@@ -13,7 +13,7 @@ steps:
     volumes:
       - name: 'vol1'
         path: '/persistent_volume'
-    args: ['run', '-v', 'vol1:/home/app', '--rm', 'gcr.io/fullstackgcp/gradle', '/bin/sh', '-c',
+    args: ['run', '-v', 'vol1:/home/app', '--rm', 'gcr.io/fullstackgcp/gradle', '/bin/sh', '-c',\
            'cd /home/app/src && ./gradlew clean sonarqube'\
            '-Dsonar.host.url=http://sonarqube.nextsense.io/ '\
            '-Dsonar.login=1bcdb5a82cd7ef74fbbf0bb46ede682e085e89b9']
