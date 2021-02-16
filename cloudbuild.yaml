@@ -1,0 +1,40 @@
+# cloudbuild.yaml
+steps:
+  # Set a persistent volume according to /cloud-build/docs/build-config (search for volumes)
+  - name: 'ubuntu'
+    volumes:
+      - name: 'vol1'
+        path: '/persistent_volume'
+    args: ['cp', '-a', '.', '/persistent_volume']
+    id: 'copy-to-persistent'
+
+  #static code analysis by sonarqube
+  - name: 'gcr.io/cloud-builders/docker'
+    volumes:
+      - name: 'vol1'
+        path: '/persistent_volume'
+    args: ['run', '-v', 'vol1:/home/app', '--rm', 'gcr.io/fullstackgcp/gradle', '/bin/sh', '-c',
+           'cd /home/app/src && ./gradlew clean sonarqube'\
+           '-Dsonar.host.url=http://sonarqube.nextsense.io/ '\
+           '-Dsonar.login=1bcdb5a82cd7ef74fbbf0bb46ede682e085e89b9']
+    id: 'sonarqube-analysis'
+
+  # Build APK with Gradle Image from mounted /persistent_volume using name: vol1
+  - name: 'gcr.io/cloud-builders/docker'
+    volumes:
+      - name: 'vol1'
+        path: '/persistent_volume'
+    args: ['run', '-v', 'vol1:/home/app', '--rm', 'gcr.io/fullstackgcp/gradle', '/bin/sh', '-c',
+           'cd /home/app && ./gradlew clean assembleDebug']
+    id: 'build'
+
+  # Push the APK Output from vol1 to your GCS Bucket with Short Commit SHA.
+  - name: 'gcr.io/cloud-builders/gsutil'
+    volumes:
+      - name: 'vol1'
+        path: '/persistent_volume'
+    args: ['cp', '/persistent_volume/app/build/outputs/apk/debug/app-debug.apk',
+           'gs://fullstackgcp-apk-builds/app-debug-$SHORT_SHA.apk']
+    id: 'persist'
+
+timeout: 1200s

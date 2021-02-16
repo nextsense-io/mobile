@@ -27,8 +27,15 @@ public class BleScanner {
 
   private static final String TAG = BleScanner.class.getSimpleName();
 
+  public enum ScanError {
+    BT_DISABLED,  // Bluetooth is not enabled, scan can't be completed.
+    INTERNAL_BT_ERROR  // Internal error in the Android Bluetooth stack. Should try to restart it.
+  }
+
   public interface BleResultsListener {
-    void onNewDevice(BluetoothDevice device);
+    void onNewDevice(BluetoothDevice btDevice);
+    void onScanComplete();
+    void onScanError(ScanError scanError);
   }
 
   private final Application application;
@@ -69,12 +76,12 @@ public class BleScanner {
    * Starts scanning and returns the results in the <code>resultsListener</code>. If a scan was
    * already running, resets the <code>timeout</code>.
    * @param resultsListener will be called with valid devices
-   * @return true if scan is started, false if it could not
    */
-  public boolean startScanning(BleResultsListener resultsListener, Duration timeout) {
+  public void startScanning(BleResultsListener resultsListener, Duration timeout) {
     Logd(TAG, "starting BLE scan");
     if (!btAdapter.isEnabled()) {
-      return false;
+      bleResultsListener.onScanError(ScanError.BT_DISABLED);
+      return;
     }
     bleResultsListener = resultsListener;
     if (cancelTaskFuture != null && !cancelTaskFuture.isDone()) {
@@ -83,14 +90,14 @@ public class BleScanner {
     cancelTaskFuture =
         scheduler.schedule(this::stopScanning, timeout.toMillis(), TimeUnit.MILLISECONDS);
     if (scanning.get()) {
-      return true;
+      return;
     }
     bleScanner.startScan(leScanCallback);
-    return true;
   }
 
   public void stopScanning() {
     Logd(TAG, "stopping BLE scan");
     bleScanner.stopScan(leScanCallback);
+    bleResultsListener.onScanComplete();
   }
 }
