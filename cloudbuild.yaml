@@ -14,7 +14,7 @@ steps:
     volumes:
       - name: data
         path: /persistent_volume
-    args: ['run', '-v', 'data:/workspace', '--rm', 'gcr.io/$PROJECT_ID/cloudbuild', '/bin/sh', '-c',\
+    args: ['run', '-v', 'data:/workspace', '--rm', 'gcr.io/$PROJECT_ID/cloudbuild-android', '/bin/sh', '-c',\
            'cd /workspace && ./gradlew clean sonarqube '\
            '-Dsonar.host.url=http://sonarqube.nextsense.io/ '\
            '-Dsonar.login=1bcdb5a82cd7ef74fbbf0bb46ede682e085e89b9'
@@ -25,7 +25,7 @@ steps:
     volumes:
       - name: data
         path: /persistent_volume
-    args: ['run', '-v', 'data:/workspace', '--rm', 'gcr.io/$PROJECT_ID/cloudbuild', '/bin/sh', '-c',\
+    args: ['run', '-v', 'data:/workspace', '--rm', 'gcr.io/$PROJECT_ID/cloudbuild-android', '/bin/sh', '-c',\
            'cd /workspace && ./gradlew app:assembleDebug && mv app/build/outputs/apk/debug/app-debug.aar app/build/outputs/apk/debug/$REPO_NAME-$SHORT_SHA-debug.aar && ls -la app/build/outputs/apk/debug/$REPO_NAME-$SHORT_SHA-debug.aar']
 
   - name: gcr.io/cloud-builders/gsutil
