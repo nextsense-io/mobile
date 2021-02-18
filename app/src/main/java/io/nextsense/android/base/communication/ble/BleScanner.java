@@ -26,6 +26,8 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 public class BleScanner {
 
   private static final String TAG = BleScanner.class.getSimpleName();
+  // Useless constant to provoke a warning.
+  private static final String TAG_USELESS = BleScanner.class.getSimpleName();
 
   public enum ScanError {
     BT_DISABLED,  // Bluetooth is not enabled, scan can't be completed.
