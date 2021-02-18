@@ -16,7 +16,7 @@ steps:
     volumes:
       - name: data
         path: /persistent_volume
-    args: ['run', '-v', 'data:/workspace', '--rm', 'gcr.io/$PROJECT_ID/cloudbuild-android', '/bin/sh', '-c', 'cd /workspace && ./gradlew clean sonarqube -Dsonar.host.url=http://sonarqube.nextsense.io/ -Dsonar.login=1bcdb5a82cd7ef74fbbf0bb46ede682e085e89b9'
+    args: ['run', '-v', 'data:/workspace', '--rm', 'gcr.io/$PROJECT_ID/cloudbuild-android', '/bin/sh', '-c', 'cd /workspace && ./gradlew clean sonarqube -Dsonar.host.url=http://sonarqube.nextsense.io/ -Dsonar.login=1bcdb5a82cd7ef74fbbf0bb46ede682e085e89b9 -Dsonar.pullrequest.base=$_BASE_BRANCH -Dsonar.pullrequest.branch=$_HEAD_BRANCH -Dsonar.pullrequest.key=$_PR_NUMBER'
     ]
 
   # Build the library.
@@ -28,14 +28,5 @@ steps:
       - name: data
         path: /persistent_volume
     args: ['run', '-v', 'data:/workspace', '--rm', 'gcr.io/$PROJECT_ID/cloudbuild-android', '/bin/sh', '-c', 'cd /workspace && ./gradlew app:assembleDebug && mv app/build/outputs/aar/app-debug.aar app/build/outputs/aar/$REPO_NAME-$SHORT_SHA-debug.aar && ls -la app/build/outputs/aar/$REPO_NAME-$SHORT_SHA-debug.aar']
-
-  # TODO(eric): Copy to the artifact registry instead?
-  # Copy the built library to cloud storage.
-  - name: gcr.io/cloud-builders/gsutil
-    id: 'publish-gsutil'
-    args: ['cp', '/persistent_volume/app/build/outputs/aar/$REPO_NAME-$SHORT_SHA-debug.aar', 'gs://artifacts.$PROJECT_ID.appspot.com/android/']
-    volumes:
-      - name: data
-        path: /persistent_volume
 
 timeout: 1200s
