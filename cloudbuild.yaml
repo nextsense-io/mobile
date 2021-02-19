@@ -16,7 +16,7 @@ steps:
     volumes:
       - name: data
         path: /persistent_volume
-    args: ['run', '-v', 'data:/workspace', '--rm', 'gcr.io/$PROJECT_ID/cloudbuild-android', '/bin/sh', '-c', 'cd /workspace && ./gradlew clean sonarqube -Dsonar.host.url=http://sonarqube.nextsense.io/ -Dsonar.login=8eda7d8b0d87bda142a80e22877b078e7a215a62'
+    args: ['run', '-v', 'data:/workspace', '--rm', 'gcr.io/$PROJECT_ID/cloudbuild-android', '/bin/sh', '-c', 'cd /workspace && ./gradlew clean sonarqube -Dsonar.host.url=http://sonarqube.nextsense.io/ -Dsonar.projectKey=nextsense-io_android_base_library -Dsonar.login=4dd829b1d3ac152d5e5b01d8c0353d651360edba'
     ]
 
   # Build the library.
