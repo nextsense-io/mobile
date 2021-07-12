@@ -1,2 +1,3 @@
-include ':app'
-rootProject.name = "NextSense Base Android Library"
+rootProject.name = "NextSense Mobile"
+include ':testui'
+include ':core'
