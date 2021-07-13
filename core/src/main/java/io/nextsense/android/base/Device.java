@@ -13,16 +13,13 @@ import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.HciStatus;
 import com.welie.blessed.PhyType;
-
-import org.jetbrains.annotations.NotNull;
-
+import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
+import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
+import io.nextsense.android.base.devices.NextSenseDevice;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.Future;
-
-import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
-import io.nextsense.android.base.devices.NextSenseDevice;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Main device interface that is shared for any device. Device specific functions are encapsulated
@@ -46,8 +43,8 @@ public class Device {
   private final DeviceInfo deviceInfo = new DeviceInfo();
   private final DeviceSettings deviceSettings = new DeviceSettings();
   private final DeviceData deviceData = new DeviceData();
+  private final BlePeripheralCallbackProxy callbackProxy = new BlePeripheralCallbackProxy();
 
-  private DeviceMode deviceMode = DeviceMode.IDLE;
   private DeviceState deviceState = DeviceState.DISCONNECTED;
   private boolean autoReconnect = false;
   private SettableFuture<DeviceState> deviceConnectionFuture;
@@ -59,6 +56,15 @@ public class Device {
     this.nextSenseDevice = nextSenseDevice;
     this.btPeripheral = btPeripheral;
     centralProxy.addPeripheralListener(bluetoothCentralManagerCallback, btPeripheral.getAddress());
+    callbackProxy.addPeripheralCallbackListener(peripheralCallback);
+  }
+
+  public String getName() {
+    return btPeripheral.getName();
+  }
+
+  public String getAddress() {
+    return btPeripheral.getAddress();
   }
 
   public DeviceState getState() {
@@ -66,12 +72,15 @@ public class Device {
   }
 
   public DeviceMode getMode() {
-    return deviceMode;
+    return nextSenseDevice.getDeviceMode();
   }
 
-  public Future<DeviceMode> setMode(DeviceMode deviceMode) {
-    this.deviceMode = deviceMode;
-    return Futures.immediateFuture(deviceMode);
+  public ListenableFuture<DeviceMode> setMode(DeviceMode deviceMode) {
+    if (deviceState != DeviceState.READY) {
+      return Futures.immediateFailedFuture(new IllegalStateException(
+          "Device needs to be in READY state to change its mode."));
+    }
+    return nextSenseDevice.changeMode(deviceMode);
   }
 
   public void addOnDeviceStateChangeListener(DeviceStateChangeListener listener) {
@@ -100,7 +109,8 @@ public class Device {
     deviceState = DeviceState.CONNECTING;
     this.autoReconnect = autoReconnect;
     deviceConnectionFuture = SettableFuture.create();
-    centralManagerProxy.getCentralManager().connectPeripheral(btPeripheral, peripheralCallback);
+    centralManagerProxy.getCentralManager().connectPeripheral(
+        btPeripheral, callbackProxy.getMainCallback());
     return deviceConnectionFuture;
   }
 
@@ -120,6 +130,7 @@ public class Device {
         // fallthrough
       case IN_ERROR:
         this.deviceDisconnectionFuture = SettableFuture.create();
+        nextSenseDevice.disconnect(btPeripheral);
         btPeripheral.cancelConnection();
         break;
       case DISCONNECTING:
@@ -156,6 +167,14 @@ public class Device {
    */
   public DeviceData getData() {
     return deviceData;
+  }
+
+  private void readyDevice(BluetoothPeripheral peripheral) {
+    callbackProxy.addPeripheralCallbackListener(nextSenseDevice.getBluetoothPeripheralCallback());
+    nextSenseDevice.connect(peripheral);
+    deviceState = DeviceState.READY;
+    deviceConnectionFuture.set(deviceState);
+    notifyDeviceStateChangeListeners(DeviceState.READY);
   }
 
   private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback =
@@ -209,9 +228,7 @@ public class Device {
         btPeripheral.requestMtu(nextSenseDevice.getTargetMTU());
       } else {
         // No need to change the MTU, device is ready to use.
-        deviceState = DeviceState.READY;
-        deviceConnectionFuture.set(deviceState);
-        notifyDeviceStateChangeListeners(DeviceState.READY);
+        readyDevice(peripheral);
       }
     }
 
@@ -219,7 +236,6 @@ public class Device {
     public void onNotificationStateUpdate(@NotNull BluetoothPeripheral peripheral,
                                           @NotNull BluetoothGattCharacteristic characteristic,
                                           @NotNull GattStatus status) {
-      super.onNotificationStateUpdate(peripheral, characteristic, status);
     }
 
     @Override
@@ -261,11 +277,8 @@ public class Device {
                              @NotNull GattStatus status) {
       super.onMtuChanged(peripheral, mtu, status);
       Util.logd(TAG, "MTU changed to " + mtu);
-      // Run the device specific connection
-      nextSenseDevice.connect(peripheral);
-      deviceState = DeviceState.READY;
-      deviceConnectionFuture.set(deviceState);
-      notifyDeviceStateChangeListeners(DeviceState.READY);
+      // Run the device specific connection and mark as ready.
+      readyDevice(peripheral);
     }
 
     @Override
