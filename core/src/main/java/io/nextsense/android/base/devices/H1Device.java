@@ -8,13 +8,18 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.GattStatus;
+import com.welie.blessed.WriteType;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.util.Arrays;
 import java.util.UUID;
 
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.Util;
+import io.nextsense.android.base.communication.ble.BluetoothException;
 
 /**
  * First Generation device that was built at Google X with Culvert Engineering.
@@ -26,8 +31,10 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
 
   public static final String BLUETOOTH_PREFIX = "Heimdallr";
 
-  private static final String TAG = H15Device.class.getSimpleName();
+  private static final String TAG = H1Device.class.getSimpleName();
   private static final int TARGET_MTU = 256;
+  private static final int[] START_STREAMING = {0x81};
+  private static final int[] STOP_STREAMING = {0x80};
   private static final UUID SERVICE_UUID = UUID.fromString("59462f12-9543-9999-12c8-58b459a2712d");
   private static final UUID DATA_UUID = UUID.fromString("5c3a659e-897e-45e1-b016-007107c96df6");
   private static final UUID VOLTAGE_UUID = UUID.fromString("5c3a659e-897e-45e1-b016-007107c96df3");
@@ -82,6 +89,9 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
 
   @Override
   public ListenableFuture<DeviceMode> changeMode(DeviceMode deviceMode) {
+    if (this.deviceMode == deviceMode) {
+      return Futures.immediateFuture(deviceMode);
+    }
     switch (deviceMode) {
       case STREAMING:
         if (dataCharacteristic == null) {
@@ -94,7 +104,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
         if (dataCharacteristic == null) {
           return Futures.immediateFuture(DeviceMode.IDLE);
         }
-        peripheral.setNotify(dataCharacteristic, /*enable=*/false);
+        writeCharacteristic(writeDataCharacteristic, STOP_STREAMING);
         break;
       default:
         return Futures.immediateFailedFuture(new UnsupportedOperationException(
@@ -102,6 +112,17 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     }
     deviceModeFuture = SettableFuture.create();
     return deviceModeFuture;
+  }
+
+  private void writeCharacteristic(BluetoothGattCharacteristic characteristic, int[] value) {
+    ByteBuffer byteBuffer = ByteBuffer.allocate(value.length * 4);
+    IntBuffer intBuffer = byteBuffer.asIntBuffer();
+    intBuffer.put(value);
+    writeCharacteristic(characteristic, byteBuffer.array());
+  }
+
+  private void writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] value) {
+    peripheral.writeCharacteristic(characteristic, value, WriteType.WITH_RESPONSE);
   }
 
   private void initializeCharacteristics() {
@@ -136,26 +157,68 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
 
   private final BluetoothPeripheralCallback bluetoothPeripheralCallback =
       new BluetoothPeripheralCallback() {
-        @Override
-        public void onNotificationStateUpdate(
-            @NotNull BluetoothPeripheral peripheral,
-            @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
-          if (!deviceModeFuture.isDone() && isDataCharacteristic(characteristic)) {
-            if (status == GattStatus.SUCCESS) {
-              Util.logd(TAG, "Notification updated with success to " +
-                  peripheral.isNotifying(characteristic));
-              if (peripheral.isNotifying(characteristic)) {
-                deviceMode = DeviceMode.STREAMING;
-                deviceModeFuture.set(DeviceMode.STREAMING);
-              } else {
-                deviceMode = DeviceMode.IDLE;
-                deviceModeFuture.set(DeviceMode.IDLE);
-              }
-            } else {
-              deviceModeFuture.setException(new Exception(
-                  "Notification state update failed with code " + status));
-            }
+    @Override
+    public void onNotificationStateUpdate(
+        @NotNull BluetoothPeripheral peripheral,
+        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+      if (!deviceModeFuture.isDone() && isDataCharacteristic(characteristic)) {
+        if (status == GattStatus.SUCCESS) {
+          Util.logd(TAG, "Notification updated with success to " +
+              peripheral.isNotifying(characteristic));
+          if (peripheral.isNotifying(characteristic)) {
+            writeCharacteristic(writeDataCharacteristic, START_STREAMING);
+          } else {
+            deviceMode = DeviceMode.IDLE;
+            deviceModeFuture.set(DeviceMode.IDLE);
           }
+        } else {
+          deviceModeFuture.setException(new BluetoothException(
+              "Notification state update failed with code " + status));
         }
-      };
+      }
+    }
+
+    @Override
+    public void onCharacteristicUpdate(
+        @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
+        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+      Util.logv(TAG, "Data received: " + Arrays.toString(value));
+    }
+
+    @Override
+    public void onCharacteristicWrite(
+        @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
+        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+      int[] intValues = Util.getIntValues(value);
+      Util.logv(TAG, "Characteristic write completed with status " + status.toString() +
+          " with value: " + Arrays.toString(intValues));
+
+      // Check mode change result.
+      if (characteristic == writeDataCharacteristic && intValues.length == 1) {
+        DeviceMode targetMode;
+        if (intValues[0] == START_STREAMING[0]) {
+          targetMode = DeviceMode.STREAMING;
+        } else if (intValues[0] == STOP_STREAMING[0]) {
+          targetMode = DeviceMode.IDLE;
+        } else {
+          // Not an expected value, return.
+          return;
+        }
+
+        if (status == GattStatus.SUCCESS) {
+          if (targetMode == DeviceMode.IDLE) {
+            peripheral.setNotify(dataCharacteristic, /*enable=*/false);
+          } else {
+            deviceMode = targetMode;
+            deviceModeFuture.set(targetMode);
+          }
+          Util.logd(TAG, "Wrote command to writeData characteristic with success.");
+        } else {
+          deviceModeFuture.setException(
+              new BluetoothException("Failed to change the mode to " + targetMode.name() +
+                  ", Bluetooth error code: " + status.name()));
+        }
+      }
+    }
+  };
 }

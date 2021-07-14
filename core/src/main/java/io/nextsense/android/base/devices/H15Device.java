@@ -11,10 +11,12 @@ import com.welie.blessed.GattStatus;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.Util;
+import io.nextsense.android.base.communication.ble.BluetoothException;
 
 /**
  * Next generation single ear device prototype that was designed at Google X by Russ.
@@ -64,6 +66,9 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
 
   @Override
   public ListenableFuture<DeviceMode> changeMode(DeviceMode deviceMode) {
+    if (this.deviceMode == deviceMode) {
+      return Futures.immediateFuture(deviceMode);
+    }
     switch (deviceMode) {
       case STREAMING:
         if (dataCharacteristic == null) {
@@ -104,10 +109,17 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
             deviceModeFuture.set(DeviceMode.IDLE);
           }
         } else {
-          deviceModeFuture.setException(new Exception(
+          deviceModeFuture.setException(new BluetoothException(
               "Notification state update failed with code " + status));
         }
       }
+    }
+
+    @Override
+    public void onCharacteristicUpdate(
+        @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
+        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+      Util.logv(TAG, "Data received: " + Arrays.toString(value));
     }
   };
 }
