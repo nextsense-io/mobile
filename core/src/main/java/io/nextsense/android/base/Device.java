@@ -19,6 +19,8 @@ import io.nextsense.android.base.devices.NextSenseDevice;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -171,10 +173,18 @@ public class Device {
 
   private void readyDevice(BluetoothPeripheral peripheral) {
     callbackProxy.addPeripheralCallbackListener(nextSenseDevice.getBluetoothPeripheralCallback());
-    nextSenseDevice.connect(peripheral);
-    deviceState = DeviceState.READY;
-    deviceConnectionFuture.set(deviceState);
-    notifyDeviceStateChangeListeners(DeviceState.READY);
+    try {
+      nextSenseDevice.connect(peripheral).get();
+      deviceState = DeviceState.READY;
+      deviceConnectionFuture.set(deviceState);
+      notifyDeviceStateChangeListeners(DeviceState.READY);
+    } catch (ExecutionException e) {
+      Log.e(TAG, "Failed to connect device: " + e.getMessage());
+      deviceConnectionFuture.setException(e);
+    } catch (InterruptedException e) {
+      deviceConnectionFuture.setException(e);
+      Thread.currentThread().interrupt();
+    }
   }
 
   private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback =

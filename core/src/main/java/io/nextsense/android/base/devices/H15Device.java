@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.Future;
 
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.Util;
@@ -51,11 +52,12 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
-  public void connect(BluetoothPeripheral peripheral) {
+  public Future<?> connect(BluetoothPeripheral peripheral) {
     // H15 Device specific connection logic.
     this.peripheral = peripheral;
     dataCharacteristic = peripheral.getCharacteristic(SERVICE_UUID, DATA_UUID);
     checkCharacteristic(dataCharacteristic, SERVICE_UUID, DATA_UUID);
+    return Futures.immediateFuture(null);
   }
 
   @Override

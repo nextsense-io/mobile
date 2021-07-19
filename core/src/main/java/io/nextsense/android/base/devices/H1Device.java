@@ -1,6 +1,7 @@
 package io.nextsense.android.base.devices;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.util.Log;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -13,9 +14,10 @@ import com.welie.blessed.WriteType;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.Future;
 
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.Util;
@@ -33,8 +35,18 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
 
   private static final String TAG = H1Device.class.getSimpleName();
   private static final int TARGET_MTU = 256;
-  private static final int[] START_STREAMING = {0x81};
-  private static final int[] STOP_STREAMING = {0x80};
+  private static final int MIN_BATTERY_VOLTAGE = 3600;
+  private static final int MAX_BATTERY_VOLTAGE = 4194;
+  private static final byte START_STREAMING = (byte)0x81;
+  private static final byte STOP_STREAMING = (byte)0x80;
+  private static final byte FIRMWARE_VERSION_CODE = (byte)0x01;
+  private static final byte BATTERY_INFO_CODE = (byte)0x02;
+  private static final byte BATTERY_STATUS_CODE = (byte)0x03;
+  private static final byte TIME_SYNC_FLAG_CODE = (byte)0x04;
+  private static final byte TIME_SET_ID_CODE = (byte)0x05;
+  private static final byte GET_TIME_CODE = (byte)0x06;
+
+
   private static final UUID SERVICE_UUID = UUID.fromString("59462f12-9543-9999-12c8-58b459a2712d");
   private static final UUID DATA_UUID = UUID.fromString("5c3a659e-897e-45e1-b016-007107c96df6");
   private static final UUID VOLTAGE_UUID = UUID.fromString("5c3a659e-897e-45e1-b016-007107c96df3");
@@ -75,10 +87,13 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
-  public void connect(BluetoothPeripheral peripheral) {
+  public Future<?> connect(BluetoothPeripheral peripheral) {
     // H1 Device specific connection logic.
     this.peripheral = peripheral;
     initializeCharacteristics();
+    setTime();
+    // TODO(eric): Use a future when setting the time.
+    return Futures.immediateFuture(null);
   }
 
   @Override
@@ -104,7 +119,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
         if (dataCharacteristic == null) {
           return Futures.immediateFuture(DeviceMode.IDLE);
         }
-        writeCharacteristic(writeDataCharacteristic, STOP_STREAMING);
+        writeCharacteristic(writeDataCharacteristic, new byte[]{STOP_STREAMING});
         break;
       default:
         return Futures.immediateFailedFuture(new UnsupportedOperationException(
@@ -112,13 +127,6 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     }
     deviceModeFuture = SettableFuture.create();
     return deviceModeFuture;
-  }
-
-  private void writeCharacteristic(BluetoothGattCharacteristic characteristic, int[] value) {
-    ByteBuffer byteBuffer = ByteBuffer.allocate(value.length * 4);
-    IntBuffer intBuffer = byteBuffer.asIntBuffer();
-    intBuffer.put(value);
-    writeCharacteristic(characteristic, byteBuffer.array());
   }
 
   private void writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] value) {
@@ -155,6 +163,33 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     dataTransRxCharacteristic = null;
   }
 
+  private String padString(String string, int length) {
+    return String.format("%1$" + length + "s", string).replace(' ', '0');
+  }
+
+  private byte[] getSetTimeCommand(Instant time) {
+    long seconds = time.getEpochSecond();
+    ByteBuffer buf = ByteBuffer.allocate(13);
+    buf.put(TIME_SET_ID_CODE);
+    String secondsHex = padString(Long.toHexString(seconds), /*length=*/8);
+    for (char character : secondsHex.toCharArray()) {
+      buf.put((byte)character);
+    }
+    String timeZone = "0000";
+    for (char character : timeZone.toCharArray()) {
+      buf.put((byte)character);
+    }
+    buf.rewind();
+    byte[] message = buf.array();
+    Log.i(TAG, "Setting the device time to " + Arrays.toString(message));
+    return message;
+  }
+
+  private void setTime() {
+    byte[] command = getSetTimeCommand(Instant.now());
+    writeCharacteristic(dataTransRxCharacteristic, command);
+  }
+
   private final BluetoothPeripheralCallback bluetoothPeripheralCallback =
       new BluetoothPeripheralCallback() {
     @Override
@@ -166,7 +201,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           Util.logd(TAG, "Notification updated with success to " +
               peripheral.isNotifying(characteristic));
           if (peripheral.isNotifying(characteristic)) {
-            writeCharacteristic(writeDataCharacteristic, START_STREAMING);
+            writeCharacteristic(writeDataCharacteristic, new byte[]{START_STREAMING});
           } else {
             deviceMode = DeviceMode.IDLE;
             deviceModeFuture.set(DeviceMode.IDLE);
@@ -189,16 +224,14 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     public void onCharacteristicWrite(
         @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
         @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
-      int[] intValues = Util.getIntValues(value);
       Util.logv(TAG, "Characteristic write completed with status " + status.toString() +
-          " with value: " + Arrays.toString(intValues));
-
+          " with value: " + Arrays.toString(value));
       // Check mode change result.
-      if (characteristic == writeDataCharacteristic && intValues.length == 1) {
+      if (characteristic == writeDataCharacteristic && value.length == 1) {
         DeviceMode targetMode;
-        if (intValues[0] == START_STREAMING[0]) {
+        if (value[0] == START_STREAMING) {
           targetMode = DeviceMode.STREAMING;
-        } else if (intValues[0] == STOP_STREAMING[0]) {
+        } else if (value[0] == STOP_STREAMING) {
           targetMode = DeviceMode.IDLE;
         } else {
           // Not an expected value, return.

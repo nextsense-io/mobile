@@ -6,6 +6,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
 
+import java.util.concurrent.Future;
+
 import io.nextsense.android.base.DeviceMode;
 
 /**
@@ -21,7 +23,7 @@ public interface NextSenseDevice {
 
   boolean isDataCharacteristic(BluetoothGattCharacteristic characteristic);
 
-  void connect(BluetoothPeripheral peripheral);
+  Future connect(BluetoothPeripheral peripheral);
 
   void disconnect(BluetoothPeripheral peripheral);
 
