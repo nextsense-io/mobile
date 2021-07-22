@@ -3,10 +3,10 @@ package io.nextsense.android.base.devices;
 import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 
 import java.util.UUID;
-import java.util.concurrent.Future;
 
 import io.nextsense.android.base.DeviceMode;
 
@@ -24,8 +24,8 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
-  public Future<?> connect(BluetoothPeripheral peripheral) {
-    return Futures.immediateFuture(null);
+  public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral) {
+    return Futures.immediateFuture(true);
   }
 
   @Override

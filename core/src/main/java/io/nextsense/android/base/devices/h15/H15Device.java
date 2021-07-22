@@ -1,4 +1,4 @@
-package io.nextsense.android.base.devices;
+package io.nextsense.android.base.devices.h15;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 
@@ -13,11 +13,13 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.UUID;
-import java.util.concurrent.Future;
 
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.Util;
+import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
+import io.nextsense.android.base.devices.BaseNextSenseDevice;
+import io.nextsense.android.base.devices.NextSenseDevice;
 
 /**
  * Next generation single ear device prototype that was designed at Google X by Russ.
@@ -33,12 +35,14 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
   private static final UUID SERVICE_UUID = UUID.fromString("cb577fc4-7260-41f8-8216-3be734c7820a");
   private static final UUID DATA_UUID = UUID.fromString("59e33cfa-497d-4356-bb46-b87888419cb2");
 
+  private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
   private BluetoothGattCharacteristic dataCharacteristic;
   private SettableFuture<DeviceMode> deviceModeFuture;
 
   @Override
-  public BluetoothPeripheralCallback getBluetoothPeripheralCallback() {
-    return bluetoothPeripheralCallback;
+  public void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy) {
+    blePeripheralCallbackProxy = proxy;
+    blePeripheralCallbackProxy.addPeripheralCallbackListener(bluetoothPeripheralCallback);
   }
 
   @Override
@@ -52,7 +56,7 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
-  public Future<?> connect(BluetoothPeripheral peripheral) {
+  public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral) {
     // H15 Device specific connection logic.
     this.peripheral = peripheral;
     dataCharacteristic = peripheral.getCharacteristic(SERVICE_UUID, DATA_UUID);

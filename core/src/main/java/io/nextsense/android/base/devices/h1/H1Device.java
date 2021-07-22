@@ -1,10 +1,11 @@
-package io.nextsense.android.base.devices;
+package io.nextsense.android.base.devices.h1;
 
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
@@ -13,15 +14,18 @@ import com.welie.blessed.WriteType;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.UUID;
-import java.util.concurrent.Future;
+import java.util.concurrent.Executors;
 
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.Util;
+import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
+import io.nextsense.android.base.devices.BaseNextSenseDevice;
+import io.nextsense.android.base.devices.FirmwareMessageParsingException;
+import io.nextsense.android.base.devices.NextSenseDevice;
 
 /**
  * First Generation device that was built at Google X with Culvert Engineering.
@@ -32,20 +36,13 @@ import io.nextsense.android.base.communication.ble.BluetoothException;
 public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
 
   public static final String BLUETOOTH_PREFIX = "Heimdallr";
+  public static final int MIN_BATTERY_VOLTAGE = 3600;
+  public static final int MAX_BATTERY_VOLTAGE = 4194;
 
   private static final String TAG = H1Device.class.getSimpleName();
   private static final int TARGET_MTU = 256;
-  private static final int MIN_BATTERY_VOLTAGE = 3600;
-  private static final int MAX_BATTERY_VOLTAGE = 4194;
   private static final byte START_STREAMING = (byte)0x81;
   private static final byte STOP_STREAMING = (byte)0x80;
-  private static final byte FIRMWARE_VERSION_CODE = (byte)0x01;
-  private static final byte BATTERY_INFO_CODE = (byte)0x02;
-  private static final byte BATTERY_STATUS_CODE = (byte)0x03;
-  private static final byte TIME_SYNC_FLAG_CODE = (byte)0x04;
-  private static final byte TIME_SET_ID_CODE = (byte)0x05;
-  private static final byte GET_TIME_CODE = (byte)0x06;
-
 
   private static final UUID SERVICE_UUID = UUID.fromString("59462f12-9543-9999-12c8-58b459a2712d");
   private static final UUID DATA_UUID = UUID.fromString("5c3a659e-897e-45e1-b016-007107c96df6");
@@ -61,6 +58,10 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   private static final UUID DATA_TRANS_RX_UUID =
       UUID.fromString("5c3a659e-897e-45e1-b016-007107c96dfa");
 
+  private final ListeningExecutorService executorService =
+      MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+
+  private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
   private BluetoothGattCharacteristic dataCharacteristic;
   private BluetoothGattCharacteristic voltageCharacteristic;
   private BluetoothGattCharacteristic writeDataCharacteristic;
@@ -72,8 +73,9 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   private SettableFuture<DeviceMode> deviceModeFuture;
 
   @Override
-  public BluetoothPeripheralCallback getBluetoothPeripheralCallback() {
-    return bluetoothPeripheralCallback;
+  public void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy) {
+    blePeripheralCallbackProxy = proxy;
+    blePeripheralCallbackProxy.addPeripheralCallbackListener(bluetoothPeripheralCallback);
   }
 
   @Override
@@ -87,13 +89,17 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
-  public Future<?> connect(BluetoothPeripheral peripheral) {
-    // H1 Device specific connection logic.
+  public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral) {
     this.peripheral = peripheral;
     initializeCharacteristics();
-    setTime();
-    // TODO(eric): Use a future when setting the time.
-    return Futures.immediateFuture(null);
+    return executorService.submit(() -> {
+      SetTimeResponse setTimeResponse = setTime().get();
+      if (setTimeResponse == null) {
+        throw new FirmwareMessageParsingException(
+            "Could not parse the setTime response");
+      }
+      return setTimeResponse.getTimeSet();
+    });
   }
 
   @Override
@@ -104,6 +110,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
 
   @Override
   public ListenableFuture<DeviceMode> changeMode(DeviceMode deviceMode) {
+    // TODO(eric): Check if there is an active future first?
     if (this.deviceMode == deviceMode) {
       return Futures.immediateFuture(deviceMode);
     }
@@ -113,19 +120,20 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           return Futures.immediateFailedFuture(
               new IllegalStateException("No characteristic to stream on."));
         }
+        deviceModeFuture = SettableFuture.create();
         peripheral.setNotify(dataCharacteristic, /*enable=*/true);
         break;
       case IDLE:
         if (dataCharacteristic == null) {
           return Futures.immediateFuture(DeviceMode.IDLE);
         }
+        deviceModeFuture = SettableFuture.create();
         writeCharacteristic(writeDataCharacteristic, new byte[]{STOP_STREAMING});
         break;
       default:
         return Futures.immediateFailedFuture(new UnsupportedOperationException(
             "The " + deviceMode.toString() + " is not supported on this device."));
     }
-    deviceModeFuture = SettableFuture.create();
     return deviceModeFuture;
   }
 
@@ -163,31 +171,26 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     dataTransRxCharacteristic = null;
   }
 
-  private String padString(String string, int length) {
-    return String.format("%1$" + length + "s", string).replace(' ', '0');
-  }
-
-  private byte[] getSetTimeCommand(Instant time) {
-    long seconds = time.getEpochSecond();
-    ByteBuffer buf = ByteBuffer.allocate(13);
-    buf.put(TIME_SET_ID_CODE);
-    String secondsHex = padString(Long.toHexString(seconds), /*length=*/8);
-    for (char character : secondsHex.toCharArray()) {
-      buf.put((byte)character);
-    }
-    String timeZone = "0000";
-    for (char character : timeZone.toCharArray()) {
-      buf.put((byte)character);
-    }
-    buf.rewind();
-    byte[] message = buf.array();
-    Log.i(TAG, "Setting the device time to " + Arrays.toString(message));
-    return message;
-  }
-
-  private void setTime() {
-    byte[] command = getSetTimeCommand(Instant.now());
-    writeCharacteristic(dataTransRxCharacteristic, command);
+  // TODO(eric) Encapsulate this in the SetTimeCommand with a "Communication" interface implemented
+  // by Bluetooth.
+  private ListenableFuture<SetTimeResponse> setTime() {
+    return executorService.submit(() -> {
+        byte[] command = new SetTimeCommand(Instant.now()).getCommand();
+        blePeripheralCallbackProxy.writeCharacteristic(
+            peripheral, dataTransRxCharacteristic, command).get();
+        byte[] readValue = blePeripheralCallbackProxy.readCharacteristic(
+            peripheral, dataTransTxCharacteristic).get();
+        H1FirmwareResponse response = H1DataParser.parseDataTransRxBytes(readValue);
+        if (response.getType() == H1MessageType.SET_TIME) {
+          SetTimeResponse setTimeResponse = (SetTimeResponse) response;
+          if (setTimeResponse.getTimeSet()) {
+            Util.logd(TAG, "Time set with success");
+          }
+          return setTimeResponse;
+        }
+        return null;
+      }
+    );
   }
 
   private final BluetoothPeripheralCallback bluetoothPeripheralCallback =
@@ -201,6 +204,8 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           Util.logd(TAG, "Notification updated with success to " +
               peripheral.isNotifying(characteristic));
           if (peripheral.isNotifying(characteristic)) {
+//            blePeripheralCallbackProxy.writeCharacteristic(peripheral, writeDataCharacteristic,
+//                new byte[]{START_STREAMING});
             writeCharacteristic(writeDataCharacteristic, new byte[]{START_STREAMING});
           } else {
             deviceMode = DeviceMode.IDLE;

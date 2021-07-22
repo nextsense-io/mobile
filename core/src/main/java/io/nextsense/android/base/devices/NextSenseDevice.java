@@ -4,11 +4,9 @@ import android.bluetooth.BluetoothGattCharacteristic;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.welie.blessed.BluetoothPeripheral;
-import com.welie.blessed.BluetoothPeripheralCallback;
-
-import java.util.concurrent.Future;
 
 import io.nextsense.android.base.DeviceMode;
+import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 
 /**
  * Defines the interface of NextSense devices.
@@ -18,12 +16,11 @@ public interface NextSenseDevice {
   // Gets the target Bluetooth MTU for this device.
   int getTargetMTU();
 
-
-  BluetoothPeripheralCallback getBluetoothPeripheralCallback();
+  void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy);
 
   boolean isDataCharacteristic(BluetoothGattCharacteristic characteristic);
 
-  Future connect(BluetoothPeripheral peripheral);
+  ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral);
 
   void disconnect(BluetoothPeripheral peripheral);
 
