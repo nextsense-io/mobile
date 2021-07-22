@@ -2,6 +2,9 @@ package io.nextsense.android.base.devices;
 
 import org.junit.Test;
 
+import io.nextsense.android.base.devices.h1.H1Device;
+import io.nextsense.android.base.devices.h15.H15Device;
+
 import static org.junit.Assert.*;
 
 public class NextSenseDeviceManagerTest {

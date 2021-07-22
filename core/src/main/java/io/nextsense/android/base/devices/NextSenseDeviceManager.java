@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import io.nextsense.android.base.devices.h1.H1Device;
+import io.nextsense.android.base.devices.h15.H15Device;
+
 /**
  * Abstracts the different devices that that the mobile application can connect to.
  */

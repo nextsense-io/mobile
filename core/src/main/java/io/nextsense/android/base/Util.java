@@ -16,4 +16,9 @@ public class Util {
   public static void logd(String tag, String txt) {
     if (BuildConfig.DEBUG && BuildConfig.BUILD_TYPE.equals("debug")) Log.d(tag, txt);
   }
+
+  public static String padString(String string, int length) {
+    String format = "%1$" + length + "s";
+    return String.format(format, string).replace(' ', '0');
+  }
 }
