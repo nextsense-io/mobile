@@ -1,6 +1,7 @@
 package io.nextsense.android.base.devices.h15;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import androidx.annotation.NonNull;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -8,8 +9,6 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.GattStatus;
-
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -101,8 +100,8 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
       new BluetoothPeripheralCallback() {
     @Override
     public void onNotificationStateUpdate(
-        @NotNull BluetoothPeripheral peripheral,
-        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral,
+        @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
       if (!deviceModeFuture.isDone() && isDataCharacteristic(characteristic)) {
         if (status == GattStatus.SUCCESS) {
           Util.logd(TAG, "Notification updated with success to " +
@@ -123,8 +122,8 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
 
     @Override
     public void onCharacteristicUpdate(
-        @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
-        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
+        @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
       Util.logv(TAG, "Data received: " + Arrays.toString(value));
     }
   };

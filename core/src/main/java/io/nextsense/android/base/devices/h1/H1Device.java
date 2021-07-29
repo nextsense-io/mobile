@@ -1,6 +1,7 @@
 package io.nextsense.android.base.devices.h1;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import androidx.annotation.NonNull;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -11,8 +12,6 @@ import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.WriteType;
-
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -197,8 +196,8 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
       new BluetoothPeripheralCallback() {
     @Override
     public void onNotificationStateUpdate(
-        @NotNull BluetoothPeripheral peripheral,
-        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral,
+        @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
       if (!deviceModeFuture.isDone() && isDataCharacteristic(characteristic)) {
         if (status == GattStatus.SUCCESS) {
           Util.logd(TAG, "Notification updated with success to " +
@@ -220,15 +219,15 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
 
     @Override
     public void onCharacteristicUpdate(
-        @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
-        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
+        @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
       Util.logv(TAG, "Data received: " + Arrays.toString(value));
     }
 
     @Override
     public void onCharacteristicWrite(
-        @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
-        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
+        @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
       Util.logv(TAG, "Characteristic write completed with status " + status.toString() +
           " with value: " + Arrays.toString(value));
       // Check mode change result.

@@ -3,6 +3,7 @@ package io.nextsense.android.base.communication.ble;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.util.ArraySet;
+import androidx.annotation.NonNull;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -12,8 +13,6 @@ import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.PhyType;
 import com.welie.blessed.WriteType;
-
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -87,7 +86,7 @@ public class BlePeripheralCallbackProxy {
 
   private final BluetoothPeripheralCallback deviceCallback = new BluetoothPeripheralCallback() {
     @Override
-    public void onServicesDiscovered(@NotNull BluetoothPeripheral peripheral) {
+    public void onServicesDiscovered(@NonNull BluetoothPeripheral peripheral) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onServicesDiscovered(peripheral);
       }
@@ -95,8 +94,8 @@ public class BlePeripheralCallbackProxy {
 
     @Override
     public void onNotificationStateUpdate(
-        @NotNull BluetoothPeripheral peripheral,
-        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral,
+        @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onNotificationStateUpdate(peripheral, characteristic, status);
       }
@@ -104,8 +103,8 @@ public class BlePeripheralCallbackProxy {
 
     @Override
     public void onCharacteristicUpdate(
-        @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
-        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
+        @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
       SettableFuture<byte[]> readFuture = readFutures.get(peripheral.getAddress());
       if (readFuture != null && !readFuture.isDone()) {
         // Return a response on the future.
@@ -125,8 +124,8 @@ public class BlePeripheralCallbackProxy {
 
     @Override
     public void onCharacteristicWrite(
-        @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
-        @NotNull BluetoothGattCharacteristic characteristic, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
+        @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
       SettableFuture<byte[]> writeFuture = writeFutures.get(peripheral.getAddress());
       if (writeFuture != null && !writeFuture.isDone()) {
         // Return a response on the future.
@@ -146,8 +145,8 @@ public class BlePeripheralCallbackProxy {
 
     @Override
     public void onDescriptorRead(
-        @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
-        @NotNull BluetoothGattDescriptor descriptor, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
+        @NonNull BluetoothGattDescriptor descriptor, @NonNull GattStatus status) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onDescriptorRead(peripheral, value, descriptor, status);
       }
@@ -155,36 +154,36 @@ public class BlePeripheralCallbackProxy {
 
     @Override
     public void onDescriptorWrite(
-        @NotNull BluetoothPeripheral peripheral, @NotNull byte[] value,
-        @NotNull BluetoothGattDescriptor descriptor, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
+        @NonNull BluetoothGattDescriptor descriptor, @NonNull GattStatus status) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onDescriptorWrite(peripheral, value, descriptor, status);
       }
     }
 
     @Override
-    public void onBondingStarted(@NotNull BluetoothPeripheral peripheral) {
+    public void onBondingStarted(@NonNull BluetoothPeripheral peripheral) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onBondingStarted(peripheral);
       }
     }
 
     @Override
-    public void onBondingSucceeded(@NotNull BluetoothPeripheral peripheral) {
+    public void onBondingSucceeded(@NonNull BluetoothPeripheral peripheral) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onBondingSucceeded(peripheral);
       }
     }
 
     @Override
-    public void onBondingFailed(@NotNull BluetoothPeripheral peripheral) {
+    public void onBondingFailed(@NonNull BluetoothPeripheral peripheral) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onBondingFailed(peripheral);
       }
     }
 
     @Override
-    public void onBondLost(@NotNull BluetoothPeripheral peripheral) {
+    public void onBondLost(@NonNull BluetoothPeripheral peripheral) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onBondLost(peripheral);
       }
@@ -192,7 +191,7 @@ public class BlePeripheralCallbackProxy {
 
     @Override
     public void onReadRemoteRssi(
-        @NotNull BluetoothPeripheral peripheral, int rssi, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, int rssi, @NonNull GattStatus status) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onReadRemoteRssi(peripheral, rssi, status);
       }
@@ -200,7 +199,7 @@ public class BlePeripheralCallbackProxy {
 
     @Override
     public void onMtuChanged(
-        @NotNull BluetoothPeripheral peripheral, int mtu, @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, int mtu, @NonNull GattStatus status) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onMtuChanged(peripheral, mtu, status);
       }
@@ -208,8 +207,8 @@ public class BlePeripheralCallbackProxy {
 
     @Override
     public void onPhyUpdate(
-        @NotNull BluetoothPeripheral peripheral, @NotNull PhyType txPhy, @NotNull PhyType rxPhy,
-        @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, @NonNull PhyType txPhy, @NonNull PhyType rxPhy,
+        @NonNull GattStatus status) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onPhyUpdate(peripheral, txPhy, rxPhy, status);
       }
@@ -217,8 +216,8 @@ public class BlePeripheralCallbackProxy {
 
     @Override
     public void onConnectionUpdated(
-        @NotNull BluetoothPeripheral peripheral, int interval, int latency, int timeout,
-        @NotNull GattStatus status) {
+        @NonNull BluetoothPeripheral peripheral, int interval, int latency, int timeout,
+        @NonNull GattStatus status) {
       for (BluetoothPeripheralCallback callback : componentCallbacks) {
         callback.onConnectionUpdated(peripheral, interval, latency, timeout, status);
       }

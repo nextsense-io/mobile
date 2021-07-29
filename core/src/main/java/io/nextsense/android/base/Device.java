@@ -3,6 +3,7 @@ package io.nextsense.android.base;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.util.Log;
+import androidx.annotation.NonNull;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -21,8 +22,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Main device interface that is shared for any device. Device specific functions are encapsulated
@@ -193,15 +192,15 @@ public class Device {
   private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback =
       new BluetoothCentralManagerCallback() {
     @Override
-    public void onConnectedPeripheral(@NotNull BluetoothPeripheral peripheral) {
+    public void onConnectedPeripheral(@NonNull BluetoothPeripheral peripheral) {
       Log.d(TAG, "Connected with device " + peripheral.getName());
       deviceState = DeviceState.CONNECTED;
       notifyDeviceStateChangeListeners(DeviceState.CONNECTED);
     }
 
     @Override
-    public void onConnectionFailed(@NotNull BluetoothPeripheral peripheral,
-                                   @NotNull HciStatus status) {
+    public void onConnectionFailed(@NonNull BluetoothPeripheral peripheral,
+                                   @NonNull HciStatus status) {
       Log.w(TAG, "Connection with device " + peripheral.getName() + " failed. HCI status: " +
           status.toString());
       deviceState = DeviceState.DISCONNECTED;
@@ -210,22 +209,22 @@ public class Device {
     }
 
     @Override
-    public void onConnectingPeripheral(@NotNull BluetoothPeripheral peripheral) {
+    public void onConnectingPeripheral(@NonNull BluetoothPeripheral peripheral) {
       Util.logd(TAG, "Device " + peripheral.getName() + " connecting.");
       deviceState = DeviceState.CONNECTING;
       notifyDeviceStateChangeListeners(DeviceState.CONNECTING);
     }
 
     @Override
-    public void onDisconnectingPeripheral(@NotNull BluetoothPeripheral peripheral) {
+    public void onDisconnectingPeripheral(@NonNull BluetoothPeripheral peripheral) {
       Util.logd(TAG, "Device " + peripheral.getName() + " disconnecting.");
       deviceState = DeviceState.DISCONNECTING;
       notifyDeviceStateChangeListeners(DeviceState.DISCONNECTING);
     }
 
     @Override
-    public void onDisconnectedPeripheral(@NotNull BluetoothPeripheral peripheral,
-                                         @NotNull HciStatus status) {
+    public void onDisconnectedPeripheral(@NonNull BluetoothPeripheral peripheral,
+                                         @NonNull HciStatus status) {
       Util.logd(TAG, "Device " + peripheral.getName() + " disconnected.");
       deviceState = DeviceState.DISCONNECTED;
       deviceDisconnectionFuture.set(deviceState);
@@ -235,7 +234,7 @@ public class Device {
 
   private final BluetoothPeripheralCallback peripheralCallback = new BluetoothPeripheralCallback() {
     @Override
-    public void onServicesDiscovered(@NotNull BluetoothPeripheral peripheral) {
+    public void onServicesDiscovered(@NonNull BluetoothPeripheral peripheral) {
       Util.logd(TAG, "Services discovered.");
       if (nextSenseDevice.getTargetMTU() != 23) {
         btPeripheral.requestMtu(nextSenseDevice.getTargetMTU());
@@ -246,48 +245,48 @@ public class Device {
     }
 
     @Override
-    public void onNotificationStateUpdate(@NotNull BluetoothPeripheral peripheral,
-                                          @NotNull BluetoothGattCharacteristic characteristic,
-                                          @NotNull GattStatus status) {
+    public void onNotificationStateUpdate(@NonNull BluetoothPeripheral peripheral,
+                                          @NonNull BluetoothGattCharacteristic characteristic,
+                                          @NonNull GattStatus status) {
     }
 
     @Override
-    public void onCharacteristicUpdate(@NotNull BluetoothPeripheral peripheral, byte[] value,
-                                       @NotNull BluetoothGattCharacteristic characteristic,
-                                       @NotNull GattStatus status) {
+    public void onCharacteristicUpdate(@NonNull BluetoothPeripheral peripheral, byte[] value,
+                                       @NonNull BluetoothGattCharacteristic characteristic,
+                                       @NonNull GattStatus status) {
       super.onCharacteristicUpdate(peripheral, value, characteristic, status);
     }
 
     @Override
-    public void onCharacteristicWrite(@NotNull BluetoothPeripheral peripheral, byte[] value,
-                                      @NotNull BluetoothGattCharacteristic characteristic,
-                                      @NotNull GattStatus status) {
+    public void onCharacteristicWrite(@NonNull BluetoothPeripheral peripheral, byte[] value,
+                                      @NonNull BluetoothGattCharacteristic characteristic,
+                                      @NonNull GattStatus status) {
       super.onCharacteristicWrite(peripheral, value, characteristic, status);
     }
 
     @Override
-    public void onDescriptorRead(@NotNull BluetoothPeripheral peripheral, byte[] value,
-                                 @NotNull BluetoothGattDescriptor descriptor,
-                                 @NotNull GattStatus status) {
+    public void onDescriptorRead(@NonNull BluetoothPeripheral peripheral, byte[] value,
+                                 @NonNull BluetoothGattDescriptor descriptor,
+                                 @NonNull GattStatus status) {
       super.onDescriptorRead(peripheral, value, descriptor, status);
     }
 
     @Override
-    public void onDescriptorWrite(@NotNull BluetoothPeripheral peripheral, byte[] value,
-                                  @NotNull BluetoothGattDescriptor descriptor,
-                                  @NotNull GattStatus status) {
+    public void onDescriptorWrite(@NonNull BluetoothPeripheral peripheral, byte[] value,
+                                  @NonNull BluetoothGattDescriptor descriptor,
+                                  @NonNull GattStatus status) {
       super.onDescriptorWrite(peripheral, value, descriptor, status);
     }
 
     @Override
-    public void onReadRemoteRssi(@NotNull BluetoothPeripheral peripheral, int rssi,
-                                 @NotNull GattStatus status) {
+    public void onReadRemoteRssi(@NonNull BluetoothPeripheral peripheral, int rssi,
+                                 @NonNull GattStatus status) {
       super.onReadRemoteRssi(peripheral, rssi, status);
     }
 
     @Override
-    public void onMtuChanged(@NotNull BluetoothPeripheral peripheral, int mtu,
-                             @NotNull GattStatus status) {
+    public void onMtuChanged(@NonNull BluetoothPeripheral peripheral, int mtu,
+                             @NonNull GattStatus status) {
       super.onMtuChanged(peripheral, mtu, status);
       Util.logd(TAG, "MTU changed to " + mtu);
       // Run the device specific connection and mark as ready.
@@ -295,15 +294,15 @@ public class Device {
     }
 
     @Override
-    public void onPhyUpdate(@NotNull BluetoothPeripheral peripheral, @NotNull PhyType txPhy,
-                            @NotNull PhyType rxPhy, @NotNull GattStatus status) {
+    public void onPhyUpdate(@NonNull BluetoothPeripheral peripheral, @NonNull PhyType txPhy,
+                            @NonNull PhyType rxPhy, @NonNull GattStatus status) {
       super.onPhyUpdate(peripheral, txPhy, rxPhy, status);
       Util.logd(TAG, "PHY changed to tx: " + txPhy.name() + ", rx: " + rxPhy.name());
     }
 
     @Override
-    public void onConnectionUpdated(@NotNull BluetoothPeripheral peripheral, int interval,
-                                    int latency, int timeout, @NotNull GattStatus status) {
+    public void onConnectionUpdated(@NonNull BluetoothPeripheral peripheral, int interval,
+                                    int latency, int timeout, @NonNull GattStatus status) {
       super.onConnectionUpdated(peripheral, interval, latency, timeout, status);
       Util.logd(TAG, "Connection updated to interval: " + interval + ", latency: " + latency +
           ", timeout: " + timeout + ", gatt status: " + status);

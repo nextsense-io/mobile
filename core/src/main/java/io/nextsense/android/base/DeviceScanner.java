@@ -1,6 +1,7 @@
 package io.nextsense.android.base;
 
 import android.bluetooth.le.ScanResult;
+import androidx.annotation.NonNull;
 
 import com.welie.blessed.BluetoothCentralManagerCallback;
 import com.welie.blessed.BluetoothPeripheral;
@@ -13,8 +14,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.jetbrains.annotations.NotNull;
 
 import static io.nextsense.android.base.Util.logd;
 
@@ -65,8 +64,8 @@ public class DeviceScanner {
   private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback =
       new BluetoothCentralManagerCallback() {
     @Override
-    public void onDiscoveredPeripheral(@NotNull BluetoothPeripheral peripheral,
-                                       @NotNull ScanResult scanResult) {
+    public void onDiscoveredPeripheral(@NonNull BluetoothPeripheral peripheral,
+                                       @NonNull ScanResult scanResult) {
       for (String prefix : deviceManager.getValidPrefixes()) {
         if (scanResult.getDevice().getName().startsWith(prefix)) {
           if (foundPeripheralAddresses.contains(peripheral.getAddress())) {
@@ -92,7 +91,7 @@ public class DeviceScanner {
      * @param scanFailure the status code for the scanning failure
      */
     @Override
-    public void onScanFailed(@NotNull ScanFailure scanFailure) {
+    public void onScanFailed(@NonNull ScanFailure scanFailure) {
       DeviceScanListener.ScanError deviceScanError = DeviceScanListener.ScanError.UNDEFINED;
       switch (scanFailure) {
         case ALREADY_STARTED:
