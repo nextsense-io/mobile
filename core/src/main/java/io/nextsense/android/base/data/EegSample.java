@@ -3,7 +3,7 @@ package io.nextsense.android.base.data;
 import androidx.annotation.Nullable;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -13,13 +13,13 @@ import java.util.Optional;
  * Either the relative or absolute sampling timestamp need to be provided.
  */
 public class EegSample {
-  private final List<Float> eegSamples;
+  private final Map<Integer, Float> eegSamples;
   private final Instant receptionTimestamp;
   private final Integer relativeSamplingTimestamp;
   private final Instant absoluteSamplingTimestamp;
 
   public static EegSample create(
-      List<Float> eegData, Instant receptionTimestamp, @Nullable Integer relativeSamplingTimestamp,
+      Map<Integer, Float> eegData, Instant receptionTimestamp, @Nullable Integer relativeSamplingTimestamp,
       @Nullable Instant absoluteSamplingTimestamp) {
     if (eegData.isEmpty()) {
       throw new IllegalArgumentException("eegData needs to contain at least 1 element");
@@ -32,15 +32,15 @@ public class EegSample {
         absoluteSamplingTimestamp);
   }
 
-  private EegSample(List<Float> eegData, Instant receptionTimestamp,
-                   Integer relativeSamplingTimestamp, Instant absoluteSamplingTimestamp) {
+  private EegSample(Map<Integer, Float> eegData, Instant receptionTimestamp,
+                    Integer relativeSamplingTimestamp, Instant absoluteSamplingTimestamp) {
     this.eegSamples = eegData;
     this.receptionTimestamp = receptionTimestamp;
     this.relativeSamplingTimestamp = relativeSamplingTimestamp;
     this.absoluteSamplingTimestamp = absoluteSamplingTimestamp;
   }
 
-  public List<Float> getEegSamples() {
+  public Map<Integer, Float> getEegSamples() {
     return eegSamples;
   }
 

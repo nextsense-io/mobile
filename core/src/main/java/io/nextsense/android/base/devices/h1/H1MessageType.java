@@ -11,7 +11,9 @@ public enum H1MessageType {
   BATTERY_STATUS((byte)0x03),
   TIME_SYNCED((byte)0x04),
   SET_TIME((byte)0x05),
-  GET_TIME((byte)0x06);
+  GET_TIME((byte)0x06),
+  STOP_STREAMING((byte)0x80),
+  START_STREAMING((byte)0x81);
 
   public final byte code;
 

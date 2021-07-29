@@ -16,6 +16,6 @@ public class H1FirmwareCommand {
   }
 
   public byte[] getCommand() {
-    return new byte[]{};
+    return new byte[]{getType().getCode()};
   }
 }

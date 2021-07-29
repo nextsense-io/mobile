@@ -11,7 +11,6 @@ import java.util.Optional;
  * Either the relative or absolute sampling timestamp need to be provided.
  */
 public class Acceleration {
-
   private final int x;
   private final int y;
   private final int z;

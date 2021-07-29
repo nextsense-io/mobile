@@ -33,6 +33,7 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
   private static final int TARGET_MTU = 23;
   private static final UUID SERVICE_UUID = UUID.fromString("cb577fc4-7260-41f8-8216-3be734c7820a");
   private static final UUID DATA_UUID = UUID.fromString("59e33cfa-497d-4356-bb46-b87888419cb2");
+  private static final int CHANNEL_COUNT = 1;
 
   private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
   private BluetoothGattCharacteristic dataCharacteristic;
@@ -52,6 +53,11 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
   @Override
   public int getTargetMTU() {
     return TARGET_MTU;
+  }
+
+  @Override
+  public int getChannelCount() {
+    return CHANNEL_COUNT;
   }
 
   @Override
