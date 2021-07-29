@@ -16,6 +16,9 @@ public interface NextSenseDevice {
   // Gets the target Bluetooth MTU for this device.
   int getTargetMTU();
 
+  // Gets the maximum number of channels that the device could have.
+  int getChannelCount();
+
   void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy);
 
   boolean isDataCharacteristic(BluetoothGattCharacteristic characteristic);

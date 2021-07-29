@@ -16,6 +16,7 @@ import com.welie.blessed.WriteType;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import io.nextsense.android.base.DeviceMode;
@@ -40,8 +41,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
 
   private static final String TAG = H1Device.class.getSimpleName();
   private static final int TARGET_MTU = 256;
-  private static final byte START_STREAMING = (byte)0x81;
-  private static final byte STOP_STREAMING = (byte)0x80;
+  private static final int CHANNELS_NUMBER = 8;
 
   private static final UUID SERVICE_UUID = UUID.fromString("59462f12-9543-9999-12c8-58b459a2712d");
   private static final UUID DATA_UUID = UUID.fromString("5c3a659e-897e-45e1-b016-007107c96df6");
@@ -88,6 +88,11 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
+  public int getChannelCount() {
+    return CHANNELS_NUMBER;
+  }
+
+  @Override
   public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral) {
     this.peripheral = peripheral;
     initializeCharacteristics();
@@ -127,7 +132,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           return Futures.immediateFuture(DeviceMode.IDLE);
         }
         deviceModeFuture = SettableFuture.create();
-        writeCharacteristic(writeDataCharacteristic, new byte[]{STOP_STREAMING});
+        writeCharacteristic(writeDataCharacteristic, new StopStreamingCommand().getCommand());
         break;
       default:
         return Futures.immediateFailedFuture(new UnsupportedOperationException(
@@ -170,26 +175,33 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     dataTransRxCharacteristic = null;
   }
 
-  // TODO(eric) Encapsulate this in the SetTimeCommand with a "Communication" interface implemented
-  // by Bluetooth.
+  // TODO(eric): Could encapsulate this in the SetTimeCommand with a "Communication" interface
+  //     implemented by Bluetooth.
   private ListenableFuture<SetTimeResponse> setTime() {
     return executorService.submit(() -> {
-        byte[] command = new SetTimeCommand(Instant.now()).getCommand();
-        blePeripheralCallbackProxy.writeCharacteristic(
-            peripheral, dataTransRxCharacteristic, command).get();
-        byte[] readValue = blePeripheralCallbackProxy.readCharacteristic(
-            peripheral, dataTransTxCharacteristic).get();
-        H1FirmwareResponse response = H1DataParser.parseDataTransRxBytes(readValue);
-        if (response.getType() == H1MessageType.SET_TIME) {
-          SetTimeResponse setTimeResponse = (SetTimeResponse) response;
-          if (setTimeResponse.getTimeSet()) {
-            Util.logd(TAG, "Time set with success");
-          }
-          return setTimeResponse;
+        SetTimeResponse setTimeResponse =
+            (SetTimeResponse) executeCommand(new SetTimeCommand(Instant.now()));
+        if (setTimeResponse.getTimeSet()) {
+          Util.logd(TAG, "Time set with success");
         }
-        return null;
+        return setTimeResponse;
       }
     );
+  }
+
+  private H1FirmwareResponse executeCommand(H1FirmwareCommand command) throws
+      ExecutionException, InterruptedException, FirmwareMessageParsingException {
+    blePeripheralCallbackProxy.writeCharacteristic(
+        peripheral, dataTransRxCharacteristic, command.getCommand()).get();
+    byte[] readValue = blePeripheralCallbackProxy.readCharacteristic(
+        peripheral, dataTransTxCharacteristic).get();
+    H1FirmwareResponse response = H1DataParser.parseDataTransRxBytes(readValue);
+    if (response.getType() == command.getType()) {
+      return response;
+    } else {
+      throw new FirmwareMessageParsingException("Expected response type of " +
+          command.getType().name() + " but got " + response.getType().name());
+    }
   }
 
   private final BluetoothPeripheralCallback bluetoothPeripheralCallback =
@@ -203,9 +215,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           Util.logd(TAG, "Notification updated with success to " +
               peripheral.isNotifying(characteristic));
           if (peripheral.isNotifying(characteristic)) {
-//            blePeripheralCallbackProxy.writeCharacteristic(peripheral, writeDataCharacteristic,
-//                new byte[]{START_STREAMING});
-            writeCharacteristic(writeDataCharacteristic, new byte[]{START_STREAMING});
+            writeCharacteristic(writeDataCharacteristic, new StartStreamingCommand().getCommand());
           } else {
             deviceMode = DeviceMode.IDLE;
             deviceModeFuture.set(DeviceMode.IDLE);
@@ -222,6 +232,11 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
         @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
       Util.logv(TAG, "Data received: " + Arrays.toString(value));
+      try {
+        H1DataParser.parseDataBytes(value, getChannelCount());
+      } catch (FirmwareMessageParsingException e) {
+        e.printStackTrace();
+      }
     }
 
     @Override
@@ -233,9 +248,9 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
       // Check mode change result.
       if (characteristic == writeDataCharacteristic && value.length == 1) {
         DeviceMode targetMode;
-        if (value[0] == START_STREAMING) {
+        if (value[0] == H1MessageType.START_STREAMING.getCode()) {
           targetMode = DeviceMode.STREAMING;
-        } else if (value[0] == STOP_STREAMING) {
+        } else if (value[0] == H1MessageType.STOP_STREAMING.getCode()) {
           targetMode = DeviceMode.IDLE;
         } else {
           // Not an expected value, return.
