@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.nextsense.android.base.Util;
+import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
@@ -73,8 +73,9 @@ public class H1DataParser {
     Map<Integer, Float> eegData = new HashMap<>();
     for (Integer activeChannel : activeChannels) {
       // The sample is encoded in 3 bytes.
-      // TODO(eric): Need to make this signed?
-      int eegValue = valuesBuffer.get() * valuesBuffer.getShort();
+      int eegValue = Util.bytesToInt24(
+          new byte[]{valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get()}, 0,
+          ByteOrder.LITTLE_ENDIAN);
       eegData.put(activeChannel, convertToMicroVolts(eegValue));
     }
     EegSample eegSample = EegSample.create(eegData, receptionTimestamp, samplingTimestamp, null);

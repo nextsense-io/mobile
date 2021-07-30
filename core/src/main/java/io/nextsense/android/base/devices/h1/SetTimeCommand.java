@@ -5,7 +5,7 @@ import java.time.Instant;
 
 import javax.annotation.concurrent.Immutable;
 
-import io.nextsense.android.base.Util;
+import io.nextsense.android.base.utils.Util;
 
 /**
  * Command to set the clock in the H1 device.

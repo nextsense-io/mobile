@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import io.nextsense.android.base.DeviceMode;
-import io.nextsense.android.base.Util;
+import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
 import io.nextsense.android.base.devices.BaseNextSenseDevice;

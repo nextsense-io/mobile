@@ -10,12 +10,14 @@ import com.welie.blessed.ScanFailure;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
+import io.nextsense.android.base.utils.Util;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static io.nextsense.android.base.Util.logd;
+import static io.nextsense.android.base.utils.Util.logd;
 
 /**
  * Scans for devices and returns the list of {@link Device} that can be connected to.

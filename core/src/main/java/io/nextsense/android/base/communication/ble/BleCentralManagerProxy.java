@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import io.nextsense.android.base.Util;
+import io.nextsense.android.base.utils.Util;
 
 /**
  * Proxies access to the BluetoothCentralManager object so that multiple objects can listens to

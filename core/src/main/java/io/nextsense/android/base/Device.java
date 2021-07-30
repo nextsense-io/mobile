@@ -17,6 +17,8 @@ import com.welie.blessed.PhyType;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.devices.NextSenseDevice;
+import io.nextsense.android.base.utils.Util;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;

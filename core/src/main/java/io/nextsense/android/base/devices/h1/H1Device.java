@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import io.nextsense.android.base.DeviceMode;
-import io.nextsense.android.base.Util;
+import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
 import io.nextsense.android.base.devices.BaseNextSenseDevice;
