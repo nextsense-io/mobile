@@ -14,7 +14,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.base.data.Acceleration;
@@ -70,7 +69,7 @@ public class H1DataParser {
         /*y=*/valuesBuffer.getShort(), /*z=*/valuesBuffer.getShort(), receptionTimestamp,
         samplingTimestamp,null);
     EventBus.getDefault().post(acceleration);
-    Map<Integer, Float> eegData = new HashMap<>();
+    HashMap<Integer, Float> eegData = new HashMap<>();
     for (Integer activeChannel : activeChannels) {
       // The sample is encoded in 3 bytes.
       int eegValue = Util.bytesToInt24(
