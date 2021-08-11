@@ -126,13 +126,14 @@ public class Device {
     switch (deviceState) {
       case DISCONNECTED:
         return Futures.immediateFuture(DeviceState.DISCONNECTED);
+      case IN_ERROR:
+        // fallthrough
       case CONNECTING:
         // fallthrough
       case CONNECTED:
         // fallthrough
       case READY:
         // fallthrough
-      case IN_ERROR:
         this.deviceDisconnectionFuture = SettableFuture.create();
         nextSenseDevice.disconnect(btPeripheral);
         btPeripheral.cancelConnection();
@@ -206,7 +207,9 @@ public class Device {
       Log.w(TAG, "Connection with device " + peripheral.getName() + " failed. HCI status: " +
           status.toString());
       deviceState = DeviceState.DISCONNECTED;
-      deviceConnectionFuture.set(deviceState);
+      if (deviceConnectionFuture != null) {
+        deviceConnectionFuture.set(deviceState);
+      }
       notifyDeviceStateChangeListeners(DeviceState.DISCONNECTED);
     }
 
@@ -229,7 +232,9 @@ public class Device {
                                          @NonNull HciStatus status) {
       Util.logd(TAG, "Device " + peripheral.getName() + " disconnected.");
       deviceState = DeviceState.DISCONNECTED;
-      deviceDisconnectionFuture.set(deviceState);
+      if (deviceDisconnectionFuture != null) {
+        deviceDisconnectionFuture.set(deviceState);
+      }
       notifyDeviceStateChangeListeners(DeviceState.DISCONNECTED);
     }
   };
@@ -250,31 +255,34 @@ public class Device {
     public void onNotificationStateUpdate(@NonNull BluetoothPeripheral peripheral,
                                           @NonNull BluetoothGattCharacteristic characteristic,
                                           @NonNull GattStatus status) {
+      super.onNotificationStateUpdate(peripheral, characteristic, status);
     }
 
     @Override
-    public void onCharacteristicUpdate(@NonNull BluetoothPeripheral peripheral, byte[] value,
+    public void onCharacteristicUpdate(@NonNull BluetoothPeripheral peripheral,
+                                       @NonNull byte[] value,
                                        @NonNull BluetoothGattCharacteristic characteristic,
                                        @NonNull GattStatus status) {
       super.onCharacteristicUpdate(peripheral, value, characteristic, status);
     }
 
     @Override
-    public void onCharacteristicWrite(@NonNull BluetoothPeripheral peripheral, byte[] value,
+    public void onCharacteristicWrite(@NonNull BluetoothPeripheral peripheral,
+                                      @NonNull byte[] value,
                                       @NonNull BluetoothGattCharacteristic characteristic,
                                       @NonNull GattStatus status) {
       super.onCharacteristicWrite(peripheral, value, characteristic, status);
     }
 
     @Override
-    public void onDescriptorRead(@NonNull BluetoothPeripheral peripheral, byte[] value,
+    public void onDescriptorRead(@NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
                                  @NonNull BluetoothGattDescriptor descriptor,
                                  @NonNull GattStatus status) {
       super.onDescriptorRead(peripheral, value, descriptor, status);
     }
 
     @Override
-    public void onDescriptorWrite(@NonNull BluetoothPeripheral peripheral, byte[] value,
+    public void onDescriptorWrite(@NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
                                   @NonNull BluetoothGattDescriptor descriptor,
                                   @NonNull GattStatus status) {
       super.onDescriptorWrite(peripheral, value, descriptor, status);
@@ -312,15 +320,14 @@ public class Device {
   };
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Device device = (Device) o;
-    return nextSenseDevice.equals(device.nextSenseDevice);
+  public boolean equals(Object other) {
+    if (this == other) return true;
+    if (other == null || getClass() != other.getClass()) return false;
+    return getAddress().equals(((Device) other).getAddress());
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(nextSenseDevice);
+    return Objects.hash(getAddress());
   }
 }

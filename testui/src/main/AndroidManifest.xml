@@ -5,19 +5,24 @@
 
     <application
         android:allowBackup="true"
+        android:fullBackupOnly="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BaseLibraryTestUI"
-        tools:replace="android:theme">
-        <activity android:name=".MainActivity">
+        tools:replace="android:theme, android:label">
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name="io.nextsense.android.service.ForegroundService"
+            android:enabled="true"
+            android:exported="false"/>
     </application>
 
 </manifest>

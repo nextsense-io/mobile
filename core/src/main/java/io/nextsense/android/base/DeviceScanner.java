@@ -138,6 +138,7 @@ public class DeviceScanner {
    */
   public void findDevices(DeviceScanListener deviceScanListener) {
     this.deviceScanListener = deviceScanListener;
+    this.devices.clear();
     Util.logd(TAG, "Finding devices...");
     centralManagerProxy.getCentralManager()
         .scanForPeripheralsWithNames(deviceManager.getValidPrefixes().toArray(new String[0]));
