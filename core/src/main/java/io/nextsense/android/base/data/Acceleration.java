@@ -7,6 +7,7 @@ import java.time.Instant;
 import io.nextsense.android.base.db.objectbox.Converters;
 import io.objectbox.annotation.Convert;
 import io.objectbox.annotation.Entity;
+import io.objectbox.relation.ToOne;
 
 /**
  * IMU Acceleration components.
@@ -14,7 +15,9 @@ import io.objectbox.annotation.Entity;
  * Either the relative or absolute sampling timestamp need to be provided.
  */
 @Entity
-public class Acceleration extends BaseSample {
+public class Acceleration extends BaseRecord {
+  public ToOne<LocalSession> localSession;
+
   private final int x;
   private final int y;
   private final int z;
@@ -26,21 +29,37 @@ public class Acceleration extends BaseSample {
   @Nullable
   private final Instant absoluteSamplingTimestamp;
 
+  private Acceleration(long localSessionId, int x, int y, int z, Instant receptionTimestamp,
+                       @Nullable Integer relativeSamplingTimestamp,
+                       @Nullable Instant absoluteSamplingTimestamp) {
+    this.localSession = new ToOne<>(this, Acceleration_.localSession);
+    this.localSession.setTargetId(localSessionId);
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.receptionTimestamp = receptionTimestamp;
+    this.relativeSamplingTimestamp = relativeSamplingTimestamp;
+    this.absoluteSamplingTimestamp = absoluteSamplingTimestamp;
+  }
+
   public static Acceleration create(
-      int x, int y, int z, Instant receptionTimestamp, @Nullable Integer relativeSamplingTimestamp,
-      @Nullable Instant absoluteSamplingTimestamp) {
+      long localSessionId, int x, int y, int z, Instant receptionTimestamp,
+      @Nullable Integer relativeSamplingTimestamp, @Nullable Instant absoluteSamplingTimestamp) {
     if (relativeSamplingTimestamp == null && absoluteSamplingTimestamp == null) {
       throw new IllegalArgumentException(
           "Either the relative or the absolute timestamp need to be present");
     }
-    return new Acceleration(x, y, z, receptionTimestamp, relativeSamplingTimestamp,
+    return new Acceleration(localSessionId, x, y, z, receptionTimestamp, relativeSamplingTimestamp,
         absoluteSamplingTimestamp);
   }
 
   // Needs to be public for ObjectBox performance.
-  private Acceleration(int x, int y, int z, Instant receptionTimestamp,
+  public Acceleration(long id, long localSessionId, int x, int y, int z, Instant receptionTimestamp,
                       @Nullable Integer relativeSamplingTimestamp,
-                       @Nullable Instant absoluteSamplingTimestamp) {
+                      @Nullable Instant absoluteSamplingTimestamp) {
+    super(id);
+    this.localSession = new ToOne<>(this, Acceleration_.localSession);
+    this.localSession.setTargetId(localSessionId);
     this.x = x;
     this.y = y;
     this.z = z;
@@ -49,17 +68,8 @@ public class Acceleration extends BaseSample {
     this.absoluteSamplingTimestamp = absoluteSamplingTimestamp;
   }
 
-  // Needs to be public for ObjectBox performance.
-  public Acceleration(long id, int sessionId, int x, int y, int z, Instant receptionTimestamp,
-                       @Nullable Integer relativeSamplingTimestamp,
-                      @Nullable Instant absoluteSamplingTimestamp) {
-    super(id, sessionId);
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.receptionTimestamp = receptionTimestamp;
-    this.relativeSamplingTimestamp = relativeSamplingTimestamp;
-    this.absoluteSamplingTimestamp = absoluteSamplingTimestamp;
+  public LocalSession getLocalSession() {
+    return localSession.getTarget();
   }
 
   public int getX() {

@@ -9,14 +9,20 @@ import com.welie.blessed.BluetoothPeripheral;
 import java.util.UUID;
 
 import io.nextsense.android.base.DeviceMode;
+import io.nextsense.android.base.data.LocalSessionManager;
 
 /**
  * Created by Eric Bouchard on 12/9/2020.
  */
 public abstract class BaseNextSenseDevice implements NextSenseDevice {
 
+  protected LocalSessionManager localSessionManager;
   protected DeviceMode deviceMode = DeviceMode.IDLE;
   protected BluetoothPeripheral peripheral;
+
+  public LocalSessionManager getLocalSessionManager() {
+    return localSessionManager;
+  }
 
   @Override
   public DeviceMode getDeviceMode() {
@@ -30,7 +36,6 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
 
   @Override
   public void disconnect(BluetoothPeripheral peripheral) {
-
   }
 
   protected void checkCharacteristic(BluetoothGattCharacteristic characteristic, UUID serviceUuid,

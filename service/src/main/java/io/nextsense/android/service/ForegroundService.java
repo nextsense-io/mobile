@@ -18,6 +18,10 @@ import androidx.core.app.NotificationCompat;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
+import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.data.Uploader;
+import io.nextsense.android.base.db.DatabaseSink;
+import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.utils.Util;
 
@@ -46,6 +50,10 @@ public class ForegroundService extends Service {
   private BleCentralManagerProxy centralManagerProxy;
   private DeviceScanner deviceScanner;
   private DeviceManager deviceManager;
+  private ObjectBoxDatabase objectBoxDatabase;
+  private DatabaseSink databaseSink;
+  private LocalSessionManager localSessionManager;
+  private Uploader uploader;
   private boolean initialized = false;
 
   @Override
@@ -70,7 +78,7 @@ public class ForegroundService extends Service {
     startForeground(NOTIFICATION_ID, notification);
     initialize();
     Util.logd(TAG, "Service initialized.");
-    return START_STICKY;
+    return START_NOT_STICKY;
   }
 
   @Override
@@ -90,13 +98,23 @@ public class ForegroundService extends Service {
   }
 
   private void initialize() {
+    objectBoxDatabase = new ObjectBoxDatabase();
+    objectBoxDatabase.init(this);
+    localSessionManager = LocalSessionManager.create(objectBoxDatabase);
     centralManagerProxy = new BleCentralManagerProxy(getApplicationContext());
-    deviceScanner = new DeviceScanner(new NextSenseDeviceManager(), centralManagerProxy);
+    deviceScanner = new DeviceScanner(NextSenseDeviceManager.create(localSessionManager),
+        centralManagerProxy);
     deviceManager = new DeviceManager(deviceScanner);
+    databaseSink = DatabaseSink.create(objectBoxDatabase);
+    databaseSink.startListening();
+    // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
+    uploader = Uploader.create(objectBoxDatabase, /*uploadChunk=*/500);
+    uploader.start();
     initialized = true;
   }
 
   private void destroy() {
+    Log.i(TAG, "destroy started.");
     if (deviceScanner != null) {
       deviceScanner.close();
     }
@@ -106,7 +124,13 @@ public class ForegroundService extends Service {
     if (centralManagerProxy != null) {
       centralManagerProxy.close();
     }
+    databaseSink.stopListening();
+    if (uploader != null) {
+      uploader.stop();
+    }
+    objectBoxDatabase.stop();
     initialized = false;
+    Log.i(TAG, "destroy finished.");
   }
 
   private void createNotificationChannel() {

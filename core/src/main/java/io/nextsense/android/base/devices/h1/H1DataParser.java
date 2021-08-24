@@ -14,10 +14,14 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
+import io.nextsense.android.base.data.EegSample;
+import io.nextsense.android.base.data.LocalSession;
+import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.base.data.Acceleration;
-import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
 
 /**
@@ -35,9 +39,17 @@ public class H1DataParser {
   private static final int DATA_CHANNEL_SIZE_BYTES = 3;
   private static final float V_REF = 4.5f;
 
-  private H1DataParser() {}
+  private final LocalSessionManager localSessionManager;
 
-  public static void parseDataBytes(byte[] values, int channelsCount) throws
+  private H1DataParser(LocalSessionManager localSessionManager) {
+    this.localSessionManager = localSessionManager;
+  }
+
+  public static H1DataParser create(LocalSessionManager localSessionManager) {
+    return new H1DataParser(localSessionManager);
+  }
+
+  public void parseDataBytes(byte[] values, int channelsCount) throws
       FirmwareMessageParsingException {
     Instant receptionTimestamp = Instant.now();
     if (values.length < 1) {
@@ -62,10 +74,16 @@ public class H1DataParser {
     return (float)(data * ((V_REF * 1000000) / (24 * (pow(2, 23) - 1))));
   }
 
-  private static void parsePacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,
-                                  Instant receptionTimestamp) {
+  private void parsePacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,
+                                  Instant receptionTimestamp) throws NoSuchElementException {
     int samplingTimestamp = valuesBuffer.getInt();
-    Acceleration acceleration = Acceleration.create(/*x=*/valuesBuffer.getShort(),
+    Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
+    if (!localSessionOptional.isPresent()) {
+      Log.w(TAG, "Received data without an active session, cannot record it.");
+      return;
+    }
+    LocalSession localSession = localSessionOptional.get();
+    Acceleration acceleration = Acceleration.create(localSession.id, /*x=*/valuesBuffer.getShort(),
         /*y=*/valuesBuffer.getShort(), /*z=*/valuesBuffer.getShort(), receptionTimestamp,
         samplingTimestamp,null);
     EventBus.getDefault().post(acceleration);
@@ -77,7 +95,8 @@ public class H1DataParser {
           ByteOrder.LITTLE_ENDIAN);
       eegData.put(activeChannel, convertToMicroVolts(eegValue));
     }
-    EegSample eegSample = EegSample.create(eegData, receptionTimestamp, samplingTimestamp, null);
+    EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
+        samplingTimestamp, null);
     EventBus.getDefault().post(eegSample);
   }
 

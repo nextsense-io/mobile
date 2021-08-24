@@ -7,11 +7,15 @@ import com.welie.blessed.BluetoothPeripheral;
 
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
+import io.nextsense.android.base.data.LocalSessionManager;
 
 /**
  * Defines the interface of NextSense devices.
  */
 public interface NextSenseDevice {
+
+  // Interface to set the {@link LocalSessionManager} after construction.
+  void setLocalSessionManager(LocalSessionManager localSessionManager);
 
   // Gets the target Bluetooth MTU for this device.
   int getTargetMTU();

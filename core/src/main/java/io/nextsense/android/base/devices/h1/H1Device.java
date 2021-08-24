@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import io.nextsense.android.base.DeviceMode;
+import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
@@ -60,6 +61,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   private final ListeningExecutorService executorService =
       MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 
+  private H1DataParser h1DataParser;
   private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
   private BluetoothGattCharacteristic dataCharacteristic;
   private BluetoothGattCharacteristic voltageCharacteristic;
@@ -70,6 +72,19 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   private BluetoothGattCharacteristic dataTransTxCharacteristic;
   private BluetoothGattCharacteristic dataTransRxCharacteristic;
   private SettableFuture<DeviceMode> deviceModeFuture;
+
+  // Needed for reflexion when created by Bluetooth device name.
+  public H1Device() {}
+
+  public H1Device(LocalSessionManager localSessionManager) {
+    setLocalSessionManager(localSessionManager);
+  }
+
+  @Override
+  public void setLocalSessionManager(LocalSessionManager localSessionManager) {
+    super.localSessionManager = localSessionManager;
+    h1DataParser = H1DataParser.create(getLocalSessionManager());
+  }
 
   @Override
   public void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy) {
@@ -125,6 +140,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
               new IllegalStateException("No characteristic to stream on."));
         }
         deviceModeFuture = SettableFuture.create();
+        localSessionManager.startLocalSession(/*cloudSessionId=*/null, /*uploadNeeded=*/true);
         peripheral.setNotify(dataCharacteristic, /*enable=*/true);
         break;
       case IDLE:
@@ -217,6 +233,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           if (peripheral.isNotifying(characteristic)) {
             writeCharacteristic(writeDataCharacteristic, new StartStreamingCommand().getCommand());
           } else {
+            localSessionManager.stopLocalSession();
             deviceMode = DeviceMode.IDLE;
             deviceModeFuture.set(DeviceMode.IDLE);
           }
@@ -231,9 +248,8 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     public void onCharacteristicUpdate(
         @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-      Util.logv(TAG, "Data received: " + Arrays.toString(value));
       try {
-        H1DataParser.parseDataBytes(value, getChannelCount());
+        h1DataParser.parseDataBytes(value, getChannelCount());
       } catch (FirmwareMessageParsingException e) {
         e.printStackTrace();
       }

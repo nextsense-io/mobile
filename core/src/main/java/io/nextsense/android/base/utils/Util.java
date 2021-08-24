@@ -30,7 +30,7 @@ public class Util {
     return byteOrder == ByteOrder.LITTLE_ENDIAN?
         ((buffer[byteOffset] << 16) // Java handles the sign-bit
             | ((buffer[byteOffset + 1] & 0xFF) << 8) // Use unsigned value, ignore the sign-bit
-            | ((buffer[byteOffset + 2] & 0xFF))):
+            | (buffer[byteOffset + 2] & 0xFF)):
         ((buffer[byteOffset + 2] << 16) // Java handles the sign-bit
             | ((buffer[byteOffset + 1] & 0xFF) << 8) // Use unsigned value, ignore the sign-bit
             | (buffer[byteOffset] & 0xFF));

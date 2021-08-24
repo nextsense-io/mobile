@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.h1.H1Device;
 import io.nextsense.android.base.devices.h15.H15Device;
 
@@ -19,11 +20,17 @@ public class NextSenseDeviceManager {
   // Contains the mapping of devices bluetooth name prefixes to the classes that should be
   // instantiated to
   private final Map<String, Class<? extends NextSenseDevice>> devicesMapping;
+  private final LocalSessionManager localSessionManager;
 
-  public NextSenseDeviceManager() {
+  private NextSenseDeviceManager(LocalSessionManager localSessionManager) {
+    this.localSessionManager = localSessionManager;
     devicesMapping = new HashMap<>();
     devicesMapping.put(H1Device.BLUETOOTH_PREFIX, H1Device.class);
     devicesMapping.put(H15Device.BLUETOOTH_PREFIX, H15Device.class);
+  }
+
+  public static NextSenseDeviceManager create(LocalSessionManager localSessionManager) {
+    return new NextSenseDeviceManager(localSessionManager);
   }
 
   public Set<String> getValidPrefixes() {
@@ -43,7 +50,9 @@ public class NextSenseDeviceManager {
       return null;
     }
     try {
-      return deviceClass.newInstance();
+      NextSenseDevice nextSenseDevice = deviceClass.newInstance();
+      nextSenseDevice.setLocalSessionManager(localSessionManager);
+      return nextSenseDevice;
     } catch (IllegalAccessException | InstantiationException e) {
       Log.e(TAG, "Could not instantiate " + deviceClass.getName());
       return null;

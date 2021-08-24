@@ -193,7 +193,9 @@ public class MainActivity extends AppCompatActivity {
   public void onBackPressed() {
     // Should add a confirmation prompt here in a non-test app.
     // Disconnect is done on the main thread handler so can't do it synchronously, it would hang.
-    lastDevice.disconnect();
+    if (lastDevice != null) {
+      lastDevice.disconnect();
+    }
     stopService(foregroundServiceIntent);
     super.onBackPressed();
   }
@@ -238,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onServiceDisconnected(ComponentName arg0) {
+    public void onServiceDisconnected(ComponentName componentName) {
       nextSenseServiceBound = false;
     }
   };

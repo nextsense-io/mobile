@@ -14,6 +14,8 @@ import java.util.Arrays;
 import java.util.UUID;
 
 import io.nextsense.android.base.DeviceMode;
+import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.devices.h1.H1DataParser;
 import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
@@ -38,6 +40,11 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
   private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
   private BluetoothGattCharacteristic dataCharacteristic;
   private SettableFuture<DeviceMode> deviceModeFuture;
+
+  @Override
+  public void setLocalSessionManager(LocalSessionManager localSessionManager) {
+    super.localSessionManager = localSessionManager;
+  }
 
   @Override
   public void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy) {
@@ -130,7 +137,6 @@ public class H15Device extends BaseNextSenseDevice implements NextSenseDevice {
     public void onCharacteristicUpdate(
         @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-      Util.logv(TAG, "Data received: " + Arrays.toString(value));
     }
   };
 }
