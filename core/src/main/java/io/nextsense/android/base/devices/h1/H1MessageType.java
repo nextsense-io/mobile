@@ -15,7 +15,7 @@ public enum H1MessageType {
   STOP_STREAMING((byte)0x80),
   START_STREAMING((byte)0x81);
 
-  public final byte code;
+  private final byte code;
 
   H1MessageType(byte code) {
     this.code = code;

@@ -5,6 +5,8 @@ package io.nextsense.android.base.devices.h1;
  */
 public class H1FirmwareCommand {
 
+  public static final int COMMAND_SIZE = 1;
+
   private final H1MessageType type;
 
   public H1FirmwareCommand(H1MessageType type) {

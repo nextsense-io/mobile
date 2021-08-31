@@ -75,7 +75,8 @@ public class BlePeripheralCallbackProxy {
     }
     SettableFuture<byte[]> writeFuture = SettableFuture.create();
     writeFutures.put(peripheral.getAddress(), writeFuture);
-    boolean writeDone = peripheral.writeCharacteristic(characteristic, value, WriteType.WITH_RESPONSE);
+    boolean writeDone = peripheral.writeCharacteristic(
+        characteristic, value, WriteType.WITHOUT_RESPONSE);
     if (!writeDone) {
       return Futures.immediateFailedFuture(new BluetoothException(
           "Failed to write to characteristic " + characteristic.getUuid()));
