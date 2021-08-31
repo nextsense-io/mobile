@@ -56,6 +56,10 @@ public class ObjectBoxDatabase implements Database {
     boxStore.close();
   }
 
+  public void runInTx(Runnable runnable) {
+    boxStore.runInTx(runnable);
+  }
+
   public <T extends BaseRecord> DataSubscription subscribe(
       Class<T> type, DataObserver<Class<T>> dataObserver, Scheduler scheduler) {
     return boxStore.subscribe(type).on(scheduler).observer(dataObserver);

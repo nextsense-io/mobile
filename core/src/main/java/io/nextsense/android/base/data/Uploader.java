@@ -72,19 +72,25 @@ public class Uploader {
     if (activeSessionSubscription != null) {
       activeSessionSubscription.cancel();
     }
-    subscriptionsHandlerThread.quit();
-    subscriptionsHandlerThread = null;
+    if (subscriptionsHandlerThread != null) {
+      subscriptionsHandlerThread.quit();
+      subscriptionsHandlerThread = null;
+    }
     synchronized (syncToken) {
       syncToken.notifyAll();
     }
-    try {
-      uploadTask.get();
-    } catch (ExecutionException e) {
-      Log.e(TAG, "Error when stopping. " + e.getMessage());
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+    if (uploadTask != null) {
+      try {
+        uploadTask.get();
+      } catch (ExecutionException e) {
+        Log.e(TAG, "Error when stopping. " + e.getMessage());
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
     }
-    executor.shutdown();
+    if (executor != null) {
+      executor.shutdown();
+    }
     Log.d(TAG, "stopping finished.");
   }
 
@@ -122,17 +128,20 @@ public class Uploader {
           // TODO(eric): Run actual upload here.
           // Update the local database with the uploaded records size and mark the local session as
           // uploaded if done.
-          localSession.setEegSamplesUploaded(
-              localSession.getEegSamplesUploaded() + eegSamplesToUpload.size());
-          Util.logv(TAG, "Uploaded " + localSession.getEegSamplesUploaded() + " from session " +
-              localSession.id);
-          if (localSession.getStatus() == LocalSession.Status.FINISHED &&
-              localSession.getEegSamplesUploaded() ==
-                  objectBoxDatabase.getEegSamplesCount(localSession.id)) {
-            Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
-            localSession.setStatus(LocalSession.Status.UPLOADED);
-          }
-          objectBoxDatabase.putLocalSession(localSession);
+          final int eegSamplesToUploadSize = eegSamplesToUpload.size();
+          objectBoxDatabase.runInTx(() -> {
+            localSession.setEegSamplesUploaded(
+                localSession.getEegSamplesUploaded() + eegSamplesToUploadSize);
+            Util.logv(TAG, "Uploaded " + localSession.getEegSamplesUploaded() +
+                " from session " + localSession.id);
+            if (localSession.getStatus() == LocalSession.Status.FINISHED &&
+                localSession.getEegSamplesUploaded() ==
+                    objectBoxDatabase.getEegSamplesCount(localSession.id)) {
+              Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
+              localSession.setStatus(LocalSession.Status.UPLOADED);
+            }
+            objectBoxDatabase.putLocalSession(localSession);
+          });
           eegSamplesToUpload = getSamplesToUpload(localSession);
         }
       }
@@ -160,7 +169,7 @@ public class Uploader {
       }
 
       synchronized (syncToken) {
-        while (!recordsToUpload.get()) {
+        while (running.get() && !recordsToUpload.get()) {
           try {
             Util.logd(TAG, "Starting to wait");
             syncToken.wait();
