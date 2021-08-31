@@ -31,12 +31,12 @@ public class DatabaseSink {
     EventBus.getDefault().unregister(this);
   }
 
-  @Subscribe(threadMode = ThreadMode.ASYNC)
+  @Subscribe(threadMode = ThreadMode.BACKGROUND)
   public void onEegSample(EegSample eegSample) {
     boxDatabase.putEegSample(eegSample);
   }
 
-  @Subscribe(threadMode = ThreadMode.ASYNC)
+  @Subscribe(threadMode = ThreadMode.BACKGROUND)
   public void onAcceleration(Acceleration acceleration) {
     boxDatabase.putAcceleration(acceleration);
   }
