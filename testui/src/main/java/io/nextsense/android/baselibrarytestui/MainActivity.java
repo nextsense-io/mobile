@@ -28,6 +28,7 @@ import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.DeviceState;
+import io.nextsense.android.base.SampleRateCalculator;
 import io.nextsense.android.service.ForegroundService;
 
 /**
@@ -45,7 +46,8 @@ public class MainActivity extends AppCompatActivity {
   private Button disconnectButton;
   private Button startStreamingButton;
   private Button stopStreamingButton;
-  private TextView resultsView;
+  private TextView resultsTextView;
+  private TextView sampleRateTextView;
   private DeviceManager deviceManager;
   private Device lastDevice;
   private ForegroundService nextSenseService;
@@ -68,10 +70,11 @@ public class MainActivity extends AppCompatActivity {
     disconnectButton = findViewById(R.id.disconnect_button);
     startStreamingButton = findViewById(R.id.start_streaming_button);
     stopStreamingButton = findViewById(R.id.stop_streaming_button);
-    resultsView = findViewById(R.id.results_view);
+    resultsTextView = findViewById(R.id.results_view);
+    sampleRateTextView = findViewById(R.id.sample_rate_textview);
 
     startScanningButton.setOnClickListener(view -> {
-      resultsView.setText("");
+      resultsTextView.setText("");
       if (!nextSenseServiceBound) {
         return;
       }
@@ -185,8 +188,11 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onStop() {
     super.onStop();
-    unbindService(nextSenseConnection);
-    nextSenseServiceBound = false;
+    if (nextSenseServiceBound) {
+      nextSenseService.getSampleRateCalculator().removeRateUpdateListener(rateUpdateListener);
+      unbindService(nextSenseConnection);
+      nextSenseServiceBound = false;
+    }
   }
 
   @Override
@@ -236,6 +242,7 @@ public class MainActivity extends AppCompatActivity {
       ForegroundService.LocalBinder binder = (ForegroundService.LocalBinder) service;
       nextSenseService = binder.getService();
       deviceManager = nextSenseService.getDeviceManager();
+      nextSenseService.getSampleRateCalculator().addRateUpdateListener(rateUpdateListener);
       nextSenseServiceBound = true;
     }
 
@@ -253,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
         lastDevice.removeOnDeviceStateChangeListener(stateChangeListener);
       }
       lastDevice = device;
-      runOnUiThread(() -> resultsView.setText(resultsView.getText() + " \n" + device.getName()));
+      runOnUiThread(() -> resultsTextView.setText(resultsTextView.getText() + " \n" + device.getName()));
     }
 
     @Override
@@ -261,4 +268,9 @@ public class MainActivity extends AppCompatActivity {
       Log.w("MainActivity", scanError.toString());
     }
   };
+
+  private final SampleRateCalculator.RateUpdateListener rateUpdateListener =
+      (formattedSampleRate, skippedSamples) ->
+        runOnUiThread(() -> sampleRateTextView.setText("Sample Rate " + formattedSampleRate +
+            ", Skipped samples: " + skippedSamples));
 }

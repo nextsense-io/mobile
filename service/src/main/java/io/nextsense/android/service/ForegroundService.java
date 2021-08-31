@@ -17,6 +17,7 @@ import androidx.core.app.NotificationCompat;
 
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
+import io.nextsense.android.base.SampleRateCalculator;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Uploader;
@@ -54,6 +55,7 @@ public class ForegroundService extends Service {
   private DatabaseSink databaseSink;
   private LocalSessionManager localSessionManager;
   private Uploader uploader;
+  private SampleRateCalculator sampleRateCalculator;
   private boolean initialized = false;
 
   @Override
@@ -97,6 +99,10 @@ public class ForegroundService extends Service {
     return deviceManager;
   }
 
+  public SampleRateCalculator getSampleRateCalculator() {
+    return sampleRateCalculator;
+  }
+
   private void initialize() {
     objectBoxDatabase = new ObjectBoxDatabase();
     objectBoxDatabase.init(this);
@@ -107,6 +113,8 @@ public class ForegroundService extends Service {
     deviceManager = new DeviceManager(deviceScanner);
     databaseSink = DatabaseSink.create(objectBoxDatabase);
     databaseSink.startListening();
+    sampleRateCalculator = SampleRateCalculator.create(500);
+    sampleRateCalculator.startListening();
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
     uploader = Uploader.create(objectBoxDatabase, /*uploadChunk=*/500);
     uploader.start();
@@ -115,6 +123,7 @@ public class ForegroundService extends Service {
 
   private void destroy() {
     Log.i(TAG, "destroy started.");
+    sampleRateCalculator.stopListening();
     if (deviceScanner != null) {
       deviceScanner.close();
     }
