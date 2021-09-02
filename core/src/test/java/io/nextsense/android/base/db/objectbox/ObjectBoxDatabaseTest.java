@@ -23,7 +23,7 @@ public class ObjectBoxDatabaseTest {
 
   private final Context context = ApplicationProvider.getApplicationContext();
   private static final HashMap<Integer, Float> SAMPLE_1_VALUES =
-      new HashMap<Integer, Float>(){{put(1, 10.0f); put(2, 15.0f);}};
+      new HashMap<>(){{put(1, 10.0f); put(2, 15.0f);}};
   private static final Instant RECEPTION_1_VALUE = Instant.ofEpochMilli(1627633663376L);
   private static final Integer RELATIVE_1_VALUE = 1;
   private static final Integer RELATIVE_2_VALUE = 2;
@@ -63,7 +63,7 @@ public class ObjectBoxDatabaseTest {
     List<EegSample> results = objectBoxDatabase.getEegSamples(SESSION_1_VALUE, 0, 1);
     assertEquals(1, results.size());
     EegSample sample = results.get(0);
-    assertEquals(SESSION_1_VALUE, sample.getSessionId());
+    assertEquals(SESSION_1_VALUE, sample.localSession.getTargetId());
     assertEquals(SAMPLE_1_VALUES, sample.getEegSamples());
     assertEquals(RECEPTION_1_VALUE, sample.getReceptionTimestamp());
     assertEquals(RELATIVE_1_VALUE, sample.getRelativeSamplingTimestamp());
@@ -78,7 +78,7 @@ public class ObjectBoxDatabaseTest {
     List<EegSample> results = objectBoxDatabase.getEegSamples(SESSION_1_VALUE, 0, 1);
     assertEquals(1, results.size());
     EegSample sample = results.get(0);
-    assertEquals(SESSION_1_VALUE, sample.getSessionId());
+    assertEquals(SESSION_1_VALUE, sample.localSession.getTargetId());
     assertEquals(SAMPLE_1_VALUES, sample.getEegSamples());
     assertEquals(RECEPTION_1_VALUE, sample.getReceptionTimestamp());
     assertNull(sample.getRelativeSamplingTimestamp());

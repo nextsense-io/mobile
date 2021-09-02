@@ -2,14 +2,18 @@ package io.nextsense.android.base.devices;
 
 import org.junit.Test;
 
+import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.devices.h1.H1Device;
 import io.nextsense.android.base.devices.h15.H15Device;
+import io.nextsense.android.base.devices.xenon.XenonDevice;
 
 import static org.junit.Assert.*;
 
 public class NextSenseDeviceManagerTest {
 
-  private final NextSenseDeviceManager deviceManager = new NextSenseDeviceManager();
+  private final NextSenseDeviceManager deviceManager =
+      NextSenseDeviceManager.create(LocalSessionManager.create(new ObjectBoxDatabase()));
 
   @Test
   public void getValidPrefixes_notEmpty() {
@@ -30,7 +34,14 @@ public class NextSenseDeviceManagerTest {
 
   @Test
   public void getDeviceForName_h15name_returnsH15Device() {
-    assertEquals(H15Device.class, deviceManager.getDeviceForName(H15Device.BLUETOOTH_PREFIX).getClass());
+    assertEquals(H15Device.class,
+        deviceManager.getDeviceForName(H15Device.BLUETOOTH_PREFIX).getClass());
+  }
+
+  @Test
+  public void getDeviceForName_xenonname_returnsXenonDevice() {
+    assertEquals(XenonDevice.class,
+        deviceManager.getDeviceForName(XenonDevice.BLUETOOTH_PREFIX).getClass());
   }
 
   @Test
