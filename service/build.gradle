@@ -52,11 +52,13 @@ project.afterEvaluate {
                 from components.release
                 groupId = 'com.github.nextsense-io.android_base_library.service'
                 artifactId = 'service'
+                version = '0.1.0'
             }
             debug(MavenPublication) {
                 from components.debug
                 groupId = 'com.github.nextsense-io.android_base_library.service'
-                artifactId = 'service'
+                artifactId = 'service-debug'
+                version = '0.1.0'
             }
         }
     }
