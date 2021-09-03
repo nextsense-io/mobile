@@ -50,11 +50,13 @@ project.afterEvaluate {
         publications {
             release(MavenPublication) {
                 from components.release
-                groupId = 'com.github.nextsense-io.android_base_library'
+                groupId = 'com.github.nextsense-io.android_base_library.service'
+                artifactId = 'service'
             }
             debug(MavenPublication) {
                 from components.debug
-                groupId = 'com.github.nextsense-io.android_base_library'
+                groupId = 'com.github.nextsense-io.android_base_library.service'
+                artifactId = 'service'
             }
         }
     }
