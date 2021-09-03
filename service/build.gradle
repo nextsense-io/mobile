@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-group 'com.github.nextsense-io.service'
+group 'com.github.nextsense-io.android_base_library'
 
 android {
     compileSdk 30

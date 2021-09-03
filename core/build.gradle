@@ -4,7 +4,7 @@ apply plugin: 'io.objectbox'
 apply plugin: 'maven-publish'
 apply plugin: 'org.sonarqube'
 
-group 'com.github.nextsense-io.core'
+group 'com.github.nextsense-io.android_base_library'
 
 android {
     compileSdkVersion 30
