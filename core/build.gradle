@@ -2,8 +2,9 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.google.protobuf'
 apply plugin: 'io.objectbox'
 apply plugin: 'maven-publish'
-group 'com.github.nextsense-io'
 apply plugin: 'org.sonarqube'
+
+group 'com.github.nextsense-io.core'
 
 android {
     compileSdkVersion 30
