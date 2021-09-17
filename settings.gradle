@@ -2,3 +2,8 @@ rootProject.name = "nextsense_mobile"
 include ':core'
 include ':service'
 include ':testui'
+setBinding(new Binding([gradle: this]))
+evaluate(new File(
+        settingsDir.getAbsoluteFile(),
+        'nextsense_trial_ui/.android/include_flutter.groovy'
+))

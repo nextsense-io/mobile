@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import io.flutter.embedding.android.FlutterActivity;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceMode;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
   private Button disconnectButton;
   private Button startStreamingButton;
   private Button stopStreamingButton;
+  private Button startFlutterButton;
   private TextView resultsTextView;
   private TextView sampleRateTextView;
   private DeviceManager deviceManager;
@@ -69,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
     stopStreamingButton = findViewById(R.id.stop_streaming_button);
     resultsTextView = findViewById(R.id.results_view);
     sampleRateTextView = findViewById(R.id.sample_rate_textview);
+    startFlutterButton = findViewById(R.id.start_flutter_button);
 
     startScanningButton.setOnClickListener(view -> {
       resultsTextView.setText("");
@@ -167,6 +170,10 @@ public class MainActivity extends AppCompatActivity {
         }
       }, Executors.newSingleThreadExecutor());
     });
+
+    startFlutterButton.setOnClickListener(
+        view -> startActivity(FlutterActivity.createDefaultIntent(this))
+    );
 
     checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_REQUEST_CODE);
 

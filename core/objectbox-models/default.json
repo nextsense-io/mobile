@@ -1,0 +1,232 @@
+{
+  "_note1": "KEEP THIS FILE! Check it into a version control system (VCS) like git.",
+  "_note2": "ObjectBox manages crucial IDs for your object model. See docs for details.",
+  "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
+  "entities": [
+    {
+      "id": "1:3658994930751552543",
+      "lastPropertyId": "8:4163970389268528287",
+      "name": "Acceleration",
+      "properties": [
+        {
+          "id": "1:6652613090521664119",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6270588610746783010",
+          "name": "x",
+          "type": 5,
+          "flags": 4
+        },
+        {
+          "id": "3:7390502527269194648",
+          "name": "y",
+          "type": 5,
+          "flags": 4
+        },
+        {
+          "id": "4:3495735850726738029",
+          "name": "z",
+          "type": 5,
+          "flags": 4
+        },
+        {
+          "id": "5:2260023409202753285",
+          "name": "receptionTimestamp",
+          "type": 6,
+          "flags": 2
+        },
+        {
+          "id": "6:2718408363096941834",
+          "name": "relativeSamplingTimestamp",
+          "type": 5,
+          "flags": 2
+        },
+        {
+          "id": "7:3599223326442562352",
+          "name": "absoluteSamplingTimestamp",
+          "type": 6,
+          "flags": 2
+        },
+        {
+          "id": "8:4163970389268528287",
+          "name": "localSessionId",
+          "indexId": "1:8816028416433126273",
+          "type": 11,
+          "flags": 1548,
+          "relationTarget": "LocalSession"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:1156884321071994760",
+      "lastPropertyId": "1:3127138337912180822",
+      "name": "BaseRecord",
+      "properties": [
+        {
+          "id": "1:3127138337912180822",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "3:7033608295971815213",
+      "lastPropertyId": "14:1983560963269143168",
+      "name": "EegSample",
+      "properties": [
+        {
+          "id": "1:7247404680874530107",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:3023543844408358812",
+          "name": "eegSamples",
+          "type": 23
+        },
+        {
+          "id": "3:9217311519292577988",
+          "name": "receptionTimestamp",
+          "type": 6,
+          "flags": 2
+        },
+        {
+          "id": "4:3141188964553715676",
+          "name": "relativeSamplingTimestamp",
+          "type": 5,
+          "flags": 2
+        },
+        {
+          "id": "5:2161923181385908254",
+          "name": "absoluteSamplingTimestamp",
+          "type": 6,
+          "flags": 2
+        },
+        {
+          "id": "6:3394089932842450801",
+          "name": "sync",
+          "type": 1,
+          "flags": 4
+        },
+        {
+          "id": "7:8782592525651390911",
+          "name": "trigOut",
+          "type": 1,
+          "flags": 4
+        },
+        {
+          "id": "8:6374573288853488058",
+          "name": "trigIn",
+          "type": 1,
+          "flags": 4
+        },
+        {
+          "id": "9:6602109085153755855",
+          "name": "zMod",
+          "type": 1,
+          "flags": 4
+        },
+        {
+          "id": "10:7766223348197797431",
+          "name": "marker",
+          "type": 1,
+          "flags": 4
+        },
+        {
+          "id": "11:2258544700067478525",
+          "name": "tbd6",
+          "type": 1,
+          "flags": 4
+        },
+        {
+          "id": "12:330530214154588309",
+          "name": "tbd7",
+          "type": 1,
+          "flags": 4
+        },
+        {
+          "id": "13:8062287022729870208",
+          "name": "button",
+          "type": 1,
+          "flags": 4
+        },
+        {
+          "id": "14:1983560963269143168",
+          "name": "localSessionId",
+          "indexId": "2:5334745580860206316",
+          "type": 11,
+          "flags": 1548,
+          "relationTarget": "LocalSession"
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "4:7829109381478237227",
+      "lastPropertyId": "6:4999159638621476428",
+      "name": "LocalSession",
+      "properties": [
+        {
+          "id": "1:498531413724022567",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:4134901508840748592",
+          "name": "cloudSessionId",
+          "type": 5,
+          "flags": 2
+        },
+        {
+          "id": "3:1309886517756714001",
+          "name": "status",
+          "type": 5,
+          "flags": 2
+        },
+        {
+          "id": "4:821309137090656557",
+          "name": "uploadNeeded",
+          "type": 1,
+          "flags": 4
+        },
+        {
+          "id": "5:5002650484267278739",
+          "name": "eegSamplesUploaded",
+          "type": 5,
+          "flags": 4
+        },
+        {
+          "id": "6:4999159638621476428",
+          "name": "accelerationsUploaded",
+          "type": 5,
+          "flags": 4
+        }
+      ],
+      "relations": []
+    }
+  ],
+  "lastEntityId": "5:7328132450138436351",
+  "lastIndexId": "2:5334745580860206316",
+  "lastRelationId": "0:0",
+  "lastSequenceId": "0:0",
+  "modelVersion": 5,
+  "modelVersionParserMinimum": 5,
+  "retiredEntityUids": [
+    7328132450138436351
+  ],
+  "retiredIndexUids": [],
+  "retiredPropertyUids": [
+    6662824838682468754,
+    6877395832217822513
+  ],
+  "retiredRelationUids": [],
+  "version": 1
+}

@@ -77,6 +77,16 @@
         app:layout_constraintStart_toStartOf="parent"
         tools:layout_editor_absoluteX="44dp" />
 
+    <Button
+        android:id="@+id/start_flutter_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Start Flutter"
+        app:layout_constraintTop_toBottomOf="@+id/stop_streaming_button"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:layout_editor_absoluteX="44dp" />
+
     <TextView
         android:id="@+id/sample_rate_textview"
         android:layout_width="wrap_content"

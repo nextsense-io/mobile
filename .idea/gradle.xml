@@ -12,6 +12,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/nextsense_trial_ui/.android/Flutter" />
             <option value="$PROJECT_DIR$/service" />
             <option value="$PROJECT_DIR$/testui" />
           </set>
