@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,11 +16,9 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceManager;
