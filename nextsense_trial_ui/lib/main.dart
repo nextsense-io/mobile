@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 
 void main() => runApp(MyApp());
 
@@ -46,6 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   void _incrementCounter() {
+    NextsenseBase.startService();
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below

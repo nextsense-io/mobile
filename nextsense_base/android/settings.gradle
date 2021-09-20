@@ -1,0 +1,19 @@
+rootProject.name = 'nextsense_base'
+
+// Add project stubs for core and service base libraries
+include 'core'
+include 'service'
+
+// Tell gradle where to find liblsl-Java
+if (hasProperty("base_dir")) {
+    println("Looking for base project in " + base_dir)
+    project(':core').projectDir = new File(base_dir + "/core")
+    project(':service').projectDir = new File(base_dir + "/service")
+} else {
+    println("Looking for base project in the default path.")
+    println("Change this via 'gradle -Pbase_dir=path/here if this fails")
+    project(':core').projectDir = new File("../../core")
+    project(':service').projectDir = new File("../../service")
+//    project(':core').projectDir = new File("L:/Data/nextsense/android_base_library_clone/core")
+//    project(':service').projectDir = new File("L:/Data/nextsense/android_base_library_clone/service")
+}

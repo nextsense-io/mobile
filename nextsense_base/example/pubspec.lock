@@ -84,7 +84,7 @@ packages:
   nextsense_base:
     dependency: "direct main"
     description:
-      path: "../nextsense_base"
+      path: ".."
       relative: true
     source: path
     version: "0.0.1"
