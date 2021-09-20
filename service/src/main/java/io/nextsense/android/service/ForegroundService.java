@@ -42,7 +42,7 @@ public class ForegroundService extends Service {
   private static final String TAG = ForegroundService.class.getSimpleName();
   private static final String CHANNEL_ID = "NextSenseChannel";
   private static final String CHANNEL_NAME = "NextSense";
-  private static final int UI_INTENT_REQUEST_CODE = 0;
+  private static final int UI_INTENT_REQUEST_CODE = 1;
   private static final int NOTIFICATION_ID = 1;
 
   // Binder given to clients.
@@ -69,6 +69,8 @@ public class ForegroundService extends Service {
     createNotificationChannel();
     Class<Activity> uiClass = (Class<Activity>) intent.getSerializableExtra("ui_class");
     Intent notificationIntent = new Intent(this, uiClass);
+    // Re-use existing activity if it is already running.
+    notificationIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
     PendingIntent pendingIntent = PendingIntent.getActivity(this,
         UI_INTENT_REQUEST_CODE, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
     Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
