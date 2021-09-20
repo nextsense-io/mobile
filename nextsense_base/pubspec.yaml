@@ -1,7 +1,7 @@
 name: nextsense_base
-description: A new Flutter project.
+description: NextSense core and service modules plugin.
 version: 0.0.1
-homepage:
+homepage: nextsense.io
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
