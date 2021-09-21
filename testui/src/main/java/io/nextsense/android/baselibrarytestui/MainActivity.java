@@ -21,6 +21,8 @@ import java.util.concurrent.Executors;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.engine.FlutterEngine;
+import io.flutter.embedding.engine.FlutterEngineCache;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceMode;
@@ -36,6 +38,7 @@ import io.nextsense.android.service.ForegroundService;
 public class MainActivity extends AppCompatActivity {
 
   private static final int LOCATION_REQUEST_CODE = 100;
+  private static final boolean AUTOSTART_FLUTTER = false;
 
   private Intent foregroundServiceIntent;
   private Button startScanningButton;
@@ -172,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
     });
 
     startFlutterButton.setOnClickListener(
-        view -> startActivity(FlutterActivity.createDefaultIntent(this))
+        view -> startFlutter()
     );
 
     checkPermission(Manifest.permission.ACCESS_FINE_LOCATION, LOCATION_REQUEST_CODE);
@@ -186,27 +189,36 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onStart() {
     super.onStart();
-    bindService(foregroundServiceIntent, nextSenseConnection, Context.BIND_IMPORTANT);
+    if (!nextSenseServiceBound) {
+      bindService(foregroundServiceIntent, nextSenseConnection, Context.BIND_IMPORTANT);
+    } else {
+      Log.i("MainActivity", "service bound. Flutter active: " +
+          nextSenseService.isFlutterActivityActive());
+      if (AUTOSTART_FLUTTER) {
+        if (nextSenseService.isFlutterActivityActive()) {
+          startFlutter();
+        } else {
+          stopService();
+          finish();
+        }
+      }
+    }
   }
 
   @Override
   protected void onStop() {
-    super.onStop();
     if (nextSenseServiceBound) {
       nextSenseService.getSampleRateCalculator().removeRateUpdateListener(rateUpdateListener);
       unbindService(nextSenseConnection);
       nextSenseServiceBound = false;
     }
+    super.onStop();
   }
 
   @Override
   public void onBackPressed() {
     // Should add a confirmation prompt here in a non-test app.
-    // Disconnect is done on the main thread handler so can't do it synchronously, it would hang.
-    if (lastDevice != null) {
-      lastDevice.disconnect();
-    }
-    stopService(foregroundServiceIntent);
+    stopService();
     super.onBackPressed();
   }
 
@@ -218,6 +230,24 @@ public class MainActivity extends AppCompatActivity {
     } else {
       Toast.makeText(MainActivity.this, "Permission already granted", Toast.LENGTH_SHORT).show();
     }
+  }
+
+  private void stopService() {
+    // Disconnect is done on the main thread handler so can't do it synchronously, it would hang.
+    if (lastDevice != null) {
+      lastDevice.disconnect();
+    }
+    stopService(foregroundServiceIntent);
+    // The flutter engine would survive the application.
+    FlutterEngine flutterEngine = FlutterEngineCache.getInstance().get(TestUi.FLUTTER_ENGINE_NAME);
+    if (flutterEngine != null) {
+      flutterEngine.destroy();
+    }
+  }
+
+  private void startFlutter() {
+    startActivity(FlutterActivity.withCachedEngine(TestUi.FLUTTER_ENGINE_NAME)
+        .build(this));
   }
 
   @Override
@@ -248,6 +278,16 @@ public class MainActivity extends AppCompatActivity {
       deviceManager = nextSenseService.getDeviceManager();
       nextSenseService.getSampleRateCalculator().addRateUpdateListener(rateUpdateListener);
       nextSenseServiceBound = true;
+      Log.i("MainActivity", "service bound. Flutter active: " +
+          nextSenseService.isFlutterActivityActive());
+      if (AUTOSTART_FLUTTER) {
+        if (nextSenseService.isFlutterActivityActive()) {
+          startFlutter();
+        } else {
+          stopService();
+          finish();
+        }
+      }
     }
 
     @Override

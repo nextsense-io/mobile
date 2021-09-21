@@ -57,6 +57,8 @@ public class ForegroundService extends Service {
   private Uploader uploader;
   private SampleRateCalculator sampleRateCalculator;
   private boolean initialized = false;
+  // Starts true so the activity is launched on first start.
+  private boolean flutterActivityActive = true;
 
   @Override
   @SuppressWarnings("unchecked")
@@ -103,6 +105,14 @@ public class ForegroundService extends Service {
 
   public SampleRateCalculator getSampleRateCalculator() {
     return sampleRateCalculator;
+  }
+
+  public boolean isFlutterActivityActive() {
+    return flutterActivityActive;
+  }
+
+  public void setFlutterActivityActive(boolean active) {
+    flutterActivityActive = active;
   }
 
   private void initialize() {

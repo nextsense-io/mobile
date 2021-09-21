@@ -73,8 +73,22 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
           Log.d(TAG, "connected devices: " +
               nextSenseService.getDeviceManager().getConnectedDevices().size());
           result.success(nextSenseService.getDeviceManager().getConnectedDevices().size());
+        } else {
+          Log.d(TAG, "Service not connected.");
         }
-        Log.d(TAG, "Service not connected.");
+        break;
+      case "set_flutter_activity_active":
+        if (nextSenseServiceBound) {
+          nextSenseService.setFlutterActivityActive((boolean)call.arguments);
+        } else {
+          Log.d(TAG, "flutter_start: service not connected.");
+        }
+        break;
+      case "is_flutter_activity_active":
+        if (nextSenseServiceBound) {
+          result.success(nextSenseService.isFlutterActivityActive());
+        }
+        result.success(false);
         break;
       default:
         result.notImplemented();
@@ -97,6 +111,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       deviceManager = nextSenseService.getDeviceManager();
       // nextSenseService.getSampleRateCalculator().addRateUpdateListener(rateUpdateListener);
       nextSenseServiceBound = true;
+      nextSenseService.setFlutterActivityActive(true);
     }
 
     @Override

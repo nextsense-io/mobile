@@ -4,6 +4,7 @@
     package="io.nextsense.android.baselibrarytestui">
 
     <application
+        android:name=".TestUi"
         android:allowBackup="true"
         android:fullBackupOnly="true"
         android:icon="@mipmap/ic_launcher"
