@@ -66,8 +66,8 @@ public class BlePeripheralCallbackProxy {
    * Write a characteristic for a peripheral and return a Future that will be completed when it is
    * confirmed by the Android stack. This implies that it is of type WRITE_WITH_RESPONSE.
    */
-  public synchronized ListenableFuture<byte[]> writeCharacteristic(
-      BluetoothPeripheral peripheral, BluetoothGattCharacteristic characteristic, byte[] value) {
+  public synchronized ListenableFuture<byte[]> writeCharacteristic(BluetoothPeripheral peripheral,
+      BluetoothGattCharacteristic characteristic, byte[] value, WriteType writeType) {
     if (writeFutures.get(peripheral.getAddress()) != null &&
         !writeFutures.get(peripheral.getAddress()).isDone()) {
       // Should call this function one by one for a peripheral as it is sync.
@@ -76,7 +76,7 @@ public class BlePeripheralCallbackProxy {
     SettableFuture<byte[]> writeFuture = SettableFuture.create();
     writeFutures.put(peripheral.getAddress(), writeFuture);
     boolean writeDone = peripheral.writeCharacteristic(
-        characteristic, value, WriteType.WITHOUT_RESPONSE);
+        characteristic, value, writeType);
     if (!writeDone) {
       return Futures.immediateFailedFuture(new BluetoothException(
           "Failed to write to characteristic " + characteristic.getUuid()));

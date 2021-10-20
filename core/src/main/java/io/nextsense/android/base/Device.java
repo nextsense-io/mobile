@@ -2,6 +2,7 @@ package io.nextsense.android.base;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.os.Bundle;
 import android.util.Log;
 import androidx.annotation.NonNull;
 
@@ -17,6 +18,8 @@ import com.welie.blessed.PhyType;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.devices.NextSenseDevice;
+import io.nextsense.android.base.devices.xenon.StartStreamingCommand;
+import io.nextsense.android.base.devices.xenon.XenonDevice;
 import io.nextsense.android.base.utils.Util;
 
 import java.util.HashSet;
@@ -79,12 +82,25 @@ public class Device {
     return nextSenseDevice.getDeviceMode();
   }
 
-  public ListenableFuture<DeviceMode> setMode(DeviceMode deviceMode) {
+  public ListenableFuture<Boolean> startStreaming() {
     if (deviceState != DeviceState.READY) {
       return Futures.immediateFailedFuture(new IllegalStateException(
           "Device needs to be in READY state to change its mode."));
     }
-    return nextSenseDevice.changeMode(deviceMode);
+    Bundle parametersBundle = new Bundle();
+    // TODO(eric): Should have common parameters that then get translated to device specific command
+    //             sets.
+    parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
+        StartStreamingCommand.StartMode.NO_LOGGING);
+    return nextSenseDevice.startStreaming(/*uploadToCloud=*/true, parametersBundle);
+  }
+
+  public ListenableFuture<Boolean> stopStreaming() {
+    if (deviceState != DeviceState.READY) {
+      return Futures.immediateFailedFuture(new IllegalStateException(
+          "Device needs to be in READY state to change its mode."));
+    }
+    return nextSenseDevice.stopStreaming();
   }
 
   public void addOnDeviceStateChangeListener(DeviceStateChangeListener listener) {
@@ -155,16 +171,19 @@ public class Device {
   /**
    * Returns the {@link DeviceSettings} currently in place on the {@link Device}.
    */
-  public DeviceSettings getSettings() {
-    return deviceSettings;
+  public ListenableFuture<DeviceSettings> getSettings() {
+    return nextSenseDevice.loadDeviceSettings();
   }
 
   /**
    * Sets the deviceSettings in the device firmware. The device must be in {@code DeviceMode.IDLE}
    * mode when invoking this.
    */
-  public boolean setSettings(DeviceSettings deviceSettings) {
-    return false;
+  public ListenableFuture<Boolean> setSettings(DeviceSettings deviceSettings) {
+    if (nextSenseDevice.getDeviceMode() != DeviceMode.IDLE) {
+      return Futures.immediateFuture(false);
+    }
+    return nextSenseDevice.applyDeviceSettings(deviceSettings);
   }
 
   /**

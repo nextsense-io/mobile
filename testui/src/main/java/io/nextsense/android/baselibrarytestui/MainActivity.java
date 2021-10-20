@@ -138,12 +138,12 @@ public class MainActivity extends AppCompatActivity {
       if (!nextSenseServiceBound || lastDevice == null) {
         return;
       }
-      ListenableFuture<DeviceMode> deviceModeFuture = lastDevice.setMode(DeviceMode.STREAMING);
+      ListenableFuture<Boolean> deviceModeFuture = lastDevice.startStreaming();
       deviceModeFuture.addListener(() -> {
         try {
-          DeviceMode mode = deviceModeFuture.get();
+          Boolean streaming = deviceModeFuture.get();
           runOnUiThread(
-              () -> Toast.makeText(MainActivity.this, "Start Streaming: Mode " + mode.toString(),
+              () -> Toast.makeText(MainActivity.this, "Start Streaming: " + streaming.toString(),
                   Toast.LENGTH_SHORT).show());
         } catch (ExecutionException e) {
           e.printStackTrace();
@@ -158,12 +158,12 @@ public class MainActivity extends AppCompatActivity {
       if (!nextSenseServiceBound || lastDevice == null) {
         return;
       }
-      ListenableFuture<DeviceMode> deviceModeFuture = lastDevice.setMode(DeviceMode.IDLE);
+      ListenableFuture<Boolean> deviceModeFuture = lastDevice.stopStreaming();
       deviceModeFuture.addListener(() -> {
         try {
-          DeviceMode mode = deviceModeFuture.get();
+          Boolean stopped = deviceModeFuture.get();
           runOnUiThread(
-              () -> Toast.makeText(MainActivity.this, "Stop Streaming: Mode " + mode.toString(),
+              () -> Toast.makeText(MainActivity.this, "Stop Streaming: " + stopped.toString(),
                   Toast.LENGTH_SHORT).show());
         } catch (ExecutionException e) {
           e.printStackTrace();

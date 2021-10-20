@@ -1,6 +1,8 @@
 package io.nextsense.android.base.devices.h1;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 
 import com.google.common.util.concurrent.Futures;
@@ -71,7 +73,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   private BluetoothGattCharacteristic firmwareCharacteristic;
   private BluetoothGattCharacteristic dataTransTxCharacteristic;
   private BluetoothGattCharacteristic dataTransRxCharacteristic;
-  private SettableFuture<DeviceMode> deviceModeFuture;
+  private SettableFuture<Boolean> deviceModeFuture;
 
   // Needed for reflexion when created by Bluetooth device name.
   public H1Device() {}
@@ -128,32 +130,24 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
-  public ListenableFuture<DeviceMode> changeMode(DeviceMode deviceMode) {
-    // TODO(eric): Check if there is an active future first?
-    if (this.deviceMode == deviceMode) {
-      return Futures.immediateFuture(deviceMode);
+  public ListenableFuture<Boolean> startStreaming(boolean uploadToCloud, Bundle parameters) {
+    if (this.deviceMode == DeviceMode.STREAMING) {
+      return Futures.immediateFuture(true);
     }
-    switch (deviceMode) {
-      case STREAMING:
-        if (dataCharacteristic == null) {
-          return Futures.immediateFailedFuture(
-              new IllegalStateException("No characteristic to stream on."));
-        }
-        deviceModeFuture = SettableFuture.create();
-        localSessionManager.startLocalSession(/*cloudSessionId=*/null, /*uploadNeeded=*/true);
-        peripheral.setNotify(dataCharacteristic, /*enable=*/true);
-        break;
-      case IDLE:
-        if (dataCharacteristic == null) {
-          return Futures.immediateFuture(DeviceMode.IDLE);
-        }
-        deviceModeFuture = SettableFuture.create();
-        writeCharacteristic(writeDataCharacteristic, new StopStreamingCommand().getCommand());
-        break;
-      default:
-        return Futures.immediateFailedFuture(new UnsupportedOperationException(
-            "The " + deviceMode.toString() + " is not supported on this device."));
+    if (dataCharacteristic == null) {
+      return Futures.immediateFailedFuture(
+          new IllegalStateException("No characteristic to stream on."));
     }
+    deviceModeFuture = SettableFuture.create();
+    localSessionManager.startLocalSession(/*cloudSessionId=*/null, uploadToCloud);
+    peripheral.setNotify(dataCharacteristic, /*enable=*/true);
+    return deviceModeFuture;
+  }
+
+  @Override
+  public ListenableFuture<Boolean> stopStreaming() {
+    deviceModeFuture = SettableFuture.create();
+    writeCharacteristic(writeDataCharacteristic, new StopStreamingCommand().getCommand());
     return deviceModeFuture;
   }
 
@@ -208,7 +202,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   private H1FirmwareResponse executeCommand(H1FirmwareCommand command) throws
       ExecutionException, InterruptedException, FirmwareMessageParsingException {
     blePeripheralCallbackProxy.writeCharacteristic(
-        peripheral, dataTransRxCharacteristic, command.getCommand()).get();
+        peripheral, dataTransRxCharacteristic, command.getCommand(), WriteType.WITH_RESPONSE).get();
     byte[] readValue = blePeripheralCallbackProxy.readCharacteristic(
         peripheral, dataTransTxCharacteristic).get();
     H1FirmwareResponse response = H1DataParser.parseDataTransRxBytes(readValue);
@@ -236,7 +230,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           } else {
             localSessionManager.stopLocalSession();
             deviceMode = DeviceMode.IDLE;
-            deviceModeFuture.set(DeviceMode.IDLE);
+            deviceModeFuture.set(true);
           }
         } else {
           deviceModeFuture.setException(new BluetoothException(
@@ -264,7 +258,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           " with value: " + Arrays.toString(value));
       // Check mode change result.
       if (characteristic == writeDataCharacteristic &&
-          value.length == H1FirmwareCommand.COMMAND_SIZE) {
+          value.length >= H1FirmwareCommand.COMMAND_SIZE) {
         DeviceMode targetMode;
         if (value[0] == H1MessageType.START_STREAMING.getCode()) {
           targetMode = DeviceMode.STREAMING;
@@ -280,7 +274,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
             peripheral.setNotify(dataCharacteristic, /*enable=*/false);
           } else {
             deviceMode = targetMode;
-            deviceModeFuture.set(targetMode);
+            deviceModeFuture.set(true);
           }
           Util.logd(TAG, "Wrote command to writeData characteristic with success.");
         } else {

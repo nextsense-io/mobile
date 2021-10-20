@@ -1,6 +1,7 @@
 package io.nextsense.android.base.devices;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.os.Bundle;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -9,6 +10,7 @@ import com.welie.blessed.BluetoothPeripheral;
 import java.util.UUID;
 
 import io.nextsense.android.base.DeviceMode;
+import io.nextsense.android.base.DeviceSettings;
 import io.nextsense.android.base.data.LocalSessionManager;
 
 /**
@@ -30,12 +32,37 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
+  public ListenableFuture<Boolean> startStreaming(boolean uploadToCloud) {
+    return startStreaming(uploadToCloud, new Bundle());
+  }
+
+  @Override
+  public ListenableFuture<Boolean> startStreaming(boolean uploadToCloud, Bundle parameters) {
+    return Futures.immediateFuture(false);
+  }
+
+  @Override
+  public ListenableFuture<Boolean> stopStreaming() {
+    return Futures.immediateFuture(false);
+  }
+
+  @Override
   public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral) {
-    return Futures.immediateFuture(true);
+    return Futures.immediateFuture(false);
   }
 
   @Override
   public void disconnect(BluetoothPeripheral peripheral) {
+  }
+
+  @Override
+  public ListenableFuture<Boolean> applyDeviceSettings(DeviceSettings deviceSettings) {
+    return Futures.immediateFuture(false);
+  }
+
+  @Override
+  public ListenableFuture<DeviceSettings> loadDeviceSettings() {
+    return Futures.immediateFuture(new DeviceSettings());
   }
 
   protected void checkCharacteristic(BluetoothGattCharacteristic characteristic, UUID serviceUuid,

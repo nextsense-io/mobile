@@ -1,6 +1,7 @@
 package io.nextsense.android.base.devices.xenon;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.os.Bundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -17,11 +18,13 @@ import com.welie.blessed.WriteType;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import io.nextsense.android.base.DeviceMode;
+import io.nextsense.android.base.DeviceSettings;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -38,6 +41,7 @@ import io.nextsense.android.base.utils.Util;
 public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice {
 
   public static final String BLUETOOTH_PREFIX = "Xenon";
+  public static final String STREAM_START_MODE_KEY = "stream.start.mode";
 
   private static final String TAG = XenonDevice.class.getSimpleName();
   private static final int TARGET_MTU = 256;
@@ -48,11 +52,14 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
 
   private final ListeningExecutorService executorService =
       MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+  private final List<Integer> enabledChannels = Arrays.asList(3, 4, 6, 8);
 
   private XenonDataParser xenonDataParser;
   private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
   private BluetoothGattCharacteristic dataCharacteristic;
-  private SettableFuture<DeviceMode> deviceModeFuture;
+  private SettableFuture<Boolean> deviceModeFuture;
+  private DeviceSettings deviceSettings;
+  private StartStreamingCommand.StartMode targetStartStreamingMode;
 
   // Needed for reflexion when created by Bluetooth device name.
   public XenonDevice() {}
@@ -95,6 +102,8 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     return executorService.submit(() -> {
       try {
         executeCommandNoResponse(new SetTimeCommand(Instant.now()));
+        // Cannot read device settings, so load the default setting and apply them when connecting.
+        applyDeviceSettings(loadDeviceSettings().get());
       } catch (ExecutionException e) {
         Log.e(TAG, "Failed to set the time on the device: " + e.getMessage());
         return false;
@@ -114,33 +123,73 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   }
 
   @Override
-  public ListenableFuture<DeviceMode> changeMode(DeviceMode targetDeviceMode) {
-    // TODO(eric): Check if there is an active future first?
-    if (this.deviceMode == targetDeviceMode) {
-      return Futures.immediateFuture(targetDeviceMode);
+  public ListenableFuture<Boolean> startStreaming(boolean uploadToCloud, Bundle parameters) {
+    if (parameters == null || parameters.getSerializable(STREAM_START_MODE_KEY) == null) {
+      return Futures.immediateFailedFuture(
+          new IllegalArgumentException("Need to provide the " + STREAM_START_MODE_KEY +
+              " parameter."));
     }
-    switch (targetDeviceMode) {
-      case STREAMING:
-        if (dataCharacteristic == null) {
-          return Futures.immediateFailedFuture(
-              new IllegalStateException("No characteristic to stream on."));
-        }
-        deviceModeFuture = SettableFuture.create();
-        localSessionManager.startLocalSession(/*cloudSessionId=*/null, /*uploadNeeded=*/true);
-        peripheral.setNotify(dataCharacteristic, /*enable=*/true);
-        break;
-      case IDLE:
-        if (dataCharacteristic == null) {
-          return Futures.immediateFuture(DeviceMode.IDLE);
-        }
-        deviceModeFuture = SettableFuture.create();
-        writeCharacteristic(dataCharacteristic, new StopStreamingCommand().getCommand());
-        break;
-      default:
-        return Futures.immediateFailedFuture(new UnsupportedOperationException(
-            "The " + targetDeviceMode.toString() + " is not supported on this device."));
+    targetStartStreamingMode =
+        (StartStreamingCommand.StartMode)parameters.getSerializable(STREAM_START_MODE_KEY);
+    if (this.deviceMode == DeviceMode.STREAMING) {
+      return Futures.immediateFuture(true);
     }
+    if (dataCharacteristic == null) {
+      return Futures.immediateFailedFuture(
+          new IllegalStateException("No characteristic to stream on."));
+    }
+    deviceModeFuture = SettableFuture.create();
+    localSessionManager.startLocalSession(/*cloudSessionId=*/null, uploadToCloud);
+    peripheral.setNotify(dataCharacteristic, /*enable=*/true);
     return deviceModeFuture;
+  }
+
+  @Override
+  public ListenableFuture<Boolean> stopStreaming() {
+    if (this.deviceMode == DeviceMode.IDLE) {
+      return Futures.immediateFuture(true);
+    }
+    deviceModeFuture = SettableFuture.create();
+    writeCharacteristic(dataCharacteristic, new StopStreamingCommand().getCommand());
+    return deviceModeFuture;
+  }
+
+  @Override
+  public ListenableFuture<Boolean> applyDeviceSettings(DeviceSettings deviceSettings) {
+    if (deviceSettings.equals(this.deviceSettings)) {
+      return Futures.immediateFuture(true);
+    }
+    return executorService.submit(() -> {
+      try {
+        executeCommandNoResponse(new SetConfigCommand(deviceSettings.getEnabledChannels(),
+            deviceSettings.isImpedanceMode(), deviceSettings.getImpedanceDivider()));
+        this.deviceSettings = deviceSettings;
+        return true;
+      } catch (ExecutionException e) {
+        Log.e(TAG, "Failed to set the time on the device: " + e.getMessage());
+        return false;
+      } catch (InterruptedException e) {
+        Log.e(TAG, "Interrupted when trying to set the time on the device: " + e.getMessage());
+        Thread.currentThread().interrupt();
+        return false;
+      }
+    });
+  }
+
+  @Override
+  public ListenableFuture<DeviceSettings> loadDeviceSettings() {
+    if (deviceSettings == null) {
+      deviceSettings = new DeviceSettings();
+      // No command to load settings yet in Xenon, apply default values.
+      deviceSettings.setEnabledChannels(enabledChannels);
+      deviceSettings.setEegSamplingRate(500);
+      deviceSettings.setEegStreamingRate(250);
+      deviceSettings.setImuSamplingRate(500);
+      deviceSettings.setImuStreamingRate(250);
+      deviceSettings.setImpedanceMode(false);
+      deviceSettings.setImpedanceDivider(50);
+    }
+    return Futures.immediateFuture(deviceSettings);
   }
 
   private void writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] value) {
@@ -159,7 +208,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private void executeCommandNoResponse(XenonFirmwareCommand command) throws
       ExecutionException, InterruptedException {
     blePeripheralCallbackProxy.writeCharacteristic(
-        peripheral, dataCharacteristic, command.getCommand()).get();
+        peripheral, dataCharacteristic, command.getCommand(), WriteType.WITHOUT_RESPONSE).get();
   }
 
   private final BluetoothPeripheralCallback bluetoothPeripheralCallback =
@@ -173,11 +222,12 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           Util.logd(TAG, "Notification updated with success to " +
               peripheral.isNotifying(characteristic));
           if (peripheral.isNotifying(characteristic)) {
-            writeCharacteristic(dataCharacteristic, new StartStreamingCommand().getCommand());
+            writeCharacteristic(dataCharacteristic, new StartStreamingCommand(
+                targetStartStreamingMode).getCommand());
           } else {
             localSessionManager.stopLocalSession();
             deviceMode = DeviceMode.IDLE;
-            deviceModeFuture.set(DeviceMode.IDLE);
+            deviceModeFuture.set(true);
           }
         } else {
           deviceModeFuture.setException(new BluetoothException(
@@ -205,14 +255,14 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           " with value: " + Arrays.toString(value));
       // Check mode change result.
       if (characteristic == dataCharacteristic &&
-          value.length == XenonFirmwareCommand.COMMAND_SIZE) {
-        DeviceMode targetMode;
+          value.length >= XenonFirmwareCommand.COMMAND_SIZE) {
+        DeviceMode targetMode = DeviceMode.IDLE;
         byte[] command = Arrays.copyOfRange(value, 0, XenonFirmwareCommand.COMMAND_SIZE);
         if (Arrays.equals(command, XenonMessageType.START_STREAMING.getCode())) {
           targetMode = DeviceMode.STREAMING;
         } else if (Arrays.equals(command, XenonMessageType.STOP_STREAMING.getCode())) {
           targetMode = DeviceMode.IDLE;
-        } else {
+        } else if (Arrays.equals(command, XenonMessageType.SET_CONFIG.getCode())) {
           // Not an expected value, return.
           return;
         }
@@ -225,7 +275,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
             peripheral.setNotify(dataCharacteristic, /*enable=*/false);
           } else {
             deviceMode = targetMode;
-            deviceModeFuture.set(targetMode);
+            deviceModeFuture.set(true);
           }
           Util.logd(TAG, "Wrote command to writeData characteristic with success.");
         } else {

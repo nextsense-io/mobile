@@ -5,5 +5,6 @@ package io.nextsense.android.base;
  */
 public enum DeviceType {
   H1,  // First version that was used at Emory.
-  H15  // Development version done at Google X.
+  H15,  // Development version done at Google X.
+  XENON // First generation device done at NextSense.
 }

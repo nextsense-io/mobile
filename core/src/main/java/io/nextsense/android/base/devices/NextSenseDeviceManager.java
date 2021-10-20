@@ -8,7 +8,6 @@ import java.util.Set;
 
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.h1.H1Device;
-import io.nextsense.android.base.devices.h15.H15Device;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
 
 /**
@@ -27,7 +26,6 @@ public class NextSenseDeviceManager {
     this.localSessionManager = localSessionManager;
     devicesMapping = new HashMap<>();
     devicesMapping.put(H1Device.BLUETOOTH_PREFIX, H1Device.class);
-    devicesMapping.put(H15Device.BLUETOOTH_PREFIX, H15Device.class);
     devicesMapping.put(XenonDevice.BLUETOOTH_PREFIX, XenonDevice.class);
   }
 
