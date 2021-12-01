@@ -23,6 +23,14 @@
           }
         },
         {
+          "client_id": "894094054051-5fngp8qlqupecaa98gcketle6g5psdt7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.baselibrarytestui",
+            "certificate_hash": "9db4914f5ada563d8fab6b2fc47bdc445e1e4fa7"
+          }
+        },
+        {
           "client_id": "894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -51,6 +59,22 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "894094054051-eblvp1coqdg0hok5nd48h0s3peo0hsuu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.mobile.trial",
+            "certificate_hash": "1d1e708623e85122b1bc285598d14293ed4eb948"
+          }
+        },
+        {
+          "client_id": "894094054051-f5sut48f5ele2mod398sfjlp39unn22g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.mobile.trial",
+            "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
         {
           "client_id": "894094054051-f9c8hcmb91bk7lgksf4t2s0v0oofmo75.apps.googleusercontent.com",
           "client_type": 1,

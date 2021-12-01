@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   @override
@@ -9,7 +10,7 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final AuthManager _authManager = AuthManager();
+  final AuthManager _authManager = GetIt.instance.get<AuthManager>();
   String _code = '';
 
   @override
@@ -57,18 +58,21 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 Padding(
                     padding: EdgeInsets.all(10.0),
-                    child: SignInButton(
-                      Buttons.Email,
-                      text: 'Continue',
+                    child: ElevatedButton(
+                      child: const Text('Continue'),
                       onPressed: () async {
                         UserCodeValidationResult result =
                             await _authManager.validateUserCode(_code);
                         if (result ==
                             UserCodeValidationResult.password_not_set) {
                           // navigate to password set screen.
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => SetPasswordScreen()),
+                          );
                         }
                         if (result == UserCodeValidationResult.invalid) {
-                          showDialog(
+                          await showDialog(
                             context: context,
                             builder: (BuildContext context) {
                               return SimpleAlertDialog(title: 'Invalid code',

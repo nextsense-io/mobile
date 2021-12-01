@@ -10,6 +10,7 @@ enum UserCodeValidationResult {
 }
 
 class AuthManager {
+  static const minimumPasswordLength = 8;
   // TODO(eric): Get from session?
   final FirestoreManager _firestoreManager = FirestoreManager();
   // final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -26,8 +27,8 @@ class AuthManager {
     if (entity == null) {
       return UserCodeValidationResult.invalid;
     }
-    User user = User(entity);
-    if (user.getValue(UserKey.password) == null) {
+    _user = User(entity);
+    if (_user!.getValue(UserKey.password) == null) {
       return UserCodeValidationResult.password_not_set;
     }
     return UserCodeValidationResult.valid;

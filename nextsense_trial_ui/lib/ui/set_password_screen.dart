@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 
@@ -8,9 +9,18 @@ class SetPasswordScreen extends StatefulWidget {
 }
 
 class _SetPasswordScreenState extends State<SetPasswordScreen> {
-  final AuthManager _authManager = AuthManager();
+  final AuthManager _authManager = GetIt.instance.get<AuthManager>();
   String? _password;
   String? _passwordConfirmation;
+
+  Future _showError(BuildContext context, String message) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return SimpleAlertDialog(title: 'Error', content: message);
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +52,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                       labelStyle: TextStyle(
                         color: Color(0xFF6200EE),
                       ),
-                      helperText: 'Minimum 8 characters.',
+                      helperText: 'Minimum ${AuthManager.minimumPasswordLength} characters.',
                       enabledBorder: UnderlineInputBorder(
                         borderSide: BorderSide(color: Color(0xFF6200EE)),
                       ),
@@ -86,9 +96,17 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                           if (_password == null || _password!.isEmpty) {
                             return;
                           }
-                          if (_password!.compareTo(_passwordConfirmation!) != 0) {
-
+                          if (_password!.length < AuthManager.minimumPasswordLength) {
+                            _showError(context, 'Password should be at least '
+                                '${AuthManager.minimumPasswordLength} '
+                                'characters long');
+                            return;
                           }
+                          if (_password!.compareTo(_passwordConfirmation!) != 0) {
+                            _showError(context, 'Passwords do not match.');
+                            return;
+                          }
+                          _authManager.setPassword(_password!);
                         },
                     )),
               ]),
