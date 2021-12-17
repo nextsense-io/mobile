@@ -128,7 +128,7 @@ public class ForegroundService extends Service {
     sampleRateCalculator = SampleRateCalculator.create(500);
     sampleRateCalculator.startListening();
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
-    uploader = Uploader.create(objectBoxDatabase, /*uploadChunk=*/500);
+    uploader = Uploader.create(objectBoxDatabase, /*uploadChunk=*/250);
     uploader.start();
     initialized = true;
   }
