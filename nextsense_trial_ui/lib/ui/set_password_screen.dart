@@ -28,88 +28,100 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
         appBar: AppBar(
           title: Text("Set Password"),
         ),
-        body: Center(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: Text("Set Password",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                          fontFamily: 'Roboto')),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: TextFormField(
-                    cursorColor: Theme.of(context).cursorColor,
-                    initialValue: '',
-                    maxLength: 20,
-                    decoration: InputDecoration(
-                      icon: Icon(Icons.password),
-                      labelText: 'Enter your password',
-                      labelStyle: TextStyle(
-                        color: Color(0xFF6200EE),
-                      ),
-                      helperText: 'Minimum ${AuthManager.minimumPasswordLength} characters.',
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFF6200EE)),
-                      ),
+        body: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage("assets/images/background.png"),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Center(
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: Text("Set Password",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 30,
+                              fontFamily: 'Roboto')),
                     ),
-                    onChanged: (password) {
-                      setState(() {
-                        _password = password;
-                      });
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: TextFormField(
-                    cursorColor: Theme.of(context).cursorColor,
-                    initialValue: '',
-                    maxLength: 20,
-                    decoration: InputDecoration(
-                      icon: Icon(Icons.password),
-                      labelText: 'Confirm your password',
-                      labelStyle: TextStyle(
-                        color: Color(0xFF6200EE),
-                      ),
-                      helperText: '',
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFF6200EE)),
-                      ),
-                    ),
-                    onChanged: (passwordConfirmation) {
-                      setState(() {
-                        _passwordConfirmation = passwordConfirmation;
-                      });
-                    },
-                  ),
-                ),
-                Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: TextButton(
-                        child: Text('Submit'),
-                        onPressed: () async {
-                          if (_password == null || _password!.isEmpty) {
-                            return;
-                          }
-                          if (_password!.length < AuthManager.minimumPasswordLength) {
-                            _showError(context, 'Password should be at least '
-                                '${AuthManager.minimumPasswordLength} '
-                                'characters long');
-                            return;
-                          }
-                          if (_password!.compareTo(_passwordConfirmation!) != 0) {
-                            _showError(context, 'Passwords do not match.');
-                            return;
-                          }
-                          _authManager.setPassword(_password!);
+                    Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: TextFormField(
+                        cursorColor: Theme.of(context).cursorColor,
+                        initialValue: '',
+                        maxLength: 20,
+                        decoration: InputDecoration(
+                          icon: Icon(Icons.password),
+                          labelText: 'Enter your password',
+                          labelStyle: TextStyle(
+                            color: Color(0xFF6200EE),
+                          ),
+                          helperText:
+                              'Minimum ${AuthManager.minimumPasswordLength} characters.',
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF6200EE)),
+                          ),
+                        ),
+                        onChanged: (password) {
+                          setState(() {
+                            _password = password;
+                          });
                         },
-                    )),
-              ]),
-        ));
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(10.0),
+                      child: TextFormField(
+                        cursorColor: Theme.of(context).cursorColor,
+                        initialValue: '',
+                        maxLength: 20,
+                        decoration: InputDecoration(
+                          icon: Icon(Icons.password),
+                          labelText: 'Confirm your password',
+                          labelStyle: TextStyle(
+                            color: Color(0xFF6200EE),
+                          ),
+                          helperText: '',
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF6200EE)),
+                          ),
+                        ),
+                        onChanged: (passwordConfirmation) {
+                          setState(() {
+                            _passwordConfirmation = passwordConfirmation;
+                          });
+                        },
+                      ),
+                    ),
+                    Padding(
+                        padding: EdgeInsets.all(10.0),
+                        child: TextButton(
+                          child: Text('Submit'),
+                          onPressed: () async {
+                            if (_password == null || _password!.isEmpty) {
+                              return;
+                            }
+                            if (_password!.length <
+                                AuthManager.minimumPasswordLength) {
+                              _showError(
+                                  context,
+                                  'Password should be at least '
+                                  '${AuthManager.minimumPasswordLength} '
+                                  'characters long');
+                              return;
+                            }
+                            if (_password!.compareTo(_passwordConfirmation!) !=
+                                0) {
+                              _showError(context, 'Passwords do not match.');
+                              return;
+                            }
+                            _authManager.setPassword(_password!);
+                          },
+                        )),
+                  ]),
+            )));
   }
 }

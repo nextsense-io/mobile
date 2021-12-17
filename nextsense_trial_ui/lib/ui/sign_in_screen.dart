@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -16,10 +17,17 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text("title"),
+      appBar: AppBar(
+        title: Text("Login"),
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/images/background.png"),
+            fit: BoxFit.cover,
+          ),
         ),
-        body: Center(
+        child: Center(
           child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
@@ -35,7 +43,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   padding: EdgeInsets.all(10.0),
                   child: TextFormField(
                     cursorColor: Theme.of(context).cursorColor,
-                    initialValue: 'id',
+                    initialValue: '',
                     maxLength: 20,
                     decoration: InputDecoration(
                       icon: Icon(Icons.account_circle),
@@ -68,22 +76,32 @@ class _SignInScreenState extends State<SignInScreen> {
                           // navigate to password set screen.
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => SetPasswordScreen()),
+                            MaterialPageRoute(
+                                builder: (context) => SetPasswordScreen()),
                           );
                         }
                         if (result == UserCodeValidationResult.invalid) {
                           await showDialog(
                             context: context,
                             builder: (BuildContext context) {
-                              return SimpleAlertDialog(title: 'Invalid code',
-                                  content: 'The code you entered does not exists.');
+                              return SimpleAlertDialog(
+                                  title: 'Invalid code',
+                                  content:
+                                      'The code you entered does not exists.');
                             },
                           );
                         }
-                        // navigate to password screen
+                        // navigate to device preparation screen.
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => PrepareDeviceScreen()),
+                        );
                       },
                     )),
               ]),
-        ));
+        ),
+      ),
+    );
   }
 }
