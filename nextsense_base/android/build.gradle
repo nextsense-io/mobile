@@ -36,13 +36,7 @@ android {
 }
 
 dependencies {
-    // implementation fileTree(dir: "libs", include: ["*.aar"])
-    // implementation files('L:\\Data\\nextsense\\android_base_library_clone\\core\\build\\outputs\\aar\\core-debug.aar')
-    // implementation files('L:\\Data\\nextsense\\android_base_library_clone\\service\\build\\outputs\\aar\\service-debug.aar')
     implementation project(path: ':core')
     implementation project(path:':service')
-    // implementation 'com.github.nextsense-io.android_base_library:service:master-SNAPSHOT'
-    // implementation 'com.github.nextsense-io.android_base_library:core:master-SNAPSHOT'
-    // implementation 'com.github.nextsense-io.android_base_library:core:master-SNAPSHOT'
-    // implementation 'com.github.nextsense-io.android_base_library:service:master-SNAPSHOT'
+    implementation 'com.google.code.gson:gson:2.8.9'
 }

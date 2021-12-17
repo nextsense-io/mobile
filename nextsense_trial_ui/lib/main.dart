@@ -7,14 +7,15 @@ import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
 
 GetIt getIt = GetIt.instance;
 
-void getServices() {
+void registerServices() {
   getIt.registerSingleton<AuthManager>(AuthManager());
 }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  getServices();
+  registerServices();
+  NextsenseBase.startService();
   runApp(MyApp());
 }
 
