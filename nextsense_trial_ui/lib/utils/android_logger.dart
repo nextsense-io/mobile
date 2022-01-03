@@ -19,6 +19,8 @@ user can clear logs as well.
 */
 class LogFile {
   static final LogFile _logFile = new LogFile._internal();
+  static final String _startLine =
+      '*************************************************\n';
 
   factory LogFile() {
     return _logFile;
@@ -26,7 +28,7 @@ class LogFile {
 
   LogFile._internal();
 
-  String appLogs = "*************************************************\n";
+  String appLogs = _startLine;
 
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
@@ -35,7 +37,7 @@ class LogFile {
 
   Future<File> get _localFile async {
     final path = await _localPath;
-    return File('$path/log.txt');
+    return File('$path/app_log.txt');
   }
 
   Future<void> writeData(String appLog, FileMode mode) async {
@@ -57,8 +59,8 @@ class LogFile {
     return this.appLogs;
   }
 
-  clearApplogs() {
-    this.appLogs = "*************************************************\n";
+  clearAppLogs() {
+    this.appLogs = _startLine;
     writeData(this.appLogs, FileMode.write);
   }
 }
@@ -68,11 +70,11 @@ Implementation of customized logger class to change the desired format of log in
 console while the app is running.
 */
 class CustomLogPrinter {
-  static String datalog = "";
+  static final DateFormat _dateFormatter =
+      new DateFormat('yyyy:MM:dd:HH:mm:ss');
 
   final String className;
   final Logger _logger;
-  final DateFormat _dateFormatter = new DateFormat('yyyy:MM:dd:HH:mm:ss');
 
   CustomLogPrinter(this.className) : _logger = Logger(className) {
     Logger.root.level = Level.ALL;  // defaults to Level.INFO
@@ -82,7 +84,7 @@ class CustomLogPrinter {
   }
 
   void log(Level logLevel, dynamic message,
-      [dynamic? error, StackTrace? stackTrace]) {
+      [dynamic error, StackTrace? stackTrace]) {
     String log = '${_dateFormatter.format(new DateTime.now())} - $logLevel -'
         ' $className - $message';
     _logger.log(logLevel, message, error, stackTrace);
