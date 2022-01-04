@@ -3,6 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="io.nextsense.android.baselibrarytestui">
 
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
     <application
         android:name=".TestUi"
         android:allowBackup="true"

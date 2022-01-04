@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
+import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -12,7 +14,53 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final AuthManager _authManager = GetIt.instance.get<AuthManager>();
+  final PermissionsManager _permissionsManager =
+      GetIt.instance.get<PermissionsManager>();
   String _code = '';
+
+  _signIn() async {
+    UserCodeValidationResult result =
+        await _authManager.validateUserCode(_code);
+    if (result == UserCodeValidationResult.password_not_set) {
+      // navigate to password set screen.
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SetPasswordScreen()),
+      );
+      return;
+    }
+    if (result == UserCodeValidationResult.invalid) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleAlertDialog(
+              title: 'Invalid code',
+              content: 'The code you entered does not exists.');
+        },
+      );
+      return;
+    }
+
+    // If there are permissions that need to be granted, go through them one by
+    // one with an explanation screen.
+    for (PermissionRequest permissionRequest
+        in await _permissionsManager.getPermissionsToRequest()) {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => RequestPermissionScreen(permissionRequest)),
+      );
+    }
+    // Navigate to the device preparation screen.
+    // TODO(eric): Might want to add a "Do not show this again" in that page and
+    // check first before going to that page.
+    // TODO(eric): Might want to pop back with a true/false result at this point
+    // to remove the login page from the stack?
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => PrepareDeviceScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,34 +117,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: ElevatedButton(
                       child: const Text('Continue'),
                       onPressed: () async {
-                        UserCodeValidationResult result =
-                            await _authManager.validateUserCode(_code);
-                        if (result ==
-                            UserCodeValidationResult.password_not_set) {
-                          // navigate to password set screen.
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => SetPasswordScreen()),
-                          );
-                        }
-                        if (result == UserCodeValidationResult.invalid) {
-                          await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return SimpleAlertDialog(
-                                  title: 'Invalid code',
-                                  content:
-                                      'The code you entered does not exists.');
-                            },
-                          );
-                        }
-                        // navigate to device preparation screen.
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => PrepareDeviceScreen()),
-                        );
+                        _signIn();
                       },
                     )),
               ]),

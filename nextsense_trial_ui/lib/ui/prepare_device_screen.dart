@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nextsense_trial_ui/ui/request_permissions_screen.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
 
 class PrepareDeviceScreen extends StatefulWidget {
   @override
@@ -10,14 +9,8 @@ class PrepareDeviceScreen extends StatefulWidget {
 
 class _PrepareDeviceScreenState extends State<PrepareDeviceScreen> {
 
-  _requestPermissions() async {
-    await Permission.locationWhenInUse.request();
-    await Permission.ignoreBatteryOptimizations.request();
-  }
-
   @override
   Widget build(BuildContext context) {
-    _requestPermissions();
     return Scaffold(
       appBar: AppBar(
         title: Text("Prepare Device"),
@@ -50,7 +43,7 @@ class _PrepareDeviceScreenState extends State<PrepareDeviceScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => RequestPermissionsScreen()),
+                                builder: (context) => DeviceScanScreen()),
                           );
                       },
                     )),
