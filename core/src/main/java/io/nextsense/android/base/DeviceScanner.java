@@ -139,7 +139,7 @@ public class DeviceScanner {
   public void findDevices(DeviceScanListener deviceScanListener) {
     this.deviceScanListener = deviceScanListener;
     this.devices.clear();
-    Util.logd(TAG, "Finding devices...");
+    Util.logd(TAG, "Finding Bluetooth devices...");
     centralManagerProxy.getCentralManager()
         .scanForPeripheralsWithNames(deviceManager.getValidPrefixes().toArray(new String[0]));
   }

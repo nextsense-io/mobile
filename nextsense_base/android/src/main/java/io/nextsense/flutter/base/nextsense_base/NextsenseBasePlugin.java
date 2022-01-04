@@ -24,11 +24,11 @@ import io.nextsense.android.service.ForegroundService;
 /** NextSenseBasePlugin */
 public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String CONNECT_TO_SERVICE_COMMAND = "connect_to_service";
-  public static final String START_SCANNING_COMMAND = "start_scanning";
 
   private static final String TAG = NextsenseBasePlugin.class.getSimpleName();
   private static final String METHOD_CHANNEL_NAME = "nextsense_base";
-  private static final String DEVICE_SCAN_CHANNEL_NAME = "device_scan_channel";
+  private static final String DEVICE_SCAN_CHANNEL_NAME =
+      "io.nextsense.flutter.base.nextsense_base/device_scan_channel";
 
   private final Gson gson = new Gson();
   /// The MethodChannel that will the communication between Flutter and native Android
@@ -49,11 +49,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     methodChannel =
         new MethodChannel(flutterPluginBinding.getBinaryMessenger(), METHOD_CHANNEL_NAME);
     methodChannel.setMethodCallHandler(this);
+    Log.i(TAG, "Getting context.");
+    applicationContext = flutterPluginBinding.getApplicationContext();
     deviceScanChannel =
         new EventChannel(flutterPluginBinding.getBinaryMessenger(), DEVICE_SCAN_CHANNEL_NAME);
     deviceScanChannel.setStreamHandler(new EventChannel.StreamHandler() {
       @Override
       public void onListen(Object listener, EventChannel.EventSink eventSink) {
+        Log.i(TAG, "Starting Android Bluetooth scan...");
         startScanning(eventSink);
       }
       @Override
@@ -61,8 +64,6 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         stopScanning();
       }
     });
-    Log.i(TAG, "Getting context.");
-    applicationContext = flutterPluginBinding.getApplicationContext();
     Log.i(TAG, "Attached to engine.");
   }
 
@@ -105,6 +106,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     methodChannel.setMethodCallHandler(null);
+    deviceScanChannel.setStreamHandler(null);
+    Log.i(TAG, "Detached from engine.");
   }
 
   private void connectToService() {
@@ -132,6 +135,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       deviceScanListener = new DeviceScanner.DeviceScanListener() {
         @Override
         public void onNewDevice(Device device) {
+          Log.i(TAG, "Found a device in Android scan: " + device.getName());
           DeviceAttributes deviceAttributes =
               new DeviceAttributes(device.getAddress(), device.getName());
           eventSink.success(gson.toJson(deviceAttributes));
@@ -139,12 +143,13 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
         @Override
         public void onScanError(ScanError scanError) {
+          Log.e(TAG, "Error while scanning in Android: " + scanError.name());
           eventSink.error(scanError.name(), scanError.name(), scanError.name());
         }
       };
       nextSenseService.getDeviceManager().findDevices(deviceScanListener);
     } else {
-      Log.d(TAG, "Service not connected.");
+      Log.w(TAG, "Service not connected, cannot start Bluetooth scan.");
     }
   }
 

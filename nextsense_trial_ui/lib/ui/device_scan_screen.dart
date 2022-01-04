@@ -19,6 +19,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
   bool _isScanning = false;
   bool _isLoading = false;
   int _scanningCount = 0;
+  CancelListening? _cancelListening;
 
   @override
   void initState() {
@@ -27,12 +28,21 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
     _startScan();
   }
 
+  @override
+  void dispose() {
+    _cancelListening?.call();
+    super.dispose();
+  }
+
   _startScan() async {
     setState(() {
       _scanResults.clear();
     });
     _logger.log(Level.INFO, 'Starting Bluetooth scan.');
-    CancelListening cancel = NextsenseBase.startScanning((deviceAttributesJson) {
+    setState(() {
+      _isScanning = true;
+    });
+    _cancelListening = NextsenseBase.startScanning((deviceAttributesJson) {
       Map<String, dynamic> deviceAttributes = gson.decode(deviceAttributesJson);
       String macAddress =
           deviceAttributes[describeEnum(DeviceAttributesFields.macAddress)];
@@ -40,19 +50,16 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
           deviceAttributes[describeEnum(DeviceAttributesFields.name)]);
       setState(() {
         _scanResults[macAddress] = deviceAttributes;
-        _isScanning = false;
         _buildScanResultList();
+        _isScanning = false;
       });
-    });
-    setState(() {
-      _isScanning = true;
     });
   }
 
   _buildScanResultList() {
     return _scanResults.values
         .map((result) => ScanResultList(
-        key: Key(result[result[describeEnum(DeviceAttributesFields.macAddress)]]),
+        key: Key(result[describeEnum(DeviceAttributesFields.macAddress)]),
         result: result,
         onTap: () => {
           // _connect(result.device),
@@ -179,13 +186,20 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
           child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: Text("Looking for NextSense devices nearby...",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                          fontFamily: 'Roboto')),
+                Expanded(
+                  flex: 20,
+                  child: Padding(
+                    padding: EdgeInsets.all(10.0),
+                    child: Text("Looking for NextSense devices nearby...",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 30,
+                            fontFamily: 'Roboto')),
+                  ),
+                ),
+                Expanded(
+                  flex: 80,
+                  child: _displayScanResult(_buildScanResultList()),
                 ),
               ]),
         ),

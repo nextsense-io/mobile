@@ -13,12 +13,25 @@ class PermissionRequest {
 class PermissionsManager {
 
   List<PermissionRequest> _permissionsNeeded = [
+    PermissionRequest(permission: Permission.bluetoothScan, required: true,
+        requestText: 'Bluetooth scan permission is needed to find your '
+            'NextSense device, please accept the permission in the popup after '
+            'pressing continue.',
+        deniedText: 'Please try again and allow the Bluetooth scan permission. '
+            'It is not possible to find your NextSense device without it.'),
+    PermissionRequest(permission: Permission.bluetoothConnect, required: true,
+        requestText: 'Bluetooth connect permission is needed to connect to '
+            'your NextSense device, please accept the permission in the popup '
+            'after pressing continue.',
+        deniedText: 'Please try again and allow the bluetooth connect '
+            'permission. It is not possible to connect to your NextSense '
+            'device without it.'),
     PermissionRequest(permission: Permission.locationWhenInUse, required: true,
-        requestText: 'Location permission is needed to connect to Bluetooth, '
-            'please accept the permission in the popup after pressing '
-            'continue.',
+        requestText: 'Location permission is needed to connect to your '
+            'NextSense device with Bluetooth, please accept the permission in '
+            'the popup after pressing continue.',
         deniedText: 'Please try again and allow the location permission. It is '
-            'not possible to connect to the NextSense device without it.'),
+            'not possible to connect to your NextSense device without it.'),
     PermissionRequest(permission: Permission.ignoreBatteryOptimizations,
         required: false,
         requestText: 'Battery optimizations need to be disabled to ensure that '

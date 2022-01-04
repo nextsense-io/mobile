@@ -3,7 +3,7 @@ package io.nextsense.android.base.communication.ble;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.os.Handler;
-import android.os.HandlerThread;
+import android.os.Looper;
 import android.util.ArraySet;
 import android.util.Log;
 import androidx.annotation.NonNull;
@@ -32,7 +32,7 @@ public class BleCentralManagerProxy {
   private final Set<BluetoothCentralManagerCallback> globalCallbacks = new ArraySet<>();
   private final Map<String, BluetoothCentralManagerCallback> peripheralCallbacks = new HashMap<>();
   private Handler centralHandler;
-  private HandlerThread centralHandlerThread;
+  // private HandlerThread centralHandlerThread;
 
   private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback =
       new BluetoothCentralManagerCallback() {
@@ -157,12 +157,17 @@ public class BleCentralManagerProxy {
   }
 
   private void startCentralHandlerThread() {
-    centralHandlerThread = new HandlerThread("centralHandlerThread");
-    centralHandlerThread.start();
-    centralHandler = new Handler(centralHandlerThread.getLooper());
+    // centralHandlerThread = new HandlerThread("centralHandlerThread");
+    // centralHandlerThread.start();
+    // TODO(eric): Crash when not using the UI thread for Bluetooth with Flutter.
+    //             Need to investigate.
+    // centralHandler = new Handler(centralHandlerThread.getLooper());
+    centralHandler = new Handler(Looper.getMainLooper());
   }
 
   private void stopCentralHandlerThread() {
-    centralHandlerThread.quitSafely();
+    // TODO(eric): Crash when not using the UI thread for Bluetooth with Flutter.
+    //             Need to investigate.
+    // centralHandlerThread.quitSafely();
   }
 }
