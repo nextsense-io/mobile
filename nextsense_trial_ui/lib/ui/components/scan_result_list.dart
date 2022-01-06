@@ -1,14 +1,14 @@
-/*
-A widget to show a device or a device id (if a name is not available) once
-search is completed.
-*/
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 
-class ScanResultList extends StatelessWidget {
-  const ScanResultList(
+/*
+A widget to show a device or a device id (if a name is not available) once
+search is completed.
+*/
+class ScanResult extends StatelessWidget {
+  const ScanResult(
       {required Key key, required this.result, required this.onTap}) :
         super(key: key);
 

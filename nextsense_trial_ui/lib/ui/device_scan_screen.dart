@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/scan_result_list.dart';
 import 'package:nextsense_trial_ui/ui/components/search_device_bluetooth.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -15,11 +17,12 @@ class DeviceScanScreen extends StatefulWidget {
 class _DeviceScanScreenState extends State<DeviceScanScreen> {
 
   CustomLogPrinter _logger = CustomLogPrinter('DeviceScanScreen');
-  Map<String, Map<String, dynamic>> _scanResults = new Map();
+  Map<String, Map<String, dynamic>> _scanResultsMap = new Map();
+  List<ScanResult> _scanResultsWidgets = [];
   bool _isScanning = false;
-  bool _isLoading = false;
+  bool _isConnecting = false;
   int _scanningCount = 0;
-  CancelListening? _cancelListening;
+  CancelListening? _cancelScanning;
 
   @override
   void initState() {
@@ -30,44 +33,73 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
 
   @override
   void dispose() {
-    _cancelListening?.call();
+    _cancelScanning?.call();
     super.dispose();
   }
 
   _startScan() async {
     setState(() {
-      _scanResults.clear();
+      _scanResultsMap.clear();
     });
     _logger.log(Level.INFO, 'Starting Bluetooth scan.');
     setState(() {
       _isScanning = true;
     });
-    _cancelListening = NextsenseBase.startScanning((deviceAttributesJson) {
+    _cancelScanning = NextsenseBase.startScanning((deviceAttributesJson) {
       Map<String, dynamic> deviceAttributes = gson.decode(deviceAttributesJson);
       String macAddress =
           deviceAttributes[describeEnum(DeviceAttributesFields.macAddress)];
       _logger.log(Level.INFO, 'Found a device: ' +
           deviceAttributes[describeEnum(DeviceAttributesFields.name)]);
       setState(() {
-        _scanResults[macAddress] = deviceAttributes;
-        _buildScanResultList();
+        _scanResultsMap[macAddress] = deviceAttributes;
+        _scanResultsWidgets = _buildScanResultList();
+        // This flags let the device list start getting displayed.
         _isScanning = false;
       });
     });
   }
 
-  _buildScanResultList() {
-    return _scanResults.values
-        .map((result) => ScanResultList(
-        key: Key(result[describeEnum(DeviceAttributesFields.macAddress)]),
-        result: result,
-        onTap: () => {
-          // _connect(result.device),
-        }))
+  _connectToDevice(String macAddress) async {
+    _logger.log(Level.INFO, 'Connecting to device: ' + macAddress);
+    _cancelScanning?.call();
+    setState(() {
+      this._isConnecting = true;
+    });
+    try {
+      await NextsenseBase.connectDevice(macAddress);
+      // TODO(eric): Go to dashboard?
+    } on PlatformException catch(e) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleAlertDialog(
+              title: 'Connection Error',
+              content: 'Failed to connect to the NextSense device. Make sure '
+                  'it is turned on an try again. It it still fails, please '
+                  'contact NextSense support.');
+        },
+      );
+      _startScan();
+    }
+    setState(() {
+      this._isConnecting = false;
+    });
+    _logger.log(Level.INFO, 'Connected to device: ' + macAddress);
+  }
+
+  List<ScanResult> _buildScanResultList() {
+    return _scanResultsMap.values
+        .map((result) => ScanResult(
+            key: Key(result[describeEnum(DeviceAttributesFields.macAddress)]),
+            result: result,
+            onTap: () async => {
+              await _connectToDevice(result[describeEnum(DeviceAttributesFields.macAddress)])
+            }))
         .toList();
   }
 
-  _displayScanResult(resultList) {
+  _displayScanResults(resultList) {
     if (_isScanning) {
       setState(() {
         if (_scanningCount == 100) {
@@ -105,36 +137,33 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
     }
   }
 
-  _buildBody(List<Widget> resultList) {
-    Widget body = Container(
+  _buildBody(List<ScanResult> resultList) {
+    Widget scanningBody = Container(
       child: Column(
         children: <Widget>[
           Expanded(
             flex: 20,
-            child: Container(
-              margin: EdgeInsets.only(left: 20, right: 20),
-              child: Text(
-                "To move ahead we need to pair the device.",
-                style: Theme.of(context)
-                    .textTheme
-                    .headline6!
-                    .copyWith(fontWeight: FontWeight.w300),
-                textAlign: TextAlign.center,
-              ),
+            child: Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Text("Looking for NextSense devices nearby...",
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 30,
+                      fontFamily: 'Roboto')),
             ),
           ),
           Expanded(
             flex: 80,
-            child: _displayScanResult(resultList),
+            child: _displayScanResults(resultList),
           ),
         ],
       ),
     );
 
-    Widget progress = Container(
+    Widget connectingBody = Container(
       child: Stack(
         children: <Widget>[
-          body,
+          scanningBody,
           new Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
@@ -166,7 +195,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
         ],
       ),
     );
-    return _isLoading ? progress : body;
+    return _isConnecting ? connectingBody : scanningBody;
   }
 
   @override
@@ -183,25 +212,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
           ),
         ),
         child: Center(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Expanded(
-                  flex: 20,
-                  child: Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: Text("Looking for NextSense devices nearby...",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 30,
-                            fontFamily: 'Roboto')),
-                  ),
-                ),
-                Expanded(
-                  flex: 80,
-                  child: _displayScanResult(_buildScanResultList()),
-                ),
-              ]),
+          child: _buildBody(_scanResultsWidgets)
         ),
       ),
     );

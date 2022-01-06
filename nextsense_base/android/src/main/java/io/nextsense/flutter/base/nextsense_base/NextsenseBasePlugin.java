@@ -4,12 +4,18 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.google.common.collect.Maps;
 import com.google.gson.Gson;
+
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.EventChannel;
@@ -19,17 +25,25 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceScanner;
+import io.nextsense.android.base.DeviceState;
 import io.nextsense.android.service.ForegroundService;
 
 /** NextSenseBasePlugin */
 public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String CONNECT_TO_SERVICE_COMMAND = "connect_to_service";
+  public static final String CONNECT_TO_DEVICE_COMMAND = "connect_to_device";
+  public static final String CONNECT_TO_DEVICE_MAC_ADDRESS = "mac_address";
+  public static final String CONNECT_TO_DEVICE_ERROR_NOT_FOUND = "not_found";
+  public static final String CONNECT_TO_DEVICE_ERROR_CONNECTION = "connection_error";
+  public static final String CONNECT_TO_DEVICE_ERROR_INTERRUPTED = "connection_interrupted";
 
   private static final String TAG = NextsenseBasePlugin.class.getSimpleName();
   private static final String METHOD_CHANNEL_NAME = "nextsense_base";
   private static final String DEVICE_SCAN_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/device_scan_channel";
 
+  // Handler for the UI thread which is needed for running flutter JNI methods.
+  private final Handler uiThreadHandler = new Handler(Looper.getMainLooper());
   private final Gson gson = new Gson();
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
@@ -42,6 +56,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private ForegroundService nextSenseService;
   private boolean nextSenseServiceBound = false;
   private DeviceScanner.DeviceScanListener deviceScanListener;
+  private Map<String, Device> devices = Maps.newConcurrentMap();
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -75,6 +90,12 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case CONNECT_TO_SERVICE_COMMAND:
         connectToService();
+        break;
+      case CONNECT_TO_DEVICE_COMMAND:
+        String macAddress = call.argument(CONNECT_TO_DEVICE_MAC_ADDRESS);
+        Log.d(TAG, "connecting to device: " + macAddress);
+        connectDevice(result, macAddress);
+        Log.d(TAG, "connected to device: " + macAddress + " with result " + result.toString());
         break;
       case "test":
         if (nextSenseServiceBound) {
@@ -136,15 +157,17 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         @Override
         public void onNewDevice(Device device) {
           Log.i(TAG, "Found a device in Android scan: " + device.getName());
+          devices.put(device.getAddress(), device);
           DeviceAttributes deviceAttributes =
               new DeviceAttributes(device.getAddress(), device.getName());
-          eventSink.success(gson.toJson(deviceAttributes));
+          uiThreadHandler.post(() -> eventSink.success(gson.toJson(deviceAttributes)));
         }
 
         @Override
         public void onScanError(ScanError scanError) {
           Log.e(TAG, "Error while scanning in Android: " + scanError.name());
-          eventSink.error(scanError.name(), scanError.name(), scanError.name());
+          uiThreadHandler.post(() ->
+              eventSink.error(scanError.name(), scanError.name(), scanError.name()));
         }
       };
       nextSenseService.getDeviceManager().findDevices(deviceScanListener);
@@ -159,6 +182,31 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       deviceScanListener = null;
     } else {
       Log.d(TAG, "Service not connected.");
+    }
+  }
+
+  private void connectDevice(Result result, String macAddress) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      result.error(CONNECT_TO_DEVICE_ERROR_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    try {
+      DeviceState deviceState = device.connect(/*autoReconnect=*/true).get();
+      if (deviceState == DeviceState.READY) {
+        result.success(null);
+      } else {
+        result.error(CONNECT_TO_DEVICE_ERROR_CONNECTION, /*errorMessage=*/"Failed to connect.",
+            /*errorDetails=*/null);
+      }
+    } catch (ExecutionException e) {
+      result.error(CONNECT_TO_DEVICE_ERROR_CONNECTION, /*errorMessage=*/e.getMessage(),
+          /*errorDetails=*/e);
+    } catch (InterruptedException e) {
+      result.error(CONNECT_TO_DEVICE_ERROR_INTERRUPTED, /*errorMessage=*/e.getMessage(),
+          /*errorDetails=*/e);
+      Thread.currentThread().interrupt();
     }
   }
 
