@@ -39,7 +39,7 @@ class ScanResult extends StatelessWidget {
         result[describeEnum(DeviceAttributesFields.macAddress)];
     if (deviceName.length > 0) {
       return _deviceStyle(
-          context, deviceName + " - " + deviceMacAddress);
+          context, deviceName + ' - ' + deviceMacAddress);
     } else {
       return _deviceStyle(context, deviceMacAddress);
     }

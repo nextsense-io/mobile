@@ -20,7 +20,7 @@ class GoogleAuthManager {
           idToken: googleSignInAuthentication.idToken,
         );
       }
-      return Future.error("Could not authenticate with Google.");
+      return Future.error('Could not authenticate with Google.');
   }
 
   Future<void> handleSignOut() async {

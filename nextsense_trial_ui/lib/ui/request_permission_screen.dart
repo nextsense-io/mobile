@@ -22,12 +22,12 @@ class _RequestPermissionScreenState extends State<RequestPermissionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Request Permission"),
+        title: Text('Request Permission'),
       ),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/background.png"),
+            image: AssetImage('assets/images/background.png'),
             fit: BoxFit.cover,
           ),
         ),

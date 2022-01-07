@@ -36,7 +36,7 @@ class AuthManager {
 
   Future<void> setPassword(String password) async {
     if (_user == null) {
-      throw("Cannot set password on non-existent user.");
+      throw('Cannot set password on non-existent user.');
     }
     _user!.setValue(UserKey.password,
         UserPasswordAuthManager.generatePasswordHash(password));

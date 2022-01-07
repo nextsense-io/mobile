@@ -42,11 +42,11 @@ class LogFile {
 
   Future<void> writeData(String appLog, FileMode mode) async {
     final file = await _localFile;
-    file.writeAsStringSync('$appLog' + "\n", mode: mode);
+    file.writeAsStringSync('$appLog' + '\n', mode: mode);
   }
 
   appendToAppLogs(String appLog) {
-    this.appLogs += appLog + "\n";
+    this.appLogs += appLog + '\n';
     writeData(appLog, FileMode.append);
   }
 

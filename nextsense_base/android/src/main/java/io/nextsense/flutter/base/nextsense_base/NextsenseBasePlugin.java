@@ -14,6 +14,8 @@ import androidx.annotation.NonNull;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -32,8 +34,11 @@ import io.nextsense.android.service.ForegroundService;
 public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String CONNECT_TO_SERVICE_COMMAND = "connect_to_service";
   public static final String CONNECT_TO_DEVICE_COMMAND = "connect_to_device";
-  public static final String CONNECT_TO_DEVICE_MAC_ADDRESS = "mac_address";
-  public static final String CONNECT_TO_DEVICE_ERROR_NOT_FOUND = "not_found";
+  public static final String START_STREAMING_COMMAND = "start_streaming";
+  public static final String STOP_STREAMING_COMMAND = "stop_streaming";
+  public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
+  public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
+  public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
   public static final String CONNECT_TO_DEVICE_ERROR_CONNECTION = "connection_error";
   public static final String CONNECT_TO_DEVICE_ERROR_INTERRUPTED = "connection_interrupted";
 
@@ -92,10 +97,21 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         connectToService();
         break;
       case CONNECT_TO_DEVICE_COMMAND:
-        String macAddress = call.argument(CONNECT_TO_DEVICE_MAC_ADDRESS);
+        String macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         Log.d(TAG, "connecting to device: " + macAddress);
         connectDevice(result, macAddress);
         Log.d(TAG, "connected to device: " + macAddress + " with result " + result.toString());
+        break;
+      case START_STREAMING_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        startStreaming(result, macAddress);
+        break;
+      case STOP_STREAMING_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        stopStreaming(result, macAddress);
+        break;
+      case GET_CONNECTED_DEVICES_COMMAND:
+        getConnectedDevices(result);
         break;
       case "test":
         if (nextSenseServiceBound) {
@@ -151,6 +167,18 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
+  private void getConnectedDevices(Result result) {
+    List<String> connectedDevicesJson = new ArrayList<>();
+    if (nextSenseServiceBound) {
+      List<Device> connectedDevices = nextSenseService.getDeviceManager().getConnectedDevices();
+      for (Device device : connectedDevices) {
+        connectedDevicesJson.add(
+            gson.toJson(new DeviceAttributes(device.getAddress(), device.getName())));
+      }
+    }
+    result.success(connectedDevicesJson);
+  }
+
   private void startScanning(EventChannel.EventSink eventSink) {
     if (nextSenseServiceBound) {
       deviceScanListener = new DeviceScanner.DeviceScanListener() {
@@ -188,7 +216,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private void connectDevice(Result result, String macAddress) {
     Device device = devices.get(macAddress);
     if (device == null) {
-      result.error(CONNECT_TO_DEVICE_ERROR_NOT_FOUND, /*errorMessage=*/null,
+      result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
@@ -208,6 +236,26 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
           /*errorDetails=*/e);
       Thread.currentThread().interrupt();
     }
+  }
+
+  private void startStreaming(Result result, String macAddress) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    device.startStreaming();
+  }
+
+  private void stopStreaming(Result result, String macAddress) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    device.stopStreaming();
   }
 
   private final ServiceConnection nextSenseConnection = new ServiceConnection() {

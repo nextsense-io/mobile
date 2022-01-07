@@ -52,7 +52,7 @@ class _SignInScreenState extends State<SignInScreen> {
       );
     }
     // Navigate to the device preparation screen.
-    // TODO(eric): Might want to add a "Do not show this again" in that page and
+    // TODO(eric): Might want to add a 'Do not show this again' in that page and
     // check first before going to that page.
     // TODO(eric): Might want to pop back with a true/false result at this point
     // to remove the login page from the stack?
@@ -66,12 +66,12 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Login"),
+        title: Text('Login'),
       ),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/background.png"),
+            image: AssetImage('assets/images/background.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -81,7 +81,7 @@ class _SignInScreenState extends State<SignInScreen> {
               children: <Widget>[
                 Padding(
                   padding: EdgeInsets.all(10.0),
-                  child: Text("NextSense Trial",
+                  child: Text('NextSense Trial',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 30,
@@ -90,7 +90,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 Padding(
                   padding: EdgeInsets.all(10.0),
                   child: TextFormField(
-                    cursorColor: Theme.of(context).cursorColor,
+                    cursorColor: TextSelectionTheme.of(context).cursorColor,
                     initialValue: '',
                     maxLength: 20,
                     decoration: InputDecoration(

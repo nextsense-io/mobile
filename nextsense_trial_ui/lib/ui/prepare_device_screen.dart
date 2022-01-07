@@ -13,12 +13,12 @@ class _PrepareDeviceScreenState extends State<PrepareDeviceScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Prepare Device"),
+        title: Text('Prepare Device'),
       ),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/background.png"),
+            image: AssetImage('assets/images/background.png'),
             fit: BoxFit.cover,
           ),
         ),
@@ -28,7 +28,7 @@ class _PrepareDeviceScreenState extends State<PrepareDeviceScreen> {
               children: <Widget>[
                 Padding(
                   padding: EdgeInsets.all(10.0),
-                  child: Text("Move the slider to the ON position on your device",
+                  child: Text('Move the slider to the ON position on your device',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 30,

@@ -26,12 +26,12 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text("Set Password"),
+          title: Text('Set Password'),
         ),
         body: Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage("assets/images/background.png"),
+                image: AssetImage('assets/images/background.png'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -41,7 +41,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                   children: <Widget>[
                     Padding(
                       padding: EdgeInsets.all(10.0),
-                      child: Text("Set Password",
+                      child: Text('Set Password',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 30,
@@ -50,7 +50,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                     Padding(
                       padding: EdgeInsets.all(10.0),
                       child: TextFormField(
-                        cursorColor: Theme.of(context).cursorColor,
+                        cursorColor: TextSelectionTheme.of(context).cursorColor,
                         initialValue: '',
                         maxLength: 20,
                         decoration: InputDecoration(
@@ -75,7 +75,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                     Padding(
                       padding: EdgeInsets.all(10.0),
                       child: TextFormField(
-                        cursorColor: Theme.of(context).cursorColor,
+                        cursorColor: TextSelectionTheme.of(context).cursorColor,
                         initialValue: '',
                         maxLength: 20,
                         decoration: InputDecoration(

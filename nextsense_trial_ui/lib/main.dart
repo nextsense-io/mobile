@@ -46,7 +46,7 @@ class MyHomePage extends StatefulWidget {
   // This class is the configuration for the state. It holds the values (in this
   // case the title) provided by the parent (in this case the App widget) and
   // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+  // always marked 'final'.
 
   final String title;
 
@@ -58,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   _MyHomePageState() {
-    print("Starting service in dart activity");
+    print('Starting service in dart activity');
     NextsenseBase.startService();
   }
 
@@ -102,9 +102,9 @@ class _MyHomePageState extends State<MyHomePage> {
               // arranges them vertically. By default, it sizes itself to fit its
               // children horizontally, and tries to be as tall as its parent.
               //
-              // Invoke "debug painting" (press "p" in the console, choose the
-              // "Toggle Debug Paint" action from the Flutter Inspector in Android
-              // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
+              // Invoke 'debug painting' (press 'p' in the console, choose the
+              // 'Toggle Debug Paint' action from the Flutter Inspector in Android
+              // Studio, or the 'Toggle Debug Paint' command in Visual Studio Code)
               // to see the wireframe for each widget.
               //
               // Column has various properties to control how it sizes itself and

@@ -12,16 +12,16 @@ class SearchDeviceBluetooth extends StatelessWidget {
     String path;
     switch (count) {
       case 1:
-        path = "assets/images/bluetooth_1.png";
+        path = 'assets/images/bluetooth_1.png';
         break;
       case 2:
-        path = "assets/images/bluetooth_2.png";
+        path = 'assets/images/bluetooth_2.png';
         break;
       case 3:
-        path = "assets/images/bluetooth_3.png";
+        path = 'assets/images/bluetooth_3.png';
         break;
       default:
-        path = "assets/images/bluetooth_1.png";
+        path = 'assets/images/bluetooth_1.png';
         break;
     }
 
@@ -42,7 +42,7 @@ class SearchDeviceBluetooth extends StatelessWidget {
             child: Container(
               margin: EdgeInsets.only(top: 15),
               child: Text(
-                "Searching for devices...",
+                'Searching for devices...',
                 style: Theme.of(context).textTheme.bodyText2,
                 textAlign: TextAlign.center,
               ),

@@ -7,6 +7,7 @@ import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/scan_result_list.dart';
 import 'package:nextsense_trial_ui/ui/components/search_device_bluetooth.dart';
+import 'package:nextsense_trial_ui/ui/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class DeviceScanScreen extends StatefulWidget {
@@ -37,7 +38,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
     super.dispose();
   }
 
-  _startScan() async {
+  void _startScan() async {
     setState(() {
       _scanResultsMap.clear();
     });
@@ -64,12 +65,15 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
     _logger.log(Level.INFO, 'Connecting to device: ' + macAddress);
     _cancelScanning?.call();
     setState(() {
-      this._isConnecting = true;
+      _isConnecting = true;
     });
     try {
       await NextsenseBase.connectDevice(macAddress);
-      // TODO(eric): Go to dashboard?
-    } on PlatformException catch(e) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => DashboardScreen()),
+      );
+    } on PlatformException {
       await showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -83,7 +87,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
       _startScan();
     }
     setState(() {
-      this._isConnecting = false;
+      _isConnecting = false;
     });
     _logger.log(Level.INFO, 'Connected to device: ' + macAddress);
   }
@@ -93,13 +97,13 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
         .map((result) => ScanResult(
             key: Key(result[describeEnum(DeviceAttributesFields.macAddress)]),
             result: result,
-            onTap: () async => {
-              await _connectToDevice(result[describeEnum(DeviceAttributesFields.macAddress)])
+            onTap: () => {
+              _connectToDevice(result[describeEnum(DeviceAttributesFields.macAddress)])
             }))
         .toList();
   }
 
-  _displayScanResults(resultList) {
+  Widget _displayScanResults(resultList) {
     if (_isScanning) {
       setState(() {
         if (_scanningCount == 100) {
@@ -137,7 +141,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
     }
   }
 
-  _buildBody(List<ScanResult> resultList) {
+  Widget _buildBody(List<ScanResult> resultList) {
     Widget scanningBody = Container(
       child: Column(
         children: <Widget>[
@@ -145,7 +149,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
             flex: 20,
             child: Padding(
               padding: EdgeInsets.all(10.0),
-              child: Text("Looking for NextSense devices nearby...",
+              child: Text('Looking for NextSense devices nearby...',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 30,
@@ -182,7 +186,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
                 child: Container(
                   margin: EdgeInsets.all(24),
                   child: Text(
-                    "Connecting...",
+                    'Connecting...',
                     style: Theme.of(context)
                         .textTheme
                         .bodyText2!
@@ -202,12 +206,12 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Find your device"),
+        title: Text('Find your device'),
       ),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: AssetImage("assets/images/background.png"),
+            image: AssetImage('assets/images/background.png'),
             fit: BoxFit.cover,
           ),
         ),

@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:core';
 
 import 'package:flutter/services.dart';
+import 'package:gson/gson.dart';
 
 typedef void Listener(dynamic msg);
 typedef void CancelListening();
@@ -10,19 +12,20 @@ enum DeviceAttributesFields {
   name
 }
 
-
-
 class NextsenseBase {
   static const MethodChannel _channel = const MethodChannel('nextsense_base');
   static const EventChannel _deviceScanStream = const EventChannel(
       'io.nextsense.flutter.base.nextsense_base/device_scan_channel');
   static const String _connectToServiceCommand = 'connect_to_service';
+  static const String _getConnectedDevicesCommand = 'get_connected_devices';
   static const String _connectToDeviceCommand = 'connect_to_device';
-  static const String _connectToDeviceMacAddress = "mac_address";
-  static const String _connectToDeviceErrorNotFound = "not_found";
-  static const String _connectToDeviceErrorConnection = "connection_error";
+  static const String _startStreamingCommand = 'start_streaming';
+  static const String _stopStreamingCommand = 'stop_streaming';
+  static const String _macAddress = 'mac_address';
+  static const String _connectToDeviceErrorNotFound = 'not_found';
+  static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
-      "connection_interrupted";
+      'connection_interrupted';
   static int _nextScanningListenerId = 1;
 
 
@@ -41,7 +44,7 @@ class NextsenseBase {
 
   static Future connectDevice(String macAddress) async {
     await _channel.invokeMethod(_connectToDeviceCommand,
-        {_connectToDeviceMacAddress: macAddress});
+        {_macAddress: macAddress});
   }
 
   static CancelListening startScanning(Listener listener) {
@@ -53,8 +56,28 @@ class NextsenseBase {
     };
   }
 
-  static Future<int> get test async {
-    final int connectedDevices = await _channel.invokeMethod('test');
+  static Future startStreaming(String macAddress) async {
+    await _channel.invokeMethod(_startStreamingCommand,
+        {_macAddress: macAddress});
+  }
+
+  static Future stopStreaming(String macAddress) async {
+    await _channel.invokeMethod(_stopStreamingCommand,
+        {_macAddress: macAddress});
+  }
+
+  static Future<List<Map<String, dynamic>>> getConnectedDevices() async {
+    List<Object?> connectedDevicesJson =
+        await _channel.invokeMethod(_getConnectedDevicesCommand);
+    List<Map<String, dynamic>> connectedDevices = [];
+    for (Object? connectedDeviceJson in connectedDevicesJson) {
+      connectedDevices.add(gson.decode(connectedDeviceJson as String));
+    }
     return connectedDevices;
+  }
+
+  static Future<int> get test async {
+    final int connectedDevicesCount = await _channel.invokeMethod('test');
+    return connectedDevicesCount;
   }
 }
