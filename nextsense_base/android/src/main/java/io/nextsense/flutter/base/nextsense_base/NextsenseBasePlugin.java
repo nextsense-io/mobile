@@ -33,6 +33,7 @@ import io.nextsense.android.service.ForegroundService;
 /** NextSenseBasePlugin */
 public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String CONNECT_TO_SERVICE_COMMAND = "connect_to_service";
+  public static final String STOP_SERVICE_COMMAND = "stop_service";
   public static final String CONNECT_TO_DEVICE_COMMAND = "connect_to_device";
   public static final String START_STREAMING_COMMAND = "start_streaming";
   public static final String STOP_STREAMING_COMMAND = "stop_streaming";
@@ -50,6 +51,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   // Handler for the UI thread which is needed for running flutter JNI methods.
   private final Handler uiThreadHandler = new Handler(Looper.getMainLooper());
   private final Gson gson = new Gson();
+  private final Map<String, Device> devices = Maps.newConcurrentMap();
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -61,7 +63,6 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private ForegroundService nextSenseService;
   private boolean nextSenseServiceBound = false;
   private DeviceScanner.DeviceScanListener deviceScanListener;
-  private Map<String, Device> devices = Maps.newConcurrentMap();
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -95,6 +96,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case CONNECT_TO_SERVICE_COMMAND:
         connectToService();
+        break;
+      case STOP_SERVICE_COMMAND:
+        stopService();
         break;
       case CONNECT_TO_DEVICE_COMMAND:
         String macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -162,6 +166,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         Log.e(TAG, "Could not find class: " +
             "io.flutter.embedding.android.FlutterActivity");
       }
+    } else {
+      Log.d(TAG, "context still null");
+    }
+  }
+
+  private void stopService() {
+    if (applicationContext != null) {
+      applicationContext.stopService(foregroundServiceIntent);
     } else {
       Log.d(TAG, "context still null");
     }
