@@ -130,6 +130,7 @@ class _SignInScreenState extends State<SignInScreen> {
             cursorColor: TextSelectionTheme.of(context).cursorColor,
             initialValue: '',
             maxLength: 20,
+            obscureText: true,
             decoration: InputDecoration(
               icon: Icon(Icons.account_circle),
               labelText: 'Enter your password',

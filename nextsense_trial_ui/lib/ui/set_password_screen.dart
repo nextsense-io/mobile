@@ -55,6 +55,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                         cursorColor: TextSelectionTheme.of(context).cursorColor,
                         initialValue: '',
                         maxLength: 20,
+                        obscureText: true,
                         decoration: InputDecoration(
                           icon: Icon(Icons.password),
                           labelText: 'Enter your password',
@@ -80,6 +81,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                         cursorColor: TextSelectionTheme.of(context).cursorColor,
                         initialValue: '',
                         maxLength: 20,
+                        obscureText: true,
                         decoration: InputDecoration(
                           icon: Icon(Icons.password),
                           labelText: 'Confirm your password',
