@@ -5,6 +5,7 @@ import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
+import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
 
 GetIt getIt = GetIt.instance;
@@ -13,6 +14,7 @@ void registerServices() {
   getIt.registerSingleton<FirestoreManager>(FirestoreManager());
   getIt.registerSingleton<AuthManager>(AuthManager());
   getIt.registerSingleton<PermissionsManager>(PermissionsManager());
+  getIt.registerSingleton<SessionManager>(SessionManager());
 }
 
 void main() async {

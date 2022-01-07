@@ -16,7 +16,9 @@ enum UserKey {
   // Ending date of the currently enrolled study for this subject.
   study_end_date,
   // User type.
-  type
+  type,
+  // How many sessions were recorded by this user.
+  session_number
 }
 
 class User extends FirebaseEntity {

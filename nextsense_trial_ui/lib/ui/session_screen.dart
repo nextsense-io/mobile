@@ -1,12 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/managers/session_manager.dart';
 
 class SessionScreen extends StatefulWidget {
   @override
   _SessionScreenState createState() => _SessionScreenState();
 }
 class _SessionScreenState extends State<SessionScreen> {
+
+  final SessionManager _sessionManager = GetIt.instance.get<SessionManager>();
 
   String? _deviceMacAddress;
   bool _loading = true;
@@ -69,9 +73,9 @@ class _SessionScreenState extends State<SessionScreen> {
                 child: Text(streamButtonText),
                 onPressed: () async {
                   if (_streaming) {
-                    NextsenseBase.stopStreaming(_deviceMacAddress!);
+                    _sessionManager.stopSession(_deviceMacAddress!);
                   } else {
-                    NextsenseBase.startStreaming(_deviceMacAddress!);
+                    _sessionManager.startSession(_deviceMacAddress!);
                   }
                   setState(() {
                     _streaming = !_streaming;

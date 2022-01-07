@@ -17,18 +17,20 @@ class AuthManager {
   // final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   // final GoogleAuthManager _googleAuthManager = GoogleAuthManager();
 
+  String? _userCode;
   User? _user;
   bool _authorized = false;
 
   AuthManager() {}
 
   Future<UserCodeValidationResult> validateUserCode(String code) async {
-    FirebaseEntity? entity =
-        await _firestoreManager.queryEntity(Table.users, code);
-    if (entity == null) {
+    FirebaseEntity userEntity =
+        await _firestoreManager.queryEntity([Table.users], [code]);
+    if (!userEntity.getDocumentSnapshot().exists) {
       return UserCodeValidationResult.invalid;
     }
-    _user = User(entity);
+    _user = User(userEntity);
+    _userCode = code;
     if (_user!.getValue(UserKey.password) == null) {
       return UserCodeValidationResult.password_not_set;
     }
@@ -56,6 +58,14 @@ class AuthManager {
 
   bool isAuthorized() {
     return _authorized;
+  }
+
+  String? getUserCode() {
+    return _userCode;
+  }
+
+  User? getUserEntity() {
+    return _user;
   }
 
   // Future<SignInResult> signIn() async {

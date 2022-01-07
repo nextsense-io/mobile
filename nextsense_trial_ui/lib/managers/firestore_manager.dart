@@ -5,8 +5,12 @@ enum Table {
   organizations,
   users,
   sessions,
+  data_sessions,
+  planned_assessments,
+  planned_surveys,
   studies,
-  surveys
+  surveys,
+  questions
 }
 
 extension ParseToString on Table {
@@ -25,12 +29,28 @@ class FirestoreManager {
     }
   }
 
-  Future<FirebaseEntity?> queryEntity(Table table, String entityKey) async {
-    DocumentSnapshot snapshot = await _references[table]!.doc(entityKey).get();
-    print(snapshot);
-    if (!snapshot.exists) {
-      return null;
+  /*
+   * Query a single entity. The number of entries in the tables list needs to
+   * match the entityKeys size.
+   *
+   * tables: List of tables that makes up the reference, in order. One entityKey
+   *         is inserted after each table.
+   * entityKeys: List of entity keys for each table in the `tables` parameter.
+   */
+  Future<FirebaseEntity> queryEntity(
+      List<Table> tables, List<String> entityKeys) async {
+    assert(tables.length == entityKeys.length);
+    DocumentReference? reference = null;
+    for (int i = 0; i < tables.length; ++i) {
+      if (i == 0) {
+        reference = FirebaseFirestore.instance.collection(tables[i].name()).doc(
+            entityKeys[i]);
+      } else {
+        reference = reference!.collection(tables[i].name()).doc(
+            entityKeys[i]);
+      }
     }
+    DocumentSnapshot snapshot = await reference!.get();
     return FirebaseEntity(snapshot);
   }
 
