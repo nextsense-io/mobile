@@ -16,9 +16,12 @@ class _SignInScreenState extends State<SignInScreen> {
   final AuthManager _authManager = GetIt.instance.get<AuthManager>();
   final PermissionsManager _permissionsManager =
       GetIt.instance.get<PermissionsManager>();
-  String _code = '';
 
-  _signIn() async {
+  String _code = '';
+  String _password = '';
+  bool _askForPassword = false;
+
+  _validatedUserCode() async {
     UserCodeValidationResult result =
         await _authManager.validateUserCode(_code);
     if (result == UserCodeValidationResult.password_not_set) {
@@ -41,10 +44,30 @@ class _SignInScreenState extends State<SignInScreen> {
       return;
     }
 
+    // Ask the user to enter his password.
+    setState(() {
+      _askForPassword = true;
+    });
+  }
+
+  _signIn() async {
+    bool authenticated = await _authManager.signIn(_password);
+    if (!authenticated) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleAlertDialog(
+              title: 'Invalid password',
+              content: 'The password you entered is invalid.');
+        },
+      );
+      return;
+    }
+
     // If there are permissions that need to be granted, go through them one by
     // one with an explanation screen.
     for (PermissionRequest permissionRequest
-        in await _permissionsManager.getPermissionsToRequest()) {
+    in await _permissionsManager.getPermissionsToRequest()) {
       await Navigator.push(
         context,
         MaterialPageRoute(
@@ -62,6 +85,87 @@ class _SignInScreenState extends State<SignInScreen> {
     );
   }
 
+  List<Widget> _buildBody(BuildContext context) {
+    List<Widget> widgets = <Widget>[
+      Padding(
+        padding: EdgeInsets.all(10.0),
+        child: Text('NextSense Trial',
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 30,
+                fontFamily: 'Roboto')),
+      ),
+      Padding(
+        padding: EdgeInsets.all(10.0),
+        child: TextFormField(
+          cursorColor: TextSelectionTheme.of(context).cursorColor,
+          initialValue: '',
+          maxLength: 20,
+          enabled: !_askForPassword,
+          decoration: InputDecoration(
+            icon: Icon(Icons.account_circle),
+            labelText: 'Enter your id',
+            labelStyle: TextStyle(
+              color: Color(0xFF6200EE),
+            ),
+            helperText:
+            'Please contact NextSense support if you did not get an id',
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Color(0xFF6200EE)),
+            ),
+          ),
+          onChanged: (code) {
+            setState(() {
+              _code = code;
+            });
+          },
+        ),
+      ),
+    ];
+    if (_askForPassword) {
+      widgets.add(
+        Padding(
+          padding: EdgeInsets.all(10.0),
+          child: TextFormField(
+            cursorColor: TextSelectionTheme.of(context).cursorColor,
+            initialValue: '',
+            maxLength: 20,
+            decoration: InputDecoration(
+              icon: Icon(Icons.account_circle),
+              labelText: 'Enter your password',
+              labelStyle: TextStyle(
+                color: Color(0xFF6200EE),
+              ),
+              helperText:
+              'Contact NextSense to reset your password',
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF6200EE)),
+              ),
+            ),
+            onChanged: (password) {
+              setState(() {
+                _password = password;
+              });
+            },
+          ),
+        ),
+      );
+    }
+    widgets.add(Padding(
+        padding: EdgeInsets.all(10.0),
+        child: ElevatedButton(
+          child: const Text('Continue'),
+          onPressed: () async {
+            if (_askForPassword) {
+              _signIn();
+            } else {
+              _validatedUserCode();
+            }
+          },
+        )));
+    return widgets;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,51 +180,10 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
         ),
         child: Center(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: Text('NextSense Trial',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                          fontFamily: 'Roboto')),
-                ),
-                Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: TextFormField(
-                    cursorColor: TextSelectionTheme.of(context).cursorColor,
-                    initialValue: '',
-                    maxLength: 20,
-                    decoration: InputDecoration(
-                      icon: Icon(Icons.account_circle),
-                      labelText: 'Enter your id',
-                      labelStyle: TextStyle(
-                        color: Color(0xFF6200EE),
-                      ),
-                      helperText:
-                          'Please contact NextSense support if you did not get an id',
-                      enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Color(0xFF6200EE)),
-                      ),
-                    ),
-                    onChanged: (code) {
-                      setState(() {
-                        _code = code;
-                      });
-                    },
-                  ),
-                ),
-                Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: ElevatedButton(
-                      child: const Text('Continue'),
-                      onPressed: () async {
-                        _signIn();
-                      },
-                    )),
-              ]),
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _buildBody(context),
+            ),
         ),
       ),
     );
