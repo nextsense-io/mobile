@@ -13,11 +13,13 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
   String? _password;
   String? _passwordConfirmation;
 
-  Future _showError(BuildContext context, String message) async {
+  Future _showDialog(BuildContext context, String title, String message,
+      bool popNavigator) async {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return SimpleAlertDialog(title: 'Error', content: message);
+        return SimpleAlertDialog(title: title, content: message,
+            popNavigator: popNavigator);
       },
     );
   }
@@ -106,19 +108,22 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                             }
                             if (_password!.length <
                                 AuthManager.minimumPasswordLength) {
-                              _showError(
-                                  context,
+                              _showDialog(
+                                  context, 'Error',
                                   'Password should be at least '
                                   '${AuthManager.minimumPasswordLength} '
-                                  'characters long');
+                                  'characters long', false);
                               return;
                             }
                             if (_password!.compareTo(_passwordConfirmation!) !=
                                 0) {
-                              _showError(context, 'Passwords do not match.');
+                              _showDialog(context, 'Error',
+                                  'Passwords do not match.', false);
                               return;
                             }
                             _authManager.setPassword(_password!);
+                            _showDialog(context, 'Password Set',
+                                'Please login to access the system.', true);
                           },
                         )),
                   ]),

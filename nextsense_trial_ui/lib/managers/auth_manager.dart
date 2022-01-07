@@ -1,3 +1,4 @@
+import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
@@ -11,8 +12,8 @@ enum UserCodeValidationResult {
 
 class AuthManager {
   static const minimumPasswordLength = 8;
-  // TODO(eric): Get from session?
-  final FirestoreManager _firestoreManager = FirestoreManager();
+  final FirestoreManager _firestoreManager =
+      GetIt.instance.get<FirestoreManager>();
   // final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   // final GoogleAuthManager _googleAuthManager = GoogleAuthManager();
 
@@ -40,7 +41,7 @@ class AuthManager {
     }
     _user!.setValue(UserKey.password,
         UserPasswordAuthManager.generatePasswordHash(password));
-    await _firestoreManager.persistEntity(_user!);
+    _firestoreManager.persistEntity(_user!);
   }
 
   Future<bool> signIn(String password) async {

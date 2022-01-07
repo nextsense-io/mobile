@@ -25,10 +25,10 @@ class User extends FirebaseEntity {
         super(firebaseEntity.getDocumentSnapshot());
 
   dynamic getValue(UserKey userKey) {
-    return getValues()[userKey.toString()];
+    return getValues()[userKey.name];
   }
 
   void setValue(UserKey userKey, dynamic value) {
-    getValues()[userKey.toString()] = value;
+    getValues()[userKey.name] = value;
   }
 }
