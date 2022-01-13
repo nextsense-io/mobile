@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package nextsense;
+
+import "google/protobuf/timestamp.proto";
+
+option java_package = "io.nextsense.android.base";
+option java_outer_classname = "DataSamplesProto";
+
+message Channel {
+  int32 number = 1;
+  repeated float sample = 2;
+}
+
+message DataSamples {
+  string data_session_id = 1;
+  string user_id = 2;
+  repeated google.protobuf.Timestamp sampling_timestamp = 4;
+  repeated Channel channel = 5;
+  repeated bool sync = 6;
+  repeated bool trig_out = 7;
+  repeated bool trig_in = 8;
+  repeated bool z_mod = 9;
+  repeated bool marker = 10;
+  repeated bool button = 11;
+}

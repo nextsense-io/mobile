@@ -82,7 +82,7 @@ public class Device {
     return nextSenseDevice.getDeviceMode();
   }
 
-  public ListenableFuture<Boolean> startStreaming() {
+  public ListenableFuture<Boolean> startStreaming(String userBigTableKey, String dataSessionId) {
     if (deviceState != DeviceState.READY) {
       return Futures.immediateFailedFuture(new IllegalStateException(
           "Device needs to be in READY state to change its mode."));
@@ -92,7 +92,8 @@ public class Device {
     //             sets.
     parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
         StartStreamingCommand.StartMode.NO_LOGGING);
-    return nextSenseDevice.startStreaming(/*uploadToCloud=*/true, parametersBundle);
+    return nextSenseDevice.startStreaming(/*uploadToCloud=*/true, userBigTableKey,
+        dataSessionId, parametersBundle);
   }
 
   public ListenableFuture<Boolean> stopStreaming() {
@@ -123,6 +124,7 @@ public class Device {
    * @param autoReconnect if true will try to reconnect when the connection is lost.
    */
   public ListenableFuture<DeviceState> connect(boolean autoReconnect) {
+    Util.logd(TAG, "connect start");
     if (deviceState != DeviceState.DISCONNECTED) {
       return Futures.immediateFuture(deviceState);
     }
@@ -131,6 +133,7 @@ public class Device {
     deviceConnectionFuture = SettableFuture.create();
     centralManagerProxy.getCentralManager().connectPeripheral(
         btPeripheral, callbackProxy.getMainCallback());
+    Util.logd(TAG, "connect returning future");
     return deviceConnectionFuture;
   }
 

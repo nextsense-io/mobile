@@ -22,6 +22,8 @@ class NextsenseBase {
   static const String _startStreamingCommand = 'start_streaming';
   static const String _stopStreamingCommand = 'stop_streaming';
   static const String _macAddress = 'mac_address';
+  static const String _userBigTableKey = 'user_bigtable_key';
+  static const String _dataSessionId = 'data_session_id';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
@@ -56,9 +58,11 @@ class NextsenseBase {
     };
   }
 
-  static Future startStreaming(String macAddress) async {
+  static Future startStreaming(String macAddress, String userBigTableKey,
+      String dataSessionId) async {
     await _channel.invokeMethod(_startStreamingCommand,
-        {_macAddress: macAddress});
+        {_macAddress: macAddress, _userBigTableKey: userBigTableKey,
+         _dataSessionId: dataSessionId});
   }
 
   static Future stopStreaming(String macAddress) async {

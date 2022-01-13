@@ -39,6 +39,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String STOP_STREAMING_COMMAND = "stop_streaming";
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
+  public static final String USER_BT_KEY_ARGUMENT = "user_bigtable_key";
+  public static final String DATA_SESSION_ID_ARGUMENT = "data_session_id";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
   public static final String CONNECT_TO_DEVICE_ERROR_CONNECTION = "connection_error";
   public static final String CONNECT_TO_DEVICE_ERROR_INTERRUPTED = "connection_interrupted";
@@ -108,7 +110,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case START_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
-        startStreaming(result, macAddress);
+        String user_bt_key = call.argument(USER_BT_KEY_ARGUMENT);
+        String data_session_id = call.argument(DATA_SESSION_ID_ARGUMENT);
+        startStreaming(result, macAddress, user_bt_key, data_session_id);
         break;
       case STOP_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -250,14 +254,15 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private void startStreaming(Result result, String macAddress) {
+  private void startStreaming(Result result, String macAddress, String userBigTableKey,
+                              String dataSessionId) {
     Device device = devices.get(macAddress);
     if (device == null) {
       result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
-    device.startStreaming();
+    device.startStreaming(userBigTableKey, dataSessionId);
   }
 
   private void stopStreaming(Result result, String macAddress) {

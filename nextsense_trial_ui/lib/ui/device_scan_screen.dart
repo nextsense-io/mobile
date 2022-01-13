@@ -17,7 +17,7 @@ class DeviceScanScreen extends StatefulWidget {
 
 class _DeviceScanScreenState extends State<DeviceScanScreen> {
 
-  CustomLogPrinter _logger = CustomLogPrinter('DeviceScanScreen');
+  final CustomLogPrinter _logger = CustomLogPrinter('DeviceScanScreen');
   Map<String, Map<String, dynamic>> _scanResultsMap = new Map();
   List<ScanResult> _scanResultsWidgets = [];
   bool _isScanning = false;

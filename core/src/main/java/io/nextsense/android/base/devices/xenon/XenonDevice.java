@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -123,7 +124,9 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   }
 
   @Override
-  public ListenableFuture<Boolean> startStreaming(boolean uploadToCloud, Bundle parameters) {
+  public ListenableFuture<Boolean> startStreaming(
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      Bundle parameters) {
     if (parameters == null || parameters.getSerializable(STREAM_START_MODE_KEY) == null) {
       return Futures.immediateFailedFuture(
           new IllegalArgumentException("Need to provide the " + STREAM_START_MODE_KEY +
@@ -139,7 +142,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           new IllegalStateException("No characteristic to stream on."));
     }
     deviceModeFuture = SettableFuture.create();
-    localSessionManager.startLocalSession(/*cloudSessionId=*/null, uploadToCloud);
+    localSessionManager.startLocalSession(userBigTableKey, dataSessionId, uploadToCloud);
     peripheral.setNotify(dataCharacteristic, /*enable=*/true);
     return deviceModeFuture;
   }

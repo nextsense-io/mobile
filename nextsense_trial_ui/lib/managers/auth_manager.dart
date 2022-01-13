@@ -3,6 +3,7 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/user_password_auth_manager.dart';
+import 'package:uuid/uuid.dart';
 
 enum UserCodeValidationResult {
   valid,
@@ -12,8 +13,10 @@ enum UserCodeValidationResult {
 
 class AuthManager {
   static const minimumPasswordLength = 8;
+
   final FirestoreManager _firestoreManager =
       GetIt.instance.get<FirestoreManager>();
+  final Uuid _uuid = Uuid();
   // final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   // final GoogleAuthManager _googleAuthManager = GoogleAuthManager();
 
@@ -49,6 +52,10 @@ class AuthManager {
   Future<bool> signIn(String password) async {
     _authorized =  UserPasswordAuthManager.isPasswordValid(
         password, _user!.getValue(UserKey.password));
+    if (_authorized && _user!.getValue(UserKey.bt_key) == null) {
+      _user!.setValue(UserKey.bt_key, _uuid.v4());
+      _firestoreManager.persistEntity(_user!);
+    }
     return _authorized;
   }
 

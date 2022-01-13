@@ -3,6 +3,8 @@ package io.nextsense.android.base.devices;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
+
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.welie.blessed.BluetoothPeripheral;
@@ -32,12 +34,15 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
-  public ListenableFuture<Boolean> startStreaming(boolean uploadToCloud) {
-    return startStreaming(uploadToCloud, new Bundle());
+  public ListenableFuture<Boolean> startStreaming(
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId) {
+    return startStreaming(uploadToCloud, userBigTableKey, dataSessionId, new Bundle());
   }
 
   @Override
-  public ListenableFuture<Boolean> startStreaming(boolean uploadToCloud, Bundle parameters) {
+  public ListenableFuture<Boolean> startStreaming(
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      Bundle parameters) {
     return Futures.immediateFuture(false);
   }
 

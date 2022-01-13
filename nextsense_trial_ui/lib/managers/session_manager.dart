@@ -1,10 +1,12 @@
 import 'package:get_it/get_it.dart';
+import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/domain/data_session.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum Modality {
   eeeg,
@@ -16,6 +18,7 @@ class SessionManager {
   final FirestoreManager _firestoreManager =
       GetIt.instance.get<FirestoreManager>();
   final AuthManager _authManager = GetIt.instance.get<AuthManager>();
+  final CustomLogPrinter _logger = CustomLogPrinter('SessionManager');
 
   Session? _currentSession;
   DataSession? _currentDataSession;
@@ -45,15 +48,15 @@ class SessionManager {
     await _firestoreManager.persistEntity(_currentSession!);
 
     // Add the data session.
-    DataSession dataSessionEntity = DataSession(
+    _currentDataSession = DataSession(
         await _firestoreManager.queryEntity(
             [Table.sessions, Table.data_sessions],
             [sessionCode, Modality.eeeg.name]));
-    dataSessionEntity.setValue(
+    _currentDataSession!.setValue(
         DataSessionKey.start_datetime, startTime.toIso8601String());
     // TODO(eric): Add an API to get this from the connected device.
-    dataSessionEntity.setValue(DataSessionKey.streaming_rate, 250);
-    await _firestoreManager.persistEntity(dataSessionEntity);
+    _currentDataSession!.setValue(DataSessionKey.streaming_rate, 250);
+    await _firestoreManager.persistEntity(_currentDataSession!);
 
     // Update the session number in the user entry.
     userEntity.setValue(UserKey.session_number, nextSessionNumber);
@@ -61,12 +64,16 @@ class SessionManager {
 
     // TODO(eric): Start streaming should return the exact start time of the
     //             session, and then that should be persisted in the table?
-    NextsenseBase.startStreaming(deviceMacAddress);
+    String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
+    NextsenseBase.startStreaming(
+        deviceMacAddress, userEntity.getValue(UserKey.bt_key), dataSessionCode);
     return true;
   }
 
   Future stopSession(String deviceMacAddress) async {
     if (_currentSession == null || _currentDataSession == null) {
+      _logger.log(Level.WARNING,
+          'Tried to stop a session while none was running.');
       return;
     }
     NextsenseBase.stopStreaming(deviceMacAddress);

@@ -25,47 +25,64 @@ public class LocalSession extends BaseRecord {
     }
   }
 
+  // User key for BigTable. Can be null if the session is local only.
+  @Nullable
+  private String userBigTableKey;
   // Session id assigned in the cloud database. Can be null if the session is local only.
   @Nullable
-  private Integer cloudSessionId;
+  private String cloudDataSessionId;
   @Convert(converter = StatusConverter.class, dbType = Integer.class)
   private Status status;
   private boolean uploadNeeded;
   private int eegSamplesUploaded;
   private int accelerationsUploaded;
 
-  private LocalSession(@Nullable Integer cloudSessionId, Status status, boolean uploadNeeded,
-                       int eegSamplesUploaded, int accelerationsUploaded) {
+  private LocalSession(@Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
+                       Status status, boolean uploadNeeded, int eegSamplesUploaded,
+                       int accelerationsUploaded) {
     super();
-    this.cloudSessionId = cloudSessionId;
+    this.cloudDataSessionId = cloudDataSessionId;
+    this.userBigTableKey = userBigTableKey;
     this.status = status;
     this.uploadNeeded = uploadNeeded;
     this.eegSamplesUploaded = eegSamplesUploaded;
     this.accelerationsUploaded = accelerationsUploaded;
   }
 
-  public static LocalSession create(@Nullable Integer cloudSessionId, boolean uploadNeeded) {
-    return new LocalSession(cloudSessionId, Status.RECORDING, uploadNeeded, /*recordsUploaded=*/0,
-        /*accelerationsUploaded=*/0);
+  public static LocalSession create(
+      @Nullable String userBigTableKey, @Nullable String cloudDataSessionId, boolean uploadNeeded) {
+    return new LocalSession(cloudDataSessionId, userBigTableKey, Status.RECORDING, uploadNeeded,
+        /*recordsUploaded=*/0, /*accelerationsUploaded=*/0);
   }
 
   // Need to be public for ObjectBox performance.
-  public LocalSession(int id, @Nullable Integer cloudSessionId, Status status, boolean uploadNeeded,
-                      int eegSamplesUploaded, int accelerationsUploaded) {
+  public LocalSession(int id, @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
+                      Status status, boolean uploadNeeded, int eegSamplesUploaded,
+                      int accelerationsUploaded) {
     super(id);
-    this.cloudSessionId = cloudSessionId;
+    this.cloudDataSessionId = cloudDataSessionId;
+    this.userBigTableKey = userBigTableKey;
     this.status = status;
     this.uploadNeeded = uploadNeeded;
     this.eegSamplesUploaded = eegSamplesUploaded;
     this.accelerationsUploaded = accelerationsUploaded;
   }
 
-  public @Nullable Integer getCloudSessionId() {
-    return cloudSessionId;
+  @Nullable
+  public String getUserBigTableKey() {
+    return userBigTableKey;
   }
 
-  public void setCloudSessionId(@Nullable Integer cloudSessionId) {
-    this.cloudSessionId = cloudSessionId;
+  public void setUserBigTableKey(@Nullable String userBigTableKey) {
+    this.userBigTableKey = userBigTableKey;
+  }
+
+  public @Nullable String getCloudDataSessionId() {
+    return cloudDataSessionId;
+  }
+
+  public void setCloudDataSessionId(@Nullable String cloudDataSessionId) {
+    this.cloudDataSessionId = cloudDataSessionId;
   }
 
   public Status getStatus() {

@@ -138,7 +138,8 @@ public class MainActivity extends AppCompatActivity {
       if (!nextSenseServiceBound || lastDevice == null) {
         return;
       }
-      ListenableFuture<Boolean> deviceModeFuture = lastDevice.startStreaming();
+      ListenableFuture<Boolean> deviceModeFuture = lastDevice.startStreaming(
+          /*userBigTableKey=*/null, /*dataSessionId=*/null);
       deviceModeFuture.addListener(() -> {
         try {
           Boolean streaming = deviceModeFuture.get();

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
 /**
@@ -17,6 +16,8 @@ enum UserKey {
   study_end_date,
   // User type.
   type,
+  // BigTable key. Generated as a UUID.
+  bt_key,
   // How many sessions were recorded by this user.
   session_number
 }

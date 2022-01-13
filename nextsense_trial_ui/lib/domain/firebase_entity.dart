@@ -8,7 +8,9 @@ class FirebaseEntity {
 
   FirebaseEntity(DocumentSnapshot documentSnapshot) :
       this._documentSnapshot = documentSnapshot,
-      this._values = documentSnapshot.data() as Map<String, dynamic> {}
+      this._values = documentSnapshot.exists ?
+          documentSnapshot.data() as Map<String, dynamic> :
+          new Map<String, dynamic>() {}
 
   DocumentSnapshot getDocumentSnapshot() {
     return _documentSnapshot;

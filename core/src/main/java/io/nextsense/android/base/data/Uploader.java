@@ -1,17 +1,34 @@
 package io.nextsense.android.base.data;
 
 import android.os.HandlerThread;
+import android.util.Base64;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.functions.FirebaseFunctions;
+import com.google.firebase.functions.HttpsCallableResult;
+import com.google.protobuf.Timestamp;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.nextsense.android.base.DataSamplesProto;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.utils.Util;
 import io.objectbox.android.AndroidScheduler;
@@ -26,6 +43,7 @@ public class Uploader {
   private static final String TAG = Uploader.class.getSimpleName();
 
   private final ObjectBoxDatabase objectBoxDatabase;
+  private final FirebaseFunctions functions = FirebaseFunctions.getInstance();
   private final AtomicBoolean running = new AtomicBoolean(false);
   // Should be 1 second of data to be simple to import in BigTable.
   private final int uploadChunkSize;
@@ -125,7 +143,30 @@ public class Uploader {
         Util.logd(TAG, "Session " + localSession.id + " has " + eegSamplesToUpload.size() +
             " to upload.");
         while (!eegSamplesToUpload.isEmpty() && running.get()) {
-          // TODO(eric): Run actual upload here.
+          for (int eegSamplesIndex = 0; eegSamplesIndex < eegSamplesToUpload.size();
+               eegSamplesIndex += uploadChunkSize) {
+            int eegSamplesEndIndex =
+                Math.min(eegSamplesToUpload.size(), eegSamplesIndex + uploadChunkSize);
+            DataSamplesProto.DataSamples dataSamplesProto =
+                serializeToProto(eegSamplesToUpload.subList(eegSamplesIndex, eegSamplesEndIndex),
+                    localSession);
+            try {
+              // Block on the task for a maximum of 500 milliseconds, otherwise time out.
+              Task<String> uploadDataSamplesTask = uploadDataSamplesProto(dataSamplesProto);
+              String uploadResult = Tasks.await(uploadDataSamplesTask, 500, TimeUnit.MILLISECONDS);
+              Util.logd(TAG, "Upload result: " + uploadResult);
+            } catch (IOException e) {
+              Log.e(TAG, "Failed to upload data samples: " + e.getMessage(), e);
+            } catch (ExecutionException e) {
+              Log.e(TAG, "Failed to upload data samples: " + e.getMessage(), e);
+            } catch (InterruptedException e) {
+              Log.e(TAG, "Failed to upload data samples: " + e.getMessage(), e);
+              Thread.currentThread().interrupt();
+            } catch (TimeoutException e) {
+              Log.e(TAG, "Failed to upload data samples: " + e.getMessage(), e);
+            }
+          }
+
           // Update the local database with the uploaded records size and mark the local session as
           // uploaded if done.
           final int eegSamplesToUploadSize = eegSamplesToUpload.size();
@@ -185,6 +226,68 @@ public class Uploader {
       }
       Util.logd(TAG, "New records to upload, wait finished.");
     }
+  }
+
+  private DataSamplesProto.DataSamples serializeToProto(List<EegSample> eegSamplesToUpload,
+                                                        LocalSession localSession) {
+    DataSamplesProto.DataSamples.Builder dataSamplesProtoBuilder =
+        DataSamplesProto.DataSamples.newBuilder();
+    Map<Integer, DataSamplesProto.Channel.Builder> channelBuilders = new HashMap<>();
+    for (EegSample eegSample : eegSamplesToUpload) {
+      if (localSession.getUserBigTableKey() != null) {
+        dataSamplesProtoBuilder.setUserId(localSession.getUserBigTableKey());
+      }
+      if (localSession.getCloudDataSessionId() != null) {
+        dataSamplesProtoBuilder.setDataSessionId(localSession.getCloudDataSessionId());
+      }
+      Timestamp samplingTimestamp = Timestamp.newBuilder()
+          .setSeconds(eegSample.getAbsoluteSamplingTimestamp().getEpochSecond())
+          .setNanos(eegSample.getAbsoluteSamplingTimestamp().getNano()).build();
+      dataSamplesProtoBuilder.addSamplingTimestamp(samplingTimestamp);
+      for (Integer channel : eegSample.getEegSamples().keySet()) {
+        DataSamplesProto.Channel.Builder channelBuilder = channelBuilders.computeIfAbsent(
+            channel, channelValue ->
+                DataSamplesProto.Channel.newBuilder().setNumber(channelValue));
+        channelBuilder.addSample(eegSample.getEegSamples().get(channel));
+      }
+      dataSamplesProtoBuilder.addSync(eegSample.getSync());
+      dataSamplesProtoBuilder.addTrigOut(eegSample.getTrigOut());
+      dataSamplesProtoBuilder.addTrigIn(eegSample.getTrigIn());
+      dataSamplesProtoBuilder.addZMod(eegSample.getZMod());
+      dataSamplesProtoBuilder.addMarker(eegSample.getMarker());
+      dataSamplesProtoBuilder.addButton(eegSample.getButton());
+    }
+    for (DataSamplesProto.Channel.Builder channelBuilder : channelBuilders.values()) {
+      dataSamplesProtoBuilder.addChannel(channelBuilder.build());
+    }
+    return dataSamplesProtoBuilder.build();
+  }
+
+  private Task<String> uploadDataSamplesProto(DataSamplesProto.DataSamples dataSamplesProto)
+      throws IOException {
+    // Create the arguments to the callable function.
+    Log.i(TAG, "Starting upload with callable function.");
+    Map<String, Object> data = new HashMap<>();
+    ByteArrayOutputStream byteArrayOutputStream =
+        new ByteArrayOutputStream(dataSamplesProto.getSerializedSize());
+    dataSamplesProto.writeTo(byteArrayOutputStream);
+    data.put("data_samples_proto",
+        Base64.encodeToString(byteArrayOutputStream.toByteArray(), Base64.DEFAULT));
+
+    return functions
+        .getHttpsCallable("upload_data_samples")
+        .call(data)
+        .continueWith(new Continuation<HttpsCallableResult, String>() {
+          @Override
+          public String then(@NonNull Task<HttpsCallableResult> task) throws Exception {
+            // This continuation runs on either success or failure, but if the task
+            // has failed then getResult() will throw an Exception which will be
+            // propagated down.
+            String result = (String) task.getResult().getData();
+            Util.logd(TAG, "Upload data sample result: " + result);
+            return result;
+          }
+        });
   }
 
   private DataSubscription subscribeToFinishedSession(long localSessionId) {

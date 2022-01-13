@@ -3,6 +3,8 @@ package io.nextsense.android.base.devices;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 
@@ -42,11 +44,15 @@ public interface NextSenseDevice {
   /**
    * Starts streaming data from the device.
    * @param uploadToCloud upload data to the cloud if true
+   * @param userBigTableKey User's BigTable key for eeg data.
+   * @param dataSessionId Data Session id for this session.
    * @param parameters device specific parameters
    * @return true if successful, false otherwise
    */
-  ListenableFuture<Boolean> startStreaming(boolean uploadToCloud, Bundle parameters);
-  ListenableFuture<Boolean> startStreaming(boolean uploadToCloud);
+  ListenableFuture<Boolean> startStreaming(boolean uploadToCloud, @Nullable String userBigTableKey,
+                                           @Nullable String dataSessionId, Bundle parameters);
+  ListenableFuture<Boolean> startStreaming(
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId);
 
   /**
    * Stops streaming data from the device.

@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -130,7 +131,9 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
-  public ListenableFuture<Boolean> startStreaming(boolean uploadToCloud, Bundle parameters) {
+  public ListenableFuture<Boolean> startStreaming(
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      Bundle parameters) {
     if (this.deviceMode == DeviceMode.STREAMING) {
       return Futures.immediateFuture(true);
     }
@@ -139,7 +142,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           new IllegalStateException("No characteristic to stream on."));
     }
     deviceModeFuture = SettableFuture.create();
-    localSessionManager.startLocalSession(/*cloudSessionId=*/null, uploadToCloud);
+    localSessionManager.startLocalSession(userBigTableKey, dataSessionId, uploadToCloud);
     peripheral.setNotify(dataCharacteristic, /*enable=*/true);
     return deviceModeFuture;
   }
