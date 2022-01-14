@@ -77,7 +77,7 @@ public class XenonDataParser {
   }
 
   private void parsePacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,
-                                  Instant receptionTimestamp) throws NoSuchElementException {
+                           Instant receptionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
       Log.w(TAG, "Received data without an active session, cannot record it.");
@@ -117,7 +117,7 @@ public class XenonDataParser {
     for (int i = 0; i < channelCount; ++i) {
       byte channelMask = BIT_MASKS.get(i);
       if ((channelMask & activeChannelFlags) == channelMask) {
-        activeChannels.add(i);
+        activeChannels.add(i + 1);
       }
     }
     return activeChannels;

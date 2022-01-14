@@ -5,6 +5,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.Task;
@@ -15,6 +16,8 @@ import com.google.protobuf.Timestamp;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +44,7 @@ import io.objectbox.reactive.DataSubscription;
  */
 public class Uploader {
   private static final String TAG = Uploader.class.getSimpleName();
+  private static final Duration UPLOAD_FUNCTION_TIMEOUT = Duration.ofMillis(10000);
 
   private final ObjectBoxDatabase objectBoxDatabase;
   private final FirebaseFunctions functions = FirebaseFunctions.getInstance();
@@ -112,6 +116,9 @@ public class Uploader {
     Log.d(TAG, "stopping finished.");
   }
 
+  // TODO(eric): Should query this by sampling timestamp instead of number of records to send
+  //             records based o na time period, not a record count, which might not match if there
+  //             are missing samples.
   private List<EegSample> getSamplesToUpload(LocalSession localSession) {
     List<EegSample> eegSamplesToUpload = new ArrayList<>();
     if (objectBoxDatabase.getEegSamplesCount(localSession.id) -
@@ -125,6 +132,17 @@ public class Uploader {
               localSession.getEegSamplesUploaded()));
     }
     return eegSamplesToUpload;
+  }
+
+  private @Nullable Instant getExpectedFirstEegTimestamp(
+      LocalSession localSession, EegSample firstEegSampleToUpload, int frequency) {
+    if (localSession.getEegSamplesUploaded() > 0) {
+      return objectBoxDatabase.getEegSamples(
+          localSession.id, localSession.getEegSamplesUploaded() - 1L, /*count=*/1)
+          .get(0).getAbsoluteSamplingTimestamp().plusMillis(
+              Math.round(Math.floor(1000f / frequency)));
+    }
+    return firstEegSampleToUpload.getAbsoluteSamplingTimestamp();
   }
 
   private void uploadData() {
@@ -151,10 +169,12 @@ public class Uploader {
                 serializeToProto(eegSamplesToUpload.subList(eegSamplesIndex, eegSamplesEndIndex),
                     localSession);
             try {
-              // Block on the task for a maximum of 500 milliseconds, otherwise time out.
-              Task<String> uploadDataSamplesTask = uploadDataSamplesProto(dataSamplesProto);
-              String uploadResult = Tasks.await(uploadDataSamplesTask, 500, TimeUnit.MILLISECONDS);
-              Util.logd(TAG, "Upload result: " + uploadResult);
+              // Block on the task for a maximum of UPLOAD_FUNCTION_TIMEOUT milliseconds,
+              // otherwise time out.
+              Task<Map> uploadDataSamplesTask = uploadDataSamplesProto(dataSamplesProto);
+              Map uploadResult = Tasks.await(
+                  uploadDataSamplesTask, UPLOAD_FUNCTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+              Util.logd(TAG, "Upload result: " + uploadResult.get("result"));
             } catch (IOException e) {
               Log.e(TAG, "Failed to upload data samples: " + e.getMessage(), e);
             } catch (ExecutionException e) {
@@ -232,14 +252,23 @@ public class Uploader {
                                                         LocalSession localSession) {
     DataSamplesProto.DataSamples.Builder dataSamplesProtoBuilder =
         DataSamplesProto.DataSamples.newBuilder();
+    if (localSession.getUserBigTableKey() != null) {
+      dataSamplesProtoBuilder.setUserId(localSession.getUserBigTableKey());
+    }
+    if (localSession.getCloudDataSessionId() != null) {
+      dataSamplesProtoBuilder.setDataSessionId(localSession.getCloudDataSessionId());
+    }
+    dataSamplesProtoBuilder.setModality(DataSamplesProto.DataSamples.Modality.EAR_EEG);
+    dataSamplesProtoBuilder.setFrequency(uploadChunkSize);
+    dataSamplesProtoBuilder.setExpectedSamplesCount(eegSamplesToUpload.size());
+    Instant expectedStartInstant =
+        getExpectedFirstEegTimestamp(localSession, eegSamplesToUpload.get(0), uploadChunkSize);
+    Timestamp expectedStartTimestamp = Timestamp.newBuilder()
+        .setSeconds(expectedStartInstant.getEpochSecond())
+        .setNanos(expectedStartInstant.getNano()).build();
+    dataSamplesProtoBuilder.setExpectedStartTimestamp(expectedStartTimestamp);
     Map<Integer, DataSamplesProto.Channel.Builder> channelBuilders = new HashMap<>();
     for (EegSample eegSample : eegSamplesToUpload) {
-      if (localSession.getUserBigTableKey() != null) {
-        dataSamplesProtoBuilder.setUserId(localSession.getUserBigTableKey());
-      }
-      if (localSession.getCloudDataSessionId() != null) {
-        dataSamplesProtoBuilder.setDataSessionId(localSession.getCloudDataSessionId());
-      }
       Timestamp samplingTimestamp = Timestamp.newBuilder()
           .setSeconds(eegSample.getAbsoluteSamplingTimestamp().getEpochSecond())
           .setNanos(eegSample.getAbsoluteSamplingTimestamp().getNano()).build();
@@ -263,7 +292,7 @@ public class Uploader {
     return dataSamplesProtoBuilder.build();
   }
 
-  private Task<String> uploadDataSamplesProto(DataSamplesProto.DataSamples dataSamplesProto)
+  private Task<Map> uploadDataSamplesProto(DataSamplesProto.DataSamples dataSamplesProto)
       throws IOException {
     // Create the arguments to the callable function.
     Log.i(TAG, "Starting upload with callable function.");
@@ -277,13 +306,13 @@ public class Uploader {
     return functions
         .getHttpsCallable("upload_data_samples")
         .call(data)
-        .continueWith(new Continuation<HttpsCallableResult, String>() {
+        .continueWith(new Continuation<HttpsCallableResult, Map>() {
           @Override
-          public String then(@NonNull Task<HttpsCallableResult> task) throws Exception {
+          public Map then(@NonNull Task<HttpsCallableResult> task) throws Exception {
             // This continuation runs on either success or failure, but if the task
             // has failed then getResult() will throw an Exception which will be
             // propagated down.
-            String result = (String) task.getResult().getData();
+            Map result = (Map) task.getResult().getData();
             Util.logd(TAG, "Upload data sample result: " + result);
             return result;
           }

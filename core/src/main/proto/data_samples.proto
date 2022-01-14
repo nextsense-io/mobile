@@ -13,14 +13,23 @@ message Channel {
 }
 
 message DataSamples {
+  enum Modality {
+    EAR_EEG = 0;
+    SCALP_EEG = 1;
+    INTRA_CRANIAL_EEG = 2;
+  }
   string data_session_id = 1;
   string user_id = 2;
-  repeated google.protobuf.Timestamp sampling_timestamp = 4;
-  repeated Channel channel = 5;
-  repeated bool sync = 6;
-  repeated bool trig_out = 7;
-  repeated bool trig_in = 8;
-  repeated bool z_mod = 9;
-  repeated bool marker = 10;
-  repeated bool button = 11;
+  Modality modality = 3;
+  int32 frequency = 4;
+  google.protobuf.Timestamp expected_start_timestamp = 5;
+  int32 expected_samples_count = 6;
+  repeated google.protobuf.Timestamp sampling_timestamp = 7;
+  repeated Channel channel = 8;
+  repeated bool sync = 9;
+  repeated bool trig_out = 10;
+  repeated bool trig_in = 11;
+  repeated bool z_mod = 12;
+  repeated bool marker = 13;
+  repeated bool button = 14;
 }
