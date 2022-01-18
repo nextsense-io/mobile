@@ -32,6 +32,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.nextsense.android.base.DataSamplesProto;
+import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.utils.Util;
 import io.objectbox.android.AndroidScheduler;
@@ -47,6 +48,7 @@ public class Uploader {
   private static final Duration UPLOAD_FUNCTION_TIMEOUT = Duration.ofMillis(10000);
 
   private final ObjectBoxDatabase objectBoxDatabase;
+  private final Connectivity connectivity;
   private final FirebaseFunctions functions = FirebaseFunctions.getInstance();
   private final AtomicBoolean running = new AtomicBoolean(false);
   // Should be 1 second of data to be simple to import in BigTable.
@@ -60,33 +62,59 @@ public class Uploader {
   private DataSubscription activeSessionSubscription;
   private HandlerThread subscriptionsHandlerThread;
   private AndroidScheduler subscriptionsScheduler;
+  private boolean started;
 
 
-  private Uploader(ObjectBoxDatabase objectBoxDatabase, int uploadChunkSize) {
+  private Uploader(ObjectBoxDatabase objectBoxDatabase, Connectivity connectivity, int uploadChunkSize) {
     this.objectBoxDatabase = objectBoxDatabase;
+    this.connectivity = connectivity;
     this.uploadChunkSize = uploadChunkSize;
   }
 
-  public static Uploader create(ObjectBoxDatabase objectBoxDatabase, int uploadChunkSize) {
-    return new Uploader(objectBoxDatabase, uploadChunkSize);
+  public static Uploader create(ObjectBoxDatabase objectBoxDatabase, Connectivity connectivity,
+                                int uploadChunkSize) {
+    return new Uploader(objectBoxDatabase, connectivity, uploadChunkSize);
   }
 
   public void start() {
+    if (started) {
+      Log.w(TAG, "Already started, no-op.");
+      return;
+    }
+    connectivity.addStateListener(connectivityStateListener);
+    started = true;
+    Log.i(TAG, "Started.");
+  }
+
+  public void stop() {
+    connectivity.removeStateListener(connectivityStateListener);
+    stopRunning();
+    started = false;
+    Log.i(TAG, "Stopped.");
+  }
+
+  private void startRunning() {
     recordsSinceLastNotify = 0;
     if (running.get()) {
       Log.w(TAG, "Already running, no-op.");
       return;
     }
+    Log.i(TAG, "Starting to run.");
     subscriptionsHandlerThread = new HandlerThread("UploaderSubscriptionsHandlerThread");
     subscriptionsHandlerThread.start();
     subscriptionsScheduler = new AndroidScheduler(subscriptionsHandlerThread.getLooper());
     running.set(true);
     executor = Executors.newSingleThreadExecutor();
     uploadTask = executor.submit(this::uploadData);
+    Log.i(TAG, "Started running.");
   }
 
-  public void stop() {
-    Log.d(TAG, "stopping started.");
+  private void stopRunning() {
+    if (!running.get()) {
+      Log.w(TAG, "Already stopped, no-op.");
+      return;
+    }
+    Log.i(TAG, "Stopping to run.");
     running.set(false);
     if (eegSampleSubscription != null) {
       eegSampleSubscription.cancel();
@@ -113,7 +141,7 @@ public class Uploader {
     if (executor != null) {
       executor.shutdown();
     }
-    Log.d(TAG, "stopping finished.");
+    Log.i(TAG, "Stopped running.");
   }
 
   // TODO(eric): Should query this by sampling timestamp instead of number of records to send
@@ -161,6 +189,7 @@ public class Uploader {
         Util.logd(TAG, "Session " + localSession.id + " has " + eegSamplesToUpload.size() +
             " to upload.");
         while (!eegSamplesToUpload.isEmpty() && running.get()) {
+          boolean uploaded = false;
           for (int eegSamplesIndex = 0; eegSamplesIndex < eegSamplesToUpload.size();
                eegSamplesIndex += uploadChunkSize) {
             int eegSamplesEndIndex =
@@ -171,9 +200,11 @@ public class Uploader {
             try {
               // Block on the task for a maximum of UPLOAD_FUNCTION_TIMEOUT milliseconds,
               // otherwise time out.
-              Task<Map> uploadDataSamplesTask = uploadDataSamplesProto(dataSamplesProto);
-              Map uploadResult = Tasks.await(
+              Task<Map<String, Object>> uploadDataSamplesTask =
+                  uploadDataSamplesProto(dataSamplesProto);
+              Map<String, Object> uploadResult = Tasks.await(
                   uploadDataSamplesTask, UPLOAD_FUNCTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+              uploaded = true;
               Util.logd(TAG, "Upload result: " + uploadResult.get("result"));
             } catch (IOException e) {
               Log.e(TAG, "Failed to upload data samples: " + e.getMessage(), e);
@@ -189,20 +220,26 @@ public class Uploader {
 
           // Update the local database with the uploaded records size and mark the local session as
           // uploaded if done.
-          final int eegSamplesToUploadSize = eegSamplesToUpload.size();
-          objectBoxDatabase.runInTx(() -> {
-            localSession.setEegSamplesUploaded(
-                localSession.getEegSamplesUploaded() + eegSamplesToUploadSize);
-            Util.logv(TAG, "Uploaded " + localSession.getEegSamplesUploaded() +
-                " from session " + localSession.id);
-            if (localSession.getStatus() == LocalSession.Status.FINISHED &&
-                localSession.getEegSamplesUploaded() ==
-                    objectBoxDatabase.getEegSamplesCount(localSession.id)) {
-              Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
-              localSession.setStatus(LocalSession.Status.UPLOADED);
-            }
-            objectBoxDatabase.putLocalSession(localSession);
-          });
+          if (uploaded) {
+            final int eegSamplesToUploadSize = eegSamplesToUpload.size();
+            objectBoxDatabase.runInTx(() -> {
+              localSession.setEegSamplesUploaded(
+                  localSession.getEegSamplesUploaded() + eegSamplesToUploadSize);
+              Util.logv(TAG, "Uploaded " + localSession.getEegSamplesUploaded() +
+                  " from session " + localSession.id);
+              if (localSession.getStatus() == LocalSession.Status.FINISHED &&
+                  localSession.getEegSamplesUploaded() ==
+                      objectBoxDatabase.getEegSamplesCount(localSession.id)) {
+                Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
+                localSession.setStatus(LocalSession.Status.UPLOADED);
+              }
+              objectBoxDatabase.putLocalSession(localSession);
+            });
+          }
+          // TODO(eric): Implement more error mitigation strategies:
+          //             - backoff retry.
+          //             - notifications to user/NextSense.
+          // If it did not work, it will try to upload again.
           eegSamplesToUpload = getSamplesToUpload(localSession);
         }
       }
@@ -292,8 +329,8 @@ public class Uploader {
     return dataSamplesProtoBuilder.build();
   }
 
-  private Task<Map> uploadDataSamplesProto(DataSamplesProto.DataSamples dataSamplesProto)
-      throws IOException {
+  private Task<Map<String, Object>> uploadDataSamplesProto(
+      DataSamplesProto.DataSamples dataSamplesProto) throws IOException {
     // Create the arguments to the callable function.
     Log.i(TAG, "Starting upload with callable function.");
     Map<String, Object> data = new HashMap<>();
@@ -306,13 +343,14 @@ public class Uploader {
     return functions
         .getHttpsCallable("upload_data_samples")
         .call(data)
-        .continueWith(new Continuation<HttpsCallableResult, Map>() {
+        .continueWith(new Continuation<HttpsCallableResult, Map<String, Object>>() {
           @Override
-          public Map then(@NonNull Task<HttpsCallableResult> task) throws Exception {
+          public Map<String, Object> then(@NonNull Task<HttpsCallableResult> task)
+              throws Exception {
             // This continuation runs on either success or failure, but if the task
             // has failed then getResult() will throw an Exception which will be
             // propagated down.
-            Map result = (Map) task.getResult().getData();
+            Map<String, Object> result = (Map<String, Object>) task.getResult().getData();
             Util.logd(TAG, "Upload data sample result: " + result);
             return result;
           }
@@ -325,7 +363,8 @@ public class Uploader {
           if (finishedSessions.isEmpty()) {
             return;
           }
-          Util.logd(TAG, "Session " + finishedSessions.get(0).id + " finished, waking Uploader.");
+          Util.logd(TAG, "Session " + finishedSessions.get(0).id +
+              " finished, waking Uploader.");
           recordsSinceLastNotify = 0;
           recordsToUpload.set(true);
           synchronized (syncToken) {
@@ -333,4 +372,12 @@ public class Uploader {
           }
         });
   }
+
+  private final Connectivity.StateListener connectivityStateListener = newState -> {
+      if (newState == Connectivity.State.FULL_CONNECTION) {
+        startRunning();
+      } else {
+        stopRunning();
+      }
+  };
 }

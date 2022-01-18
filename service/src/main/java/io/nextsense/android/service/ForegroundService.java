@@ -19,6 +19,7 @@ import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.SampleRateCalculator;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
+import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Uploader;
 import io.nextsense.android.base.db.DatabaseSink;
@@ -54,6 +55,7 @@ public class ForegroundService extends Service {
   private ObjectBoxDatabase objectBoxDatabase;
   private DatabaseSink databaseSink;
   private LocalSessionManager localSessionManager;
+  private Connectivity connectivity;
   private Uploader uploader;
   private SampleRateCalculator sampleRateCalculator;
   private boolean initialized = false;
@@ -127,8 +129,9 @@ public class ForegroundService extends Service {
     databaseSink.startListening();
     sampleRateCalculator = SampleRateCalculator.create(500);
     sampleRateCalculator.startListening();
+    connectivity = Connectivity.create(this);
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
-    uploader = Uploader.create(objectBoxDatabase, /*uploadChunk=*/250);
+    uploader = Uploader.create(objectBoxDatabase, connectivity, /*uploadChunk=*/250);
     uploader.start();
     initialized = true;
   }
