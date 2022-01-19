@@ -8,7 +8,8 @@ import 'package:uuid/uuid.dart';
 enum UserCodeValidationResult {
   valid,
   invalid,
-  password_not_set
+  password_not_set,
+  no_connection
 }
 
 class AuthManager {
@@ -27,8 +28,12 @@ class AuthManager {
   AuthManager() {}
 
   Future<UserCodeValidationResult> validateUserCode(String code) async {
-    FirebaseEntity userEntity =
-        await _firestoreManager.queryEntity([Table.users], [code]);
+    FirebaseEntity userEntity;
+    try {
+      userEntity = await _firestoreManager.queryEntity([Table.users], [code]);
+    } catch(e) {
+      return UserCodeValidationResult.no_connection;
+    }
     if (!userEntity.getDocumentSnapshot().exists) {
       return UserCodeValidationResult.invalid;
     }
@@ -46,7 +51,11 @@ class AuthManager {
     }
     _user!.setValue(UserKey.password,
         UserPasswordAuthManager.generatePasswordHash(password));
-    _firestoreManager.persistEntity(_user!);
+    try {
+      _firestoreManager.persistEntity(_user!);
+    } catch(e) {
+
+    }
   }
 
   Future<bool> signIn(String password) async {

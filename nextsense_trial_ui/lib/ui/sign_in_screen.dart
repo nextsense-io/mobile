@@ -43,6 +43,18 @@ class _SignInScreenState extends State<SignInScreen> {
       );
       return;
     }
+    if (result == UserCodeValidationResult.no_connection) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleAlertDialog(
+              title: 'No connection',
+              content: 'An internet connection is needed to validate your user '
+                  'code.');
+        },
+      );
+      return;
+    }
 
     // Ask the user to enter his password.
     setState(() {
@@ -51,7 +63,21 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   _signIn() async {
-    bool authenticated = await _authManager.signIn(_password);
+    bool authenticated = false;
+    try {
+      authenticated = await _authManager.signIn(_password);
+    } catch (e) {
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleAlertDialog(
+              title: 'Error',
+              content: 'An internet connection is needed to validate your '
+                  'password.');
+        },
+      );
+      return;
+    }
     if (!authenticated) {
       await showDialog(
         context: context,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
+import 'package:nextsense_trial_ui/ui/components/alert.dart';
 
 class SessionScreen extends StatefulWidget {
   @override
@@ -72,14 +73,28 @@ class _SessionScreenState extends State<SessionScreen> {
               child: ElevatedButton(
                 child: Text(streamButtonText),
                 onPressed: () async {
-                  if (_streaming) {
-                    _sessionManager.stopSession(_deviceMacAddress!);
-                  } else {
-                    _sessionManager.startSession(_deviceMacAddress!);
+                  try {
+                    if (_streaming) {
+                      await _sessionManager.stopSession(_deviceMacAddress!);
+                    } else {
+                      await _sessionManager.startSession(_deviceMacAddress!);
+                    }
+                    setState(() {
+                      _streaming = !_streaming;
+                    });
+                  } catch (e) {
+                    String startOrStop = _streaming ? 'stop' : 'start';
+                    await showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return SimpleAlertDialog(
+                            title: 'Error',
+                            content: 'Failed to ${startOrStop}. Make sure your '
+                                'device is nearby and you have a working '
+                                'internet connection');
+                      },
+                    );
                   }
-                  setState(() {
-                    _streaming = !_streaming;
-                  });
                 },
               )),
         ]);

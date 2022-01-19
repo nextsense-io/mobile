@@ -123,7 +123,15 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                                   'Passwords do not match.', false);
                               return;
                             }
-                            _authManager.setPassword(_password!);
+                            try {
+                              _authManager.setPassword(_password!);
+                            } catch (e) {
+                              _showDialog(context, 'Error',
+                                  'Could not set password, make sure you have '
+                                  'an active internet connection and try'
+                                  ' again.', false);
+                              return;
+                            }
                             _showDialog(context, 'Password Set',
                                 'Please login to access the system.', true);
                           },
