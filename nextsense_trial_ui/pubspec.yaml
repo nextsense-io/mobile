@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   nextsense_base:
     path: ../nextsense_base
+  app_settings: ^4.1.1
   cloud_firestore: ^2.5.3
   crypt: ^4.0.1
   firebase_core: ^1.6.0

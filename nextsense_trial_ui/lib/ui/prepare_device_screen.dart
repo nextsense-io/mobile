@@ -1,6 +1,9 @@
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
+import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
 
 class PrepareDeviceScreen extends StatefulWidget {
   @override
@@ -39,12 +42,30 @@ class _PrepareDeviceScreenState extends State<PrepareDeviceScreen> {
                     child: ElevatedButton(
                       child: const Text('Continue'),
                       onPressed: () async {
+                        // Check if Bluetooth is ON.
+                        if (!await NextsenseBase.isBluetoothEnabled()) {
+                          // Ask the user to turn on Bluetooth.
+                          // Navigate to device scan screen.
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => TurnOnBluetoothScreen()),
+                          );
+                          if (await NextsenseBase.isBluetoothEnabled()) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => DeviceScanScreen()),
+                            );
+                          }
+                        } else {
                           // Navigate to device scan screen.
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                                 builder: (context) => DeviceScanScreen()),
                           );
+                        }
                       },
                     )),
               ]),

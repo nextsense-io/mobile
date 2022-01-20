@@ -21,6 +21,7 @@ class NextsenseBase {
   static const String _connectToDeviceCommand = 'connect_to_device';
   static const String _startStreamingCommand = 'start_streaming';
   static const String _stopStreamingCommand = 'stop_streaming';
+  static const String _isBluetoothEnabledCommand = 'is_bluetooth_enabled';
   static const String _macAddress = 'mac_address';
   static const String _userBigTableKey = 'user_bigtable_key';
   static const String _dataSessionId = 'data_session_id';
@@ -78,6 +79,10 @@ class NextsenseBase {
       connectedDevices.add(gson.decode(connectedDeviceJson as String));
     }
     return connectedDevices;
+  }
+
+  static Future<bool> isBluetoothEnabled() async {
+    return await _channel.invokeMethod(_isBluetoothEnabledCommand);
   }
 
   static Future<int> get test async {

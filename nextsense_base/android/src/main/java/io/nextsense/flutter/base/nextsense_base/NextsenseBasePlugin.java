@@ -1,5 +1,6 @@
 package io.nextsense.flutter.base.nextsense_base;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -38,6 +39,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String START_STREAMING_COMMAND = "start_streaming";
   public static final String STOP_STREAMING_COMMAND = "stop_streaming";
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
+  public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
   public static final String USER_BT_KEY_ARGUMENT = "user_bigtable_key";
   public static final String DATA_SESSION_ID_ARGUMENT = "data_session_id";
@@ -107,6 +109,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         Log.d(TAG, "connecting to device: " + macAddress);
         connectDevice(result, macAddress);
         Log.d(TAG, "connected to device: " + macAddress + " with result " + result.toString());
+        break;
+      case IS_BLUETOOTH_ENABLED:
+        result.success(BluetoothAdapter.getDefaultAdapter().isEnabled());
         break;
       case START_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
