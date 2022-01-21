@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
@@ -93,7 +94,7 @@ class _SignInScreenState extends State<SignInScreen> {
     // If there are permissions that need to be granted, go through them one by
     // one with an explanation screen.
     for (PermissionRequest permissionRequest
-    in await _permissionsManager.getPermissionsToRequest()) {
+        in await _permissionsManager.getPermissionsToRequest()) {
       await Navigator.push(
         context,
         MaterialPageRoute(
@@ -135,7 +136,7 @@ class _SignInScreenState extends State<SignInScreen> {
               color: Color(0xFF6200EE),
             ),
             helperText:
-            'Please contact NextSense support if you did not get an id',
+                'Please contact NextSense support if you did not get an id',
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF6200EE)),
             ),
@@ -163,8 +164,7 @@ class _SignInScreenState extends State<SignInScreen> {
               labelStyle: TextStyle(
                 color: Color(0xFF6200EE),
               ),
-              helperText:
-              'Contact NextSense to reset your password',
+              helperText: 'Contact NextSense to reset your password',
               enabledBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: Color(0xFF6200EE)),
               ),
@@ -195,24 +195,29 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Login'),
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/background.png'),
-            fit: BoxFit.cover,
+    return WillPopScope(
+        onWillPop: () async {
+          NextsenseBase.setFlutterActivityActive(false);
+          return true;
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('Login'),
           ),
-        ),
-        child: Center(
-            child: Column(
+          body: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/background.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Center(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: _buildBody(context),
+              ),
             ),
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }

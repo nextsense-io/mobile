@@ -1,6 +1,7 @@
 package io.nextsense.android.baselibrarytestui;
 
 import android.app.Application;
+import android.util.Log;
 
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
@@ -18,6 +19,11 @@ public class TestUi extends Application {
   @Override
   public void onCreate() {
     super.onCreate();
+    initFlutterEngineCache();
+  }
+
+  public void initFlutterEngineCache() {
+    Log.i("TestUi", "Initializing the flutter engine.");
     // Instantiate a FlutterEngine.
     flutterEngine = new FlutterEngine(this);
 

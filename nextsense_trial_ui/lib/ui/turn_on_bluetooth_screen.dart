@@ -1,8 +1,6 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
 
 class TurnOnBluetoothScreen extends StatefulWidget {
   @override

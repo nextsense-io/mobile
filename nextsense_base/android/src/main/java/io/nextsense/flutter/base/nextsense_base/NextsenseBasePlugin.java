@@ -157,6 +157,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
     methodChannel.setMethodCallHandler(null);
     deviceScanChannel.setStreamHandler(null);
+    applicationContext = null;
     Log.i(TAG, "Detached from engine.");
   }
 

@@ -17,6 +17,8 @@ class NextsenseBase {
   static const EventChannel _deviceScanStream = const EventChannel(
       'io.nextsense.flutter.base.nextsense_base/device_scan_channel');
   static const String _connectToServiceCommand = 'connect_to_service';
+  static const String _setFlutterActivityActiveCommand =
+      'set_flutter_activity_active';
   static const String _getConnectedDevicesCommand = 'get_connected_devices';
   static const String _connectToDeviceCommand = 'connect_to_device';
   static const String _startStreamingCommand = 'start_streaming';
@@ -38,7 +40,7 @@ class NextsenseBase {
   }
 
   static Future setFlutterActivityActive(bool active) async {
-    return _channel.invokeMethod('set_flutter_activity_active', active);
+    return _channel.invokeMethod(_setFlutterActivityActiveCommand, active);
   }
 
   static Future startService() async {

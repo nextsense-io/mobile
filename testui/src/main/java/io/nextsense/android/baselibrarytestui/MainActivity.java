@@ -25,7 +25,6 @@ import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceManager;
-import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.DeviceState;
 import io.nextsense.android.base.SampleRateCalculator;
@@ -37,8 +36,9 @@ import io.nextsense.android.service.ForegroundService;
  */
 public class MainActivity extends AppCompatActivity {
 
+  private static final String TAG = MainActivity.class.getSimpleName();
   private static final int LOCATION_REQUEST_CODE = 100;
-  private static final boolean AUTOSTART_FLUTTER = false;
+  private static final boolean AUTOSTART_FLUTTER = true;
 
   private Intent foregroundServiceIntent;
   private Button startScanningButton;
@@ -184,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
     // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
     getApplicationContext().startService(foregroundServiceIntent);
 
-    Log.d("MainActivity", "started");
+    Log.d(TAG, "started");
   }
 
   @Override
@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
     if (!nextSenseServiceBound) {
       bindService(foregroundServiceIntent, nextSenseConnection, Context.BIND_IMPORTANT);
     } else {
-      Log.i("MainActivity", "service bound. Flutter active: " +
+      Log.i(TAG, "service bound. Flutter active: " +
           nextSenseService.isFlutterActivityActive());
       if (AUTOSTART_FLUTTER) {
         if (nextSenseService.isFlutterActivityActive()) {
@@ -233,20 +233,36 @@ public class MainActivity extends AppCompatActivity {
     }
   }
 
-  private void stopService() {
-    // Disconnect is done on the main thread handler so can't do it synchronously, it would hang.
-    if (lastDevice != null) {
-      lastDevice.disconnect();
-    }
-    stopService(foregroundServiceIntent);
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
     // The flutter engine would survive the application.
     FlutterEngine flutterEngine = FlutterEngineCache.getInstance().get(TestUi.FLUTTER_ENGINE_NAME);
     if (flutterEngine != null) {
-      flutterEngine.destroy();
+      Log.i(TAG, "Detaching flutter engine.");
+      flutterEngine.getPlatformViewsController().detachFromView();
+      flutterEngine.getLifecycleChannel().appIsDetached();
+      FlutterEngineCache.getInstance().remove(TestUi.FLUTTER_ENGINE_NAME);
     }
   }
 
+  private void stopService() {
+    if (lastDevice != null) {
+      try {
+        lastDevice.disconnect().get();
+      } catch (ExecutionException executionException) {
+        executionException.printStackTrace();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+    stopService(foregroundServiceIntent);
+  }
+
   private void startFlutter() {
+    if (FlutterEngineCache.getInstance().get(TestUi.FLUTTER_ENGINE_NAME) == null) {
+      ((TestUi) getApplicationContext()).initFlutterEngineCache();
+    }
     startActivity(FlutterActivity.withCachedEngine(TestUi.FLUTTER_ENGINE_NAME)
         .build(this));
   }
@@ -279,7 +295,7 @@ public class MainActivity extends AppCompatActivity {
       deviceManager = nextSenseService.getDeviceManager();
       nextSenseService.getSampleRateCalculator().addRateUpdateListener(rateUpdateListener);
       nextSenseServiceBound = true;
-      Log.i("MainActivity", "service bound. Flutter active: " +
+      Log.i(TAG, "service bound. Flutter active: " +
           nextSenseService.isFlutterActivityActive());
       if (AUTOSTART_FLUTTER) {
         if (nextSenseService.isFlutterActivityActive()) {
@@ -294,6 +310,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onServiceDisconnected(ComponentName componentName) {
       nextSenseServiceBound = false;
+      nextSenseService = null;
     }
   };
 
@@ -310,7 +327,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onScanError(ScanError scanError) {
-      Log.w("MainActivity", scanError.toString());
+      Log.w(TAG, scanError.toString());
     }
   };
 
