@@ -4,6 +4,7 @@ import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/SessionPopScope.dart';
 import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/session_screen.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
 
@@ -36,10 +37,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: const Text('Connect your device'),
           onPressed: () async {
             // Navigate to the device scan screen.
-            await Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => DeviceScanScreen()),
-            );
+            await Navigation.navigateToDeviceScan(
+                context, /*replaceCurrent=*/false);
             setState(() {});
           },
         ));
