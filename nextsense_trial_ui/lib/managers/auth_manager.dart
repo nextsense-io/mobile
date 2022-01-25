@@ -70,6 +70,8 @@ class AuthManager {
 
   Future<void> signOut() async {
     _authorized = false;
+    _userCode = null;
+    _user = null;
   }
 
   bool isAuthorized() {

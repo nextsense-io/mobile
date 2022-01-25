@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get_it/get_it.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/scan_result_list.dart';
 import 'package:nextsense_trial_ui/ui/components/search_device_bluetooth.dart';
@@ -17,7 +19,9 @@ class DeviceScanScreen extends StatefulWidget {
 
 class _DeviceScanScreenState extends State<DeviceScanScreen> {
 
+  final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceScanScreen');
+
   Map<String, Map<String, dynamic>> _scanResultsMap = new Map();
   List<ScanResult> _scanResultsWidgets = [];
   bool _isScanning = false;
@@ -61,15 +65,22 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
     });
   }
 
-  _connectToDevice(String macAddress) async {
-    _logger.log(Level.INFO, 'Connecting to device: ' + macAddress);
+  _connectToDevice(Map<String, dynamic> result) async {
+    Device device = new Device(
+        result[describeEnum(DeviceAttributesFields.macAddress)],
+        result[describeEnum(DeviceAttributesFields.name)]);
+    _logger.log(Level.INFO, 'Connecting to device: ' + device.macAddress);
     _cancelScanning?.call();
     setState(() {
       _isConnecting = true;
     });
     try {
-      await NextsenseBase.connectDevice(macAddress);
-      Navigator.push(
+      await NextsenseBase.connectDevice(device.macAddress);
+      _deviceManager.setConnectedDevice(device);
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => DashboardScreen()),
       );
@@ -89,7 +100,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
     setState(() {
       _isConnecting = false;
     });
-    _logger.log(Level.INFO, 'Connected to device: ' + macAddress);
+    _logger.log(Level.INFO, 'Connected to device: ' + device.macAddress);
   }
 
   List<ScanResult> _buildScanResultList() {
@@ -98,7 +109,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
             key: Key(result[describeEnum(DeviceAttributesFields.macAddress)]),
             result: result,
             onTap: () => {
-              _connectToDevice(result[describeEnum(DeviceAttributesFields.macAddress)])
+              _connectToDevice(result)
             }))
         .toList();
   }

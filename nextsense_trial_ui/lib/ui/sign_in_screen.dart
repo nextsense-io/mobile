@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
-import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
+import 'package:nextsense_trial_ui/ui/components/SessionPopScope.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
@@ -102,14 +103,17 @@ class _SignInScreenState extends State<SignInScreen> {
       );
     }
     // Navigate to the device preparation screen.
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => DashboardScreen()),
+    );
     // TODO(eric): Might want to add a 'Do not show this again' in that page and
     // check first before going to that page.
-    // TODO(eric): Might want to pop back with a true/false result at this point
-    // to remove the login page from the stack?
-    Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => PrepareDeviceScreen()),
     );
+    setState(() {});
   }
 
   List<Widget> _buildBody(BuildContext context) {
@@ -195,11 +199,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-        onWillPop: () async {
-          NextsenseBase.setFlutterActivityActive(false);
-          return true;
-        },
+    return SessionPopScope(
         child: Scaffold(
           appBar: AppBar(
             title: Text('Login'),

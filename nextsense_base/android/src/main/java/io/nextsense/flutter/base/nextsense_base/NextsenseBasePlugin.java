@@ -35,7 +35,8 @@ import io.nextsense.android.service.ForegroundService;
 public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String CONNECT_TO_SERVICE_COMMAND = "connect_to_service";
   public static final String STOP_SERVICE_COMMAND = "stop_service";
-  public static final String CONNECT_TO_DEVICE_COMMAND = "connect_to_device";
+  public static final String CONNECT_DEVICE_COMMAND = "connect_device";
+  public static final String DISCONNECT_DEVICE_COMMAND = "disconnect_device";
   public static final String START_STREAMING_COMMAND = "start_streaming";
   public static final String STOP_STREAMING_COMMAND = "stop_streaming";
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
@@ -104,11 +105,18 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case STOP_SERVICE_COMMAND:
         stopService();
         break;
-      case CONNECT_TO_DEVICE_COMMAND:
+      case CONNECT_DEVICE_COMMAND:
         String macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         Log.d(TAG, "connecting to device: " + macAddress);
         connectDevice(result, macAddress);
         Log.d(TAG, "connected to device: " + macAddress + " with result " + result.toString());
+        break;
+      case DISCONNECT_DEVICE_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        Log.d(TAG, "disconnecting from device: " + macAddress);
+        disconnectDevice(result, macAddress);
+        Log.d(TAG, "disconnected from device: " + macAddress + " with result " +
+            result.toString());
         break;
       case IS_BLUETOOTH_ENABLED:
         result.success(BluetoothAdapter.getDefaultAdapter().isEnabled());
@@ -248,6 +256,31 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         result.success(null);
       } else {
         result.error(CONNECT_TO_DEVICE_ERROR_CONNECTION, /*errorMessage=*/"Failed to connect.",
+            /*errorDetails=*/null);
+      }
+    } catch (ExecutionException e) {
+      result.error(CONNECT_TO_DEVICE_ERROR_CONNECTION, /*errorMessage=*/e.getMessage(),
+          /*errorDetails=*/e);
+    } catch (InterruptedException e) {
+      result.error(CONNECT_TO_DEVICE_ERROR_INTERRUPTED, /*errorMessage=*/e.getMessage(),
+          /*errorDetails=*/e);
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  private void disconnectDevice(Result result, String macAddress) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    try {
+      DeviceState deviceState = device.disconnect().get();
+      if (deviceState == DeviceState.DISCONNECTED) {
+        result.success(null);
+      } else {
+        result.error(CONNECT_TO_DEVICE_ERROR_CONNECTION, /*errorMessage=*/"Failed to disconnect.",
             /*errorDetails=*/null);
       }
     } catch (ExecutionException e) {

@@ -20,7 +20,8 @@ class NextsenseBase {
   static const String _setFlutterActivityActiveCommand =
       'set_flutter_activity_active';
   static const String _getConnectedDevicesCommand = 'get_connected_devices';
-  static const String _connectToDeviceCommand = 'connect_to_device';
+  static const String _connectDeviceCommand = 'connect_device';
+  static const String _disconnectDeviceCommand = 'disconnect_device';
   static const String _startStreamingCommand = 'start_streaming';
   static const String _stopStreamingCommand = 'stop_streaming';
   static const String _isBluetoothEnabledCommand = 'is_bluetooth_enabled';
@@ -48,7 +49,12 @@ class NextsenseBase {
   }
 
   static Future connectDevice(String macAddress) async {
-    await _channel.invokeMethod(_connectToDeviceCommand,
+    await _channel.invokeMethod(_connectDeviceCommand,
+        {_macAddress: macAddress});
+  }
+
+  static Future disconnectDevice(String macAddress) async {
+    await _channel.invokeMethod(_disconnectDeviceCommand,
         {_macAddress: macAddress});
   }
 

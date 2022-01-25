@@ -1,5 +1,3 @@
-import 'package:app_settings/app_settings.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
@@ -52,7 +50,7 @@ class _PrepareDeviceScreenState extends State<PrepareDeviceScreen> {
                                 builder: (context) => TurnOnBluetoothScreen()),
                           );
                           if (await NextsenseBase.isBluetoothEnabled()) {
-                            Navigator.push(
+                            Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                   builder: (context) => DeviceScanScreen()),
@@ -60,7 +58,7 @@ class _PrepareDeviceScreenState extends State<PrepareDeviceScreen> {
                           }
                         } else {
                           // Navigate to device scan screen.
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                                 builder: (context) => DeviceScanScreen()),
