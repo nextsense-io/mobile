@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:nextsense_trial_ui/ui/components/image_box.dart';
 
 /* A widget to show bluetooth image while searching for the device. */

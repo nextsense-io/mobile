@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
 /**

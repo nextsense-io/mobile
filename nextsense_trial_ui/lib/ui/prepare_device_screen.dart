@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
-import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
 
 class PrepareDeviceScreen extends StatefulWidget {
   @override
