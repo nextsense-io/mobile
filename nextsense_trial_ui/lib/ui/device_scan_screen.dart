@@ -135,7 +135,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
                 _startScan();
               },
               child: Text(
-                'scan',
+                'Scan',
                 style: Theme.of(context).textTheme.subtitle2,
                 textAlign: TextAlign.center,
               ),

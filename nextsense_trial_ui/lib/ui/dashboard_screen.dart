@@ -50,10 +50,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _deviceManager.disconnectDevice();
             setState(() {});
             // Navigate to the device scan screen.
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => DeviceScanScreen()),
-            );
+            Navigation.navigateToDeviceScan(context, /*replaceCurrent=*/false);
           },
         ));
     Widget logoutButton = Padding(
