@@ -17,11 +17,13 @@ import com.welie.blessed.HciStatus;
 import com.welie.blessed.PhyType;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
+import io.nextsense.android.base.communication.ble.ReconnectionManager;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.xenon.StartStreamingCommand;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
 import io.nextsense.android.base.utils.Util;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -41,7 +43,14 @@ public class Device {
     void onDeviceStateChange(DeviceState deviceState);
   }
 
+  public enum DisconnectionStatus {
+    NOT_DISCONNECTING,  // Not connected yet.
+    BY_REQUEST,  // Disconnect initiated by the user.
+    HARD  // Disconnect not initiated by the user.
+  }
+
   private static final String TAG = Device.class.getSimpleName();
+  private static final Duration RECONNECTION_ATTEMPTS_INTERVAL = Duration.ofSeconds(30);
 
   private final NextSenseDevice nextSenseDevice;
   private final BluetoothPeripheral btPeripheral;
@@ -51,11 +60,13 @@ public class Device {
   private final DeviceSettings deviceSettings = new DeviceSettings();
   private final DeviceData deviceData = new DeviceData();
   private final BlePeripheralCallbackProxy callbackProxy = new BlePeripheralCallbackProxy();
+  private final ReconnectionManager reconnectionManager;
 
   private DeviceState deviceState = DeviceState.DISCONNECTED;
   private boolean autoReconnect = false;
   private SettableFuture<DeviceState> deviceConnectionFuture;
   private SettableFuture<DeviceState> deviceDisconnectionFuture;
+  private DisconnectionStatus disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
 
   public Device(BleCentralManagerProxy centralProxy, NextSenseDevice nextSenseDevice,
                 BluetoothPeripheral btPeripheral) {
@@ -64,6 +75,8 @@ public class Device {
     this.btPeripheral = btPeripheral;
     centralProxy.addPeripheralListener(bluetoothCentralManagerCallback, btPeripheral.getAddress());
     callbackProxy.addPeripheralCallbackListener(peripheralCallback);
+    reconnectionManager = ReconnectionManager.create(
+        centralManagerProxy, RECONNECTION_ATTEMPTS_INTERVAL);
   }
 
   public String getName() {
@@ -128,6 +141,9 @@ public class Device {
     if (deviceState != DeviceState.DISCONNECTED) {
       return Futures.immediateFuture(deviceState);
     }
+    if (reconnectionManager.isReconnecting()) {
+      reconnectionManager.stopReconnecting();
+    }
     deviceState = DeviceState.CONNECTING;
     this.autoReconnect = autoReconnect;
     deviceConnectionFuture = SettableFuture.create();
@@ -142,6 +158,9 @@ public class Device {
    * connecting.
    */
   public ListenableFuture<DeviceState> disconnect() {
+    if (reconnectionManager.isReconnecting()) {
+      reconnectionManager.stopReconnecting();
+    }
     switch (deviceState) {
       case DISCONNECTED:
         return Futures.immediateFuture(DeviceState.DISCONNECTED);
@@ -153,6 +172,7 @@ public class Device {
         // fallthrough
       case READY:
         // fallthrough
+        disconnectionStatus = DisconnectionStatus.BY_REQUEST;
         this.deviceDisconnectionFuture = SettableFuture.create();
         nextSenseDevice.disconnect(btPeripheral);
         btPeripheral.cancelConnection();
@@ -200,7 +220,9 @@ public class Device {
     nextSenseDevice.setBluetoothPeripheralProxy(callbackProxy);
     Executors.newSingleThreadExecutor().submit(() -> {
       try {
-        nextSenseDevice.connect(peripheral).get();
+        nextSenseDevice.connect(peripheral,
+            disconnectionStatus == DisconnectionStatus.HARD).get();
+        disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
         deviceState = DeviceState.READY;
         deviceConnectionFuture.set(deviceState);
         notifyDeviceStateChangeListeners(DeviceState.READY);
@@ -221,13 +243,16 @@ public class Device {
       Log.d(TAG, "Connected with device " + peripheral.getName());
       deviceState = DeviceState.CONNECTED;
       notifyDeviceStateChangeListeners(DeviceState.CONNECTED);
+      if (reconnectionManager.isReconnecting()) {
+        reconnectionManager.stopReconnecting();
+      }
     }
 
     @Override
     public void onConnectionFailed(@NonNull BluetoothPeripheral peripheral,
                                    @NonNull HciStatus status) {
       Log.w(TAG, "Connection with device " + peripheral.getName() + " failed. HCI status: " +
-          status.toString());
+          status);
       deviceState = DeviceState.DISCONNECTED;
       if (deviceConnectionFuture != null) {
         deviceConnectionFuture.set(deviceState);
@@ -253,6 +278,12 @@ public class Device {
     public void onDisconnectedPeripheral(@NonNull BluetoothPeripheral peripheral,
                                          @NonNull HciStatus status) {
       Util.logd(TAG, "Device " + peripheral.getName() + " disconnected.");
+      if (disconnectionStatus != DisconnectionStatus.BY_REQUEST) {
+        disconnectionStatus = DisconnectionStatus.HARD;
+        if (autoReconnect) {
+          reconnectionManager.startReconnecting(peripheral, callbackProxy.getMainCallback());
+        }
+      }
       deviceState = DeviceState.DISCONNECTED;
       if (deviceDisconnectionFuture != null) {
         deviceDisconnectionFuture.set(deviceState);

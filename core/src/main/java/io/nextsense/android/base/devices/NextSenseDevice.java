@@ -35,6 +35,8 @@ public interface NextSenseDevice {
 
   ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral);
 
+  ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral, boolean reconnecting);
+
   void disconnect(BluetoothPeripheral peripheral);
 
   ListenableFuture<Boolean> applyDeviceSettings(DeviceSettings deviceSettings);

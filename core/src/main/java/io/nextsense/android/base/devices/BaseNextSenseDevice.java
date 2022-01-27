@@ -53,6 +53,11 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
 
   @Override
   public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral) {
+    return connect(peripheral, /*reconnecting=*/false);
+  }
+
+  @Override
+  public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral, boolean reconnecting) {
     return Futures.immediateFuture(false);
   }
 

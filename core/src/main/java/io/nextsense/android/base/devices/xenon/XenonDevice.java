@@ -97,14 +97,21 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   }
 
   @Override
-  public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral) {
+  public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral, boolean reconnecting) {
     this.peripheral = peripheral;
     initializeCharacteristics();
+    if (reconnecting) {
+      // If reconnecting, we do not want to reset the time and apply settings as there might be a
+      // recording in progress and this is not supported.
+      Log.i(TAG, "Reconnecting, no need to re-apply device settings.");
+      return Futures.immediateFuture(true);
+    }
     return executorService.submit(() -> {
       try {
         executeCommandNoResponse(new SetTimeCommand(Instant.now()));
         // Cannot read device settings, so load the default setting and apply them when connecting.
         applyDeviceSettings(loadDeviceSettings().get());
+        Log.i(TAG, "Applied device settings.");
       } catch (ExecutionException e) {
         Log.e(TAG, "Failed to set the time on the device: " + e.getMessage());
         return false;
