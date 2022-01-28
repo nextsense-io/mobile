@@ -76,12 +76,7 @@ class CustomLogPrinter {
   final String className;
   final Logger _logger;
 
-  CustomLogPrinter(this.className) : _logger = Logger(className) {
-    Logger.root.level = Level.ALL;  // defaults to Level.INFO
-    Logger.root.onRecord.listen((record) {
-      print('${record.level.name}: ${record.time}: ${record.message}');
-    });
-  }
+  CustomLogPrinter(this.className) : _logger = Logger(className) {}
 
   void log(Level logLevel, dynamic message,
       [dynamic error, StackTrace? stackTrace]) {

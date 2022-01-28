@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
@@ -11,7 +12,7 @@ import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
 
 GetIt getIt = GetIt.instance;
 
-void registerServices() {
+void _registerServices() {
   getIt.registerSingleton<FirestoreManager>(FirestoreManager());
   getIt.registerSingleton<AuthManager>(AuthManager());
   getIt.registerSingleton<PermissionsManager>(PermissionsManager());
@@ -19,10 +20,18 @@ void registerServices() {
   getIt.registerSingleton<SessionManager>(SessionManager());
 }
 
+void _initLogging() {
+  Logger.root.level = Level.ALL;  // defaults to Level.INFO
+  Logger.root.onRecord.listen((record) {
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  _initLogging();
   await Firebase.initializeApp();
-  registerServices();
+  _registerServices();
   NextsenseBase.startService();
   runApp(MyApp());
 }
