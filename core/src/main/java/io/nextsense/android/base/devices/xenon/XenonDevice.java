@@ -261,8 +261,8 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     public void onCharacteristicWrite(
         @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-      Util.logv(TAG, "Characteristic write completed with status " + status.toString() +
-          " with value: " + Arrays.toString(value));
+      Util.logv(TAG, "Characteristic write completed with status " + status + " with value: " +
+          Arrays.toString(value));
       // Check mode change result.
       if (characteristic == dataCharacteristic &&
           value.length >= XenonFirmwareCommand.COMMAND_SIZE) {

@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class SessionScreen extends StatefulWidget {
   @override
@@ -12,16 +14,24 @@ class SessionScreen extends StatefulWidget {
 class _SessionScreenState extends State<SessionScreen> {
 
   final SessionManager _sessionManager = GetIt.instance.get<SessionManager>();
+  final CustomLogPrinter _logger = CustomLogPrinter('SessionScreen');
 
   String? _deviceMacAddress;
   bool _loading = true;
   bool _streaming = false;
   bool _noDevice = false;
+  CancelListening? _cancelListening;
 
   @override
   void initState() {
     super.initState();
     init();
+  }
+
+  @override
+  void dispose() {
+    _cancelListening?.call();
+    super.dispose();
   }
 
   void init() async {
@@ -30,6 +40,7 @@ class _SessionScreenState extends State<SessionScreen> {
     if (connectedDevices.isNotEmpty) {
       _deviceMacAddress = connectedDevices.first[
           describeEnum(DeviceAttributesFields.macAddress)];
+      listenToState();
     } else {
       setState(() {
         _noDevice = true;
@@ -38,6 +49,13 @@ class _SessionScreenState extends State<SessionScreen> {
     setState(() {
       _loading = false;
     });
+  }
+
+  void listenToState() {
+    _cancelListening = NextsenseBase.listenToDeviceState((newDeviceState) {
+      String deviceState = newDeviceState;
+      _logger.log(Level.INFO, 'Device state changed to ' + deviceState);
+    }, _deviceMacAddress!);
   }
 
   Widget _buildBody(BuildContext context) {
@@ -63,7 +81,7 @@ class _SessionScreenState extends State<SessionScreen> {
             ),
           ]);
     }
-    String streamButtonText = _streaming? 'Stop Recording' :'Start recording';
+    String streamButtonText = _streaming ? 'Stop Recording' : 'Start recording';
     return Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,

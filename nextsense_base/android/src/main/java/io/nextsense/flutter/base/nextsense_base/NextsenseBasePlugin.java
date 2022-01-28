@@ -35,6 +35,8 @@ import io.nextsense.android.service.ForegroundService;
 public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String CONNECT_TO_SERVICE_COMMAND = "connect_to_service";
   public static final String STOP_SERVICE_COMMAND = "stop_service";
+  public static final String SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND = "set_flutter_activity_active";
+  public static final String IS_FLUTTER_ACTIVITY_ACTIVE_COMMAND = "is_flutter_activity_active";
   public static final String CONNECT_DEVICE_COMMAND = "connect_device";
   public static final String DISCONNECT_DEVICE_COMMAND = "disconnect_device";
   public static final String START_STREAMING_COMMAND = "start_streaming";
@@ -52,17 +54,22 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private static final String METHOD_CHANNEL_NAME = "nextsense_base";
   private static final String DEVICE_SCAN_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/device_scan_channel";
+  private static final String DEVICE_STATE_CHANNEL_NAME =
+      "io.nextsense.flutter.base.nextsense_base/device_state_channel";
 
   // Handler for the UI thread which is needed for running flutter JNI methods.
   private final Handler uiThreadHandler = new Handler(Looper.getMainLooper());
   private final Gson gson = new Gson();
   private final Map<String, Device> devices = Maps.newConcurrentMap();
+  private final Map<String, Device.DeviceStateChangeListener> deviceStateListeners =
+      Maps.newConcurrentMap();
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
   /// when the Flutter Engine is detached from the Activity
   private MethodChannel methodChannel;
   private EventChannel deviceScanChannel;
+  private EventChannel deviceStateChannel;
   private Context applicationContext;
   private Intent foregroundServiceIntent;
   private ForegroundService nextSenseService;
@@ -88,6 +95,21 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       @Override
       public void onCancel(Object listener) {
         stopScanning();
+      }
+    });
+    deviceStateChannel =
+        new EventChannel(flutterPluginBinding.getBinaryMessenger(), DEVICE_STATE_CHANNEL_NAME);
+    deviceStateChannel.setStreamHandler(new EventChannel.StreamHandler() {
+      @Override
+      public void onListen(Object arguments, EventChannel.EventSink eventSink) {
+        Log.i(TAG, "Starting to listen to Android device state...");
+        List<Object> argumentList = (ArrayList<Object>) arguments;
+        startListeningToDeviceState(eventSink, (String) argumentList.get(1));
+      }
+      @Override
+      public void onCancel(Object arguments) {
+        List<Object> argumentList = (ArrayList<Object>) arguments;
+        stopListeningToDeviceState((String) argumentList.get(1));
       }
     });
     Log.i(TAG, "Attached to engine.");
@@ -134,23 +156,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case GET_CONNECTED_DEVICES_COMMAND:
         getConnectedDevices(result);
         break;
-      case "test":
-        if (nextSenseServiceBound) {
-          Log.d(TAG, "connected devices: " +
-              nextSenseService.getDeviceManager().getConnectedDevices().size());
-          result.success(nextSenseService.getDeviceManager().getConnectedDevices().size());
-        } else {
-          Log.d(TAG, "Service not connected.");
-        }
-        break;
-      case "set_flutter_activity_active":
+      case SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
         if (nextSenseServiceBound) {
           nextSenseService.setFlutterActivityActive((boolean)call.arguments);
         } else {
           Log.d(TAG, "flutter_start: service not connected.");
         }
         break;
-      case "is_flutter_activity_active":
+      case IS_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
         if (nextSenseServiceBound) {
           result.success(nextSenseService.isFlutterActivityActive());
         }
@@ -240,6 +253,41 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       deviceScanListener = null;
     } else {
       Log.d(TAG, "Service not connected.");
+    }
+  }
+
+  private void startListeningToDeviceState(EventChannel.EventSink eventSink, String macAddress) {
+    if (nextSenseServiceBound) {
+      Device device = devices.get(macAddress);
+      if (device == null) {
+        uiThreadHandler.post(() ->
+            eventSink.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+                /*errorDetails=*/null));
+        return;
+      }
+      deviceStateListeners.put(macAddress, newDeviceState ->
+          uiThreadHandler.post(() -> eventSink.success(newDeviceState.name())));
+      device.addOnDeviceStateChangeListener(deviceStateListeners.get(macAddress));
+    } else {
+      Log.w(TAG, "Service not connected, cannot start monitoring device state.");
+    }
+  }
+
+  public void stopListeningToDeviceState(String macAddress) {
+    if (nextSenseServiceBound) {
+      Device device = devices.get(macAddress);
+      if (device == null) {
+        Log.w(TAG, "Cannot find the device " + macAddress +
+            " when trying to stop listening to its state.");
+        return;
+      }
+      Device.DeviceStateChangeListener deviceStateListener = deviceStateListeners.get(macAddress);
+      if (deviceStateListener != null) {
+        device.removeOnDeviceStateChangeListener(deviceStateListener);
+        Log.i(TAG, "Stopped listening to Android device state for " + macAddress);
+      }
+    } else {
+      Log.w(TAG, "Service not connected, cannot start monitoring device state.");
     }
   }
 
