@@ -40,7 +40,7 @@ class _SessionScreenState extends State<SessionScreen> {
     if (connectedDevices.isNotEmpty) {
       _deviceMacAddress = connectedDevices.first[
           describeEnum(DeviceAttributesFields.macAddress)];
-      listenToState();
+      _listenToState();
     } else {
       setState(() {
         _noDevice = true;
@@ -51,7 +51,7 @@ class _SessionScreenState extends State<SessionScreen> {
     });
   }
 
-  void listenToState() {
+  void _listenToState() {
     _cancelListening = NextsenseBase.listenToDeviceState((newDeviceState) {
       String deviceState = newDeviceState;
       _logger.log(Level.INFO, 'Device state changed to ' + deviceState);

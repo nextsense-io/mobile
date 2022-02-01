@@ -175,9 +175,7 @@ public class MainActivity extends AppCompatActivity {
       }, Executors.newSingleThreadExecutor());
     });
 
-    startFlutterButton.setOnClickListener(
-        view -> startFlutter()
-    );
+    startFlutterButton.setOnClickListener(view -> startFlutter());
 
     checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION, LOCATION_REQUEST_CODE);
 
