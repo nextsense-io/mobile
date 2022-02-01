@@ -53,6 +53,8 @@ class DeviceManager {
       return;
     }
     _cancelListening?.call();
+    _notificationsManager.hideAlertNotification(
+        CONNECTION_LOST_NOTIFICATION_ID);
     NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
     setConnectedDevice(null);
   }
