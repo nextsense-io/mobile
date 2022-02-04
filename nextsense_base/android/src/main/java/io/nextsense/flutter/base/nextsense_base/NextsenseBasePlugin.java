@@ -15,9 +15,11 @@ import androidx.annotation.NonNull;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -29,6 +31,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.DeviceState;
+import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.service.ForegroundService;
 
 /** NextSenseBasePlugin */
@@ -42,11 +45,17 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String START_STREAMING_COMMAND = "start_streaming";
   public static final String STOP_STREAMING_COMMAND = "stop_streaming";
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
+  public static final String GET_CHANNEL_DATA_COMMAND = "get_channel_data";
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
+  public static final String UPLOAD_TO_CLOUD_ARGUMENT = "upload_to_cloud";
   public static final String USER_BT_KEY_ARGUMENT = "user_bigtable_key";
   public static final String DATA_SESSION_ID_ARGUMENT = "data_session_id";
+  public static final String LOCAL_SESSION_ID_ARGUMENT = "local_session_id";
+  public static final String CHANNEL_NUMBER_ARGUMENT = "channel_number";
+  public static final String DURATION_MILLIS_ARGUMENT = "duration_millis";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
+  public static final String ERROR_SESSION_NOT_STARTED = "session_not_started";
   public static final String CONNECT_TO_DEVICE_ERROR_CONNECTION = "connection_error";
   public static final String CONNECT_TO_DEVICE_ERROR_INTERRUPTED = "connection_interrupted";
 
@@ -56,6 +65,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       "io.nextsense.flutter.base.nextsense_base/device_scan_channel";
   private static final String DEVICE_STATE_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/device_state_channel";
+  private static final String DEVICE_DATA_CHANNEL_NAME =
+      "io.nextsense.flutter.base.nextsense_base/device_data_channel";
 
   // Handler for the UI thread which is needed for running flutter JNI methods.
   private final Handler uiThreadHandler = new Handler(Looper.getMainLooper());
@@ -145,9 +156,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case START_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
-        String user_bt_key = call.argument(USER_BT_KEY_ARGUMENT);
-        String data_session_id = call.argument(DATA_SESSION_ID_ARGUMENT);
-        startStreaming(result, macAddress, user_bt_key, data_session_id);
+        Boolean uploadToCloud = call.argument(UPLOAD_TO_CLOUD_ARGUMENT);
+        String userBtKey = call.argument(USER_BT_KEY_ARGUMENT);
+        String dataSessionId = call.argument(DATA_SESSION_ID_ARGUMENT);
+        startStreaming(result, macAddress, uploadToCloud, userBtKey, dataSessionId);
         break;
       case STOP_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -155,6 +167,13 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case GET_CONNECTED_DEVICES_COMMAND:
         getConnectedDevices(result);
+        break;
+      case GET_CHANNEL_DATA_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        int localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
+        int channelNumber = call.argument(CHANNEL_NUMBER_ARGUMENT);
+        int durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
+        getChannelData(result, macAddress, localSessionId, channelNumber, durationMillis);
         break;
       case SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
         if (nextSenseServiceBound) {
@@ -341,15 +360,23 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private void startStreaming(Result result, String macAddress, String userBigTableKey,
-                              String dataSessionId) {
+  private void startStreaming(Result result, String macAddress, Boolean uploadToCloud,
+                              String userBigTableKey, String dataSessionId) {
     Device device = devices.get(macAddress);
     if (device == null) {
       result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
-    device.startStreaming(userBigTableKey, dataSessionId);
+    device.startStreaming(uploadToCloud, userBigTableKey, dataSessionId);
+    Optional<LocalSession> localSession =
+        nextSenseService.getLocalSessionManager().getActiveLocalSession();
+    if (localSession.isPresent()) {
+      result.success(localSession.get().id);
+    } else {
+      result.error(ERROR_SESSION_NOT_STARTED, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+    }
   }
 
   private void stopStreaming(Result result, String macAddress) {
@@ -360,6 +387,18 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       return;
     }
     device.stopStreaming();
+  }
+
+  private void getChannelData(
+      Result result, String macAddress, int localSessionId, int channelNumber, int durationMillis) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    result.success(nextSenseService.getObjectBoxDatabase().getLastChannelData(
+        localSessionId, channelNumber, Duration.ofMillis(durationMillis)));
   }
 
   private final ServiceConnection nextSenseConnection = new ServiceConnection() {

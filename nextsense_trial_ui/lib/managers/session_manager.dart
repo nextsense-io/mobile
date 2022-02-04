@@ -22,6 +22,7 @@ class SessionManager {
 
   Session? _currentSession;
   DataSession? _currentDataSession;
+  int? _currentLocalSession;
 
   Future<bool> startSession(String deviceMacAddress) async {
     String? userCode = _authManager.getUserCode();
@@ -65,8 +66,9 @@ class SessionManager {
     // TODO(eric): Start streaming should return the exact start time of the
     //             session, and then that should be persisted in the table?
     String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
-    NextsenseBase.startStreaming(
-        deviceMacAddress, userEntity.getValue(UserKey.bt_key), dataSessionCode);
+    _currentLocalSession = await NextsenseBase.startStreaming(
+        deviceMacAddress, /*uploadToCloud=*/true,
+        userEntity.getValue(UserKey.bt_key), dataSessionCode);
     return true;
   }
 

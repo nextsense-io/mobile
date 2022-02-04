@@ -37,13 +37,15 @@ public class LocalSessionManager {
   }
 
   public synchronized long startLocalSession(
-      @Nullable String cloudDataSessionId, @Nullable String userBigTableKey, boolean uploadNeeded) {
+      @Nullable String cloudDataSessionId, @Nullable String userBigTableKey, boolean uploadNeeded,
+      float eegSampleRate, float accelerationSampleRate) {
     if (activeLocalSession != null &&
         activeLocalSession.getStatus() == LocalSession.Status.RECORDING) {
       Log.w(TAG, "Trying to start a session, but one is already active.");
       return -1;
     }
-    activeLocalSession = LocalSession.create(userBigTableKey, cloudDataSessionId, uploadNeeded);
+    activeLocalSession = LocalSession.create(userBigTableKey, cloudDataSessionId, uploadNeeded,
+        eegSampleRate, accelerationSampleRate);
     return objectBoxDatabase.putLocalSession(activeLocalSession);
   }
 

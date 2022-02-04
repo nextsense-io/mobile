@@ -35,37 +35,46 @@ public class LocalSession extends BaseRecord {
   private Status status;
   private boolean uploadNeeded;
   private int eegSamplesUploaded;
+  private float eegSampleRate;
   private int accelerationsUploaded;
+  private float accelerationSampleRate;
 
   private LocalSession(@Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
                        Status status, boolean uploadNeeded, int eegSamplesUploaded,
-                       int accelerationsUploaded) {
+                       float eegSampleRate, int accelerationsUploaded,
+                       float accelerationSampleRate) {
     super();
     this.cloudDataSessionId = cloudDataSessionId;
     this.userBigTableKey = userBigTableKey;
     this.status = status;
     this.uploadNeeded = uploadNeeded;
     this.eegSamplesUploaded = eegSamplesUploaded;
+    this.eegSampleRate = eegSampleRate;
     this.accelerationsUploaded = accelerationsUploaded;
+    this.accelerationSampleRate = accelerationSampleRate;
   }
 
   public static LocalSession create(
-      @Nullable String userBigTableKey, @Nullable String cloudDataSessionId, boolean uploadNeeded) {
+      @Nullable String userBigTableKey, @Nullable String cloudDataSessionId, boolean uploadNeeded,
+      float eegSampleRate, float accelerationSampleRate) {
     return new LocalSession(cloudDataSessionId, userBigTableKey, Status.RECORDING, uploadNeeded,
-        /*recordsUploaded=*/0, /*accelerationsUploaded=*/0);
+        /*recordsUploaded=*/0, eegSampleRate, /*accelerationsUploaded=*/0, accelerationSampleRate);
   }
 
   // Need to be public for ObjectBox performance.
-  public LocalSession(int id, @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
-                      Status status, boolean uploadNeeded, int eegSamplesUploaded,
-                      int accelerationsUploaded) {
+  public LocalSession(
+      int id, @Nullable String userBigTableKey, @Nullable String cloudDataSessionId, Status status,
+      boolean uploadNeeded, int eegSamplesUploaded, float eegSampleRate, int accelerationsUploaded,
+      float accelerationSampleRate) {
     super(id);
     this.cloudDataSessionId = cloudDataSessionId;
     this.userBigTableKey = userBigTableKey;
     this.status = status;
     this.uploadNeeded = uploadNeeded;
     this.eegSamplesUploaded = eegSamplesUploaded;
+    this.eegSampleRate = eegSampleRate;
     this.accelerationsUploaded = accelerationsUploaded;
+    this.accelerationSampleRate = accelerationSampleRate;
   }
 
   @Nullable
@@ -113,8 +122,24 @@ public class LocalSession extends BaseRecord {
     this.eegSamplesUploaded = eegSamplesUploaded;
   }
 
+  public float getEegSampleRate() {
+    return eegSampleRate;
+  }
+
+  public void setEegSampleRate(float eegSampleRate) {
+    this.eegSampleRate = eegSampleRate;
+  }
+
   public void setAccelerationsUploaded(int accelerationsUploaded) {
     this.accelerationsUploaded = accelerationsUploaded;
+  }
+
+  public float getAccelerationSampleRate() {
+    return accelerationSampleRate;
+  }
+
+  public void setAccelerationSampleRate(float accelerationSampleRate) {
+    this.accelerationSampleRate = accelerationSampleRate;
   }
 
   public static class StatusConverter implements PropertyConverter<Status, Integer> {

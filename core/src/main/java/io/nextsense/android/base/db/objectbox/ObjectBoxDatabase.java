@@ -3,6 +3,8 @@ package io.nextsense.android.base.db.objectbox;
 import android.content.Context;
 import android.util.Log;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -107,6 +109,17 @@ public class ObjectBoxDatabase implements Database {
   public List<EegSample> getLastEegSamples(int localSessionId, long count) {
     long offset = count <= eegSampleBox.count()? eegSampleBox.count() - count: 0;
     return getEegSamples(localSessionId, offset, count);
+  }
+
+  public List<Float> getLastChannelData(int localSessionId, int channelNumber, Duration duration) {
+    LocalSession localSession = getLocalSessions().get(localSessionId);
+    List<EegSample> eegSamples = getLastEegSamples(localSessionId,
+        Math.round(Math.floor(duration.getSeconds() * localSession.getEegSampleRate())));
+    List<Float> channelSamples = new ArrayList<>(eegSamples.size());
+    for (EegSample eegSample : eegSamples) {
+      channelSamples.add(eegSample.getEegSamples().get(channelNumber));
+    }
+    return channelSamples;
   }
 
   public long getEegSamplesCount(long localSessionId) {

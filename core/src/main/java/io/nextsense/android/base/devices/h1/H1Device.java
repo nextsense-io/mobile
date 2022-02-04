@@ -142,7 +142,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           new IllegalStateException("No characteristic to stream on."));
     }
     deviceModeFuture = SettableFuture.create();
-    localSessionManager.startLocalSession(userBigTableKey, dataSessionId, uploadToCloud);
+    localSessionManager.startLocalSession(userBigTableKey, dataSessionId, uploadToCloud, 500, 10);
     peripheral.setNotify(dataCharacteristic, /*enable=*/true);
     return deviceModeFuture;
   }

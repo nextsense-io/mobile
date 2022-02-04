@@ -139,7 +139,8 @@ public class MainActivity extends AppCompatActivity {
         return;
       }
       ListenableFuture<Boolean> deviceModeFuture = lastDevice.startStreaming(
-          /*userBigTableKey=*/null, /*dataSessionId=*/null);
+          /*uploadToCloud=*/false, /*userBigTableKey=*/null,
+          /*dataSessionId=*/null);
       deviceModeFuture.addListener(() -> {
         try {
           Boolean streaming = deviceModeFuture.get();

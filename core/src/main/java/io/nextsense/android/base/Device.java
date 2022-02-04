@@ -5,9 +5,12 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Bundle;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.welie.blessed.BluetoothCentralManagerCallback;
 import com.welie.blessed.BluetoothPeripheral;
@@ -57,16 +60,19 @@ public class Device {
   private final BleCentralManagerProxy centralManagerProxy;
   private final Set<DeviceStateChangeListener> deviceStateChangeListeners = new HashSet<>();
   private final DeviceInfo deviceInfo = new DeviceInfo();
-  private final DeviceSettings deviceSettings = new DeviceSettings();
-  private final DeviceData deviceData = new DeviceData();
+  // TODO(eric): Inject DB? Frequency?
+  // private final DeviceData deviceData = new DeviceData();
   private final BlePeripheralCallbackProxy callbackProxy = new BlePeripheralCallbackProxy();
   private final ReconnectionManager reconnectionManager;
+  private final ListeningExecutorService executorService =
+      MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 
   private DeviceState deviceState = DeviceState.DISCONNECTED;
   private boolean autoReconnect = false;
   private SettableFuture<DeviceState> deviceConnectionFuture;
   private SettableFuture<DeviceState> deviceDisconnectionFuture;
   private DisconnectionStatus disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
+  private DeviceSettings deviceSettings;
 
   public Device(BleCentralManagerProxy centralProxy, NextSenseDevice nextSenseDevice,
                 BluetoothPeripheral btPeripheral) {
@@ -95,7 +101,8 @@ public class Device {
     return nextSenseDevice.getDeviceMode();
   }
 
-  public ListenableFuture<Boolean> startStreaming(String userBigTableKey, String dataSessionId) {
+  public ListenableFuture<Boolean> startStreaming(
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId) {
     if (deviceState != DeviceState.READY) {
       return Futures.immediateFailedFuture(new IllegalStateException(
           "Device needs to be in READY state to change its mode."));
@@ -105,8 +112,8 @@ public class Device {
     //             sets.
     parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
         StartStreamingCommand.StartMode.NO_LOGGING);
-    return nextSenseDevice.startStreaming(/*uploadToCloud=*/true, userBigTableKey,
-        dataSessionId, parametersBundle);
+    return nextSenseDevice.startStreaming(uploadToCloud, userBigTableKey, dataSessionId,
+        parametersBundle);
   }
 
   public ListenableFuture<Boolean> stopStreaming() {
@@ -194,8 +201,8 @@ public class Device {
   /**
    * Returns the {@link DeviceSettings} currently in place on the {@link Device}.
    */
-  public ListenableFuture<DeviceSettings> getSettings() {
-    return nextSenseDevice.loadDeviceSettings();
+  public DeviceSettings getSettings() {
+    return deviceSettings;
   }
 
   /**
@@ -206,14 +213,21 @@ public class Device {
     if (nextSenseDevice.getDeviceMode() != DeviceMode.IDLE) {
       return Futures.immediateFuture(false);
     }
-    return nextSenseDevice.applyDeviceSettings(deviceSettings);
+    return executorService.submit(() -> {
+      boolean applied = nextSenseDevice.applyDeviceSettings(deviceSettings).get();
+      if (applied) {
+        this.deviceSettings = deviceSettings;
+      }
+      return applied;
+    });
   }
 
   /**
    * Methods to get the data or listen to new data.
    */
   public DeviceData getData() {
-    return deviceData;
+    // return deviceData;
+    return null;
   }
 
   private void readyDevice(BluetoothPeripheral peripheral) {
@@ -223,6 +237,7 @@ public class Device {
         nextSenseDevice.connect(peripheral,
             disconnectionStatus == DisconnectionStatus.HARD).get();
         disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
+        deviceSettings = nextSenseDevice.loadDeviceSettings().get();
         deviceState = DeviceState.READY;
         deviceConnectionFuture.set(deviceState);
         notifyDeviceStateChangeListeners(DeviceState.READY);

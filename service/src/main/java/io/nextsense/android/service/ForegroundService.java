@@ -105,6 +105,14 @@ public class ForegroundService extends Service {
     return deviceManager;
   }
 
+  public ObjectBoxDatabase getObjectBoxDatabase() {
+    return objectBoxDatabase;
+  }
+
+  public LocalSessionManager getLocalSessionManager() {
+    return localSessionManager;
+  }
+
   public SampleRateCalculator getSampleRateCalculator() {
     return sampleRateCalculator;
   }

@@ -26,9 +26,14 @@ class NextsenseBase {
   static const String _startStreamingCommand = 'start_streaming';
   static const String _stopStreamingCommand = 'stop_streaming';
   static const String _isBluetoothEnabledCommand = 'is_bluetooth_enabled';
+  static const String _getChannelDataCommand = 'get_channel_data';
   static const String _macAddress = 'mac_address';
+  static const String _uploadToCloud = 'upload_to_cloud';
   static const String _userBigTableKey = 'user_bigtable_key';
   static const String _dataSessionId = 'data_session_id';
+  static const String _localSessionId = 'local_session_id';
+  static const String _channelNumber = 'channel_number';
+  static const String _durationMillis = 'duration_millis';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
@@ -59,6 +64,14 @@ class NextsenseBase {
         {_macAddress: macAddress});
   }
 
+  static Future<List<Float>?> getChannelData(
+      String macAddress, int localSessionId, int channelNumber,
+      Duration duration) async {
+    final List<Float>? channelData =
+        await _channel.invokeMethod(_getChannelDataCommand);
+    return channelData;
+  }
+
   static CancelListening startScanning(Listener listener) {
     var subscription = _deviceScanStream.receiveBroadcastStream(
         _nextScanningListenerId++
@@ -78,11 +91,11 @@ class NextsenseBase {
     };
   }
 
-  static Future startStreaming(String macAddress, String userBigTableKey,
-      String dataSessionId) async {
-    await _channel.invokeMethod(_startStreamingCommand,
-        {_macAddress: macAddress, _userBigTableKey: userBigTableKey,
-         _dataSessionId: dataSessionId});
+  static Future<int> startStreaming(String macAddress, bool uploadToCloud,
+      String userBigTableKey, String dataSessionId) async {
+    return await _channel.invokeMethod(_startStreamingCommand,
+        {_macAddress: macAddress, _uploadToCloud: uploadToCloud,
+          _userBigTableKey: userBigTableKey, _dataSessionId: dataSessionId});
   }
 
   static Future stopStreaming(String macAddress) async {
