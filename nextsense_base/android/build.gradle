@@ -30,14 +30,21 @@ apply plugin: 'com.android.library'
 android {
     compileSdkVersion 30
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true
+    }
+
     defaultConfig {
-        minSdkVersion 23
+        minSdkVersion 24
     }
 }
 
 dependencies {
     implementation project(path: ':core')
     implementation project(path:':service')
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.google.guava:guava:30.1.1-jre'
 }
