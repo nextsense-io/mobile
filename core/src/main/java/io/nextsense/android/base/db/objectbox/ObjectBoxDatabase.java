@@ -83,6 +83,10 @@ public class ObjectBoxDatabase implements Database {
     return accelerationBox.put(acceleration);
   }
 
+  public LocalSession getLocalSession(int localSessionId) {
+    return localSessionBox.get(localSessionId);
+  }
+
   public List<LocalSession> getLocalSessions() {
     return localSessionBox.getAll();
   }
@@ -107,14 +111,16 @@ public class ObjectBoxDatabase implements Database {
   }
 
   public List<EegSample> getLastEegSamples(int localSessionId, long count) {
-    long offset = count <= eegSampleBox.count()? eegSampleBox.count() - count: 0;
+    long sessionEegSamplesCount = getEegSamplesCount(localSessionId);
+    long offset = count <= sessionEegSamplesCount ? sessionEegSamplesCount - count: 0;
     return getEegSamples(localSessionId, offset, count);
   }
 
   public List<Float> getLastChannelData(int localSessionId, int channelNumber, Duration duration) {
-    LocalSession localSession = getLocalSessions().get(localSessionId);
+    LocalSession localSession = getLocalSession(localSessionId);
+    float seconds = duration.toMillis() / 1000.0f;
     List<EegSample> eegSamples = getLastEegSamples(localSessionId,
-        Math.round(Math.floor(duration.getSeconds() * localSession.getEegSampleRate())));
+        Math.round(Math.floor(seconds * localSession.getEegSampleRate())));
     List<Float> channelSamples = new ArrayList<>(eegSamples.size());
     for (EegSample eegSample : eegSamples) {
       channelSamples.add(eegSample.getEegSamples().get(channelNumber));
@@ -127,7 +133,8 @@ public class ObjectBoxDatabase implements Database {
   }
 
   public List<Acceleration> getLastAccelerations(int localSessionId, long count) {
-    long offset = count <= accelerationBox.count()? accelerationBox.count() - count: 0;
+    long sessionAccelerationCount = getAccelerationCount(localSessionId);
+    long offset = count <= sessionAccelerationCount ? sessionAccelerationCount - count: 0;
     return getAccelerations(localSessionId, offset, count);
   }
 
@@ -143,6 +150,10 @@ public class ObjectBoxDatabase implements Database {
 
   public long getAccelerationCount() {
     return accelerationBox.count();
+  }
+
+  public long getAccelerationCount(long localSessionId) {
+    return accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).count();
   }
 
   public long deleteEegSamplesData(int localSessionId) {

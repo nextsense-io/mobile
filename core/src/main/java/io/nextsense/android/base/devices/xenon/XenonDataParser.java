@@ -73,7 +73,7 @@ public class XenonDataParser {
 
   private static float convertToMicroVolts(int data) {
     // TODO(eric): Get current channel EEG gain from device state.
-    return (float)(data * ((V_REF * 1000000) / (24 * (pow(2, 23) - 1))));
+    return (float)(data * ((V_REF * 1000000.0f) / (24.0f * (pow(2, 23) - 1))));
   }
 
   private void parsePacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,

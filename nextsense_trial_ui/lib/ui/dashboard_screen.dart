@@ -3,7 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/SessionPopScope.dart';
-import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
+import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/session_screen.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
@@ -19,6 +19,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
 
   Widget _buildBody(BuildContext context) {
+    Widget checkSeatingButton = Padding(
+        padding: EdgeInsets.all(10.0),
+        child: ElevatedButton(
+          child: const Text('Check earbuds seating'),
+          onPressed: () async {
+            // Navigate to the session screen.
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) =>
+                  ImpedanceCalculationScreen()),
+            );
+          },
+        ));
     Widget recordSessionButton = Padding(
         padding: EdgeInsets.all(10.0),
         child: ElevatedButton(
@@ -69,6 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ));
     List<Widget> buttons = [];
     if (_deviceManager.getConnectedDevice() != null) {
+      buttons.add(checkSeatingButton);
       buttons.add(recordSessionButton);
       buttons.add(disconnectButton);
     } else {

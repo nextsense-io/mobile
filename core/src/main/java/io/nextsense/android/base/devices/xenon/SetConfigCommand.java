@@ -10,6 +10,8 @@ import java.util.List;
 public class SetConfigCommand extends XenonFirmwareCommand {
   private static final byte TRUE = (byte)0x01;
   private static final byte FALSE = (byte)0x00;
+  private static final byte SAMPLING_RATE_250 = (byte)0xf6;
+  private static final byte SAMPLING_RATE_500 = (byte)0xf5;
   private static final byte CHANNEL_ENABLED_REGISTER = (byte)0x60;
   private static final byte CHANNEL_DISABLED_REGISTER = (byte)0x80;
   private static final byte CHANNEL_IMPEDANCE_REGISTER = (byte)0x68;
@@ -17,7 +19,7 @@ public class SetConfigCommand extends XenonFirmwareCommand {
   private static final byte MISC_1_INDEPENDENT_CHANNELS = (byte)0x20;
   private static final byte[] DEFAULT_ADS_1299_REGISTERS = new byte[]{
       // 0xAC,  // REG_ID (Overriden by enabled channels byte)
-      (byte)0xf5,  // REG_CONFIG_1
+      SAMPLING_RATE_250,  // REG_CONFIG_1
       (byte)0xd0,  // REG_CONFIG_2
       (byte)0xfc,  // REG_CONFIG_3
       (byte)0x01,  // REG_LOFF
@@ -86,9 +88,12 @@ public class SetConfigCommand extends XenonFirmwareCommand {
     if (impedanceMode) {
       registers[MISC_1_OFFSET] = MISC_1_INDEPENDENT_CHANNELS;
       channelEnabledRegisterValue = CHANNEL_IMPEDANCE_REGISTER;
+    } else {
+      registers[MISC_1_OFFSET] = MISC_1_DEFAULT;
     }
     for (Integer enabledChannel : enabledChannels) {
-      registers[CHANNELS_START_OFFSET + enabledChannel] = channelEnabledRegisterValue;
+      // The first channel is 1, so need to remove 1 to get teh correct offset.
+      registers[CHANNELS_START_OFFSET + enabledChannel - 1] = channelEnabledRegisterValue;
     }
     return registers;
   }

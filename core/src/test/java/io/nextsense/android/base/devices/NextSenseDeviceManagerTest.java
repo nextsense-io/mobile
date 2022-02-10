@@ -5,7 +5,6 @@ import org.junit.Test;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.devices.h1.H1Device;
-import io.nextsense.android.base.devices.h15.H15Device;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
 
 import static org.junit.Assert.*;
@@ -30,12 +29,6 @@ public class NextSenseDeviceManagerTest {
   public void getDeviceForName_h1name_returnsH1Device() {
     assertEquals(H1Device.class,
         deviceManager.getDeviceForName(H1Device.BLUETOOTH_PREFIX + "-1").getClass());
-  }
-
-  @Test
-  public void getDeviceForName_h15name_returnsH15Device() {
-    assertEquals(H15Device.class,
-        deviceManager.getDeviceForName(H15Device.BLUETOOTH_PREFIX).getClass());
   }
 
   @Test

@@ -12,4 +12,10 @@ public class UtilTest {
     byte[] int24Bytes = new byte[]{(byte)0b00000001, (byte)0b00000010, (byte)0b00000011};
     assertEquals(66051, Util.bytesToInt24(int24Bytes, 0, ByteOrder.LITTLE_ENDIAN));
   }
+
+  @Test
+  public void bytesToInt24_negativeValue_isCorrect() {
+    byte[] int24Bytes = new byte[]{(byte)0b11111110, (byte)0b11111101, (byte)0b11111101};
+    assertEquals(-66051, Util.bytesToInt24(int24Bytes, 0, ByteOrder.LITTLE_ENDIAN));
+  }
 }

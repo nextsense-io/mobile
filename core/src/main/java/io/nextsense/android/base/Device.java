@@ -7,6 +7,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -73,6 +74,7 @@ public class Device {
   private SettableFuture<DeviceState> deviceDisconnectionFuture;
   private DisconnectionStatus disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
   private DeviceSettings deviceSettings;
+  private DeviceSettings savedDeviceSettings;
 
   public Device(BleCentralManagerProxy centralProxy, NextSenseDevice nextSenseDevice,
                 BluetoothPeripheral btPeripheral) {
@@ -110,8 +112,13 @@ public class Device {
     Bundle parametersBundle = new Bundle();
     // TODO(eric): Should have common parameters that then get translated to device specific command
     //             sets.
-    parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
-        StartStreamingCommand.StartMode.NO_LOGGING);
+    if (uploadToCloud) {
+      parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
+          StartStreamingCommand.StartMode.WITH_LOGGING);
+    } else {
+      parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
+          StartStreamingCommand.StartMode.NO_LOGGING);
+    }
     return nextSenseDevice.startStreaming(uploadToCloud, userBigTableKey, dataSessionId,
         parametersBundle);
   }
@@ -122,6 +129,37 @@ public class Device {
           "Device needs to be in READY state to change its mode."));
     }
     return nextSenseDevice.stopStreaming();
+  }
+
+  public ListenableFuture<Boolean> startImpedance(int channelNumber, int frequencyDivider) {
+    return executorService.submit(() -> {
+      savedDeviceSettings = new DeviceSettings(deviceSettings);
+      DeviceSettings newDeviceSettings = new DeviceSettings(deviceSettings);
+      newDeviceSettings.setImpedanceMode(true);
+      newDeviceSettings.setImpedanceDivider(frequencyDivider);
+      newDeviceSettings.setEnabledChannels(ImmutableList.of(channelNumber));
+      boolean settingsSet = setSettings(newDeviceSettings).get();
+      if (settingsSet) {
+        return startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null,
+            /*dataSessionId=*/null).get();
+      } else {
+        return false;
+      }
+    });
+  }
+
+  public ListenableFuture<Boolean> stopImpedance() {
+    return executorService.submit(() -> {
+      boolean stoppedStreaming = stopStreaming().get();
+      if (stoppedStreaming) {
+        boolean settingsSet = setSettings(savedDeviceSettings).get();
+        if (settingsSet) {
+          savedDeviceSettings = null;
+          return true;
+        }
+      }
+      return false;
+    });
   }
 
   public void addOnDeviceStateChangeListener(DeviceStateChangeListener listener) {
@@ -209,14 +247,14 @@ public class Device {
    * Sets the deviceSettings in the device firmware. The device must be in {@code DeviceMode.IDLE}
    * mode when invoking this.
    */
-  public ListenableFuture<Boolean> setSettings(DeviceSettings deviceSettings) {
+  public ListenableFuture<Boolean> setSettings(DeviceSettings newDeviceSettings) {
     if (nextSenseDevice.getDeviceMode() != DeviceMode.IDLE) {
       return Futures.immediateFuture(false);
     }
     return executorService.submit(() -> {
-      boolean applied = nextSenseDevice.applyDeviceSettings(deviceSettings).get();
+      boolean applied = nextSenseDevice.applyDeviceSettings(newDeviceSettings).get();
       if (applied) {
-        this.deviceSettings = deviceSettings;
+        this.deviceSettings = newDeviceSettings;
       }
       return applied;
     });
@@ -237,7 +275,7 @@ public class Device {
         nextSenseDevice.connect(peripheral,
             disconnectionStatus == DisconnectionStatus.HARD).get();
         disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
-        deviceSettings = nextSenseDevice.loadDeviceSettings().get();
+        deviceSettings = new DeviceSettings(nextSenseDevice.loadDeviceSettings().get());
         deviceState = DeviceState.READY;
         deviceConnectionFuture.set(deviceState);
         notifyDeviceStateChangeListeners(DeviceState.READY);

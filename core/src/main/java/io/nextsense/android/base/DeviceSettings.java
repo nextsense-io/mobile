@@ -1,5 +1,6 @@
 package io.nextsense.android.base;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,6 +21,19 @@ public class DeviceSettings {
   // calculations. For example, a divider of 10 with a sampling frequency of 500 would give an
   // impedance frequency of 50.
   private int impedanceDivider;
+
+  public DeviceSettings(DeviceSettings deviceSettings) {
+    this.eegSamplingRate = deviceSettings.eegSamplingRate;
+    this.eegStreamingRate = deviceSettings.eegStreamingRate;
+    this.imuSamplingRate = deviceSettings.imuSamplingRate;
+    this.imuStreamingRate = deviceSettings.imuStreamingRate;
+    this.enabledChannels = new ArrayList<>();
+    this.enabledChannels.addAll(deviceSettings.enabledChannels);
+    this.impedanceMode = deviceSettings.impedanceMode;
+    this.impedanceDivider = deviceSettings.impedanceDivider;
+  }
+
+  public DeviceSettings() {}
 
   public float getEegSamplingRate() {
     return eegSamplingRate;

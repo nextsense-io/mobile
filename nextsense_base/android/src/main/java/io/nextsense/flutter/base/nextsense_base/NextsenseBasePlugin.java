@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nullable;
+
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
@@ -44,7 +46,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String DISCONNECT_DEVICE_COMMAND = "disconnect_device";
   public static final String START_STREAMING_COMMAND = "start_streaming";
   public static final String STOP_STREAMING_COMMAND = "stop_streaming";
+  public static final String START_IMPEDANCE_COMMAND = "start_impedance";
+  public static final String STOP_IMPEDANCE_COMMAND = "stop_impedance";
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
+  public static final String GET_DEVICE_SETTINGS_COMMAND = "get_device_settings";
   public static final String GET_CHANNEL_DATA_COMMAND = "get_channel_data";
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
@@ -54,8 +59,11 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String LOCAL_SESSION_ID_ARGUMENT = "local_session_id";
   public static final String CHANNEL_NUMBER_ARGUMENT = "channel_number";
   public static final String DURATION_MILLIS_ARGUMENT = "duration_millis";
+  public static final String FREQUENCY_DIVIDER_ARGUMENT = "frequency_divider";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
   public static final String ERROR_SESSION_NOT_STARTED = "session_not_started";
+  public static final String ERROR_STREAMING_START_FAILED = "streaming_start_failed";
+  public static final String ERROR_STREAMING_STOP_FAILED = "streaming_stop_failed";
   public static final String CONNECT_TO_DEVICE_ERROR_CONNECTION = "connection_error";
   public static final String CONNECT_TO_DEVICE_ERROR_INTERRUPTED = "connection_interrupted";
 
@@ -119,6 +127,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       }
       @Override
       public void onCancel(Object arguments) {
+        if (arguments == null) {
+          return;
+        }
         List<Object> argumentList = (ArrayList<Object>) arguments;
         stopListeningToDeviceState((String) argumentList.get(1));
       }
@@ -142,14 +153,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         String macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         Log.d(TAG, "connecting to device: " + macAddress);
         connectDevice(result, macAddress);
-        Log.d(TAG, "connected to device: " + macAddress + " with result " + result.toString());
+        Log.d(TAG, "connected to device: " + macAddress + " with result " + result);
         break;
       case DISCONNECT_DEVICE_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         Log.d(TAG, "disconnecting from device: " + macAddress);
         disconnectDevice(result, macAddress);
         Log.d(TAG, "disconnected from device: " + macAddress + " with result " +
-            result.toString());
+            result);
         break;
       case IS_BLUETOOTH_ENABLED:
         result.success(BluetoothAdapter.getDefaultAdapter().isEnabled());
@@ -165,14 +176,28 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         stopStreaming(result, macAddress);
         break;
+      case START_IMPEDANCE_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        Integer channelNumber = call.argument(CHANNEL_NUMBER_ARGUMENT);
+        Integer frequencyDivider = call.argument(FREQUENCY_DIVIDER_ARGUMENT);
+        startImpedance(result, macAddress, channelNumber, frequencyDivider);
+        break;
+      case STOP_IMPEDANCE_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        stopImpedance(result, macAddress);
+        break;
       case GET_CONNECTED_DEVICES_COMMAND:
         getConnectedDevices(result);
         break;
+      case GET_DEVICE_SETTINGS_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        getDeviceSettings(result, macAddress);
+        break;
       case GET_CHANNEL_DATA_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
-        int localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
-        int channelNumber = call.argument(CHANNEL_NUMBER_ARGUMENT);
-        int durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
+        Integer localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
+        channelNumber = call.argument(CHANNEL_NUMBER_ARGUMENT);
+        Integer durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
         getChannelData(result, macAddress, localSessionId, channelNumber, durationMillis);
         break;
       case SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
@@ -313,7 +338,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private void connectDevice(Result result, String macAddress) {
     Device device = devices.get(macAddress);
     if (device == null) {
-      result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+      returnError(result, CONNECT_DEVICE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
@@ -322,15 +347,15 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       if (deviceState == DeviceState.READY) {
         result.success(null);
       } else {
-        result.error(CONNECT_TO_DEVICE_ERROR_CONNECTION, /*errorMessage=*/"Failed to connect.",
-            /*errorDetails=*/null);
+        returnError(result, CONNECT_DEVICE_COMMAND, CONNECT_TO_DEVICE_ERROR_CONNECTION,
+            /*errorMessage=*/"Failed to connect.", /*errorDetails=*/null);
       }
     } catch (ExecutionException e) {
-      result.error(CONNECT_TO_DEVICE_ERROR_CONNECTION, /*errorMessage=*/e.getMessage(),
-          /*errorDetails=*/e);
+      returnError(result, CONNECT_DEVICE_COMMAND, CONNECT_TO_DEVICE_ERROR_CONNECTION,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
     } catch (InterruptedException e) {
-      result.error(CONNECT_TO_DEVICE_ERROR_INTERRUPTED, /*errorMessage=*/e.getMessage(),
-          /*errorDetails=*/e);
+      returnError(result, CONNECT_DEVICE_COMMAND, CONNECT_TO_DEVICE_ERROR_INTERRUPTED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
       Thread.currentThread().interrupt();
     }
   }
@@ -338,7 +363,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private void disconnectDevice(Result result, String macAddress) {
     Device device = devices.get(macAddress);
     if (device == null) {
-      result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+      returnError(result, DISCONNECT_DEVICE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
@@ -347,15 +372,15 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       if (deviceState == DeviceState.DISCONNECTED) {
         result.success(null);
       } else {
-        result.error(CONNECT_TO_DEVICE_ERROR_CONNECTION, /*errorMessage=*/"Failed to disconnect.",
-            /*errorDetails=*/null);
+        returnError(result, DISCONNECT_DEVICE_COMMAND, CONNECT_TO_DEVICE_ERROR_CONNECTION,
+            /*errorMessage=*/"Failed to disconnect.", /*errorDetails=*/null);
       }
     } catch (ExecutionException e) {
-      result.error(CONNECT_TO_DEVICE_ERROR_CONNECTION, /*errorMessage=*/e.getMessage(),
-          /*errorDetails=*/e);
+      returnError(result, DISCONNECT_DEVICE_COMMAND, CONNECT_TO_DEVICE_ERROR_CONNECTION,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
     } catch (InterruptedException e) {
-      result.error(CONNECT_TO_DEVICE_ERROR_INTERRUPTED, /*errorMessage=*/e.getMessage(),
-          /*errorDetails=*/e);
+      returnError(result, DISCONNECT_DEVICE_COMMAND, CONNECT_TO_DEVICE_ERROR_INTERRUPTED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
       Thread.currentThread().interrupt();
     }
   }
@@ -364,17 +389,33 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
                               String userBigTableKey, String dataSessionId) {
     Device device = devices.get(macAddress);
     if (device == null) {
-      result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+      returnError(result, START_STREAMING_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
-    device.startStreaming(uploadToCloud, userBigTableKey, dataSessionId);
+    try {
+      boolean started = device.startStreaming(uploadToCloud, userBigTableKey, dataSessionId).get();
+      if (!started) {
+        returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
+            /*errorMessage=*/null, /*errorDetails=*/null);
+        return;
+      }
+    } catch (ExecutionException e) {
+      returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+      return;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+      return;
+    }
     Optional<LocalSession> localSession =
         nextSenseService.getLocalSessionManager().getActiveLocalSession();
     if (localSession.isPresent()) {
       result.success(localSession.get().id);
     } else {
-      result.error(ERROR_SESSION_NOT_STARTED, /*errorMessage=*/null,
+      returnError(result, START_STREAMING_COMMAND, ERROR_SESSION_NOT_STARTED, /*errorMessage=*/null,
           /*errorDetails=*/null);
     }
   }
@@ -382,23 +423,119 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private void stopStreaming(Result result, String macAddress) {
     Device device = devices.get(macAddress);
     if (device == null) {
-      result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+      returnError(result, STOP_STREAMING_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
-    device.stopStreaming();
+    try {
+      boolean stopped = device.stopStreaming().get();
+      if (stopped) {
+        result.success(null);
+      } else {
+        returnError(result, STOP_STREAMING_COMMAND, ERROR_STREAMING_STOP_FAILED,
+            /*errorMessage=*/null, /*errorDetails=*/null);
+      }
+    } catch (ExecutionException e) {
+      returnError(result, STOP_STREAMING_COMMAND, ERROR_STREAMING_STOP_FAILED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      returnError(result, STOP_STREAMING_COMMAND, ERROR_STREAMING_STOP_FAILED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+    }
+  }
+
+  private void startImpedance(Result result, String macAddress, int channelNumber,
+                              int frequencyDivider) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      returnError(result, START_IMPEDANCE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    try {
+      boolean started = device.startImpedance(channelNumber, frequencyDivider).get();
+      if (!started) {
+        returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
+            /*errorMessage=*/null, /*errorDetails=*/null);
+      }
+    } catch (ExecutionException e) {
+      returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+    }
+    Optional<LocalSession> localSession =
+        nextSenseService.getLocalSessionManager().getActiveLocalSession();
+    if (localSession.isPresent()) {
+      Log.i(TAG, "start impedence returning local session " + localSession.get().id);
+      result.success(localSession.get().id);
+    } else {
+      returnError(result, START_IMPEDANCE_COMMAND, ERROR_SESSION_NOT_STARTED,
+          /*errorMessage=*/null, /*errorDetails=*/null);
+    }
+  }
+
+  private void stopImpedance(Result result, String macAddress) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      returnError(result, STOP_IMPEDANCE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    try {
+      boolean stopped = device.stopImpedance().get();
+      if (stopped) {
+        result.success(null);
+      } else {
+        returnError(result, STOP_IMPEDANCE_COMMAND, ERROR_STREAMING_STOP_FAILED,
+            /*errorMessage=*/null, /*errorDetails=*/null);
+      }
+    } catch (ExecutionException e) {
+      returnError(result, STOP_IMPEDANCE_COMMAND, ERROR_STREAMING_STOP_FAILED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      returnError(result, STOP_IMPEDANCE_COMMAND, ERROR_STREAMING_STOP_FAILED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+    }
+  }
+
+  private void getDeviceSettings(Result result, String macAddress) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      returnError(result, GET_DEVICE_SETTINGS_COMMAND, ERROR_DEVICE_NOT_FOUND,
+          /*errorMessage=*/null, /*errorDetails=*/null);
+      return;
+    }
+    result.success(gson.toJson(device.getSettings()));
   }
 
   private void getChannelData(
       Result result, String macAddress, int localSessionId, int channelNumber, int durationMillis) {
     Device device = devices.get(macAddress);
     if (device == null) {
-      result.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+      returnError(result, GET_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
     result.success(nextSenseService.getObjectBoxDatabase().getLastChannelData(
         localSessionId, channelNumber, Duration.ofMillis(durationMillis)));
+  }
+
+  private void returnError(Result result, String method, String errorCode, @Nullable String errorMessage,
+                           @Nullable String errorDetails) {
+    String errorLog = "Error in " + method + ", code: " + errorCode;
+    if (errorMessage != null) {
+      errorLog += ", message: " + errorMessage;
+    }
+    if (errorDetails != null) {
+      errorLog += ", details: " + errorDetails;
+    }
+    Log.e(TAG, errorLog);
+    result.error(errorCode, errorMessage, errorDetails);
   }
 
   private final ServiceConnection nextSenseConnection = new ServiceConnection() {

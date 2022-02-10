@@ -152,7 +152,11 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     startStreamingFuture = SettableFuture.create();
     localSessionManager.startLocalSession(userBigTableKey, dataSessionId, uploadToCloud,
         deviceSettings.getEegStreamingRate(), deviceSettings.getImuStreamingRate());
-    peripheral.setNotify(dataCharacteristic, /*enable=*/true);
+    if (!peripheral.isNotifying(dataCharacteristic)) {
+      peripheral.setNotify(dataCharacteristic, /*enable=*/true);
+    } else {
+      runStartStreamingCommand();
+    }
     return startStreamingFuture;
   }
 
@@ -167,15 +171,15 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   }
 
   @Override
-  public ListenableFuture<Boolean> applyDeviceSettings(DeviceSettings deviceSettings) {
-    if (deviceSettings.equals(this.deviceSettings)) {
+  public ListenableFuture<Boolean> applyDeviceSettings(DeviceSettings newDeviceSettings) {
+    if (newDeviceSettings.equals(this.deviceSettings)) {
       return Futures.immediateFuture(true);
     }
     return executorService.submit(() -> {
       try {
-        executeCommandNoResponse(new SetConfigCommand(deviceSettings.getEnabledChannels(),
-            deviceSettings.isImpedanceMode(), deviceSettings.getImpedanceDivider()));
-        this.deviceSettings = deviceSettings;
+        executeCommandNoResponse(new SetConfigCommand(newDeviceSettings.getEnabledChannels(),
+            newDeviceSettings.isImpedanceMode(), newDeviceSettings.getImpedanceDivider()));
+        this.deviceSettings = newDeviceSettings;
         return true;
       } catch (ExecutionException e) {
         Log.e(TAG, "Failed to set the time on the device: " + e.getMessage());
@@ -194,9 +198,9 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       deviceSettings = new DeviceSettings();
       // No command to load settings yet in Xenon, apply default values.
       deviceSettings.setEnabledChannels(enabledChannels);
-      deviceSettings.setEegSamplingRate(500);
+      deviceSettings.setEegSamplingRate(250);
       deviceSettings.setEegStreamingRate(250);
-      deviceSettings.setImuSamplingRate(500);
+      deviceSettings.setImuSamplingRate(250);
       deviceSettings.setImuStreamingRate(250);
       deviceSettings.setImpedanceMode(false);
       deviceSettings.setImpedanceDivider(50);
@@ -223,6 +227,11 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
         peripheral, dataCharacteristic, command.getCommand(), WriteType.WITHOUT_RESPONSE).get();
   }
 
+  private void runStartStreamingCommand() {
+    writeCharacteristic(
+        dataCharacteristic, new StartStreamingCommand(targetStartStreamingMode).getCommand());
+  }
+
   private final BluetoothPeripheralCallback bluetoothPeripheralCallback =
       new BluetoothPeripheralCallback() {
     @Override
@@ -234,8 +243,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           Util.logd(TAG, "Notification updated with success to " +
               peripheral.isNotifying(characteristic));
           if (peripheral.isNotifying(characteristic)) {
-            writeCharacteristic(dataCharacteristic, new StartStreamingCommand(
-                targetStartStreamingMode).getCommand());
+            runStartStreamingCommand();
           } else {
             localSessionManager.stopLocalSession();
             deviceMode = DeviceMode.IDLE;
