@@ -92,7 +92,7 @@ public class SetConfigCommand extends XenonFirmwareCommand {
       registers[MISC_1_OFFSET] = MISC_1_DEFAULT;
     }
     for (Integer enabledChannel : enabledChannels) {
-      // The first channel is 1, so need to remove 1 to get teh correct offset.
+      // The first channel is 1, so need to remove 1 to get the correct offset.
       registers[CHANNELS_START_OFFSET + enabledChannel - 1] = channelEnabledRegisterValue;
     }
     return registers;

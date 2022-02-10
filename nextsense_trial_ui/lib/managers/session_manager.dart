@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
@@ -56,7 +57,10 @@ class SessionManager {
     _currentDataSession!.setValue(
         DataSessionKey.start_datetime, startTime.toIso8601String());
     // TODO(eric): Add an API to get this from the connected device.
-    _currentDataSession!.setValue(DataSessionKey.streaming_rate, 250);
+    Map<String, dynamic> deviceSettings =
+        await NextsenseBase.getDeviceSettings(deviceMacAddress);
+    _currentDataSession!.setValue(DataSessionKey.streaming_rate,
+        deviceSettings[describeEnum(DeviceSettingsFields.eegStreamingRate)]);
     await _firestoreManager.persistEntity(_currentDataSession!);
 
     // Update the session number in the user entry.

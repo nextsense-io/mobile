@@ -133,7 +133,9 @@ public class Device {
 
   public ListenableFuture<Boolean> startImpedance(int channelNumber, int frequencyDivider) {
     return executorService.submit(() -> {
-      savedDeviceSettings = new DeviceSettings(deviceSettings);
+      if (savedDeviceSettings == null) {
+        savedDeviceSettings = new DeviceSettings(deviceSettings);
+      }
       DeviceSettings newDeviceSettings = new DeviceSettings(deviceSettings);
       newDeviceSettings.setImpedanceMode(true);
       newDeviceSettings.setImpedanceDivider(frequencyDivider);
