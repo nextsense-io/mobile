@@ -276,11 +276,14 @@ public class Device {
       try {
         nextSenseDevice.connect(peripheral,
             disconnectionStatus == DisconnectionStatus.HARD).get();
-        disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
         deviceSettings = new DeviceSettings(nextSenseDevice.loadDeviceSettings().get());
         deviceState = DeviceState.READY;
         deviceConnectionFuture.set(deviceState);
         notifyDeviceStateChangeListeners(DeviceState.READY);
+        if (disconnectionStatus == DisconnectionStatus.HARD && getMode() == DeviceMode.STREAMING) {
+          nextSenseDevice.restartStreaming();
+        }
+        disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
       } catch (ExecutionException e) {
         Log.e(TAG, "Failed to connect device: " + e.getMessage());
         deviceConnectionFuture.setException(e);

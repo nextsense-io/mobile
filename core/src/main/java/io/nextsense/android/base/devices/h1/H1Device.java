@@ -148,6 +148,17 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
+  public ListenableFuture<Boolean> restartStreaming() {
+    if (dataCharacteristic == null) {
+      return Futures.immediateFailedFuture(
+          new IllegalStateException("No characteristic to stream on."));
+    }
+    deviceModeFuture = SettableFuture.create();
+    peripheral.setNotify(dataCharacteristic, /*enable=*/true);
+    return deviceModeFuture;
+  }
+
+  @Override
   public ListenableFuture<Boolean> stopStreaming() {
     deviceModeFuture = SettableFuture.create();
     writeCharacteristic(writeDataCharacteristic, new StopStreamingCommand().getCommand());

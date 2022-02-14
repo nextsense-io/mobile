@@ -57,6 +57,13 @@ public interface NextSenseDevice {
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId);
 
   /**
+   * Restarts an ongoing stream after a disconnection.
+   *
+   * @return true if successful, false otherwise
+   */
+  ListenableFuture<Boolean> restartStreaming();
+
+  /**
    * Stops streaming data from the device.
    * @return true if successful, false otherwise
    */

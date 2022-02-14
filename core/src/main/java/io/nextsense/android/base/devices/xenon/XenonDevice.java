@@ -161,6 +161,21 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   }
 
   @Override
+  public ListenableFuture<Boolean> restartStreaming() {
+    if (dataCharacteristic == null) {
+      return Futures.immediateFailedFuture(
+          new IllegalStateException("No characteristic to stream on."));
+    }
+    startStreamingFuture = SettableFuture.create();
+    if (!peripheral.isNotifying(dataCharacteristic)) {
+      peripheral.setNotify(dataCharacteristic, /*enable=*/true);
+    } else {
+      runStartStreamingCommand();
+    }
+    return startStreamingFuture;
+  }
+
+  @Override
   public ListenableFuture<Boolean> stopStreaming() {
     if (this.deviceMode == DeviceMode.IDLE) {
       return Futures.immediateFuture(true);
@@ -203,7 +218,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       deviceSettings.setImuSamplingRate(250);
       deviceSettings.setImuStreamingRate(250);
       deviceSettings.setImpedanceMode(false);
-      deviceSettings.setImpedanceDivider(50);
+      deviceSettings.setImpedanceDivider(25);
     }
     return Futures.immediateFuture(deviceSettings);
   }
