@@ -98,9 +98,6 @@ class XenonImpedanceCalculator {
     // Remove the average from every sample to account for DC drift.
     double eegArrayAverage = eegArray.average;
     for (int i = 0; i < eegArray.length; ++i) {
-      if (eegArrayAverage <= 0) {
-        _logger.log(Level.WARNING, 'eeg array average is negative: ' + eegArrayAverage.toString());
-      }
       eegArray[i] -= eegArrayAverage;
     }
     ArrayComplex eegArrayComplex = arrayToComplexArray(Array(eegArray));
@@ -126,6 +123,10 @@ class XenonImpedanceCalculator {
       await Future.delayed(_channelCycleTime, () {});
       impedanceData[channel.toSimple()] = await calculateImpedance(
           channel.toSimple(), _impedanceFrequency!, _streamingFrequency!);
+      if (_localSessionId != null) {
+        NextsenseBase.deleteLocalSession(_localSessionId!);
+        _localSessionId = null;
+      }
     }
     await stopImpedance();
     return impedanceData;

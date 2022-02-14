@@ -51,6 +51,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
   public static final String GET_DEVICE_SETTINGS_COMMAND = "get_device_settings";
   public static final String GET_CHANNEL_DATA_COMMAND = "get_channel_data";
+  public static final String DELETE_LOCAL_SESSION_COMMAND = "delete_local_session";
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
   public static final String UPLOAD_TO_CLOUD_ARGUMENT = "upload_to_cloud";
@@ -199,6 +200,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         channelNumber = call.argument(CHANNEL_NUMBER_ARGUMENT);
         Integer durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
         getChannelData(result, macAddress, localSessionId, channelNumber, durationMillis);
+        break;
+      case DELETE_LOCAL_SESSION_COMMAND:
+        localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
+        deleteLocalSession(result, localSessionId);
         break;
       case SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
         if (nextSenseServiceBound) {
@@ -523,6 +528,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
     result.success(nextSenseService.getObjectBoxDatabase().getLastChannelData(
         localSessionId, channelNumber, Duration.ofMillis(durationMillis)));
+  }
+
+  private void deleteLocalSession(Result result, Integer localSessionId) {
+    result.success(nextSenseService.getObjectBoxDatabase().deleteLocalSession(localSessionId));
   }
 
   private void returnError(Result result, String method, String errorCode, @Nullable String errorMessage,

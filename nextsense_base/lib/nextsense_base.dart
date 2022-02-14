@@ -40,14 +40,15 @@ class NextsenseBase {
   static const String _isBluetoothEnabledCommand = 'is_bluetooth_enabled';
   static const String _getChannelDataCommand = 'get_channel_data';
   static const String _getDeviceSettingsCommand = 'get_device_settings';
-  static const String _macAddress = 'mac_address';
-  static const String _uploadToCloud = 'upload_to_cloud';
-  static const String _userBigTableKey = 'user_bigtable_key';
-  static const String _dataSessionId = 'data_session_id';
-  static const String _localSessionId = 'local_session_id';
-  static const String _channelNumber = 'channel_number';
-  static const String _durationMillis = 'duration_millis';
-  static const String _frequencyDivider = 'frequency_divider';
+  static const String _deleteLocalSessionCommand = 'delete_local_session';
+  static const String _macAddressArg = 'mac_address';
+  static const String _uploadToCloudArg = 'upload_to_cloud';
+  static const String _userBigTableKeyArg = 'user_bigtable_key';
+  static const String _dataSessionIdArg = 'data_session_id';
+  static const String _localSessionIdArg = 'local_session_id';
+  static const String _channelNumberArg = 'channel_number';
+  static const String _durationMillisArg = 'duration_millis';
+  static const String _frequencyDividerArg = 'frequency_divider';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
@@ -70,12 +71,12 @@ class NextsenseBase {
 
   static Future connectDevice(String macAddress) async {
     await _channel.invokeMethod(_connectDeviceCommand,
-        {_macAddress: macAddress});
+        {_macAddressArg: macAddress});
   }
 
   static Future disconnectDevice(String macAddress) async {
     await _channel.invokeMethod(_disconnectDeviceCommand,
-        {_macAddress: macAddress});
+        {_macAddressArg: macAddress});
   }
 
   static Future<List<double>> getChannelData(
@@ -83,10 +84,15 @@ class NextsenseBase {
       Duration duration) async {
     final List<Object?> channelData =
         await _channel.invokeMethod(_getChannelDataCommand,
-        {_macAddress: macAddress, _localSessionId: localSessionId,
-          _channelNumber: channelNumber,
-          _durationMillis: duration.inMilliseconds});
+        {_macAddressArg: macAddress, _localSessionIdArg: localSessionId,
+          _channelNumberArg: channelNumber,
+          _durationMillisArg: duration.inMilliseconds});
     return channelData.cast<double>();
+  }
+
+  static Future deleteLocalSession(int localSessionId) async {
+    await  _channel.invokeMethod(_deleteLocalSessionCommand,
+        {_localSessionIdArg: localSessionId});
   }
 
   static CancelListening startScanning(Listener listener) {
@@ -111,25 +117,25 @@ class NextsenseBase {
   static Future<int> startStreaming(String macAddress, bool uploadToCloud,
       String userBigTableKey, String dataSessionId) async {
     return await _channel.invokeMethod(_startStreamingCommand,
-        {_macAddress: macAddress, _uploadToCloud: uploadToCloud,
-          _userBigTableKey: userBigTableKey, _dataSessionId: dataSessionId});
+        {_macAddressArg: macAddress, _uploadToCloudArg: uploadToCloud,
+          _userBigTableKeyArg: userBigTableKey, _dataSessionIdArg: dataSessionId});
   }
 
   static Future stopStreaming(String macAddress) async {
     await _channel.invokeMethod(_stopStreamingCommand,
-        {_macAddress: macAddress});
+        {_macAddressArg: macAddress});
   }
 
   static Future<int> startImpedance(String macAddress, int channelNumber,
       int frequencyDivider) async {
     return await _channel.invokeMethod(_startImpedanceCommand,
-        {_macAddress: macAddress, _channelNumber: channelNumber,
-        _frequencyDivider: frequencyDivider});
+        {_macAddressArg: macAddress, _channelNumberArg: channelNumber,
+        _frequencyDividerArg: frequencyDivider});
   }
 
   static Future stopImpedance(String macAddress) async {
     await _channel.invokeMethod(_stopImpedanceCommand,
-        {_macAddress: macAddress});
+        {_macAddressArg: macAddress});
   }
 
   static Future<List<Map<String, dynamic>>> getConnectedDevices() async {
@@ -144,7 +150,7 @@ class NextsenseBase {
 
   static Future<Map<String, dynamic>> getDeviceSettings(String macAddress) async {
     String deviceSettingsJson = (await _channel.invokeMethod(_getDeviceSettingsCommand,
-        {_macAddress: macAddress})) as String;
+        {_macAddressArg: macAddress})) as String;
     return gson.decode(deviceSettingsJson);
   }
 

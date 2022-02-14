@@ -156,6 +156,12 @@ public class ObjectBoxDatabase implements Database {
     return accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).count();
   }
 
+  public boolean deleteLocalSession(int localSessionId) {
+    deleteEegSamplesData(localSessionId);
+    deleteAccelerationData(localSessionId);
+    return localSessionBox.remove(localSessionId);
+  }
+
   public long deleteEegSamplesData(int localSessionId) {
     return eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).remove();
   }
