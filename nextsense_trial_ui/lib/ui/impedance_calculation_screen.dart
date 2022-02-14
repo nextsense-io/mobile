@@ -1,11 +1,14 @@
 import 'dart:collection';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:gson/values.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
+import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class ImpedanceCalculationScreen extends StatefulWidget {
@@ -22,6 +25,7 @@ class _ImpedanceCalculationScreenState extends
       CustomLogPrinter('ImpedanceCalculationScreen');
   XenonImpedanceCalculator? _impedanceCalculator;
   HashMap<int, double>? _impedanceResults;
+  Map<String, dynamic>? _deviceSettings;
 
   @override
   void initState() {
@@ -34,8 +38,9 @@ class _ImpedanceCalculationScreenState extends
     Device? connectedDevice = _deviceManager.getConnectedDevice();
     if (connectedDevice != null) {
       String macAddress = connectedDevice.macAddress;
+      _deviceSettings = await NextsenseBase.getDeviceSettings(macAddress);
       _impedanceCalculator = new XenonImpedanceCalculator(samplesSize: 250,
-          deviceSettings: await NextsenseBase.getDeviceSettings(macAddress));
+          deviceSettings: _deviceSettings!);
     }
   }
 
@@ -74,16 +79,20 @@ class _ImpedanceCalculationScreenState extends
                         _impedanceResults = await _impedanceCalculator
                               ?.calculateAllChannelsImpedance();
                         if (_impedanceResults != null) {
-                          _logger.log(Level.INFO, 'Impedance 1: ' +
-                              _impedanceResults![1].toString());
-                          _logger.log(Level.INFO, 'Impedance 3: ' +
-                              _impedanceResults![3].toString());
-                          _logger.log(Level.INFO, 'Impedance 6: ' +
-                              _impedanceResults![6].toString());
-                          _logger.log(Level.INFO, 'Impedance 7: ' +
-                              _impedanceResults![7].toString());
-                          _logger.log(Level.INFO, 'Impedance 8: ' +
-                              _impedanceResults![8].toString());
+                          String resultsText = '';
+                          for (Integer channel in _deviceSettings![describeEnum(DeviceSettingsFields.enabledChannels)]) {
+                            resultsText += 'Channel ${channel.toSimple()}: ' +
+                                _impedanceResults![channel.toSimple()]!.round().toString() + '\n\n';
+                          }
+                          _logger.log(Level.INFO, resultsText);
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return SimpleAlertDialog(
+                                  title: 'Impedance Results',
+                                  content: resultsText);
+                            },
+                          );
                         }
                       },
                     )),
