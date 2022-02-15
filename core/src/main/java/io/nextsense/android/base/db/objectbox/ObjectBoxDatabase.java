@@ -51,6 +51,8 @@ public class ObjectBoxDatabase implements Database {
     eegSamplesQuery = eegSampleBox.query().equal(EegSample_.localSessionId, 0).build();
     accelerationBox = boxStore.boxFor(Acceleration.class);
     accelerationQuery = accelerationBox.query().equal(Acceleration_.localSessionId, 0).build();
+    Log.d(TAG, "Size on disk: " + boxStore.sizeOnDisk());
+    Log.d(TAG, boxStore.diagnose());
   }
 
   public void stop() {
@@ -156,17 +158,17 @@ public class ObjectBoxDatabase implements Database {
     return accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).count();
   }
 
-  public boolean deleteLocalSession(int localSessionId) {
+  public boolean deleteLocalSession(long localSessionId) {
     deleteEegSamplesData(localSessionId);
     deleteAccelerationData(localSessionId);
     return localSessionBox.remove(localSessionId);
   }
 
-  public long deleteEegSamplesData(int localSessionId) {
+  public long deleteEegSamplesData(long localSessionId) {
     return eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).remove();
   }
 
-  public long deleteAccelerationData(int localSessionId) {
+  public long deleteAccelerationData(long localSessionId) {
     return accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).remove();
   }
 }
