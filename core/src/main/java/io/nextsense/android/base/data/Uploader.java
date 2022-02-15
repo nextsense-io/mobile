@@ -232,6 +232,9 @@ public class Uploader {
                       objectBoxDatabase.getEegSamplesCount(localSession.id)) {
                 Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
                 localSession.setStatus(LocalSession.Status.UPLOADED);
+                // This could be deleted at a later time in case the data needs to be analyzed or
+                // displayed in the app.
+                objectBoxDatabase.deleteLocalSession(localSession.id);
               }
               objectBoxDatabase.putLocalSession(localSession);
             });
@@ -343,6 +346,8 @@ public class Uploader {
     return functions
         .getHttpsCallable("upload_data_samples")
         .call(data)
+        .addOnFailureListener(exception ->
+            Log.e(TAG, "Failed to upload data: " + exception.getMessage()))
         .continueWith(new Continuation<HttpsCallableResult, Map<String, Object>>() {
           @Override
           public Map<String, Object> then(@NonNull Task<HttpsCallableResult> task)
