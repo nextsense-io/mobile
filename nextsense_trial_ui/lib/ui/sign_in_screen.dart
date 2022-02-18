@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/SessionPopScope.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/dashboard_screen.dart';
@@ -16,6 +18,7 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final AuthManager _authManager = GetIt.instance.get<AuthManager>();
+  final StudyManager _studyManager = GetIt.instance.get<StudyManager>();
   final PermissionsManager _permissionsManager =
       GetIt.instance.get<PermissionsManager>();
 
@@ -64,7 +67,7 @@ class _SignInScreenState extends State<SignInScreen> {
     });
   }
 
-  _signIn() async {
+  Future _signIn() async {
     bool authenticated = false;
     try {
       authenticated = await _authManager.signIn(_password);
@@ -102,6 +105,24 @@ class _SignInScreenState extends State<SignInScreen> {
             builder: (context) => RequestPermissionScreen(permissionRequest)),
       );
     }
+
+    // Load the study data.
+    bool studyLoaded = await _studyManager.loadCurrentStudy(
+        _authManager.getUserEntity()!.getValue(UserKey.study));
+    if (!studyLoaded) {
+      // Cannot proceed without study data.
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleAlertDialog(
+              title: 'Error with your account',
+              content: 'Please contact NextSense support and mention that there'
+                  ' is an issue with your account study setup.');
+        },
+      );
+      return;
+    }
+
     // Navigate to the device preparation screen.
     Navigator.pushReplacement(
       context,
@@ -113,7 +134,6 @@ class _SignInScreenState extends State<SignInScreen> {
       context,
       MaterialPageRoute(builder: (context) => PrepareDeviceScreen()),
     );
-    setState(() {});
   }
 
   List<Widget> _buildBody(BuildContext context) {

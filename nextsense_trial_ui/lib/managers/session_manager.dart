@@ -25,7 +25,7 @@ class SessionManager {
   DataSession? _currentDataSession;
   int? _currentLocalSession;
 
-  Future<bool> startSession(String deviceMacAddress) async {
+  Future<bool> startSession(String deviceMacAddress, String studyId) async {
     String? userCode = _authManager.getUserCode();
     if (userCode == null) {
       return false;
@@ -42,11 +42,11 @@ class SessionManager {
     // Add the session.
     _currentSession = Session(await _firestoreManager.queryEntity(
         [Table.sessions], [sessionCode]));
-    // TODO(eric): Add other values once the study logic is in place.
     DateTime startTime = DateTime.now();
     _currentSession!.setValue(
         SessionKey.start_datetime, startTime.toIso8601String());
     _currentSession!.setValue(SessionKey.user_id, userCode);
+    _currentSession!.setValue(SessionKey.study_id, studyId);
     await _firestoreManager.persistEntity(_currentSession!);
 
     // Add the data session.
