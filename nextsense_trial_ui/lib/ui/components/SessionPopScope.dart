@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/managers/device_manager.dart';
 
 class SessionPopScope extends StatelessWidget {
   final Widget child;
+  final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
 
   SessionPopScope({required Widget this.child}) {}
 
@@ -10,6 +13,7 @@ class SessionPopScope extends StatelessWidget {
   Widget build(BuildContext context) {
     return WillPopScope(
         onWillPop: () async {
+          _deviceManager.disconnectDevice();
           NextsenseBase.setFlutterActivityActive(false);
           return true;
         },
