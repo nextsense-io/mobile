@@ -26,7 +26,9 @@ enum SessionKey {
   // `study_id` in which this session was recorded.
   study_id,
   // `user_id` of who recorded this session.
-  user_id
+  user_id,
+  // Name of the protocol that was ran to record this session
+  protocol
 }
 
 class Session extends FirebaseEntity {

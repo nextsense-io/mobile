@@ -25,7 +25,8 @@ class SessionManager {
   DataSession? _currentDataSession;
   int? _currentLocalSession;
 
-  Future<bool> startSession(String deviceMacAddress, String studyId) async {
+  Future<bool> startSession(String deviceMacAddress, String studyId,
+      String protocolName) async {
     String? userCode = _authManager.getUserCode();
     if (userCode == null) {
       return false;
@@ -47,6 +48,7 @@ class SessionManager {
         SessionKey.start_datetime, startTime.toIso8601String());
     _currentSession!.setValue(SessionKey.user_id, userCode);
     _currentSession!.setValue(SessionKey.study_id, studyId);
+    _currentSession!.setValue(SessionKey.protocol, protocolName);
     await _firestoreManager.persistEntity(_currentSession!);
 
     // Add the data session.
@@ -74,6 +76,10 @@ class SessionManager {
         deviceMacAddress, /*uploadToCloud=*/true,
         userEntity.getValue(UserKey.bt_key), dataSessionCode);
     return true;
+  }
+
+  Session? getCurrentSession() {
+    return _currentSession;
   }
 
   Future stopSession(String deviceMacAddress) async {

@@ -96,7 +96,7 @@ class _SessionScreenState extends State<SessionScreen> {
                       await _sessionManager.stopSession(_deviceMacAddress!);
                     } else {
                       await _sessionManager.startSession(_deviceMacAddress!,
-                          'adhoc');
+                          'adhoc', 'adhoc');
                     }
                     setState(() {
                       _streaming = !_streaming;
