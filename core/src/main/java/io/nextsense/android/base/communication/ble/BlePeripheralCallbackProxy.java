@@ -64,7 +64,7 @@ public class BlePeripheralCallbackProxy {
 
   /**
    * Write a characteristic for a peripheral and return a Future that will be completed when it is
-   * confirmed by the Android stack. This implies that it is of type WRITE_WITH_RESPONSE.
+   * confirmed by the Android stack.
    */
   public synchronized ListenableFuture<byte[]> writeCharacteristic(BluetoothPeripheral peripheral,
       BluetoothGattCharacteristic characteristic, byte[] value, WriteType writeType) {

@@ -5,6 +5,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import io.nextsense.android.base.data.Acceleration;
+import io.nextsense.android.base.data.DeviceState;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 
@@ -39,5 +40,10 @@ public class DatabaseSink {
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
   public void onAcceleration(Acceleration acceleration) {
     boxDatabase.putAcceleration(acceleration);
+  }
+
+  @Subscribe(threadMode = ThreadMode.BACKGROUND)
+  public void onDeviceState(DeviceState deviceState) {
+    boxDatabase.putDeviceState(deviceState);
   }
 }

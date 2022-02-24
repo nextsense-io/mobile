@@ -4,7 +4,7 @@ import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Id;
 
 /**
- * Base sample which contains session information and ObjectBox persistence fields.
+ * Base sample which contains ObjectBox persistence fields.
  */
 @Entity
 public class BaseRecord {

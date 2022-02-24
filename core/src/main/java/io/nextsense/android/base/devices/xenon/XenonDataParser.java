@@ -15,10 +15,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import io.nextsense.android.base.data.Acceleration;
+import io.nextsense.android.base.data.DeviceState;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -34,12 +36,24 @@ public class XenonDataParser {
   private static final List<Byte> BIT_MASKS = ImmutableList.of(
       (byte)0x01, (byte)0x02, (byte)0x04, (byte)0x08, (byte)0x10, (byte)0x20, (byte)0x40, (byte)0x80
   );
+  private static final byte ACTIVE_CHANNELS_AUX_PACKET = 0x00;
+  private static final byte AUX_PACKET_STATUS_TYPE = 0x01;
+  private static final byte AUX_STATUS_PACKET_VERSION = 0x00;
   private static final int DATA_TIMESTAMP_SIZE_BYTES = 6;
   private static final int DATA_ACCELERATION_SIZE_BYTES = 6;
   private static final int DATA_CHANNEL_SIZE_BYTES = 3;
   private static final int DATA_FLAGS_SIZE_BYTES = 1;
   private static final float V_REF = 4.5f;
 
+  private static final int BUSY_FLAG_INDEX = 15;
+  private static final int USD_PRESENT_FLAG_INDEX = 14;
+  private static final int HDMI_PRESENT_FLAG_INDEX = 13;
+  private static final int RTC_SET_FLAG_INDEX = 12;
+  private static final int CAPTURE_RUNNING_FLAG_INDEX = 11;
+  private static final int BATTERY_CHARGING_FLAG_INDEX = 10;
+  private static final int BATTERY_LOW_FLAG_INDEX = 9;
+  private static final int BINARY_USD_LOGGING_ENABLED_FLAG_INDEX = 8;
+  private static final int INTERNAL_ERROR_FLAG_INDEX = 0;
 
   private final LocalSessionManager localSessionManager;
 
@@ -60,14 +74,18 @@ public class XenonDataParser {
     ByteBuffer valuesBuffer = ByteBuffer.wrap(values);
     valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
     byte activeChannelFlags = valuesBuffer.get();
+    if (activeChannelFlags == ACTIVE_CHANNELS_AUX_PACKET) {
+      parseAuxPacket(valuesBuffer);
+      return;
+    }
     List<Integer> activeChannels = getActiveChannelList(activeChannelFlags, channelsCount);
-    int packetSize = getPacketSize(activeChannels.size());
+    int packetSize = getDataPacketSize(activeChannels.size());
     if (valuesBuffer.remaining() < packetSize) {
       throw new FirmwareMessageParsingException("Data is too small to parse one packet. Expected " +
           "minimum size of " + (packetSize + 1) + " but got " + values.length);
     }
     while (valuesBuffer.remaining() >= packetSize) {
-      parsePacket(valuesBuffer, activeChannels, receptionTimestamp);
+      parseDataPacket(valuesBuffer, activeChannels, receptionTimestamp);
     }
   }
 
@@ -76,11 +94,11 @@ public class XenonDataParser {
     return (float)(data * ((V_REF * 1000000.0f) / (24.0f * (pow(2, 23) - 1))));
   }
 
-  private void parsePacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,
-                           Instant receptionTimestamp) throws NoSuchElementException {
+  private void parseDataPacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,
+                               Instant receptionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
-      Log.w(TAG, "Received data without an active session, cannot record it.");
+      Log.w(TAG, "Received data packet without an active session, cannot record it.");
       return;
     }
     LocalSession localSession = localSessionOptional.get();
@@ -107,7 +125,7 @@ public class XenonDataParser {
     EventBus.getDefault().post(eegSample);
   }
 
-  private static int getPacketSize(int activeChannelsSize) {
+  private static int getDataPacketSize(int activeChannelsSize) {
     return DATA_ACCELERATION_SIZE_BYTES + activeChannelsSize * DATA_CHANNEL_SIZE_BYTES +
         DATA_TIMESTAMP_SIZE_BYTES + DATA_FLAGS_SIZE_BYTES;
   }
@@ -121,5 +139,63 @@ public class XenonDataParser {
       }
     }
     return activeChannels;
+  }
+
+  private void parseAuxPacket(ByteBuffer valuesBuffer) {
+    byte auxPacketType = valuesBuffer.get();
+    switch (auxPacketType) {
+      case AUX_PACKET_STATUS_TYPE:
+        parseAuxStatePacket(valuesBuffer);
+        break;
+      default:
+        throw new UnsupportedOperationException(
+            "Aux packet type " + auxPacketType + " is not supported.");
+    }
+  }
+
+  private void parseAuxStatePacket(ByteBuffer valuesBuffer) {
+    Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
+    Long localSessionId = null;
+    if (localSessionOptional.isPresent()) {
+      localSessionId = localSessionOptional.get().id;
+    }
+    valuesBuffer.order(ByteOrder.BIG_ENDIAN);
+    byte versionNumber = valuesBuffer.get();
+    if (versionNumber != AUX_STATUS_PACKET_VERSION) {
+      throw new UnsupportedOperationException(
+          "Aux status packet version " + versionNumber + " is not supported.");
+    }
+    short batteryMilliVolts = valuesBuffer.getShort();
+    Util.logd(TAG, "Battery milli volts: " + batteryMilliVolts);
+    long timestampMs = Util.bytesToLong48(new byte[]{valuesBuffer.get(),
+        valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get(),
+        valuesBuffer.get()}, 0, ByteOrder.LITTLE_ENDIAN);
+    Instant timestamp = Instant.ofEpochMilli(timestampMs);
+    byte leadsOffNegative = valuesBuffer.get();
+    byte leadsOffPositive = valuesBuffer.get();
+    // TODO(eric): Parse leads off.
+    // int sampleCounter = Util.bytesToInt32(new byte[]{valuesBuffer.get(), valuesBuffer.get(),
+    //     valuesBuffer.get(), valuesBuffer.get()}, 0, ByteOrder.LITTLE_ENDIAN);
+    int sampleCounter = valuesBuffer.getInt();
+    short statusFlags = valuesBuffer.getShort();
+    // Go through all the bits and set the values in a Map by bit index.
+    Map<Integer, Boolean> flagsMap = new HashMap<>();
+    for (int i = 0; i < 16; ++i) {
+      byte flagMask = BIT_MASKS.get(i % 8);
+      byte flags = i >= 8 ? (byte)((statusFlags >> 8) & 0xFF) : (byte)(statusFlags & 0xFF);
+      flagsMap.put(i, (flagMask & flags) == flagMask);
+    }
+    byte masterState = valuesBuffer.get();
+    byte bleFifoCounter = valuesBuffer.get();
+    int lostSamplesCounter = valuesBuffer.getInt();
+    byte bleRssi = valuesBuffer.get();
+
+    DeviceState deviceState = DeviceState.create(localSessionId, timestamp, batteryMilliVolts,
+        flagsMap.get(BUSY_FLAG_INDEX), flagsMap.get(USD_PRESENT_FLAG_INDEX),
+        flagsMap.get(HDMI_PRESENT_FLAG_INDEX), flagsMap.get(RTC_SET_FLAG_INDEX),
+        flagsMap.get(CAPTURE_RUNNING_FLAG_INDEX), flagsMap.get(BATTERY_CHARGING_FLAG_INDEX),
+        flagsMap.get(BATTERY_LOW_FLAG_INDEX), flagsMap.get(BINARY_USD_LOGGING_ENABLED_FLAG_INDEX),
+        flagsMap.get(INTERNAL_ERROR_FLAG_INDEX), bleFifoCounter, lostSamplesCounter, bleRssi);
+    EventBus.getDefault().post(deviceState);
   }
 }
