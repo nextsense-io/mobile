@@ -32,6 +32,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceScanner;
+import io.nextsense.android.base.DeviceSettings.ImpedanceMode;
 import io.nextsense.android.base.DeviceState;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.service.ForegroundService;
@@ -62,6 +63,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String LOCAL_SESSION_ID_ARGUMENT = "local_session_id";
   public static final String CHANNEL_NUMBER_ARGUMENT = "channel_number";
   public static final String DURATION_MILLIS_ARGUMENT = "duration_millis";
+  public static final String IMPEDANCE_MODE_ARGUMENT = "impedance_mode";
   public static final String FREQUENCY_DIVIDER_ARGUMENT = "frequency_divider";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
   public static final String ERROR_SESSION_NOT_STARTED = "session_not_started";
@@ -182,9 +184,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case START_IMPEDANCE_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        String impedanceModeName = call.argument(IMPEDANCE_MODE_ARGUMENT);
         Integer channelNumber = call.argument(CHANNEL_NUMBER_ARGUMENT);
         Integer frequencyDivider = call.argument(FREQUENCY_DIVIDER_ARGUMENT);
-        startImpedance(result, macAddress, channelNumber, frequencyDivider);
+        startImpedance(result, macAddress, impedanceModeName, channelNumber, frequencyDivider);
         break;
       case STOP_IMPEDANCE_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -472,16 +475,18 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private void startImpedance(Result result, String macAddress, int channelNumber,
-                              int frequencyDivider) {
+  private void startImpedance(
+      Result result, String macAddress, String impedanceModeName, @Nullable Integer channelNumber,
+      @Nullable Integer frequencyDivider) {
     Device device = devices.get(macAddress);
     if (device == null) {
       returnError(result, START_IMPEDANCE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
+    ImpedanceMode impedanceMode = ImpedanceMode.valueOf(impedanceModeName);
     try {
-      boolean started = device.startImpedance(channelNumber, frequencyDivider).get();
+      boolean started = device.startImpedance(impedanceMode, channelNumber, frequencyDivider).get();
       if (!started) {
         returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
             /*errorMessage=*/null, /*errorDetails=*/null);
@@ -494,10 +499,13 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
           /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
     }
+    if (impedanceMode == ImpedanceMode.ON_1299_AC) {
+      result.success(null);
+    }
     Optional<LocalSession> localSession =
         nextSenseService.getLocalSessionManager().getActiveLocalSession();
     if (localSession.isPresent()) {
-      Log.i(TAG, "start impedence returning local session " + localSession.get().id);
+      Log.i(TAG, "start impedance returning local session " + localSession.get().id);
       result.success(localSession.get().id);
     } else {
       returnError(result, START_IMPEDANCE_COMMAND, ERROR_SESSION_NOT_STARTED,

@@ -8,6 +8,25 @@ import java.util.List;
  * hardware device.
  */
 public class DeviceSettings {
+
+  // TODO(eric): Should have device specific modes.
+  public enum ImpedanceMode {
+    OFF((byte)0x00),
+    ON_EXTERNAL_CURRENT((byte)0x01),
+    ON_1299_DC((byte)0x02),
+    ON_1299_AC((byte)0x03);
+
+    private final byte code;
+
+    ImpedanceMode(byte code) {
+      this.code = code;
+    }
+
+    public byte getCode() {
+      return code;
+    }
+  }
+
   private float eegSamplingRate;
   private float eegStreamingRate;
   private float imuSamplingRate;
@@ -16,7 +35,7 @@ public class DeviceSettings {
   private List<Integer> enabledChannels;
   // If the device should be ran in impedance mode where it stimulates an electrode to calculate the
   // impedance. Only one channel can be enabled at a time in this mode.
-  private boolean impedanceMode;
+  private ImpedanceMode impedanceMode;
   // Device sampling frequency divider to obtain the stimulating frequency for impedance
   // calculations. For example, a divider of 10 with a sampling frequency of 500 would give an
   // impedance frequency of 50.
@@ -59,11 +78,11 @@ public class DeviceSettings {
     this.enabledChannels = enabledChannels;
   }
 
-  public boolean isImpedanceMode() {
+  public ImpedanceMode getImpedanceMode() {
     return impedanceMode;
   }
 
-  public void setImpedanceMode(boolean impedanceMode) {
+  public void setImpedanceMode(ImpedanceMode impedanceMode) {
     this.impedanceMode = impedanceMode;
   }
 

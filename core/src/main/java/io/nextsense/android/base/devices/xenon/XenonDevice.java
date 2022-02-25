@@ -59,7 +59,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private XenonDataParser xenonDataParser;
   private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
   private BluetoothGattCharacteristic dataCharacteristic;
-  private SettableFuture<Boolean> startStreamingFuture;
+  private SettableFuture<Boolean> changeStreamingStateFuture;
   private DeviceSettings deviceSettings;
   private StartStreamingCommand.StartMode targetStartStreamingMode;
 
@@ -149,7 +149,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       return Futures.immediateFailedFuture(
           new IllegalStateException("No characteristic to stream on."));
     }
-    startStreamingFuture = SettableFuture.create();
+    changeStreamingStateFuture = SettableFuture.create();
     localSessionManager.startLocalSession(userBigTableKey, dataSessionId, uploadToCloud,
         deviceSettings.getEegStreamingRate(), deviceSettings.getImuStreamingRate());
     if (!peripheral.isNotifying(dataCharacteristic)) {
@@ -157,7 +157,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     } else {
       runStartStreamingCommand();
     }
-    return startStreamingFuture;
+    return changeStreamingStateFuture;
   }
 
   @Override
@@ -166,13 +166,13 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       return Futures.immediateFailedFuture(
           new IllegalStateException("No characteristic to stream on."));
     }
-    startStreamingFuture = SettableFuture.create();
+    changeStreamingStateFuture = SettableFuture.create();
     if (!peripheral.isNotifying(dataCharacteristic)) {
       peripheral.setNotify(dataCharacteristic, /*enable=*/true);
     } else {
       runStartStreamingCommand();
     }
-    return startStreamingFuture;
+    return changeStreamingStateFuture;
   }
 
   @Override
@@ -180,9 +180,9 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     if (this.deviceMode == DeviceMode.IDLE) {
       return Futures.immediateFuture(true);
     }
-    startStreamingFuture = SettableFuture.create();
+    changeStreamingStateFuture = SettableFuture.create();
     writeCharacteristic(dataCharacteristic, new StopStreamingCommand().getCommand());
-    return startStreamingFuture;
+    return changeStreamingStateFuture;
   }
 
   @Override
@@ -193,7 +193,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     return executorService.submit(() -> {
       try {
         executeCommandNoResponse(new SetConfigCommand(newDeviceSettings.getEnabledChannels(),
-            newDeviceSettings.isImpedanceMode(), newDeviceSettings.getImpedanceDivider()));
+            newDeviceSettings.getImpedanceMode(), newDeviceSettings.getImpedanceDivider()));
         this.deviceSettings = newDeviceSettings;
         return true;
       } catch (ExecutionException e) {
@@ -218,7 +218,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       deviceSettings.setEegStreamingRate(250);
       deviceSettings.setImuSamplingRate(250);
       deviceSettings.setImuStreamingRate(250);
-      deviceSettings.setImpedanceMode(false);
+      deviceSettings.setImpedanceMode(DeviceSettings.ImpedanceMode.OFF);
       deviceSettings.setImpedanceDivider(25);
     }
     return Futures.immediateFuture(deviceSettings);
@@ -269,7 +269,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     public void onNotificationStateUpdate(
         @NonNull BluetoothPeripheral peripheral,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-      if (!startStreamingFuture.isDone() && isDataCharacteristic(characteristic)) {
+      if (!changeStreamingStateFuture.isDone() && isDataCharacteristic(characteristic)) {
         if (status == GattStatus.SUCCESS) {
           Util.logd(TAG, "Notification updated with success to " +
               peripheral.isNotifying(characteristic));
@@ -278,10 +278,10 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           } else {
             localSessionManager.stopLocalSession();
             deviceMode = DeviceMode.IDLE;
-            startStreamingFuture.set(true);
+            changeStreamingStateFuture.set(true);
           }
         } else {
-          startStreamingFuture.setException(new BluetoothException(
+          changeStreamingStateFuture.setException(new BluetoothException(
               "Notification state update failed with code " + status));
         }
       }
@@ -326,11 +326,11 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
             peripheral.setNotify(dataCharacteristic, /*enable=*/false);
           } else {
             deviceMode = targetMode;
-            startStreamingFuture.set(true);
+            changeStreamingStateFuture.set(true);
           }
           Util.logd(TAG, "Wrote command to writeData characteristic with success.");
         } else {
-          startStreamingFuture.setException(
+          changeStreamingStateFuture.setException(
               new BluetoothException("Failed to change the mode to " + targetMode.name() +
                   ", Bluetooth error code: " + status.name()));
         }

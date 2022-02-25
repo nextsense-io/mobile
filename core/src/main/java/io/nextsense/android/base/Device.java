@@ -138,19 +138,36 @@ public class Device {
     return nextSenseDevice.stopStreaming();
   }
 
-  public ListenableFuture<Boolean> startImpedance(int channelNumber, int frequencyDivider) {
+  public ListenableFuture<Boolean> startImpedance(
+      DeviceSettings.ImpedanceMode impedanceMode, @Nullable Integer channelNumber,
+      @Nullable Integer frequencyDivider) {
+    if (impedanceMode == DeviceSettings.ImpedanceMode.OFF) {
+      return Futures.immediateFuture(false);
+    }
     return executorService.submit(() -> {
       if (savedDeviceSettings == null) {
         savedDeviceSettings = new DeviceSettings(deviceSettings);
       }
       DeviceSettings newDeviceSettings = new DeviceSettings(deviceSettings);
-      newDeviceSettings.setImpedanceMode(true);
-      newDeviceSettings.setImpedanceDivider(frequencyDivider);
-      newDeviceSettings.setEnabledChannels(ImmutableList.of(channelNumber));
+      newDeviceSettings.setImpedanceMode(impedanceMode);
+      if (impedanceMode == DeviceSettings.ImpedanceMode.ON_EXTERNAL_CURRENT) {
+        if (channelNumber == null || frequencyDivider == null) {
+          Log.e(TAG, "Need to provide a channel number and impedance frequency for External Current" +
+              " Impedance Mode.");
+          return false;
+        }
+        newDeviceSettings.setEnabledChannels(ImmutableList.of(channelNumber));
+        newDeviceSettings.setImpedanceDivider(frequencyDivider);
+      }
       boolean settingsSet = setSettings(newDeviceSettings).get();
       if (settingsSet) {
-        return startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null,
-            /*dataSessionId=*/null).get();
+        if ((impedanceMode == DeviceSettings.ImpedanceMode.ON_EXTERNAL_CURRENT ||
+            impedanceMode == DeviceSettings.ImpedanceMode.ON_1299_DC)) {
+          return startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null,
+              /*dataSessionId=*/null).get();
+        } else {
+          return true;
+        }
       } else {
         return false;
       }

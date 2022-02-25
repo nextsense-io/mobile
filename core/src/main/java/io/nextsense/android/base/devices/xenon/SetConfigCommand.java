@@ -4,47 +4,70 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
+import io.nextsense.android.base.DeviceSettings.ImpedanceMode;
+
 /**
  * Changes the device configuration.
  */
 public class SetConfigCommand extends XenonFirmwareCommand {
-  private static final byte TRUE = (byte)0x01;
-  private static final byte FALSE = (byte)0x00;
-  private static final byte SAMPLING_RATE_250 = (byte)0xf6;
-  private static final byte SAMPLING_RATE_500 = (byte)0xf5;
-  private static final byte CHANNEL_ENABLED_REGISTER = (byte)0x60;
-  private static final byte CHANNEL_DISABLED_REGISTER = (byte)0x80;
-  private static final byte CHANNEL_IMPEDANCE_REGISTER = (byte)0x68;
-  private static final byte MISC_1_DEFAULT = (byte)0x00;
-  private static final byte MISC_1_INDEPENDENT_CHANNELS = (byte)0x20;
+
+  // Registry values
+  private static final byte REG_TRUE = (byte)0x01;
+  private static final byte REG_FALSE = (byte)0x00;
+  private static final byte REG_SAMPLING_RATE_250 = (byte)0xf6;
+  private static final byte REG_SAMPLING_RATE_500 = (byte)0xf5;
+  private static final byte REG_CHANNEL_ENABLED_REGISTER = (byte)0x60;
+  private static final byte REG_CHANNEL_DISABLED_REGISTER = (byte)0x80;
+  private static final byte REG_CHANNEL_IMPEDANCE_REGISTER = (byte)0x68;
+  private static final byte REG_MISC_1_DEFAULT = (byte)0x00;
+  private static final byte REG_MISC_1_INDEPENDENT_CHANNELS = (byte)0x20;
+  // ADS1299 Impedance mode disabled.
+  private static final byte REG_LOFF_DEFAULT = (byte)0x01;
+  // Select AC mode, FDR/4 freq, 6nA current. COMP_THR is not used.
+  private static final byte REG_LOFF_AC_MODE = (byte)0x03;
+  // Select DC mode, 6nA current. COMP_THR at 80/20%. These values will need tweaks.
+  private static final byte REG_LOFF_DC_MODE = (byte)0xA0;
+  // This register can be configured to determine which channels (1-8) are enabled for 1299
+  // impedance modes, AC or DC.
+  private static final byte REG_LOFF_SENSP_DEFAULT = (byte)0x00;
+  private static final byte REG_CONFIG4_DEFAULT = (byte)0x00;
+  private static final byte REG_CONFIG4_DC_IMPEDANCE = (byte)0x02;
+
+  // ADS 1299 Register binary values with defaults.
   private static final byte[] DEFAULT_ADS_1299_REGISTERS = new byte[]{
       // 0xAC,  // REG_ID (Overriden by enabled channels byte)
-      SAMPLING_RATE_250,  // REG_CONFIG_1
+      REG_SAMPLING_RATE_250,  // REG_CONFIG_1
       (byte)0xd0,  // REG_CONFIG_2
       (byte)0xfc,  // REG_CONFIG_3
-      (byte)0x01,  // REG_LOFF
-      CHANNEL_DISABLED_REGISTER,  // REG_CH1_SET
-      CHANNEL_DISABLED_REGISTER,  // REG_CH2_SET
-      CHANNEL_DISABLED_REGISTER,  // REG_CH3_SET
-      CHANNEL_DISABLED_REGISTER,  // REG_CH4_SET
-      CHANNEL_DISABLED_REGISTER,  // REG_CH5_SET
-      CHANNEL_DISABLED_REGISTER,  // REG_CH6_SET
-      CHANNEL_DISABLED_REGISTER,  // REG_CH7_SET
-      CHANNEL_DISABLED_REGISTER,  // REG_CH8_SET
+      REG_LOFF_DEFAULT,  // REG_LOFF
+      REG_CHANNEL_DISABLED_REGISTER,  // REG_CH1_SET
+      REG_CHANNEL_DISABLED_REGISTER,  // REG_CH2_SET
+      REG_CHANNEL_DISABLED_REGISTER,  // REG_CH3_SET
+      REG_CHANNEL_DISABLED_REGISTER,  // REG_CH4_SET
+      REG_CHANNEL_DISABLED_REGISTER,  // REG_CH5_SET
+      REG_CHANNEL_DISABLED_REGISTER,  // REG_CH6_SET
+      REG_CHANNEL_DISABLED_REGISTER,  // REG_CH7_SET
+      REG_CHANNEL_DISABLED_REGISTER,  // REG_CH8_SET
       (byte)0x00,  // REG_BIAS_SENSP
       (byte)0x00,  // REG_BIAS_SENSN
-      (byte)0x00,  // REG_LOFF_SENSP
+      REG_LOFF_SENSP_DEFAULT,  // REG_LOFF_SENSP
       (byte)0x00,  // REG_LOFF_SENSN
       (byte)0x00,  // REG_LOFF_FLIP
       (byte)0x00,  // REG_LOFF_STATP
       (byte)0x00,  // REG_LOFF_STATN
       (byte)0x0f,  // REG_GPIO
-      MISC_1_DEFAULT,  // REG_MISC_1
+      REG_MISC_1_DEFAULT,  // REG_MISC_1
       (byte)0x00,  // REG_MISC_2
-      (byte)0x00   // REG_CONFIG_4
+      REG_CONFIG4_DEFAULT   // REG_CONFIG_4
   };
-  private static final byte DEFAULT_OPTOSYNC_OUTPUT = TRUE;
-  private static final byte DEFAULT_LOG_TO_SDCARD = FALSE;
+  private static final int REG_LOFF_OFFSET = 3;
+  private static final int REG_CHANNELS_START_OFFSET = 4;
+  private static final int REG_LOFF_SENSP_OFFSET = 14;
+  private static final int REG_MISC_1_OFFSET = 20;
+  private static final int REG_CONFIG4_OFFSET = 22;
+
+  private static final byte DEFAULT_OPTOSYNC_OUTPUT = REG_TRUE;
+  private static final byte DEFAULT_LOG_TO_SDCARD = REG_FALSE;
   private static final List<Byte> CHANNEL_MASKS = Arrays.asList(
       (byte)0x01,
       (byte)0x02,
@@ -55,14 +78,12 @@ public class SetConfigCommand extends XenonFirmwareCommand {
       (byte)0x40,
       (byte)0x80
   );
-  private static final int CHANNELS_START_OFFSET = 4;
-  private static final int MISC_1_OFFSET = 20;
 
   private final List<Integer> enabledChannels;
-  private final boolean impedanceMode;
+  private final ImpedanceMode impedanceMode;
   private final int impedanceDivider;
 
-  public SetConfigCommand(List<Integer> enabledChannels, boolean impedanceMode,
+  public SetConfigCommand(List<Integer> enabledChannels,  ImpedanceMode impedanceMode,
                           int impedanceDivider) {
     super(XenonMessageType.SET_CONFIG);
     this.enabledChannels = enabledChannels;
@@ -71,7 +92,7 @@ public class SetConfigCommand extends XenonFirmwareCommand {
   }
 
   private byte boolToByte(boolean boolValue) {
-    return boolValue ? TRUE : FALSE;
+    return boolValue ? REG_TRUE : REG_FALSE;
   }
 
   private byte getEnabledChannelsByte(List<Integer> enabledChannels) {
@@ -82,18 +103,27 @@ public class SetConfigCommand extends XenonFirmwareCommand {
     return enabledChannelsByte;
   }
 
-  byte[] getASD1299Registers(List<Integer> enabledChannels, boolean impedanceMode) {
+  byte[] getASD1299Registers(List<Integer> enabledChannels, ImpedanceMode impedanceMode) {
     byte[] registers = DEFAULT_ADS_1299_REGISTERS;
-    byte channelEnabledRegisterValue = CHANNEL_ENABLED_REGISTER;
-    if (impedanceMode) {
-      registers[MISC_1_OFFSET] = MISC_1_INDEPENDENT_CHANNELS;
-      channelEnabledRegisterValue = CHANNEL_IMPEDANCE_REGISTER;
+    byte channelEnabledRegisterValue = REG_CHANNEL_ENABLED_REGISTER;
+    if (impedanceMode == ImpedanceMode.ON_EXTERNAL_CURRENT) {
+      registers[REG_MISC_1_OFFSET] = REG_MISC_1_INDEPENDENT_CHANNELS;
+      channelEnabledRegisterValue = REG_CHANNEL_IMPEDANCE_REGISTER;
     } else {
-      registers[MISC_1_OFFSET] = MISC_1_DEFAULT;
+      registers[REG_MISC_1_OFFSET] = REG_MISC_1_DEFAULT;
+    }
+    if (impedanceMode == ImpedanceMode.ON_1299_AC) {
+      registers[REG_LOFF_OFFSET] = REG_LOFF_AC_MODE;
+    } else if (impedanceMode == ImpedanceMode.ON_1299_DC) {
+      registers[REG_LOFF_OFFSET] = REG_LOFF_DC_MODE;
+      registers[REG_CONFIG4_OFFSET] = REG_CONFIG4_DC_IMPEDANCE;
+    }
+    if (impedanceMode == ImpedanceMode.ON_1299_AC || impedanceMode == ImpedanceMode.ON_1299_DC) {
+      registers[REG_LOFF_SENSP_OFFSET] = getEnabledChannelsByte(enabledChannels);
     }
     for (Integer enabledChannel : enabledChannels) {
       // The first channel is 1, so need to remove 1 to get the correct offset.
-      registers[CHANNELS_START_OFFSET + enabledChannel - 1] = channelEnabledRegisterValue;
+      registers[REG_CHANNELS_START_OFFSET + enabledChannel - 1] = channelEnabledRegisterValue;
     }
     return registers;
   }
@@ -104,7 +134,7 @@ public class SetConfigCommand extends XenonFirmwareCommand {
     buf.put(getType().getCode());
     buf.put(getEnabledChannelsByte(enabledChannels));
     buf.put(getASD1299Registers(enabledChannels, impedanceMode));
-    buf.put(boolToByte(impedanceMode));
+    buf.put(impedanceMode.getCode());
     buf.put((byte)impedanceDivider);
     buf.put(DEFAULT_OPTOSYNC_OUTPUT);
     buf.put(DEFAULT_LOG_TO_SDCARD);

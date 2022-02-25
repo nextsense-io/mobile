@@ -51,7 +51,8 @@ class XenonImpedanceCalculator {
       return false;
     }
     _localSessionId = await NextsenseBase.startImpedance(
-        macAddress, channelNum, _impedanceDivider!);
+        macAddress, ImpedanceMode.ON_EXTERNAL_CURRENT, channelNum,
+        _impedanceDivider!);
     return true;
   }
 
@@ -62,6 +63,10 @@ class XenonImpedanceCalculator {
     }
     // TODO(eric): Do not close notifications when changing config.
     await NextsenseBase.stopStreaming(macAddress);
+    if (_localSessionId != null) {
+      NextsenseBase.deleteLocalSession(_localSessionId!);
+      _localSessionId = null;
+    }
     // Need to give the device a small delay so it can be ready to start again.
     await Future.delayed(const Duration(milliseconds: 100), () {});
     return await startImpedance(channelNum);
@@ -123,12 +128,12 @@ class XenonImpedanceCalculator {
       await Future.delayed(_channelCycleTime, () {});
       impedanceData[channel.toSimple()] = await calculateImpedance(
           channel.toSimple(), _impedanceFrequency!, _streamingFrequency!);
-      if (_localSessionId != null) {
-        NextsenseBase.deleteLocalSession(_localSessionId!);
-        _localSessionId = null;
-      }
     }
     await stopImpedance();
+    if (_localSessionId != null) {
+      NextsenseBase.deleteLocalSession(_localSessionId!);
+      _localSessionId = null;
+    }
     return impedanceData;
   }
 }

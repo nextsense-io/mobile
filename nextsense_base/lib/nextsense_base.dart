@@ -1,5 +1,6 @@
 import 'dart:core';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:gson/gson.dart';
 
@@ -18,7 +19,16 @@ enum DeviceSettingsFields {
   imuStreamingRate,
   enabledChannels,
   impedanceMode,
-  impedanceDivider,
+  impedanceDivider
+}
+
+// This should stay in sync with
+// io.nextsense.android.base.DeviceSettings.ImpedanceMode.
+enum ImpedanceMode {
+  OFF,
+  ON_EXTERNAL_CURRENT,
+  ON_1299_DC,
+  ON_1299_AC
 }
 
 class NextsenseBase {
@@ -50,6 +60,7 @@ class NextsenseBase {
   static const String _localSessionIdArg = 'local_session_id';
   static const String _channelNumberArg = 'channel_number';
   static const String _durationMillisArg = 'duration_millis';
+  static const String _impedanceModeArg = 'impedance_mode';
   static const String _frequencyDividerArg = 'frequency_divider';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
@@ -128,11 +139,14 @@ class NextsenseBase {
         {_macAddressArg: macAddress});
   }
 
-  static Future<int> startImpedance(String macAddress, int channelNumber,
+  static Future<int> startImpedance(String macAddress,
+      ImpedanceMode impedanceMode, int channelNumber,
       int frequencyDivider) async {
     return await _channel.invokeMethod(_startImpedanceCommand,
-        {_macAddressArg: macAddress, _channelNumberArg: channelNumber,
-        _frequencyDividerArg: frequencyDivider});
+        {_macAddressArg: macAddress,
+          _impedanceModeArg: describeEnum(impedanceMode),
+          _channelNumberArg: channelNumber,
+          _frequencyDividerArg: frequencyDivider});
   }
 
   static Future stopImpedance(String macAddress) async {
