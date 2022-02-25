@@ -20,7 +20,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import io.nextsense.android.base.data.Acceleration;
-import io.nextsense.android.base.data.DeviceState;
+import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -72,7 +72,7 @@ public class XenonDataParser {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device data.");
     }
     ByteBuffer valuesBuffer = ByteBuffer.wrap(values);
-    valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    valuesBuffer.order(ByteOrder.BIG_ENDIAN);
     byte activeChannelFlags = valuesBuffer.get();
     if (activeChannelFlags == ACTIVE_CHANNELS_AUX_PACKET) {
       parseAuxPacket(valuesBuffer);
@@ -190,12 +190,12 @@ public class XenonDataParser {
     int lostSamplesCounter = valuesBuffer.getInt();
     byte bleRssi = valuesBuffer.get();
 
-    DeviceState deviceState = DeviceState.create(localSessionId, timestamp, batteryMilliVolts,
-        flagsMap.get(BUSY_FLAG_INDEX), flagsMap.get(USD_PRESENT_FLAG_INDEX),
+    DeviceInternalState deviceInternalState = DeviceInternalState.create(localSessionId, timestamp,
+        batteryMilliVolts, flagsMap.get(BUSY_FLAG_INDEX), flagsMap.get(USD_PRESENT_FLAG_INDEX),
         flagsMap.get(HDMI_PRESENT_FLAG_INDEX), flagsMap.get(RTC_SET_FLAG_INDEX),
         flagsMap.get(CAPTURE_RUNNING_FLAG_INDEX), flagsMap.get(BATTERY_CHARGING_FLAG_INDEX),
         flagsMap.get(BATTERY_LOW_FLAG_INDEX), flagsMap.get(BINARY_USD_LOGGING_ENABLED_FLAG_INDEX),
         flagsMap.get(INTERNAL_ERROR_FLAG_INDEX), bleFifoCounter, lostSamplesCounter, bleRssi);
-    EventBus.getDefault().post(deviceState);
+    EventBus.getDefault().post(deviceInternalState);
   }
 }

@@ -197,10 +197,11 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
         this.deviceSettings = newDeviceSettings;
         return true;
       } catch (ExecutionException e) {
-        Log.e(TAG, "Failed to set the time on the device: " + e.getMessage());
+        Log.e(TAG, "Failed to apply settings on the device: " + e.getMessage());
         return false;
       } catch (InterruptedException e) {
-        Log.e(TAG, "Interrupted when trying to set the time on the device: " + e.getMessage());
+        Log.e(TAG, "Interrupted when trying to apply settings on the device: " +
+            e.getMessage());
         Thread.currentThread().interrupt();
         return false;
       }
@@ -221,6 +222,21 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       deviceSettings.setImpedanceDivider(25);
     }
     return Futures.immediateFuture(deviceSettings);
+  }
+
+  @Override
+  public boolean requestDeviceInternalState() {
+    try {
+      executeCommandNoResponse(new RequestAuxPacketCommand());
+      return true;
+    } catch (ExecutionException e) {
+      Log.e(TAG, "Failed to set the time on the device: " + e.getMessage());
+      return false;
+    } catch (InterruptedException e) {
+      Log.e(TAG, "Interrupted when trying to set the time on the device: " + e.getMessage());
+      Thread.currentThread().interrupt();
+      return false;
+    }
   }
 
   private void writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] value) {

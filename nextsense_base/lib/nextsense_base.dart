@@ -41,6 +41,8 @@ class NextsenseBase {
   static const String _getChannelDataCommand = 'get_channel_data';
   static const String _getDeviceSettingsCommand = 'get_device_settings';
   static const String _deleteLocalSessionCommand = 'delete_local_session';
+  static const String _requestDeviceInternalStateUpdateCommand =
+      'request_device_internal_state';
   static const String _macAddressArg = 'mac_address';
   static const String _uploadToCloudArg = 'upload_to_cloud';
   static const String _userBigTableKeyArg = 'user_bigtable_key';
@@ -152,6 +154,11 @@ class NextsenseBase {
     String deviceSettingsJson = (await _channel.invokeMethod(_getDeviceSettingsCommand,
         {_macAddressArg: macAddress})) as String;
     return gson.decode(deviceSettingsJson);
+  }
+
+  static Future requestDeviceStateUpdate(String macAddress) async {
+    await _channel.invokeMethod(_requestDeviceInternalStateUpdateCommand,
+        {_macAddressArg: macAddress});
   }
 
   static Future<bool> isBluetoothEnabled() async {

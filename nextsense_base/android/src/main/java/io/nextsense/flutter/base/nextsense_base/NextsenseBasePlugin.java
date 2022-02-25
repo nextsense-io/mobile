@@ -52,6 +52,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String GET_DEVICE_SETTINGS_COMMAND = "get_device_settings";
   public static final String GET_CHANNEL_DATA_COMMAND = "get_channel_data";
   public static final String DELETE_LOCAL_SESSION_COMMAND = "delete_local_session";
+  public static final String REQUEST_DEVICE_INTERNAL_STATE_COMMAND =
+      "request_device_internal_state";
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
   public static final String UPLOAD_TO_CLOUD_ARGUMENT = "upload_to_cloud";
@@ -65,6 +67,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String ERROR_SESSION_NOT_STARTED = "session_not_started";
   public static final String ERROR_STREAMING_START_FAILED = "streaming_start_failed";
   public static final String ERROR_STREAMING_STOP_FAILED = "streaming_stop_failed";
+  public static final String ERROR_COMMAND_FAILED = "command_failed";
   public static final String CONNECT_TO_DEVICE_ERROR_CONNECTION = "connection_error";
   public static final String CONNECT_TO_DEVICE_ERROR_INTERRUPTED = "connection_interrupted";
 
@@ -205,6 +208,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
         deleteLocalSession(result, localSessionId);
         break;
+      case REQUEST_DEVICE_INTERNAL_STATE_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        requestDeviceInternalStateUpdate(result, macAddress);
+        break;
       case SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
         if (nextSenseServiceBound) {
           nextSenseService.setFlutterActivityActive((boolean)call.arguments);
@@ -221,6 +228,21 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       default:
         result.notImplemented();
     }
+  }
+
+  private void requestDeviceInternalStateUpdate(Result result, String macAddress) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      returnError(result, REQUEST_DEVICE_INTERNAL_STATE_COMMAND, ERROR_DEVICE_NOT_FOUND,
+          /*errorMessage=*/null, /*errorDetails=*/null);
+      return;
+    }
+    boolean requested = device.requestDeviceState();
+    if (!requested) {
+      returnError(result, REQUEST_DEVICE_INTERNAL_STATE_COMMAND, ERROR_COMMAND_FAILED,
+          /*errorMessage=*/null, /*errorDetails=*/null);
+    }
+    result.success(null);
   }
 
   @Override

@@ -165,6 +165,12 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     return deviceModeFuture;
   }
 
+  @Override
+  public boolean requestDeviceInternalState() {
+    // Not implemented on this device.
+    return false;
+  }
+
   private void writeCharacteristic(BluetoothGattCharacteristic characteristic, byte[] value) {
     peripheral.writeCharacteristic(characteristic, value, WriteType.WITH_RESPONSE);
   }
@@ -268,8 +274,8 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     public void onCharacteristicWrite(
         @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-      Util.logv(TAG, "Characteristic write completed with status " + status.toString() +
-          " with value: " + Arrays.toString(value));
+      Util.logv(TAG, "Characteristic write completed with status " + status + " with value: " +
+          Arrays.toString(value));
       // Check mode change result.
       if (characteristic == writeDataCharacteristic &&
           value.length >= H1FirmwareCommand.COMMAND_SIZE) {

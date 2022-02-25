@@ -43,6 +43,9 @@ public interface NextSenseDevice {
 
   ListenableFuture<DeviceSettings> loadDeviceSettings();
 
+  // Requests an updated device internal state.
+  boolean requestDeviceInternalState();
+
   /**
    * Starts streaming data from the device.
    * @param uploadToCloud upload data to the cloud if true

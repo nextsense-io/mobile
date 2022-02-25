@@ -38,6 +38,7 @@ class DeviceManager {
   void setConnectedDevice(Device? device) {
     if (device != null) {
       _listenToState(device.macAddress);
+      NextsenseBase.requestDeviceStateUpdate(device.macAddress);
     } else {
       _cancelListening?.call();
     }

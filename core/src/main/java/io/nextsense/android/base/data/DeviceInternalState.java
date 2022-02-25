@@ -13,7 +13,7 @@ import io.objectbox.relation.ToOne;
  * Local session stored in the local database for sessions that have not been uploaded yet.
  */
 @Entity
-public class DeviceState extends BaseRecord {
+public class DeviceInternalState extends BaseRecord {
 
   // Can be null when there it no currently running session.
   public @Nullable ToOne<LocalSession> localSession;
@@ -34,7 +34,7 @@ public class DeviceState extends BaseRecord {
   int lostSamplesCounter;
   short bleRssi;
 
-  private DeviceState(
+  private DeviceInternalState(
       @Nullable Long localSessionId, Instant timestamp, short batteryMilliVolts, boolean busy,
       boolean uSdPresent, boolean hdmiCablePresent, boolean rtcClockSet, boolean captureRunning,
       boolean charging, boolean batteryLow, boolean uSdLoggingEnabled,
@@ -60,18 +60,18 @@ public class DeviceState extends BaseRecord {
     this.bleRssi = bleRssi;
   }
 
-  public static DeviceState create(
+  public static DeviceInternalState create(
       @Nullable Long localSessionId, Instant timestamp, short batteryMilliVolts, boolean busy,
       boolean uSdPresent, boolean hdmiCablePresent, boolean rtcClockSet, boolean captureRunning,
       boolean charging, boolean batteryLow, boolean uSdLoggingEnabled,
       boolean internalErrorDetected, short bleQueueBacklog, int lostSamplesCounter, short bleRssi) {
-    return new DeviceState(localSessionId, timestamp, batteryMilliVolts, busy, uSdPresent,
+    return new DeviceInternalState(localSessionId, timestamp, batteryMilliVolts, busy, uSdPresent,
         hdmiCablePresent, rtcClockSet, captureRunning, charging, batteryLow, uSdLoggingEnabled,
         internalErrorDetected, bleQueueBacklog, lostSamplesCounter, bleRssi);
   }
 
   // Need to be public for ObjectBox performance.
-  public DeviceState(
+  public DeviceInternalState(
       long id, @Nullable Long localSessionId, Instant timestamp, short batteryMilliVolts,
       boolean busy, boolean uSdPresent, boolean hdmiCablePresent, boolean rtcClockSet,
       boolean captureRunning, boolean charging, boolean batteryLow, boolean uSdLoggingEnabled,

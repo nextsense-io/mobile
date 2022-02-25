@@ -11,7 +11,7 @@ import java.util.Optional;
 import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.data.Acceleration_;
 import io.nextsense.android.base.data.BaseRecord;
-import io.nextsense.android.base.data.DeviceState;
+import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.EegSample_;
 import io.nextsense.android.base.data.LocalSession;
@@ -35,7 +35,7 @@ public class ObjectBoxDatabase implements Database {
   private Box<LocalSession> localSessionBox;
   private Box<EegSample> eegSampleBox;
   private Box<Acceleration> accelerationBox;
-  private Box<DeviceState> deviceStateBox;
+  private Box<DeviceInternalState> deviceInternalStateBox;
   private Query<LocalSession> activeSessionQuery;
   private Query<LocalSession> sessionFinishedQuery;
   private Query<EegSample> eegSamplesQuery;
@@ -53,7 +53,7 @@ public class ObjectBoxDatabase implements Database {
     eegSamplesQuery = eegSampleBox.query().equal(EegSample_.localSessionId, 0).build();
     accelerationBox = boxStore.boxFor(Acceleration.class);
     accelerationQuery = accelerationBox.query().equal(Acceleration_.localSessionId, 0).build();
-    deviceStateBox = boxStore.boxFor(DeviceState.class);
+    deviceInternalStateBox = boxStore.boxFor(DeviceInternalState.class);
     Log.d(TAG, "Size on disk: " + boxStore.sizeOnDisk());
     Log.d(TAG, boxStore.diagnose());
   }
@@ -88,8 +88,8 @@ public class ObjectBoxDatabase implements Database {
     return accelerationBox.put(acceleration);
   }
 
-  public long putDeviceState(DeviceState deviceState) {
-    return deviceStateBox.put(deviceState);
+  public long putDeviceInternalState(DeviceInternalState deviceInternalState) {
+    return deviceInternalStateBox.put(deviceInternalState);
   }
 
   public LocalSession getLocalSession(int localSessionId) {

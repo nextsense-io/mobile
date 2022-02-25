@@ -9,6 +9,7 @@ public enum XenonMessageType {
   SET_TIME(new byte[]{0x00, 0x06}),
   START_STREAMING(new byte[]{0x00, 0x0A}),
   STOP_STREAMING(new byte[]{0x00, 0x0B}),
+  REQUEST_AUX_PACKET(new byte[]{0x00, 0x41}),
   WRITE_TEXT(new byte[]{0x00, 0x48}),
   SET_CONFIG(new byte[]{0x00, 0x49});
 

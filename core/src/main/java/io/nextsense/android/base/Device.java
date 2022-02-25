@@ -103,6 +103,13 @@ public class Device {
     return nextSenseDevice.getDeviceMode();
   }
 
+  public boolean requestDeviceState() {
+    if (deviceState != DeviceState.READY) {
+      return false;
+    }
+    return nextSenseDevice.requestDeviceInternalState();
+  }
+
   public ListenableFuture<Boolean> startStreaming(
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId) {
     if (deviceState != DeviceState.READY) {

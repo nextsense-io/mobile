@@ -5,7 +5,7 @@ package io.nextsense.android.base;
  */
 public class DeviceInfo {
   public DeviceType getDeviceType() {
-    return DeviceType.H1;
+    return DeviceType.XENON;
   }
 
   String getFirmwareVersion() {
