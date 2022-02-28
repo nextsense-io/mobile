@@ -9,6 +9,7 @@ import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
 
 GetIt getIt = GetIt.instance;
@@ -22,6 +23,7 @@ void _registerServices() {
   getIt.registerSingleton<PermissionsManager>(PermissionsManager());
   getIt.registerSingleton<DeviceManager>(DeviceManager());
   getIt.registerSingleton<SessionManager>(SessionManager());
+  getIt.registerSingleton<StudyManager>(StudyManager());
 }
 
 void _initLogging() {
