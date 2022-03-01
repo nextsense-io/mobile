@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.JsonAdapter;
 
 import java.time.Instant;
+import java.util.ArrayList;
 
 import javax.annotation.Nullable;
 
@@ -51,12 +52,15 @@ public class DeviceInternalState extends BaseRecord {
   int lostSamplesCounter;
   @Expose
   short bleRssi;
+  @Convert(converter = Converters.SerializableConverter.class, dbType = byte[].class)
+  ArrayList<Boolean> leadsOffPositive;
 
   private DeviceInternalState(
       @Nullable Long localSessionId, Instant timestamp, short batteryMilliVolts, boolean busy,
       boolean uSdPresent, boolean hdmiCablePresent, boolean rtcClockSet, boolean captureRunning,
       boolean charging, boolean batteryLow, boolean uSdLoggingEnabled,
-      boolean internalErrorDetected, short bleQueueBacklog, int lostSamplesCounter, short bleRssi) {
+      boolean internalErrorDetected, short bleQueueBacklog, int lostSamplesCounter, short bleRssi,
+      ArrayList<Boolean> leadsOffPositive) {
     super();
     this.localSession = new ToOne<>(this, DeviceInternalState_.localSession);
     if (localSessionId != null) {
@@ -76,16 +80,18 @@ public class DeviceInternalState extends BaseRecord {
     this.bleQueueBacklog = bleQueueBacklog;
     this.lostSamplesCounter = lostSamplesCounter;
     this.bleRssi = bleRssi;
+    this.leadsOffPositive = leadsOffPositive;
   }
 
   public static DeviceInternalState create(
       @Nullable Long localSessionId, Instant timestamp, short batteryMilliVolts, boolean busy,
       boolean uSdPresent, boolean hdmiCablePresent, boolean rtcClockSet, boolean captureRunning,
       boolean charging, boolean batteryLow, boolean uSdLoggingEnabled,
-      boolean internalErrorDetected, short bleQueueBacklog, int lostSamplesCounter, short bleRssi) {
+      boolean internalErrorDetected, short bleQueueBacklog, int lostSamplesCounter, short bleRssi,
+      ArrayList<Boolean> leadsOffPositive) {
     return new DeviceInternalState(localSessionId, timestamp, batteryMilliVolts, busy, uSdPresent,
         hdmiCablePresent, rtcClockSet, captureRunning, charging, batteryLow, uSdLoggingEnabled,
-        internalErrorDetected, bleQueueBacklog, lostSamplesCounter, bleRssi);
+        internalErrorDetected, bleQueueBacklog, lostSamplesCounter, bleRssi, leadsOffPositive);
   }
 
   public DeviceInternalState() {

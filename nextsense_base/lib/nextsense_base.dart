@@ -152,8 +152,8 @@ class NextsenseBase {
   }
 
   static Future<int> startImpedance(String macAddress,
-      ImpedanceMode impedanceMode, int channelNumber,
-      int frequencyDivider) async {
+      ImpedanceMode impedanceMode, int? channelNumber,
+      int? frequencyDivider) async {
     return await _channel.invokeMethod(_startImpedanceCommand,
         {_macAddressArg: macAddress,
           _impedanceModeArg: describeEnum(impedanceMode),

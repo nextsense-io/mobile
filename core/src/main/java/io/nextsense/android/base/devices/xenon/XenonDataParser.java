@@ -172,7 +172,12 @@ public class XenonDataParser {
         valuesBuffer.get()}, 0, ByteOrder.LITTLE_ENDIAN);
     Instant timestamp = Instant.ofEpochMilli(timestampMs);
     byte leadsOffNegative = valuesBuffer.get();
-    byte leadsOffPositive = valuesBuffer.get();
+    byte leadsOffPositiveValues = valuesBuffer.get();
+    ArrayList<Boolean> leadsOffPositive = new ArrayList<>(8);
+    for (int i = 0; i < 8; ++i) {
+      byte flagMask = BIT_MASKS.get(i);
+      leadsOffPositive.add((flagMask & leadsOffPositiveValues) == flagMask);
+    }
     // TODO(eric): Parse leads off.
     // int sampleCounter = Util.bytesToInt32(new byte[]{valuesBuffer.get(), valuesBuffer.get(),
     //     valuesBuffer.get(), valuesBuffer.get()}, 0, ByteOrder.LITTLE_ENDIAN);
@@ -180,6 +185,7 @@ public class XenonDataParser {
     short statusFlags = valuesBuffer.getShort();
     // Go through all the bits and set the values in a Map by bit index.
     Map<Integer, Boolean> flagsMap = new HashMap<>();
+    // The state flags are spread 2 bytes.
     for (int i = 0; i < 16; ++i) {
       byte flagMask = BIT_MASKS.get(i % 8);
       byte flags = i >= 8 ? (byte)((statusFlags >> 8) & 0xFF) : (byte)(statusFlags & 0xFF);
@@ -195,7 +201,8 @@ public class XenonDataParser {
         flagsMap.get(HDMI_PRESENT_FLAG_INDEX), flagsMap.get(RTC_SET_FLAG_INDEX),
         flagsMap.get(CAPTURE_RUNNING_FLAG_INDEX), flagsMap.get(BATTERY_CHARGING_FLAG_INDEX),
         flagsMap.get(BATTERY_LOW_FLAG_INDEX), flagsMap.get(BINARY_USD_LOGGING_ENABLED_FLAG_INDEX),
-        flagsMap.get(INTERNAL_ERROR_FLAG_INDEX), bleFifoCounter, lostSamplesCounter, bleRssi);
+        flagsMap.get(INTERNAL_ERROR_FLAG_INDEX), bleFifoCounter, lostSamplesCounter, bleRssi,
+        leadsOffPositive);
     EventBus.getDefault().post(deviceInternalState);
   }
 }

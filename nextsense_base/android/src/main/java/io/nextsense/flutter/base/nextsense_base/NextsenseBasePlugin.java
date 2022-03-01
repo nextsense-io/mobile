@@ -59,6 +59,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String DELETE_LOCAL_SESSION_COMMAND = "delete_local_session";
   public static final String REQUEST_DEVICE_INTERNAL_STATE_COMMAND =
       "request_device_internal_state";
+  public static final String GET_DEVICE_INTERNAL_STATE_DATA_COMMAND =
+      "get_device_internal_state_data";
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
   public static final String UPLOAD_TO_CLOUD_ARGUMENT = "upload_to_cloud";
@@ -244,6 +246,12 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case REQUEST_DEVICE_INTERNAL_STATE_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         requestDeviceInternalStateUpdate(result, macAddress);
+        break;
+      case GET_DEVICE_INTERNAL_STATE_DATA_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
+        durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
+        getDeviceInternalStateData(result, macAddress, localSessionId, durationMillis);
         break;
       case SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
         if (nextSenseServiceBound) {
@@ -554,9 +562,6 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
           /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
     }
-    if (impedanceMode == ImpedanceMode.ON_1299_AC) {
-      result.success(null);
-    }
     Optional<LocalSession> localSession =
         nextSenseService.getLocalSessionManager().getActiveLocalSession();
     if (localSession.isPresent()) {
@@ -615,12 +620,27 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         localSessionId, channelNumber, Duration.ofMillis(durationMillis)));
   }
 
+  private void getDeviceInternalStateData(
+      Result result, String macAddress, @Nullable Integer localSessionId, int durationMillis) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      returnError(result, GET_DEVICE_INTERNAL_STATE_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND,
+          /*errorMessage=*/null, /*errorDetails=*/null);
+      return;
+    }
+    if (localSessionId == null) {
+      result.success(nextSenseService.getObjectBoxDatabase().getRecentDeviceInternalStateData(
+          Duration.ofMillis(durationMillis)));
+    }
+  }
+
   private void deleteLocalSession(Result result, Integer localSessionId) {
     result.success(nextSenseService.getObjectBoxDatabase().deleteLocalSession(localSessionId));
   }
 
-  private void returnError(Result result, String method, String errorCode, @Nullable String errorMessage,
-                           @Nullable String errorDetails) {
+  private void returnError(
+      Result result, String method, String errorCode, @Nullable String errorMessage,
+      @Nullable String errorDetails) {
     String errorLog = "Error in " + method + ", code: " + errorCode;
     if (errorMessage != null) {
       errorLog += ", message: " + errorMessage;
