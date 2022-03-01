@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,7 @@ import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.data.Acceleration_;
 import io.nextsense.android.base.data.BaseRecord;
 import io.nextsense.android.base.data.DeviceInternalState;
+import io.nextsense.android.base.data.DeviceInternalState_;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.EegSample_;
 import io.nextsense.android.base.data.LocalSession;
@@ -40,7 +42,8 @@ public class ObjectBoxDatabase implements Database {
   private Query<LocalSession> sessionFinishedQuery;
   private Query<EegSample> eegSamplesQuery;
   private Query<Acceleration> accelerationQuery;
-  private Query<DeviceInternalState> deviceInternalStateQuery;
+  private Query<DeviceInternalState> recentDeviceInternalStateQuery;
+  private Query<DeviceInternalState> lastDeviceInternalStateQuery;
 
   @Override
   public void init(Context context) {
@@ -55,7 +58,9 @@ public class ObjectBoxDatabase implements Database {
     accelerationBox = boxStore.boxFor(Acceleration.class);
     accelerationQuery = accelerationBox.query().equal(Acceleration_.localSessionId, 0).build();
     deviceInternalStateBox = boxStore.boxFor(DeviceInternalState.class);
-    deviceInternalStateQuery = deviceInternalStateBox.query().build();
+    lastDeviceInternalStateQuery = deviceInternalStateBox.query().build();
+    recentDeviceInternalStateQuery = deviceInternalStateBox.query()
+        .greater(DeviceInternalState_.timestamp, 0).build();
     Log.d(TAG, "Size on disk: " + boxStore.sizeOnDisk());
     Log.d(TAG, boxStore.diagnose());
   }
@@ -139,6 +144,16 @@ public class ObjectBoxDatabase implements Database {
     return channelSamples;
   }
 
+  public List<DeviceInternalState> getRecentDeviceInternalStateData(Duration duration) {
+    long targetTimestamp = Instant.now().minus(duration).toEpochMilli();
+    return lastDeviceInternalStateQuery
+        .setParameter(DeviceInternalState_.timestamp, targetTimestamp).find();
+  }
+
+  public List<DeviceInternalState> getDeviceInternalStates(long offset, long count) {
+    return lastDeviceInternalStateQuery.find(offset, count);
+  }
+
   public long getEegSamplesCount(long localSessionId) {
     return eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).count();
   }
@@ -171,10 +186,6 @@ public class ObjectBoxDatabase implements Database {
     long deviceInternalStateCount = deviceInternalStateBox.count();
     long offset = count <= deviceInternalStateCount ? deviceInternalStateCount - count: 0;
     return getDeviceInternalStates(offset, count);
-  }
-
-  public List<DeviceInternalState> getDeviceInternalStates(long offset, long count) {
-    return deviceInternalStateQuery.find(offset, count);
   }
 
   public boolean deleteLocalSession(long localSessionId) {

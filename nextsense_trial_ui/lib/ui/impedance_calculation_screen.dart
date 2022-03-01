@@ -44,6 +44,29 @@ class _ImpedanceCalculationScreenState extends
     }
   }
 
+  Future _calculateImpedance() async {
+    _impedanceResults = await _impedanceCalculator
+        ?.calculateAllChannelsImpedance(ImpedanceMode.ON_1299_AC);
+    if (_impedanceResults != null) {
+      String resultsText = '';
+      for (Integer channel in _deviceSettings![
+          describeEnum(DeviceSettingsFields.enabledChannels)]) {
+        resultsText += 'Channel ${channel.toSimple()}: ' +
+            _impedanceResults![channel.toSimple()]!.round().toString() + '\n\n';
+      }
+      _logger.log(Level.INFO, resultsText);
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleAlertDialog(
+              title: 'Impedance Results',
+              content: resultsText);
+        },
+      );
+    }
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,24 +99,7 @@ class _ImpedanceCalculationScreenState extends
                     child: ElevatedButton(
                       child: const Text('Continue'),
                       onPressed: () async {
-                        _impedanceResults = await _impedanceCalculator
-                              ?.calculateAllChannelsImpedance();
-                        if (_impedanceResults != null) {
-                          String resultsText = '';
-                          for (Integer channel in _deviceSettings![describeEnum(DeviceSettingsFields.enabledChannels)]) {
-                            resultsText += 'Channel ${channel.toSimple()}: ' +
-                                _impedanceResults![channel.toSimple()]!.round().toString() + '\n\n';
-                          }
-                          _logger.log(Level.INFO, resultsText);
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return SimpleAlertDialog(
-                                  title: 'Impedance Results',
-                                  content: resultsText);
-                            },
-                          );
-                        }
+                        _calculateImpedance();
                       },
                     )),
               ]),

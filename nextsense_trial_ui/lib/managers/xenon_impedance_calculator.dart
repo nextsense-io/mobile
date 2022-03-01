@@ -14,12 +14,14 @@ import 'package:scidart/scidart.dart';
 class XenonImpedanceCalculator {
   static const int defaultTargetFrequency = 10;
   // Manually tweaked with resistors.
-  static const double _impedanceConstant = 13700.94;
+  static const double _externalCurrentImpedanceConstant = 13700.94;
+  static const double _ads1299AcImpedanceConstant = 170;
   // This gives between 500ms and 1000ms of time where calculations can occur.
   static const Duration _channelCycleTime = Duration(milliseconds: 5000);
   // The time period on which a calculation is made.
   static const Duration _impedanceCalculationPeriod =
        Duration(milliseconds: 1000);
+  static const double _ads1299AcImpedanceFrequency = 62.5;
 
   final int samplesSize;
   final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
@@ -30,6 +32,7 @@ class XenonImpedanceCalculator {
   double? _impedanceFrequency;
   double? _streamingFrequency;
   int? _localSessionId;
+  ImpedanceMode? _impedanceMode;
 
   XenonImpedanceCalculator({required this.samplesSize,
       required this.deviceSettings}) :
@@ -44,8 +47,34 @@ class XenonImpedanceCalculator {
         describeEnum(DeviceSettingsFields.eegStreamingRate)].toSimple();
   }
 
-  Future<bool> startImpedance(int channelNum) async {
+  Future<bool> startADS1299DcImpedance() async {
     _logger.log(Level.INFO, "Starting impedance check");
+    String? macAddress = _deviceManager.getConnectedDevice()?.macAddress;
+    if (macAddress == null) {
+      return false;
+    }
+    _localSessionId = await NextsenseBase.startImpedance(
+        macAddress, ImpedanceMode.ON_1299_DC, /*channelNumber=*/null,
+        /*frequencyDivider=*/null);
+    _impedanceMode = ImpedanceMode.ON_1299_DC;
+    return true;
+  }
+
+  Future<bool> startADS1299AcImpedance() async {
+    _logger.log(Level.INFO, "Starting impedance check");
+    String? macAddress = _deviceManager.getConnectedDevice()?.macAddress;
+    if (macAddress == null) {
+      return false;
+    }
+    _localSessionId = await NextsenseBase.startImpedance(
+        macAddress, ImpedanceMode.ON_1299_AC, /*channelNumber=*/null,
+        /*frequencyDivider=*/null);
+    _impedanceMode = ImpedanceMode.ON_1299_AC;
+    return true;
+  }
+
+  Future<bool> startExternalCurrentImpedance(int channelNum) async {
+    _logger.log(Level.INFO, "Starting external impedance impedance check");
     String? macAddress = _deviceManager.getConnectedDevice()?.macAddress;
     if (macAddress == null) {
       return false;
@@ -69,7 +98,7 @@ class XenonImpedanceCalculator {
     }
     // Need to give the device a small delay so it can be ready to start again.
     await Future.delayed(const Duration(milliseconds: 100), () {});
-    return await startImpedance(channelNum);
+    return await startExternalCurrentImpedance(channelNum);
   }
 
   Future stopImpedance() async {
@@ -78,11 +107,13 @@ class XenonImpedanceCalculator {
       return;
     }
     await NextsenseBase.stopImpedance(macAddress);
+    _impedanceMode = null;
   }
 
   // Calculate the impedance in Ohms from a single channel electrode values.
-  Future<double> calculateImpedance(int channelNumber,
-      double impedanceFrequency, double eegFrequency) async {
+  Future<double> calculateImpedance(
+      int channelNumber, double impedanceFrequency, double eegFrequency,
+      double impedanceConstant) async {
     String? macAddress = _deviceManager.getConnectedDevice()?.macAddress;
     if (macAddress == null || _localSessionId == null) {
       return -1;
@@ -115,19 +146,45 @@ class XenonImpedanceCalculator {
         Complex(real: eegArrayComplex.length.toDouble(), imaginary: 0);
     double magnitude =
         sqrt(pow(frequencyBin.real, 2) + pow(frequencyBin.imaginary, 2));
-    return magnitude * _impedanceConstant;
+    return magnitude * impedanceConstant;
   }
 
-  Future<HashMap<int, double>> calculateAllChannelsImpedance() async {
+  Future<HashMap<int, double>> calculateAllChannelsImpedance(
+      ImpedanceMode impedanceMode) async {
+    _impedanceMode = impedanceMode;
     HashMap<int, double> impedanceData = new HashMap();
-    await startImpedance(_eegChannelList!.first.toSimple());
-    for (Integer channel in _eegChannelList!) {
-      if (channel.toSimple() != _eegChannelList!.first.toSimple()) {
-        await changeImpedanceConfig(channel.toSimple());
-      }
-      await Future.delayed(_channelCycleTime, () {});
-      impedanceData[channel.toSimple()] = await calculateImpedance(
-          channel.toSimple(), _impedanceFrequency!, _streamingFrequency!);
+    switch (_impedanceMode!) {
+      case ImpedanceMode.ON_EXTERNAL_CURRENT:
+        await startExternalCurrentImpedance(_eegChannelList!.first.toSimple());
+        for (Integer channel in _eegChannelList!) {
+          if (channel.toSimple() != _eegChannelList!.first.toSimple()) {
+            await changeImpedanceConfig(channel.toSimple());
+          }
+          await Future.delayed(_channelCycleTime, () {});
+          impedanceData[channel.toSimple()] = await calculateImpedance(
+              channel.toSimple(), _impedanceFrequency!, _streamingFrequency!,
+              _externalCurrentImpedanceConstant);
+        }
+        break;
+      case ImpedanceMode.ON_1299_DC:
+        await startADS1299DcImpedance();
+        await Future.delayed(_channelCycleTime, () {});
+        // TODO(eric): Check the leadsOffPositive bits in the
+        //             `DeviceInternalState`. Not working on this for now as the
+        //             adapter wiring make this method hard to use.
+        break;
+      case ImpedanceMode.ON_1299_AC:
+        await startADS1299AcImpedance();
+        await Future.delayed(_channelCycleTime, () {});
+        for (Integer channel in _eegChannelList!) {
+          impedanceData[channel.toSimple()] = await calculateImpedance(
+              channel.toSimple(), _ads1299AcImpedanceFrequency,
+              _streamingFrequency!, _ads1299AcImpedanceConstant);
+        }
+        break;
+      default:
+        throw new UnimplementedError(
+            'Impedance mode ${_impedanceMode} is not supported');
     }
     await stopImpedance();
     if (_localSessionId != null) {
