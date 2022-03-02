@@ -80,7 +80,7 @@ public class DeviceScanner {
           if (nextSenseDevice == null) {
             return;
           }
-          Device device = new Device(centralManagerProxy, nextSenseDevice, peripheral);
+          Device device = Device.create(centralManagerProxy, nextSenseDevice, peripheral);
           devices.add(device);
           deviceScanListener.onNewDevice(device);
         }
