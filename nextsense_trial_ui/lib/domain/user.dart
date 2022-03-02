@@ -34,4 +34,30 @@ class User extends FirebaseEntity {
   void setValue(UserKey userKey, dynamic value) {
     getValues()[userKey.name] = value;
   }
+
+  /**
+   * Checks that the current date is between the study start and end dates for
+   * this subject if present.
+   *
+   * If not in between, return the number of days it is before as a negative and
+   * after as a positive.
+   */
+  int verifyStudyDates() {
+    DateTime now = DateTime.now();
+    String? startDateTimeString = getValue(UserKey.study_start_date);
+    if (startDateTimeString != null) {
+      DateTime startDateTime = DateTime.parse(startDateTimeString);
+      if (now.isBefore(startDateTime)) {
+        return now.difference(startDateTime).inDays;
+      }
+    }
+    String? endDateTimeString = getValue(UserKey.study_end_date);
+    if (endDateTimeString != null) {
+      DateTime endDateTime = DateTime.parse(endDateTimeString);
+      if (now.isAfter(endDateTime)) {
+        return now.difference(endDateTime).inDays;
+      }
+    }
+    return 0;
+  }
 }
