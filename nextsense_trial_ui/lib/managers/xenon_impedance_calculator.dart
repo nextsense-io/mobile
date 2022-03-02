@@ -15,7 +15,7 @@ class XenonImpedanceCalculator {
   static const int defaultTargetFrequency = 10;
   // Manually tweaked with resistors.
   static const double _externalCurrentImpedanceConstant = 13700.94;
-  static const double _ads1299AcImpedanceConstant = 170;
+  static const double _ads1299AcImpedanceConstant = 188;
   // This gives between 500ms and 1000ms of time where calculations can occur.
   static const Duration _channelCycleTime = Duration(milliseconds: 5000);
   // The time period on which a calculation is made.

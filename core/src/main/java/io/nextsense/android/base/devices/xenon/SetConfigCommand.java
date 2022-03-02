@@ -119,7 +119,8 @@ public class SetConfigCommand extends XenonFirmwareCommand {
       registers[REG_CONFIG4_OFFSET] = REG_CONFIG4_DC_IMPEDANCE;
     }
     if (impedanceMode == ImpedanceMode.ON_1299_AC || impedanceMode == ImpedanceMode.ON_1299_DC) {
-      registers[REG_LOFF_SENSP_OFFSET] = getEnabledChannelsByte(enabledChannels);
+      // registers[REG_LOFF_SENSP_OFFSET] = getEnabledChannelsByte(enabledChannels);
+      registers[REG_LOFF_SENSP_OFFSET] = (byte)0xE7;
     }
     for (Integer enabledChannel : enabledChannels) {
       // The first channel is 1, so need to remove 1 to get the correct offset.
