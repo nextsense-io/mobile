@@ -132,7 +132,7 @@ public class ForegroundService extends Service {
     centralManagerProxy = new BleCentralManagerProxy(getApplicationContext());
     deviceScanner = new DeviceScanner(NextSenseDeviceManager.create(localSessionManager),
         centralManagerProxy);
-    deviceManager = new DeviceManager(deviceScanner);
+    deviceManager = DeviceManager.create(deviceScanner, localSessionManager);
     databaseSink = DatabaseSink.create(objectBoxDatabase);
     databaseSink.startListening();
     sampleRateCalculator = SampleRateCalculator.create(500);
