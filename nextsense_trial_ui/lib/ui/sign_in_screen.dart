@@ -22,9 +22,27 @@ class _SignInScreenState extends State<SignInScreen> {
   final PermissionsManager _permissionsManager =
       GetIt.instance.get<PermissionsManager>();
 
+  // Change _code and _password to some values
+  // and _askForPassword to true
+  // for autologin
   String _code = '';
   String _password = '';
   bool _askForPassword = false;
+
+  @override
+  void initState()  {
+    super.initState();
+
+    // Do autologin to save time when debugging
+    if (_code.isNotEmpty && _password.isNotEmpty) {
+        void _autologin() async {
+          await _validatedUserCode();
+          await _signIn();
+        }
+        _autologin();
+    };
+  }
+
 
   _validatedUserCode() async {
     UserCodeValidationResult result =
@@ -137,6 +155,7 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   List<Widget> _buildBody(BuildContext context) {
+
     List<Widget> widgets = <Widget>[
       Padding(
         padding: EdgeInsets.all(10.0),
@@ -150,7 +169,7 @@ class _SignInScreenState extends State<SignInScreen> {
         padding: EdgeInsets.all(10.0),
         child: TextFormField(
           cursorColor: TextSelectionTheme.of(context).cursorColor,
-          initialValue: '',
+          initialValue: _code,
           maxLength: 20,
           enabled: !_askForPassword,
           decoration: InputDecoration(
@@ -179,7 +198,7 @@ class _SignInScreenState extends State<SignInScreen> {
           padding: EdgeInsets.all(10.0),
           child: TextFormField(
             cursorColor: TextSelectionTheme.of(context).cursorColor,
-            initialValue: '',
+            initialValue: _password,
             maxLength: 20,
             obscureText: true,
             decoration: InputDecoration(
