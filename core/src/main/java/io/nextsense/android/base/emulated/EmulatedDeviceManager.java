@@ -29,7 +29,7 @@ public class EmulatedDeviceManager implements DeviceManager {
 
     @Override
     public void close() {
-        // Emulated stuff here
+        // Nothing to do here when emulated
     }
 
     @Override
@@ -49,7 +49,7 @@ public class EmulatedDeviceManager implements DeviceManager {
 
     @Override
     public void stopFindingDevices(DeviceScanner.DeviceScanListener deviceScanListener) {
-        // Emulated stuff here
+        // Nothing to do here when emulated
     }
 
 }
