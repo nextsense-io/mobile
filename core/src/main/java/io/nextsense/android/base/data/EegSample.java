@@ -21,12 +21,15 @@ import io.objectbox.relation.ToOne;
 public class EegSample extends BaseRecord {
   public ToOne<LocalSession> localSession;
 
+  // Key is the channel number, value is the voltage im milliVolts.
   @Convert(converter = Converters.SerializableConverter.class, dbType = byte[].class)
   private HashMap<Integer, Float> eegSamples;
+  // When the Android application received the packet from the device.
   @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
   private Instant receptionTimestamp;
   @Nullable
   private Integer relativeSamplingTimestamp;
+  // When the sample was colelcted on the device.
   @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
   @Nullable
   private Instant absoluteSamplingTimestamp;
