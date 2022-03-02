@@ -6,6 +6,8 @@ import androidx.annotation.Nullable;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 
 import org.greenrobot.eventbus.EventBus;
@@ -50,6 +52,9 @@ public class EmulatedDevice extends Device {
   private DeviceState currentState = DeviceState.DISCONNECTED;
   private DeviceMode currentMode = DeviceMode.IDLE;
 
+  private final ListeningExecutorService executorService =
+          MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+
   public EmulatedDevice() {
   }
 
@@ -83,7 +88,6 @@ public class EmulatedDevice extends Device {
   }
 
   private void postEmulatedSamples() {
-    //Util.logd(TAG, "EmulatedDevice::postEmulatedSamples");
 
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
@@ -92,8 +96,7 @@ public class EmulatedDevice extends Device {
     }
     LocalSession localSession = localSessionOptional.get();
 
-    final Short z = 0;
-    List<Short> accelerationData = Arrays.asList(z, z, z);
+    List<Short> accelerationData = Arrays.asList((short)100, (short)200, (short)300);
 
     HashMap<Integer, Float> eegData = new HashMap<>();
     for (Integer activeChannel : getSettings().getEnabledChannels()) {
@@ -115,7 +118,7 @@ public class EmulatedDevice extends Device {
   public ListenableFuture<Boolean> startStreaming(
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId) {
 
-    Util.logd(TAG, "EmulatedDevice::startStreaming");
+    Util.logd(TAG, "startStreaming");
 
     if (localSessionManager != null) {
       localSessionManager.startLocalSession(userBigTableKey, dataSessionId, uploadToCloud,
@@ -138,7 +141,7 @@ public class EmulatedDevice extends Device {
 
   @Override
   public ListenableFuture<Boolean> stopStreaming() {
-    Util.logd(TAG, "EmulatedDevice::stopStreaming");
+    Util.logd(TAG, "stopStreaming");
 
     if (localSessionManager != null) {
       localSessionManager.stopLocalSession();
@@ -167,16 +170,26 @@ public class EmulatedDevice extends Device {
 
   @Override
   public ListenableFuture<DeviceState> connect(boolean autoReconnect) {
-    Util.logd(TAG, "EmulatedDevice::connect");
-    currentState = DeviceState.CONNECTED;
-    return Futures.immediateFuture(DeviceState.READY);
+    Util.logd(TAG, "connect");
+    return executorService.submit(() -> {
+      currentState = DeviceState.CONNECTING;
+      // Simulate some delay
+      Thread.sleep(1);
+      currentState = DeviceState.READY;
+      return DeviceState.READY;
+    });
   }
 
   @Override
   public ListenableFuture<DeviceState> disconnect() {
-    Util.logd(TAG, "EmulatedDevice::disconnect");
-    currentState = DeviceState.DISCONNECTED;
-    return Futures.immediateFuture(DeviceState.DISCONNECTED);
+    Util.logd(TAG, "disconnect");
+    return executorService.submit(() -> {
+      currentState = DeviceState.DISCONNECTING;
+      // Simulate some delay
+      Thread.sleep(1);
+      currentState = DeviceState.DISCONNECTED;
+      return DeviceState.DISCONNECTED;
+    });
   }
 
   @Override
