@@ -22,8 +22,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final PermissionsManager _permissionsManager =
       GetIt.instance.get<PermissionsManager>();
 
-  // Change _code and _password to some values
-  // and _askForPassword to true
+  // Change _code and _password to some values and _askForPassword to true
   // for autologin
   String _code = '';
   String _password = '';
