@@ -62,7 +62,8 @@ class SessionManager {
     Map<String, dynamic> deviceSettings =
         await NextsenseBase.getDeviceSettings(deviceMacAddress);
     _currentDataSession!.setValue(DataSessionKey.streaming_rate,
-        deviceSettings[describeEnum(DeviceSettingsFields.eegStreamingRate)]);
+        deviceSettings[describeEnum(DeviceSettingsFields.eegStreamingRate)]
+            .value);
     await _firestoreManager.persistEntity(_currentDataSession!);
 
     // Update the session number in the user entry.
