@@ -175,7 +175,10 @@ public class EmulatedDevice extends Device {
       currentState = DeviceState.CONNECTING;
       notifyDeviceStateChangeListeners(DeviceState.CONNECTING);
       // Simulate some delay
-      Thread.sleep(1);
+      Thread.sleep(100);
+      currentState = DeviceState.CONNECTED;
+      notifyDeviceStateChangeListeners(DeviceState.CONNECTED);
+      Thread.sleep(100);
       currentState = DeviceState.READY;
       notifyDeviceStateChangeListeners(DeviceState.READY);
       return DeviceState.READY;
@@ -189,7 +192,7 @@ public class EmulatedDevice extends Device {
       currentState = DeviceState.DISCONNECTING;
       notifyDeviceStateChangeListeners(DeviceState.DISCONNECTING);
       // Simulate some delay
-      Thread.sleep(1);
+      Thread.sleep(100);
       currentState = DeviceState.DISCONNECTED;
       notifyDeviceStateChangeListeners(DeviceState.DISCONNECTED);
       return DeviceState.DISCONNECTED;
