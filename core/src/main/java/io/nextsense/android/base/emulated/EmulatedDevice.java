@@ -173,9 +173,11 @@ public class EmulatedDevice extends Device {
     Util.logd(TAG, "connect");
     return executorService.submit(() -> {
       currentState = DeviceState.CONNECTING;
+      notifyDeviceStateChangeListeners(DeviceState.CONNECTING);
       // Simulate some delay
       Thread.sleep(1);
       currentState = DeviceState.READY;
+      notifyDeviceStateChangeListeners(DeviceState.READY);
       return DeviceState.READY;
     });
   }
@@ -185,9 +187,11 @@ public class EmulatedDevice extends Device {
     Util.logd(TAG, "disconnect");
     return executorService.submit(() -> {
       currentState = DeviceState.DISCONNECTING;
+      notifyDeviceStateChangeListeners(DeviceState.DISCONNECTING);
       // Simulate some delay
       Thread.sleep(1);
       currentState = DeviceState.DISCONNECTED;
+      notifyDeviceStateChangeListeners(DeviceState.DISCONNECTED);
       return DeviceState.DISCONNECTED;
     });
   }
