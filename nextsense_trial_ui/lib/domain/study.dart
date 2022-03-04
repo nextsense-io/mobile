@@ -45,4 +45,12 @@ class Study extends FirebaseEntity {
   void setValue(StudyKey studyKey, dynamic value) {
     getValues()[studyKey.name] = value;
   }
+
+  String getName() {
+    return getValue(StudyKey.name) as String;
+  }
+
+  String getDescription() {
+    return (getValue(StudyKey.intro_text) as List<dynamic>).map((e) => e as String).join("\n");
+  }
 }
