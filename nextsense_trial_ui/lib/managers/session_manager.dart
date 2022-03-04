@@ -44,11 +44,11 @@ class SessionManager {
     _currentSession = Session(await _firestoreManager.queryEntity(
         [Table.sessions], [sessionCode]));
     DateTime startTime = DateTime.now();
-    _currentSession!.setValue(
-        SessionKey.start_datetime, startTime.toIso8601String());
-    _currentSession!.setValue(SessionKey.user_id, userCode);
-    _currentSession!.setValue(SessionKey.study_id, studyId);
-    _currentSession!.setValue(SessionKey.protocol, protocolName);
+    _currentSession!..setValue(
+        SessionKey.start_datetime, startTime.toIso8601String())
+                    ..setValue(SessionKey.user_id, userCode)
+                    ..setValue(SessionKey.study_id, studyId)
+                    ..setValue(SessionKey.protocol, protocolName);
     await _firestoreManager.persistEntity(_currentSession!);
 
     // Add the data session.
