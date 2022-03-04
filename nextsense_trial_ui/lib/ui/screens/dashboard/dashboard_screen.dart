@@ -11,9 +11,6 @@ import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
-import 'package:nextsense_trial_ui/ui/screens/study/protocol_screen.dart';
-import 'package:nextsense_trial_ui/ui/screens/study/protocol_screen_vm.dart';
-import 'package:nextsense_trial_ui/ui/session_screen.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -187,7 +184,7 @@ class DashboardScreen extends HookWidget {
                           Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => ChangeNotifierProvider(
-                                  create: (_) => new ProtocolScreenViewModel(),
+                                  create: (_) => new ProtocolScreenViewModel(protocol),
                                   child: ProtocolScreen(protocol))
                               ));
                         },

@@ -15,7 +15,7 @@ class ProtocolScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.read<ProtocolScreenViewModel>();
-    Study? study = viewModel.getStudy();
+    //Study? study = viewModel.getStudy();
 
     var timerVisible = useState<bool>(true);
 
@@ -27,18 +27,36 @@ class ProtocolScreen extends HookWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              study?.getName() ?? "",
+              protocol.getName(),
               style: TextStyle(color: Colors.white),
             ),
             SizedBox(
               height: 30,
             ),
-            Text(study?.getDescription() ?? "",
+            Text(protocol.getDescription(),
                 style: TextStyle(color: Colors.white)),
             SizedBox(
               height: 30,
             ),
             if (timerVisible.value) _timer(context),
+            SizedBox(
+              height: 30,
+            ),
+            Container(
+              height: 100,
+              child: Visibility(
+                visible: viewModel.sessionIsActive,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                    Text("Test in progress", style: TextStyle(color: Colors.white),)
+                  ],
+                ),
+              ),
+            ),
             SizedBox(
               height: 30,
             ),
