@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -34,8 +35,11 @@ import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.DeviceSettings.ImpedanceMode;
 import io.nextsense.android.base.DeviceState;
+import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.service.ForegroundService;
+import io.objectbox.android.AndroidScheduler;
+import io.objectbox.reactive.DataSubscription;
 
 /** NextSenseBasePlugin */
 public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
@@ -79,12 +83,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       "io.nextsense.flutter.base.nextsense_base/device_scan_channel";
   private static final String DEVICE_STATE_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/device_state_channel";
+  private static final String DEVICE_INTERNAL_STATE_CHANNEL_NAME =
+      "io.nextsense.flutter.base.nextsense_base/device_internal_state_channel";
   private static final String DEVICE_DATA_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/device_data_channel";
 
   // Handler for the UI thread which is needed for running flutter JNI methods.
   private final Handler uiThreadHandler = new Handler(Looper.getMainLooper());
-  private final Gson gson = new Gson();
+  private final Gson gson;
   private final Map<String, Device> devices = Maps.newConcurrentMap();
   private final Map<String, Device.DeviceStateChangeListener> deviceStateListeners =
       Maps.newConcurrentMap();
@@ -95,11 +101,20 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private MethodChannel methodChannel;
   private EventChannel deviceScanChannel;
   private EventChannel deviceStateChannel;
+  private EventChannel deviceInternalStateChannel;
   private Context applicationContext;
   private Intent foregroundServiceIntent;
   private ForegroundService nextSenseService;
   private boolean nextSenseServiceBound = false;
   private DeviceScanner.DeviceScanListener deviceScanListener;
+  private AndroidScheduler deviceInternalStateSubscriptionScheduler;
+  private DataSubscription deviceInternalStateSubscription;
+
+  public NextsenseBasePlugin() {
+    GsonBuilder gsonBuilder = new GsonBuilder();
+    gsonBuilder.excludeFieldsWithoutExposeAnnotation();
+    gson = gsonBuilder.create();
+  }
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -138,6 +153,21 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         }
         List<Object> argumentList = (ArrayList<Object>) arguments;
         stopListeningToDeviceState((String) argumentList.get(1));
+      }
+    });
+    deviceInternalStateSubscriptionScheduler =
+        new AndroidScheduler(applicationContext.getMainLooper());
+    deviceInternalStateChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(),
+        DEVICE_INTERNAL_STATE_CHANNEL_NAME);
+    deviceInternalStateChannel.setStreamHandler(new EventChannel.StreamHandler() {
+      @Override
+      public void onListen(Object arguments, EventChannel.EventSink eventSink) {
+        Log.i(TAG, "Starting to listen to internal device state...");
+        startListeningToInternalDeviceState(eventSink);
+      }
+      @Override
+      public void onCancel(Object arguments) {
+        stopListeningToInternalDeviceState();
       }
     });
     Log.i(TAG, "Attached to engine.");
@@ -250,6 +280,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+    if (deviceInternalStateSubscription != null) {
+      deviceInternalStateSubscription.cancel();
+    }
     methodChannel.setMethodCallHandler(null);
     deviceScanChannel.setStreamHandler(null);
     applicationContext = null;
@@ -362,6 +395,28 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       }
     } else {
       Log.w(TAG, "Service not connected, cannot start monitoring device state.");
+    }
+  }
+
+  private void startListeningToInternalDeviceState(EventChannel.EventSink eventSink) {
+    if (nextSenseServiceBound) {
+      deviceInternalStateSubscription =
+          nextSenseService.getObjectBoxDatabase().subscribe(
+              DeviceInternalState.class, deviceInternalStateClass -> {
+                DeviceInternalState deviceInternalState = nextSenseService.getObjectBoxDatabase()
+                    .getLastDeviceInternalStates(/*count=*/1).get(0);
+                eventSink.success(gson.toJson(deviceInternalState));
+              },
+              deviceInternalStateSubscriptionScheduler);
+    } else {
+      Log.w(TAG, "Service not connected, cannot start monitoring internal device state.");
+    }
+  }
+
+  private void stopListeningToInternalDeviceState() {
+    if (deviceInternalStateSubscription != null) {
+      deviceInternalStateSubscription.cancel();
+      deviceInternalStateSubscription = null;
     }
   }
 

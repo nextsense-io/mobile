@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
@@ -33,14 +34,18 @@ class DeviceManager {
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceManager');
 
   Device? _connectedDevice;
-  CancelListening? _cancelListening;
+  CancelListening? _cancelStateListening;
+  CancelListening? _cancelInternalStateListening;
+
 
   void setConnectedDevice(Device? device) {
     if (device != null) {
       _listenToState(device.macAddress);
+      _listenToInternalState();
       NextsenseBase.requestDeviceStateUpdate(device.macAddress);
     } else {
-      _cancelListening?.call();
+      _cancelStateListening?.call();
+      _cancelInternalStateListening?.call();
     }
     _connectedDevice = device;
   }
@@ -53,7 +58,8 @@ class DeviceManager {
     if (getConnectedDevice() == null) {
       return;
     }
-    _cancelListening?.call();
+    _cancelStateListening?.call();
+    _cancelInternalStateListening?.call();
     _notificationsManager.hideAlertNotification(
         CONNECTION_LOST_NOTIFICATION_ID);
     NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
@@ -61,7 +67,7 @@ class DeviceManager {
   }
 
   void _listenToState(String macAddress) {
-    _cancelListening = NextsenseBase.listenToDeviceState((newDeviceState) {
+    _cancelStateListening = NextsenseBase.listenToDeviceState((newDeviceState) {
       _logger.log(Level.INFO, 'Device state changed to ' + newDeviceState);
       if (_connectedDevice != null) {
         if (newDeviceState == DeviceState.DISCONNECTED.name) {
@@ -75,5 +81,19 @@ class DeviceManager {
         }
       }
     }, macAddress);
+  }
+
+  void _listenToInternalState() {
+    _cancelInternalStateListening =
+        NextsenseBase.listenToDeviceInternalState((newDeviceInternalStateJson) {
+      _logger.log(Level.FINE, 'Device internal state changed');
+      if (_connectedDevice != null) {
+        Map<String, dynamic> deviceInternalState =
+            gson.decode(newDeviceInternalStateJson);
+        _logger.log(Level.FINE, deviceInternalState);
+        // TODO(eric): Implement state manager to propagate events and keep
+        //             state.
+      }
+    });
   }
 }

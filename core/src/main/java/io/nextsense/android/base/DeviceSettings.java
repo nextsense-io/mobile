@@ -1,5 +1,7 @@
 package io.nextsense.android.base;
 
+import com.google.gson.annotations.Expose;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,18 +29,25 @@ public class DeviceSettings {
     }
   }
 
+  @Expose
   private float eegSamplingRate;
+  @Expose
   private float eegStreamingRate;
+  @Expose
   private float imuSamplingRate;
+  @Expose
   private float imuStreamingRate;
   // List of enabled channels on the device. 0 indexed.
+  @Expose
   private List<Integer> enabledChannels;
   // If the device should be ran in impedance mode where it stimulates an electrode to calculate the
   // impedance. Only one channel can be enabled at a time in this mode.
+  @Expose
   private ImpedanceMode impedanceMode;
   // Device sampling frequency divider to obtain the stimulating frequency for impedance
   // calculations. For example, a divider of 10 with a sampling frequency of 500 would give an
   // impedance frequency of 50.
+  @Expose
   private int impedanceDivider;
 
   public DeviceSettings(DeviceSettings deviceSettings) {
