@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -16,6 +17,9 @@ class ProtocolScreenViewModel extends ChangeNotifier {
   bool sessionIsActive = false;
 
   Timer? timer;
+  Protocol protocol;
+
+  ProtocolScreenViewModel(this.protocol);
 
   Study? getStudy() {
       return _studyManager.getCurrentStudy();
@@ -27,7 +31,7 @@ class ProtocolScreenViewModel extends ChangeNotifier {
     sessionIsActive = true;
     startTimer();
 
-    // TODO(alex):
+    protocol.start();
 
     notifyListeners();
   }
@@ -39,6 +43,8 @@ class ProtocolScreenViewModel extends ChangeNotifier {
 
     sessionIsActive = false;
     secondsLeft = 0;
+
+    protocol.stop();
 
     notifyListeners();
   }

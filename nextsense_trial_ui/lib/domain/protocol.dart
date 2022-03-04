@@ -57,8 +57,9 @@ abstract class BaseProtocol implements Protocol {
           _deviceManager.getConnectedDevice()!.macAddress,
           _authManager.getUserEntity()!.getValue(UserKey.study),
           getName());
-      _startTime = _sessionManager.getCurrentSession()?.getValue(
-          SessionKey.start_datetime);
+      // Comment for now, cause giving exception
+      /*_startTime = _sessionManager.getCurrentSession()?.getValue(
+          SessionKey.start_datetime);*/
       _protocolState = ProtocolState.running;
     }
   }
