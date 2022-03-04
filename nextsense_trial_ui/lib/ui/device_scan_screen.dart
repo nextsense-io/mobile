@@ -9,8 +9,10 @@ import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/scan_result_list.dart';
 import 'package:nextsense_trial_ui/ui/components/search_device_bluetooth.dart';
-import 'package:nextsense_trial_ui/ui/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:provider/provider.dart';
 
 class DeviceScanScreen extends StatefulWidget {
   @override
@@ -82,7 +84,10 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
       }
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => DashboardScreen()),
+        MaterialPageRoute(builder: (context) => ChangeNotifierProvider(
+            create: (_) => new DashboardScreenViewModel(),
+            child: DashboardScreen())
+        ),
       );
     } on PlatformException {
       await showDialog(
