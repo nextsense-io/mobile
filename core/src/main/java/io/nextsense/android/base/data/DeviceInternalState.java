@@ -1,5 +1,8 @@
 package io.nextsense.android.base.data;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.JsonAdapter;
+
 import java.time.Instant;
 
 import javax.annotation.Nullable;
@@ -18,20 +21,35 @@ public class DeviceInternalState extends BaseRecord {
   // Can be null when there it no currently running session.
   public @Nullable ToOne<LocalSession> localSession;
 
-  @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
+  @Expose
+  @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)  // ObjectBox
+  @JsonAdapter(InstantGsonConverter.class)  // Gson
   Instant timestamp;
+  @Expose
   short batteryMilliVolts;
+  @Expose
   boolean busy;
+  @Expose
   boolean uSdPresent;
+  @Expose
   boolean hdmiCablePresent;
+  @Expose
   boolean rtcClockSet;
+  @Expose
   boolean captureRunning;
+  @Expose
   boolean charging;
+  @Expose
   boolean batteryLow;
+  @Expose
   boolean uSdLoggingEnabled;
+  @Expose
   boolean internalErrorDetected;
+  @Expose
   short bleQueueBacklog;
+  @Expose
   int lostSamplesCounter;
+  @Expose
   short bleRssi;
 
   private DeviceInternalState(
@@ -40,7 +58,7 @@ public class DeviceInternalState extends BaseRecord {
       boolean charging, boolean batteryLow, boolean uSdLoggingEnabled,
       boolean internalErrorDetected, short bleQueueBacklog, int lostSamplesCounter, short bleRssi) {
     super();
-    this.localSession = new ToOne<>(this, EegSample_.localSession);
+    this.localSession = new ToOne<>(this, DeviceInternalState_.localSession);
     if (localSessionId != null) {
       this.localSession.setTargetId(localSessionId);
     }
@@ -68,6 +86,10 @@ public class DeviceInternalState extends BaseRecord {
     return new DeviceInternalState(localSessionId, timestamp, batteryMilliVolts, busy, uSdPresent,
         hdmiCablePresent, rtcClockSet, captureRunning, charging, batteryLow, uSdLoggingEnabled,
         internalErrorDetected, bleQueueBacklog, lostSamplesCounter, bleRssi);
+  }
+
+  public DeviceInternalState() {
+    this.localSession = new ToOne<>(this, DeviceInternalState_.localSession);
   }
 
   // Need to be public for ObjectBox performance.

@@ -37,6 +37,8 @@ class NextsenseBase {
       'io.nextsense.flutter.base.nextsense_base/device_scan_channel');
   static const EventChannel _deviceStateStream = const EventChannel(
       'io.nextsense.flutter.base.nextsense_base/device_state_channel');
+  static const EventChannel _deviceInternalStateStream = const EventChannel(
+      'io.nextsense.flutter.base.nextsense_base/device_internal_state_channel');
   static const String _connectToServiceCommand = 'connect_to_service';
   static const String _setFlutterActivityActiveCommand =
       'set_flutter_activity_active';
@@ -67,7 +69,8 @@ class NextsenseBase {
   static const String _connectToDeviceErrorInterrupted =
       'connection_interrupted';
   static int _nextScanningListenerId = 1;
-  static int _nextStateListenerId = 1;
+  static int _nextDeviceStateListenerId = 1;
+  static int _nextDeviceInternalStateListenerId = 1;
 
   static Future<String?> get platformVersion async {
     final String? version = await _channel.invokeMethod('getPlatformVersion');
@@ -120,7 +123,16 @@ class NextsenseBase {
   static CancelListening listenToDeviceState(Listener listener,
       String deviceMacAddress) {
     var subscription = _deviceStateStream.receiveBroadcastStream(
-        [_nextStateListenerId++, deviceMacAddress]
+        [_nextDeviceStateListenerId++, deviceMacAddress]
+    ).listen(listener, cancelOnError: true);
+    return () {
+      subscription.cancel();
+    };
+  }
+
+  static CancelListening listenToDeviceInternalState(Listener listener) {
+    var subscription = _deviceInternalStateStream.receiveBroadcastStream(
+        [_nextDeviceInternalStateListenerId++]
     ).listen(listener, cancelOnError: true);
     return () {
       subscription.cancel();

@@ -40,6 +40,7 @@ public class ObjectBoxDatabase implements Database {
   private Query<LocalSession> sessionFinishedQuery;
   private Query<EegSample> eegSamplesQuery;
   private Query<Acceleration> accelerationQuery;
+  private Query<DeviceInternalState> deviceInternalStateQuery;
 
   @Override
   public void init(Context context) {
@@ -54,6 +55,7 @@ public class ObjectBoxDatabase implements Database {
     accelerationBox = boxStore.boxFor(Acceleration.class);
     accelerationQuery = accelerationBox.query().equal(Acceleration_.localSessionId, 0).build();
     deviceInternalStateBox = boxStore.boxFor(DeviceInternalState.class);
+    deviceInternalStateQuery = deviceInternalStateBox.query().build();
     Log.d(TAG, "Size on disk: " + boxStore.sizeOnDisk());
     Log.d(TAG, boxStore.diagnose());
   }
@@ -163,6 +165,16 @@ public class ObjectBoxDatabase implements Database {
 
   public long getAccelerationCount(long localSessionId) {
     return accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).count();
+  }
+
+  public List<DeviceInternalState> getLastDeviceInternalStates(long count) {
+    long deviceInternalStateCount = deviceInternalStateBox.count();
+    long offset = count <= deviceInternalStateCount ? deviceInternalStateCount - count: 0;
+    return getDeviceInternalStates(offset, count);
+  }
+
+  public List<DeviceInternalState> getDeviceInternalStates(long offset, long count) {
+    return deviceInternalStateQuery.find(offset, count);
   }
 
   public boolean deleteLocalSession(long localSessionId) {
