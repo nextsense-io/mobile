@@ -84,10 +84,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
       }
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => ChangeNotifierProvider(
-            create: (_) => new DashboardScreenViewModel(),
-            child: DashboardScreen())
-        ),
+        MaterialPageRoute(builder: (context) => DashboardScreen()),
       );
     } on PlatformException {
       await showDialog(
