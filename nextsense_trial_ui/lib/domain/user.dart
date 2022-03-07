@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
 /**
@@ -35,6 +36,15 @@ class User extends FirebaseEntity {
     getValues()[userKey.name] = value;
   }
 
+  DateTime? getStudyStartDate() {
+    final value = getValue(UserKey.study_start_date);
+    return value!=null ? (value as Timestamp).toDate() : null;
+  }
+
+  DateTime? getStudyEndDate() {
+    final value = getValue(UserKey.study_end_date);
+    return value!=null ? (value as Timestamp).toDate() : null;
+  }
   /**
    * Checks that the current date is between the study start and end dates for
    * this subject if present.
@@ -42,7 +52,8 @@ class User extends FirebaseEntity {
    * If not in between, return the number of days it is before as a negative and
    * after as a positive.
    */
-  int verifyStudyDates() {
+  // TODO(alex): this code need to be fixed
+  /*int verifyStudyDates() {
     DateTime now = DateTime.now();
     String? startDateTimeString = getValue(UserKey.study_start_date);
     if (startDateTimeString != null) {
@@ -59,5 +70,5 @@ class User extends FirebaseEntity {
       }
     }
     return 0;
-  }
+  }*/
 }
