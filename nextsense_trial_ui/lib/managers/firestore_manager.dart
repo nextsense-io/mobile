@@ -54,6 +54,37 @@ class FirestoreManager {
     return FirebaseEntity(snapshot);
   }
 
+  Future<List<FirebaseEntity>> queryEntities(
+      List<Table> tables, List<String> entityKeys) async {
+    assert(tables.length == entityKeys.length + 1);
+    DocumentReference? pathReference = null;
+    CollectionReference? collectionReference = null;
+    for (int i = 0; i < tables.length; ++i) {
+      if (i == 0) {
+        if (entityKeys.isEmpty) {
+          collectionReference = FirebaseFirestore.instance.collection(
+              tables[i].name());
+        } else {
+          pathReference = FirebaseFirestore.instance.collection(
+              tables[i].name()).doc(entityKeys[i]);
+        }
+      } else {
+        if (i > entityKeys.length) {
+          collectionReference = pathReference!.collection(tables[i].name());
+        } else {
+          pathReference = pathReference!.collection(tables[i].name()).doc(
+              entityKeys[i]);
+        }
+      }
+    }
+    List<DocumentSnapshot> documents = (await collectionReference!.get()).docs;
+    List<FirebaseEntity> entities = [];
+    for (DocumentSnapshot documentSnapshot in documents) {
+      entities.add(FirebaseEntity(documentSnapshot));
+    }
+    return entities;
+  }
+
   Future persistEntity(FirebaseEntity entity) async {
     entity.getDocumentSnapshot().reference.set(entity.getValues());
   }
