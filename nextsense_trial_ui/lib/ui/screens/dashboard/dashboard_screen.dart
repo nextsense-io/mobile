@@ -12,48 +12,49 @@ import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
+import 'package:nextsense_trial_ui/utils/use_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:stacked/stacked.dart';
 
-class DashboardScreen extends HookWidget {
+class DashboardScreen extends StatelessWidget {
 
   final AuthManager _authManager = getIt<AuthManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<DashboardScreenViewModel>();
-    useEffect(() {
-      viewModel.selectToday();
-      return null;
-    }, const []);
-
-    return SessionPopScope(
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text('Dashboard'),
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.png'),
-                fit: BoxFit.cover,
+    return ViewModelBuilder<DashboardScreenViewModel>.reactive(
+      viewModelBuilder: () => DashboardScreenViewModel(),
+      onModelReady: (viewModel) => viewModel.init(),
+      builder: (context, viewModel, child) => SessionPopScope(
+            child: Scaffold(
+              appBar: AppBar(
+                title: Text('Dashboard'),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(flex: 2,child: Column(
+              body: Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/background.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _getDayTabs(context),
-                    _buildSchedule(context),
+                    Expanded(flex: 2,child: Column(
+                      children: [
+                        _getDayTabs(context),
+                        _buildSchedule(context),
+                      ],
+                    )),
+                    Expanded(flex: 1,child: _buildButtons(context)),
                   ],
-                )),
-                Expanded(flex: 1,child: _buildButtons(context)),
-              ],
-            ),
-          ),
-        ));
+                ),
+              ),
+            )
+      ),
+    );
   }
 
   Widget _buildButtons(BuildContext context) {
@@ -116,7 +117,7 @@ class DashboardScreen extends HookWidget {
 
     return Container(
         margin: EdgeInsets.symmetric(vertical: 20.0),
-        height: 60.0,
+        height: 80.0,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           itemCount: days.length,
@@ -125,7 +126,6 @@ class DashboardScreen extends HookWidget {
             DateTime day = days[index];
             final isSelected = viewModel.selectedDay?.isAtSameMomentAs(day) ?? false;
             final textStyle = TextStyle(fontSize: 20.0, color: isSelected ? Colors.white : Colors.black);
-            print(isSelected);
             return Padding(
               padding: const EdgeInsets.all(4.0),
               child: InkWell(
@@ -134,7 +134,7 @@ class DashboardScreen extends HookWidget {
                 },
                 child: Container(
                     width: 60,
-                    height: 60,
+                    height: 80,
                     decoration: new BoxDecoration(
                         color: isSelected ? Colors.black : Colors.white,
                         borderRadius: new BorderRadius.all(const Radius.circular(5.0))
@@ -142,6 +142,7 @@ class DashboardScreen extends HookWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Opacity(opacity:0.5,child: Text(DateFormat('MMMM').format(day), style: textStyle.copyWith(fontSize: 10.0))),
                         Opacity(opacity:0.5,child: Text(DateFormat('EE').format(day), style: textStyle)),
                         Text(day.day.toString(), style: textStyle),
                       ],
@@ -156,6 +157,16 @@ class DashboardScreen extends HookWidget {
 
   Widget _buildSchedule(BuildContext context) {
     List<Protocol> protocols = context.watch<DashboardScreenViewModel>().getCurrentDayProtocols();
+    
+    if (protocols.length == 0) {
+      return Container(
+        padding: EdgeInsets.all(30.0),
+          child: Text("There are no protocols for selected day",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 30.0)
+          )
+      );
+    }
     return Container(
         margin: EdgeInsets.symmetric(vertical: 20.0),
         child: ListView.builder(
@@ -174,34 +185,38 @@ class DashboardScreen extends HookWidget {
                     Container(
                       width: 60,
                       child: Visibility(
-                          visible: index == 0,
-                          child: Text("08:00", style: TextStyle(color: Colors.white))
+                          visible: true,
+                          child: Text(protocol.startTimeAsString ?? "-", style: TextStyle(color: Colors.white))
                       ),
                     ),
                     Expanded(
-                      child: InkWell(
-                        onTap: (){
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => ChangeNotifierProvider(
-                                  create: (_) => new ProtocolScreenViewModel(protocol),
-                                  child: ProtocolScreen(protocol))
-                              ));
-                        },
-                        child: Container(
-                            padding: const EdgeInsets.all(20.0),
-                            decoration: new BoxDecoration(
-                                color: Color(0xFF6DC5D5),
-                                borderRadius: new BorderRadius.all(const Radius.circular(5.0))
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(protocol.getDescription(), style: TextStyle(color: Colors.white)),
-                                Text(protocol.getMinDuration().inMinutes.toString() + " min.", style: TextStyle(color: Colors.white))
-                              ],
-                            )
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 16.0),
+                        child: InkWell(
+                          onTap: (){
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => ChangeNotifierProvider(
+                                    create: (_) => new ProtocolScreenViewModel(protocol),
+                                    child: ProtocolScreen(protocol))
+                                ));
+                          },
+                          child: Container(
+                              padding: const EdgeInsets.all(16.0),
+                              decoration: new BoxDecoration(
+                                  color: Color(0xFF6DC5D5),
+                                  borderRadius: new BorderRadius.all(const Radius.circular(5.0))
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(protocol.getDescription(), style: TextStyle(color: Colors.white)),
+                                  SizedBox(height: 8,),
+                                  Text(protocol.getMinDuration().inMinutes.toString() + " min.", style: TextStyle(color: Colors.white))
+                                ],
+                              )
+                          ),
                         ),
                       ),
                     ),

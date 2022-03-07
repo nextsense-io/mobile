@@ -6,6 +6,9 @@ class FirebaseEntity {
   // Current user values. Valid keys are in the UserKey enum.
   final Map<String, dynamic> _values;
 
+  // Id of entity
+  String get id => _documentSnapshot.id;
+
   FirebaseEntity(DocumentSnapshot documentSnapshot) :
       this._documentSnapshot = documentSnapshot,
       this._values = documentSnapshot.exists ?

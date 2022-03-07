@@ -6,7 +6,7 @@ import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/SessionPopScope.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
-import 'package:nextsense_trial_ui/ui/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
@@ -124,8 +124,15 @@ class _SignInScreenState extends State<SignInScreen> {
     }
 
     // Load the study data.
+    final userEntity = _authManager.getUserEntity()!;
+
+    // TODO(alex): can start and end dates be null?
     bool studyLoaded = await _studyManager.loadCurrentStudy(
-        _authManager.getUserEntity()!.getValue(UserKey.study));
+        userEntity.getValue(UserKey.study),
+        userEntity.getStudyStartDate()!,
+        userEntity.getStudyEndDate()!,
+    );
+
     if (!studyLoaded) {
       // Cannot proceed without study data.
       await showDialog(

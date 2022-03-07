@@ -53,4 +53,10 @@ class Study extends FirebaseEntity {
   String getDescription() {
     return (getValue(StudyKey.intro_text) as List<dynamic>).map((e) => e as String).join("\n");
   }
+
+  int getDurationDays() {
+    return getValue(StudyKey.duration_days) as int;
+  }
+
+
 }
