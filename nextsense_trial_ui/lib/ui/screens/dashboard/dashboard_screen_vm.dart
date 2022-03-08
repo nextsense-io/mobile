@@ -27,6 +27,7 @@ class DashboardScreenViewModel extends ChangeNotifier {
 
   void init() async {
     //selectToday();
+    // TODO(alex): cache assessments (move to protocol manager?)
     assesments = await _studyManager.loadAssesments();
     for (var assesment in assesments) {
       print('[TODO] DashboardScreenViewModel.init ${assesment.id} ${assesment.dayNumber}');
@@ -38,6 +39,7 @@ class DashboardScreenViewModel extends ChangeNotifier {
           _studyManager.currentStudyStartDate.add(Duration(days: i)));
       print('[TODO] DashboardScreenViewModel days loaded - $_days');
     }
+    // TODO(alex): if current day out of range show some warning
     selectFirstDayOfStudy();
     notifyListeners();
   }
