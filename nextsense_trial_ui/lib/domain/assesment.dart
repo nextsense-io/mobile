@@ -6,7 +6,8 @@ import 'package:nextsense_trial_ui/utils/android_logger.dart';
 enum AssessmentKey {
   day,
   type,
-  time
+  time,
+  parameters
 }
 
 class Assessment extends FirebaseEntity {
@@ -37,9 +38,18 @@ class Assessment extends FirebaseEntity {
       // Create protocol assigned to current assessment
       protocol = Protocol.create(protocolType)
         ..setStartTime(startTime);
+
+      // Override default min/max durations
+      final minDurationOverride = getDurationOverride('minDuration');
+      final maxDurationOverride = getDurationOverride('maxDuration');
+      if (minDurationOverride != null)
+        protocol!.setMinDuration(minDurationOverride);
+      if (maxDurationOverride != null)
+        protocol!.setMaxDuration(maxDurationOverride);
+
     }
     else {
-      _logger.log(Level.SEVERE, 'Unknown protocol "$protocolTypeString"');
+      _logger.log(Level.WARNING, 'Unknown protocol "$protocolTypeString"');
     }
 
   }
@@ -50,6 +60,22 @@ class Assessment extends FirebaseEntity {
 
   void setValue(AssessmentKey assessmentKey, dynamic value) {
     getValues()[assessmentKey.name] = value;
+  }
+
+  Duration? getDurationOverride(String field) {
+    dynamic value = getParameters()[field];
+    if (value == null)
+      return null;
+    // Value comes in HH:MM:SS format
+    final hms = value.split(":");
+    return Duration(
+        hours: int.parse(hms[0]),
+        minutes: int.parse(hms[1]),
+        seconds: int.parse(hms[2]));
+  }
+
+  Map<String, dynamic> getParameters() {
+    return getValue(AssessmentKey.parameters) ?? {};
   }
 
 

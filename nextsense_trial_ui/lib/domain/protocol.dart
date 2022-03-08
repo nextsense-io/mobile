@@ -47,6 +47,9 @@ abstract class Protocol implements ProtocolInterface {
 
   Duration? _runTime;
   DateTime? _startTime;
+  Duration? _minDurationOverride;
+  Duration? _maxDurationOverride;
+
   ProtocolState _protocolState = ProtocolState.not_started;
   ProtocolType get type => ProtocolType.unknown;
 
@@ -74,6 +77,14 @@ abstract class Protocol implements ProtocolInterface {
 
   void setStartTime(DateTime startTime) {
     _startTime = startTime;
+  }
+
+  void setMinDuration(Duration duration) {
+    _minDurationOverride = duration;
+  }
+
+  void setMaxDuration(Duration duration) {
+    _maxDurationOverride = duration;
   }
 
   String getName() {
@@ -112,12 +123,12 @@ class VariableDaytimeProtocol extends Protocol {
 
   @override
   Duration getMinDuration() {
-    return Duration(minutes: 10);
+    return _minDurationOverride ?? Duration(minutes: 10);
   }
 
   @override
   Duration getMaxDuration() {
-    return Duration(hours: 24);
+    return _maxDurationOverride ?? Duration(hours: 24);
   }
 
   @override
@@ -139,12 +150,12 @@ class SleepProtocol extends Protocol {
 
   @override
   Duration getMinDuration() {
-    return Duration(minutes: 10);
+    return _minDurationOverride ?? Duration(hours: 1);
   }
 
   @override
   Duration getMaxDuration() {
-    return Duration(hours: 24);
+    return _maxDurationOverride ?? Duration(hours: 10);
   }
 
   @override

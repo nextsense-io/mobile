@@ -12,7 +12,7 @@ import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
-import 'package:nextsense_trial_ui/utils/use_viewmodel.dart';
+import 'package:nextsense_trial_ui/utils/duration.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:stacked/stacked.dart';
@@ -42,13 +42,13 @@ class DashboardScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(flex: 2,child: Column(
+                    Expanded(child: Column(
                       children: [
                         _getDayTabs(context),
                         _buildSchedule(context),
                       ],
                     )),
-                    Expanded(flex: 1,child: _buildButtons(context)),
+                    Center(child: _buildButtons(context)),
                   ],
                 ),
               ),
@@ -105,9 +105,8 @@ class DashboardScreen extends StatelessWidget {
       buttons.add(findDeviceButton);
     }
     buttons.add(logoutButton);
-    return Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+        spacing: 5.0,
         children: buttons);
   }
 
@@ -167,71 +166,70 @@ class DashboardScreen extends StatelessWidget {
           )
       );
     }
-    return Container(
-        margin: EdgeInsets.symmetric(vertical: 20.0),
-        child: ListView.builder(
-          scrollDirection: Axis.vertical,
-          //physics: const NeverScrollableScrollPhysics(),
-          itemCount: protocols.length,
-          shrinkWrap: true,
-          itemBuilder:  (BuildContext context, int index) {
-            //String tag = vm.getDoctorTags()[index];
-            Protocol protocol = protocols[index];
-            return Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 60,
-                      child: Visibility(
-                          visible: true,
-                          child: Text(protocol.startTimeAsString ?? "-", style: TextStyle(color: Colors.white))
+    return SingleChildScrollView(
+      physics: ScrollPhysics(),
+      child: Container(
+          margin: EdgeInsets.symmetric(vertical: 20.0),
+          child: ListView.builder(
+            scrollDirection: Axis.vertical,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: protocols.length,
+            shrinkWrap: true,
+            itemBuilder:  (BuildContext context, int index) {
+              //String tag = vm.getDoctorTags()[index];
+              Protocol protocol = protocols[index];
+              return Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 60,
+                        child: Visibility(
+                            visible: true,
+                            child: Text(protocol.startTimeAsString ?? "-", style: TextStyle(color: Colors.white))
+                        ),
                       ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 16.0),
-                        child: InkWell(
-                          onTap: (){
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => ChangeNotifierProvider(
-                                    create: (_) => new ProtocolScreenViewModel(protocol),
-                                    child: ProtocolScreen(protocol))
-                                ));
-                          },
-                          child: Container(
-                              padding: const EdgeInsets.all(16.0),
-                              decoration: new BoxDecoration(
-                                  color: Color(0xFF6DC5D5),
-                                  borderRadius: new BorderRadius.all(const Radius.circular(5.0))
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(protocol.getDescription(), style: TextStyle(color: Colors.white)),
-                                  SizedBox(height: 8,),
-                                  Text(protocol.getMinDuration().inMinutes.toString() + " min.", style: TextStyle(color: Colors.white))
-                                ],
-                              )
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 16.0),
+                          child: InkWell(
+                            onTap: (){
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => ChangeNotifierProvider(
+                                      create: (_) => new ProtocolScreenViewModel(protocol),
+                                      child: ProtocolScreen(protocol))
+                                  ));
+                            },
+                            child: Container(
+                                padding: const EdgeInsets.all(16.0),
+                                decoration: new BoxDecoration(
+                                    color: Color(0xFF6DC5D5),
+                                    borderRadius: new BorderRadius.all(const Radius.circular(5.0))
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(protocol.getDescription(), style: TextStyle(color: Colors.white)),
+                                    SizedBox(height: 8,),
+                                    Text(humanizeDuration(protocol.getMinDuration()), style: TextStyle(color: Colors.white))
+                                  ],
+                                )
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    Container(
-                      width: 40,
-                    ),
-                  ],
-                )
-            );
-          },
-        ));
+                      Container(
+                        width: 40,
+                      ),
+                    ],
+                  )
+              );
+            },
+          )),
+    );
   }
-
-
-
-
-
 }
+
