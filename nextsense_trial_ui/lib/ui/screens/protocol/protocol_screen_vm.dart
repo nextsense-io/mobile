@@ -13,21 +13,29 @@ class ProtocolScreenViewModel extends ChangeNotifier {
   final StudyManager _studyManager = getIt<StudyManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
 
-  int secondsLeft = 0;
+  int secondsElapsed = 0;
   bool sessionIsActive = false;
+
+  // This indicates that minimum duration of protocol is passed
+  // and we can mark protocol as completed
+  bool get protocolCompleted => minDurationPassed == true;
+  bool minDurationPassed = false;
+  bool maxDurationPassed = false;
+
 
   Timer? timer;
   Protocol protocol;
 
   ProtocolScreenViewModel(this.protocol);
 
-  Study? getStudy() {
+  Study? getCurrentStudy() {
       return _studyManager.getCurrentStudy();
   }
 
   startSession() {
     _logger.log(Level.INFO, "startSession");
 
+    secondsElapsed = 0;
     sessionIsActive = true;
     startTimer();
 
@@ -42,7 +50,8 @@ class ProtocolScreenViewModel extends ChangeNotifier {
     cancelTimer();
 
     sessionIsActive = false;
-    secondsLeft = 0;
+    minDurationPassed = false;
+    maxDurationPassed = false;
 
     protocol.stop();
 
@@ -50,16 +59,21 @@ class ProtocolScreenViewModel extends ChangeNotifier {
   }
 
   void startTimer() {
-    final seconds = 3;
+    final protocolMinTimeSeconds = protocol.getMinDuration().inSeconds;
+    final protocolMaxTimeSeconds = protocol.getMaxDuration().inSeconds;
     if (timer?.isActive ?? false) timer?.cancel();
-    secondsLeft = seconds;
+    secondsElapsed = 0;
     notifyListeners();
     timer = Timer.periodic(
       Duration(seconds: 1),
           (_){
             _logger.log(Level.INFO, "tick");
-            secondsLeft-=1;
-            if (secondsLeft <= 0) {
+            secondsElapsed+=1;
+            if (secondsElapsed >= protocolMinTimeSeconds) {
+              minDurationPassed = true;
+            }
+            if (secondsElapsed >= protocolMaxTimeSeconds) {
+              maxDurationPassed = true;
               timer?.cancel();
               onTimerFinished();
             }
@@ -76,7 +90,5 @@ class ProtocolScreenViewModel extends ChangeNotifier {
   void cancelTimer() {
     timer?.cancel();
   }
-
-
 
 }
