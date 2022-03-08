@@ -15,6 +15,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import io.nextsense.android.Config;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.SampleRateCalculator;
@@ -129,8 +130,9 @@ public class ForegroundService extends Service {
     objectBoxDatabase = new ObjectBoxDatabase();
     objectBoxDatabase.init(this);
     localSessionManager = LocalSessionManager.create(objectBoxDatabase);
-    centralManagerProxy = new BleCentralManagerProxy(getApplicationContext());
-    deviceScanner = new DeviceScanner(NextSenseDeviceManager.create(localSessionManager),
+    centralManagerProxy = (!Config.useEmulatedBle) ?
+            new BleCentralManagerProxy(getApplicationContext()) : null;
+    deviceScanner = DeviceScanner.create(NextSenseDeviceManager.create(localSessionManager),
         centralManagerProxy);
     deviceManager = DeviceManager.create(deviceScanner, localSessionManager);
     databaseSink = DatabaseSink.create(objectBoxDatabase);
