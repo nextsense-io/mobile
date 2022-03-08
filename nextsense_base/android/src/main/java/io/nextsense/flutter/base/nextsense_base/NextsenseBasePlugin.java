@@ -31,6 +31,7 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.nextsense.android.Config;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.DeviceSettings.ImpedanceMode;
@@ -199,7 +200,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
             result);
         break;
       case IS_BLUETOOTH_ENABLED:
-        result.success(BluetoothAdapter.getDefaultAdapter().isEnabled());
+        if (!Config.useEmulatedBle)
+          result.success(BluetoothAdapter.getDefaultAdapter().isEnabled());
+        else
+          result.success(true);
         break;
       case START_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -399,6 +403,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void startListeningToInternalDeviceState(EventChannel.EventSink eventSink) {
+    // TODO(alex): get(0) giving out-of-index exception, just return for now
+    if (Config.useEmulatedBle) return;
+
     if (nextSenseServiceBound) {
       deviceInternalStateSubscription =
           nextSenseService.getObjectBoxDatabase().subscribe(
