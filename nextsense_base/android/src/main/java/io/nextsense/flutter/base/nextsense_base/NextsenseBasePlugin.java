@@ -411,9 +411,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       deviceInternalStateSubscription =
           nextSenseService.getObjectBoxDatabase().subscribe(
               DeviceInternalState.class, deviceInternalStateClass -> {
-                DeviceInternalState deviceInternalState = nextSenseService.getObjectBoxDatabase()
-                    .getLastDeviceInternalStates(/*count=*/1).get(0);
-                eventSink.success(gson.toJson(deviceInternalState));
+                List<DeviceInternalState> deviceInternalStates =
+                    nextSenseService.getObjectBoxDatabase()
+                        .getLastDeviceInternalStates(/*count=*/1);
+                if (!deviceInternalStates.isEmpty()) {
+                  DeviceInternalState deviceInternalState = nextSenseService.getObjectBoxDatabase()
+                      .getLastDeviceInternalStates(/*count=*/1).get(0);
+                  eventSink.success(gson.toJson(deviceInternalState));
+                }
               },
               deviceInternalStateSubscriptionScheduler);
     } else {
@@ -489,17 +494,17 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     try {
       boolean started = device.startStreaming(uploadToCloud, userBigTableKey, dataSessionId).get();
       if (!started) {
-        returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
+        returnError(result, START_STREAMING_COMMAND, ERROR_STREAMING_START_FAILED,
             /*errorMessage=*/null, /*errorDetails=*/null);
         return;
       }
     } catch (ExecutionException e) {
-      returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
+      returnError(result, START_STREAMING_COMMAND, ERROR_STREAMING_START_FAILED,
           /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
       return;
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
+      returnError(result, START_STREAMING_COMMAND, ERROR_STREAMING_START_FAILED,
           /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
       return;
     }

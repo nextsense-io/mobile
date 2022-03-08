@@ -159,13 +159,8 @@ public class BleDevice extends Device {
       }
       boolean settingsSet = setSettings(newDeviceSettings).get();
       if (settingsSet) {
-        if ((impedanceMode == DeviceSettings.ImpedanceMode.ON_EXTERNAL_CURRENT ||
-            impedanceMode == DeviceSettings.ImpedanceMode.ON_1299_DC)) {
-          return startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null,
-              /*dataSessionId=*/null).get();
-        } else {
-          return true;
-        }
+        return startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null,
+            /*dataSessionId=*/null).get();
       } else {
         return false;
       }

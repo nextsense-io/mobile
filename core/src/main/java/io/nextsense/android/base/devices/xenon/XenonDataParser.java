@@ -178,9 +178,6 @@ public class XenonDataParser {
       byte flagMask = BIT_MASKS.get(i);
       leadsOffPositive.add((flagMask & leadsOffPositiveValues) == flagMask);
     }
-    // TODO(eric): Parse leads off.
-    // int sampleCounter = Util.bytesToInt32(new byte[]{valuesBuffer.get(), valuesBuffer.get(),
-    //     valuesBuffer.get(), valuesBuffer.get()}, 0, ByteOrder.LITTLE_ENDIAN);
     int sampleCounter = valuesBuffer.getInt();
     short statusFlags = valuesBuffer.getShort();
     // Go through all the bits and set the values in a Map by bit index.

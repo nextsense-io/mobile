@@ -146,7 +146,7 @@ public class ObjectBoxDatabase implements Database {
 
   public List<DeviceInternalState> getRecentDeviceInternalStateData(Duration duration) {
     long targetTimestamp = Instant.now().minus(duration).toEpochMilli();
-    return lastDeviceInternalStateQuery
+    return recentDeviceInternalStateQuery
         .setParameter(DeviceInternalState_.timestamp, targetTimestamp).find();
   }
 
