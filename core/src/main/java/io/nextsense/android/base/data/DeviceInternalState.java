@@ -47,6 +47,8 @@ public class DeviceInternalState extends BaseRecord {
   @Expose
   boolean internalErrorDetected;
   @Expose
+  int samplesCounter;
+  @Expose
   short bleQueueBacklog;
   @Expose
   int lostSamplesCounter;
@@ -59,8 +61,8 @@ public class DeviceInternalState extends BaseRecord {
       @Nullable Long localSessionId, Instant timestamp, short batteryMilliVolts, boolean busy,
       boolean uSdPresent, boolean hdmiCablePresent, boolean rtcClockSet, boolean captureRunning,
       boolean charging, boolean batteryLow, boolean uSdLoggingEnabled,
-      boolean internalErrorDetected, short bleQueueBacklog, int lostSamplesCounter, short bleRssi,
-      ArrayList<Boolean> leadsOffPositive) {
+      boolean internalErrorDetected, int samplesCounter, short bleQueueBacklog,
+      int lostSamplesCounter, short bleRssi, ArrayList<Boolean> leadsOffPositive) {
     super();
     this.localSession = new ToOne<>(this, DeviceInternalState_.localSession);
     if (localSessionId != null) {
@@ -77,6 +79,7 @@ public class DeviceInternalState extends BaseRecord {
     this.batteryLow = batteryLow;
     this.uSdLoggingEnabled = uSdLoggingEnabled;
     this.internalErrorDetected = internalErrorDetected;
+    this.samplesCounter = samplesCounter;
     this.bleQueueBacklog = bleQueueBacklog;
     this.lostSamplesCounter = lostSamplesCounter;
     this.bleRssi = bleRssi;
@@ -87,11 +90,12 @@ public class DeviceInternalState extends BaseRecord {
       @Nullable Long localSessionId, Instant timestamp, short batteryMilliVolts, boolean busy,
       boolean uSdPresent, boolean hdmiCablePresent, boolean rtcClockSet, boolean captureRunning,
       boolean charging, boolean batteryLow, boolean uSdLoggingEnabled,
-      boolean internalErrorDetected, short bleQueueBacklog, int lostSamplesCounter, short bleRssi,
-      ArrayList<Boolean> leadsOffPositive) {
+      boolean internalErrorDetected, int samplesCounter, short bleQueueBacklog,
+      int lostSamplesCounter, short bleRssi, ArrayList<Boolean> leadsOffPositive) {
     return new DeviceInternalState(localSessionId, timestamp, batteryMilliVolts, busy, uSdPresent,
         hdmiCablePresent, rtcClockSet, captureRunning, charging, batteryLow, uSdLoggingEnabled,
-        internalErrorDetected, bleQueueBacklog, lostSamplesCounter, bleRssi, leadsOffPositive);
+        internalErrorDetected, samplesCounter, bleQueueBacklog, lostSamplesCounter, bleRssi,
+        leadsOffPositive);
   }
 
   public DeviceInternalState() {
@@ -211,6 +215,14 @@ public class DeviceInternalState extends BaseRecord {
 
   public void setInternalErrorDetected(boolean internalErrorDetected) {
     this.internalErrorDetected = internalErrorDetected;
+  }
+
+  public int getSamplesCounter() {
+    return samplesCounter;
+  }
+
+  public void setSamplesCounter(int samplesCounter) {
+    this.samplesCounter = samplesCounter;
   }
 
   public short getBleQueueBacklog() {
