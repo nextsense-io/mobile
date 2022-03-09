@@ -31,6 +31,13 @@ enum ImpedanceMode {
   ON_1299_AC
 }
 
+enum EmulatorCommand {
+  NONE,
+  CONNECT,
+  DISCONNECT
+}
+
+
 class NextsenseBase {
   static const MethodChannel _channel = const MethodChannel('nextsense_base');
   static const EventChannel _deviceScanStream = const EventChannel(
@@ -55,6 +62,7 @@ class NextsenseBase {
   static const String _deleteLocalSessionCommand = 'delete_local_session';
   static const String _requestDeviceInternalStateUpdateCommand =
       'request_device_internal_state';
+  static const String _emulatorCommand = 'emulator_command';
   static const String _macAddressArg = 'mac_address';
   static const String _uploadToCloudArg = 'upload_to_cloud';
   static const String _userBigTableKeyArg = 'user_bigtable_key';
@@ -68,6 +76,7 @@ class NextsenseBase {
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
       'connection_interrupted';
+
   static int _nextScanningListenerId = 1;
   static int _nextDeviceStateListenerId = 1;
   static int _nextDeviceInternalStateListenerId = 1;
@@ -189,5 +198,9 @@ class NextsenseBase {
 
   static Future<bool> isBluetoothEnabled() async {
     return await _channel.invokeMethod(_isBluetoothEnabledCommand);
+  }
+
+  static Future<bool> sendEmulatorCommand(EmulatorCommand command) async {
+    return await _channel.invokeMethod(_emulatorCommand, command.index);
   }
 }

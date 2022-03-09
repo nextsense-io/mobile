@@ -36,6 +36,7 @@ import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.DeviceSettings.ImpedanceMode;
 import io.nextsense.android.base.DeviceState;
+import io.nextsense.android.base.ble.EmulatedDeviceManager;
 import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.service.ForegroundService;
@@ -62,6 +63,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       "request_device_internal_state";
   public static final String GET_DEVICE_INTERNAL_STATE_DATA_COMMAND =
       "get_device_internal_state_data";
+  public static final String EMULATOR_COMMAND = "emulator_command";
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
   public static final String UPLOAD_TO_CLOUD_ARGUMENT = "upload_to_cloud";
@@ -257,6 +259,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
         getDeviceInternalStateData(result, macAddress, localSessionId, durationMillis);
         break;
+      case EMULATOR_COMMAND:
+        ((EmulatedDeviceManager)nextSenseService.getDeviceManager())
+                .sendEmulatorCommand((int)call.arguments);
+        break;
       case SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
         if (nextSenseServiceBound) {
           nextSenseService.setFlutterActivityActive((boolean)call.arguments);
@@ -411,9 +417,6 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void startListeningToInternalDeviceState(EventChannel.EventSink eventSink) {
-    // TODO(alex): get(0) giving out-of-index exception, just return for now
-    if (Config.useEmulatedBle) return;
-
     if (nextSenseServiceBound) {
       deviceInternalStateSubscription =
           nextSenseService.getObjectBoxDatabase().subscribe(

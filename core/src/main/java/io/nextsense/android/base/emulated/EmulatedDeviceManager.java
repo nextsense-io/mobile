@@ -15,12 +15,16 @@ import io.nextsense.android.base.emulated.EmulatedDevice;
 
 public class EmulatedDeviceManager implements DeviceManager {
 
+    public static final int EMULATOR_COMMAND_CONNECT = 1;
+    public static final int EMULATOR_COMMAND_DISCONNECT = 2;
+
     private static final String TAG = EmulatedDeviceManager.class.getSimpleName();
 
     private final DeviceScanner deviceScanner;
     private final Set<DeviceScanner.DeviceScanListener> deviceScanListeners = new HashSet<>();
     private final List<Device> devices = new ArrayList<>();
     private final LocalSessionManager localSessionManager;
+    private EmulatedDevice emulatedDevice;
 
     public EmulatedDeviceManager(DeviceScanner deviceScanner, LocalSessionManager localSessionManager) {
         this.deviceScanner = deviceScanner;
@@ -35,11 +39,11 @@ public class EmulatedDeviceManager implements DeviceManager {
     @Override
     public void findDevices(DeviceScanner.DeviceScanListener deviceScanListener) {
         Log.w(TAG, "EmulatedDeviceManager::findDevices");
-        Device device = Device.create(null, null, null);
+        emulatedDevice = (EmulatedDevice) Device.create(null, null, null);
         // Have to pass localSessionManager to emulated device
-        ((EmulatedDevice)device).setLocalSessionManager(localSessionManager);
-        devices.add(device);
-        deviceScanListener.onNewDevice(device);
+        emulatedDevice.setLocalSessionManager(localSessionManager);
+        devices.add(emulatedDevice);
+        deviceScanListener.onNewDevice(emulatedDevice);
     }
 
     @Override
@@ -52,4 +56,16 @@ public class EmulatedDeviceManager implements DeviceManager {
         // Nothing to do here when emulated
     }
 
+    public void sendEmulatorCommand(Integer command) {
+        Log.w(TAG, "sendEmulatorCommand");
+        switch (command) {
+            case EMULATOR_COMMAND_DISCONNECT:
+                emulatedDevice.emulateDisconnect();
+                break;
+            case EMULATOR_COMMAND_CONNECT:
+                emulatedDevice.emulateConnect();
+                break;
+        }
+
+    }
 }
