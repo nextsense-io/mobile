@@ -231,4 +231,16 @@ public class EmulatedDevice extends Device {
     // not used
     return null;
   }
+
+  public void emulateDisconnect() {
+    Util.logd(TAG, "emulateDisconnect");
+    currentState = DeviceState.DISCONNECTED;
+    notifyDeviceStateChangeListeners(DeviceState.DISCONNECTED);
+  }
+
+  public void emulateConnect() {
+    Util.logd(TAG, "emulateConnect");
+    currentState = DeviceState.READY;
+    notifyDeviceStateChangeListeners(DeviceState.READY);
+  }
 }
