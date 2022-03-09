@@ -15,8 +15,9 @@ import io.nextsense.android.base.emulated.EmulatedDevice;
 
 public class EmulatedDeviceManager implements DeviceManager {
 
-    public static final int EMULATOR_COMMAND_CONNECT = 1;
-    public static final int EMULATOR_COMMAND_DISCONNECT = 2;
+    // Changes in those commands should respect EmulatorCommand enum in nextsense_base.dart
+    public static final String EMULATOR_COMMAND_CONNECT = "CONNECT";
+    public static final String EMULATOR_COMMAND_DISCONNECT = "DISCONNECT";
 
     private static final String TAG = EmulatedDeviceManager.class.getSimpleName();
 
@@ -56,7 +57,7 @@ public class EmulatedDeviceManager implements DeviceManager {
         // Nothing to do here when emulated
     }
 
-    public void sendEmulatorCommand(Integer command) {
+    public void sendEmulatorCommand(String command) {
         Log.w(TAG, "sendEmulatorCommand");
         switch (command) {
             case EMULATOR_COMMAND_DISCONNECT:

@@ -261,7 +261,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case EMULATOR_COMMAND:
         ((EmulatedDeviceManager)nextSenseService.getDeviceManager())
-                .sendEmulatorCommand((int)call.arguments);
+                .sendEmulatorCommand((String)call.arguments);
         break;
       case SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
         if (nextSenseServiceBound) {

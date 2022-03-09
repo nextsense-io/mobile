@@ -31,12 +31,12 @@ enum ImpedanceMode {
   ON_1299_AC
 }
 
+// Changes in those commands should match constants in EmulatedDeviceManager.java
 enum EmulatorCommand {
   NONE,
   CONNECT,
   DISCONNECT
 }
-
 
 class NextsenseBase {
   static const MethodChannel _channel = const MethodChannel('nextsense_base');
@@ -201,6 +201,6 @@ class NextsenseBase {
   }
 
   static Future<bool> sendEmulatorCommand(EmulatorCommand command) async {
-    return await _channel.invokeMethod(_emulatorCommand, command.index);
+    return await _channel.invokeMethod(_emulatorCommand, command.name);
   }
 }
