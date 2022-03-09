@@ -198,8 +198,8 @@ public class XenonDataParser {
         flagsMap.get(HDMI_PRESENT_FLAG_INDEX), flagsMap.get(RTC_SET_FLAG_INDEX),
         flagsMap.get(CAPTURE_RUNNING_FLAG_INDEX), flagsMap.get(BATTERY_CHARGING_FLAG_INDEX),
         flagsMap.get(BATTERY_LOW_FLAG_INDEX), flagsMap.get(BINARY_USD_LOGGING_ENABLED_FLAG_INDEX),
-        flagsMap.get(INTERNAL_ERROR_FLAG_INDEX), bleFifoCounter, lostSamplesCounter, bleRssi,
-        leadsOffPositive);
+        flagsMap.get(INTERNAL_ERROR_FLAG_INDEX), sampleCounter, bleFifoCounter, lostSamplesCounter,
+        bleRssi, leadsOffPositive);
     EventBus.getDefault().post(deviceInternalState);
   }
 }
