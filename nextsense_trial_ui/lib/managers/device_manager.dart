@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/domain/device_internal_state.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
@@ -88,9 +89,10 @@ class DeviceManager {
         NextsenseBase.listenToDeviceInternalState((newDeviceInternalStateJson) {
       _logger.log(Level.FINE, 'Device internal state changed');
       if (_connectedDevice != null) {
-        Map<String, dynamic> deviceInternalState =
+        Map<String, dynamic> deviceInternalStateValues =
             gson.decode(newDeviceInternalStateJson);
-        _logger.log(Level.FINE, deviceInternalState);
+        _logger.log(Level.FINE, deviceInternalStateValues);
+        DeviceInternalState state = new DeviceInternalState(deviceInternalStateValues);
         // TODO(eric): Implement state manager to propagate events and keep
         //             state.
       }

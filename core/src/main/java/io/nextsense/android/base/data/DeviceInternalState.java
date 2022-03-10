@@ -27,7 +27,7 @@ public class DeviceInternalState extends BaseRecord {
   @JsonAdapter(InstantGsonConverter.class)  // Gson
   Instant timestamp;
   @Expose
-  short batteryMilliVolts;
+  int batteryMilliVolts;
   @Expose
   boolean busy;
   @Expose
@@ -49,11 +49,12 @@ public class DeviceInternalState extends BaseRecord {
   @Expose
   int samplesCounter;
   @Expose
-  short bleQueueBacklog;
+  int bleQueueBacklog;
   @Expose
   int lostSamplesCounter;
   @Expose
-  short bleRssi;
+  int bleRssi;
+  @Expose
   @Convert(converter = Converters.SerializableConverter.class, dbType = byte[].class)
   ArrayList<Boolean> leadsOffPositive;
 
@@ -137,11 +138,11 @@ public class DeviceInternalState extends BaseRecord {
     this.timestamp = timestamp;
   }
 
-  public short getBatteryMilliVolts() {
+  public int getBatteryMilliVolts() {
     return batteryMilliVolts;
   }
 
-  public void setBatteryMilliVolts(short batteryMilliVolts) {
+  public void setBatteryMilliVolts(int batteryMilliVolts) {
     this.batteryMilliVolts = batteryMilliVolts;
   }
 
@@ -225,11 +226,11 @@ public class DeviceInternalState extends BaseRecord {
     this.samplesCounter = samplesCounter;
   }
 
-  public short getBleQueueBacklog() {
+  public int getBleQueueBacklog() {
     return bleQueueBacklog;
   }
 
-  public void setBleQueueBacklog(short bleQueueBacklog) {
+  public void setBleQueueBacklog(int bleQueueBacklog) {
     this.bleQueueBacklog = bleQueueBacklog;
   }
 
@@ -241,11 +242,11 @@ public class DeviceInternalState extends BaseRecord {
     this.lostSamplesCounter = lostSamplesCounter;
   }
 
-  public short getBleRssi() {
+  public int getBleRssi() {
     return bleRssi;
   }
 
-  public void setBleRssi(short bleRssi) {
+  public void setBleRssi(int bleRssi) {
     this.bleRssi = bleRssi;
   }
 }
