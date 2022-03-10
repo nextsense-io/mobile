@@ -230,7 +230,7 @@
     },
     {
       "id": "7:5721869432385465913",
-      "lastPropertyId": "16:1978241505719588141",
+      "lastPropertyId": "18:5745297287327352785",
       "name": "DeviceInternalState",
       "properties": [
         {
@@ -248,7 +248,7 @@
         {
           "id": "3:6626354131202844329",
           "name": "batteryMilliVolts",
-          "type": 3,
+          "type": 5,
           "flags": 4
         },
         {
@@ -308,7 +308,7 @@
         {
           "id": "13:696357043725367907",
           "name": "bleQueueBacklog",
-          "type": 3,
+          "type": 5,
           "flags": 4
         },
         {
@@ -320,7 +320,7 @@
         {
           "id": "15:3365346689582140019",
           "name": "bleRssi",
-          "type": 3,
+          "type": 5,
           "flags": 4
         },
         {
@@ -330,6 +330,17 @@
           "type": 11,
           "flags": 1548,
           "relationTarget": "LocalSession"
+        },
+        {
+          "id": "17:4655228295370405909",
+          "name": "samplesCounter",
+          "type": 5,
+          "flags": 4
+        },
+        {
+          "id": "18:5745297287327352785",
+          "name": "leadsOffPositive",
+          "type": 23
         }
       ],
       "relations": []
