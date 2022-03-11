@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Timer;
@@ -35,6 +36,7 @@ import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceSettings;
 import io.nextsense.android.base.DeviceState;
 import io.nextsense.android.base.data.Acceleration;
+import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -51,6 +53,7 @@ public class EmulatedDevice extends Device {
   private Timer sendSamplesTimer;
   private DeviceState currentState = DeviceState.DISCONNECTED;
   private DeviceMode currentMode = DeviceMode.IDLE;
+  DeviceInternalState deviceInternalState;
 
   private final ListeningExecutorService executorService =
           MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
@@ -242,5 +245,36 @@ public class EmulatedDevice extends Device {
     Util.logd(TAG, "emulateConnect");
     currentState = DeviceState.READY;
     notifyDeviceStateChangeListeners(DeviceState.READY);
+  }
+
+  @SuppressWarnings("ConstantConditions")
+  public void emulateInternalStateChange(Map<String, Object> params) {
+    Util.logd(TAG, "emulateInternalStateChange");
+    if (deviceInternalState == null) {
+      Instant timestamp = Instant.now();
+      short batteryMilliVolts = 0;
+      int samplesCounter = 0;
+      short bleQueueBacklog = 0;
+      int lostSamplesCounter = 0;
+      short bleRssi = 0;
+      ArrayList<Boolean> leadsOffPositive = new ArrayList<>();
+      deviceInternalState = DeviceInternalState.create((long)0, timestamp,
+            batteryMilliVolts, false, false,
+            false, false,
+            false, false,
+            false, false,
+            false, samplesCounter, bleQueueBacklog, lostSamplesCounter,
+            bleRssi, leadsOffPositive);
+    }
+
+    // TODO(alex): later add those fields batteryLow, internalErrorDetected
+    if (params.containsKey(DeviceInternalState.FIELD_U_SD_PRESENT))
+      deviceInternalState.setuSdPresent(
+              (boolean)params.get(DeviceInternalState.FIELD_U_SD_PRESENT));
+    if (params.containsKey(DeviceInternalState.FIELD_HDMI_CABLE_PRESENT))
+      deviceInternalState.setHdmiCablePresent(
+              (boolean)params.get(DeviceInternalState.FIELD_HDMI_CABLE_PRESENT));
+
+    EventBus.getDefault().post(deviceInternalState);
   }
 }

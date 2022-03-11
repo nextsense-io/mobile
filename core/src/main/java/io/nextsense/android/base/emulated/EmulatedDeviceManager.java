@@ -5,6 +5,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.nextsense.android.base.Device;
@@ -18,6 +19,7 @@ public class EmulatedDeviceManager implements DeviceManager {
     // Changes in those commands should respect EmulatorCommand enum in nextsense_base.dart
     public static final String EMULATOR_COMMAND_CONNECT = "CONNECT";
     public static final String EMULATOR_COMMAND_DISCONNECT = "DISCONNECT";
+    public static final String EMULATOR_COMMAND_INTERNAL_STATE_CHANGE = "INTERNAL_STATE_CHANGE";
 
     private static final String TAG = EmulatedDeviceManager.class.getSimpleName();
 
@@ -57,14 +59,17 @@ public class EmulatedDeviceManager implements DeviceManager {
         // Nothing to do here when emulated
     }
 
-    public void sendEmulatorCommand(String command) {
-        Log.w(TAG, "sendEmulatorCommand");
+    public void sendEmulatorCommand(String command, Map<String, Object> params) {
+        Log.w(TAG, "sendEmulatorCommand " + command + " " + params);
         switch (command) {
             case EMULATOR_COMMAND_DISCONNECT:
                 emulatedDevice.emulateDisconnect();
                 break;
             case EMULATOR_COMMAND_CONNECT:
                 emulatedDevice.emulateConnect();
+                break;
+            case EMULATOR_COMMAND_INTERNAL_STATE_CHANGE:
+                emulatedDevice.emulateInternalStateChange(params);
                 break;
         }
 

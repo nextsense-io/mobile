@@ -260,8 +260,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         getDeviceInternalStateData(result, macAddress, localSessionId, durationMillis);
         break;
       case EMULATOR_COMMAND:
+        String command = call.argument("command");
+        Map<String, Object> params = call.argument("params");
         ((EmulatedDeviceManager)nextSenseService.getDeviceManager())
-                .sendEmulatorCommand((String)call.arguments);
+                .sendEmulatorCommand(command, params);
         break;
       case SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
         if (nextSenseServiceBound) {
