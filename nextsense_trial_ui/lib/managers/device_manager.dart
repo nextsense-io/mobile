@@ -49,7 +49,7 @@ class DeviceManager {
   ValueNotifier<DeviceState> deviceState =
       ValueNotifier(DeviceState.DISCONNECTED);
   ValueNotifier<DeviceInternalState?> deviceInternalState = ValueNotifier(null);
-  Completer<bool>? _deviceInternalStateAvailableCompleter;
+  Completer<bool> _deviceInternalStateAvailableCompleter = Completer<bool>();
 
   bool get deviceIsConnected => deviceState.value == DeviceState.READY;
   bool get deviceInternalStateAvailable => deviceInternalState.value != null;
@@ -77,12 +77,12 @@ class DeviceManager {
   Future<bool> waitInternalStateAvailable(Duration timeout) async {
     _deviceInternalStateAvailableCompleter = new Completer<bool>();
     new Timer(timeout, () {
-      if (!_deviceInternalStateAvailableCompleter!.isCompleted) {
-        _deviceInternalStateAvailableCompleter!
+      if (!_deviceInternalStateAvailableCompleter.isCompleted) {
+        _deviceInternalStateAvailableCompleter
             .complete(deviceInternalStateAvailable);
       }
     });
-    return _deviceInternalStateAvailableCompleter!.future;
+    return _deviceInternalStateAvailableCompleter.future;
   }
 
   Device? getConnectedDevice() {
@@ -134,8 +134,8 @@ class DeviceManager {
       // TODO(eric): Implement state manager to propagate events and keep
       //             state.
       deviceInternalState.value = state;
-      if (!_deviceInternalStateAvailableCompleter!.isCompleted) {
-        _deviceInternalStateAvailableCompleter?.complete(true);
+      if (!_deviceInternalStateAvailableCompleter.isCompleted) {
+        _deviceInternalStateAvailableCompleter.complete(true);
       }
     });
   }
