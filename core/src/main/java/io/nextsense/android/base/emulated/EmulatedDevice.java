@@ -86,7 +86,12 @@ public class EmulatedDevice extends Device {
   }
 
   public boolean requestDeviceState() {
-    // TODO(alex): need to implement later
+    Util.logd(TAG, "requestDeviceState");
+    if (deviceInternalState == null) {
+      initDeviceInternalState();
+    }
+
+    EventBus.getDefault().post(deviceInternalState);
     return true;
   }
 
@@ -251,20 +256,7 @@ public class EmulatedDevice extends Device {
   public void emulateInternalStateChange(Map<String, Object> params) {
     Util.logd(TAG, "emulateInternalStateChange");
     if (deviceInternalState == null) {
-      Instant timestamp = Instant.now();
-      short batteryMilliVolts = 0;
-      int samplesCounter = 0;
-      short bleQueueBacklog = 0;
-      int lostSamplesCounter = 0;
-      short bleRssi = 0;
-      ArrayList<Boolean> leadsOffPositive = new ArrayList<>();
-      deviceInternalState = DeviceInternalState.create((long)0, timestamp,
-            batteryMilliVolts, false, false,
-            false, false,
-            false, false,
-            false, false,
-            false, samplesCounter, bleQueueBacklog, lostSamplesCounter,
-            bleRssi, leadsOffPositive);
+      initDeviceInternalState();
     }
 
     // TODO(alex): later add those fields batteryLow, internalErrorDetected
@@ -277,4 +269,22 @@ public class EmulatedDevice extends Device {
 
     EventBus.getDefault().post(deviceInternalState);
   }
+
+  private void initDeviceInternalState() {
+    Instant timestamp = Instant.now();
+    short batteryMilliVolts = 0;
+    int samplesCounter = 0;
+    short bleQueueBacklog = 0;
+    int lostSamplesCounter = 0;
+    short bleRssi = 0;
+    ArrayList<Boolean> leadsOffPositive = new ArrayList<>();
+    deviceInternalState = DeviceInternalState.create((long)0, timestamp,
+            batteryMilliVolts, false, false,
+            false, false,
+            false, false,
+            false, false,
+            false, samplesCounter, bleQueueBacklog, lostSamplesCounter,
+            bleRssi, leadsOffPositive);
+  }
+
 }

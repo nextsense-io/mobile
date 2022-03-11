@@ -46,24 +46,42 @@ class DeviceManager {
   CancelListening? _cancelStateListening;
   CancelListening? _cancelInternalStateListening;
 
-  ValueNotifier<DeviceState> deviceState = ValueNotifier(DeviceState.READY);
-  ValueNotifier<DeviceInternalState> deviceInternalState = ValueNotifier(DeviceInternalState.initial());
+  ValueNotifier<DeviceState> deviceState =
+      ValueNotifier(DeviceState.DISCONNECTED);
+  ValueNotifier<DeviceInternalState?> deviceInternalState = ValueNotifier(null);
+  Completer<bool>? _deviceInternalStateAvailableCompleter;
+
   bool get deviceIsConnected => deviceState.value == DeviceState.READY;
+  bool get deviceInternalStateAvailable => deviceInternalState.value != null;
 
   // Internal state shortcuts
-  bool get isHdmiCablePresent => deviceInternalState.value.hdmiCablePresent;
-  bool get isUSdPresent => deviceInternalState.value.uSdPresent;
+  bool get isHdmiCablePresent =>
+      deviceInternalState.value?.hdmiCablePresent ?? false;
 
-  void setConnectedDevice(Device? device) {
-    if (device != null) {
-      _listenToState(device.macAddress);
-      _listenToInternalState();
-      NextsenseBase.requestDeviceStateUpdate(device.macAddress);
-    } else {
-      _cancelStateListening?.call();
-      _cancelInternalStateListening?.call();
+  bool get isUSdPresent => deviceInternalState.value?.uSdPresent ?? false;
+
+  Future<bool> connectDevice(Device device,
+      {Duration timeout = const Duration(seconds: 10)}) async {
+    _listenToState(device.macAddress);
+    _listenToInternalState();
+    await NextsenseBase.connectDevice(device.macAddress);
+    NextsenseBase.requestDeviceStateUpdate(device.macAddress);
+    bool stateAvailable = await waitInternalStateAvailable(timeout);
+    if (!stateAvailable) {
+      return false;
     }
     _connectedDevice = device;
+    return true;
+  }
+
+  Future<bool> waitInternalStateAvailable(Duration timeout) async {
+    _deviceInternalStateAvailableCompleter = new Completer<bool>();
+    new Timer(timeout, () {
+      if (!_deviceInternalStateAvailableCompleter!.isCompleted)
+        _deviceInternalStateAvailableCompleter!
+            .complete(deviceInternalStateAvailable);
+    });
+    return _deviceInternalStateAvailableCompleter!.future;
   }
 
   Device? getConnectedDevice() {
@@ -76,10 +94,12 @@ class DeviceManager {
     }
     _cancelStateListening?.call();
     _cancelInternalStateListening?.call();
-    _notificationsManager.hideAlertNotification(
-        CONNECTION_LOST_NOTIFICATION_ID);
+    _notificationsManager
+        .hideAlertNotification(CONNECTION_LOST_NOTIFICATION_ID);
     NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
-    setConnectedDevice(null);
+    _cancelStateListening?.call();
+    _cancelInternalStateListening?.call();
+    _connectedDevice = null;
   }
 
   void _listenToState(String macAddress) {
@@ -88,9 +108,14 @@ class DeviceManager {
       if (_connectedDevice != null) {
         final DeviceState state = deviceStateFromString(newDeviceState);
         switch (state) {
-          case DeviceState.DISCONNECTED: _onDeviceDisconnected(); break;
-          case DeviceState.READY: _onDeviceReady(); break;
-          default: break;
+          case DeviceState.DISCONNECTED:
+            _onDeviceDisconnected();
+            break;
+          case DeviceState.READY:
+            _onDeviceReady();
+            break;
+          default:
+            break;
         }
       }
     }, macAddress);
@@ -100,29 +125,30 @@ class DeviceManager {
     _cancelInternalStateListening =
         NextsenseBase.listenToDeviceInternalState((newDeviceInternalStateJson) {
       _logger.log(Level.FINE, 'Device internal state changed');
-      if (_connectedDevice != null) {
-        Map<String, dynamic> deviceInternalStateValues = jsonDecode(newDeviceInternalStateJson);
-        _logger.log(Level.FINE, deviceInternalStateValues);
-        DeviceInternalState state = new DeviceInternalState(deviceInternalStateValues);
-        // TODO(eric): Implement state manager to propagate events and keep
-        //             state.
-        deviceInternalState.value = state;
-      }
+      Map<String, dynamic> deviceInternalStateValues =
+          jsonDecode(newDeviceInternalStateJson);
+      _logger.log(Level.FINE, deviceInternalStateValues);
+      DeviceInternalState state =
+          new DeviceInternalState(deviceInternalStateValues);
+      // TODO(eric): Implement state manager to propagate events and keep
+      //             state.
+      deviceInternalState.value = state;
+      if (!_deviceInternalStateAvailableCompleter!.isCompleted)
+        _deviceInternalStateAvailableCompleter?.complete(true);
     });
   }
 
   void _onDeviceDisconnected() {
     // Disconnected without being requested by the user.
-    _notificationsManager.showAlertNotification(
-        CONNECTION_LOST_NOTIFICATION_ID, CONNECTION_LOST_TITLE,
-        CONNECTION_LOST_BODY, /*payload=*/'');
+    _notificationsManager.showAlertNotification(CONNECTION_LOST_NOTIFICATION_ID,
+        CONNECTION_LOST_TITLE, CONNECTION_LOST_BODY, /*payload=*/ '');
 
     deviceState.value = DeviceState.DISCONNECTED;
   }
 
   void _onDeviceReady() {
-    _notificationsManager.hideAlertNotification(
-        CONNECTION_LOST_NOTIFICATION_ID);
+    _notificationsManager
+        .hideAlertNotification(CONNECTION_LOST_NOTIFICATION_ID);
 
     deviceState.value = DeviceState.READY;
   }

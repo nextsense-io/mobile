@@ -81,33 +81,41 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
       _isConnecting = true;
     });
     try {
-      await NextsenseBase.connectDevice(device.macAddress);
-      _deviceManager.setConnectedDevice(device);
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      bool connected = await _deviceManager.connectDevice(device);
+      if (connected) {
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => DashboardScreen()),
+        );
+      } else {
+        _onConnectionError(context);
       }
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => DashboardScreen()),
-      );
     } on PlatformException {
-      await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return SimpleAlertDialog(
-              title: 'Connection Error',
-              content: 'Failed to connect to the NextSense device. Make sure '
-                  'it is turned on an try again. It it still fails, please '
-                  'contact NextSense support.');
-        },
-      );
-      _startScan();
+      _onConnectionError(context);
     }
     setState(() {
       _isConnecting = false;
     });
     _logger.log(Level.INFO, 'Connected to device: ' + device.macAddress);
   }
+
+  Future<void> _onConnectionError(BuildContext context) async {
+    await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+      return SimpleAlertDialog(
+          title: 'Connection Error',
+          content: 'Failed to connect to the NextSense device. Make sure '
+              'it is turned on an try again. It it still fails, please '
+              'contact NextSense support.');
+      },
+    );
+    _startScan();
+  }
+
 
   List<ScanResult> _buildScanResultList() {
     return _scanResultsMap.values

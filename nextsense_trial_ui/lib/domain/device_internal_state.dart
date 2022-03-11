@@ -60,24 +60,6 @@ class DeviceInternalState {
   int bleRssi;
   List<bool> leadsOffPositive;
 
-  DeviceInternalState.initial() :
-    timestamp = DateTime.now(),
-    batteryMilliVolts = 0,
-    busy = false,
-    uSdPresent = false,
-    hdmiCablePresent = false,
-    rtcClockSet = false,
-    captureRunning = false,
-    charging = false,
-    uSdLoggingEnabled = false,
-    internalErrorDetected = false,
-    batteryLow = false,
-    samplesCounter = 0,
-    bleQueueBacklog = 0,
-    lostSamplesCounter = 0,
-    bleRssi = 0,
-    leadsOffPositive = const [];
-
   DeviceInternalState(Map<String, dynamic> values) :
       timestamp = DateTime.parse(values[describeEnum(
           DeviceInternalStateFields.timestamp)]),
