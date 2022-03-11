@@ -28,31 +28,29 @@ class DashboardScreen extends StatelessWidget {
       onModelReady: (viewModel) => viewModel.init(),
       builder: (context, viewModel, child) => SessionPopScope(
           child: Scaffold(
-        appBar: AppBar(
-          title: Text('Dashboard'),
-        ),
-        body: Container(
-          decoration: BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/images/background.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                  child: Column(
+            body: Container(
+              padding: EdgeInsets.all(10.0),
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/background.png'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _getDayTabs(context),
-                  _buildSchedule(context),
+                  Expanded(
+                      child: Column(
+                        children: [
+                          _getDayTabs(context),
+                          _buildSchedule(context),
+                        ],
+                      )),
+                  Center(child: _buildButtons(context)),
                 ],
-              )),
-              Center(child: _buildButtons(context)),
-            ],
-          ),
-        ),
-      )),
+              ),
+            ),
+          )),
     );
   }
 
@@ -111,7 +109,7 @@ class DashboardScreen extends StatelessWidget {
     final days = viewModel.getDays();
 
     return Container(
-        margin: EdgeInsets.symmetric(vertical: 20.0),
+        margin: EdgeInsets.only(top: 20.0),
         height: 80.0,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
@@ -136,7 +134,7 @@ class DashboardScreen extends StatelessWidget {
                       decoration: new BoxDecoration(
                           color: isSelected ? Colors.black : Colors.white,
                           borderRadius:
-                              new BorderRadius.all(const Radius.circular(5.0))),
+                          new BorderRadius.all(const Radius.circular(5.0))),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -158,7 +156,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildSchedule(BuildContext context) {
     List<Protocol> protocols =
-        context.watch<DashboardScreenViewModel>().getCurrentDayProtocols();
+    context.watch<DashboardScreenViewModel>().getCurrentDayProtocols();
 
     if (protocols.length == 0) {
       return Container(
@@ -166,20 +164,31 @@ class DashboardScreen extends StatelessWidget {
           child: Text("There are no protocols for selected day",
               textAlign: TextAlign.center, style: TextStyle(fontSize: 30.0)));
     }
+
     return SingleChildScrollView(
       physics: ScrollPhysics(),
       child: Container(
-          margin: EdgeInsets.symmetric(vertical: 20.0),
           child: ListView.builder(
             scrollDirection: Axis.vertical,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: protocols.length,
             shrinkWrap: true,
             itemBuilder: (BuildContext context, int index) {
-              //String tag = vm.getDoctorTags()[index];
               Protocol protocol = protocols[index];
+              var protocolBackgroundColor = Color(0xFF6DC5D5);
+              switch(protocol.type) {
+                case ProtocolType.variable_daytime:
+                  protocolBackgroundColor = Color(0xFF6DC5D5);
+                  break;
+                case ProtocolType.sleep:
+                case ProtocolType.eoec:
+                case ProtocolType.eyes_movement:
+                case ProtocolType.unknown:
+                  protocolBackgroundColor = Color(0xFF984DF1);
+                  break;
+              }
               return Padding(
-                  padding: const EdgeInsets.all(4.0),
+                  padding: const EdgeInsets.all(0.0),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -187,12 +196,12 @@ class DashboardScreen extends StatelessWidget {
                         width: 60,
                         child: Visibility(
                             visible: true,
-                            child: Text(protocol.startTimeAsString ?? "-",
+                            child: Text(protocol.startTimeAsString,
                                 style: TextStyle(color: Colors.white))),
                       ),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.only(top: 16.0),
+                          padding: const EdgeInsets.only(top: 12.0),
                           child: InkWell(
                             onTap: () {
                               Navigator.push(
@@ -204,12 +213,12 @@ class DashboardScreen extends StatelessWidget {
                             child: Container(
                                 padding: const EdgeInsets.all(16.0),
                                 decoration: new BoxDecoration(
-                                    color: Color(0xFF6DC5D5),
+                                    color: protocolBackgroundColor,
                                     borderRadius: new BorderRadius.all(
                                         const Radius.circular(5.0))),
                                 child: Column(
                                   mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  MainAxisAlignment.spaceBetween,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(protocol.getDescription(),

@@ -34,7 +34,7 @@ class ProtocolScreenViewModel extends ChangeNotifier {
   bool get protocolCompleted => minDurationPassed == true;
   bool minDurationPassed = false;
   bool maxDurationPassed = false;
-  DeviceState deviceState = DeviceState.READY;
+  DeviceState get deviceState => _deviceManager.deviceState.value;
   bool get deviceIsConnected => deviceState == DeviceState.READY;
 
   Timer? timer;
@@ -45,24 +45,11 @@ class ProtocolScreenViewModel extends ChangeNotifier {
   ProtocolScreenViewModel(this.protocol);
 
   void init() {
-    _deviceStateSubscription = _deviceManager.deviceStateStream.listen((DeviceState state) {
-      print('[TODO] ProtocolScreenViewModel.init deviceState $state');
-      deviceState = state;
-      switch (deviceState){
-        case DeviceState.DISCONNECTED:
-          _onDeviceDisconnected();
-          break;
-        case DeviceState.READY:
-          _onDeviceReconnected();
-          break;
-        default: break;
-      }
-      notifyListeners();
-    });
+    _deviceManager.deviceState.addListener(_onDeviceStateChanged);
   }
 
   Study? getCurrentStudy() {
-      return _studyManager.getCurrentStudy();
+    return _studyManager.getCurrentStudy();
   }
 
   void startSession() {
@@ -102,19 +89,18 @@ class ProtocolScreenViewModel extends ChangeNotifier {
       Duration(seconds: 1),
           (_){
 
-            if (_timerPaused) return;
+        if (_timerPaused) return;
 
-            _logger.log(Level.INFO, "tick");
-            secondsElapsed+=1;
-            if (secondsElapsed >= protocolMinTimeSeconds) {
-              minDurationPassed = true;
-            }
-            if (secondsElapsed >= protocolMaxTimeSeconds) {
-              maxDurationPassed = true;
-              timer?.cancel();
-              onTimerFinished();
-            }
-            notifyListeners();
+        secondsElapsed+=1;
+        if (secondsElapsed >= protocolMinTimeSeconds) {
+          minDurationPassed = true;
+        }
+        if (secondsElapsed >= protocolMaxTimeSeconds) {
+          maxDurationPassed = true;
+          timer?.cancel();
+          onTimerFinished();
+        }
+        notifyListeners();
       },
     );
   }
@@ -128,15 +114,28 @@ class ProtocolScreenViewModel extends ChangeNotifier {
     timer?.cancel();
   }
 
+  void _onDeviceStateChanged() {
+    switch (deviceState) {
+      case DeviceState.DISCONNECTED:
+        _onDeviceDisconnected();
+        break;
+      case DeviceState.READY:
+        _onDeviceReconnected();
+        break;
+      default:
+        break;
+    }
+    notifyListeners();
+  }
+
   void _onDeviceDisconnected() {
-    print('[TODO] ProtocolScreenViewModel._onDeviceDisconnected');
     _timerPaused = true;
     disconnectTimeoutTimer?.cancel();
+    // TODO(alex): get disconnect timeout from firebase
     disconnectTimeoutSecondsLeft = protocol.disconnectTimeoutDuration.inSeconds;
     disconnectTimeoutTimer = Timer.periodic(
       Duration(seconds: 1),
           (_){
-        _logger.log(Level.INFO, "disconnectTimeoutTimer tick");
         disconnectTimeoutSecondsLeft-=1;
         if (disconnectTimeoutSecondsLeft <= 0) {
           disconnectTimeoutTimer?.cancel();
@@ -154,7 +153,7 @@ class ProtocolScreenViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    _deviceStateSubscription.cancel();
+    _deviceManager.deviceState.removeListener(_onDeviceStateChanged);
     super.dispose();
   }
 

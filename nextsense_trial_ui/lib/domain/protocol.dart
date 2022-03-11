@@ -46,7 +46,6 @@ abstract class Protocol implements ProtocolInterface {
   final CustomLogPrinter _logger = CustomLogPrinter('SessionScreen');
 
   Duration? _runTime;
-  DateTime? _startTime;
   Duration? _minDurationOverride;
   Duration? _maxDurationOverride;
 
@@ -57,30 +56,35 @@ abstract class Protocol implements ProtocolInterface {
   //Duration get disconnectTimeoutDuration => Duration(minutes: 5);
   Duration get disconnectTimeoutDuration => Duration(seconds: 10);
 
+  late DateTime startTime;
   // Returns protocol start time in format 'HH:MM'
-  String? get startTimeAsString => _startTime != null
-      ? DateFormat('HH:mm').format(_startTime!) : null;
+  String get startTimeAsString => DateFormat('HH:mm').format(startTime);
+
+  Protocol();
 
   static ProtocolType typeFromString(String typeStr) {
     return ProtocolType.values.firstWhere((element) => element.name == typeStr,
         orElse: () => ProtocolType.unknown);
   }
 
-  Protocol();
-
-  factory Protocol.create(ProtocolType type) {
+  factory Protocol.create(ProtocolType type, DateTime startTime) {
+    Protocol protocol;
     switch (type) {
       case ProtocolType.variable_daytime:
-        return VariableDaytimeProtocol();
+        protocol = VariableDaytimeProtocol();
+        break;
       case ProtocolType.sleep:
-        return SleepProtocol();
+        protocol = SleepProtocol();
+        break;
       default:
         throw("Class for protocol type ${type} isn't defined");
     }
+    protocol.setStartTime(startTime);
+    return protocol;
   }
 
   void setStartTime(DateTime startTime) {
-    _startTime = startTime;
+    this.startTime = startTime;
   }
 
   void setMinDuration(Duration duration) {

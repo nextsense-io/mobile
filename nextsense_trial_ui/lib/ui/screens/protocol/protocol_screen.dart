@@ -22,9 +22,9 @@ class ProtocolScreen extends HookWidget {
         viewModelBuilder: () => ProtocolScreenViewModel(protocol),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) => WillPopScope(
-              onWillPop: () => _onBackButtonPressed(context, viewModel),
-              child: _body(context, viewModel),
-            ));
+          onWillPop: () => _onBackButtonPressed(context, viewModel),
+          child: _body(context, viewModel),
+        ));
   }
 
   Widget _body(BuildContext context, ProtocolScreenViewModel viewModel) {
@@ -38,105 +38,105 @@ class ProtocolScreen extends HookWidget {
     return SafeArea(
       child: Scaffold(
           body: Container(
-        padding: EdgeInsets.all(10.0),
-        decoration: BoxDecoration(color: Colors.black),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                  width: 200,
-                  decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white),
-                      color: Colors.grey[800]),
-                  child: Align(
-                      alignment: Alignment.centerRight,
-                      child: ProtocolDebugMenu())),
-              /*Text(
+            padding: EdgeInsets.all(10.0),
+            decoration: BoxDecoration(color: Colors.black),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                      width: 200,
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.white),
+                          color: Colors.grey[800]),
+                      child: Align(
+                          alignment: Alignment.centerRight,
+                          child: ProtocolDebugMenu())),
+                  /*Text(
                 protocol.getName(),
                 style: whiteTextStyle,
               ),*/
-              Text(protocol.getDescription(), style: whiteTextStyle),
-              Opacity(
-                opacity: 0.3,
-                child: Column(
-                  children: [
-                    Text(
-                      "Min duration: " +
-                          humanizeDuration(protocol.getMinDuration()),
-                      style: whiteTextStyle,
+                  Text(protocol.getDescription(), style: whiteTextStyle),
+                  Opacity(
+                    opacity: 0.3,
+                    child: Column(
+                      children: [
+                        Text(
+                          "Min duration: " +
+                              humanizeDuration(protocol.getMinDuration()),
+                          style: whiteTextStyle,
+                        ),
+                        Text(
+                          "Max duration: " +
+                              humanizeDuration(protocol.getMaxDuration()),
+                          style: whiteTextStyle,
+                        ),
+                      ],
                     ),
-                    Text(
-                      "Max duration: " +
-                          humanizeDuration(protocol.getMaxDuration()),
-                      style: whiteTextStyle,
-                    ),
-                  ],
-                ),
-              ),
-              Stack(
-                children: [
-                  Center(child: _timer(context)),
-                  if (!viewModel.deviceIsConnected)
-                    _deviceInactiveOverlay(context, viewModel)
-                ],
-              ),
-              Container(
-                child: Visibility(
-                  visible:
-                      viewModel.sessionIsActive && viewModel.deviceIsConnected,
-                  child: Column(
+                  ),
+                  Stack(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                      Text(
-                        "Test in progress",
-                        style: TextStyle(color: Colors.white),
-                      )
+                      Center(child: _timer(context)),
+                      if (!viewModel.deviceIsConnected)
+                        _deviceInactiveOverlay(context, viewModel)
                     ],
                   ),
-                ),
-              ),
-              _statusMessage(viewModel),
-              ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all<Color>(
-                          sessionControlButtonColor)),
-                  onPressed: () async {
-                    if (viewModel.sessionIsActive) {
-                      bool confirm = await _confirmStopSessionDialog(context);
-                      if (confirm) viewModel.stopSession();
-                    } else
-                      if (viewModel.deviceIsConnected)
-                        viewModel.startSession();
-                      else
-                      {
-                        await showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return SimpleAlertDialog(
-                                title: 'Connection error',
-                                content: 'Device is not connected.');
-                          },
-                        );
-                      }
-
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      viewModel.sessionIsActive
-                          ? "Stop session"
-                          : "Start session",
-                      style: TextStyle(fontSize: 30.0),
+                  Container(
+                    child: Visibility(
+                      visible:
+                      viewModel.sessionIsActive && viewModel.deviceIsConnected,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                          Text(
+                            "Test in progress",
+                            style: TextStyle(color: Colors.white),
+                          )
+                        ],
+                      ),
                     ),
-                  )),
-            ],
-          ),
-        ),
-      )),
+                  ),
+                  _statusMessage(viewModel),
+                  ElevatedButton(
+                      style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all<Color>(
+                              sessionControlButtonColor)),
+                      onPressed: () async {
+                        if (viewModel.sessionIsActive) {
+                          bool confirm = await _confirmStopSessionDialog(context);
+                          if (confirm) viewModel.stopSession();
+                        } else
+                        if (viewModel.deviceIsConnected)
+                          viewModel.startSession();
+                        else
+                        {
+                          await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return SimpleAlertDialog(
+                                  title: 'Connection error',
+                                  content: 'Device is not connected.');
+                            },
+                          );
+                        }
+
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          viewModel.sessionIsActive
+                              ? "Stop session"
+                              : "Start session",
+                          style: TextStyle(fontSize: 30.0),
+                        ),
+                      )),
+                ],
+              ),
+            ),
+          )),
     );
   }
 
@@ -207,7 +207,7 @@ class ProtocolScreen extends HookWidget {
         "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
 
     final countdownTimer =
-        Text(timerValue, style: TextStyle(color: Colors.white, fontSize: 20));
+    Text(timerValue, style: TextStyle(color: Colors.white, fontSize: 20));
 
     return Opacity(
       opacity: 0.9,
@@ -234,7 +234,7 @@ class ProtocolScreen extends HookWidget {
               ),
               Text(
                 'The protocol will be marked as cancelled if the '
-                'connection is not brought back online before:',
+                    'connection is not brought back online before:',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
@@ -258,10 +258,10 @@ class ProtocolScreen extends HookWidget {
     if (isError) {
       if (viewModel.protocolCancelReason ==
           ProtocolCancelReason.deviceDisconnectedTimeout)
-        {
-          statusMsg = "Protocol canceled because \n"
-              "device was disconnected too long";
-        }
+      {
+        statusMsg = "Protocol canceled because \n"
+            "device was disconnected too long";
+      }
     }
     else if (viewModel.protocolCompleted) {
       statusMsg = "Protocol completed!"
