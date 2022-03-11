@@ -3,7 +3,9 @@
 // layer.
 import 'package:flutter/foundation.dart';
 
-enum Fields {
+// These field keys must match with ones declared in java side
+// in DeviceInternalState.java
+enum DeviceInternalStateFields {
   // When the state was sampled in the hardware device.
   timestamp,
   // Battery level in milli volts.
@@ -58,25 +60,50 @@ class DeviceInternalState {
   int bleRssi;
   List<bool> leadsOffPositive;
 
+  DeviceInternalState.initial() :
+    timestamp = DateTime.now(),
+    batteryMilliVolts = 0,
+    busy = false,
+    uSdPresent = false,
+    hdmiCablePresent = false,
+    rtcClockSet = false,
+    captureRunning = false,
+    charging = false,
+    uSdLoggingEnabled = false,
+    internalErrorDetected = false,
+    batteryLow = false,
+    samplesCounter = 0,
+    bleQueueBacklog = 0,
+    lostSamplesCounter = 0,
+    bleRssi = 0,
+    leadsOffPositive = const [];
+
   DeviceInternalState(Map<String, dynamic> values) :
-      timestamp = DateTime.parse(values[describeEnum(Fields.timestamp)]),
-      batteryMilliVolts = values[describeEnum(Fields.batteryMilliVolts)].value,
-      busy = values[describeEnum(Fields.busy)],
-      uSdPresent = values[describeEnum(Fields.uSdPresent)],
-      hdmiCablePresent = values[describeEnum(Fields.hdmiCablePresent)],
-      rtcClockSet = values[describeEnum(Fields.rtcClockSet)],
-      captureRunning = values[describeEnum(Fields.captureRunning)],
-      charging = values[describeEnum(Fields.charging)],
-      batteryLow = values[describeEnum(Fields.batteryLow)],
-      uSdLoggingEnabled = values[describeEnum(Fields.uSdLoggingEnabled)],
+      timestamp = DateTime.parse(values[describeEnum(
+          DeviceInternalStateFields.timestamp)]),
+      batteryMilliVolts = values[describeEnum(
+          DeviceInternalStateFields.batteryMilliVolts)],
+      busy = values[describeEnum(DeviceInternalStateFields.busy)],
+      uSdPresent = values[describeEnum(DeviceInternalStateFields.uSdPresent)],
+      hdmiCablePresent = values[describeEnum(
+          DeviceInternalStateFields.hdmiCablePresent)],
+      rtcClockSet = values[describeEnum(DeviceInternalStateFields.rtcClockSet)],
+      captureRunning = values[describeEnum(
+          DeviceInternalStateFields.captureRunning)],
+      charging = values[describeEnum(DeviceInternalStateFields.charging)],
+      batteryLow = values[describeEnum(DeviceInternalStateFields.batteryLow)],
+      uSdLoggingEnabled = values[describeEnum(
+          DeviceInternalStateFields.uSdLoggingEnabled)],
       internalErrorDetected =
-          values[describeEnum(Fields.internalErrorDetected)],
-      samplesCounter = values[describeEnum(Fields.samplesCounter)].value,
-      bleQueueBacklog = values[describeEnum(Fields.bleQueueBacklog)].value,
+          values[describeEnum(DeviceInternalStateFields.internalErrorDetected)],
+      samplesCounter = values[describeEnum(
+          DeviceInternalStateFields.samplesCounter)],
+      bleQueueBacklog = values[describeEnum(
+          DeviceInternalStateFields.bleQueueBacklog)],
       lostSamplesCounter =
-          values[describeEnum(Fields.lostSamplesCounter)].value,
-      bleRssi = values[describeEnum(Fields.bleRssi)].value,
+          values[describeEnum(DeviceInternalStateFields.lostSamplesCounter)],
+      bleRssi = values[describeEnum(DeviceInternalStateFields.bleRssi)],
       leadsOffPositive = new List<bool>.from(
-          values[describeEnum(Fields.leadsOffPositive)])
+          values[describeEnum(DeviceInternalStateFields.leadsOffPositive)])
   {}
 }

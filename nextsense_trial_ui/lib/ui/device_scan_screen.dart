@@ -5,6 +5,7 @@ import 'package:get_it/get_it.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/config.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/scan_result_list.dart';
@@ -61,6 +62,11 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
         _scanResultsWidgets = _buildScanResultList();
         // This flags let the device list start getting displayed.
         _isScanning = false;
+
+        // Connect to device automatically
+        if (Config.autoConnectAfterScan) {
+          _connectToDevice(deviceAttributes);
+        }
       });
     });
   }

@@ -35,7 +35,8 @@ enum ImpedanceMode {
 enum EmulatorCommand {
   NONE,
   CONNECT,
-  DISCONNECT
+  DISCONNECT,
+  INTERNAL_STATE_CHANGE
 }
 
 class NextsenseBase {
@@ -200,7 +201,9 @@ class NextsenseBase {
     return await _channel.invokeMethod(_isBluetoothEnabledCommand);
   }
 
-  static Future<bool> sendEmulatorCommand(EmulatorCommand command) async {
-    return await _channel.invokeMethod(_emulatorCommand, command.name);
+  static Future<bool> sendEmulatorCommand(EmulatorCommand command,
+      {Map<String, dynamic> params = const {}}) async {
+    return await _channel.invokeMethod(_emulatorCommand,
+      {'command': command.name, 'params' : params });
   }
 }

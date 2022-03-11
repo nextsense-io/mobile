@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
@@ -21,6 +25,10 @@ enum DeviceState {
   DISCONNECTED
 }
 
+DeviceState deviceStateFromString(String str) {
+  return DeviceState.values.firstWhere((e) => e.name == str);
+}
+
 // Contains the currently connected devices for ease of use.
 class DeviceManager {
   static final int CONNECTION_LOST_NOTIFICATION_ID = 2;
@@ -38,6 +46,13 @@ class DeviceManager {
   CancelListening? _cancelStateListening;
   CancelListening? _cancelInternalStateListening;
 
+  ValueNotifier<DeviceState> deviceState = ValueNotifier(DeviceState.READY);
+  ValueNotifier<DeviceInternalState> deviceInternalState = ValueNotifier(DeviceInternalState.initial());
+  bool get deviceIsConnected => deviceState.value == DeviceState.READY;
+
+  // Internal state shortcuts
+  bool get isHdmiCablePresent => deviceInternalState.value.hdmiCablePresent;
+  bool get isUSdPresent => deviceInternalState.value.uSdPresent;
 
   void setConnectedDevice(Device? device) {
     if (device != null) {
@@ -71,14 +86,11 @@ class DeviceManager {
     _cancelStateListening = NextsenseBase.listenToDeviceState((newDeviceState) {
       _logger.log(Level.INFO, 'Device state changed to ' + newDeviceState);
       if (_connectedDevice != null) {
-        if (newDeviceState == DeviceState.DISCONNECTED.name) {
-          // Disconnected without being requested by the user.
-          _notificationsManager.showAlertNotification(
-              CONNECTION_LOST_NOTIFICATION_ID, CONNECTION_LOST_TITLE,
-              CONNECTION_LOST_BODY, /*payload=*/'');
-        } else if (newDeviceState == DeviceState.READY.name) {
-          _notificationsManager.hideAlertNotification(
-              CONNECTION_LOST_NOTIFICATION_ID);
+        final DeviceState state = deviceStateFromString(newDeviceState);
+        switch (state) {
+          case DeviceState.DISCONNECTED: _onDeviceDisconnected(); break;
+          case DeviceState.READY: _onDeviceReady(); break;
+          default: break;
         }
       }
     }, macAddress);
@@ -89,13 +101,29 @@ class DeviceManager {
         NextsenseBase.listenToDeviceInternalState((newDeviceInternalStateJson) {
       _logger.log(Level.FINE, 'Device internal state changed');
       if (_connectedDevice != null) {
-        Map<String, dynamic> deviceInternalStateValues =
-            gson.decode(newDeviceInternalStateJson);
+        Map<String, dynamic> deviceInternalStateValues = jsonDecode(newDeviceInternalStateJson);
         _logger.log(Level.FINE, deviceInternalStateValues);
         DeviceInternalState state = new DeviceInternalState(deviceInternalStateValues);
         // TODO(eric): Implement state manager to propagate events and keep
         //             state.
+        deviceInternalState.value = state;
       }
     });
+  }
+
+  void _onDeviceDisconnected() {
+    // Disconnected without being requested by the user.
+    _notificationsManager.showAlertNotification(
+        CONNECTION_LOST_NOTIFICATION_ID, CONNECTION_LOST_TITLE,
+        CONNECTION_LOST_BODY, /*payload=*/'');
+
+    deviceState.value = DeviceState.DISCONNECTED;
+  }
+
+  void _onDeviceReady() {
+    _notificationsManager.hideAlertNotification(
+        CONNECTION_LOST_NOTIFICATION_ID);
+
+    deviceState.value = DeviceState.READY;
   }
 }

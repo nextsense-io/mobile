@@ -19,6 +19,11 @@ import io.objectbox.relation.ToOne;
 @Entity
 public class DeviceInternalState extends BaseRecord {
 
+  // These field keys must match with ones declared dart side.
+  // in DeviceInternalState.dart
+  public static final String FIELD_HDMI_CABLE_PRESENT = "hdmiCablePresent";
+  public static final String FIELD_U_SD_PRESENT = "uSdPresent";
+
   // Can be null when there it no currently running session.
   public @Nullable ToOne<LocalSession> localSession;
 

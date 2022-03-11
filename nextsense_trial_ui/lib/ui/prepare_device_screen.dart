@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nextsense_trial_ui/config.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 
 class PrepareDeviceScreen extends StatefulWidget {
@@ -10,6 +11,13 @@ class _PrepareDeviceScreenState extends State<PrepareDeviceScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    if (Config.useEmulatedBle) {
+      Navigation.navigateToDeviceScan(
+          context, /*replaceCurrent=*/true);
+      return Container();
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Prepare Device'),
