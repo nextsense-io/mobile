@@ -272,18 +272,26 @@ public class EmulatedDevice extends Device {
 
   private void initDeviceInternalState() {
     Instant timestamp = Instant.now();
-    short batteryMilliVolts = 0;
+    short batteryMilliVolts = 4000;
     int samplesCounter = 0;
     short bleQueueBacklog = 0;
     int lostSamplesCounter = 0;
     short bleRssi = 0;
     ArrayList<Boolean> leadsOffPositive = new ArrayList<>();
-    deviceInternalState = DeviceInternalState.create((long)0, timestamp,
-            batteryMilliVolts, false, false,
-            false, false,
-            false, false,
-            false, false,
-            false, samplesCounter, bleQueueBacklog, lostSamplesCounter,
+    deviceInternalState = DeviceInternalState.create(
+            /*localSessionId=*/(long)0,
+            timestamp,
+            batteryMilliVolts,
+            /*busy=*/false,
+            /*uSdPresent=*/true,
+            /*hdmiCablePresent=*/true,
+            /*rtcClockSet=*/true,
+            /*captureRunning=*/false,
+            /*charging=*/false,
+            /*batteryLow=*/false,
+            /*uSdLoggingEnabled=*/false,
+            /*internalErrorDetected=*/false,
+            samplesCounter, bleQueueBacklog, lostSamplesCounter,
             bleRssi, leadsOffPositive);
   }
 

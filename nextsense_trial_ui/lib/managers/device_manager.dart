@@ -77,9 +77,10 @@ class DeviceManager {
   Future<bool> waitInternalStateAvailable(Duration timeout) async {
     _deviceInternalStateAvailableCompleter = new Completer<bool>();
     new Timer(timeout, () {
-      if (!_deviceInternalStateAvailableCompleter!.isCompleted)
+      if (!_deviceInternalStateAvailableCompleter!.isCompleted) {
         _deviceInternalStateAvailableCompleter!
             .complete(deviceInternalStateAvailable);
+      }
     });
     return _deviceInternalStateAvailableCompleter!.future;
   }
@@ -133,8 +134,9 @@ class DeviceManager {
       // TODO(eric): Implement state manager to propagate events and keep
       //             state.
       deviceInternalState.value = state;
-      if (!_deviceInternalStateAvailableCompleter!.isCompleted)
+      if (!_deviceInternalStateAvailableCompleter!.isCompleted) {
         _deviceInternalStateAvailableCompleter?.complete(true);
+      }
     });
   }
 
