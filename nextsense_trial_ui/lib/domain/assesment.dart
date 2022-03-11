@@ -36,8 +36,7 @@ class Assessment extends FirebaseEntity {
 
     if (protocolType != ProtocolType.unknown) {
       // Create protocol assigned to current assessment
-      protocol = Protocol.create(protocolType)
-        ..setStartTime(startTime);
+      protocol = Protocol.create(protocolType, startTime);
 
       // Override default min/max durations
       final minDurationOverride = getDurationOverride('minDuration');

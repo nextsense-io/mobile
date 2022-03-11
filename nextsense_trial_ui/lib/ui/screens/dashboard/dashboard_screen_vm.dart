@@ -29,15 +29,10 @@ class DashboardScreenViewModel extends ChangeNotifier {
     //selectToday();
     // TODO(alex): cache assessments (move to protocol manager?)
     assesments = await _studyManager.loadAssesments();
-    for (var assesment in assesments) {
-      print('[TODO] DashboardScreenViewModel.init ${assesment.id} ${assesment.dayNumber}');
-    }
-    print('[TODO] DashboardScreenViewModel.init ${_studyManager.currentStudyStartDate}');
     if (_studyManager.currentStudyStartDate != null) {
       final studyDays = getCurrentStudy()?.getDurationDays() ?? 0;
       _days = List<DateTime>.generate(studyDays, (i) =>
           _studyManager.currentStudyStartDate.add(Duration(days: i)));
-      print('[TODO] DashboardScreenViewModel days loaded - $_days');
     }
     // TODO(alex): if current day out of range show some warning
     selectFirstDayOfStudy();
@@ -49,7 +44,7 @@ class DashboardScreenViewModel extends ChangeNotifier {
   }
 
   Study? getCurrentStudy() {
-      return _studyManager.getCurrentStudy();
+    return _studyManager.getCurrentStudy();
   }
 
   List<DateTime> getDays() {
@@ -70,17 +65,19 @@ class DashboardScreenViewModel extends ChangeNotifier {
     List<Protocol> result = [];
     for (var assessment in assesments) {
       if (assessment.protocol != null)
-         result.add(assessment.protocol!);
+        result.add(assessment.protocol!);
     }
     return result;
   }
-  
+
   List<Protocol> getProtocolsByDay(DateTime day) {
     List<Protocol> result = [];
     for (var assessment in assesments) {
       if (assessment.protocol != null && assessment.day.isAtSameMomentAs(day))
         result.add(assessment.protocol!);
     }
+    result.sort((p1, p2) =>
+        p1.startTime.compareTo(p2.startTime));
     return result;
   }
 
