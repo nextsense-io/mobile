@@ -52,19 +52,19 @@ class ProtocolScreen extends HookWidget {
                 protocol.getName(),
                 style: whiteTextStyle,
               ),*/
-                  Text(protocol.getDescription(), style: whiteTextStyle),
+                  Text(protocol.description, style: whiteTextStyle),
                   Opacity(
                     opacity: 0.3,
                     child: Column(
                       children: [
                         Text(
                           "Min duration: " +
-                              humanizeDuration(protocol.getMinDuration()),
+                              humanizeDuration(protocol.minDuration),
                           style: whiteTextStyle,
                         ),
                         Text(
                           "Max duration: " +
-                              humanizeDuration(protocol.getMaxDuration()),
+                              humanizeDuration(protocol.maxDuration),
                           style: whiteTextStyle,
                         ),
                       ],
@@ -270,6 +270,9 @@ class ProtocolScreen extends HookWidget {
     else if (viewModel.protocolCompleted) {
       statusMsg = 'Protocol completed!'
           '\nYou can go ahead until you reach max duration.';
+      if (viewModel.maxDurationPassed) {
+        statusMsg = 'Protocol completed!';
+      }
     }
 
     return Container(

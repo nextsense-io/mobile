@@ -25,48 +25,29 @@ enum ProtocolState {
   finished
 }
 
-abstract class ProtocolInterface {
-  Duration getMinDuration();
+abstract class Protocol {
 
-  Duration getMaxDuration();
+  ProtocolType get type;
 
-  String getDescription();
+  DateTime get startTime;
 
-  String getIntro();
+  Duration get minDuration;
+
+  Duration get maxDuration;
+
+  Duration get disconnectTimeoutDuration;
+
+  String get description;
+
+  String get intro;
 
   Future start();
 
   Future stop();
-}
 
-abstract class Protocol implements ProtocolInterface {
-  final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
-  final AuthManager _authManager = GetIt.instance.get<AuthManager>();
-  final SessionManager _sessionManager = GetIt.instance.get<SessionManager>();
-  final CustomLogPrinter _logger = CustomLogPrinter('SessionScreen');
-
-  Duration? _runTime;
-  Duration? _minDurationOverride;
-  Duration? _maxDurationOverride;
-
-  ProtocolState _protocolState = ProtocolState.not_started;
-  ProtocolType get type => ProtocolType.unknown;
-
-  Duration get disconnectTimeoutDuration => Duration(minutes: 5);
-
-  late DateTime startTime;
-  // Returns protocol start time in format 'HH:MM'
-  String get startTimeAsString => DateFormat('HH:mm').format(startTime);
-
-  Protocol();
-
-  static ProtocolType typeFromString(String typeStr) {
-    return ProtocolType.values.firstWhere((element) => element.name == typeStr,
-        orElse: () => ProtocolType.unknown);
-  }
-
-  factory Protocol.create(ProtocolType type, DateTime startTime) {
-    Protocol protocol;
+  factory Protocol(ProtocolType type, DateTime startTime,
+      {Duration? minDuration, Duration? maxDuration}) {
+    BaseProtocol protocol;
     switch (type) {
       case ProtocolType.variable_daytime:
         protocol = VariableDaytimeProtocol();
@@ -78,17 +59,51 @@ abstract class Protocol implements ProtocolInterface {
         throw("Class for protocol type ${type} isn't defined");
     }
     protocol.setStartTime(startTime);
+
+    if (minDuration != null)
+      protocol.setMinDuration(minDuration);
+    if (maxDuration != null)
+      protocol.setMaxDuration(maxDuration);
+
     return protocol;
   }
 
+}
+
+abstract class BaseProtocol implements Protocol {
+  final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
+  final AuthManager _authManager = GetIt.instance.get<AuthManager>();
+  final SessionManager _sessionManager = GetIt.instance.get<SessionManager>();
+  final CustomLogPrinter _logger = CustomLogPrinter('SessionScreen');
+
+  DateTime? _startTime;
+  Duration? _minDurationOverride;
+  Duration? _maxDurationOverride;
+
+  ProtocolState _protocolState = ProtocolState.not_started;
+
+  @override
+  ProtocolType get type => ProtocolType.unknown;
+
+  @override
+  DateTime get startTime => _startTime!;
+
+  @override
+  Duration get disconnectTimeoutDuration => Duration(minutes: 5);
+
+  BaseProtocol();
+
+  @override
   void setStartTime(DateTime startTime) {
-    this.startTime = startTime;
+    this._startTime = startTime;
   }
 
+  @override
   void setMinDuration(Duration duration) {
     _minDurationOverride = duration;
   }
 
+  @override
   void setMaxDuration(Duration duration) {
     _maxDurationOverride = duration;
   }
@@ -96,7 +111,6 @@ abstract class Protocol implements ProtocolInterface {
   String getName() {
     return describeEnum(type);
   }
-
 
   @override
   Future start() async {
@@ -123,57 +137,48 @@ abstract class Protocol implements ProtocolInterface {
 
 }
 
-class VariableDaytimeProtocol extends Protocol {
+class VariableDaytimeProtocol extends BaseProtocol {
 
   @override
   ProtocolType get type => ProtocolType.variable_daytime;
 
   @override
-  Duration getMinDuration() {
-    return _minDurationOverride ?? Duration(minutes: 10);
-  }
+  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 10);
 
   @override
-  Duration getMaxDuration() {
-    return _maxDurationOverride ?? Duration(hours: 24);
-  }
+  Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 24);
 
   @override
-  String getDescription() {
-    return 'Record at daytime';
-  }
+  String get description => 'Record at daytime';
 
   @override
-  String getIntro() {
-    return 'Run a recording of a variable amount of time at daytime. You can '
-        'stop the recording at any time.';
-  }
+  String get intro => 'Run a recording of a variable amount of time at daytime.'
+      ' You can stop the recording at any time.';
+
 }
 
-class SleepProtocol extends Protocol {
+class SleepProtocol extends BaseProtocol {
 
   @override
   ProtocolType get type => ProtocolType.sleep;
 
   @override
-  Duration getMinDuration() {
-    return _minDurationOverride ?? Duration(hours: 1);
-  }
+  Duration get minDuration => _minDurationOverride ?? Duration(hours: 1);
 
   @override
-  Duration getMaxDuration() {
-    return _maxDurationOverride ?? Duration(hours: 10);
-  }
+  Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 10);
 
+  // TODO(alex): add sleep protocol description
   @override
-  String getDescription() {
-    // TODO(alex): add sleep protocol description
-    return 'Sleep';
-  }
+  String get description => 'Sleep';
 
+  // TODO(alex): add sleep protocol intro
   @override
-  String getIntro() {
-    // TODO(alex): add sleep protocol intro?
-    return 'Sleep protocol intro';
-  }
+  String get intro => 'Sleep protocol intro';
+
+}
+
+ProtocolType protocolTypeFromString(String typeStr) {
+  return ProtocolType.values.firstWhere((element) => element.name == typeStr,
+      orElse: () => ProtocolType.unknown);
 }

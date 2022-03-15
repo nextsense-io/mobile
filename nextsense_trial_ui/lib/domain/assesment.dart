@@ -37,11 +37,9 @@ class PlannedAssessment extends FirebaseEntity {
 
     // Construct protocol here based on assessment fields like
     String protocolTypeString = getValue(PlannedAssessmentKey.type);
-    ProtocolType protocolType = Protocol.typeFromString(protocolTypeString);
+    ProtocolType protocolType = protocolTypeFromString(protocolTypeString);
 
     if (protocolType != ProtocolType.unknown) {
-      // Create protocol assigned to current assessment
-      protocol = Protocol.create(protocolType, startTime);
 
       // Override default min/max durations
       Duration? minDurationOverride = getDurationOverride(
@@ -50,10 +48,13 @@ class PlannedAssessment extends FirebaseEntity {
       Duration? maxDurationOverride = getDurationOverride(
           PlannedAssessmentParameter.maxDuration.name
       );
-      if (minDurationOverride != null)
-        protocol!.setMinDuration(minDurationOverride);
-      if (maxDurationOverride != null)
-        protocol!.setMaxDuration(maxDurationOverride);
+
+      // Create protocol assigned to current assessment
+      protocol = Protocol(
+          protocolType, startTime,
+          minDuration: minDurationOverride,
+          maxDuration: maxDurationOverride
+      );
     }
     else {
       _logger.log(Level.WARNING, 'Unknown protocol "$protocolTypeString"');
