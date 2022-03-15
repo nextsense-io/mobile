@@ -225,6 +225,10 @@ class DashboardScreen extends StatelessWidget {
                   protocolBackgroundColor = Color(0xFF984DF1);
                   break;
               }
+
+              String startTimeString = DateFormat('HH:mm')
+                  .format(protocol.startTime);
+
               return Padding(
                   padding: const EdgeInsets.all(0.0),
                   child: Row(
@@ -234,7 +238,7 @@ class DashboardScreen extends StatelessWidget {
                         width: 60,
                         child: Visibility(
                             visible: true,
-                            child: Text(protocol.startTimeAsString,
+                            child: Text(startTimeString,
                                 style: TextStyle(color: Colors.white))),
                       ),
                       Expanded(
@@ -259,14 +263,14 @@ class DashboardScreen extends StatelessWidget {
                                   MainAxisAlignment.spaceBetween,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(protocol.getDescription(),
+                                    Text(protocol.description,
                                         style: TextStyle(color: Colors.white)),
                                     SizedBox(
                                       height: 8,
                                     ),
                                     Text(
                                         humanizeDuration(
-                                            protocol.getMinDuration()),
+                                            protocol.minDuration),
                                         style: TextStyle(color: Colors.white))
                                   ],
                                 )),

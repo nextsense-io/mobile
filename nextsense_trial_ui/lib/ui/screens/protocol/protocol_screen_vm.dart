@@ -71,8 +71,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   }
 
   void startTimer() {
-    final int protocolMinTimeSeconds = protocol.getMinDuration().inSeconds;
-    final int protocolMaxTimeSeconds = protocol.getMaxDuration().inSeconds;
+    final int protocolMinTimeSeconds = protocol.minDuration.inSeconds;
+    final int protocolMaxTimeSeconds = protocol.maxDuration.inSeconds;
     if (timer?.isActive ?? false) timer?.cancel();
     secondsElapsed = 0;
     notifyListeners();
