@@ -45,10 +45,6 @@ class ProtocolScreen extends HookWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                      width: 200,
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white),
-                          color: Colors.grey[800]),
                       child: Align(
                           alignment: Alignment.centerRight,
                           child: ProtocolDebugMenu())),

@@ -9,6 +9,7 @@ import 'package:nextsense_trial_ui/ui/components/SessionPopScope.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_debug_menu.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
@@ -27,32 +28,70 @@ class DashboardScreen extends StatelessWidget {
       viewModelBuilder: () => DashboardScreenViewModel(),
       onModelReady: (viewModel) => viewModel.init(),
       builder: (context, viewModel, child) => SessionPopScope(
-          child: Scaffold(
-            body: Container(
-              padding: EdgeInsets.all(10.0),
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/images/background.png'),
-                  fit: BoxFit.cover,
+          child: SafeArea(
+            child: Scaffold(
+              body: Container(
+                padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/background.png'),
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                      child: Column(
-                        children: [
-                          _getDayTabs(context),
-                          _buildSchedule(context),
-                        ],
-                      )),
-                  Center(child: _buildButtons(context)),
-                ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                        child: Column(
+                          children: [
+                            _appBar(context),
+                            _getDayTabs(context),
+                            _buildSchedule(context),
+                          ],
+                        )),
+                    Center(child: _buildButtons(context)),
+                  ],
+                ),
               ),
             ),
           )),
     );
   }
+
+  Widget _appBar(BuildContext context) {
+    final viewModel = context.watch<DashboardScreenViewModel>();
+    return Container(
+      height: 50,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _indicator("HDMI", viewModel.isHdmiCablePresent),
+          SizedBox(width: 10,),
+          _indicator("Micro SD", viewModel.isUSdPresent),
+          SizedBox(width: 10,),
+          ProtocolDebugMenu(),
+        ],
+      ),
+    );
+  }
+
+  Widget _indicator(String text, bool on) {
+    return Opacity(
+      opacity: on ? 1.0 : 0.3,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.white)
+        ),
+        padding: EdgeInsets.all(5.0),
+        child: Text(
+            text + (on ? " ON" : " OFF"),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+  
 
   Widget _buildButtons(BuildContext context) {
     Widget checkSeatingButton = ElevatedButton(
@@ -109,7 +148,6 @@ class DashboardScreen extends StatelessWidget {
     final days = viewModel.getDays();
 
     return Container(
-        margin: EdgeInsets.only(top: 20.0),
         height: 80.0,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
