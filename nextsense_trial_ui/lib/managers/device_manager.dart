@@ -1,12 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get_it/get_it.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state.dart';
+import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
@@ -38,8 +41,7 @@ class DeviceManager {
       'accident and make sure your phone is not more than a few meters away. '
       'It should reconnect automatically.';
 
-  final NotificationsManager _notificationsManager =
-      GetIt.instance.get<NotificationsManager>();
+  final NotificationsManager _notificationsManager = getIt<NotificationsManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceManager');
 
   Device? _connectedDevice;
@@ -50,6 +52,11 @@ class DeviceManager {
       ValueNotifier(DeviceState.DISCONNECTED);
   ValueNotifier<DeviceInternalState?> deviceInternalState = ValueNotifier(null);
   Completer<bool> _deviceInternalStateAvailableCompleter = Completer<bool>();
+  Map<String, dynamic>? _deviceInternalStateValues;
+  final _deviceInternalStateChangeController =
+    StreamController<DeviceInternalStateEvent>.broadcast();
+  Stream<DeviceInternalStateEvent> get deviceInternalStateChangeStream
+    => _deviceInternalStateChangeController.stream;
 
   bool get deviceIsConnected => deviceState.value == DeviceState.READY;
   bool get deviceInternalStateAvailable => deviceInternalState.value != null;
@@ -126,18 +133,46 @@ class DeviceManager {
     _cancelInternalStateListening =
         NextsenseBase.listenToDeviceInternalState((newDeviceInternalStateJson) {
       _logger.log(Level.FINE, 'Device internal state changed');
-      Map<String, dynamic> deviceInternalStateValues =
-          jsonDecode(newDeviceInternalStateJson);
-      _logger.log(Level.FINE, deviceInternalStateValues);
+      Map<String, dynamic> newStateValues =
+        jsonDecode(newDeviceInternalStateJson);
+
       DeviceInternalState state =
-          new DeviceInternalState(deviceInternalStateValues);
-      // TODO(eric): Implement state manager to propagate events and keep
-      //             state.
+          new DeviceInternalState(newStateValues);
+
       deviceInternalState.value = state;
       if (!_deviceInternalStateAvailableCompleter.isCompleted) {
         _deviceInternalStateAvailableCompleter.complete(true);
       }
+
+      _detectInternalStateValueChange(newStateValues);
+      _deviceInternalStateValues = newStateValues;
+
     });
+  }
+
+  // Whenever a new state is receive, compare it to the one
+  // that is cached and generate a state transition event whenever
+  // one of the boolean flags are changed
+  // (like low battery, earbuds disconnected, etc…)
+  void _detectInternalStateValueChange(Map<String, dynamic> newStateValues) {
+    if (_deviceInternalStateValues != null) {
+      for (var key in newStateValues.keys) {
+        var oldValue = _deviceInternalStateValues![key];
+        var newValue = newStateValues[key];
+        // Compare DeviceInternalState fields
+        bool equal(dynamic a, dynamic b) {
+          if (a is List && b is List) {
+            return listEquals(a, b);
+          }
+          return oldValue == newValue;
+        }
+        if (_deviceInternalStateValues!.containsKey(key)
+            && !equal(oldValue, newValue)) {
+          final event = DeviceInternalStateEvent.create(key, newValue);
+          _deviceInternalStateChangeController.add(event);
+        }
+      }
+    }
   }
 
   void _onDeviceDisconnected() {
