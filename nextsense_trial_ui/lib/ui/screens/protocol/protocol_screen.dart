@@ -102,7 +102,8 @@ class ProtocolScreen extends HookWidget {
                               sessionControlButtonColor)),
                       onPressed: () async {
                         if (viewModel.sessionIsActive) {
-                          bool confirm = await _confirmStopSessionDialog(context);
+                          bool confirm = await _confirmStopSessionDialog(context,
+                              viewModel);
                           if (confirm) viewModel.stopSession();
                         } else
                         if (viewModel.deviceIsConnected)
@@ -138,8 +139,8 @@ class ProtocolScreen extends HookWidget {
 
   Widget _timer(BuildContext context) {
     final viewModel = context.watch<ProtocolScreenViewModel>();
-    var minutes = viewModel.secondsElapsed ~/ 60;
-    var seconds = viewModel.secondsElapsed % 60;
+    final int minutes = viewModel.secondsElapsed ~/ 60;
+    final int seconds = viewModel.secondsElapsed % 60;
     var timerValue =
         "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
     return Container(
@@ -160,7 +161,7 @@ class ProtocolScreen extends HookWidget {
   Future<bool> _onBackButtonPressed(
       BuildContext context, ProtocolScreenViewModel viewModel) async {
     if (viewModel.sessionIsActive) {
-      bool confirm = await _confirmStopSessionDialog(context);
+      bool confirm = await _confirmStopSessionDialog(context, viewModel);
       if (confirm) {
         viewModel.stopSession();
         return true;
@@ -170,14 +171,21 @@ class ProtocolScreen extends HookWidget {
     return true;
   }
 
-  Future<bool> _confirmStopSessionDialog(BuildContext context) async {
+  Future<bool> _confirmStopSessionDialog(BuildContext context,
+      ProtocolScreenViewModel viewModel) async {
+    String confirmStopText = 'Protocol is not finished yet.\n'
+        'Are you sure you want to stop?';
+    if (viewModel.minDurationPassed) {
+      confirmStopText = 'Protocol minimum time successfully passed!\n'
+          'You can continue protocol until maximum duration reached.\n'
+          'Do you want to stop?';
+    }
     return await showDialog(
         context: context,
         builder: (context) {
           return AlertDialog(
             title: Text('Stop session?'),
-            content: Text(
-                'Protocol is not finished yet. Are you sure you want to stop?'),
+            content: Text(confirmStopText),
             actions: <Widget>[
               TextButton(
                   onPressed: () {
@@ -197,13 +205,13 @@ class ProtocolScreen extends HookWidget {
 
   Widget _deviceInactiveOverlay(
       BuildContext context, ProtocolScreenViewModel viewModel) {
-    var minutes = viewModel.disconnectTimeoutSecondsLeft ~/ 60;
-    var seconds = viewModel.disconnectTimeoutSecondsLeft % 60;
-    var timerValue =
+    final int minutes = viewModel.disconnectTimeoutSecondsLeft ~/ 60;
+    final int seconds = viewModel.disconnectTimeoutSecondsLeft % 60;
+    String timerValue =
         "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
 
-    final countdownTimer =
-    Text(timerValue, style: TextStyle(color: Colors.white, fontSize: 20));
+    final countdownTimerText =
+      Text(timerValue, style: TextStyle(color: Colors.white, fontSize: 20));
 
     return Opacity(
       opacity: 0.9,
@@ -237,7 +245,7 @@ class ProtocolScreen extends HookWidget {
               SizedBox(
                 height: 10,
               ),
-              countdownTimer
+              countdownTimerText
             ]
           ],
         ),
@@ -246,22 +254,22 @@ class ProtocolScreen extends HookWidget {
   }
 
   Widget _statusMessage(ProtocolScreenViewModel viewModel) {
-    var isError = !viewModel.protocolCompleted &&
+    bool isError = !viewModel.protocolCompleted &&
         viewModel.protocolCancelReason != ProtocolCancelReason.none;
 
-    var statusMsg = "";
+    var statusMsg = '';
 
     if (isError) {
       if (viewModel.protocolCancelReason ==
           ProtocolCancelReason.deviceDisconnectedTimeout)
       {
-        statusMsg = "Protocol canceled because \n"
-            "device was disconnected too long";
+        statusMsg = 'Protocol canceled because \n'
+            'device was disconnected too long';
       }
     }
     else if (viewModel.protocolCompleted) {
-      statusMsg = "Protocol completed!"
-          "\nYou can go ahead until you reach max duration.";
+      statusMsg = 'Protocol completed!'
+          '\nYou can go ahead until you reach max duration.';
     }
 
     return Container(

@@ -1,13 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_vm.dart';
@@ -74,8 +71,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   }
 
   void startTimer() {
-    final protocolMinTimeSeconds = protocol.getMinDuration().inSeconds;
-    final protocolMaxTimeSeconds = protocol.getMaxDuration().inSeconds;
+    final int protocolMinTimeSeconds = protocol.getMinDuration().inSeconds;
+    final int protocolMaxTimeSeconds = protocol.getMaxDuration().inSeconds;
     if (timer?.isActive ?? false) timer?.cancel();
     secondsElapsed = 0;
     notifyListeners();
@@ -108,13 +105,13 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     timer?.cancel();
   }
 
-
   @override
   void onDeviceDisconnected() {
     _timerPaused = true;
     disconnectTimeoutTimer?.cancel();
     // TODO(alex): get disconnect timeout from firebase
-    disconnectTimeoutSecondsLeft = protocol.disconnectTimeoutDuration.inSeconds;
+    disconnectTimeoutSecondsLeft =
+        protocol.disconnectTimeoutDuration.inSeconds;
     disconnectTimeoutTimer = Timer.periodic(
       Duration(seconds: 1),
           (_){
@@ -144,5 +141,4 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   void onDeviceInternalStateChanged(DeviceInternalStateEvent event) {
     _logger.log(Level.INFO, 'onDeviceInternalStateChanged $event');
   }
-
 }

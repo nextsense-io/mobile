@@ -22,7 +22,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   DateTime? selectedDay;
 
-  List<Assessment> assesments = [];
+  List<PlannedAssessment> assesments = [];
 
   // List of days that will appear for current study
   List<DateTime>? _days;
@@ -31,8 +31,8 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     super.init();
 
     // TODO(alex): cache assessments (move to protocol manager?)
-    assesments = await _studyManager.loadAssesments();
-    final studyDays = getCurrentStudy()?.getDurationDays() ?? 0;
+    assesments = await _studyManager.loadPlannedAssesments();
+    final int studyDays = getCurrentStudy()?.getDurationDays() ?? 0;
     _days = List<DateTime>.generate(studyDays, (i) =>
         _studyManager.currentStudyStartDate.add(Duration(days: i)));
 
@@ -41,7 +41,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     notifyListeners();
   }
 
-  List<Assessment> getAssessmentsByDay(DateTime day) {
+  List<PlannedAssessment> getAssessmentsByDay(DateTime day) {
     return [];
   }
 

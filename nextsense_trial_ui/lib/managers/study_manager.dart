@@ -39,23 +39,16 @@ class StudyManager {
     return true;
   }
 
-  Future<List<Assessment>> loadAssesments() async {
+  Future<List<PlannedAssessment>> loadPlannedAssesments() async {
     if (_currentStudy == null) return Future.value([]);
-    var collection = await FirebaseFirestore.instance
-        .collection(Table.studies.name())
-        .doc(_currentStudy!.id)
-        .collection(Table.planned_assessments.name()).get();
+    List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
+        [Table.studies, Table.planned_assessments],
+        [_currentStudy!.id]
+    );
 
-    final List<Assessment> result = [];
-    for (var doc in collection.docs) {
-      final assessment = Assessment(FirebaseEntity(doc), currentStudyStartDate);
-      // Skip creation of assessment in case of some error and
-      // protocol is not set
-      if (assessment.protocol != null) {
-        result.add(assessment);
-      }
-    }
-    return result;
+    return entities.map((firebaseEntity) =>
+        PlannedAssessment(firebaseEntity, currentStudyStartDate))
+        .toList();
   }
 
   String? getCurrentStudyId() {
@@ -65,6 +58,4 @@ class StudyManager {
   Study? getCurrentStudy() {
     return _currentStudy;
   }
-
-  //DateTime
 }

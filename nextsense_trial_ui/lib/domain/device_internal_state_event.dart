@@ -9,6 +9,10 @@ enum DeviceInternalStateEventType {
   unknown
 }
 
+/*
+ * Represent internal state event coming from native layer.
+ * Event is emitted when single field of device internal state is changed.
+ */
 class DeviceInternalStateEvent {
   final DeviceInternalStateFields field;
   final dynamic value;
@@ -18,18 +22,18 @@ class DeviceInternalStateEvent {
 
   factory DeviceInternalStateEvent.create(String fieldKey, dynamic value) {
     DeviceInternalStateFields field =
-      DeviceInternalStateFields.values.asNameMap()[fieldKey]!;
+        DeviceInternalStateFields.values.asNameMap()[fieldKey]!;
     DeviceInternalStateEventType type = DeviceInternalStateEventType.unknown;
 
     // TODO(alex): add more event mapping
     switch (field) {
       case DeviceInternalStateFields.uSdPresent:
         type = value ? DeviceInternalStateEventType.uSdConnected :
-        DeviceInternalStateEventType.uSdDisconnected;
+            DeviceInternalStateEventType.uSdDisconnected;
         break;
       case DeviceInternalStateFields.hdmiCablePresent:
         type = value ? DeviceInternalStateEventType.hdmiCableConnected :
-        DeviceInternalStateEventType.hdmiCableDisconnected;
+            DeviceInternalStateEventType.hdmiCableDisconnected;
         break;
       default:
         break;

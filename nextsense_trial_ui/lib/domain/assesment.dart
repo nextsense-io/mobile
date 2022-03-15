@@ -3,61 +3,68 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
-enum AssessmentKey {
+enum PlannedAssessmentKey {
   day,
   type,
   time,
   parameters
 }
 
-class Assessment extends FirebaseEntity {
+enum PlannedAssessmentParameter {
+  minDuration,
+  maxDuration
+}
+
+class PlannedAssessment extends FirebaseEntity {
 
   final CustomLogPrinter _logger = CustomLogPrinter('Assessment');
 
-  late int dayNumber;
-
   late DateTime day;
+
+  late int _dayNumber;
 
   Protocol? protocol;
 
-  Assessment(FirebaseEntity firebaseEntity, DateTime studyStartDate) :
+  PlannedAssessment(FirebaseEntity firebaseEntity, DateTime studyStartDate) :
         super(firebaseEntity.getDocumentSnapshot()) {
-    dayNumber = getValue(AssessmentKey.day);
-    day = studyStartDate.add(Duration(days: dayNumber - 1));
-    final startTimeStr = getValue(AssessmentKey.time) as String;
+    _dayNumber = getValue(PlannedAssessmentKey.day);
+    day = studyStartDate.add(Duration(days: _dayNumber - 1));
+    String startTimeStr = getValue(PlannedAssessmentKey.time) as String;
     // TODO(alex): check HH:MM string is correctly set
-    final startTimeHours = int.parse(startTimeStr.split(":")[0]);
-    final startTimeMinutes = int.parse(startTimeStr.split(":")[1]);
-    final startTime = DateTime(0, 0, 0, startTimeHours, startTimeMinutes);
+    int startTimeHours = int.parse(startTimeStr.split(":")[0]);
+    int startTimeMinutes = int.parse(startTimeStr.split(":")[1]);
+    DateTime startTime = DateTime(0, 0, 0, startTimeHours, startTimeMinutes);
 
     // Construct protocol here based on assessment fields like
-    final protocolTypeString = getValue(AssessmentKey.type);
-    final protocolType = Protocol.typeFromString(protocolTypeString);
+    String protocolTypeString = getValue(PlannedAssessmentKey.type);
+    ProtocolType protocolType = Protocol.typeFromString(protocolTypeString);
 
     if (protocolType != ProtocolType.unknown) {
       // Create protocol assigned to current assessment
       protocol = Protocol.create(protocolType, startTime);
 
       // Override default min/max durations
-      final minDurationOverride = getDurationOverride('minDuration');
-      final maxDurationOverride = getDurationOverride('maxDuration');
+      Duration? minDurationOverride = getDurationOverride(
+          PlannedAssessmentParameter.minDuration.name
+      );
+      Duration? maxDurationOverride = getDurationOverride(
+          PlannedAssessmentParameter.maxDuration.name
+      );
       if (minDurationOverride != null)
         protocol!.setMinDuration(minDurationOverride);
       if (maxDurationOverride != null)
         protocol!.setMaxDuration(maxDurationOverride);
-
     }
     else {
       _logger.log(Level.WARNING, 'Unknown protocol "$protocolTypeString"');
     }
-
   }
 
-  dynamic getValue(AssessmentKey assessmentKey) {
+  dynamic getValue(PlannedAssessmentKey assessmentKey) {
     return getValues()[assessmentKey.name];
   }
 
-  void setValue(AssessmentKey assessmentKey, dynamic value) {
+  void setValue(PlannedAssessmentKey assessmentKey, dynamic value) {
     getValues()[assessmentKey.name] = value;
   }
 
@@ -66,7 +73,7 @@ class Assessment extends FirebaseEntity {
     if (value == null)
       return null;
     // Value comes in HH:MM:SS format
-    final hms = value.split(":");
+    List<String> hms = value.split(":");
     return Duration(
         hours: int.parse(hms[0]),
         minutes: int.parse(hms[1]),
@@ -74,8 +81,6 @@ class Assessment extends FirebaseEntity {
   }
 
   Map<String, dynamic> getParameters() {
-    return getValue(AssessmentKey.parameters) ?? {};
+    return getValue(PlannedAssessmentKey.parameters) ?? {};
   }
-
-
 }
