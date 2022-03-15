@@ -54,9 +54,9 @@ class DeviceManager {
   Completer<bool> _deviceInternalStateAvailableCompleter = Completer<bool>();
   Map<String, dynamic>? _deviceInternalStateValues;
   final _deviceInternalStateChangeController =
-    StreamController<DeviceInternalStateEvent>.broadcast();
+      StreamController<DeviceInternalStateEvent>.broadcast();
   Stream<DeviceInternalStateEvent> get deviceInternalStateChangeStream
-    => _deviceInternalStateChangeController.stream;
+      => _deviceInternalStateChangeController.stream;
 
   bool get deviceIsConnected => deviceState.value == DeviceState.READY;
   bool get deviceInternalStateAvailable => deviceInternalState.value != null;
@@ -134,7 +134,7 @@ class DeviceManager {
         NextsenseBase.listenToDeviceInternalState((newDeviceInternalStateJson) {
       _logger.log(Level.FINE, 'Device internal state changed');
       Map<String, dynamic> newStateValues =
-        jsonDecode(newDeviceInternalStateJson);
+          jsonDecode(newDeviceInternalStateJson);
 
       DeviceInternalState state =
           new DeviceInternalState(newStateValues);
@@ -146,14 +146,12 @@ class DeviceManager {
 
       _detectInternalStateValueChange(newStateValues);
       _deviceInternalStateValues = newStateValues;
-
     });
   }
 
-  // Whenever a new state is receive, compare it to the one
-  // that is cached and generate a state transition event whenever
-  // one of the boolean flags are changed
-  // (like low battery, earbuds disconnected, etc…)
+  // Whenever a new state is received, compare it to the one that is cached and
+  // generate a state transition event whenever one of the boolean flags
+  // are changed (like low battery, earbuds disconnected, etc…)
   void _detectInternalStateValueChange(Map<String, dynamic> newStateValues) {
     if (_deviceInternalStateValues != null) {
       for (var key in newStateValues.keys) {

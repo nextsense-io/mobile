@@ -12,6 +12,10 @@ abstract class DeviceStateViewModelInterface extends ChangeNotifier {
   void onDeviceInternalStateChanged(DeviceInternalStateEvent event);
 }
 
+/*
+ * This model is base for all UI view-models that are going to deal
+ * with device state or device internal state
+ */
 abstract class DeviceStateViewModel
     extends DeviceStateViewModelInterface {
 

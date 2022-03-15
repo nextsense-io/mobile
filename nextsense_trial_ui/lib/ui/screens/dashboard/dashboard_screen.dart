@@ -145,7 +145,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _getDayTabs(BuildContext context) {
     final viewModel = context.watch<DashboardScreenViewModel>();
-    final days = viewModel.getDays();
+    List<DateTime> days = viewModel.getDays();
 
     return Container(
         height: 80.0,
@@ -194,7 +194,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _buildSchedule(BuildContext context) {
     List<Protocol> protocols =
-    context.watch<DashboardScreenViewModel>().getCurrentDayProtocols();
+        context.watch<DashboardScreenViewModel>().getCurrentDayProtocols();
 
     if (protocols.length == 0) {
       return Container(

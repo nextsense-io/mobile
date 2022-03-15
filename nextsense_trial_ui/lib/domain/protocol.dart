@@ -52,9 +52,7 @@ abstract class Protocol implements ProtocolInterface {
   ProtocolState _protocolState = ProtocolState.not_started;
   ProtocolType get type => ProtocolType.unknown;
 
-  // TODO(alex):keep 5 minutes
-  //Duration get disconnectTimeoutDuration => Duration(minutes: 5);
-  Duration get disconnectTimeoutDuration => Duration(seconds: 10);
+  Duration get disconnectTimeoutDuration => Duration(minutes: 5);
 
   late DateTime startTime;
   // Returns protocol start time in format 'HH:MM'
