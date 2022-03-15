@@ -2,21 +2,23 @@ import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/assesment.dart';
+import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
+import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nextsense_trial_ui/viewmodels/device_state_vm.dart';
 
-class DashboardScreenViewModel extends ChangeNotifier {
+class DashboardScreenViewModel extends DeviceStateViewModel {
 
-  final CustomLogPrinter _logger = CustomLogPrinter('DashBoardScreenViewModel');
+  final CustomLogPrinter _logger = CustomLogPrinter('DashboardScreenViewModel');
 
   final StudyManager _studyManager = getIt<StudyManager>();
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
 
   DateTime? selectedDay;
 
@@ -26,14 +28,14 @@ class DashboardScreenViewModel extends ChangeNotifier {
   List<DateTime>? _days;
 
   void init() async {
-    //selectToday();
+    super.init();
+
     // TODO(alex): cache assessments (move to protocol manager?)
     assesments = await _studyManager.loadAssesments();
-    if (_studyManager.currentStudyStartDate != null) {
-      final studyDays = getCurrentStudy()?.getDurationDays() ?? 0;
-      _days = List<DateTime>.generate(studyDays, (i) =>
-          _studyManager.currentStudyStartDate.add(Duration(days: i)));
-    }
+    final studyDays = getCurrentStudy()?.getDurationDays() ?? 0;
+    _days = List<DateTime>.generate(studyDays, (i) =>
+        _studyManager.currentStudyStartDate.add(Duration(days: i)));
+
     // TODO(alex): if current day out of range show some warning
     selectFirstDayOfStudy();
     notifyListeners();
@@ -86,6 +88,14 @@ class DashboardScreenViewModel extends ChangeNotifier {
     return getProtocolsByDay(selectedDay!);
   }
 
+  @override
+  void onDeviceDisconnected() {
+    // TODO(alex): implement logic onDeviceDisconnected if needed
+  }
 
+  @override
+  void onDeviceReconnected() {
+    // TODO(alex): implement logic onDeviceReconnected if need
+  }
 
 }

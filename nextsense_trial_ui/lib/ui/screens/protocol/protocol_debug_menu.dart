@@ -101,25 +101,33 @@ class ProtocolDebugMenu extends StatelessWidget {
   }
 
   Widget _dropdown(BuildContext context) {
-    return DropdownButton2<String>(
-      hint: Text(
-        'Debug menu',
-        style: TextStyle(
-          fontSize: 14,
+    return DropdownButtonHideUnderline(
+      child: DropdownButton2<String>(
+        customButton: const Icon(
+          Icons.settings_applications,
+          size: 30,
           color: Colors.white,
         ),
+        hint: Text(
+          'Debug menu',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+        ),
+        items:
+        items.map(
+              (type) =>
+              DropdownMenuItem<String>(
+                value: "",
+                child: _DebugMenuItemWidget(type: type),
+              ),
+        ).toList(),
+        onChanged: (value) {},
+        itemHeight: 48,
+        dropdownElevation: 8,
+        dropdownWidth: 200,
       ),
-      items:
-      items.map(
-            (type) =>
-            DropdownMenuItem<String>(
-              value: "",
-              child: _DebugMenuItemWidget(type: type),
-            ),
-      ).toList(),
-      onChanged: (value) {},
-      itemHeight: 48,
-      dropdownElevation: 8,
     );
   }
 }

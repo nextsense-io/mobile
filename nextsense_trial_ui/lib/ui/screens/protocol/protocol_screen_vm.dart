@@ -3,26 +3,26 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/viewmodels/device_state_vm.dart';
 
 enum ProtocolCancelReason {
   none,
   deviceDisconnectedTimeout
 }
 
-class ProtocolScreenViewModel extends ChangeNotifier {
+class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   final StudyManager _studyManager = getIt<StudyManager>();
-  final DeviceManager _deviceManager = getIt<DeviceManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
 
   Protocol protocol;
-
-  late StreamSubscription _deviceStateSubscription;
 
   int secondsElapsed = 0;
   bool sessionIsActive = false;
@@ -34,8 +34,6 @@ class ProtocolScreenViewModel extends ChangeNotifier {
   bool get protocolCompleted => minDurationPassed == true;
   bool minDurationPassed = false;
   bool maxDurationPassed = false;
-  DeviceState get deviceState => _deviceManager.deviceState.value;
-  bool get deviceIsConnected => deviceState == DeviceState.READY;
 
   Timer? timer;
   Timer? disconnectTimeoutTimer;
@@ -43,10 +41,6 @@ class ProtocolScreenViewModel extends ChangeNotifier {
   ProtocolCancelReason protocolCancelReason = ProtocolCancelReason.none;
 
   ProtocolScreenViewModel(this.protocol);
-
-  void init() {
-    _deviceManager.deviceState.addListener(_onDeviceStateChanged);
-  }
 
   Study? getCurrentStudy() {
     return _studyManager.getCurrentStudy();
@@ -114,21 +108,9 @@ class ProtocolScreenViewModel extends ChangeNotifier {
     timer?.cancel();
   }
 
-  void _onDeviceStateChanged() {
-    switch (deviceState) {
-      case DeviceState.DISCONNECTED:
-        _onDeviceDisconnected();
-        break;
-      case DeviceState.READY:
-        _onDeviceReconnected();
-        break;
-      default:
-        break;
-    }
-    notifyListeners();
-  }
 
-  void _onDeviceDisconnected() {
+  @override
+  void onDeviceDisconnected() {
     _timerPaused = true;
     disconnectTimeoutTimer?.cancel();
     // TODO(alex): get disconnect timeout from firebase
@@ -146,21 +128,21 @@ class ProtocolScreenViewModel extends ChangeNotifier {
     );
   }
 
-  void _onDeviceReconnected() {
+  @override
+  void onDeviceReconnected() {
     _timerPaused = false;
     disconnectTimeoutTimer?.cancel();
-  }
-
-  @override
-  void dispose() {
-    _deviceManager.deviceState.removeListener(_onDeviceStateChanged);
-    super.dispose();
   }
 
   void _onDisconnectTimeout() {
     _logger.log(Level.WARNING, '_onDisconnectTimeout');
     protocolCancelReason = ProtocolCancelReason.deviceDisconnectedTimeout;
     stopSession();
+  }
+
+  @override
+  void onDeviceInternalStateChanged(DeviceInternalStateEvent event) {
+    _logger.log(Level.INFO, 'onDeviceInternalStateChanged $event');
   }
 
 }
