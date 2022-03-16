@@ -60,11 +60,9 @@ class _ImpedanceCalculationScreenState extends
       _logger.log(Level.INFO, resultsText);
       showDialog(
         context: context,
-        builder: (BuildContext context) {
-          return SimpleAlertDialog(
+        builder: (_) => SimpleAlertDialog(
               title: 'Impedance Results',
-              content: resultsText);
-        },
+              content: resultsText)
       );
     }
 

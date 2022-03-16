@@ -115,11 +115,9 @@ class ProtocolScreen extends HookWidget {
                         {
                           await showDialog(
                             context: context,
-                            builder: (BuildContext context) {
-                              return SimpleAlertDialog(
+                            builder: (_) => SimpleAlertDialog(
                                   title: 'Connection error',
-                                  content: 'Device is not connected.');
-                            },
+                                  content: 'Device is not connected.')
                           );
                         }
 
