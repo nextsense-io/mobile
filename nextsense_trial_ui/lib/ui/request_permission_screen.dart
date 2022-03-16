@@ -47,11 +47,9 @@ class RequestPermissionScreen extends HookWidget {
                             await permissionRequest.permission.isDenied) {
                           showDialog(
                             context: context,
-                            builder: (BuildContext context) {
-                              return SimpleAlertDialog(
+                            builder: (_) => SimpleAlertDialog(
                                   title: 'Error',
-                                  content: permissionRequest.deniedText!);
-                            },
+                                  content: permissionRequest.deniedText!),
                           );
                         }
                         if (!permissionRequest.required ||

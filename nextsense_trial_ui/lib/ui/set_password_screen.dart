@@ -15,10 +15,8 @@ class SetPasswordScreen extends HookWidget {
       bool popNavigator) async {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return SimpleAlertDialog(title: title, content: message,
-            popNavigator: popNavigator);
-      },
+      builder: (_) => SimpleAlertDialog(title: title, content: message,
+            popNavigator: popNavigator)
     );
   }
 

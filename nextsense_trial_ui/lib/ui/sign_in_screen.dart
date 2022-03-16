@@ -29,9 +29,9 @@ class _SignInScreenState extends State<SignInScreen> {
 
   // Change _code and _password to some values and _askForPassword to true
   // for autologin
-  String _code = '';
-  String _password = '';
-  bool _askForPassword = false;
+  String _code = 'eemu_001';
+  String _password = 'nextsense';
+  bool _askForPassword = true;
 
   @override
   void initState()  {
@@ -83,23 +83,19 @@ class _SignInScreenState extends State<SignInScreen> {
     if (result == UserCodeValidationResult.invalid) {
       await showDialog(
         context: context,
-        builder: (BuildContext context) {
-          return SimpleAlertDialog(
+        builder: (_) => SimpleAlertDialog(
               title: 'Invalid code',
-              content: 'The code you entered does not exists.');
-        },
+              content: 'The code you entered does not exists.')
       );
       return;
     }
     if (result == UserCodeValidationResult.no_connection) {
       await showDialog(
         context: context,
-        builder: (BuildContext context) {
-          return SimpleAlertDialog(
+        builder: (_) => SimpleAlertDialog(
               title: 'No connection',
               content: 'An internet connection is needed to validate your user '
-                  'code.');
-        },
+                  'code.')
       );
       return;
     }
@@ -117,23 +113,19 @@ class _SignInScreenState extends State<SignInScreen> {
     } catch (e) {
       await showDialog(
         context: context,
-        builder: (BuildContext context) {
-          return SimpleAlertDialog(
+        builder: (_) => SimpleAlertDialog(
               title: 'Error',
               content: 'An internet connection is needed to validate your '
-                  'password.');
-        },
+                  'password.')
       );
       return;
     }
     if (!authenticated) {
       await showDialog(
         context: context,
-        builder: (BuildContext context) {
-          return SimpleAlertDialog(
+        builder: (_) => SimpleAlertDialog(
               title: 'Invalid password',
-              content: 'The password you entered is invalid.');
-        },
+              content: 'The password you entered is invalid.')
       );
       return;
     }
@@ -142,11 +134,8 @@ class _SignInScreenState extends State<SignInScreen> {
     // one with an explanation screen.
     for (PermissionRequest permissionRequest
         in await _permissionsManager.getPermissionsToRequest()) {
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => RequestPermissionScreen(permissionRequest)),
-      );
+      await _navigation.navigateTo(RequestPermissionScreen.id,
+          arguments: permissionRequest);
     }
 
     // Load the study data.
@@ -163,12 +152,10 @@ class _SignInScreenState extends State<SignInScreen> {
       // Cannot proceed without study data.
       await showDialog(
         context: context,
-        builder: (BuildContext context) {
-          return SimpleAlertDialog(
+        builder: (_) => SimpleAlertDialog(
               title: 'Error with your account',
               content: 'Please contact NextSense support and mention that there'
-                  ' is an issue with your account study setup.');
-        },
+                  ' is an issue with your account study setup.')
       );
       return;
     }

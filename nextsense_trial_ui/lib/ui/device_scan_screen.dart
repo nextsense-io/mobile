@@ -108,13 +108,11 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
   Future<void> _onConnectionError(BuildContext context) async {
     await showDialog(
         context: context,
-        builder: (BuildContext context) {
-      return SimpleAlertDialog(
+        builder: (_) => SimpleAlertDialog(
           title: 'Connection Error',
           content: 'Failed to connect to the NextSense device. Make sure '
               'it is turned on an try again. It it still fails, please '
-              'contact NextSense support.');
-      },
+              'contact NextSense support.')
     );
     _startScan();
   }
