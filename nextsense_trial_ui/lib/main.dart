@@ -12,6 +12,7 @@ import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
 
 void _initLogging() {
@@ -31,6 +32,9 @@ void main() async {
 }
 
 class NextSenseTrialApp extends StatelessWidget {
+
+  final Navigation _navigation = getIt<Navigation>();
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -40,6 +44,8 @@ class NextSenseTrialApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: SignInScreen(),
+      navigatorKey: _navigation.navigatorKey,
+      onGenerateRoute: _navigation.onGenerateRoute,
     );
   }
 }

@@ -1,26 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/ui/components/SessionPopScope.dart';
+import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
 
 class SignInScreen extends StatefulWidget {
+
+  static const String id = 'sign_in_screen';
+
   @override
   _SignInScreenState createState() => _SignInScreenState();
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final AuthManager _authManager = GetIt.instance.get<AuthManager>();
-  final StudyManager _studyManager = GetIt.instance.get<StudyManager>();
-  final PermissionsManager _permissionsManager =
-      GetIt.instance.get<PermissionsManager>();
+  final AuthManager _authManager = getIt<AuthManager>();
+  final StudyManager _studyManager = getIt<StudyManager>();
+  final Navigation _navigation = getIt<Navigation>();
+  final PermissionsManager _permissionsManager = getIt<PermissionsManager>();
 
   // Change _code and _password to some values and _askForPassword to true
   // for autologin
@@ -43,15 +48,36 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
 
+  @override
+  Widget build(BuildContext context) {
+    return SessionPopScope(
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text('Login'),
+          ),
+          body: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/background.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _buildBody(context),
+              ),
+            ),
+          ),
+        ));
+  }
+
   _validatedUserCode() async {
     UserCodeValidationResult result =
         await _authManager.validateUserCode(_code);
     if (result == UserCodeValidationResult.password_not_set) {
       // navigate to password set screen.
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => SetPasswordScreen()),
-      );
+      _navigation.navigateTo(SetPasswordScreen.id);
       return;
     }
     if (result == UserCodeValidationResult.invalid) {
@@ -148,16 +174,10 @@ class _SignInScreenState extends State<SignInScreen> {
     }
 
     // Navigate to the device preparation screen.
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => DashboardScreen()),
-    );
+    _navigation.navigateTo(DashboardScreen.id);
     // TODO(eric): Might want to add a 'Do not show this again' in that page and
     // check first before going to that page.
-    await Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => PrepareDeviceScreen()),
-    );
+    await _navigation.navigateTo(PrepareDeviceScreen.id);
   }
 
   List<Widget> _buildBody(BuildContext context) {
@@ -242,27 +262,4 @@ class _SignInScreenState extends State<SignInScreen> {
     return widgets;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SessionPopScope(
-        child: Scaffold(
-          appBar: AppBar(
-            title: Text('Login'),
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: _buildBody(context),
-              ),
-            ),
-          ),
-        ));
-  }
 }

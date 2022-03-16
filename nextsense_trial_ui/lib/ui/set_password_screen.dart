@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:get_it/get_it.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 
-class SetPasswordScreen extends StatefulWidget {
-  @override
-  _SetPasswordScreenState createState() => _SetPasswordScreenState();
-}
+class SetPasswordScreen extends HookWidget {
 
-class _SetPasswordScreenState extends State<SetPasswordScreen> {
-  final AuthManager _authManager = GetIt.instance.get<AuthManager>();
-  String? _password;
-  String? _passwordConfirmation;
+  static const String id = 'set_password_screen';
+
+  final AuthManager _authManager = getIt<AuthManager>();
 
   Future _showDialog(BuildContext context, String title, String message,
       bool popNavigator) async {
@@ -26,6 +24,10 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final _password = useState<String>("");
+    final _passwordConfirmation = useState<String>("");
+
     return Scaffold(
         appBar: AppBar(
           title: Text('Set Password'),
@@ -69,9 +71,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                           ),
                         ),
                         onChanged: (password) {
-                          setState(() {
-                            _password = password;
-                          });
+                          _password.value = password;
                         },
                       ),
                     ),
@@ -94,9 +94,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                           ),
                         ),
                         onChanged: (passwordConfirmation) {
-                          setState(() {
-                            _passwordConfirmation = passwordConfirmation;
-                          });
+                            _passwordConfirmation.value = passwordConfirmation;
                         },
                       ),
                     ),
@@ -105,10 +103,11 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                         child: TextButton(
                           child: Text('Submit'),
                           onPressed: () async {
-                            if (_password == null || _password!.isEmpty) {
+                            final String password = _password.value;
+                            if (password.isEmpty) {
                               return;
                             }
-                            if (_password!.length <
+                            if (password.length <
                                 AuthManager.minimumPasswordLength) {
                               _showDialog(
                                   context, 'Error',
@@ -117,14 +116,14 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                                   'characters long', false);
                               return;
                             }
-                            if (_password!.compareTo(_passwordConfirmation!) !=
+                            if (password.compareTo(_passwordConfirmation.value) !=
                                 0) {
                               _showDialog(context, 'Error',
                                   'Passwords do not match.', false);
                               return;
                             }
                             try {
-                              _authManager.setPassword(_password!);
+                              _authManager.setPassword(password);
                             } catch (e) {
                               _showDialog(context, 'Error',
                                   'Could not set password, make sure you have '

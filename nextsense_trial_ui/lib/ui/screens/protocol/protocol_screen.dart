@@ -5,14 +5,17 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
-import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_debug_menu.dart';
+import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:nextsense_trial_ui/utils/duration.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
 class ProtocolScreen extends HookWidget {
-  Protocol protocol;
+
+  static const String id = 'protocol_screen';
+
+  final Protocol protocol;
 
   ProtocolScreen(this.protocol);
 
@@ -47,7 +50,7 @@ class ProtocolScreen extends HookWidget {
                   Container(
                       child: Align(
                           alignment: Alignment.centerRight,
-                          child: ProtocolDebugMenu())),
+                          child: DeviceStateDebugMenu())),
                   /*Text(
                 protocol.getName(),
                 style: whiteTextStyle,

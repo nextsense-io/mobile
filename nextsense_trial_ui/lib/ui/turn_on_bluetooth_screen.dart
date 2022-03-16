@@ -1,12 +1,10 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 
-class TurnOnBluetoothScreen extends StatefulWidget {
-  @override
-  _TurnOnBluetoothScreenState createState() => _TurnOnBluetoothScreenState();
-}
+class TurnOnBluetoothScreen extends HookWidget {
 
-class _TurnOnBluetoothScreenState extends State<TurnOnBluetoothScreen> {
+  static const String id = 'turn_on_bluetooth_screen';
 
   @override
   Widget build(BuildContext context) {

@@ -74,7 +74,7 @@ abstract class BaseProtocol implements Protocol {
   final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
   final AuthManager _authManager = GetIt.instance.get<AuthManager>();
   final SessionManager _sessionManager = GetIt.instance.get<SessionManager>();
-  final CustomLogPrinter _logger = CustomLogPrinter('SessionScreen');
+  final CustomLogPrinter _logger = CustomLogPrinter('BaseProtocol');
 
   DateTime? _startTime;
   Duration? _minDurationOverride;

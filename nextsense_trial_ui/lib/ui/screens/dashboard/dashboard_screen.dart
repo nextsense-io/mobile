@@ -5,11 +5,11 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/ui/components/SessionPopScope.dart';
+import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
-import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_debug_menu.dart';
+import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
@@ -19,8 +19,12 @@ import 'package:intl/intl.dart';
 import 'package:stacked/stacked.dart';
 
 class DashboardScreen extends StatelessWidget {
+
+  static const String id = 'dashboard_screen';
+
   final AuthManager _authManager = getIt<AuthManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
+  final Navigation _navigation = getIt<Navigation>();
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +74,7 @@ class DashboardScreen extends StatelessWidget {
           SizedBox(width: 10,),
           _indicator("Micro SD", viewModel.isUSdPresent),
           SizedBox(width: 10,),
-          ProtocolDebugMenu(),
+          DeviceStateDebugMenu(),
         ],
       ),
     );
@@ -97,19 +101,14 @@ class DashboardScreen extends StatelessWidget {
     Widget checkSeatingButton = ElevatedButton(
       child: const Text('Check earbuds seating'),
       onPressed: () async {
-        // Navigate to the session screen.
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => ImpedanceCalculationScreen()),
-        );
+        _navigation.navigateTo(ImpedanceCalculationScreen.id);
       },
     );
     Widget findDeviceButton = ElevatedButton(
       child: const Text('Connect your device'),
       onPressed: () async {
         // Navigate to the device scan screen.
-        await Navigation.navigateToDeviceScan(
-            context, /*replaceCurrent=*/ false);
+        await _navigation.navigateToDeviceScan();
       },
     );
     Widget disconnectButton = ElevatedButton(
@@ -117,7 +116,7 @@ class DashboardScreen extends StatelessWidget {
       onPressed: () async {
         _deviceManager.disconnectDevice();
         // Navigate to the device scan screen.
-        Navigation.navigateToDeviceScan(context, /*replaceCurrent=*/ false);
+        _navigation.navigateToDeviceScan();
       },
     );
     Widget logoutButton = ElevatedButton(
@@ -126,10 +125,7 @@ class DashboardScreen extends StatelessWidget {
         _deviceManager.disconnectDevice();
         _authManager.signOut();
         // Navigate to the sign-in screen.
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => SignInScreen()),
-        );
+        _navigation.signOut();
       },
     );
     List<Widget> buttons = [];
@@ -246,11 +242,8 @@ class DashboardScreen extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 12.0),
                           child: InkWell(
                             onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          ProtocolScreen(protocol)));
+                              _navigation.navigateTo(ProtocolScreen.id,
+                                  arguments: protocol);
                             },
                             child: Container(
                                 padding: const EdgeInsets.all(16.0),
