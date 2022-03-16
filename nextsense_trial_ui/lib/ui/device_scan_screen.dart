@@ -6,21 +6,27 @@ import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/config.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/scan_result_list.dart';
 import 'package:nextsense_trial_ui/ui/components/search_device_bluetooth.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class DeviceScanScreen extends StatefulWidget {
+
+  static const String id = 'main_screen';
+
   @override
   _DeviceScanScreenState createState() => _DeviceScanScreenState();
 }
 
 class _DeviceScanScreenState extends State<DeviceScanScreen> {
 
-  final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
+  final Navigation _navigation = getIt<Navigation>();
+  final DeviceManager _deviceManager = getIt<DeviceManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceScanScreen');
 
   Map<String, Map<String, dynamic>> _scanResultsMap = new Map();
@@ -86,10 +92,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
         if (Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
         }
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => DashboardScreen()),
-        );
+        _navigation.navigateTo(DashboardScreen.id, replace: true);
       } else {
         _onConnectionError(context);
       }

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 
 class SessionPopScope extends StatelessWidget {
   final Widget child;
-  final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
+  final DeviceManager _deviceManager = getIt<DeviceManager>();
 
   SessionPopScope({required Widget this.child}) {}
 

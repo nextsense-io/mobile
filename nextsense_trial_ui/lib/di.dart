@@ -6,6 +6,7 @@ import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
 
 GetIt getIt = GetIt.instance;
 
@@ -19,6 +20,8 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<DeviceManager>(DeviceManager());
   getIt.registerSingleton<SessionManager>(SessionManager());
   getIt.registerSingleton<StudyManager>(StudyManager());
+
+  getIt.registerSingleton<Navigation>(Navigation());
 
   await getIt.get<NotificationsManager>().initializePlugin();
 }

@@ -1,22 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-class RequestPermissionScreen extends StatefulWidget {
+class RequestPermissionScreen extends HookWidget {
+
+  static const String id = 'request_permission_screen';
+
   final PermissionRequest permissionRequest;
 
   RequestPermissionScreen(this.permissionRequest);
-
-  @override
-  _RequestPermissionScreenState createState() =>
-      _RequestPermissionScreenState(permissionRequest);
-}
-
-class _RequestPermissionScreenState extends State<RequestPermissionScreen> {
-  PermissionRequest permissionRequest;
-
-  _RequestPermissionScreenState(this.permissionRequest);
 
   @override
   Widget build(BuildContext context) {

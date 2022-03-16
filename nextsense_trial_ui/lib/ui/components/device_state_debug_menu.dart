@@ -90,8 +90,8 @@ class _DebugMenuItemWidget extends HookWidget {
   }
 }
 
-class ProtocolDebugMenu extends StatelessWidget {
-  const ProtocolDebugMenu({Key? key}) : super(key: key);
+class DeviceStateDebugMenu extends StatelessWidget {
+  const DeviceStateDebugMenu({Key? key}) : super(key: key);
 
   static const List<DebugMenuItemType> items = DebugMenuItemType.values;
 

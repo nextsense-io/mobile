@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/config.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 
-class PrepareDeviceScreen extends StatefulWidget {
-  @override
-  _PrepareDeviceScreenState createState() => _PrepareDeviceScreenState();
-}
+class PrepareDeviceScreen extends HookWidget {
 
-class _PrepareDeviceScreenState extends State<PrepareDeviceScreen> {
+  static const String id = 'prepare_device_screen';
+
+  final Navigation _navigation = getIt<Navigation>();
 
   @override
   Widget build(BuildContext context) {
 
     if (Config.useEmulatedBle) {
-      Navigation.navigateToDeviceScan(
-          context, /*replaceCurrent=*/true);
+      _navigation.navigateToDeviceScan(replace: true);
       return Container();
     }
 
@@ -46,8 +46,7 @@ class _PrepareDeviceScreenState extends State<PrepareDeviceScreen> {
                     child: ElevatedButton(
                       child: const Text('Continue'),
                       onPressed: () async {
-                        Navigation.navigateToDeviceScan(
-                            context, /*replaceCurrent=*/true);
+                        _navigation.navigateToDeviceScan(replace: true);
                       },
                     )),
               ]),

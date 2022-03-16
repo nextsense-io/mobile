@@ -6,12 +6,15 @@ import 'package:get_it/get_it.dart';
 import 'package:gson/values.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class ImpedanceCalculationScreen extends StatefulWidget {
+  static const String id = 'impedance_calculation_screen';
+
   @override
   _ImpedanceCalculationScreenState createState() =>
       _ImpedanceCalculationScreenState();
@@ -20,7 +23,7 @@ class ImpedanceCalculationScreen extends StatefulWidget {
 class _ImpedanceCalculationScreenState extends
     State<ImpedanceCalculationScreen> {
 
-  final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
+  final DeviceManager _deviceManager = getIt<DeviceManager>();
   final CustomLogPrinter _logger =
       CustomLogPrinter('ImpedanceCalculationScreen');
   XenonImpedanceCalculator? _impedanceCalculator;
