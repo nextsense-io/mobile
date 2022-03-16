@@ -42,6 +42,10 @@ class Navigation {
           builder: (context) => DashboardScreen());
       case PrepareDeviceScreen.id: return MaterialPageRoute(
           builder: (context) => PrepareDeviceScreen());
+      case CheckWifiScreen.id: return MaterialPageRoute(
+          builder: (context) => CheckWifiScreen());
+
+      // Routes with arguments
       case ProtocolScreen.id: return MaterialPageRoute(builder: (context) =>
           ProtocolScreen(settings.arguments as Protocol));
       case RequestPermissionScreen.id: return MaterialPageRoute(
@@ -55,6 +59,10 @@ class Navigation {
   }
 
   Future navigateToDeviceScan({bool replace = false}) async {
+    // If wifi not available we ask user to check it
+    if (!await getIt<ConnectivityManager>().isWifiAvailable()) {
+      await navigateTo(CheckWifiScreen.id);
+    }
     // Check if Bluetooth is ON.
     if (!await NextsenseBase.isBluetoothEnabled()) {
       // Ask the user to turn on Bluetooth.
