@@ -13,11 +13,6 @@ class PrepareDeviceScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
 
-    if (Config.useEmulatedBle) {
-      _navigation.navigateToDeviceScan(replace: true);
-      return Container();
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Prepare Device'),

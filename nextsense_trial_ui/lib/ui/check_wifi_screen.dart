@@ -79,7 +79,7 @@ class CheckWifiScreen extends HookWidget {
                     ),
                   ),
                   onPressed: canProceed ? () async {
-                    // Check if Bluetooth is ON.
+                    Navigator.of(context).pop();
                   } : null,
                 )
                 ],
