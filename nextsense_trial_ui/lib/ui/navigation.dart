@@ -10,7 +10,11 @@ import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
@@ -19,11 +23,16 @@ class Navigation {
 
   final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
 
-  Future<dynamic> navigateTo(String routeName, {Object? arguments, bool replace = false}) {
+  Future<dynamic> navigateTo(String routeName, {Object? arguments,
+    bool replace = false, bool pop = false}) {
+    final currentState = navigatorKey.currentState!;
     if (replace) {
-      return navigatorKey.currentState!.pushReplacementNamed(routeName, arguments: arguments);
+      return currentState.pushReplacementNamed(routeName, arguments: arguments);
     }
-    return navigatorKey.currentState!.pushNamed(routeName, arguments: arguments);
+    if (pop) {
+      return currentState.popAndPushNamed(routeName, arguments: arguments);
+    }
+    return currentState.pushNamed(routeName, arguments: arguments);
   }
 
   Route<dynamic>? onGenerateRoute(RouteSettings settings) {
@@ -44,8 +53,16 @@ class Navigation {
           builder: (context) => PrepareDeviceScreen());
       case CheckWifiScreen.id: return MaterialPageRoute(
           builder: (context) => CheckWifiScreen());
+      case HelpScreen.id: return MaterialPageRoute(
+          builder: (context) => HelpScreen());
+      case AboutScreen.id: return MaterialPageRoute(
+          builder: (context) => AboutScreen());
+      case SupportScreen.id: return MaterialPageRoute(
+          builder: (context) => SupportScreen());
+      case SettingsScreen.id: return MaterialPageRoute(
+          builder: (context) => SettingsScreen());
 
-      // Routes with arguments
+    // Routes with arguments
       case ProtocolScreen.id: return MaterialPageRoute(builder: (context) =>
           ProtocolScreen(settings.arguments as Protocol));
       case RequestPermissionScreen.id: return MaterialPageRoute(
@@ -54,7 +71,7 @@ class Navigation {
     }
   }
 
-  void goBack() {
+  void pop() {
     return navigatorKey.currentState!.pop();
   }
 

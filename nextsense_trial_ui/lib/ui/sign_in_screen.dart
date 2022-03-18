@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -56,12 +57,7 @@ class _SignInScreenState extends State<SignInScreen> {
             title: Text('Login'),
           ),
           body: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
+            decoration: baseBackgroundDecoration,
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,

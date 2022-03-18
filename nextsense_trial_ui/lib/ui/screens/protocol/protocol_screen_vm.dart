@@ -7,7 +7,7 @@ import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_vm.dart';
+import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 enum ProtocolCancelReason {
   none,

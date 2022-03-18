@@ -1,10 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
+import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
+import 'package:provider/src/provider.dart';
 
 class MainMenu extends HookWidget {
 
+  final Navigation _navigation = getIt<Navigation>();
+
   @override
   Widget build(BuildContext context) {
+
+    final dashboardViewModel = context.read<DashboardScreenViewModel>();
+
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -22,38 +36,54 @@ class MainMenu extends HookWidget {
             ),
           ),
           _MainMenuItem(
+              icon: Icon(Icons.earbuds),
+              label: Text('Check earbuds settings'),
+              onPressed: () {
+                _navigation.navigateTo(ImpedanceCalculationScreen.id, pop: true);
+              }
+          ),
+          _MainMenuItem(
             icon: Icon(Icons.power_off),
             label: Text('Disconnect'),
               onPressed: () {
-                  // TOD
+                dashboardViewModel.disconnectDevice();
+                _navigation.navigateToDeviceScan();
               }
           ),
           _MainMenuItem(
               icon: Icon(Icons.logout),
               label: Text('Logout'),
               onPressed: () {
-
+                dashboardViewModel.disconnectDevice();
+                _navigation.signOut();
               }
           ),
           _MainMenuItem(
               icon: Icon(Icons.help),
               label: Text('Help'),
               onPressed: () {
-
+                _navigation.navigateTo(HelpScreen.id, pop: true);
+              }
+          ),
+          _MainMenuItem(
+              icon: Icon(Icons.settings),
+              label: Text('Settings'),
+              onPressed: () {
+                _navigation.navigateTo(SettingsScreen.id, pop: true);
               }
           ),
           _MainMenuItem(
               icon: Icon(Icons.contact_support_outlined),
               label: Text('Support'),
               onPressed: () {
-
+                _navigation.navigateTo(SupportScreen.id, pop: true);
               }
           ),
           _MainMenuItem(
               icon: Icon(Icons.info_outlined),
               label: Text('About'),
               onPressed: () {
-
+                _navigation.navigateTo(AboutScreen.id, pop: true);
               }
           )
         ],

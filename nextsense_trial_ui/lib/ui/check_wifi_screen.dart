@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
+import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:provider/src/provider.dart';
 
 class CheckWifiScreen extends HookWidget {
@@ -23,18 +24,12 @@ class CheckWifiScreen extends HookWidget {
         title: Text('Check Wifi'),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/background.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
+        decoration: baseBackgroundDecoration,
         child: Center(
           child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                   Container(
-                    height: 200,
                     width: double.infinity,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -50,6 +45,15 @@ class CheckWifiScreen extends HookWidget {
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.white, fontSize: 30),
                         ),
+                        Container(
+                          padding: EdgeInsets.all(30.0),
+                          child: Text(
+                            "A good internet connection is needed to upload your "
+                                "NextSense device data to our cloud.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                        )
                       ],
                     ),
                   ),

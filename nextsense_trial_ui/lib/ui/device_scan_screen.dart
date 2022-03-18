@@ -9,6 +9,7 @@ import 'package:nextsense_trial_ui/config.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:nextsense_trial_ui/ui/components/scan_result_list.dart';
 import 'package:nextsense_trial_ui/ui/components/search_device_bluetooth.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -235,12 +236,7 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
         title: Text('Find your device'),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/background.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
+        decoration: baseBackgroundDecoration,
         child: Center(
           child: _buildBody(_scanResultsWidgets)
         ),

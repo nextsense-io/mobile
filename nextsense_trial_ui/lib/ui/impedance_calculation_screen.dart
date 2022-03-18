@@ -10,6 +10,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class ImpedanceCalculationScreen extends StatefulWidget {
@@ -75,12 +76,7 @@ class _ImpedanceCalculationScreenState extends
         title: Text('Check earbuds seating'),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/background.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
+        decoration: baseBackgroundDecoration,
         child: Center(
           child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

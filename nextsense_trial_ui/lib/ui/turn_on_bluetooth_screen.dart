@@ -1,6 +1,7 @@
 import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 
 class TurnOnBluetoothScreen extends HookWidget {
 
@@ -13,12 +14,7 @@ class TurnOnBluetoothScreen extends HookWidget {
         title: Text('Turn Bluetooth On'),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/background.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
+        decoration: baseBackgroundDecoration,
         child: Center(
           child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

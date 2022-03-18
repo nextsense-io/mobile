@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 
 class SetPasswordScreen extends HookWidget {
 
@@ -31,12 +32,7 @@ class SetPasswordScreen extends HookWidget {
           title: Text('Set Password'),
         ),
         body: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.png'),
-                fit: BoxFit.cover,
-              ),
-            ),
+            decoration: baseBackgroundDecoration,
             child: Center(
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
