@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/main_menu.dart';
@@ -41,12 +42,7 @@ class DashboardScreen extends StatelessWidget {
               drawer: MainMenu(),
               body: Container(
                 padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/background.png'),
-                    fit: BoxFit.cover,
-                  ),
-                ),
+                decoration: baseBackgroundDecoration,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -58,7 +54,6 @@ class DashboardScreen extends StatelessWidget {
                             _buildSchedule(context),
                           ],
                         )),
-                    Center(child: _buildButtons(context)),
                   ],
                 ),
               ),
@@ -112,49 +107,6 @@ class DashboardScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-  
-
-  Widget _buildButtons(BuildContext context) {
-    Widget checkSeatingButton = ElevatedButton(
-      child: const Text('Check earbuds seating'),
-      onPressed: () async {
-        _navigation.navigateTo(ImpedanceCalculationScreen.id);
-      },
-    );
-    Widget findDeviceButton = ElevatedButton(
-      child: const Text('Connect your device'),
-      onPressed: () async {
-        // Navigate to the device scan screen.
-        await _navigation.navigateToDeviceScan();
-      },
-    );
-    Widget disconnectButton = ElevatedButton(
-      child: const Text('Disconnect'),
-      onPressed: () async {
-        _deviceManager.disconnectDevice();
-        // Navigate to the device scan screen.
-        _navigation.navigateToDeviceScan();
-      },
-    );
-    Widget logoutButton = ElevatedButton(
-      child: const Text('Logout'),
-      onPressed: () async {
-        _deviceManager.disconnectDevice();
-        _authManager.signOut();
-        // Navigate to the sign-in screen.
-        _navigation.signOut();
-      },
-    );
-    List<Widget> buttons = [];
-    if (_deviceManager.getConnectedDevice() != null) {
-      buttons.add(checkSeatingButton);
-      buttons.add(disconnectButton);
-    } else {
-      buttons.add(findDeviceButton);
-    }
-    buttons.add(logoutButton);
-    return Wrap(spacing: 5.0, children: buttons);
   }
 
   Widget _getDayTabs(BuildContext context) {

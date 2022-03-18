@@ -6,19 +6,22 @@ import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
+import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_vm.dart';
+import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 class DashboardScreenViewModel extends DeviceStateViewModel {
 
   final CustomLogPrinter _logger = CustomLogPrinter('DashboardScreenViewModel');
 
   final StudyManager _studyManager = getIt<StudyManager>();
+  final DeviceManager _deviceManager = getIt<DeviceManager>();
+  final AuthManager _authManager = getIt<AuthManager>();
 
   DateTime? selectedDay;
 
@@ -88,6 +91,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return getProtocolsByDay(selectedDay!);
   }
 
+
   @override
   void onDeviceDisconnected() {
     // TODO(alex): implement logic onDeviceDisconnected if needed
@@ -96,6 +100,15 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   @override
   void onDeviceReconnected() {
     // TODO(alex): implement logic onDeviceReconnected if need
+  }
+
+  void disconnectDevice() {
+    _deviceManager.disconnectDevice();
+  }
+
+  void logout() {
+    _deviceManager.disconnectDevice();
+    _authManager.signOut();
   }
 
 }
