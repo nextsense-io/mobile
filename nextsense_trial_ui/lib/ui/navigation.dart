@@ -60,7 +60,7 @@ class Navigation {
 
   Future navigateToDeviceScan({bool replace = false}) async {
     // If wifi not available we ask user to check it
-    if (!await getIt<ConnectivityManager>().isWifiAvailable()) {
+    if (!getIt<ConnectivityManager>().isWifi) {
       await navigateTo(CheckWifiScreen.id);
     }
     // Check if Bluetooth is ON.
