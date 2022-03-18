@@ -7,6 +7,7 @@ import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
+import 'package:nextsense_trial_ui/ui/main_menu.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
@@ -26,6 +27,8 @@ class DashboardScreen extends StatelessWidget {
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final Navigation _navigation = getIt<Navigation>();
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder<DashboardScreenViewModel>.reactive(
@@ -34,6 +37,8 @@ class DashboardScreen extends StatelessWidget {
       builder: (context, viewModel, child) => SessionPopScope(
           child: SafeArea(
             child: Scaffold(
+              key: _scaffoldKey,
+              drawer: MainMenu(),
               body: Container(
                 padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
                 decoration: BoxDecoration(
@@ -67,14 +72,27 @@ class DashboardScreen extends StatelessWidget {
     return Container(
       height: 50,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _indicator("HDMI", viewModel.isHdmiCablePresent),
-          SizedBox(width: 10,),
-          _indicator("Micro SD", viewModel.isUSdPresent),
-          SizedBox(width: 10,),
-          DeviceStateDebugMenu(),
+          IconButton(
+            icon: const Icon(
+              Icons.menu,
+              size: 30,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              _scaffoldKey.currentState?.openDrawer();
+            },
+          ),
+          Row(
+            children: [
+              _indicator("HDMI", viewModel.isHdmiCablePresent),
+              SizedBox(width: 10,),
+              _indicator("Micro SD", viewModel.isUSdPresent),
+              SizedBox(width: 10,),
+              DeviceStateDebugMenu(),
+            ],
+          ),
         ],
       ),
     );
