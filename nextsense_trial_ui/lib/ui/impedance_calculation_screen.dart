@@ -27,7 +27,7 @@ class _ImpedanceCalculationScreenState extends
   final CustomLogPrinter _logger =
       CustomLogPrinter('ImpedanceCalculationScreen');
   XenonImpedanceCalculator? _impedanceCalculator;
-  HashMap<int, double>? _impedanceResults;
+  Map<int, double>? _impedanceResults;
   Map<String, dynamic>? _deviceSettings;
 
   @override
@@ -42,7 +42,7 @@ class _ImpedanceCalculationScreenState extends
     if (connectedDevice != null) {
       String macAddress = connectedDevice.macAddress;
       _deviceSettings = await NextsenseBase.getDeviceSettings(macAddress);
-      _impedanceCalculator = new XenonImpedanceCalculator(samplesSize: 250,
+      _impedanceCalculator = new XenonImpedanceCalculator(samplesSize: 1024,
           deviceSettings: _deviceSettings!);
     }
   }
@@ -51,12 +51,19 @@ class _ImpedanceCalculationScreenState extends
     _impedanceResults = await _impedanceCalculator
         ?.calculateAllChannelsImpedance(ImpedanceMode.ON_1299_AC);
     if (_impedanceResults != null) {
+      // TODO(Eric): Should map these in an earbud configuration.
       String resultsText = '';
-      for (Integer channel in _deviceSettings![
-          describeEnum(DeviceSettingsFields.enabledChannels)]) {
-        resultsText += 'Channel ${channel.toSimple()}: ' +
-            _impedanceResults![channel.toSimple()]!.round().toString() + '\n\n';
-      }
+      resultsText += 'Channel Left Channel: ' +
+          _impedanceResults![7]!.round().toString() + '\n\n';
+      resultsText += 'Channel Right Channel: ' +
+          _impedanceResults![8]!.round().toString() + '\n\n';
+      resultsText += 'Channel Left Helix: ' +
+          _impedanceResults![1]!.round().toString() + '\n\n';
+      // for (Integer channel in _deviceSettings![
+      //     describeEnum(DeviceSettingsFields.enabledChannels)]) {
+      //   resultsText += 'Channel ${channel.toSimple()}: ' +
+      //       _impedanceResults![channel.toSimple()]!.round().toString() + '\n\n';
+      // }
       _logger.log(Level.INFO, resultsText);
       showDialog(
         context: context,
