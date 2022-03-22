@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:collection/collection.dart';
+import 'package:dart_numerics/dart_numerics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:gson/values.dart';
@@ -15,13 +16,20 @@ class XenonImpedanceCalculator {
   static const int defaultTargetFrequency = 10;
   // Manually tweaked with resistors.
   static const double _externalCurrentImpedanceConstant = 13700.94;
-  static const double _ads1299AcImpedanceConstant = 188;
+  static const double _ads1299AcImpedanceConstant = 338.4;
   // This gives between 500ms and 1000ms of time where calculations can occur.
-  static const Duration _channelCycleTime = Duration(milliseconds: 5000);
+  static const Duration _channelCycleTime = Duration(milliseconds: 10000);
   // The time period on which a calculation is made.
   static const Duration _impedanceCalculationPeriod =
-       Duration(milliseconds: 1000);
+       Duration(milliseconds: 4096);
   static const double _ads1299AcImpedanceFrequency = 62.5;
+  // Maps electrode locations with channels. If more than one, they are added
+  // together before doing the FFT.
+  static const _locationMappings = {
+    'Left Helix': [1, 8],
+    'Right Channel': [8],
+    'Left Channel': [7]
+  };
 
   final int samplesSize;
   final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
@@ -112,34 +120,48 @@ class XenonImpedanceCalculator {
 
   // Calculate the impedance in Ohms from a single channel electrode values.
   Future<double> calculateImpedance(
-      int channelNumber, double impedanceFrequency, double eegFrequency,
+      List<int> channelNumbers, double impedanceFrequency, double eegFrequency,
       double impedanceConstant) async {
     String? macAddress = _deviceManager.getConnectedDevice()?.macAddress;
     if (macAddress == null || _localSessionId == null) {
       return -1;
     }
-    List<double> eegArray = await NextsenseBase.getChannelData(macAddress,
-        _localSessionId!, channelNumber, _impedanceCalculationPeriod);
-    // Make sure there are enough samples to calculate a valid value.
-    if (eegArray.length < samplesSize) {
-      return 0;
-    }
-    // Make sure all values are valid, there can be dummy 0 values if the
-    // channel was disabled before.
-    for (double eegValue in eegArray) {
-      if (eegValue == 0.0) {
+    Map<int, List<double>> eegArrays = new HashMap();
+    for (int channelNumber in channelNumbers) {
+      List<double> eegArray = await NextsenseBase.getChannelData(macAddress,
+          _localSessionId!, channelNumber, _impedanceCalculationPeriod);
+      // Make sure there are enough samples to calculate a valid value.
+      if (eegArray.length < samplesSize) {
         return 0;
       }
+      // Make sure all values are valid, there can be dummy 0 values if the
+      // channel was disabled before.
+      for (double eegValue in eegArray) {
+        if (eegValue == 0.0) {
+          return 0;
+        }
+      }
+      // Remove the average from every sample to account for DC drift.
+      double eegArrayAverage = eegArray.average;
+      for (int i = 0; i < eegArray.length; ++i) {
+        eegArray[i] -= eegArrayAverage;
+      }
+      eegArrays[channelNumber] = eegArray;
     }
-    // Remove the average from every sample to account for DC drift.
-    double eegArrayAverage = eegArray.average;
-    for (int i = 0; i < eegArray.length; ++i) {
-      eegArray[i] -= eegArrayAverage;
+
+    List<double> combinedEegArray = List.filled(samplesSize, 0);
+    for (int channelNumber in channelNumbers) {
+      for (int i = 0; i < eegArrays[channelNumber]!.length; ++i) {
+        combinedEegArray[i] += eegArrays[channelNumber]![i];
+      }
     }
-    ArrayComplex eegArrayComplex = arrayToComplexArray(Array(eegArray));
+
+    ArrayComplex eegArrayComplex = arrayToComplexArray(Array(combinedEegArray));
     // Use a power of 2 for n.
-    eegArrayComplex = fft(eegArrayComplex, n: 256);
-    double frequencyBinSize = eegFrequency / 256;
+    // int fftSize = nextPowerOf2(samplesSize); crashing.
+    int fftSize = 1024;
+    eegArrayComplex = fft(eegArrayComplex, n: fftSize);
+    double frequencyBinSize = eegFrequency / fftSize;
     int impedanceBinIndex = (impedanceFrequency / frequencyBinSize).round();
     // Get the correct freq bin and normalize the value.
     Complex frequencyBin = eegArrayComplex[impedanceBinIndex] /
@@ -149,7 +171,7 @@ class XenonImpedanceCalculator {
     return magnitude * impedanceConstant;
   }
 
-  Future<HashMap<int, double>> calculateAllChannelsImpedance(
+  Future<Map<int, double>> calculateAllChannelsImpedance(
       ImpedanceMode impedanceMode) async {
     _impedanceMode = impedanceMode;
     HashMap<int, double> impedanceData = new HashMap();
@@ -162,7 +184,7 @@ class XenonImpedanceCalculator {
           }
           await Future.delayed(_channelCycleTime, () {});
           impedanceData[channel.toSimple()] = await calculateImpedance(
-              channel.toSimple(), _impedanceFrequency!, _streamingFrequency!,
+              [channel.toSimple()], _impedanceFrequency!, _streamingFrequency!,
               _externalCurrentImpedanceConstant);
         }
         break;
@@ -176,11 +198,15 @@ class XenonImpedanceCalculator {
       case ImpedanceMode.ON_1299_AC:
         await startADS1299AcImpedance();
         await Future.delayed(_channelCycleTime, () {});
-        for (Integer channel in _eegChannelList!) {
-          impedanceData[channel.toSimple()] = await calculateImpedance(
-              channel.toSimple(), _ads1299AcImpedanceFrequency,
+          impedanceData[1] = await calculateImpedance(
+              [1, 8], _ads1299AcImpedanceFrequency,
               _streamingFrequency!, _ads1299AcImpedanceConstant);
-        }
+        impedanceData[7] = await calculateImpedance(
+            [7], _ads1299AcImpedanceFrequency,
+            _streamingFrequency!, _ads1299AcImpedanceConstant);
+        impedanceData[8] = await calculateImpedance(
+            [8], _ads1299AcImpedanceFrequency,
+            _streamingFrequency!, _ads1299AcImpedanceConstant);
         break;
       default:
         throw new UnimplementedError(
@@ -193,4 +219,21 @@ class XenonImpedanceCalculator {
     }
     return impedanceData;
   }
+
+  Future<Map<String, double?>> calculateAllImpedances() async {
+    Map<int, double> impedanceData =
+        await calculateAllChannelsImpedance(ImpedanceMode.ON_1299_AC);
+    Map<String, double?> impedances = new HashMap();
+    impedances['Right Channel'] = impedanceData[8];
+    impedances['Left Channel'] = impedanceData[7];
+    impedances['Left Helix'] = impedanceData[1]! + impedanceData[8]!;
+    return impedances;
+  }
+
+  static int nextPowerOf2(int x) {
+    // Crash on log2(1024), opened an issue:
+    // https://github.com/zlumyo/dart_numerics/issues/6
+    return x == 0 ? 1 : pow(2, log2(x)).ceil();
+  }
+
 }
