@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';

@@ -1,18 +1,11 @@
-import 'package:flutter/foundation.dart';
-import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/assesment.dart';
-import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 class DashboardScreenViewModel extends DeviceStateViewModel {

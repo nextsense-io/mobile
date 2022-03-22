@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
-import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
-import 'package:provider/src/provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 
 class SettingsScreen extends HookWidget {
