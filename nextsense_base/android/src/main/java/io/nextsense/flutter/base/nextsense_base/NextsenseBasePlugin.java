@@ -33,6 +33,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.nextsense.android.Config;
 import io.nextsense.android.base.Device;
+import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.DeviceSettings.ImpedanceMode;
 import io.nextsense.android.base.DeviceState;
@@ -262,8 +263,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case EMULATOR_COMMAND:
         String command = call.argument("command");
         Map<String, Object> params = call.argument("params");
-        ((EmulatedDeviceManager)nextSenseService.getDeviceManager())
-                .sendEmulatorCommand(command, params);
+        DeviceManager deviceManager = nextSenseService.getDeviceManager();
+        if (deviceManager instanceof EmulatedDeviceManager) {
+          ((EmulatedDeviceManager)deviceManager).sendEmulatorCommand(command, params);
+        }
         break;
       case SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
         if (nextSenseServiceBound) {
