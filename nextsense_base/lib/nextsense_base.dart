@@ -63,6 +63,8 @@ class NextsenseBase {
   static const String _deleteLocalSessionCommand = 'delete_local_session';
   static const String _requestDeviceInternalStateUpdateCommand =
       'request_device_internal_state';
+  static const String _setUploaderMinimumConnectivityCommand =
+      'set_uploader_minimum_connectivity';
   static const String _emulatorCommand = 'emulator_command';
   static const String _macAddressArg = 'mac_address';
   static const String _uploadToCloudArg = 'upload_to_cloud';
@@ -73,6 +75,7 @@ class NextsenseBase {
   static const String _durationMillisArg = 'duration_millis';
   static const String _impedanceModeArg = 'impedance_mode';
   static const String _frequencyDividerArg = 'frequency_divider';
+  static const String _minConnectionTypeArg = 'min_connection_type';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
@@ -200,6 +203,11 @@ class NextsenseBase {
   static Future<bool> isBluetoothEnabled() async {
     return await _channel.invokeMethod(_isBluetoothEnabledCommand);
   }
+
+  static Future setUploaderMinimumConnectivity(String connectionType) async {
+    return await _channel.invokeMethod(_setUploaderMinimumConnectivityCommand,
+        {_minConnectionTypeArg: connectionType});
+}
 
   static Future<bool> sendEmulatorCommand(EmulatorCommand command,
       {Map<String, dynamic> params = const {}}) async {

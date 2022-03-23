@@ -38,6 +38,7 @@ import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.DeviceSettings.ImpedanceMode;
 import io.nextsense.android.base.DeviceState;
 import io.nextsense.android.base.ble.EmulatedDeviceManager;
+import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.service.ForegroundService;
@@ -64,6 +65,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       "request_device_internal_state";
   public static final String GET_DEVICE_INTERNAL_STATE_DATA_COMMAND =
       "get_device_internal_state_data";
+  public static final String SET_UPLOADER_MINIMUM_CONNECTIVITY_COMMAND =
+      "set_uploader_minimum_connectivity";
   public static final String EMULATOR_COMMAND = "emulator_command";
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
@@ -75,6 +78,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String DURATION_MILLIS_ARGUMENT = "duration_millis";
   public static final String IMPEDANCE_MODE_ARGUMENT = "impedance_mode";
   public static final String FREQUENCY_DIVIDER_ARGUMENT = "frequency_divider";
+  public static final String MIN_CONNECTION_TYPE_ARGUMENT = "min_connection_type";
+  public static final String ERROR_SERVICE_NOT_AVAILABLE = "service_not_available";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
   public static final String ERROR_SESSION_NOT_STARTED = "session_not_started";
   public static final String ERROR_STREAMING_START_FAILED = "streaming_start_failed";
@@ -259,6 +264,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
         durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
         getDeviceInternalStateData(result, macAddress, localSessionId, durationMillis);
+        break;
+      case SET_UPLOADER_MINIMUM_CONNECTIVITY_COMMAND:
+        String minConnectionType = call.argument(MIN_CONNECTION_TYPE_ARGUMENT);
+        setUploaderMinimumConnectivity(result, minConnectionType);
         break;
       case EMULATOR_COMMAND:
         String command = call.argument("command");
@@ -656,6 +665,17 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   private void deleteLocalSession(Result result, Integer localSessionId) {
     result.success(nextSenseService.getObjectBoxDatabase().deleteLocalSession(localSessionId));
+  }
+
+  private void setUploaderMinimumConnectivity(Result result, String connectionType) {
+    if (nextSenseServiceBound) {
+      Connectivity.State minConnectivityState = connectionType.equals("mobile") ?
+          Connectivity.State.LIMITED_CONNECTION : Connectivity.State.FULL_CONNECTION;
+      nextSenseService.getUploader().setMinimumConnectivityState(minConnectivityState);
+      result.success(null);
+    } else {
+      result.error(ERROR_SERVICE_NOT_AVAILABLE, null, null);
+    }
   }
 
   private void returnError(

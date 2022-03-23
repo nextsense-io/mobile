@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
@@ -70,6 +71,9 @@ class CheckWifiScreen extends HookWidget {
                         _preferences.setBool(
                             PreferenceKey.allowDataTransmissionViaCellular,
                             allowCellular);
+                        NextsenseBase.setUploaderMinimumConnectivity(
+                            allowCellular ? ConnectivityState.mobile.name :
+                            ConnectivityState.wifi.name);
                       },
                       secondary: const Icon(Icons.network_cell, color: Colors.white,),
                     ),

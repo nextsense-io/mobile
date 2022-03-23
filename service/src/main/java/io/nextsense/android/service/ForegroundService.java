@@ -118,6 +118,10 @@ public class ForegroundService extends Service {
     return sampleRateCalculator;
   }
 
+  public Uploader getUploader() {
+    return uploader;
+  }
+
   public boolean isFlutterActivityActive() {
     return flutterActivityActive;
   }
