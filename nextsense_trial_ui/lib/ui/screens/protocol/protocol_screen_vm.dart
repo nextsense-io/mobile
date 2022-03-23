@@ -107,28 +107,12 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   @override
   void onDeviceDisconnected() {
-    _timerPaused = true;
-    disconnectTimeoutTimer?.cancel();
-    // TODO(alex): get disconnect timeout from firebase
-    disconnectTimeoutSecondsLeft =
-        protocol.disconnectTimeoutDuration.inSeconds;
-    disconnectTimeoutTimer = Timer.periodic(
-      Duration(seconds: 1),
-          (_){
-        disconnectTimeoutSecondsLeft-=1;
-        if (disconnectTimeoutSecondsLeft <= 0) {
-          disconnectTimeoutTimer?.cancel();
-          _onDisconnectTimeout();
-        }
-        notifyListeners();
-      },
-    );
+    _pauseProtocol();
   }
 
   @override
   void onDeviceReconnected() {
-    _timerPaused = false;
-    disconnectTimeoutTimer?.cancel();
+    _restartProtocol();
   }
 
   void _onDisconnectTimeout() {
@@ -137,8 +121,52 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     stopSession();
   }
 
+  void _pauseProtocol() {
+    _timerPaused = true;
+    disconnectTimeoutTimer?.cancel();
+    // TODO(alex): get disconnect timeout from firebase
+    disconnectTimeoutSecondsLeft =
+        protocol.disconnectTimeoutDuration.inSeconds;
+    disconnectTimeoutTimer = Timer.periodic(
+      Duration(seconds: 1), (_){
+      disconnectTimeoutSecondsLeft -= 1;
+      if (disconnectTimeoutSecondsLeft <= 0) {
+        disconnectTimeoutTimer?.cancel();
+        _onDisconnectTimeout();
+      }
+      notifyListeners();
+    },
+    );
+  }
+
+  void _restartProtocol() {
+    _timerPaused = false;
+    disconnectTimeoutTimer?.cancel();
+  }
+
   @override
   void onDeviceInternalStateChanged(DeviceInternalStateEvent event) {
-    _logger.log(Level.INFO, 'onDeviceInternalStateChanged $event');
+    _logger.log(Level.INFO, 'onDeviceInternalStateChanged ${event.type.name}');
+    switch (event.type) {
+      case DeviceInternalStateEventType.hdmiCableDisconnected:
+        _pauseProtocol();
+        break;
+      case DeviceInternalStateEventType.hdmiCableConnected:
+        if (_timerPaused) {
+          _restartProtocol();
+        }
+        break;
+      case DeviceInternalStateEventType.uSdDisconnected:
+        _pauseProtocol();
+        break;
+      case DeviceInternalStateEventType.uSdConnected:
+        if (_timerPaused) {
+          _restartProtocol();
+        }
+        break;
+      case DeviceInternalStateEventType.unknown:
+        _logger.log(Level.WARNING, 'Unknown device internal state received.');
+        break;
+    }
   }
 }

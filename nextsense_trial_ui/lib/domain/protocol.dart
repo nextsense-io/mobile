@@ -122,6 +122,9 @@ abstract class BaseProtocol implements Protocol {
       /*_startTime = _sessionManager.getCurrentSession()?.getValue(
           SessionKey.start_datetime);*/
       _protocolState = ProtocolState.running;
+    } else {
+      _logger.log(Level.WARNING, 'Cannot start ${getName()} protocol, device '
+          'not connected.');
     }
   }
 

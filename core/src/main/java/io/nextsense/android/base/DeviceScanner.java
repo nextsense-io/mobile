@@ -1,29 +1,10 @@
 package io.nextsense.android.base;
 
-import android.bluetooth.le.ScanResult;
-import androidx.annotation.NonNull;
-
-import com.welie.blessed.BluetoothCentralManagerCallback;
-import com.welie.blessed.BluetoothPeripheral;
-import com.welie.blessed.ScanFailure;
-
 import io.nextsense.android.Config;
-import io.nextsense.android.base.ble.BleDeviceManager;
 import io.nextsense.android.base.ble.BleDeviceScanner;
-import io.nextsense.android.base.ble.EmulatedDeviceManager;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
-import io.nextsense.android.base.data.LocalSessionManager;
-import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.emulated.EmulatedDeviceScanner;
-import io.nextsense.android.base.utils.Util;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static io.nextsense.android.base.utils.Util.logd;
 
 /**
  * Scans for devices and returns the list of {@link Device} that can be connected to.
