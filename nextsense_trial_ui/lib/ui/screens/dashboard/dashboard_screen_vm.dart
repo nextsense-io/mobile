@@ -84,7 +84,6 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return getProtocolsByDay(selectedDay!);
   }
 
-
   @override
   void onDeviceDisconnected() {
     // TODO(alex): implement logic onDeviceDisconnected if needed
@@ -103,5 +102,4 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     _deviceManager.disconnectDevice();
     _authManager.signOut();
   }
-
 }

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
-import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
-import 'package:nextsense_trial_ui/ui/check_wifi_screen.dart';
+import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
@@ -51,8 +49,6 @@ class Navigation {
           builder: (context) => DashboardScreen());
       case PrepareDeviceScreen.id: return MaterialPageRoute(
           builder: (context) => PrepareDeviceScreen());
-      case CheckWifiScreen.id: return MaterialPageRoute(
-          builder: (context) => CheckWifiScreen());
       case HelpScreen.id: return MaterialPageRoute(
           builder: (context) => HelpScreen());
       case AboutScreen.id: return MaterialPageRoute(
@@ -63,11 +59,19 @@ class Navigation {
           builder: (context) => SettingsScreen());
 
     // Routes with arguments
-      case ProtocolScreen.id: return MaterialPageRoute(builder: (context) =>
+      case ProtocolScreen.id:
+        return MaterialPageRoute(builder: (context) =>
           ProtocolScreen(settings.arguments as Protocol));
-      case RequestPermissionScreen.id: return MaterialPageRoute(
+      case RequestPermissionScreen.id:
+        return MaterialPageRoute(
           builder: (context) => RequestPermissionScreen(
               settings.arguments as PermissionRequest));
+      case CheckInternetScreen.id:
+        Protocol? checkInternetProtocol = settings.arguments == null ? null :
+            settings.arguments as Protocol;
+        return MaterialPageRoute(
+          builder: (context) => CheckInternetScreen(
+              protocol: checkInternetProtocol));
     }
   }
 
@@ -76,10 +80,6 @@ class Navigation {
   }
 
   Future navigateToDeviceScan({bool replace = false}) async {
-    // If wifi not available we ask user to check it
-    if (!getIt<ConnectivityManager>().isWifi) {
-      await navigateTo(CheckWifiScreen.id);
-    }
     // Check if Bluetooth is ON.
     if (!await NextsenseBase.isBluetoothEnabled()) {
       // Ask the user to turn on Bluetooth.
