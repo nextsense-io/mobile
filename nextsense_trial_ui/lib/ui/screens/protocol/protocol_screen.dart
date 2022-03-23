@@ -75,7 +75,9 @@ class ProtocolScreen extends HookWidget {
                   Stack(
                     children: [
                       Center(child: _timer(context)),
-                      if (!viewModel.deviceIsConnected)
+                      if (!viewModel.deviceIsConnected ||
+                          !viewModel.isHdmiCablePresent ||
+                          !viewModel.isUSdPresent)
                         _deviceInactiveOverlay(context, viewModel)
                     ],
                   ),
@@ -213,6 +215,19 @@ class ProtocolScreen extends HookWidget {
     final countdownTimerText =
       Text(timerValue, style: TextStyle(color: Colors.white, fontSize: 20));
 
+    String explanationText = 'Device is not connected.';
+    String remediationText = 'The protocol will be marked as cancelled if the '
+        'connection is not brought back online before:';
+    if (!viewModel.isHdmiCablePresent) {
+      explanationText = 'The earbuds cable is disconnected.';
+      remediationText = 'The protocol will be marked as cancelled if the '
+          'earbuds are not reconnected before:';
+    } else if (!viewModel.isUSdPresent) {
+      explanationText = 'The micro sd card is not inserted in the device.';
+      remediationText = 'The protocol will be marked as cancelled if the '
+          'micro sd card is not reinserted before:';
+    }
+
     return Opacity(
       opacity: 0.9,
       child: Container(
@@ -228,7 +243,7 @@ class ProtocolScreen extends HookWidget {
               size: 60,
             ),
             Text(
-              "Device is not connected!",
+              explanationText,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white, fontSize: 30),
             ),
@@ -236,9 +251,7 @@ class ProtocolScreen extends HookWidget {
               SizedBox(
                 height: 30,
               ),
-              Text(
-                'The protocol will be marked as cancelled if the '
-                    'connection is not brought back online before:',
+              Text(remediationText,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
@@ -264,7 +277,7 @@ class ProtocolScreen extends HookWidget {
           ProtocolCancelReason.deviceDisconnectedTimeout)
       {
         statusMsg = 'Protocol canceled because \n'
-            'device was disconnected too long';
+            'device was unavailable for too long';
       }
     }
     else if (viewModel.protocolCompleted) {
