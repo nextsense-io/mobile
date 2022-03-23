@@ -63,6 +63,8 @@ public class Uploader {
   private HandlerThread subscriptionsHandlerThread;
   private AndroidScheduler subscriptionsScheduler;
   private boolean started;
+  private Connectivity.State minimumConnectivityState = Connectivity.State.FULL_CONNECTION;
+  private Connectivity.State currentConnectivityState = Connectivity.State.NO_CONNECTION;
 
 
   private Uploader(ObjectBoxDatabase objectBoxDatabase, Connectivity connectivity, int uploadChunkSize) {
@@ -93,13 +95,19 @@ public class Uploader {
     Log.i(TAG, "Stopped.");
   }
 
+  public void setMinimumConnectivityState(Connectivity.State connectivityState) {
+    minimumConnectivityState = connectivityState;
+    Log.i(TAG, "Minimum connectivity set to " + minimumConnectivityState.name());
+    onConnectivityStateChanged();
+  }
+
   private void startRunning() {
-    recordsSinceLastNotify = 0;
     if (running.get()) {
       Log.w(TAG, "Already running, no-op.");
       return;
     }
     Log.i(TAG, "Starting to run.");
+    recordsSinceLastNotify = 0;
     subscriptionsHandlerThread = new HandlerThread("UploaderSubscriptionsHandlerThread");
     subscriptionsHandlerThread.start();
     subscriptionsScheduler = new AndroidScheduler(subscriptionsHandlerThread.getLooper());
@@ -378,11 +386,17 @@ public class Uploader {
         });
   }
 
+  private void onConnectivityStateChanged() {
+    if (currentConnectivityState == Connectivity.State.FULL_CONNECTION ||
+        currentConnectivityState == minimumConnectivityState) {
+      startRunning();
+    } else {
+      stopRunning();
+    }
+  }
+
   private final Connectivity.StateListener connectivityStateListener = newState -> {
-      if (newState == Connectivity.State.FULL_CONNECTION) {
-        startRunning();
-      } else {
-        stopRunning();
-      }
+    currentConnectivityState = newState;
+    onConnectivityStateChanged();
   };
 }
