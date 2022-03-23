@@ -2,10 +2,13 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/preferences.dart';
 
 enum ConnectivityState {
   mobile,
   wifi,
+  none,
   unknown
 }
 
@@ -14,11 +17,15 @@ enum ConnectivityState {
  */
 class ConnectivityManager extends ChangeNotifier {
 
+  final _preferences = getIt<Preferences>();
+
   ConnectivityState state = ConnectivityState.unknown;
 
   bool get isWifi => state == ConnectivityState.wifi;
 
   bool get isCellular => state == ConnectivityState.mobile;
+
+  bool get isNone => state == ConnectivityState.none;
 
   ConnectivityManager() {
     Connectivity().onConnectivityChanged
@@ -32,7 +39,9 @@ class ConnectivityManager extends ChangeNotifier {
           break;
         case ConnectivityResult.ethernet:
         case ConnectivityResult.bluetooth:
+          break;
         case ConnectivityResult.none:
+          state = ConnectivityState.none;
           break;
       }
       notifyListeners();
@@ -50,7 +59,23 @@ class ConnectivityManager extends ChangeNotifier {
       return ConnectivityState.mobile;
     } else if (connectivityResult == ConnectivityResult.wifi) {
       return ConnectivityState.wifi;
+    } else if (connectivityResult == ConnectivityResult.none) {
+      return ConnectivityState.none;
     }
     return ConnectivityState.unknown;
+  }
+
+  bool isConnectionSufficientForCloudSync() {
+    switch (state) {
+      case ConnectivityState.wifi:
+        return true;
+      case ConnectivityState.mobile:
+        return _preferences.getBool(
+            PreferenceKey.allowDataTransmissionViaCellular);
+      case ConnectivityState.unknown:
+        // Fallthrough.
+      case ConnectivityState.none:
+        return false;
+    }
   }
 }

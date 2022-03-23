@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
-import 'package:nextsense_trial_ui/managers/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
+import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
@@ -19,10 +19,7 @@ class DashboardScreen extends StatelessWidget {
 
   static const String id = 'dashboard_screen';
 
-  final AuthManager _authManager = getIt<AuthManager>();
-  final DeviceManager _deviceManager = getIt<DeviceManager>();
   final Navigation _navigation = getIt<Navigation>();
-
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
@@ -207,8 +204,14 @@ class DashboardScreen extends StatelessWidget {
                           padding: const EdgeInsets.only(top: 12.0),
                           child: InkWell(
                             onTap: () {
-                              _navigation.navigateTo(ProtocolScreen.id,
-                                  arguments: protocol);
+                              if (context.read<ConnectivityManager>()
+                                  .isConnectionSufficientForCloudSync()) {
+                                _navigation.navigateTo(ProtocolScreen.id,
+                                    arguments: protocol);
+                              } else {
+                                _navigation.navigateTo(CheckInternetScreen.id,
+                                    arguments: protocol);
+                              }
                             },
                             child: Container(
                                 padding: const EdgeInsets.all(16.0),

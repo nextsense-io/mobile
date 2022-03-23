@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
@@ -26,6 +28,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final StudyManager _studyManager = getIt<StudyManager>();
   final Navigation _navigation = getIt<Navigation>();
   final PermissionsManager _permissionsManager = getIt<PermissionsManager>();
+  final ConnectivityManager _connectivityManager = getIt<ConnectivityManager>();
 
   // Change _code and _password to some values and _askForPassword to true
   // for autologin
@@ -155,11 +158,13 @@ class _SignInScreenState extends State<SignInScreen> {
       return;
     }
 
-    // Navigate to the device preparation screen.
     _navigation.navigateTo(DashboardScreen.id);
-    // TODO(eric): Might want to add a 'Do not show this again' in that page and
-    // check first before going to that page.
-    await _navigation.navigateTo(PrepareDeviceScreen.id);
+    // Navigate to the device preparation screen.
+    if (_connectivityManager.isConnectionSufficientForCloudSync()) {
+      await _navigation.navigateTo(PrepareDeviceScreen.id);
+    } else {
+      await _navigation.navigateTo(CheckInternetScreen.id);
+    }
   }
 
   List<Widget> _buildBody(BuildContext context) {

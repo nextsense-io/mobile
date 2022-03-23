@@ -2,16 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:provider/src/provider.dart';
 
-class CheckWifiScreen extends HookWidget {
+class CheckInternetScreen extends HookWidget {
 
-  static const String id = 'check_wifi_screen';
+  static const String id = 'check_internet_screen';
 
+  final Navigation _navigation = getIt<Navigation>();
   final _preferences = getIt<Preferences>();
+  final Protocol? protocol;
+
+  CheckInternetScreen({this.protocol = null});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +26,11 @@ class CheckWifiScreen extends HookWidget {
     final cellularEnabled = useState<bool>(_preferences.getBool(
         PreferenceKey.allowDataTransmissionViaCellular));
     final bool isWifi = connectivityManager.isWifi;
-    final bool canProceed = isWifi || cellularEnabled.value;
+    final bool canProceed =
+        connectivityManager.isConnectionSufficientForCloudSync();
     return Scaffold(
       appBar: AppBar(
-        title: Text('Check Wifi'),
+        title: Text('Internet Connection'),
       ),
       body: Container(
         decoration: baseBackgroundDecoration,
@@ -50,7 +58,10 @@ class CheckWifiScreen extends HookWidget {
                           padding: EdgeInsets.all(30.0),
                           child: Text(
                             "A good internet connection is needed to upload your "
-                                "NextSense device data to our cloud.",
+                            "NextSense device data to our cloud. Please enable "
+                            "your wifi connection or allow cellular upload. Note "
+                            "that you should do this only with unmetered plans "
+                            "as it could quickly fill your quota.",
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.white, fontSize: 20),
                           ),
@@ -87,7 +98,15 @@ class CheckWifiScreen extends HookWidget {
                     ),
                   ),
                   onPressed: canProceed ? () async {
-                    Navigator.of(context).pop();
+                    if (protocol != null) {
+                      // TODO(eric): Might want to add a 'Do not show this again'
+                      // in that page and check first before going to that page.
+                      _navigation.navigateTo(ProtocolScreen.id,
+                          replace: true, arguments: protocol);
+                    } else {
+                      _navigation.navigateToDeviceScan(replace: true);
+                      // Navigator.of(context).pop();
+                    }
                   } : null,
                 )
                 ],
