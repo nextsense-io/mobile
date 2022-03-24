@@ -75,9 +75,7 @@ class ProtocolScreen extends HookWidget {
                   Stack(
                     children: [
                       Center(child: _timer(context)),
-                      if (!viewModel.deviceIsConnected ||
-                          !viewModel.isHdmiCablePresent ||
-                          !viewModel.isUSdPresent)
+                      if (!viewModel.deviceCanRecord)
                         _deviceInactiveOverlay(context, viewModel)
                     ],
                   ),

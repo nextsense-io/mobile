@@ -25,6 +25,8 @@ abstract class DeviceStateViewModel
 
   DeviceState get deviceState => _deviceManager.deviceState.value;
   bool get deviceIsConnected => deviceState == DeviceState.READY;
+  bool get deviceCanRecord =>
+      deviceIsConnected && isHdmiCablePresent && isUSdPresent;
 
   StreamSubscription<DeviceInternalStateEvent>?
     _deviceInternalStateChangesSubscription;
