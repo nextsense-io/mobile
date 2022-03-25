@@ -21,11 +21,9 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -178,7 +176,8 @@ public class Uploader {
     if (sessionEegSamplesCount - localSession.getEegSamplesUploaded() >= uploadChunkSize) {
       eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(
           localSession.id, relativeEegStartOffset, uploadChunkSize));
-    } else if (localSession.getStatus() == LocalSession.Status.FINISHED) {
+    } else if (objectBoxDatabase.getLocalSession(localSession.id).getStatus() ==
+        LocalSession.Status.FINISHED) {
       eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(localSession.id,
           relativeEegStartOffset,
           sessionEegSamplesCount - localSession.getEegSamplesUploaded()));
@@ -252,8 +251,11 @@ public class Uploader {
                   localSession.getEegSamplesUploaded() + eegSamplesToUploadSize);
               Util.logv(TAG, "Uploaded " + localSession.getEegSamplesUploaded() +
                   " from session " + localSession.id);
-              if (localSession.getStatus() == LocalSession.Status.FINISHED &&
-                  localSession.getEegSamplesUploaded() ==
+              // Need to check the status from the DB as it could get updated to finished in another
+              // thread.
+              localSession.setStatus(objectBoxDatabase.getLocalSession(localSession.id).getStatus());
+              if (localSession.getStatus() ==
+                  LocalSession.Status.FINISHED && localSession.getEegSamplesUploaded() ==
                       objectBoxDatabase.getEegSamplesCount(localSession.id) +
                           localSession.getEegSamplesDeleted()) {
                 Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
