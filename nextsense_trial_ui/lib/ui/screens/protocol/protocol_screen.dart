@@ -35,7 +35,9 @@ class ProtocolScreen extends HookWidget {
     var sessionControlButtonColor = Colors.blue;
     if (viewModel.sessionIsActive) {
       sessionControlButtonColor = Colors.red;
-      if (viewModel.protocolCompleted) sessionControlButtonColor = Colors.green;
+      if (viewModel.protocolCompleted) {
+        sessionControlButtonColor = Colors.green;
+      }
     }
     return SafeArea(
       child: Scaffold(
@@ -106,12 +108,12 @@ class ProtocolScreen extends HookWidget {
                         if (viewModel.sessionIsActive) {
                           bool confirm = await _confirmStopSessionDialog(context,
                               viewModel);
-                          if (confirm) viewModel.stopSession();
-                        } else
-                        if (viewModel.deviceIsConnected)
-                          viewModel.startSession();
-                        else
-                        {
+                          if (confirm) {
+                            viewModel.stopSession();
+                          }
+                        } else if (viewModel.deviceIsConnected) {
+                            viewModel.startSession();
+                        } else {
                           await showDialog(
                             context: context,
                             builder: (_) => SimpleAlertDialog(
@@ -119,7 +121,6 @@ class ProtocolScreen extends HookWidget {
                                   content: 'Device is not connected.')
                           );
                         }
-
                       },
                       child: Container(
                         padding: const EdgeInsets.all(8.0),
