@@ -41,6 +41,7 @@ public class ObjectBoxDatabase implements Database {
   private Query<LocalSession> activeSessionQuery;
   private Query<LocalSession> sessionFinishedQuery;
   private Query<EegSample> eegSamplesQuery;
+  private Query<EegSample> eegSamplesTimestampIsLesserQuery;
   private Query<Acceleration> accelerationQuery;
   private Query<DeviceInternalState> recentDeviceInternalStateQuery;
   private Query<DeviceInternalState> lastDeviceInternalStateQuery;
@@ -55,6 +56,8 @@ public class ObjectBoxDatabase implements Database {
         .equal(LocalSession_.status, LocalSession.Status.FINISHED.id).build();
     eegSampleBox = boxStore.boxFor(EegSample.class);
     eegSamplesQuery = eegSampleBox.query().equal(EegSample_.localSessionId, 0).build();
+    eegSamplesTimestampIsLesserQuery = eegSampleBox.query().equal(EegSample_.localSessionId, 0)
+        .less(EegSample_.absoluteSamplingTimestamp, 0).build();
     accelerationBox = boxStore.boxFor(Acceleration.class);
     accelerationQuery = accelerationBox.query().equal(Acceleration_.localSessionId, 0).build();
     deviceInternalStateBox = boxStore.boxFor(DeviceInternalState.class);
@@ -196,6 +199,11 @@ public class ObjectBoxDatabase implements Database {
 
   public long deleteEegSamplesData(long localSessionId) {
     return eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).remove();
+  }
+
+  public long deleteFirstEegSamplesData(long localSessionId, long timestampCutoff) {
+    return eegSamplesTimestampIsLesserQuery.setParameter(EegSample_.localSessionId, localSessionId)
+        .setParameter(EegSample_.absoluteSamplingTimestamp, timestampCutoff).remove();
   }
 
   public long deleteAccelerationData(long localSessionId) {

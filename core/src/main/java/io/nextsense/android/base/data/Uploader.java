@@ -18,9 +18,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -53,6 +58,10 @@ public class Uploader {
   private final AtomicBoolean running = new AtomicBoolean(false);
   // Should be 1 second of data to be simple to import in BigTable.
   private final int uploadChunkSize;
+  // How many recent records to keep in a session locally after upload.
+  private final int minRecordsToKeep;
+  // Minimum retention time for records, used to match timestamps in database.
+  private final Duration minDurationToKeep;
   private final AtomicBoolean recordsToUpload = new AtomicBoolean(false);
   private final Object syncToken = new Object();
   private ExecutorService executor;
@@ -67,15 +76,20 @@ public class Uploader {
   private Connectivity.State currentConnectivityState = Connectivity.State.NO_CONNECTION;
 
 
-  private Uploader(ObjectBoxDatabase objectBoxDatabase, Connectivity connectivity, int uploadChunkSize) {
+  private Uploader(ObjectBoxDatabase objectBoxDatabase, Connectivity connectivity,
+                   int uploadChunkSize, int minRecordsToKeep, Duration minDurationToKeep) {
     this.objectBoxDatabase = objectBoxDatabase;
     this.connectivity = connectivity;
     this.uploadChunkSize = uploadChunkSize;
+    this.minRecordsToKeep = minRecordsToKeep;
+    this.minDurationToKeep = minDurationToKeep;
   }
 
   public static Uploader create(ObjectBoxDatabase objectBoxDatabase, Connectivity connectivity,
-                                int uploadChunkSize) {
-    return new Uploader(objectBoxDatabase, connectivity, uploadChunkSize);
+                                int uploadChunkSize, int minRecordsToKeep,
+                                Duration minDurationToKeep) {
+    return new Uploader(objectBoxDatabase, connectivity, uploadChunkSize, minRecordsToKeep,
+        minDurationToKeep);
   }
 
   public void start() {
@@ -157,15 +171,17 @@ public class Uploader {
   //             are missing samples.
   private List<EegSample> getSamplesToUpload(LocalSession localSession) {
     List<EegSample> eegSamplesToUpload = new ArrayList<>();
-    if (objectBoxDatabase.getEegSamplesCount(localSession.id) -
-        localSession.getEegSamplesUploaded() >= uploadChunkSize) {
+    long relativeEegStartOffset = localSession.getEegSamplesUploaded() -
+        localSession.getEegSamplesDeleted();
+    long sessionEegSamplesCount = objectBoxDatabase.getEegSamplesCount(localSession.id) +
+        localSession.getEegSamplesDeleted();
+    if (sessionEegSamplesCount - localSession.getEegSamplesUploaded() >= uploadChunkSize) {
       eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(
-          localSession.id, localSession.getEegSamplesUploaded(), uploadChunkSize));
+          localSession.id, relativeEegStartOffset, uploadChunkSize));
     } else if (localSession.getStatus() == LocalSession.Status.FINISHED) {
       eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(localSession.id,
-          localSession.getEegSamplesUploaded(),
-          objectBoxDatabase.getEegSamplesCount(localSession.id) -
-              localSession.getEegSamplesUploaded()));
+          relativeEegStartOffset,
+          sessionEegSamplesCount - localSession.getEegSamplesUploaded()));
     }
     return eegSamplesToUpload;
   }
@@ -174,8 +190,9 @@ public class Uploader {
       LocalSession localSession, EegSample firstEegSampleToUpload, int frequency) {
     if (localSession.getEegSamplesUploaded() > 0) {
       return objectBoxDatabase.getEegSamples(
-          localSession.id, localSession.getEegSamplesUploaded() - 1L, /*count=*/1)
-          .get(0).getAbsoluteSamplingTimestamp().plusMillis(
+          localSession.id, localSession.getEegSamplesUploaded() -
+              localSession.getEegSamplesDeleted() - 1L, /*count=*/1)
+              .get(0).getAbsoluteSamplingTimestamp().plusMillis(
               Math.round(Math.floor(1000f / frequency)));
     }
     return firstEegSampleToUpload.getAbsoluteSamplingTimestamp();
@@ -237,7 +254,8 @@ public class Uploader {
                   " from session " + localSession.id);
               if (localSession.getStatus() == LocalSession.Status.FINISHED &&
                   localSession.getEegSamplesUploaded() ==
-                      objectBoxDatabase.getEegSamplesCount(localSession.id)) {
+                      objectBoxDatabase.getEegSamplesCount(localSession.id) +
+                          localSession.getEegSamplesDeleted()) {
                 Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
                 localSession.setStatus(LocalSession.Status.UPLOADED);
                 // This could be deleted at a later time in case the data needs to be analyzed or
@@ -246,6 +264,17 @@ public class Uploader {
               }
               objectBoxDatabase.putLocalSession(localSession);
             });
+            if (localSession.getStatus() != LocalSession.Status.UPLOADED) {
+              objectBoxDatabase.runInTx(() -> {
+                long recordsDeleted = deleteOldRecords(localSession);
+                Util.logd(TAG, "Deleted " + recordsDeleted + " eeg records.");
+                if (recordsDeleted > 0) {
+                  localSession.setEegSamplesDeleted(
+                      localSession.getEegSamplesDeleted() + recordsDeleted);
+                  objectBoxDatabase.putLocalSession(localSession);
+                }
+              });
+            }
           }
           // TODO(eric): Implement more error mitigation strategies:
           //             - backoff retry.
@@ -294,6 +323,26 @@ public class Uploader {
       }
       Util.logd(TAG, "New records to upload, wait finished.");
     }
+  }
+
+  DateTimeFormatter formatter =
+      DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.from(ZoneOffset.UTC));
+
+  private long deleteOldRecords(LocalSession localSession) {
+    if (objectBoxDatabase.getEegSamplesCount(localSession.id) > minRecordsToKeep) {
+      Util.logd(TAG, "Got " + objectBoxDatabase.getEegSamplesCount(localSession.id) +
+          " records in db, need to delete " +
+          (objectBoxDatabase.getEegSamplesCount(localSession.id) - minRecordsToKeep));
+      Instant lastSampleTime = objectBoxDatabase.getEegSamples(
+          localSession.id, localSession.getEegSamplesUploaded() -
+              localSession.getEegSamplesDeleted() - 1L, /*count=*/1)
+          .get(0).getAbsoluteSamplingTimestamp();
+      Instant cutOffDate = lastSampleTime.minus(minDurationToKeep);
+      Util.logd(TAG, "Cutoff time: " + formatter.format(cutOffDate));
+      return objectBoxDatabase.deleteFirstEegSamplesData(localSession.id,
+          cutOffDate.toEpochMilli());
+    }
+    return 0;
   }
 
   private DataSamplesProto.DataSamples serializeToProto(List<EegSample> eegSamplesToUpload,

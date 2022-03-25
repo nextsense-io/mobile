@@ -35,22 +35,26 @@ public class LocalSession extends BaseRecord {
   private Status status;
   private boolean uploadNeeded;
   private int eegSamplesUploaded;
+  private long eegSamplesDeleted;
   private float eegSampleRate;
   private int accelerationsUploaded;
+  private long accelerationSamplesDeleted;
   private float accelerationSampleRate;
 
   private LocalSession(@Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
                        Status status, boolean uploadNeeded, int eegSamplesUploaded,
-                       float eegSampleRate, int accelerationsUploaded,
-                       float accelerationSampleRate) {
+                       long eegSamplesDeleted, float eegSampleRate, int accelerationsUploaded,
+                       long accelerationSamplesDeleted, float accelerationSampleRate) {
     super();
     this.cloudDataSessionId = cloudDataSessionId;
     this.userBigTableKey = userBigTableKey;
     this.status = status;
     this.uploadNeeded = uploadNeeded;
     this.eegSamplesUploaded = eegSamplesUploaded;
+    this.eegSamplesDeleted = eegSamplesDeleted;
     this.eegSampleRate = eegSampleRate;
     this.accelerationsUploaded = accelerationsUploaded;
+    this.accelerationSamplesDeleted = accelerationSamplesDeleted;
     this.accelerationSampleRate = accelerationSampleRate;
   }
 
@@ -58,22 +62,25 @@ public class LocalSession extends BaseRecord {
       @Nullable String userBigTableKey, @Nullable String cloudDataSessionId, boolean uploadNeeded,
       float eegSampleRate, float accelerationSampleRate) {
     return new LocalSession(cloudDataSessionId, userBigTableKey, Status.RECORDING, uploadNeeded,
-        /*recordsUploaded=*/0, eegSampleRate, /*accelerationsUploaded=*/0, accelerationSampleRate);
+        /*recordsUploaded=*/0, /*eegSamplesDeleted=*/0, eegSampleRate, /*accelerationsUploaded=*/0,
+        /*accelerationSamplesDeleted=*/0, accelerationSampleRate);
   }
 
   // Need to be public for ObjectBox performance.
   public LocalSession(
       int id, @Nullable String userBigTableKey, @Nullable String cloudDataSessionId, Status status,
-      boolean uploadNeeded, int eegSamplesUploaded, float eegSampleRate, int accelerationsUploaded,
-      float accelerationSampleRate) {
+      boolean uploadNeeded, int eegSamplesUploaded, long eegSamplesDeleted, float eegSampleRate,
+      int accelerationsUploaded, long accelerationSamplesDeleted, float accelerationSampleRate) {
     super(id);
     this.cloudDataSessionId = cloudDataSessionId;
     this.userBigTableKey = userBigTableKey;
     this.status = status;
     this.uploadNeeded = uploadNeeded;
     this.eegSamplesUploaded = eegSamplesUploaded;
+    this.eegSamplesDeleted = eegSamplesDeleted;
     this.eegSampleRate = eegSampleRate;
     this.accelerationsUploaded = accelerationsUploaded;
+    this.accelerationSamplesDeleted = accelerationSamplesDeleted;
     this.accelerationSampleRate = accelerationSampleRate;
   }
 
@@ -106,6 +113,14 @@ public class LocalSession extends BaseRecord {
     return eegSamplesUploaded;
   }
 
+  public long getEegSamplesDeleted() {
+    return eegSamplesDeleted;
+  }
+
+  public void setEegSamplesDeleted(long eegSamplesDeleted) {
+    this.eegSamplesDeleted = eegSamplesDeleted;
+  }
+
   public boolean isUploadNeeded() {
     return uploadNeeded;
   }
@@ -116,6 +131,14 @@ public class LocalSession extends BaseRecord {
 
   public int getAccelerationsUploaded() {
     return accelerationsUploaded;
+  }
+
+  public long getAccelerationSamplesDeleted() {
+    return accelerationSamplesDeleted;
+  }
+
+  public void setAccelerationSamplesDeleted(long accelerationSamplesDeleted) {
+    this.accelerationSamplesDeleted = accelerationSamplesDeleted;
   }
 
   public void setEegSamplesUploaded(int eegSamplesUploaded) {
