@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
  */
 public class RequestAuxPacketCommand extends XenonFirmwareCommand {
 
-  private static final byte STATE_PACKET = 0x01;
+  private static final byte STATE_PACKET = (byte)0x01;
 
   public RequestAuxPacketCommand() {
     super(XenonMessageType.REQUEST_AUX_PACKET);
