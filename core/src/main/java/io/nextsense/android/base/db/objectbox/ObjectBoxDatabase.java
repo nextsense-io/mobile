@@ -102,7 +102,7 @@ public class ObjectBoxDatabase implements Database {
     return deviceInternalStateBox.put(deviceInternalState);
   }
 
-  public LocalSession getLocalSession(int localSessionId) {
+  public LocalSession getLocalSession(long localSessionId) {
     return localSessionBox.get(localSessionId);
   }
 
