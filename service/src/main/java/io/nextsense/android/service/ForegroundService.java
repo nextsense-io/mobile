@@ -15,6 +15,8 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import java.time.Duration;
+
 import io.nextsense.android.Config;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
@@ -145,7 +147,10 @@ public class ForegroundService extends Service {
     sampleRateCalculator.startListening();
     connectivity = Connectivity.create(this);
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
-    uploader = Uploader.create(objectBoxDatabase, connectivity, /*uploadChunk=*/250);
+    // minRecordsToKeep is set at 5000 as ~4000 records is the upper limit we are considering for
+    // impedance calculation.
+    uploader = Uploader.create(objectBoxDatabase, connectivity, /*uploadChunk=*/250,
+        /*minRecordsToKeep=*/5000, Duration.ofMillis((5000 / 250) * 1000L));
     uploader.start();
     initialized = true;
   }

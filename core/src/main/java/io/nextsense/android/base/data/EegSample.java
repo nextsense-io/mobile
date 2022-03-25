@@ -9,6 +9,7 @@ import io.nextsense.android.base.db.objectbox.Converters;
 import io.nextsense.android.base.devices.xenon.SampleFlags;
 import io.objectbox.annotation.Convert;
 import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Index;
 import io.objectbox.relation.ToOne;
 
 /**
@@ -28,9 +29,11 @@ public class EegSample extends BaseRecord {
   @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
   private Instant receptionTimestamp;
   @Nullable
+  @Index
   private Integer relativeSamplingTimestamp;
-  // When the sample was colelcted on the device.
+  // When the sample was collected on the device.
   @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
+  @Index
   @Nullable
   private Instant absoluteSamplingTimestamp;
   private boolean sync;
