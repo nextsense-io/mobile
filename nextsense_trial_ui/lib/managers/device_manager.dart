@@ -50,6 +50,7 @@ class DeviceManager {
       ValueNotifier(DeviceState.DISCONNECTED);
   ValueNotifier<DeviceInternalState?> deviceInternalState = ValueNotifier(null);
   Completer<bool> _deviceInternalStateAvailableCompleter = Completer<bool>();
+  Completer<bool> _deviceReadyCompleter = Completer<bool>();
   Map<String, dynamic>? _deviceInternalStateValues;
   final _deviceInternalStateChangeController =
       StreamController<DeviceInternalStateEvent>.broadcast();
@@ -70,13 +71,30 @@ class DeviceManager {
     _listenToState(device.macAddress);
     _listenToInternalState();
     await NextsenseBase.connectDevice(device.macAddress);
+    _connectedDevice = device;
+    bool deviceReady = await waitDeviceReady(timeout);
+    if (!deviceReady) {
+      _connectedDevice = null;
+      return false;
+    }
     NextsenseBase.requestDeviceStateUpdate(device.macAddress);
     bool stateAvailable = await waitInternalStateAvailable(timeout);
     if (!stateAvailable) {
+      _connectedDevice = null;
       return false;
     }
-    _connectedDevice = device;
     return true;
+  }
+
+  Future<bool> waitDeviceReady(Duration timeout) async {
+    _deviceReadyCompleter = new Completer<bool>();
+    new Timer(timeout, () {
+      if (!_deviceReadyCompleter.isCompleted) {
+        _deviceReadyCompleter
+            .complete(deviceState.value == DeviceState.READY);
+      }
+    });
+    return _deviceReadyCompleter.future;
   }
 
   Future<bool> waitInternalStateAvailable(Duration timeout) async {
@@ -174,15 +192,16 @@ class DeviceManager {
   void _onDeviceDisconnected() {
     // Disconnected without being requested by the user.
     _notificationsManager.showAlertNotification(CONNECTION_LOST_NOTIFICATION_ID,
-        CONNECTION_LOST_TITLE, CONNECTION_LOST_BODY, /*payload=*/ '');
-
+        CONNECTION_LOST_TITLE, CONNECTION_LOST_BODY, /*payload=*/'');
     deviceState.value = DeviceState.DISCONNECTED;
   }
 
   void _onDeviceReady() {
     _notificationsManager
         .hideAlertNotification(CONNECTION_LOST_NOTIFICATION_ID);
-
     deviceState.value = DeviceState.READY;
+    if (!_deviceReadyCompleter.isCompleted) {
+      _deviceReadyCompleter.complete(true);
+    }
   }
 }
