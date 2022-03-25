@@ -22,4 +22,10 @@ class FirebaseEntity {
   Map<String, dynamic> getValues() {
     return _values;
   }
+
+  @override
+  String toString() {
+    final type = this.runtimeType.toString();
+    return "$type($id) [${getValues()}]";
+  }
 }

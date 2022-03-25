@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:nextsense_trial_ui/managers/api.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
@@ -17,6 +18,7 @@ Future<void> initDependencies() async {
   // that was initialised before.
   getIt.registerSingleton<Preferences>(Preferences());
   getIt.registerSingleton<NotificationsManager>(NotificationsManager());
+  getIt.registerSingleton<NextsenseApi>(NextsenseApi());
   getIt.registerSingleton<FirestoreManager>(FirestoreManager());
   getIt.registerSingleton<AuthManager>(AuthManager());
   getIt.registerSingleton<PermissionsManager>(PermissionsManager());

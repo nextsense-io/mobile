@@ -116,7 +116,8 @@ class SetPasswordScreen extends HookWidget {
                               return;
                             }
                             try {
-                              _authManager.setPassword(password);
+                              // TODO(alex): implement password change
+                              //_authManager.setPassword(password);
                             } catch (e) {
                               _showDialog(context, 'Error',
                                   'Could not set password, make sure you have '
