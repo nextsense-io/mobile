@@ -2,7 +2,10 @@ package io.nextsense.android.base.data;
 
 import androidx.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
+
 import java.time.Instant;
+import java.util.List;
 
 import io.nextsense.android.base.db.objectbox.Converters;
 import io.objectbox.annotation.Convert;
@@ -16,6 +19,24 @@ import io.objectbox.relation.ToOne;
  */
 @Entity
 public class Acceleration extends BaseRecord {
+
+  public enum Channels {
+    X("x"),
+    Y("y"),
+    Z("z");
+
+    private final String name;
+
+    Channels(String name) {
+      this.name = name;
+    }
+
+    public String getName() {
+      return name;
+    }
+  }
+  public static List<String> CHANNELS = ImmutableList.of("x", "y", "z");
+
   public ToOne<LocalSession> localSession;
 
   private final int x;

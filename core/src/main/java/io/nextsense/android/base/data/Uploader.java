@@ -49,6 +49,8 @@ import io.objectbox.reactive.DataSubscription;
 public class Uploader {
   private static final String TAG = Uploader.class.getSimpleName();
   private static final Duration UPLOAD_FUNCTION_TIMEOUT = Duration.ofMillis(10000);
+  private static final String EEG_SAMPLES = "eeg_samples";
+  private static final String ACC_SAMPLES = "acc_samples";
 
   private final ObjectBoxDatabase objectBoxDatabase;
   private final Connectivity connectivity;
@@ -72,7 +74,6 @@ public class Uploader {
   private boolean started;
   private Connectivity.State minimumConnectivityState = Connectivity.State.FULL_CONNECTION;
   private Connectivity.State currentConnectivityState = Connectivity.State.NO_CONNECTION;
-
 
   private Uploader(ObjectBoxDatabase objectBoxDatabase, Connectivity connectivity,
                    int uploadChunkSize, int minRecordsToKeep, Duration minDurationToKeep) {
@@ -167,7 +168,7 @@ public class Uploader {
   // TODO(eric): Should query this by sampling timestamp instead of number of records to send
   //             records based o na time period, not a record count, which might not match if there
   //             are missing samples.
-  private List<EegSample> getSamplesToUpload(LocalSession localSession) {
+  private Map<String, List<BaseRecord>> getSamplesToUpload(LocalSession localSession) {
     List<EegSample> eegSamplesToUpload = new ArrayList<>();
     long relativeEegStartOffset = localSession.getEegSamplesUploaded() -
         localSession.getEegSamplesDeleted();
@@ -348,7 +349,11 @@ public class Uploader {
   }
 
   private DataSamplesProto.DataSamples serializeToProto(List<EegSample> eegSamplesToUpload,
+                                                        List<Acceleration> accelerationsToUpload,
                                                         LocalSession localSession) {
+    // TODO(eric): If acceleration is not on the same frequency as eeg, should send it in a separate
+    //             proto?
+    assert(eegSamplesToUpload.size() == accelerationsToUpload.size());
     DataSamplesProto.DataSamples.Builder dataSamplesProtoBuilder =
         DataSamplesProto.DataSamples.newBuilder();
     if (localSession.getUserBigTableKey() != null) {
@@ -366,17 +371,34 @@ public class Uploader {
         .setSeconds(expectedStartInstant.getEpochSecond())
         .setNanos(expectedStartInstant.getNano()).build();
     dataSamplesProtoBuilder.setExpectedStartTimestamp(expectedStartTimestamp);
-    Map<Integer, DataSamplesProto.Channel.Builder> channelBuilders = new HashMap<>();
-    for (EegSample eegSample : eegSamplesToUpload) {
+    Map<String, DataSamplesProto.Channel.Builder> channelBuilders = new HashMap<>();
+    for (int i = 0; i < eegSamplesToUpload.size(); ++i) {
+      EegSample eegSample = eegSamplesToUpload.get(i);
       Timestamp samplingTimestamp = Timestamp.newBuilder()
           .setSeconds(eegSample.getAbsoluteSamplingTimestamp().getEpochSecond())
           .setNanos(eegSample.getAbsoluteSamplingTimestamp().getNano()).build();
       dataSamplesProtoBuilder.addSamplingTimestamp(samplingTimestamp);
       for (Integer channel : eegSample.getEegSamples().keySet()) {
         DataSamplesProto.Channel.Builder channelBuilder = channelBuilders.computeIfAbsent(
-            channel, channelValue ->
-                DataSamplesProto.Channel.newBuilder().setNumber(channelValue));
+            String.valueOf(channel), channelValue ->
+                DataSamplesProto.Channel.newBuilder().setNumber(String.valueOf(channel)));
         channelBuilder.addSample(eegSample.getEegSamples().get(channel));
+      }
+      Acceleration acceleration = accelerationsToUpload.get(i);
+      for (String accChannel : Acceleration.CHANNELS) {
+        DataSamplesProto.Channel.Builder channelBuilder = channelBuilders.computeIfAbsent(
+            accChannel, channelValue -> DataSamplesProto.Channel.newBuilder().setNumber(accChannel));
+        switch (Acceleration.Channels.valueOf(accChannel)) {
+          case X:
+            channelBuilder.addSample(acceleration.getX());
+            break;
+          case Y:
+            channelBuilder.addSample(acceleration.getY());
+            break;
+          case Z:
+            channelBuilder.addSample(acceleration.getZ());
+            break;
+        }
       }
       dataSamplesProtoBuilder.addSync(eegSample.getSync());
       dataSamplesProtoBuilder.addTrigOut(eegSample.getTrigOut());
