@@ -7,8 +7,9 @@ import "google/protobuf/timestamp.proto";
 option java_package = "io.nextsense.android.base";
 option java_outer_classname = "DataSamplesProto";
 
+// EEG channels start at 1. Acceleration channels are x, y and z.
 message Channel {
-  int32 number = 1;
+  string number = 1;
   repeated float sample = 2;
 }
 
