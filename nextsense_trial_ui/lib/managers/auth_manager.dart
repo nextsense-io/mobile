@@ -1,82 +1,36 @@
-import 'package:get_it/get_it.dart';
+import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'package:logging/logging.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
+import 'package:nextsense_trial_ui/managers/api.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
-import 'package:nextsense_trial_ui/managers/user_password_auth_manager.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:uuid/uuid.dart';
 
-enum UserCodeValidationResult {
-  valid,
-  invalid,
-  password_not_set,
-  no_connection
+enum AuthenticationResult {
+  success,
+  invalid_username_or_password,
+  user_fetch_failed,
+  connection_error,
+  error
 }
 
 class AuthManager {
   static const minimumPasswordLength = 8;
 
-  final FirestoreManager _firestoreManager =
-      GetIt.instance.get<FirestoreManager>();
+  final CustomLogPrinter _logger = CustomLogPrinter('AuthManager');
+  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final NextsenseApi _nextsenseApi = getIt<NextsenseApi>();
+
   final Uuid _uuid = Uuid();
-  // final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  // final GoogleAuthManager _googleAuthManager = GoogleAuthManager();
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   String? _userCode;
   User? _user;
-  bool _authorized = false;
+  bool get isAuthorized => _user != null;
 
   AuthManager() {}
-
-  Future<UserCodeValidationResult> validateUserCode(String code) async {
-    FirebaseEntity userEntity;
-    try {
-      userEntity = await _firestoreManager.queryEntity([Table.users], [code]);
-    } catch(e) {
-      return UserCodeValidationResult.no_connection;
-    }
-    if (!userEntity.getDocumentSnapshot().exists) {
-      return UserCodeValidationResult.invalid;
-    }
-    _user = User(userEntity);
-    _userCode = code;
-    if (_user!.getValue(UserKey.password) == null) {
-      return UserCodeValidationResult.password_not_set;
-    }
-    return UserCodeValidationResult.valid;
-  }
-
-  Future<void> setPassword(String password) async {
-    if (_user == null) {
-      throw('Cannot set password on non-existent user.');
-    }
-    _user!.setValue(UserKey.password,
-        UserPasswordAuthManager.generatePasswordHash(password));
-    try {
-      _firestoreManager.persistEntity(_user!);
-    } catch(e) {
-
-    }
-  }
-
-  Future<bool> signIn(String password) async {
-    _authorized =  UserPasswordAuthManager.isPasswordValid(
-        password, _user!.getValue(UserKey.password));
-    if (_authorized && _user!.getValue(UserKey.bt_key) == null) {
-      _user!.setValue(UserKey.bt_key, _uuid.v4());
-      _firestoreManager.persistEntity(_user!);
-    }
-    return _authorized;
-  }
-
-  Future<void> signOut() async {
-    _authorized = false;
-    _userCode = null;
-    _user = null;
-  }
-
-  bool isAuthorized() {
-    return _authorized;
-  }
 
   String? getUserCode() {
     return _userCode;
@@ -86,36 +40,63 @@ class AuthManager {
     return _user;
   }
 
-  // Future<SignInResult> signIn() async {
-  //   // TODO(eric): Allow authentication using different methods, not only
-  //   //             Google.
-  //   AuthCredential authCredential = await _googleAuthManager.handleSignIn();
-  //   try {
-  //     final UserCredential userCredential =
-  //         await _firebaseAuth.signInWithCredential(authCredential);
-  //     _user = userCredential.user;
-  //     if (_user!.isAnonymous) {
-  //       return SignInResult.failed;
-  //     }
-  //     _authorized = true;
-  //     return SignInResult.success;
-  //   } on FirebaseAuthException catch (e) {
-  //     if (e.code == 'account-exists-with-different-credential') {
-  //       return SignInResult.failed;
-  //     }
-  //     else if (e.code == 'invalid-credential') {
-  //       return SignInResult.failed;
-  //     }
-  //   } catch (e) {
-  //     return SignInResult.failed;
-  //   }
-  //   return SignInResult.failed;
-  // }
+  Future<AuthenticationResult> signIn(String username, String password) async {
 
-  // Future<void> signOut() async {
-  //   // TODO(eric): Allow sign out using different methods, not only Google.
-  //   _authorized = false;
-  //   await _googleAuthManager.handleSignOut();
-  //   await _firebaseAuth.signOut();
-  // }
+    ApiResponse resp = await _nextsenseApi.auth(username, password);
+
+    if (resp.isError) {
+      if (resp.isConnectionError)
+        return AuthenticationResult.connection_error;
+
+      if (resp.error == 'INVALID_USERNAME_OR_PASSWORD')
+        return AuthenticationResult.invalid_username_or_password;
+
+      //TODO(alex): handle other errors?
+      return AuthenticationResult.error;
+    }
+
+    // Authenticate in Firebase using token came from backend /auth endpoint
+    try {
+      await _firebaseAuth.signInWithCustomToken(resp.data['token']);
+    } on FirebaseAuthException catch (e) {
+      _logger.log(Level.SEVERE, e);
+      return AuthenticationResult.error;
+    }
+
+    _user = await fetchUserFromFirestore(username);
+
+    if (_user == null) {
+      return AuthenticationResult.user_fetch_failed;
+    }
+
+    _userCode = username;
+
+    // Persist bt_key
+    if (_user!.getValue(UserKey.bt_key) == null) {
+      _user!.setValue(UserKey.bt_key, _uuid.v4());
+      _firestoreManager.persistEntity(_user!);
+    }
+
+    return AuthenticationResult.success;
+  }
+
+  Future<User?> fetchUserFromFirestore(String code) async {
+    FirebaseEntity userEntity;
+    try {
+      userEntity = await _firestoreManager.queryEntity([Table.users], [code]);
+    } catch(e) {
+      return null;
+    }
+    if (!userEntity.getDocumentSnapshot().exists) {
+      return null;
+    }
+
+    return User(userEntity);
+  }
+
+  Future<void> signOut() async {
+    _userCode = null;
+    _user = null;
+  }
+
 }

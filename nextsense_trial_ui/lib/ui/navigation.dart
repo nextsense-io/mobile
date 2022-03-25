@@ -7,6 +7,7 @@ import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
@@ -14,7 +15,6 @@ import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
-import 'package:nextsense_trial_ui/ui/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
 
 class Navigation {

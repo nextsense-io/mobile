@@ -29,6 +29,8 @@ class StudyManager {
       return false;
     }
     if (!studyEntity.getDocumentSnapshot().exists) {
+      _logger.log(Level.SEVERE,
+          'Study ${study_id} does not exist');
       return false;
     }
     _currentStudy = Study(studyEntity);
