@@ -55,7 +55,7 @@ class AuthManager {
       return AuthenticationResult.error;
     }
 
-    // Authenticate in Firebase using token using the token that was obtained
+    // Authenticate in Firebase using the token that was obtained
     // from the backend
     try {
       await _firebaseAuth.signInWithCustomToken(resp.data['token']);
