@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -18,20 +19,11 @@ void _initLogging() {
   });
 }
 
-Future _initEnvironment() async {
-  final environmentFileName = "env";
-  try {
-    await dotenv.load(fileName: environmentFileName);
-  } catch (e) {
-    print('dotenv init failed. Check path "$environmentFileName" exist');
-    rethrow;
-  }
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _initLogging();
-  await _initEnvironment();
+  await initEnvironment();
   await Firebase.initializeApp();
   await initDependencies();
   await getIt<Preferences>().init();

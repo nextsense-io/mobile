@@ -23,11 +23,11 @@ class NextsenseApi {
 
   final CustomLogPrinter _logger = CustomLogPrinter('NextsenseApi');
 
-  String baseUrl = Config.nextsenseApiUrl;
+  final String baseUrl = Config.nextsenseApiUrl;
 
   Uri get endpointAuth => Uri.parse('$baseUrl/auth');
 
-  var client = http.Client();
+  final client = http.Client();
 
   NextsenseApi() {}
 
@@ -53,7 +53,7 @@ class NextsenseApi {
       );
     }
 
-    print("Api::auth()::response: ${response.body}");
+    _logger.log(Level.INFO, "Api::auth()::response: ${response.body}");
 
     if (response.statusCode == 200) {
       var responseJson = json.decode(response.body) as Map<String, dynamic>;
