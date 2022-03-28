@@ -1,11 +1,9 @@
 # nextsense_trial_ui
 
-A new Flutter project.
+## Environment file
 
-## Getting Started
+Flutter app reads environment from "env" file, which have to be located at 
 
-For help getting started with Flutter, view our online
-[documentation](https://flutter.dev/).
+ $ nextsense_trial_ui/env
 
-For instructions integrating Flutter modules to your existing applications,
-see the [add-to-app documentation](https://flutter.dev/docs/development/add-to-app).
+
