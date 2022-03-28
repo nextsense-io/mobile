@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
+import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -21,14 +22,14 @@ class SignInScreenViewModel extends BaseViewModel {
   String errorMsg = '';
 
   void init() async {
-    if (dotenv.env["USERNAME"] != null) {
+    if (envGet(EnvironmentKey.USERNAME).isNotEmpty) {
       loadCredentialsFromEnvironment();
     }
   }
 
   void loadCredentialsFromEnvironment() {
-    username.value = dotenv.get("USERNAME", fallback: "");
-    password.value = dotenv.get("PASSWORD", fallback: "");
+    username.value = envGet(EnvironmentKey.USERNAME, fallback: "");
+    password.value = envGet(EnvironmentKey.PASSWORD, fallback: "");
   }
 
   Future<AuthenticationResult> signIn() async {

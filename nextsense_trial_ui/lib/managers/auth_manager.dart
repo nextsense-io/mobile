@@ -55,7 +55,8 @@ class AuthManager {
       return AuthenticationResult.error;
     }
 
-    // Authenticate in Firebase using token came from backend /auth endpoint
+    // Authenticate in Firebase using token using the token that was obtained
+    // from the backend
     try {
       await _firebaseAuth.signInWithCustomToken(resp.data['token']);
     } on FirebaseAuthException catch (e) {
@@ -95,6 +96,7 @@ class AuthManager {
   }
 
   Future<void> signOut() async {
+    await _firebaseAuth.signOut();
     _userCode = null;
     _user = null;
   }
