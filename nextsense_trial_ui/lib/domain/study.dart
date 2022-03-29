@@ -33,18 +33,10 @@ enum StudyKey {
   sponsor_id
 }
 
-class Study extends FirebaseEntity {
+class Study extends FirebaseEntity<StudyKey> {
 
   Study(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
-
-  dynamic getValue(StudyKey studyKey) {
-    return getValues()[studyKey.name];
-  }
-
-  void setValue(StudyKey studyKey, dynamic value) {
-    getValues()[studyKey.name] = value;
-  }
 
   String getName() {
     return getValue(StudyKey.name) as String;

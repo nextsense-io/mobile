@@ -10,7 +10,8 @@ enum Table {
   planned_surveys,
   studies,
   surveys,
-  questions
+  questions,
+  scheduled_protocols
 }
 
 extension ParseToString on Table {
@@ -92,4 +93,6 @@ class FirestoreManager {
   Future persistEntity(FirebaseEntity entity) async {
     entity.getDocumentSnapshot().reference.set(entity.getValues());
   }
+
+
 }

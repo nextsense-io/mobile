@@ -140,14 +140,9 @@ class SignInScreen extends HookWidget {
       return;
     }
 
-    await _navigation.navigateTo(PrepareDeviceScreen.id);
-
     // Navigate to the device preparation screen.
-    if (_connectivityManager.isConnectionSufficientForCloudSync()) {
-      await _navigation.navigateTo(PrepareDeviceScreen.id);
-    } else {
-      await _navigation.navigateTo(CheckInternetScreen.id);
-    }
+    await _navigation.navigateWithConnectionChecking(
+        context, PrepareDeviceScreen.id);
   }
 
 }

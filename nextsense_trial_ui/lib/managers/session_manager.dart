@@ -23,6 +23,7 @@ class SessionManager {
 
   Session? _currentSession;
   DataSession? _currentDataSession;
+  String? get currentSessionId => _currentSession?.id;
   int? _currentLocalSession;
 
   Future<bool> startSession(String deviceMacAddress, String studyId,

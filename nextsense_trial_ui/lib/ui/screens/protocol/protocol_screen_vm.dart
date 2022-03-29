@@ -4,7 +4,12 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
+import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
@@ -18,8 +23,12 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   final StudyManager _studyManager = getIt<StudyManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
+  final DeviceManager _deviceManager = getIt<DeviceManager>();
+  final SessionManager _sessionManager = getIt<SessionManager>();
+  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
 
-  Protocol protocol;
+  final ScheduledProtocol scheduledProtocol;
+  Protocol get protocol => scheduledProtocol.protocol;
 
   int secondsElapsed = 0;
   bool sessionIsActive = false;
@@ -37,7 +46,10 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   bool _timerPaused = false;
   ProtocolCancelReason protocolCancelReason = ProtocolCancelReason.none;
 
-  ProtocolScreenViewModel(this.protocol);
+
+  bool protocolCompletedHandlerExecuted = false;
+
+  ProtocolScreenViewModel(this.scheduledProtocol);
 
   Study? getCurrentStudy() {
     return _studyManager.getCurrentStudy();
@@ -52,8 +64,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     maxDurationPassed = false;
     protocolCancelReason = ProtocolCancelReason.none;
     startTimer();
-
-    protocol.start();
+    _startProtocol();
 
     notifyListeners();
   }
@@ -65,7 +76,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
     sessionIsActive = false;
 
-    protocol.stop();
+    _stopProtocol();
 
     notifyListeners();
   }
@@ -169,4 +180,60 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         break;
     }
   }
+
+  void _startProtocol() async {
+    if (_deviceManager.getConnectedDevice() != null) {
+      _logger.log(Level.INFO, 'Starting ${protocol.name} protocol.');
+      await _sessionManager.startSession(
+          _deviceManager.getConnectedDevice()!.macAddress,
+          _studyManager.getCurrentStudyId()!,
+          protocol.name);
+      // Comment for now, cause giving exception
+      /*_startTime = _sessionManager.getCurrentSession()?.getValue(
+          SessionKey.start_datetime);*/
+      updateProtocolState(ProtocolState.running,
+          sessionId: _sessionManager.currentSessionId
+      );
+
+    } else {
+      _logger.log(Level.WARNING, 'Cannot start ${protocol.name} protocol, device '
+          'not connected.');
+    }
+  }
+
+  void _stopProtocol() async {
+      _logger.log(Level.INFO, 'Stopping ${protocol.name} protocol.');
+      await _sessionManager.stopSession(
+          _deviceManager.getConnectedDevice()!.macAddress);
+        updateProtocolState(protocolCompleted
+            ? ProtocolState.completed : ProtocolState.cancelled);
+  }
+
+  void updateProtocolState(ProtocolState state, {String? sessionId}) {
+    if (scheduledProtocol.state == ProtocolState.completed) {
+      _logger.log(Level.INFO, 'Protocol ${protocol.name} already completed.'
+          'Cannot change its state.');
+      return;
+    }
+    else if (scheduledProtocol.state == ProtocolState.skipped) {
+      _logger.log(Level.INFO, 'Protocol ${protocol.name} already skipped.'
+          'Cannot change its state.');
+      return;
+    }
+    _logger.log(Level.WARNING,
+        'Protocol changing state to $state');
+    scheduledProtocol.setState(state);
+    if (sessionId != null) {
+      scheduledProtocol.addSession(sessionId);
+    }
+    _firestoreManager.persistEntity(scheduledProtocol);
+  }
+
+  // Executed when protocol is successfully completed i.e. minimum duration is
+  // passed
+  void onProtocolCompleted() {
+    _logger.log(Level.INFO, 'Protocol ${protocol.name} completed');
+    updateProtocolState(ProtocolState.completed);
+  }
+
 }

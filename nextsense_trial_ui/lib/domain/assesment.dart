@@ -15,25 +15,28 @@ enum PlannedAssessmentParameter {
   maxDuration
 }
 
-class PlannedAssessment extends FirebaseEntity {
+class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
 
   final CustomLogPrinter _logger = CustomLogPrinter('Assessment');
 
   late DateTime day;
 
-  late int _dayNumber;
+  late int dayNumber;
+
+  late String startTimeStr;
+  late DateTime startTime;
 
   Protocol? protocol;
 
   PlannedAssessment(FirebaseEntity firebaseEntity, DateTime studyStartDate) :
         super(firebaseEntity.getDocumentSnapshot()) {
-    _dayNumber = getValue(PlannedAssessmentKey.day);
-    day = studyStartDate.add(Duration(days: _dayNumber - 1));
-    String startTimeStr = getValue(PlannedAssessmentKey.time) as String;
+    dayNumber = getValue(PlannedAssessmentKey.day);
+    day = studyStartDate.add(Duration(days: dayNumber - 1));
+    startTimeStr = getValue(PlannedAssessmentKey.time) as String;
     // TODO(alex): check HH:MM string is correctly set
     int startTimeHours = int.parse(startTimeStr.split(":")[0]);
     int startTimeMinutes = int.parse(startTimeStr.split(":")[1]);
-    DateTime startTime = DateTime(0, 0, 0, startTimeHours, startTimeMinutes);
+    startTime = DateTime(0, 0, 0, startTimeHours, startTimeMinutes);
 
     // Construct protocol here based on assessment fields like
     String protocolTypeString = getValue(PlannedAssessmentKey.type);
@@ -55,18 +58,11 @@ class PlannedAssessment extends FirebaseEntity {
           minDuration: minDurationOverride,
           maxDuration: maxDurationOverride
       );
+
     }
     else {
       _logger.log(Level.WARNING, 'Unknown protocol "$protocolTypeString"');
     }
-  }
-
-  dynamic getValue(PlannedAssessmentKey assessmentKey) {
-    return getValues()[assessmentKey.name];
-  }
-
-  void setValue(PlannedAssessmentKey assessmentKey, dynamic value) {
-    getValues()[assessmentKey.name] = value;
   }
 
   Duration? getDurationOverride(String field) {

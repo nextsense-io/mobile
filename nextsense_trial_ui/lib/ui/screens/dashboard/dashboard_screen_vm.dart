@@ -1,6 +1,7 @@
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/assesment.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
@@ -18,7 +19,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   DateTime? selectedDay;
 
-  List<PlannedAssessment> assesments = [];
+  List<ScheduledProtocol> scheduledProtocols = [];
 
   // List of days that will appear for current study
   List<DateTime>? _days;
@@ -27,7 +28,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     super.init();
 
     // TODO(alex): cache assessments (move to protocol manager?)
-    assesments = await _studyManager.loadPlannedAssesments();
+    scheduledProtocols = await _studyManager.loadScheduledProtocols();
     final int studyDays = getCurrentStudy()?.getDurationDays() ?? 0;
     _days = List<DateTime>.generate(studyDays, (i) =>
         _studyManager.currentStudyStartDate.add(Duration(days: i)));
@@ -35,10 +36,6 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     // TODO(alex): if current day out of range show some warning
     selectFirstDayOfStudy();
     notifyListeners();
-  }
-
-  List<PlannedAssessment> getAssessmentsByDay(DateTime day) {
-    return [];
   }
 
   Study? getCurrentStudy() {
@@ -59,29 +56,22 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
       selectDay(_days![0]);
   }
 
-  List<Protocol> getProtocols() {
-    List<Protocol> result = [];
-    for (var assessment in assesments) {
-      if (assessment.protocol != null)
-        result.add(assessment.protocol!);
-    }
-    return result;
-  }
-
-  List<Protocol> getProtocolsByDay(DateTime day) {
-    List<Protocol> result = [];
-    for (var assessment in assesments) {
-      if (assessment.protocol != null && assessment.day.isAtSameMomentAs(day))
-        result.add(assessment.protocol!);
+  List<ScheduledProtocol> getScheduledProtocolsByDay(DateTime day) {
+    List<ScheduledProtocol> result = [];
+    for (var scheduledProtocol in scheduledProtocols) {
+      if (scheduledProtocol.protocol != null
+          && scheduledProtocol.day.isAtSameMomentAs(day)) {
+        result.add(scheduledProtocol);
+      }
     }
     result.sort((p1, p2) =>
         p1.startTime.compareTo(p2.startTime));
     return result;
   }
 
-  List<Protocol> getCurrentDayProtocols() {
+  List<ScheduledProtocol> getCurrentDayScheduledProtocols() {
     if (selectedDay == null) return [];
-    return getProtocolsByDay(selectedDay!);
+    return getScheduledProtocolsByDay(selectedDay!);
   }
 
   @override

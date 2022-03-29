@@ -13,16 +13,9 @@ enum DataSessionKey {
   streaming_rate,
 }
 
-class DataSession extends FirebaseEntity {
+class DataSession extends FirebaseEntity<DataSessionKey> {
 
   DataSession(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
 
-  dynamic getValue(DataSessionKey dataSessionKey) {
-    return getValues()[dataSessionKey.name];
-  }
-
-  void setValue(DataSessionKey dataSessionKey, dynamic value) {
-    getValues()[dataSessionKey.name] = value;
-  }
 }

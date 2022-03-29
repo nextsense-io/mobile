@@ -18,9 +18,11 @@ enum ProtocolType {
 
 enum ProtocolState {
   not_started,
+  skipped,
   running,
   cancelled,
-  finished
+  completed,
+  unknown
 }
 
 abstract class Protocol {
@@ -39,9 +41,7 @@ abstract class Protocol {
 
   String get intro;
 
-  Future start();
-
-  Future stop();
+  String get name;
 
   factory Protocol(ProtocolType type, DateTime startTime,
       {Duration? minDuration, Duration? maxDuration}) {
@@ -69,9 +69,6 @@ abstract class Protocol {
 }
 
 abstract class BaseProtocol implements Protocol {
-  final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
-  final AuthManager _authManager = GetIt.instance.get<AuthManager>();
-  final SessionManager _sessionManager = GetIt.instance.get<SessionManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('BaseProtocol');
 
   DateTime? _startTime;
@@ -82,6 +79,9 @@ abstract class BaseProtocol implements Protocol {
 
   @override
   ProtocolType get type => ProtocolType.unknown;
+
+  @override
+  String get name => describeEnum(type);
 
   @override
   DateTime get startTime => _startTime!;
@@ -106,35 +106,6 @@ abstract class BaseProtocol implements Protocol {
     _maxDurationOverride = duration;
   }
 
-  String getName() {
-    return describeEnum(type);
-  }
-
-  @override
-  Future start() async {
-    if (_deviceManager.getConnectedDevice() != null) {
-      _logger.log(Level.INFO, 'Starting ${getName()} protocol.');
-      await _sessionManager.startSession(
-          _deviceManager.getConnectedDevice()!.macAddress,
-          _authManager.getUserEntity()!.getValue(UserKey.study),
-          getName());
-      // Comment for now, cause giving exception
-      /*_startTime = _sessionManager.getCurrentSession()?.getValue(
-          SessionKey.start_datetime);*/
-      _protocolState = ProtocolState.running;
-    } else {
-      _logger.log(Level.WARNING, 'Cannot start ${getName()} protocol, device '
-          'not connected.');
-    }
-  }
-
-  @override
-  Future stop() async {
-    _logger.log(Level.INFO, 'Stopping ${getName()} protocol.');
-    await _sessionManager.stopSession(
-        _deviceManager.getConnectedDevice()!.macAddress);
-    _protocolState = ProtocolState.finished;
-  }
 
 }
 
@@ -182,4 +153,9 @@ class SleepProtocol extends BaseProtocol {
 ProtocolType protocolTypeFromString(String typeStr) {
   return ProtocolType.values.firstWhere((element) => element.name == typeStr,
       orElse: () => ProtocolType.unknown);
+}
+
+ProtocolState protocolStateFromString(String protocolStr) {
+  return ProtocolState.values.firstWhere((element) => element.name == protocolStr,
+      orElse: () => ProtocolState.unknown);
 }

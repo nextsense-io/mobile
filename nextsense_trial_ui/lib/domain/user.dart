@@ -23,18 +23,10 @@ enum UserKey {
   session_number
 }
 
-class User extends FirebaseEntity {
+class User extends FirebaseEntity<UserKey> {
 
   User(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
-
-  dynamic getValue(UserKey userKey) {
-    return getValues()[userKey.name];
-  }
-
-  void setValue(UserKey userKey, dynamic value) {
-    getValues()[userKey.name] = value;
-  }
 
   DateTime? getStudyStartDate() {
     final value = getValue(UserKey.study_start_date);

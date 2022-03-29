@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
@@ -16,9 +17,9 @@ class CheckInternetScreen extends HookWidget {
 
   final Navigation _navigation = getIt<Navigation>();
   final _preferences = getIt<Preferences>();
-  final Protocol? protocol;
+  final ScheduledProtocol? scheduledProtocol;
 
-  CheckInternetScreen({this.protocol = null});
+  CheckInternetScreen({this.scheduledProtocol = null});
 
   @override
   Widget build(BuildContext context) {
@@ -98,15 +99,7 @@ class CheckInternetScreen extends HookWidget {
                     ),
                   ),
                   onPressed: canProceed ? () async {
-                    if (protocol != null) {
-                      // TODO(eric): Might want to add a 'Do not show this again'
-                      // in that page and check first before going to that page.
-                      _navigation.navigateTo(ProtocolScreen.id,
-                          replace: true, arguments: protocol);
-                    } else {
-                      _navigation.navigateToDeviceScan(replace: true);
-                      // Navigator.of(context).pop();
-                    }
+                    Navigator.of(context).pop();
                   } : null,
                 )
                 ],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
@@ -16,6 +18,7 @@ import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
+import 'package:provider/src/provider.dart';
 
 class Navigation {
 
@@ -61,17 +64,17 @@ class Navigation {
     // Routes with arguments
       case ProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
-          ProtocolScreen(settings.arguments as Protocol));
+          ProtocolScreen(settings.arguments as ScheduledProtocol));
       case RequestPermissionScreen.id:
         return MaterialPageRoute(
           builder: (context) => RequestPermissionScreen(
               settings.arguments as PermissionRequest));
       case CheckInternetScreen.id:
-        Protocol? checkInternetProtocol = settings.arguments == null ? null :
-            settings.arguments as Protocol;
+        ScheduledProtocol? checkInternetProtocol = settings.arguments == null ? null :
+            settings.arguments as ScheduledProtocol;
         return MaterialPageRoute(
           builder: (context) => CheckInternetScreen(
-              protocol: checkInternetProtocol));
+              scheduledProtocol: checkInternetProtocol));
     }
   }
 
@@ -92,6 +95,20 @@ class Navigation {
       // Navigate to device scan screen.
       navigateTo(DeviceScanScreen.id, replace: replace);
     }
+  }
+
+  // Show connection check screen if needed before navigate to target route
+  Future navigateWithConnectionChecking(BuildContext context, String routeName, {Object? arguments,
+    bool replace = false, bool pop = false}) async {
+
+    // TODO(eric): Might want to add a 'Do not show this again'
+    if (!context.read<ConnectivityManager>()
+        .isConnectionSufficientForCloudSync()) {
+      await navigateTo(CheckInternetScreen.id);
+    }
+
+    await navigateTo(routeName,
+        arguments: arguments, replace: replace, pop: pop);
   }
 
   void signOut() {
