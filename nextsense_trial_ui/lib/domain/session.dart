@@ -31,16 +31,9 @@ enum SessionKey {
   protocol
 }
 
-class Session extends FirebaseEntity {
+class Session extends FirebaseEntity<SessionKey> {
 
   Session(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
 
-  dynamic getValue(SessionKey sessionKey) {
-    return getValues()[sessionKey.name];
-  }
-
-  void setValue(SessionKey sessionKey, dynamic value) {
-    getValues()[sessionKey.name] = value;
-  }
 }

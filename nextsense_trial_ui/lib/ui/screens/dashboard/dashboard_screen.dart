@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
+import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
@@ -151,10 +154,10 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildSchedule(BuildContext context) {
-    List<Protocol> protocols =
-        context.watch<DashboardScreenViewModel>().getCurrentDayProtocols();
+    List<ScheduledProtocol> scheduledProtocols =
+        context.watch<DashboardScreenViewModel>().getCurrentDayScheduledProtocols();
 
-    if (protocols.length == 0) {
+    if (scheduledProtocols.length == 0) {
       return Container(
           padding: EdgeInsets.all(30.0),
           child: Text("There are no protocols for selected day",
@@ -167,84 +170,141 @@ class DashboardScreen extends StatelessWidget {
           child: ListView.builder(
             scrollDirection: Axis.vertical,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: protocols.length,
+            itemCount: scheduledProtocols.length,
             shrinkWrap: true,
             itemBuilder: (BuildContext context, int index) {
-              Protocol protocol = protocols[index];
-              var protocolBackgroundColor = Color(0xFF6DC5D5);
-              switch(protocol.type) {
-                case ProtocolType.variable_daytime:
-                  protocolBackgroundColor = Color(0xFF6DC5D5);
-                  break;
-                case ProtocolType.sleep:
-                case ProtocolType.eoec:
-                case ProtocolType.eyes_movement:
-                case ProtocolType.unknown:
-                  protocolBackgroundColor = Color(0xFF984DF1);
-                  break;
-              }
-
-              String startTimeString = DateFormat('HH:mm')
-                  .format(protocol.startTime);
-
-              return Padding(
-                  padding: const EdgeInsets.all(0.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 60,
-                        child: Visibility(
-                            visible: true,
-                            child: Text(startTimeString,
-                                style: TextStyle(color: Colors.white))),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 12.0),
-                          child: InkWell(
-                            onTap: () {
-                              if (context.read<ConnectivityManager>()
-                                  .isConnectionSufficientForCloudSync()) {
-                                _navigation.navigateTo(ProtocolScreen.id,
-                                    arguments: protocol);
-                              } else {
-                                _navigation.navigateTo(CheckInternetScreen.id,
-                                    arguments: protocol);
-                              }
-                            },
-                            child: Container(
-                                padding: const EdgeInsets.all(16.0),
-                                decoration: new BoxDecoration(
-                                    color: protocolBackgroundColor,
-                                    borderRadius: new BorderRadius.all(
-                                        const Radius.circular(5.0))),
-                                child: Column(
-                                  mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(protocol.description,
-                                        style: TextStyle(color: Colors.white)),
-                                    SizedBox(
-                                      height: 8,
-                                    ),
-                                    Text(
-                                        humanizeDuration(
-                                            protocol.minDuration),
-                                        style: TextStyle(color: Colors.white))
-                                  ],
-                                )),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        width: 40,
-                      ),
-                    ],
-                  ));
+              ScheduledProtocol scheduledProtocol = scheduledProtocols[index];
+              return ScheduledProtocolRow(scheduledProtocol);
             },
           )),
     );
   }
+
 }
+
+class ScheduledProtocolRow extends HookWidget {
+
+  final Navigation _navigation = getIt<Navigation>();
+
+  final ScheduledProtocol scheduledProtocol;
+
+  ScheduledProtocolRow(this.scheduledProtocol, {
+    Key? key,}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    Protocol protocol = scheduledProtocol.protocol;
+    var protocolBackgroundColor = Color(0xFF6DC5D5);
+    switch(protocol.type) {
+      case ProtocolType.variable_daytime:
+        protocolBackgroundColor = Color(0xFF6DC5D5);
+        break;
+      case ProtocolType.sleep:
+      case ProtocolType.eoec:
+      case ProtocolType.eyes_movement:
+      case ProtocolType.unknown:
+        protocolBackgroundColor = Color(0xFF984DF1);
+        break;
+    }
+
+    String startTimeString = DateFormat('HH:mm')
+        .format(protocol.startTime);
+
+    return Padding(
+        padding: const EdgeInsets.all(0.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 60,
+              child: Visibility(
+                  visible: true,
+                  child: Text(startTimeString,
+                      style: TextStyle(color: Colors.white))),
+            ),
+            Expanded(
+              child: Opacity(
+                opacity: scheduledProtocol.isCompleted ? 0.5 : 1.0,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12.0),
+                  child: InkWell(
+                    onTap: () {
+                      _onProtocolClicked(context, scheduledProtocol);
+                    },
+                    child: Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: new BoxDecoration(
+                            color: protocolBackgroundColor,
+                            borderRadius: new BorderRadius.all(
+                                const Radius.circular(5.0))),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              mainAxisAlignment:
+                              MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(protocol.description,
+                                    style: TextStyle(color: Colors.white)),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                Text(
+                                    humanizeDuration(
+                                        protocol.minDuration),
+                                    style: TextStyle(color: Colors.white))
+                              ],
+                            ),
+                            _protocolState(scheduledProtocol)
+                          ],
+                        )),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: 40,
+            ),
+          ],
+        ));
+  }
+  Widget _protocolState(ScheduledProtocol scheduledProtocol) {
+    switch(scheduledProtocol.state) {
+      case ProtocolState.skipped:
+        return Text("Cancelled", style: TextStyle(color: Colors.white),);
+      case ProtocolState.cancelled:
+        return Text("Cancelled", style: TextStyle(color: Colors.white),);
+      case ProtocolState.completed:
+        return Icon(Icons.check_circle, color: Colors.white);
+      default: break;
+    }
+    return Container();
+  }
+
+  void _onProtocolClicked(BuildContext context,
+      ScheduledProtocol scheduledProtocol) async {
+    Protocol protocol = scheduledProtocol.protocol;
+    if (scheduledProtocol.isCompleted) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleAlertDialog(
+            title: 'Warning',
+            content: 'Protocol is already completed'),
+      );
+      return;
+    }
+    
+    await _navigation.navigateWithConnectionChecking(
+        context,
+        ProtocolScreen.id,
+        arguments: scheduledProtocol
+    );
+
+    // Refresh dashboard since protocol state can be changed
+    // TODO(alex): find better way to rebuild after pop
+    context.read<DashboardScreenViewModel>().notifyListeners();
+
+  }
+}
+
