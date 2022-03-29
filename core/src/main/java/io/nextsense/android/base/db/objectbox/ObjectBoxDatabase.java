@@ -43,6 +43,7 @@ public class ObjectBoxDatabase implements Database {
   private Query<EegSample> eegSamplesQuery;
   private Query<EegSample> eegSamplesTimestampIsLesserQuery;
   private Query<Acceleration> accelerationQuery;
+  private Query<Acceleration> accelerationTimestampIsLesserQuery;
   private Query<DeviceInternalState> recentDeviceInternalStateQuery;
   private Query<DeviceInternalState> lastDeviceInternalStateQuery;
 
@@ -60,6 +61,8 @@ public class ObjectBoxDatabase implements Database {
         .less(EegSample_.absoluteSamplingTimestamp, 0).build();
     accelerationBox = boxStore.boxFor(Acceleration.class);
     accelerationQuery = accelerationBox.query().equal(Acceleration_.localSessionId, 0).build();
+    accelerationTimestampIsLesserQuery = accelerationBox.query().equal(
+        Acceleration_.localSessionId, 0).less(Acceleration_.absoluteSamplingTimestamp, 0).build();
     deviceInternalStateBox = boxStore.boxFor(DeviceInternalState.class);
     lastDeviceInternalStateQuery = deviceInternalStateBox.query().build();
     recentDeviceInternalStateQuery = deviceInternalStateBox.query()
@@ -172,7 +175,7 @@ public class ObjectBoxDatabase implements Database {
         find(offset, count);
   }
 
-  public List<Acceleration> getAccelerations(int localSessionId, long offset, long count) {
+  public List<Acceleration> getAccelerations(long localSessionId, long offset, long count) {
     return accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).
         find(offset, count);
   }
@@ -204,6 +207,12 @@ public class ObjectBoxDatabase implements Database {
   public long deleteFirstEegSamplesData(long localSessionId, long timestampCutoff) {
     return eegSamplesTimestampIsLesserQuery.setParameter(EegSample_.localSessionId, localSessionId)
         .setParameter(EegSample_.absoluteSamplingTimestamp, timestampCutoff).remove();
+  }
+
+  public long deleteFirstAccelerationsData(long localSessionId, long timestampCutoff) {
+    return accelerationTimestampIsLesserQuery
+        .setParameter(Acceleration_.localSessionId, localSessionId)
+        .setParameter(Acceleration_.absoluteSamplingTimestamp, timestampCutoff).remove();
   }
 
   public long deleteAccelerationData(long localSessionId) {
