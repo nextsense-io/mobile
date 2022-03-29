@@ -2,8 +2,10 @@
 
 ## Environment file
 
-Flutter app reads environment from "env" file, which have to be located at 
+Flutter app reads environment from "env" file, which has to be located at 
 
- $ nextsense_trial_ui/env
+> $(PROJECT_ROOT)/nextsense_trial_ui/env
 
+Please see example of environment file env.example or use command to copy:
 
+> cp env.example env
