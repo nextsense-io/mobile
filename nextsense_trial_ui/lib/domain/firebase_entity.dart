@@ -1,6 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 
 class FirebaseEntity<T extends Enum> {
+
+  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+
   // Snapshot from Firebase to be able to persist or listen to value changes.
   final DocumentSnapshot _documentSnapshot;
   // Current user values. Valid keys are in the UserKey enum.
@@ -37,5 +42,10 @@ class FirebaseEntity<T extends Enum> {
   String toString() {
     final type = this.runtimeType.toString();
     return "$type($id) [${getValues()}]";
+  }
+
+  // Save entity to firestore
+  Future save() async {
+    await _firestoreManager.persistEntity(this);
   }
 }

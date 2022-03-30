@@ -15,6 +15,7 @@ import 'package:nextsense_trial_ui/ui/main_menu.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
+import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:nextsense_trial_ui/utils/duration.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
@@ -129,8 +130,15 @@ class DashboardScreen extends StatelessWidget {
     if (scheduledProtocols.length == 0) {
       return Container(
           padding: EdgeInsets.all(30.0),
-          child: Text("There are no protocols for selected day",
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 30.0)));
+          child: Column(
+            children: [
+              Icon(Icons.event_note, size: 50, color: Colors.white,),
+              SizedBox(height: 20,),
+              Text("There are no protocols for selected day",
+                  textAlign: TextAlign.center, style:
+                  TextStyle(fontSize: 30.0, color: Colors.white)),
+            ],
+          ));
     }
 
     return SingleChildScrollView(
@@ -143,7 +151,7 @@ class DashboardScreen extends StatelessWidget {
             shrinkWrap: true,
             itemBuilder: (BuildContext context, int index) {
               ScheduledProtocol scheduledProtocol = scheduledProtocols[index];
-              return ScheduledProtocolRow(scheduledProtocol);
+              return _ScheduledProtocolRow(scheduledProtocol);
             },
           )),
     );
@@ -160,6 +168,7 @@ class _StudyDayCard extends HookWidget {
   Widget build(BuildContext context) {
     final viewModel = context.watch<DashboardScreenViewModel>();
     final isSelected = viewModel.selectedDay == studyDay;
+    final hasProtocols = viewModel.dayHasAnyScheduledProtocols(studyDay);
 
     useEffect(() {
       if (isSelected) {
@@ -170,34 +179,45 @@ class _StudyDayCard extends HookWidget {
     final textStyle = TextStyle(
         fontSize: 20.0,
         color: isSelected ? Colors.white : Colors.black);
-    return Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: InkWell(
-          onTap: () {
-            viewModel.selectDay(studyDay);
-          },
-          child: Container(
-              width: 60,
-              height: 80,
-              decoration: new BoxDecoration(
+    return Opacity(
+      opacity: hasProtocols ? 1.0 : 0.7,
+      child: Padding(
+          padding: const EdgeInsets.all(4.0),
+          child: InkWell(
+            onTap: () {
+              viewModel.selectDay(studyDay);
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Container(
+                  width: 65,
+                  height: 80,
                   color: isSelected ? Colors.black : Colors.white,
-                  borderRadius:
-                  new BorderRadius.all(const Radius.circular(5.0))),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Opacity(
-                      opacity: 0.5,
-                      child: Text(DateFormat('MMMM').format(studyDay.date),
-                          style: textStyle.copyWith(fontSize: 10.0))),
-                  Opacity(
-                      opacity: 0.5,
-                      child: Text(DateFormat('EE').format(studyDay.date),
-                          style: textStyle)),
-                  Text(studyDay.dayNumber.toString(), style: textStyle),
-                ],
-              )),
-        ));
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Opacity(
+                        opacity: hasProtocols ? 0.5 : 0.0,
+                        child: Container(
+                          color: Colors.green,
+                          height: 9,
+                        ),
+                      ),
+                      SizedBox(height: 5,),
+                      Opacity(
+                          opacity: 0.5,
+                          child: Text(DateFormat('MMMM').format(studyDay.date),
+                              style: textStyle.copyWith(fontSize: 10.0))),
+                      Opacity(
+                          opacity: 0.5,
+                          child: Text(DateFormat('EE').format(studyDay.date),
+                              style: textStyle)),
+                      Text(studyDay.dayNumber.toString(), style: textStyle),
+                    ],
+                  )),
+            ),
+          )),
+    );
   }
 
   void _ensureVisible(BuildContext context) {
@@ -213,13 +233,13 @@ class _StudyDayCard extends HookWidget {
 }
 
 
-class ScheduledProtocolRow extends HookWidget {
+class _ScheduledProtocolRow extends HookWidget {
 
   final Navigation _navigation = getIt<Navigation>();
 
   final ScheduledProtocol scheduledProtocol;
 
-  ScheduledProtocolRow(this.scheduledProtocol, {
+  _ScheduledProtocolRow(this.scheduledProtocol, {
     Key? key,}) : super(key: key);
 
   @override
@@ -238,9 +258,6 @@ class ScheduledProtocolRow extends HookWidget {
         break;
     }
 
-    String startTimeString = DateFormat('HH:mm')
-        .format(protocol.startTime);
-
     return Padding(
         padding: const EdgeInsets.all(0.0),
         child: Row(
@@ -250,12 +267,13 @@ class ScheduledProtocolRow extends HookWidget {
               width: 60,
               child: Visibility(
                   visible: true,
-                  child: Text(startTimeString,
+                  child: Text(protocol.startTime.hhmm,
                       style: TextStyle(color: Colors.white))),
             ),
             Expanded(
               child: Opacity(
-                opacity: scheduledProtocol.isCompleted ? 0.5 : 1.0,
+                opacity: scheduledProtocol.isCompleted
+                    || scheduledProtocol.isSkipped ? 0.5 : 1.0,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: InkWell(
@@ -303,7 +321,7 @@ class ScheduledProtocolRow extends HookWidget {
   Widget _protocolState(ScheduledProtocol scheduledProtocol) {
     switch(scheduledProtocol.state) {
       case ProtocolState.skipped:
-        return Text("Cancelled", style: TextStyle(color: Colors.white),);
+        return Text("Skipped", style: TextStyle(color: Colors.white),);
       case ProtocolState.cancelled:
         return Text("Cancelled", style: TextStyle(color: Colors.white),);
       case ProtocolState.completed:
@@ -322,6 +340,28 @@ class ScheduledProtocolRow extends HookWidget {
         builder: (_) => SimpleAlertDialog(
             title: 'Warning',
             content: 'Protocol is already completed'),
+      );
+      return;
+    }
+
+    if (scheduledProtocol.isSkipped) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleAlertDialog(
+            title: 'Warning',
+            content: 'Cannot start protocol cause its already skipped'),
+      );
+      return;
+    }
+
+    if (!scheduledProtocol.isAllowedToStart()) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleAlertDialog(
+            title: 'Warning',
+            content: 'This protocol can start after '
+                '${scheduledProtocol.allowedStartAfter.hhmm} and before '
+                '${scheduledProtocol.allowedStartBefore.hhmm}'),
       );
       return;
     }

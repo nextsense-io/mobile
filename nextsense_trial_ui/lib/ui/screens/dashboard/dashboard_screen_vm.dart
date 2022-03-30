@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/assesment.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
@@ -26,10 +29,23 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   StudyDay _today = StudyDay(DateTime.now());
   StudyDay? selectedDay;
 
+  late Timer _protocolCheckTimer;
+
   void init() async {
     super.init();
 
-    // TODO(alex): cache assessments (move to protocol manager?)
+    await _loadSchedule();
+
+    _initProtocolCheckTimer();
+
+    // TODO(alex): if current day out of range show some warning
+    // Select current day
+    selectDay(_today);
+
+  }
+
+  // Load schedule based on planned assesment
+  Future _loadSchedule() async {
     scheduledProtocols = await _studyManager.loadScheduledProtocols();
     final int studyDays = getCurrentStudy()?.getDurationDays() ?? 0;
     _days = List<StudyDay>.generate(studyDays, (i) {
@@ -37,14 +53,29 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
           .add(Duration(days: i));
       return StudyDay(dayDate);
     });
+  }
 
-    // TODO(alex): if current day out of range show some warning
+  void _initProtocolCheckTimer() {
+    _protocolCheckTimer = Timer.periodic(
+      Duration(seconds: 1), (_){
+        // Only execute beginning of each minute
+        if (DateTime.now().second != 0) return;
+        _checkProtocolsTimeConstraints();
+      },
+    );
+  }
 
-    // Select current day
-    selectDay(_today);
+  // We need to cancel protocols that user didn't start at desired time window
+  void _checkProtocolsTimeConstraints() {
+    _logger.log(Level.INFO, '[TODO] DashboardScreenViewModel._findAndCancelOutdatedProtocols');
 
-    //selectFirstDayOfStudy();
-    //notifyListeners();
+    for (final scheduledProtocol in scheduledProtocols) {
+      if (scheduledProtocol.shouldBeSkipped()) {
+        scheduledProtocol.update(state: ProtocolState.skipped);
+      }
+    }
+
+    notifyListeners();
   }
 
   Study? getCurrentStudy() {
@@ -77,6 +108,10 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return result;
   }
 
+  bool dayHasAnyScheduledProtocols(StudyDay day) {
+    return getScheduledProtocolsByDay(day).isNotEmpty;
+  }
+
   List<ScheduledProtocol> getCurrentDayScheduledProtocols() {
     if (selectedDay == null) return [];
     return getScheduledProtocolsByDay(selectedDay!);
@@ -100,4 +135,11 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     _deviceManager.disconnectDevice();
     _authManager.signOut();
   }
+
+  @override
+  void dispose() {
+    _protocolCheckTimer.cancel();
+    super.dispose();
+  }
+
 }
