@@ -3,6 +3,7 @@ import 'package:nextsense_trial_ui/domain/assesment.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
+import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
@@ -17,12 +18,13 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final AuthManager _authManager = getIt<AuthManager>();
 
-  DateTime? selectedDay;
-
   List<ScheduledProtocol> scheduledProtocols = [];
 
   // List of days that will appear for current study
-  List<DateTime>? _days;
+  List<StudyDay>? _days;
+
+  StudyDay _today = StudyDay(DateTime.now());
+  StudyDay? selectedDay;
 
   void init() async {
     super.init();
@@ -30,23 +32,30 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     // TODO(alex): cache assessments (move to protocol manager?)
     scheduledProtocols = await _studyManager.loadScheduledProtocols();
     final int studyDays = getCurrentStudy()?.getDurationDays() ?? 0;
-    _days = List<DateTime>.generate(studyDays, (i) =>
-        _studyManager.currentStudyStartDate.add(Duration(days: i)));
+    _days = List<StudyDay>.generate(studyDays, (i) {
+      DateTime dayDate = _studyManager.currentStudyStartDate
+          .add(Duration(days: i));
+      return StudyDay(dayDate);
+    });
 
     // TODO(alex): if current day out of range show some warning
-    selectFirstDayOfStudy();
-    notifyListeners();
+
+    // Select current day
+    selectDay(_today);
+
+    //selectFirstDayOfStudy();
+    //notifyListeners();
   }
 
   Study? getCurrentStudy() {
     return _studyManager.getCurrentStudy();
   }
 
-  List<DateTime> getDays() {
+  List<StudyDay> getDays() {
     return _days ?? [];
   }
 
-  void selectDay(DateTime day) {
+  void selectDay(StudyDay day) {
     selectedDay = day;
     notifyListeners();
   }
@@ -56,11 +65,10 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
       selectDay(_days![0]);
   }
 
-  List<ScheduledProtocol> getScheduledProtocolsByDay(DateTime day) {
+  List<ScheduledProtocol> getScheduledProtocolsByDay(StudyDay day) {
     List<ScheduledProtocol> result = [];
     for (var scheduledProtocol in scheduledProtocols) {
-      if (scheduledProtocol.protocol != null
-          && scheduledProtocol.day.isAtSameMomentAs(day)) {
+      if (scheduledProtocol.day == day) {
         result.add(scheduledProtocol);
       }
     }

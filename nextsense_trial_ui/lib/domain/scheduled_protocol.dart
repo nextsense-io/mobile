@@ -3,6 +3,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/assesment.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 
 /**
@@ -16,7 +17,7 @@ enum ScheduledProtocolKey {
 
 class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> {
 
-  late DateTime day;
+  late StudyDay day;
   late DateTime startTime;
   late Protocol protocol;
 
@@ -28,11 +29,11 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> {
   ScheduledProtocol(FirebaseEntity firebaseEntity, PlannedAssessment plannedAssessment) :
         super(firebaseEntity.getDocumentSnapshot()) {
     this.protocol = plannedAssessment.protocol!;
-    this.day = plannedAssessment.day;
+    this.day = StudyDay(plannedAssessment.day);
     this.startTime = plannedAssessment.startTime;
   }
 
-  // Set and persist state of protocol in firebase
+  // Set state of protocol in firebase
   void setState(ProtocolState state) {
     setValue(ScheduledProtocolKey.status, state.name);
   }

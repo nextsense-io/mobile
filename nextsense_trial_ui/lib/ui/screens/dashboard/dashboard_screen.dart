@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
@@ -106,7 +107,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _getDayTabs(BuildContext context) {
     final viewModel = context.watch<DashboardScreenViewModel>();
-    List<DateTime> days = viewModel.getDays();
+    List<StudyDay> days = viewModel.getDays();
 
     return Container(
         height: 80.0,
@@ -115,9 +116,8 @@ class DashboardScreen extends StatelessWidget {
           itemCount: days.length,
           shrinkWrap: true,
           itemBuilder: (BuildContext context, int index) {
-            DateTime day = days[index];
-            final isSelected =
-                viewModel.selectedDay?.isAtSameMomentAs(day) ?? false;
+            StudyDay day = days[index];
+            final isSelected = viewModel.selectedDay == day;
             final textStyle = TextStyle(
                 fontSize: 20.0,
                 color: isSelected ? Colors.white : Colors.black);
@@ -139,13 +139,13 @@ class DashboardScreen extends StatelessWidget {
                         children: [
                           Opacity(
                               opacity: 0.5,
-                              child: Text(DateFormat('MMMM').format(day),
+                              child: Text(DateFormat('MMMM').format(day.date),
                                   style: textStyle.copyWith(fontSize: 10.0))),
                           Opacity(
                               opacity: 0.5,
-                              child: Text(DateFormat('EE').format(day),
+                              child: Text(DateFormat('EE').format(day.date),
                                   style: textStyle)),
-                          Text(day.day.toString(), style: textStyle),
+                          Text(day.dayNumber.toString(), style: textStyle),
                         ],
                       )),
                 ));
