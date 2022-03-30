@@ -117,38 +117,7 @@ class DashboardScreen extends StatelessWidget {
           shrinkWrap: true,
           itemBuilder: (BuildContext context, int index) {
             StudyDay day = days[index];
-            final isSelected = viewModel.selectedDay == day;
-            final textStyle = TextStyle(
-                fontSize: 20.0,
-                color: isSelected ? Colors.white : Colors.black);
-            return Padding(
-                padding: const EdgeInsets.all(4.0),
-                child: InkWell(
-                  onTap: () {
-                    viewModel.selectDay(day);
-                  },
-                  child: Container(
-                      width: 60,
-                      height: 80,
-                      decoration: new BoxDecoration(
-                          color: isSelected ? Colors.black : Colors.white,
-                          borderRadius:
-                          new BorderRadius.all(const Radius.circular(5.0))),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Opacity(
-                              opacity: 0.5,
-                              child: Text(DateFormat('MMMM').format(day.date),
-                                  style: textStyle.copyWith(fontSize: 10.0))),
-                          Opacity(
-                              opacity: 0.5,
-                              child: Text(DateFormat('EE').format(day.date),
-                                  style: textStyle)),
-                          Text(day.dayNumber.toString(), style: textStyle),
-                        ],
-                      )),
-                ));
+            return _StudyDayCard(day);
           },
         ));
   }
@@ -181,6 +150,68 @@ class DashboardScreen extends StatelessWidget {
   }
 
 }
+
+class _StudyDayCard extends HookWidget {
+  final StudyDay studyDay;
+  const _StudyDayCard(this.studyDay, {Key? key})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = context.watch<DashboardScreenViewModel>();
+    final isSelected = viewModel.selectedDay == studyDay;
+
+    useEffect(() {
+      if (isSelected) {
+        _ensureVisible(context);
+      }
+    }, []);
+
+    final textStyle = TextStyle(
+        fontSize: 20.0,
+        color: isSelected ? Colors.white : Colors.black);
+    return Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: InkWell(
+          onTap: () {
+            viewModel.selectDay(studyDay);
+          },
+          child: Container(
+              width: 60,
+              height: 80,
+              decoration: new BoxDecoration(
+                  color: isSelected ? Colors.black : Colors.white,
+                  borderRadius:
+                  new BorderRadius.all(const Radius.circular(5.0))),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Opacity(
+                      opacity: 0.5,
+                      child: Text(DateFormat('MMMM').format(studyDay.date),
+                          style: textStyle.copyWith(fontSize: 10.0))),
+                  Opacity(
+                      opacity: 0.5,
+                      child: Text(DateFormat('EE').format(studyDay.date),
+                          style: textStyle)),
+                  Text(studyDay.dayNumber.toString(), style: textStyle),
+                ],
+              )),
+        ));
+  }
+
+  void _ensureVisible(BuildContext context) {
+    Future.delayed(const Duration(milliseconds: 200)).then((value) {
+      Scrollable.ensureVisible(
+          context,
+          alignment: 0.5,
+          curve: Curves.decelerate,
+          duration: const Duration(milliseconds: 160)
+      );
+    });
+  }
+}
+
 
 class ScheduledProtocolRow extends HookWidget {
 
