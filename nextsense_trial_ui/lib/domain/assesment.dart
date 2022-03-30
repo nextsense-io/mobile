@@ -7,7 +7,9 @@ enum PlannedAssessmentKey {
   day,
   type,
   time,
-  parameters
+  parameters,
+  allowed_early_start_time_minutes,
+  allowed_late_start_time_minutes
 }
 
 enum PlannedAssessmentParameter {
@@ -26,6 +28,9 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
   late String startTimeStr;
   late DateTime startTime;
 
+  late int allowEarlyStartTimeMinutes;
+  late int allowLateStartTimeMinutes;
+
   Protocol? protocol;
 
   PlannedAssessment(FirebaseEntity firebaseEntity, DateTime studyStartDate) :
@@ -37,6 +42,11 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
     int startTimeHours = int.parse(startTimeStr.split(":")[0]);
     int startTimeMinutes = int.parse(startTimeStr.split(":")[1]);
     startTime = DateTime(0, 0, 0, startTimeHours, startTimeMinutes);
+
+    allowEarlyStartTimeMinutes =
+        getValue(PlannedAssessmentKey.allowed_early_start_time_minutes) ?? 0;
+    allowLateStartTimeMinutes =
+        getValue(PlannedAssessmentKey.allowed_late_start_time_minutes) ?? 0;
 
     // Construct protocol here based on assessment fields like
     String protocolTypeString = getValue(PlannedAssessmentKey.type);

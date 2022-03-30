@@ -191,7 +191,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       // Comment for now, cause giving exception
       /*_startTime = _sessionManager.getCurrentSession()?.getValue(
           SessionKey.start_datetime);*/
-      updateProtocolState(ProtocolState.running,
+      scheduledProtocol.update(
+          state: ProtocolState.running,
           sessionId: _sessionManager.currentSessionId
       );
 
@@ -202,38 +203,22 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   }
 
   void _stopProtocol() async {
-      _logger.log(Level.INFO, 'Stopping ${protocol.name} protocol.');
-      await _sessionManager.stopSession(
-          _deviceManager.getConnectedDevice()!.macAddress);
-        updateProtocolState(protocolCompleted
-            ? ProtocolState.completed : ProtocolState.cancelled);
-  }
-
-  void updateProtocolState(ProtocolState state, {String? sessionId}) {
-    if (scheduledProtocol.state == ProtocolState.completed) {
-      _logger.log(Level.INFO, 'Protocol ${protocol.name} already completed.'
-          'Cannot change its state.');
-      return;
-    }
-    else if (scheduledProtocol.state == ProtocolState.skipped) {
-      _logger.log(Level.INFO, 'Protocol ${protocol.name} already skipped.'
-          'Cannot change its state.');
-      return;
-    }
-    _logger.log(Level.WARNING,
-        'Protocol changing state to $state');
-    scheduledProtocol.setState(state);
-    if (sessionId != null) {
-      scheduledProtocol.addSession(sessionId);
-    }
-    _firestoreManager.persistEntity(scheduledProtocol);
+    _logger.log(Level.INFO, 'Stopping ${protocol.name} protocol.');
+    await _sessionManager
+        .stopSession(_deviceManager.getConnectedDevice()!.macAddress);
+    scheduledProtocol.update(
+        state: protocolCompleted
+            ? ProtocolState.completed
+            : ProtocolState.cancelled);
   }
 
   // Executed when protocol is successfully completed i.e. minimum duration is
   // passed
   void onProtocolCompleted() {
     _logger.log(Level.INFO, 'Protocol ${protocol.name} completed');
-    updateProtocolState(ProtocolState.completed);
+    scheduledProtocol.update(
+        state: ProtocolState.completed
+    );
   }
 
 }
