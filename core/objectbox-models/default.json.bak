@@ -100,14 +100,16 @@
         {
           "id": "4:3141188964553715676",
           "name": "relativeSamplingTimestamp",
+          "indexId": "5:4976751085054561409",
           "type": 5,
-          "flags": 2
+          "flags": 10
         },
         {
           "id": "5:2161923181385908254",
           "name": "absoluteSamplingTimestamp",
+          "indexId": "6:8757822738783033429",
           "type": 6,
-          "flags": 2
+          "flags": 10
         },
         {
           "id": "6:3394089932842450801",
@@ -170,7 +172,7 @@
     },
     {
       "id": "4:7829109381478237227",
-      "lastPropertyId": "10:8586600348773026135",
+      "lastPropertyId": "12:5241366559788209373",
       "name": "LocalSession",
       "properties": [
         {
@@ -223,6 +225,18 @@
           "id": "10:8586600348773026135",
           "name": "accelerationSampleRate",
           "type": 7,
+          "flags": 4
+        },
+        {
+          "id": "11:2875620631030566538",
+          "name": "eegSamplesDeleted",
+          "type": 6,
+          "flags": 4
+        },
+        {
+          "id": "12:5241366559788209373",
+          "name": "accelerationSamplesDeleted",
+          "type": 6,
           "flags": 4
         }
       ],
@@ -347,7 +361,7 @@
     }
   ],
   "lastEntityId": "7:5721869432385465913",
-  "lastIndexId": "4:6731599744930573538",
+  "lastIndexId": "6:8757822738783033429",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
