@@ -1,11 +1,5 @@
 // Defines the list of existing protocols and common properties of each.
 import 'package:flutter/foundation.dart';
-import 'package:get_it/get_it.dart';
-import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/domain/user.dart';
-import 'package:nextsense_trial_ui/managers/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum ProtocolType {

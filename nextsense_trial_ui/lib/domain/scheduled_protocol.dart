@@ -73,12 +73,12 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> {
   bool isAllowedToStart() {
     final now = DateTime.now();
     final currentTime = DateTime(0,0,0,now.hour, now.minute);
-    print('[TODO] ScheduledProtocol.isAllowedToStart $currentTime $allowedStartBefore $allowedStartAfter');
     return currentTime.isAfter(allowedStartAfter.subtract(Duration(seconds: 1)))
         && currentTime.isBefore(allowedStartBefore);
   }
 
-  bool shouldBeSkipped() {
+  // Protocol didn't start in time, should be skipped
+  bool isLate() {
     // Protocol is already finished, no need to change its state
     if ([ProtocolState.completed, ProtocolState.skipped].contains(state))
       return false;
@@ -110,7 +110,6 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> {
     if (persist) {
       save();
     }
-
     return true;
   }
 
