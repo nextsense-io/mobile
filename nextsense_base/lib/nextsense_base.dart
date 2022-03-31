@@ -70,6 +70,7 @@ class NextsenseBase {
   static const String _uploadToCloudArg = 'upload_to_cloud';
   static const String _userBigTableKeyArg = 'user_bigtable_key';
   static const String _dataSessionIdArg = 'data_session_id';
+  static const String _earbudsConfigArg = 'earbuds_config';
   static const String _localSessionIdArg = 'local_session_id';
   static const String _channelNumberArg = 'channel_number';
   static const String _durationMillisArg = 'duration_millis';
@@ -153,10 +154,11 @@ class NextsenseBase {
   }
 
   static Future<int> startStreaming(String macAddress, bool uploadToCloud,
-      String userBigTableKey, String dataSessionId) async {
+      String userBigTableKey, String dataSessionId, String earbudsConfig) async {
     return await _channel.invokeMethod(_startStreamingCommand,
         {_macAddressArg: macAddress, _uploadToCloudArg: uploadToCloud,
-          _userBigTableKeyArg: userBigTableKey, _dataSessionIdArg: dataSessionId});
+          _userBigTableKeyArg: userBigTableKey, _dataSessionIdArg: dataSessionId,
+          _earbudsConfigArg: earbudsConfig});
   }
 
   static Future stopStreaming(String macAddress) async {

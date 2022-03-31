@@ -417,6 +417,9 @@ public class Uploader {
       dataSamplesProtoBuilder.setDataSessionId(localSession.getCloudDataSessionId());
     }
     dataSamplesProtoBuilder.setModality(DataSamplesProto.DataSamples.Modality.EAR_EEG);
+    if (localSession.getEarbudsConfig() != null) {
+      dataSamplesProtoBuilder.setEarbudsConfig(localSession.getEarbudsConfig());
+    }
     dataSamplesProtoBuilder.setFrequency(uploadChunkSize);
     dataSamplesProtoBuilder.setExpectedSamplesCount(eegSamplesToUpload.size());
     Instant expectedStartInstant = getExpectedFirstEegTimestamp(

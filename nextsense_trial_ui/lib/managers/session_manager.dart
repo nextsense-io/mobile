@@ -76,7 +76,7 @@ class SessionManager {
     String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
     _currentLocalSession = await NextsenseBase.startStreaming(
         deviceMacAddress, /*uploadToCloud=*/true,
-        userEntity.getValue(UserKey.bt_key), dataSessionCode);
+        userEntity.getValue(UserKey.bt_key), dataSessionCode, 'xenon_b_config');
     return true;
   }
 

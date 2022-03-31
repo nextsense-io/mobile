@@ -31,6 +31,9 @@ public class LocalSession extends BaseRecord {
   // Session id assigned in the cloud database. Can be null if the session is local only.
   @Nullable
   private String cloudDataSessionId;
+  // Earbuds configuration for the NextSense device. Can be null if unknown.
+  @Nullable
+  private String earbudsConfig;
   @Convert(converter = StatusConverter.class, dbType = Integer.class)
   private Status status;
   private boolean uploadNeeded;
@@ -42,12 +45,14 @@ public class LocalSession extends BaseRecord {
   private float accelerationSampleRate;
 
   private LocalSession(@Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
-                       Status status, boolean uploadNeeded, int eegSamplesUploaded,
-                       long eegSamplesDeleted, float eegSampleRate, int accelerationsUploaded,
-                       long accelerationsDeleted, float accelerationSampleRate) {
+                       @Nullable String earbudsConfig, Status status, boolean uploadNeeded,
+                       int eegSamplesUploaded, long eegSamplesDeleted, float eegSampleRate,
+                       int accelerationsUploaded, long accelerationsDeleted,
+                       float accelerationSampleRate) {
     super();
-    this.cloudDataSessionId = cloudDataSessionId;
     this.userBigTableKey = userBigTableKey;
+    this.cloudDataSessionId = cloudDataSessionId;
+    this.earbudsConfig = earbudsConfig;
     this.status = status;
     this.uploadNeeded = uploadNeeded;
     this.eegSamplesUploaded = eegSamplesUploaded;
@@ -59,21 +64,24 @@ public class LocalSession extends BaseRecord {
   }
 
   public static LocalSession create(
-      @Nullable String userBigTableKey, @Nullable String cloudDataSessionId, boolean uploadNeeded,
-      float eegSampleRate, float accelerationSampleRate) {
-    return new LocalSession(cloudDataSessionId, userBigTableKey, Status.RECORDING, uploadNeeded,
-        /*recordsUploaded=*/0, /*eegSamplesDeleted=*/0, eegSampleRate, /*accelerationsUploaded=*/0,
-        /*accelerationSamplesDeleted=*/0, accelerationSampleRate);
+      @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
+      @Nullable String earbudsConfig, boolean uploadNeeded, float eegSampleRate,
+      float accelerationSampleRate) {
+    return new LocalSession(cloudDataSessionId, userBigTableKey, earbudsConfig, Status.RECORDING,
+        uploadNeeded, /*recordsUploaded=*/0, /*eegSamplesDeleted=*/0, eegSampleRate,
+        /*accelerationsUploaded=*/0, /*accelerationSamplesDeleted=*/0, accelerationSampleRate);
   }
 
   // Need to be public for ObjectBox performance.
   public LocalSession(
-      int id, @Nullable String userBigTableKey, @Nullable String cloudDataSessionId, Status status,
-      boolean uploadNeeded, int eegSamplesUploaded, long eegSamplesDeleted, float eegSampleRate,
-      int accelerationsUploaded, long accelerationsDeleted, float accelerationSampleRate) {
+      int id, @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
+      @Nullable String earbudsConfig, Status status, boolean uploadNeeded, int eegSamplesUploaded,
+      long eegSamplesDeleted, float eegSampleRate, int accelerationsUploaded,
+      long accelerationsDeleted, float accelerationSampleRate) {
     super(id);
-    this.cloudDataSessionId = cloudDataSessionId;
     this.userBigTableKey = userBigTableKey;
+    this.cloudDataSessionId = cloudDataSessionId;
+    this.earbudsConfig = earbudsConfig;
     this.status = status;
     this.uploadNeeded = uploadNeeded;
     this.eegSamplesUploaded = eegSamplesUploaded;
@@ -99,6 +107,15 @@ public class LocalSession extends BaseRecord {
 
   public void setCloudDataSessionId(@Nullable String cloudDataSessionId) {
     this.cloudDataSessionId = cloudDataSessionId;
+  }
+
+  @Nullable
+  public String getEarbudsConfig() {
+    return earbudsConfig;
+  }
+
+  public void setEarbudsConfig(@Nullable String earbudsConfig) {
+    this.earbudsConfig = earbudsConfig;
   }
 
   public Status getStatus() {

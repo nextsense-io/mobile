@@ -133,7 +133,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   @Override
   public ListenableFuture<Boolean> startStreaming(
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
-      Bundle parameters) {
+      @Nullable String earbudsConfig, Bundle parameters) {
     if (this.deviceMode == DeviceMode.STREAMING) {
       return Futures.immediateFuture(true);
     }
@@ -142,7 +142,8 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
           new IllegalStateException("No characteristic to stream on."));
     }
     deviceModeFuture = SettableFuture.create();
-    localSessionManager.startLocalSession(userBigTableKey, dataSessionId, uploadToCloud, 500, 10);
+    localSessionManager.startLocalSession(userBigTableKey, dataSessionId, earbudsConfig,
+        uploadToCloud, 500, 10);
     peripheral.setNotify(dataCharacteristic, /*enable=*/true);
     return deviceModeFuture;
   }

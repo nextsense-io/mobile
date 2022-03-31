@@ -35,14 +35,16 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
 
   @Override
   public ListenableFuture<Boolean> startStreaming(
-      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId) {
-    return startStreaming(uploadToCloud, userBigTableKey, dataSessionId, new Bundle());
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      @Nullable String earbudsConfig) {
+    return startStreaming(uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig,
+        new Bundle());
   }
 
   @Override
   public ListenableFuture<Boolean> startStreaming(
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
-      Bundle parameters) {
+      @Nullable String earbudsConfig, Bundle parameters) {
     return Futures.immediateFuture(false);
   }
 

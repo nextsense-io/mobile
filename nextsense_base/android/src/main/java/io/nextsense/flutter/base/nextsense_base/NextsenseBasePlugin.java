@@ -73,6 +73,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String UPLOAD_TO_CLOUD_ARGUMENT = "upload_to_cloud";
   public static final String USER_BT_KEY_ARGUMENT = "user_bigtable_key";
   public static final String DATA_SESSION_ID_ARGUMENT = "data_session_id";
+  public static final String EARBUDS_CONFIG_ARGUMENT = "earbuds_config";
   public static final String LOCAL_SESSION_ID_ARGUMENT = "local_session_id";
   public static final String CHANNEL_NUMBER_ARGUMENT = "channel_number";
   public static final String DURATION_MILLIS_ARGUMENT = "duration_millis";
@@ -220,7 +221,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         Boolean uploadToCloud = call.argument(UPLOAD_TO_CLOUD_ARGUMENT);
         String userBtKey = call.argument(USER_BT_KEY_ARGUMENT);
         String dataSessionId = call.argument(DATA_SESSION_ID_ARGUMENT);
-        startStreaming(result, macAddress, uploadToCloud, userBtKey, dataSessionId);
+        String earbudsConfig = call.argument(EARBUDS_CONFIG_ARGUMENT);
+        startStreaming(result, macAddress, uploadToCloud, userBtKey, dataSessionId, earbudsConfig);
         break;
       case STOP_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -508,7 +510,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void startStreaming(Result result, String macAddress, Boolean uploadToCloud,
-                              String userBigTableKey, String dataSessionId) {
+                              String userBigTableKey, String dataSessionId, String earbudsConfig) {
     Device device = devices.get(macAddress);
     if (device == null) {
       returnError(result, START_STREAMING_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
@@ -516,7 +518,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       return;
     }
     try {
-      boolean started = device.startStreaming(uploadToCloud, userBigTableKey, dataSessionId).get();
+      boolean started = device.startStreaming(
+          uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig).get();
       if (!started) {
         returnError(result, START_STREAMING_COMMAND, ERROR_STREAMING_START_FAILED,
             /*errorMessage=*/null, /*errorDetails=*/null);
