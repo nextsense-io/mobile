@@ -42,7 +42,6 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     // TODO(alex): if current day out of range show some warning
     // Select current day
     selectDay(_today);
-
   }
 
   // Load schedule based on planned assesment
@@ -68,13 +67,11 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   // Find and skip protocols that user didn't start at desired time window
   void _checkProtocolsTimeConstraints() {
-
     for (final scheduledProtocol in scheduledProtocols) {
       if (scheduledProtocol.isLate()) {
         scheduledProtocol.update(state: ProtocolState.skipped);
       }
     }
-
     notifyListeners();
   }
 

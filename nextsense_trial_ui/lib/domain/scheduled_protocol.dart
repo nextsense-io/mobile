@@ -20,12 +20,16 @@ enum ScheduledProtocolKey {
 class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> {
 
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledProtocol');
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
 
   late StudyDay day;
+
+  // Start time - hours & minutes only
   late DateTime startTime;
+
   late Protocol protocol;
 
+  // Time constraints for protocol
+  // Those are absolute DateTime values
   late DateTime allowedStartBefore;
   late DateTime allowedStartAfter;
 
@@ -38,15 +42,14 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> {
   ScheduledProtocol(FirebaseEntity firebaseEntity, PlannedAssessment plannedAssessment) :
         super(firebaseEntity.getDocumentSnapshot()) {
     protocol = plannedAssessment.protocol!;
-    day = StudyDay(plannedAssessment.day);
+    day = plannedAssessment.day;
     startTime = plannedAssessment.startTime;
-    // Substract 1 second to make sure isAfter method works
-    // correct on beginning of each minute
-    // i.e 11:00:00 is after 10:59:59
-    allowedStartAfter = startTime
-        .subtract(Duration(minutes: plannedAssessment.allowEarlyStartTimeMinutes));
-    allowedStartBefore = startTime
-        .add(Duration(minutes: plannedAssessment.allowLateStartTimeMinutes));
+    final startDateTime = plannedAssessment.day.date
+        .add(Duration(hours: startTime.hour, minutes: startTime.minute));
+    allowedStartAfter = startDateTime
+        .subtract(Duration(minutes: plannedAssessment.allowedEarlyStartTimeMinutes));
+    allowedStartBefore = startDateTime
+        .add(Duration(minutes: plannedAssessment.allowedLateStartTimeMinutes));
   }
 
   // Set state of protocol in firebase
@@ -71,8 +74,10 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> {
 
   // Protocol is within desired window to start
   bool isAllowedToStart() {
-    final now = DateTime.now();
-    final currentTime = DateTime(0,0,0,now.hour, now.minute);
+    final currentTime = DateTime.now();
+    // Substract 1 second to make sure isAfter method works
+    // correct on beginning of each minute
+    // i.e 11:00:00 is after 10:59:59
     return currentTime.isAfter(allowedStartAfter.subtract(Duration(seconds: 1)))
         && currentTime.isBefore(allowedStartBefore);
   }
@@ -82,8 +87,7 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> {
     // Protocol is already finished, no need to change its state
     if ([ProtocolState.completed, ProtocolState.skipped].contains(state))
       return false;
-    final now = DateTime.now();
-    final currentTime = DateTime(0,0,0,now.hour, now.minute);
+    final currentTime = DateTime.now();
     return state == ProtocolState.not_started
         && currentTime.isAfter(allowedStartBefore.subtract(Duration(seconds: 1)));
   }
