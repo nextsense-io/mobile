@@ -17,7 +17,7 @@ class MainMenu extends HookWidget {
   @override
   Widget build(BuildContext context) {
 
-    final dashboardViewModel = context.read<DashboardScreenViewModel>();
+    final dashboardViewModel = context.watch<DashboardScreenViewModel>();
 
     return Drawer(
       child: ListView(
@@ -42,14 +42,21 @@ class MainMenu extends HookWidget {
                 _navigation.navigateTo(ImpedanceCalculationScreen.id, pop: true);
               }
           ),
-          _MainMenuItem(
-            icon: Icon(Icons.power_off),
-            label: Text('Disconnect'),
-              onPressed: () {
-                dashboardViewModel.disconnectDevice();
-                _navigation.navigateToDeviceScan();
-              }
-          ),
+          if (dashboardViewModel.deviceIsConnected)
+            _MainMenuItem(
+                icon: Icon(Icons.power_off),
+                label: Text('Disconnect'),
+                onPressed: () {
+                  dashboardViewModel.disconnectDevice();
+                  _navigation.navigateToDeviceScan();
+                })
+          else
+            _MainMenuItem(
+                icon: Icon(Icons.power),
+                label: Text('Connect'),
+                onPressed: () {
+                  _navigation.navigateToDeviceScan();
+                }),
           _MainMenuItem(
               icon: Icon(Icons.logout),
               label: Text('Logout'),
