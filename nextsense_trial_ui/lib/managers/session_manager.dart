@@ -1,12 +1,13 @@
 import 'package:flutter/foundation.dart';
-import 'package:get_it/get_it.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/data_session.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum Modality {
@@ -16,9 +17,9 @@ enum Modality {
 class SessionManager {
   static final int _firstSessionNumber = 1;
 
-  final FirestoreManager _firestoreManager =
-      GetIt.instance.get<FirestoreManager>();
-  final AuthManager _authManager = GetIt.instance.get<AuthManager>();
+  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final AuthManager _authManager = getIt<AuthManager>();
+  final StudyManager _studyManager = getIt<StudyManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('SessionManager');
 
   Session? _currentSession;
@@ -76,7 +77,8 @@ class SessionManager {
     String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
     _currentLocalSession = await NextsenseBase.startStreaming(
         deviceMacAddress, /*uploadToCloud=*/true,
-        userEntity.getValue(UserKey.bt_key), dataSessionCode, 'xenon_b_config');
+        userEntity.getValue(UserKey.bt_key), dataSessionCode,
+        _studyManager.getCurrentStudy()?.getEarbudsConfig() ?? null);
     return true;
   }
 
