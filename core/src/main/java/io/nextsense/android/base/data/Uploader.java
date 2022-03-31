@@ -237,7 +237,7 @@ public class Uploader {
         Map<String, List<BaseRecord>> samplesToUpload = getSamplesToUpload(localSession);
         List<BaseRecord> eegSamplesToUpload = samplesToUpload.get(EEG_SAMPLES);
         Util.logd(TAG, "Session " + localSession.id + " has " + eegSamplesToUpload.size() +
-            " to upload.");
+            " eeg records to upload.");
         while (dataToUpload(samplesToUpload) && running.get()) {
           boolean uploaded = false;
           for (int eegSamplesIndex = 0; eegSamplesIndex < eegSamplesToUpload.size();
@@ -260,15 +260,11 @@ public class Uploader {
                   uploadDataSamplesTask, UPLOAD_FUNCTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
               uploaded = true;
               Util.logd(TAG, "Upload result: " + uploadResult.get("result"));
-            } catch (IOException e) {
-              Log.e(TAG, "Failed to upload data samples: " + e.getMessage(), e);
-            } catch (ExecutionException e) {
+            } catch (IOException | ExecutionException | TimeoutException e) {
               Log.e(TAG, "Failed to upload data samples: " + e.getMessage(), e);
             } catch (InterruptedException e) {
               Log.e(TAG, "Failed to upload data samples: " + e.getMessage(), e);
               Thread.currentThread().interrupt();
-            } catch (TimeoutException e) {
-              Log.e(TAG, "Failed to upload data samples: " + e.getMessage(), e);
             }
           }
 
@@ -409,6 +405,8 @@ public class Uploader {
     //             proto?
     List<BaseRecord> eegSamplesToUpload = samples.get(EEG_SAMPLES);
     List<BaseRecord> accelerationsToUpload = samples.get(ACC_SAMPLES);
+    assert(eegSamplesToUpload != null);
+    assert(accelerationsToUpload != null);
     assert(eegSamplesToUpload.size() == accelerationsToUpload.size());
     DataSamplesProto.DataSamples.Builder dataSamplesProtoBuilder =
         DataSamplesProto.DataSamples.newBuilder();
@@ -444,7 +442,7 @@ public class Uploader {
       for (String accChannel : Acceleration.CHANNELS) {
         DataSamplesProto.Channel.Builder channelBuilder = channelBuilders.computeIfAbsent(
             accChannel, channelValue -> DataSamplesProto.Channel.newBuilder().setNumber(accChannel));
-        switch (Acceleration.Channels.valueOf(accChannel)) {
+        switch (Acceleration.Channels.valueOf(accChannel.toUpperCase())) {
           case X:
             channelBuilder.addSample(acceleration.getX());
             break;
@@ -485,16 +483,20 @@ public class Uploader {
         .call(data)
         .addOnFailureListener(exception ->
             Log.e(TAG, "Failed to upload data: " + exception.getMessage()))
-        .continueWith(new Continuation<HttpsCallableResult, Map<String, Object>>() {
+        .continueWith(new Continuation<>() {
           @Override
           public Map<String, Object> then(@NonNull Task<HttpsCallableResult> task)
               throws Exception {
             // This continuation runs on either success or failure, but if the task
             // has failed then getResult() will throw an Exception which will be
             // propagated down.
-            Map<String, Object> result = (Map<String, Object>) task.getResult().getData();
-            Util.logd(TAG, "Upload data sample result: " + result);
-            return result;
+            if (task.getResult() != null) {
+              @SuppressWarnings("unchecked")
+              Map<String, Object> result = (Map<String, Object>) task.getResult().getData();
+              Util.logd(TAG, "Upload data sample result: " + result);
+              return result;
+            }
+            return new HashMap<>();
           }
         });
   }

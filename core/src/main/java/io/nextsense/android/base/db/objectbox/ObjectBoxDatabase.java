@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 
 import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.data.Acceleration_;
@@ -82,140 +83,177 @@ public class ObjectBoxDatabase implements Database {
 
   public <T extends BaseRecord> DataSubscription subscribe(
       Class<T> type, DataObserver<Class<T>> dataObserver, Scheduler scheduler) {
-    return boxStore.subscribe(type).on(scheduler).observer(dataObserver);
+    return runWithExceptionLog(() ->
+      boxStore.subscribe(type).on(scheduler).observer(dataObserver));
   }
 
   public Query<LocalSession> getFinishedLocalSession(long localSessionId) {
-    return sessionFinishedQuery.setParameter(LocalSession_.id, localSessionId);
+    return runWithExceptionLog(() ->
+        sessionFinishedQuery.setParameter(LocalSession_.id, localSessionId));
   }
 
   public long putLocalSession(LocalSession localSession) {
-    return localSessionBox.put(localSession);
+    return runWithExceptionLog(() -> localSessionBox.put(localSession));
   }
 
   public long putEegSample(EegSample eegSample) {
-    return eegSampleBox.put(eegSample);
+    return runWithExceptionLog(() -> eegSampleBox.put(eegSample));
   }
 
   public long putAcceleration(Acceleration acceleration) {
-    return accelerationBox.put(acceleration);
+    return runWithExceptionLog(() -> accelerationBox.put(acceleration));
   }
 
   public long putDeviceInternalState(DeviceInternalState deviceInternalState) {
-    return deviceInternalStateBox.put(deviceInternalState);
+    return runWithExceptionLog(() -> deviceInternalStateBox.put(deviceInternalState));
   }
 
   public LocalSession getLocalSession(long localSessionId) {
-    return localSessionBox.get(localSessionId);
+    return runWithExceptionLog(() -> localSessionBox.get(localSessionId));
   }
 
   public List<LocalSession> getLocalSessions() {
-    return localSessionBox.getAll();
+    return runWithExceptionLog(() -> localSessionBox.getAll());
   }
 
   public Optional<LocalSession> getActiveSession() {
-    List<LocalSession> activeSessions = activeSessionQuery.find();
-    if (activeSessions.size() > 1) {
-      Log.w(TAG, "More than one active session");
-    }
-    if (!activeSessions.isEmpty()) {
-      return Optional.of(activeSessions.get(activeSessions.size() - 1));
-    }
-    return Optional.empty();
+    return runWithExceptionLog(() -> {
+      List<LocalSession> activeSessions = activeSessionQuery.find();
+      if (activeSessions.size() > 1) {
+        Log.w(TAG, "More than one active session");
+      }
+      if (!activeSessions.isEmpty()) {
+        return Optional.of(activeSessions.get(activeSessions.size() - 1));
+      }
+      return Optional.empty();
+    });
   }
 
   public List<EegSample> getEegSamples(int localSessionId) {
-    return eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).find();
+    return runWithExceptionLog(() ->
+      eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).find());
   }
 
   public List<Acceleration> getAccelerations(int localSessionId) {
-    return accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).find();
+    return runWithExceptionLog(() ->
+      accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).find());
   }
 
   public List<EegSample> getLastEegSamples(int localSessionId, long count) {
-    long sessionEegSamplesCount = getEegSamplesCount(localSessionId);
-    long offset = count <= sessionEegSamplesCount ? sessionEegSamplesCount - count: 0;
-    return getEegSamples(localSessionId, offset, count);
+    return runWithExceptionLog(() -> {
+      long sessionEegSamplesCount = getEegSamplesCount(localSessionId);
+      long offset = count <= sessionEegSamplesCount ? sessionEegSamplesCount - count : 0;
+      return getEegSamples(localSessionId, offset, count);
+    });
   }
 
   public List<Float> getLastChannelData(int localSessionId, int channelNumber, Duration duration) {
-    LocalSession localSession = getLocalSession(localSessionId);
-    float seconds = duration.toMillis() / 1000.0f;
-    List<EegSample> eegSamples = getLastEegSamples(localSessionId,
-        Math.round(Math.floor(seconds * localSession.getEegSampleRate())));
-    List<Float> channelSamples = new ArrayList<>(eegSamples.size());
-    for (EegSample eegSample : eegSamples) {
-      channelSamples.add(eegSample.getEegSamples().get(channelNumber));
-    }
-    return channelSamples;
+    return runWithExceptionLog(() -> {
+      LocalSession localSession = getLocalSession(localSessionId);
+      float seconds = duration.toMillis() / 1000.0f;
+      List<EegSample> eegSamples = getLastEegSamples(localSessionId,
+          Math.round(Math.floor(seconds * localSession.getEegSampleRate())));
+      List<Float> channelSamples = new ArrayList<>(eegSamples.size());
+      for (EegSample eegSample : eegSamples) {
+        channelSamples.add(eegSample.getEegSamples().get(channelNumber));
+      }
+      return channelSamples;
+    });
   }
 
   public List<DeviceInternalState> getRecentDeviceInternalStateData(Duration duration) {
-    long targetTimestamp = Instant.now().minus(duration).toEpochMilli();
-    return recentDeviceInternalStateQuery
-        .setParameter(DeviceInternalState_.timestamp, targetTimestamp).find();
+    return runWithExceptionLog(() -> {
+      long targetTimestamp = Instant.now().minus(duration).toEpochMilli();
+      return recentDeviceInternalStateQuery
+          .setParameter(DeviceInternalState_.timestamp, targetTimestamp).find();
+    });
   }
 
   public List<DeviceInternalState> getDeviceInternalStates(long offset, long count) {
-    return lastDeviceInternalStateQuery.find(offset, count);
+    return runWithExceptionLog(() ->
+      lastDeviceInternalStateQuery.find(offset, count));
   }
 
   public long getEegSamplesCount(long localSessionId) {
-    return eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).count();
+    return runWithExceptionLog(() ->
+      eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).count());
   }
 
   public List<Acceleration> getLastAccelerations(int localSessionId, long count) {
-    long sessionAccelerationCount = getAccelerationCount(localSessionId);
-    long offset = count <= sessionAccelerationCount ? sessionAccelerationCount - count: 0;
-    return getAccelerations(localSessionId, offset, count);
+    return runWithExceptionLog(() -> {
+      long sessionAccelerationCount = getAccelerationCount(localSessionId);
+      long offset = count <= sessionAccelerationCount ? sessionAccelerationCount - count : 0;
+      return getAccelerations(localSessionId, offset, count);
+    });
   }
 
   public List<EegSample> getEegSamples(long localSessionId, long offset, long count) {
-    return eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).
-        find(offset, count);
+    return runWithExceptionLog(() ->
+        eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).
+            find(offset, count));
   }
 
   public List<Acceleration> getAccelerations(long localSessionId, long offset, long count) {
-    return accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).
-        find(offset, count);
+    return runWithExceptionLog(() -> accelerationQuery.setParameter(
+        Acceleration_.localSessionId, localSessionId).find(offset, count));
   }
 
   public long getAccelerationCount() {
-    return accelerationBox.count();
+    return runWithExceptionLog(() -> accelerationBox.count());
   }
 
   public long getAccelerationCount(long localSessionId) {
-    return accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).count();
+    return runWithExceptionLog(() ->
+        accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).count());
   }
 
   public List<DeviceInternalState> getLastDeviceInternalStates(long count) {
-    long deviceInternalStateCount = deviceInternalStateBox.count();
-    long offset = count <= deviceInternalStateCount ? deviceInternalStateCount - count: 0;
-    return getDeviceInternalStates(offset, count);
+    return runWithExceptionLog(() -> {
+      long deviceInternalStateCount = deviceInternalStateBox.count();
+      long offset = count <= deviceInternalStateCount ? deviceInternalStateCount - count : 0;
+      return getDeviceInternalStates(offset, count);
+    });
   }
 
   public boolean deleteLocalSession(long localSessionId) {
-    deleteEegSamplesData(localSessionId);
-    deleteAccelerationData(localSessionId);
-    return localSessionBox.remove(localSessionId);
+    return runWithExceptionLog(() -> {
+      deleteEegSamplesData(localSessionId);
+      deleteAccelerationData(localSessionId);
+      return localSessionBox.remove(localSessionId);
+    });
   }
 
   public long deleteEegSamplesData(long localSessionId) {
-    return eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).remove();
+    return runWithExceptionLog(() ->
+        eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).remove());
   }
 
   public long deleteFirstEegSamplesData(long localSessionId, long timestampCutoff) {
-    return eegSamplesTimestampIsLesserQuery.setParameter(EegSample_.localSessionId, localSessionId)
-        .setParameter(EegSample_.absoluteSamplingTimestamp, timestampCutoff).remove();
+    return runWithExceptionLog(() ->
+      eegSamplesTimestampIsLesserQuery.setParameter(EegSample_.localSessionId, localSessionId)
+          .setParameter(EegSample_.absoluteSamplingTimestamp, timestampCutoff).remove()
+    );
   }
 
   public long deleteFirstAccelerationsData(long localSessionId, long timestampCutoff) {
-    return accelerationTimestampIsLesserQuery
-        .setParameter(Acceleration_.localSessionId, localSessionId)
-        .setParameter(Acceleration_.absoluteSamplingTimestamp, timestampCutoff).remove();
+    return runWithExceptionLog(() ->
+        accelerationTimestampIsLesserQuery
+            .setParameter(Acceleration_.localSessionId, localSessionId)
+            .setParameter(Acceleration_.absoluteSamplingTimestamp, timestampCutoff).remove());
   }
 
   public long deleteAccelerationData(long localSessionId) {
-    return accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).remove();
+    return runWithExceptionLog(() ->
+        accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).remove());
+  }
+
+  public static <T> T runWithExceptionLog(Callable<T> function) {
+    try {
+      return function.call();
+    }
+    catch(Exception ex) {
+      Log.e(TAG, "Fatal error: " + ex.getMessage());
+      return null;
+    }
   }
 }

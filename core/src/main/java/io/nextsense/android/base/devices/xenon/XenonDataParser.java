@@ -72,7 +72,6 @@ public class XenonDataParser {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device data.");
     }
     ByteBuffer valuesBuffer = ByteBuffer.wrap(values);
-    valuesBuffer.order(ByteOrder.BIG_ENDIAN);
     byte activeChannelFlags = valuesBuffer.get();
     if (activeChannelFlags == ACTIVE_CHANNELS_AUX_PACKET) {
       parseAuxPacket(valuesBuffer);
@@ -102,6 +101,7 @@ public class XenonDataParser {
       return;
     }
     LocalSession localSession = localSessionOptional.get();
+    valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
     List<Short> accelerationData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
         valuesBuffer.getShort());
     HashMap<Integer, Float> eegData = new HashMap<>();

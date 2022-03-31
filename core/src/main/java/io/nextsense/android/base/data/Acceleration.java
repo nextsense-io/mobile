@@ -35,20 +35,20 @@ public class Acceleration extends BaseRecord {
       return name;
     }
   }
-  public static List<String> CHANNELS = ImmutableList.of("x", "y", "z");
+  public static final List<String> CHANNELS = ImmutableList.of("x", "y", "z");
 
   public ToOne<LocalSession> localSession;
 
-  private final int x;
-  private final int y;
-  private final int z;
+  private int x;
+  private int y;
+  private int z;
   @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
-  private final Instant receptionTimestamp;
+  private Instant receptionTimestamp;
   @Nullable
-  private final Integer relativeSamplingTimestamp;
+  private Integer relativeSamplingTimestamp;
   @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
   @Nullable
-  private final Instant absoluteSamplingTimestamp;
+  private Instant absoluteSamplingTimestamp;
 
   private Acceleration(long localSessionId, int x, int y, int z, Instant receptionTimestamp,
                        @Nullable Integer relativeSamplingTimestamp,
@@ -88,6 +88,8 @@ public class Acceleration extends BaseRecord {
     this.relativeSamplingTimestamp = relativeSamplingTimestamp;
     this.absoluteSamplingTimestamp = absoluteSamplingTimestamp;
   }
+
+  public Acceleration() {}
 
   public LocalSession getLocalSession() {
     return localSession.getTarget();
