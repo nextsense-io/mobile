@@ -187,14 +187,10 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           _deviceManager.getConnectedDevice()!.macAddress,
           _studyManager.getCurrentStudyId()!,
           protocol.name);
-      // Comment for now, cause giving exception
-      /*_startTime = _sessionManager.getCurrentSession()?.getValue(
-          SessionKey.start_datetime);*/
       scheduledProtocol.update(
           state: ProtocolState.running,
           sessionId: _sessionManager.currentSessionId
       );
-
     } else {
       _logger.log(Level.WARNING, 'Cannot start ${protocol.name} protocol, device '
           'not connected.');

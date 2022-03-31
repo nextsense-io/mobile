@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum PlannedAssessmentKey {
@@ -21,31 +22,32 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
 
   final CustomLogPrinter _logger = CustomLogPrinter('Assessment');
 
-  late DateTime day;
+  late StudyDay day;
 
-  late int dayNumber;
+  // Get day # of study
+  int get dayNumber => day.dayNumber;
 
   late String startTimeStr;
   late DateTime startTime;
 
-  late int allowEarlyStartTimeMinutes;
-  late int allowLateStartTimeMinutes;
+  late int allowedEarlyStartTimeMinutes;
+  late int allowedLateStartTimeMinutes;
 
   Protocol? protocol;
 
   PlannedAssessment(FirebaseEntity firebaseEntity, DateTime studyStartDate) :
         super(firebaseEntity.getDocumentSnapshot()) {
-    dayNumber = getValue(PlannedAssessmentKey.day);
-    day = studyStartDate.add(Duration(days: dayNumber - 1));
+    final dayNumber = getValue(PlannedAssessmentKey.day);
+    day = StudyDay(studyStartDate.add(Duration(days: dayNumber - 1)));
     startTimeStr = getValue(PlannedAssessmentKey.time) as String;
     // TODO(alex): check HH:MM string is correctly set
     int startTimeHours = int.parse(startTimeStr.split(":")[0]);
     int startTimeMinutes = int.parse(startTimeStr.split(":")[1]);
     startTime = DateTime(0, 0, 0, startTimeHours, startTimeMinutes);
 
-    allowEarlyStartTimeMinutes =
+    allowedEarlyStartTimeMinutes =
         getValue(PlannedAssessmentKey.allowed_early_start_time_minutes) ?? 0;
-    allowLateStartTimeMinutes =
+    allowedLateStartTimeMinutes =
         getValue(PlannedAssessmentKey.allowed_late_start_time_minutes) ?? 0;
 
     // Construct protocol here based on assessment fields like

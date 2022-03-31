@@ -1,6 +1,9 @@
 import 'package:intl/intl.dart';
+
 // Represents single day of study
 class StudyDay {
+
+  // Date of study day has zero hours/minutes/seconds - 00:00:00
   late DateTime date;
 
   int get dayNumber => date.day;
