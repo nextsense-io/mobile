@@ -33,4 +33,5 @@ message DataSamples {
   repeated bool z_mod = 12;
   repeated bool marker = 13;
   repeated bool button = 14;
+  string earbuds_config = 15;
 }

@@ -124,13 +124,14 @@ public class EmulatedDevice extends Device {
 
   @Override
   public ListenableFuture<Boolean> startStreaming(
-      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId) {
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      @Nullable String earbudsConfig) {
 
     Util.logd(TAG, "startStreaming");
 
     if (localSessionManager != null) {
-      localSessionManager.startLocalSession(userBigTableKey, dataSessionId, uploadToCloud,
-              getSettings().getEegStreamingRate(), getSettings().getImuStreamingRate());
+      localSessionManager.startLocalSession(userBigTableKey, dataSessionId, earbudsConfig,
+          uploadToCloud, getSettings().getEegStreamingRate(), getSettings().getImuStreamingRate());
 
       final Integer fireEachMillis = Math.round(1000 / getSettings().getEegStreamingRate());
       sendSamplesTimer = new Timer();

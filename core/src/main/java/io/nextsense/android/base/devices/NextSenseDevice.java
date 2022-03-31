@@ -54,10 +54,12 @@ public interface NextSenseDevice {
    * @param parameters device specific parameters
    * @return true if successful, false otherwise
    */
-  ListenableFuture<Boolean> startStreaming(boolean uploadToCloud, @Nullable String userBigTableKey,
-                                           @Nullable String dataSessionId, Bundle parameters);
   ListenableFuture<Boolean> startStreaming(
-      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId);
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      @Nullable String earbudsConfig, Bundle parameters);
+  ListenableFuture<Boolean> startStreaming(
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      @Nullable String earbudsConfig);
 
   /**
    * Restarts an ongoing stream after a disconnection.

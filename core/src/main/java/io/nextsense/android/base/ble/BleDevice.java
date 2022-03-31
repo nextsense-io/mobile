@@ -107,7 +107,8 @@ public class BleDevice extends Device {
 
   @Override
   public ListenableFuture<Boolean> startStreaming(
-      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId) {
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      @Nullable String earbudsConfig) {
     if (deviceState != DeviceState.READY) {
       return Futures.immediateFailedFuture(new IllegalStateException(
           "Device needs to be in READY state to change its mode."));
@@ -123,7 +124,7 @@ public class BleDevice extends Device {
           StartStreamingCommand.StartMode.NO_LOGGING);
     }
     return nextSenseDevice.startStreaming(uploadToCloud, userBigTableKey, dataSessionId,
-        parametersBundle);
+        earbudsConfig, parametersBundle);
   }
 
   @Override
@@ -160,7 +161,7 @@ public class BleDevice extends Device {
       boolean settingsSet = setSettings(newDeviceSettings).get();
       if (settingsSet) {
         return startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null,
-            /*dataSessionId=*/null).get();
+            /*dataSessionId=*/null, /*earbudsConfig=*/null).get();
       } else {
         return false;
       }

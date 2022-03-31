@@ -134,7 +134,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   @Override
   public ListenableFuture<Boolean> startStreaming(
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
-      Bundle parameters) {
+      @Nullable String earbudsConfig, Bundle parameters) {
     if (parameters == null || parameters.getSerializable(STREAM_START_MODE_KEY) == null) {
       return Futures.immediateFailedFuture(
           new IllegalArgumentException("Need to provide the " + STREAM_START_MODE_KEY +
@@ -150,8 +150,8 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           new IllegalStateException("No characteristic to stream on."));
     }
     changeStreamingStateFuture = SettableFuture.create();
-    localSessionManager.startLocalSession(userBigTableKey, dataSessionId, uploadToCloud,
-        deviceSettings.getEegStreamingRate(), deviceSettings.getImuStreamingRate());
+    localSessionManager.startLocalSession(userBigTableKey, dataSessionId, earbudsConfig,
+        uploadToCloud, deviceSettings.getEegStreamingRate(), deviceSettings.getImuStreamingRate());
     if (!peripheral.isNotifying(dataCharacteristic)) {
       peripheral.setNotify(dataCharacteristic, /*enable=*/true);
     } else {
