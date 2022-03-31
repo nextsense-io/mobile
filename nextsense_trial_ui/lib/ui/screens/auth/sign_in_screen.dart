@@ -4,7 +4,6 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
-import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';

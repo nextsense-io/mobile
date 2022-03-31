@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';

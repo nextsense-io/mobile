@@ -5,8 +5,6 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
-import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
-import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
@@ -47,7 +45,7 @@ class DashboardScreen extends StatelessWidget {
                         child: Column(
                           children: [
                             _appBar(context),
-                            _getDayTabs(context),
+                            _buildDayTabs(context),
                             _buildSchedule(context),
                           ],
                         )),
@@ -106,7 +104,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _getDayTabs(BuildContext context) {
+  Widget _buildDayTabs(BuildContext context) {
     final viewModel = context.watch<DashboardScreenViewModel>();
     List<StudyDay> days = viewModel.getDays();
 
@@ -124,8 +122,14 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildSchedule(BuildContext context) {
-    List<ScheduledProtocol> scheduledProtocols =
-        context.watch<DashboardScreenViewModel>().getCurrentDayScheduledProtocols();
+    final viewModel = context.watch<DashboardScreenViewModel>();
+    List<ScheduledProtocol> scheduledProtocols = viewModel.getCurrentDayScheduledProtocols();
+
+    if (viewModel.isBusy) {
+      return CircularProgressIndicator(
+        color: Colors.white,
+      );
+    }
 
     if (scheduledProtocols.length == 0) {
       return Container(
@@ -180,7 +184,7 @@ class _StudyDayCard extends HookWidget {
         fontSize: 20.0,
         color: isSelected ? Colors.white : Colors.black);
     return Opacity(
-      opacity: hasProtocols ? 1.0 : 0.7,
+      opacity: hasProtocols ? 1.0 : 0.8,
       child: Padding(
           padding: const EdgeInsets.all(4.0),
           child: InkWell(

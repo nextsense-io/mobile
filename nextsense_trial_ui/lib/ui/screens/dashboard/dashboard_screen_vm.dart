@@ -1,8 +1,6 @@
 import 'dart:async';
 
-import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/assesment.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
@@ -34,9 +32,12 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   void init() async {
     super.init();
 
+    setBusy(true);
     await _loadSchedule();
+    setBusy(false);
 
     _initProtocolCheckTimer();
+    _checkProtocolsTimeConstraints();
 
     // TODO(alex): if current day out of range show some warning
     // Select current day
@@ -65,12 +66,11 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     );
   }
 
-  // We need to cancel protocols that user didn't start at desired time window
+  // Find and skip protocols that user didn't start at desired time window
   void _checkProtocolsTimeConstraints() {
-    _logger.log(Level.INFO, '[TODO] DashboardScreenViewModel._findAndCancelOutdatedProtocols');
 
     for (final scheduledProtocol in scheduledProtocols) {
-      if (scheduledProtocol.shouldBeSkipped()) {
+      if (scheduledProtocol.isLate()) {
         scheduledProtocol.update(state: ProtocolState.skipped);
       }
     }
