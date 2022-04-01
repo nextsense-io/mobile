@@ -102,6 +102,7 @@ class DeviceManager {
     return Device(macAddress, "");
   }
 
+  // Try connect to last paired device, returns true on success
   Future<bool> connectLastPairedDevice() async {
     Device? lastPairedDevice = getLastPairedDevice();
     if (lastPairedDevice == null)
