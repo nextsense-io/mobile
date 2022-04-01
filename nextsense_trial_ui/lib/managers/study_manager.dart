@@ -68,16 +68,12 @@ class StudyManager {
           scheduledProtocol.setValue(ScheduledProtocolKey.status,
               ProtocolState.not_started.name);
         }
-        _firestoreManager.persistEntity(scheduledProtocol);
+        scheduledProtocol.save();
 
         result.add(scheduledProtocol);
       }
     }
     return result;
-    //final int studyDays = _currentStudy?.getDurationDays() ?? 0;
-
-    /*_days = List<DateTime>.generate(studyDays, (i) =>
-        _studyManager.currentStudyStartDate.add(Duration(days: i)));*/
   }
 
   Future<List<PlannedAssessment>> _loadPlannedAssesments() async {

@@ -11,6 +11,7 @@ import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:provider/src/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -18,9 +19,8 @@ class SignInScreen extends HookWidget {
 
   static const String id = 'sign_in_screen';
 
-  final PermissionsManager _permissionsManager = getIt<PermissionsManager>();
-  final Navigation _navigation = getIt<Navigation>();
-  final ConnectivityManager _connectivityManager = getIt<ConnectivityManager>();
+  final _permissionsManager = getIt<PermissionsManager>();
+  final _navigation = getIt<Navigation>();
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +137,15 @@ class SignInScreen extends HookWidget {
                   ' is an issue with your account study setup.')
       );
       return;
+    }
+
+
+    if (viewModel.hadPairedDevice) {
+      bool connected = await viewModel.connectToLastPairedDevice();
+      if (connected) {
+        await _navigation.navigateWithConnectionChecking(
+            context, DashboardScreen.id);
+      };
     }
 
     // Navigate to the device preparation screen.

@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
+import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
@@ -39,7 +41,8 @@ class DeviceManager {
       'accident and make sure your phone is not more than a few meters away. '
       'It should reconnect automatically.';
 
-  final NotificationsManager _notificationsManager = getIt<NotificationsManager>();
+  final _notificationsManager = getIt<NotificationsManager>();
+  final _authManager = getIt<AuthManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceManager');
 
   Device? _connectedDevice;
@@ -83,7 +86,40 @@ class DeviceManager {
       _connectedDevice = null;
       return false;
     }
+
+    _authManager.user!
+      ..setLastPairedDeviceMacAddress(device.macAddress)
+      ..save();
+
     return true;
+  }
+
+  Device? getLastPairedDevice() {
+    final userEntity = _authManager.user!;
+    final macAddress = userEntity.getLastPairedDeviceMacAddress();
+    if (macAddress == null) return null;
+    // TODO(alex): get device name for constructor?
+    return Device(macAddress, "");
+  }
+
+  Future<bool> connectLastPairedDevice() async {
+    Device? lastPairedDevice = getLastPairedDevice();
+    if (lastPairedDevice == null)
+      return false;
+    bool connected = false;
+    try {
+      connected = await connectDevice(lastPairedDevice);
+    } on PlatformException {
+    }
+    if (connected) {
+      _logger.log(Level.INFO, "Connected to last paired device "
+          "${lastPairedDevice.macAddress}");
+    }
+    else {
+      _logger.log(Level.WARNING, "Failed connect to last paired device "
+          "${lastPairedDevice.macAddress}");
+    }
+    return connected;
   }
 
   Future<bool> waitDeviceReady(Duration timeout) async {
