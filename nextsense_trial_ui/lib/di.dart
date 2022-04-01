@@ -23,10 +23,9 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<AuthManager>(AuthManager());
   getIt.registerSingleton<PermissionsManager>(PermissionsManager());
   getIt.registerSingleton<DeviceManager>(DeviceManager());
-  getIt.registerSingleton<SessionManager>(SessionManager());
   getIt.registerSingleton<StudyManager>(StudyManager());
+  getIt.registerSingleton<SessionManager>(SessionManager());
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
-
   getIt.registerSingleton<Navigation>(Navigation());
 
   await getIt.get<NotificationsManager>().initializePlugin();
