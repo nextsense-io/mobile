@@ -66,7 +66,8 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
 
       // Create protocol assigned to current assessment
       protocol = Protocol(
-          protocolType, startTime,
+          protocolType,
+          startTime: startTime,
           minDuration: minDurationOverride,
           maxDuration: maxDurationOverride
       );

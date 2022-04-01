@@ -4,6 +4,7 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
@@ -26,8 +27,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   final SessionManager _sessionManager = getIt<SessionManager>();
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
 
-  final ScheduledProtocol scheduledProtocol;
-  Protocol get protocol => scheduledProtocol.protocol;
+  final RunnableProtocol runnableProtocol;
+  Protocol get protocol => runnableProtocol.protocol;
 
   int secondsElapsed = 0;
   bool sessionIsActive = false;
@@ -48,7 +49,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   bool protocolCompletedHandlerExecuted = false;
 
-  ProtocolScreenViewModel(this.scheduledProtocol);
+  ProtocolScreenViewModel(this.runnableProtocol);
 
   Study? getCurrentStudy() {
     return _studyManager.getCurrentStudy();
@@ -187,7 +188,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           _deviceManager.getConnectedDevice()!.macAddress,
           _studyManager.getCurrentStudyId()!,
           protocol.name);
-      scheduledProtocol.update(
+      runnableProtocol.update(
           state: ProtocolState.running,
           sessionId: _sessionManager.currentSessionId
       );
@@ -201,7 +202,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _logger.log(Level.INFO, 'Stopping ${protocol.name} protocol.');
     await _sessionManager
         .stopSession(_deviceManager.getConnectedDevice()!.macAddress);
-    scheduledProtocol.update(
+    runnableProtocol.update(
         state: protocolCompleted
             ? ProtocolState.completed
             : ProtocolState.cancelled);
@@ -211,7 +212,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   // passed
   void onProtocolCompleted() {
     _logger.log(Level.INFO, 'Protocol ${protocol.name} completed');
-    scheduledProtocol.update(
+    runnableProtocol.update(
         state: ProtocolState.completed
     );
   }

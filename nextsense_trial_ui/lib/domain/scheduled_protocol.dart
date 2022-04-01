@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/assesment.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
@@ -15,16 +16,19 @@ enum ScheduledProtocolKey {
   status
 }
 
-class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> {
+class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
+    implements RunnableProtocol {
 
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledProtocol');
+
+  late Protocol protocol;
+
+  RunnableProtocolType get type => RunnableProtocolType.scheduled;
 
   late StudyDay day;
 
   // Start time - hours & minutes only
   late DateTime startTime;
-
-  late Protocol protocol;
 
   // Time constraints for protocol
   // Those are absolute DateTime values
@@ -91,6 +95,7 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> {
   }
 
   // Update fields and save to firestore by default
+  @override
   bool update({required ProtocolState state,
     String? sessionId, bool persist = true}) {
     if (this.state == ProtocolState.completed) {
