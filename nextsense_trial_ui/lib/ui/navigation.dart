@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/domain/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
@@ -63,17 +64,14 @@ class Navigation {
     // Routes with arguments
       case ProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
-          ProtocolScreen(settings.arguments as ScheduledProtocol));
+          ProtocolScreen(settings.arguments as RunnableProtocol));
       case RequestPermissionScreen.id:
         return MaterialPageRoute(
           builder: (context) => RequestPermissionScreen(
               settings.arguments as PermissionRequest));
       case CheckInternetScreen.id:
-        ScheduledProtocol? checkInternetProtocol = settings.arguments == null ? null :
-            settings.arguments as ScheduledProtocol;
         return MaterialPageRoute(
-          builder: (context) => CheckInternetScreen(
-              scheduledProtocol: checkInternetProtocol));
+          builder: (context) => CheckInternetScreen());
     }
   }
 

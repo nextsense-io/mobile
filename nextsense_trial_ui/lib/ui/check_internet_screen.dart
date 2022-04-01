@@ -13,11 +13,9 @@ class CheckInternetScreen extends HookWidget {
 
   static const String id = 'check_internet_screen';
 
-  final Navigation _navigation = getIt<Navigation>();
   final _preferences = getIt<Preferences>();
-  final ScheduledProtocol? scheduledProtocol;
 
-  CheckInternetScreen({this.scheduledProtocol = null});
+  CheckInternetScreen();
 
   @override
   Widget build(BuildContext context) {

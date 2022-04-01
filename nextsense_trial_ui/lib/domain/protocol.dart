@@ -37,8 +37,10 @@ abstract class Protocol {
 
   String get name;
 
-  factory Protocol(ProtocolType type, DateTime startTime,
-      {Duration? minDuration, Duration? maxDuration}) {
+  String get nameForUser;
+
+  factory Protocol(ProtocolType type,
+      {DateTime? startTime, Duration? minDuration, Duration? maxDuration}) {
     BaseProtocol protocol;
     switch (type) {
       case ProtocolType.variable_daytime:
@@ -47,15 +49,24 @@ abstract class Protocol {
       case ProtocolType.sleep:
         protocol = SleepProtocol();
         break;
+      case ProtocolType.eoec:
+        protocol = EyesOpenEyesClosedProtocol();
+        break;
+      case ProtocolType.eyes_movement:
+        protocol = EyesMovementProtocol();
+        break;
       default:
         throw("Class for protocol type ${type} isn't defined");
     }
-    protocol.setStartTime(startTime);
-
-    if (minDuration != null)
+    if (startTime != null) {
+      protocol.setStartTime(startTime);
+    }
+    if (minDuration != null) {
       protocol.setMinDuration(minDuration);
-    if (maxDuration != null)
+    }
+    if (maxDuration != null) {
       protocol.setMaxDuration(maxDuration);
+    }
 
     return protocol;
   }
@@ -109,6 +120,9 @@ class VariableDaytimeProtocol extends BaseProtocol {
   ProtocolType get type => ProtocolType.variable_daytime;
 
   @override
+  String get nameForUser => "Variable Daytime";
+
+  @override
   Duration get minDuration => _minDurationOverride ?? Duration(minutes: 10);
 
   @override
@@ -129,6 +143,9 @@ class SleepProtocol extends BaseProtocol {
   ProtocolType get type => ProtocolType.sleep;
 
   @override
+  String get nameForUser => "Sleep";
+
+  @override
   Duration get minDuration => _minDurationOverride ?? Duration(hours: 1);
 
   @override
@@ -141,6 +158,50 @@ class SleepProtocol extends BaseProtocol {
   // TODO(alex): add sleep protocol intro
   @override
   String get intro => 'Sleep protocol intro';
+
+}
+
+class EyesOpenEyesClosedProtocol extends BaseProtocol {
+
+  @override
+  ProtocolType get type => ProtocolType.eoec;
+
+  @override
+  String get nameForUser => "Eyes Open, Eyes Closed";
+
+  @override
+  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 4);
+
+  @override
+  Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 4);
+
+  @override
+  String get description => 'Eyes Open, Eyes Closed';
+
+  @override
+  String get intro => 'Eyes open/Eyes closed protocol intro';
+
+}
+
+class EyesMovementProtocol extends BaseProtocol {
+
+  @override
+  ProtocolType get type => ProtocolType.eyes_movement;
+
+  @override
+  String get nameForUser => "Eyes Movement";
+
+  @override
+  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 5);
+
+  @override
+  Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 5);
+
+  @override
+  String get description => 'Eyes Movement';
+
+  @override
+  String get intro => 'Eyes Movement protocol intro';
 
 }
 

@@ -8,7 +8,7 @@ import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:stacked/stacked.dart';
 
-abstract class DeviceStateViewModelInterface extends ChangeNotifier {
+abstract class DeviceStateViewModelInterface {
   void onDeviceDisconnected();
   void onDeviceReconnected();
   void onDeviceInternalStateChanged(DeviceInternalStateEvent event);

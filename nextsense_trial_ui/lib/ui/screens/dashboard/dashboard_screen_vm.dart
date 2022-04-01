@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/adhoc_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
@@ -112,6 +113,14 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   List<ScheduledProtocol> getCurrentDayScheduledProtocols() {
     if (selectedDay == null) return [];
     return getScheduledProtocolsByDay(selectedDay!);
+  }
+
+  List<AdhocProtocol> getAdhocProtocols() {
+    List<ProtocolType> allowedProtocols =
+    _studyManager.getCurrentStudy()!.getAllowedProtocols();
+
+    return allowedProtocols.map((protocolType) => AdhocProtocol(protocolType))
+        .toList();
   }
 
   @override

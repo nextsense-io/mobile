@@ -1,4 +1,7 @@
+import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 /**
  * Each entry corresponds to a field name in the database instance.
@@ -37,6 +40,8 @@ enum StudyKey {
 
 class Study extends FirebaseEntity<StudyKey> {
 
+  final CustomLogPrinter _logger = CustomLogPrinter('Study');
+
   Study(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
 
@@ -54,5 +59,19 @@ class Study extends FirebaseEntity<StudyKey> {
 
   String getEarbudsConfig() {
     return getValue(StudyKey.earbuds_config) as String;
+  }
+
+  List<ProtocolType> getAllowedProtocols() {
+    List<dynamic> protocolNames = getValue(StudyKey.allowed_protocols) ?? [];
+    List<ProtocolType> result = [];
+    for (String name in protocolNames) {
+      ProtocolType protocolType = protocolTypeFromString(name);
+      if (protocolType == ProtocolType.unknown) {
+        _logger.log(Level.WARNING, 'Unknown protocol "$name"');
+        continue;
+      }
+      result.add(protocolType);
+    }
+    return result;
   }
 }

@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/api.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:uuid/uuid.dart';
 
@@ -55,12 +56,15 @@ class AuthManager {
 
     // Authenticate in Firebase using the token that was obtained
     // from the backend
+    String token = resp.data['token'];
     try {
-      await _firebaseAuth.signInWithCustomToken(resp.data['token']);
+      await _firebaseAuth.signInWithCustomToken(token);
     } on FirebaseAuthException catch (e) {
       _logger.log(Level.SEVERE, e);
       return AuthenticationResult.error;
     }
+
+    _preferences.setString(PreferenceKey.authToken, token);
 
     _user = await fetchUserFromFirestore(username);
 
