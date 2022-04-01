@@ -141,11 +141,10 @@ class SignInScreen extends HookWidget {
 
 
     if (viewModel.hadPairedDevice) {
-      bool connected = await viewModel.connectToLastPairedDevice();
-      if (connected) {
-        await _navigation.navigateWithConnectionChecking(
-            context, DashboardScreen.id);
-      };
+      await viewModel.connectToLastPairedDevice();
+      await _navigation.navigateWithConnectionChecking(
+          context, DashboardScreen.id);
+      return;
     }
 
     // Navigate to the device preparation screen.
