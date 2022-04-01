@@ -22,7 +22,6 @@ class AuthManager {
   final _logger = CustomLogPrinter('AuthManager');
   final _firestoreManager = getIt<FirestoreManager>();
   final _nextsenseApi = getIt<NextsenseApi>();
-  final _preferences = getIt<Preferences>();
 
   final Uuid _uuid = Uuid();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
