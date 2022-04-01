@@ -1,9 +1,11 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:stacked/stacked.dart';
@@ -14,11 +16,14 @@ class SignInScreenViewModel extends BaseViewModel {
 
   final StudyManager _studyManager = getIt<StudyManager>();
   final AuthManager _authManager = getIt<AuthManager>();
+  final DeviceManager _deviceManager = getIt<DeviceManager>();
 
   final username = ValueNotifier<String>("");
   final password = ValueNotifier<String>("");
 
   String errorMsg = '';
+
+  bool get hadPairedDevice => _deviceManager.getLastPairedDevice() != null;
 
   void init() async {
     if (envGet(EnvironmentKey.USERNAME).isNotEmpty) {
@@ -58,11 +63,11 @@ class SignInScreenViewModel extends BaseViewModel {
 
   Future<bool> loadCurrentStudy() async {
     // Load the study data.
-    final userEntity = _authManager.getUserEntity()!;
+    final user = _authManager.user!;
 
-    final studyId = userEntity.getValue(UserKey.study);
-    DateTime? studyStartDate = userEntity.getStudyStartDate();
-    DateTime? studyEndDate = userEntity.getStudyEndDate();
+    final studyId = user.getValue(UserKey.study);
+    DateTime? studyStartDate = user.getStudyStartDate();
+    DateTime? studyEndDate = user.getStudyEndDate();
 
     if (studyStartDate == null || studyEndDate == null) {
       _logger.log(Level.SEVERE,
@@ -79,5 +84,11 @@ class SignInScreenViewModel extends BaseViewModel {
 
     return studyLoaded;
   }
+
+
+  Future<bool> connectToLastPairedDevice() async {
+    return _deviceManager.connectLastPairedDevice();
+  }
+
 
 }

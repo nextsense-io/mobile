@@ -33,11 +33,11 @@ class SessionManager {
     if (userCode == null) {
       return false;
     }
-    User? userEntity = _authManager.getUserEntity();
-    if (userEntity == null) {
+    User? user = _authManager.user;
+    if (user == null) {
       return false;
     }
-    int? sessionNumber = userEntity.getValue(UserKey.session_number);
+    int? sessionNumber = user.getValue(UserKey.session_number);
     int nextSessionNumber =
         sessionNumber == null ? _firstSessionNumber : sessionNumber + 1;
     String sessionCode = userCode + '_sess_' + nextSessionNumber.toString();
@@ -51,7 +51,7 @@ class SessionManager {
                     ..setValue(SessionKey.user_id, userCode)
                     ..setValue(SessionKey.study_id, studyId)
                     ..setValue(SessionKey.protocol, protocolName);
-    await _firestoreManager.persistEntity(_currentSession!);
+    await _currentSession!.save();
 
     // Add the data session.
     _currentDataSession = DataSession(
@@ -66,19 +66,20 @@ class SessionManager {
     _currentDataSession!.setValue(DataSessionKey.streaming_rate,
         deviceSettings[describeEnum(DeviceSettingsFields.eegStreamingRate)]
             .value);
-    await _firestoreManager.persistEntity(_currentDataSession!);
+    await _currentDataSession!.save();
 
     // Update the session number in the user entry.
-    userEntity.setValue(UserKey.session_number, nextSessionNumber);
-    await _firestoreManager.persistEntity(userEntity);
+    user.setValue(UserKey.session_number, nextSessionNumber);
+    await user.save();
 
     // TODO(eric): Start streaming should return the exact start time of the
     //             session, and then that should be persisted in the table?
     String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
     _currentLocalSession = await NextsenseBase.startStreaming(
         deviceMacAddress, /*uploadToCloud=*/true,
-        userEntity.getValue(UserKey.bt_key), dataSessionCode,
+        user.getValue(UserKey.bt_key), dataSessionCode,
         _studyManager.getCurrentStudy()?.getEarbudsConfig() ?? null);
+
     return true;
   }
 
@@ -96,11 +97,11 @@ class SessionManager {
     DateTime stopTime = DateTime.now();
     _currentSession!.setValue(SessionKey.end_datetime,
         stopTime.toIso8601String());
-    await _firestoreManager.persistEntity(_currentSession!);
+    await _currentSession!.save();
     _currentSession = null;
     _currentDataSession!.setValue(
         DataSessionKey.end_datetime, stopTime.toIso8601String());
-    await _firestoreManager.persistEntity(_currentDataSession!);
+    await _currentDataSession!.save();
     _currentDataSession = null;
   }
 }

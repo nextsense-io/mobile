@@ -37,6 +37,15 @@ class User extends FirebaseEntity<UserKey> {
     final value = getValue(UserKey.study_end_date);
     return value!=null ? (value as Timestamp).toDate() : null;
   }
+
+  String? getLastPairedDeviceMacAddress() {
+    final value = getValue(UserKey.last_paired_device);
+    return value != null ? (value as String) : null;
+  }
+
+  String? setLastPairedDeviceMacAddress(String macAddress) {
+    setValue(UserKey.last_paired_device, macAddress);
+  }
   /**
    * Checks that the current date is between the study start and end dates for
    * this subject if present.

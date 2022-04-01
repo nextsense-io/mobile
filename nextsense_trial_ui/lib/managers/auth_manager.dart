@@ -19,9 +19,10 @@ enum AuthenticationResult {
 class AuthManager {
   static const minimumPasswordLength = 8;
 
-  final CustomLogPrinter _logger = CustomLogPrinter('AuthManager');
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
-  final NextsenseApi _nextsenseApi = getIt<NextsenseApi>();
+  final _logger = CustomLogPrinter('AuthManager');
+  final _firestoreManager = getIt<FirestoreManager>();
+  final _nextsenseApi = getIt<NextsenseApi>();
+  final _preferences = getIt<Preferences>();
 
   final Uuid _uuid = Uuid();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -30,14 +31,12 @@ class AuthManager {
   User? _user;
   bool get isAuthorized => _user != null;
 
+  User? get user => _user;
+
   AuthManager() {}
 
   String? getUserCode() {
     return _userCode;
-  }
-
-  User? getUserEntity() {
-    return _user;
   }
 
   Future<AuthenticationResult> signIn(String username, String password) async {
@@ -74,8 +73,9 @@ class AuthManager {
 
     // Persist bt_key
     if (_user!.getValue(UserKey.bt_key) == null) {
-      _user!.setValue(UserKey.bt_key, _uuid.v4());
-      _firestoreManager.persistEntity(_user!);
+      _user!
+        ..setValue(UserKey.bt_key, _uuid.v4())
+        ..save();
     }
 
     return AuthenticationResult.success;
