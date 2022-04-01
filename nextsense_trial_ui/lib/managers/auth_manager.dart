@@ -64,8 +64,6 @@ class AuthManager {
       return AuthenticationResult.error;
     }
 
-    _preferences.setString(PreferenceKey.authToken, token);
-
     _user = await fetchUserFromFirestore(username);
 
     if (_user == null) {

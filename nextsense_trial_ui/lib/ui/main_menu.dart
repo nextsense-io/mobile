@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_dialog.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -15,11 +16,13 @@ import 'package:provider/src/provider.dart';
 class MainMenu extends HookWidget {
 
   final Navigation _navigation = getIt<Navigation>();
+  final StudyManager _studyManager = getIt<StudyManager>();
 
   @override
   Widget build(BuildContext context) {
 
     final dashboardViewModel = context.watch<DashboardScreenViewModel>();
+    final currentStudy = _studyManager.getCurrentStudy()!;
 
     return Drawer(
       child: ListView(
@@ -37,21 +40,18 @@ class MainMenu extends HookWidget {
               ),
             ),
           ),
-          _MainMenuItem(
-              icon: Icon(Icons.play_circle_outline),
-              label: Text('Start adhoc protocol'),
-              onPressed: () async {
-                Navigator.pop(context);
-                await showDialog(
-                  context: context,
-                  builder: (_) => ChangeNotifierProvider.value(
-                    value: context.read<DashboardScreenViewModel>(),
-                    child: StartAdhocDialog()
-                  )
-                );
-                //_navigation.navigateTo(ImpedanceCalculationScreen.id, pop: true);
-              }
-          ),
+          if (currentStudy.isAdhocRecordingAllowed)
+            _MainMenuItem(
+                icon: Icon(Icons.play_circle_outline),
+                label: Text('Start adhoc protocol'),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await showDialog(
+                      context: context,
+                      builder: (_) => ChangeNotifierProvider.value(
+                          value: context.read<DashboardScreenViewModel>(),
+                          child: StartAdhocDialog()));
+                }),
           _MainMenuItem(
               icon: Icon(Icons.earbuds),
               label: Text('Check earbuds settings'),
