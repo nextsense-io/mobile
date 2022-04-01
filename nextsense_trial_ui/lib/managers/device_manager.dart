@@ -97,7 +97,9 @@ class DeviceManager {
   Device? getLastPairedDevice() {
     final userEntity = _authManager.user!;
     final macAddress = userEntity.getLastPairedDeviceMacAddress();
-    if (macAddress == null) return null;
+    if (macAddress == null) {
+      return null;
+    }
     // TODO(alex): get device name for constructor?
     return Device(macAddress, "");
   }
@@ -105,13 +107,13 @@ class DeviceManager {
   // Try connect to last paired device, returns true on success
   Future<bool> connectLastPairedDevice() async {
     Device? lastPairedDevice = getLastPairedDevice();
-    if (lastPairedDevice == null)
+    if (lastPairedDevice == null) {
       return false;
+    }
     bool connected = false;
     try {
       connected = await connectDevice(lastPairedDevice);
-    } on PlatformException {
-    }
+    } on PlatformException {}
     if (connected) {
       _logger.log(Level.INFO, "Connected to last paired device "
           "${lastPairedDevice.macAddress}");

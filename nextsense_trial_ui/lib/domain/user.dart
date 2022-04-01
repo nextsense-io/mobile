@@ -43,7 +43,7 @@ class User extends FirebaseEntity<UserKey> {
     return value != null ? (value as String) : null;
   }
 
-  String? setLastPairedDeviceMacAddress(String macAddress) {
+  void setLastPairedDeviceMacAddress(String macAddress) {
     setValue(UserKey.last_paired_device, macAddress);
   }
   /**

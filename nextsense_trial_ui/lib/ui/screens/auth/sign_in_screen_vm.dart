@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
@@ -85,10 +84,7 @@ class SignInScreenViewModel extends BaseViewModel {
     return studyLoaded;
   }
 
-
   Future<bool> connectToLastPairedDevice() async {
     return _deviceManager.connectLastPairedDevice();
   }
-
-
 }

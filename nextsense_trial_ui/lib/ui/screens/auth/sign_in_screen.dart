@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
@@ -139,7 +138,6 @@ class SignInScreen extends HookWidget {
       return;
     }
 
-
     if (viewModel.hadPairedDevice) {
       await viewModel.connectToLastPairedDevice();
       await _navigation.navigateWithConnectionChecking(
@@ -151,7 +149,6 @@ class SignInScreen extends HookWidget {
     await _navigation.navigateWithConnectionChecking(
         context, PrepareDeviceScreen.id);
   }
-
 }
 
 class _SignInInputField extends StatelessWidget {
