@@ -79,8 +79,9 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
 
   Duration? getDurationOverride(String field) {
     dynamic value = getParameters()[field];
-    if (value == null)
+    if (value == null) {
       return null;
+    }
     // Value comes in HH:MM:SS format
     List<String> hms = value.split(":");
     return Duration(
