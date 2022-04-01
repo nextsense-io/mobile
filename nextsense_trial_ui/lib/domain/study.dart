@@ -12,6 +12,8 @@ enum StudyKey {
   active,
   // Array of allowed protocols that can be recorded in this study.
   allowed_protocols,
+  // Allow recording of adhoc protocols.
+  adhoc_recording_allowed,
   // Duration in days for a single subject.
   duration_days,
   //NextSense device earbuds configuration that is used in this study.
@@ -73,5 +75,10 @@ class Study extends FirebaseEntity<StudyKey> {
       result.add(protocolType);
     }
     return result;
+  }
+
+  // Allow recording of adhoc protocols
+  bool get isAdhocRecordingAllowed {
+    return getValue(StudyKey.adhoc_recording_allowed) == true;
   }
 }
