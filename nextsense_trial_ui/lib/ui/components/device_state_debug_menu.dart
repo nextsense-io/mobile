@@ -91,7 +91,10 @@ class _DebugMenuItemWidget extends HookWidget {
 }
 
 class DeviceStateDebugMenu extends StatelessWidget {
-  const DeviceStateDebugMenu({Key? key}) : super(key: key);
+
+  final Color? iconColor;
+
+  const DeviceStateDebugMenu({Key? key, this.iconColor}) : super(key: key);
 
   static const List<DebugMenuItemType> items = DebugMenuItemType.values;
 
@@ -103,10 +106,10 @@ class DeviceStateDebugMenu extends StatelessWidget {
   Widget _dropdown(BuildContext context) {
     return DropdownButtonHideUnderline(
       child: DropdownButton2<String>(
-        customButton: const Icon(
-          Icons.settings_applications,
+        customButton: Icon(
+          Icons.settings,
           size: 30,
-          color: Colors.white,
+          color: iconColor ?? Colors.black,
         ),
         hint: Text(
           'Debug menu',
