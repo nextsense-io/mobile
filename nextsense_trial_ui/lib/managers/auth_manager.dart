@@ -5,7 +5,6 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/api.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
-import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:uuid/uuid.dart';
 

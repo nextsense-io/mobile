@@ -5,7 +5,6 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/runnable_protocol.dart';
-import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';

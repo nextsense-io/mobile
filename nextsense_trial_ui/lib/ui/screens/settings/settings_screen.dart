@@ -4,6 +4,8 @@ import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
+import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
+import 'package:provider/src/provider.dart';
 import 'package:settings_ui/settings_ui.dart';
 
 class SettingsScreen extends HookWidget {
@@ -15,11 +17,13 @@ class SettingsScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
 
+    final fromDashboard = context.read<DashboardScreenViewModel?>() != null;
+
     final cellularEnabled = useState<bool>(_preferences.getBool(
         PreferenceKey.allowDataTransmissionViaCellular));
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: fromDashboard ? null : AppBar(
         title: Text('Settings'),
       ),
       body: SettingsList(

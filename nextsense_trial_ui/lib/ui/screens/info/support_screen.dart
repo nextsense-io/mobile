@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 
 class SupportScreen extends HookWidget {
 
@@ -9,11 +8,9 @@ class SupportScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Support'),
-      ),
       body: Container(
-        decoration: baseBackgroundDecoration,
+        color: Colors.white,
+        child: Center(child: Text("Support")),
       ),
     );
   }
