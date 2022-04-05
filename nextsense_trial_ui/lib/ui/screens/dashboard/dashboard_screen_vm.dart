@@ -1,14 +1,17 @@
 import 'dart:async';
 
+import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/adhoc_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
+import 'package:nextsense_trial_ui/domain/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
@@ -17,10 +20,14 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   final CustomLogPrinter _logger = CustomLogPrinter('DashboardScreenViewModel');
 
   final StudyManager _studyManager = getIt<StudyManager>();
+  final SurveyManager _surveyManager = getIt<SurveyManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final AuthManager _authManager = getIt<AuthManager>();
 
   List<ScheduledProtocol> scheduledProtocols = [];
+
+  // TODO(alex): make scheduled surveys
+  List<Survey> scheduledSurveys = [];
 
   // List of days that will appear for current study
   List<StudyDay>? _days;
@@ -33,13 +40,27 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   void init() async {
     super.init();
 
-    setBusy(true);
-    await _loadSchedule();
-    setBusy(false);
+    await loadData();
 
     _initProtocolCheckTimer();
     _checkProtocolsTimeConstraints();
+  }
 
+  Future loadData() async {
+    clearErrors();
+    notifyListeners();
+    setBusy(true);
+    try {
+      await _loadSchedule();
+      await _loadSurveys();
+    } catch (e) {
+      _logger.log(Level.SEVERE,
+          'Failed to load dashboard data: ${e.toString()}');
+      setError("Failed to load data. Please contact support");
+      setBusy(false);
+      return;
+    }
+    setBusy(false);
     // TODO(alex): if current day out of range show some warning
     // Select current day
     selectDay(_today);
@@ -54,6 +75,10 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
           .add(Duration(days: i));
       return StudyDay(dayDate);
     });
+  }
+
+  Future _loadSurveys() async {
+    scheduledSurveys = await _surveyManager.loadSurveys();
   }
 
   void _initProtocolCheckTimer() {
@@ -115,6 +140,11 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return getScheduledProtocolsByDay(selectedDay!);
   }
 
+  List<Survey> getCurrentDaySurveys() {
+    // TODO(alex): display scheduled surveys for current day
+    return scheduledSurveys;
+  }
+
   List<AdhocProtocol> getAdhocProtocols() {
     List<ProtocolType> allowedProtocols =
     _studyManager.getCurrentStudy()!.getAllowedProtocols();
@@ -147,5 +177,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     _protocolCheckTimer.cancel();
     super.dispose();
   }
+
+
 
 }

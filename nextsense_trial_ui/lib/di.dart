@@ -9,6 +9,7 @@ import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 
@@ -25,6 +26,7 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<PermissionsManager>(PermissionsManager());
   getIt.registerSingleton<DeviceManager>(DeviceManager());
   getIt.registerSingleton<StudyManager>(StudyManager());
+  getIt.registerSingleton<SurveyManager>(SurveyManager());
   getIt.registerSingleton<SessionManager>(SessionManager());
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
   getIt.registerSingleton<DiskSpaceManager>(DiskSpaceManager());

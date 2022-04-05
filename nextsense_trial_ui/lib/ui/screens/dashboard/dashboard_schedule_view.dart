@@ -22,8 +22,14 @@ class DashboardScheduleView extends StatelessWidget {
     List<ScheduledProtocol> scheduledProtocols = viewModel.getCurrentDayScheduledProtocols();
 
     if (viewModel.isBusy) {
-      return CircularProgressIndicator(
-        color: Colors.white,
+      return Center(
+        child: Container(
+          width: 30,
+          height: 30,
+          child: CircularProgressIndicator(
+            color: Colors.deepPurple,
+          ),
+        ),
       );
     }
 

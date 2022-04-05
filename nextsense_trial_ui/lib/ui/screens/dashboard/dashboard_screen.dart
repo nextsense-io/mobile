@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
+import 'package:nextsense_trial_ui/ui/components/loading_error_widget.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/main_menu.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -14,6 +15,7 @@ import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:stacked/stacked.dart';
 
 enum DashboardTab {
@@ -36,7 +38,7 @@ class DashboardScreen extends HookWidget {
     return ViewModelBuilder<DashboardScreenViewModel>.reactive(
       viewModelBuilder: () => DashboardScreenViewModel(),
       onModelReady: (viewModel) => viewModel.init(),
-      builder: (context, viewModel, child) => SessionPopScope(
+      builder: (context, DashboardScreenViewModel viewModel, child) => SessionPopScope(
           child: SafeArea(
             child: Scaffold(
               key: _scaffoldKey,
@@ -45,7 +47,13 @@ class DashboardScreen extends HookWidget {
                 //padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+                  children: viewModel.hasError ? [
+                    _appBar(context),
+                    LoadingErrorWidget(viewModel.error(viewModel) as String,
+                          onTap: () {
+                        viewModel.loadData();
+                      })
+                    ] : [
                     _appBar(context),
                     if ([DashboardTab.schedule, DashboardTab.tasks]
                         .contains(currentTab.value))
@@ -178,6 +186,30 @@ class DashboardScreen extends HookWidget {
   Widget _buildDayTabs(BuildContext context) {
     final viewModel = context.watch<DashboardScreenViewModel>();
     List<StudyDay> days = viewModel.getDays();
+
+    if (viewModel.isBusy) {
+      return Container(
+        height: 80.0,
+        child: ListView.builder(
+            itemCount: 5,
+            scrollDirection: Axis.horizontal,
+            shrinkWrap: true,
+            itemBuilder: (BuildContext context, int index) {
+              return Shimmer.fromColors(
+                  baseColor: Colors.grey.shade100,
+                  highlightColor: Colors.grey.shade200,
+                  child: Padding(
+                    padding: const EdgeInsets.all(5.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10.0),
+                        child: Container(height: 80, width: 65, color: Colors.red,)
+                    ),
+                  )
+              );
+            }
+        ),
+      );
+    }
 
     return Container(
         height: 80.0,
