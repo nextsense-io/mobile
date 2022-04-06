@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/survey.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
@@ -19,6 +20,7 @@ import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
 import 'package:provider/src/provider.dart';
@@ -72,6 +74,9 @@ class Navigation {
       case ProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
           ProtocolScreen(settings.arguments as RunnableProtocol));
+      case SurveyScreen.id:
+        return MaterialPageRoute(builder: (context) =>
+            SurveyScreen(settings.arguments as Survey));
       case RequestPermissionScreen.id:
         return MaterialPageRoute(
           builder: (context) => RequestPermissionScreen(

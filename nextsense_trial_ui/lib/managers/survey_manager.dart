@@ -25,9 +25,7 @@ class SurveyManager {
       result.add(survey);
     }
 
-    return entities.map((firebaseEntity) =>
-        Survey(firebaseEntity))
-        .toList();
+    return result;
 
   }
 
