@@ -4,6 +4,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/survey.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:provider/src/provider.dart';
 
 class DashboardTasksView extends StatelessWidget {
@@ -94,11 +95,11 @@ class _SurveyItem extends HookWidget {
   }
 
   void _onSurveyClicked(BuildContext context) async {
-    // TODO(alex)
+    // TODO(alex): handle return from survey
 
+    await _navigation.navigateTo(SurveyScreen.id, arguments: survey);
     // Refresh tasks since survey state can be changed
     //context.read<DashboardScreenViewModel>().notifyListeners();
-
   }
 
 }

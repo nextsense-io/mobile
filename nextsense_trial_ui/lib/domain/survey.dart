@@ -10,19 +10,29 @@ enum SurveyKey {
 
 enum SurveyQuestionKey {
   type,
-  text
+  text,
+  choices
 }
 
 enum SurveyQuestionType {
   yesno,
   range,
   number,
-  text
+  choices,
+  text,
+  unknown
 }
 
 class Question extends FirebaseEntity<SurveyQuestionKey>{
-  late SurveyQuestionType type;
-  late String text;
+
+  SurveyQuestionType get type =>
+      surveyQuestionTypeFromString(typeString);
+
+  String get typeString => getValue(SurveyQuestionKey.type);
+
+  String get text => getValue(SurveyQuestionKey.text);
+
+  dynamic get choices => getValue(SurveyQuestionKey.choices);
 
   Question(FirebaseEntity firebaseEntity)
       : super(firebaseEntity.getDocumentSnapshot());
@@ -33,7 +43,7 @@ class Survey extends FirebaseEntity<SurveyKey> {
 
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
 
-  List<Question>? questions;
+  List<Question> questions = [];
 
   String get name => getValue(SurveyKey.name) ?? "";
 
@@ -44,9 +54,16 @@ class Survey extends FirebaseEntity<SurveyKey> {
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
         [Table.surveys, Table.questions], [this.id]);
 
+    //print('[TODO] Survey.loadQuestions $entities');
+
     questions = entities.map((firebaseEntity) =>
         Question(firebaseEntity))
         .toList();
   }
 
+}
+
+SurveyQuestionType surveyQuestionTypeFromString(String typeStr) {
+  return SurveyQuestionType.values.firstWhere((element) => element.name == typeStr,
+      orElse: () => SurveyQuestionType.unknown);
 }
