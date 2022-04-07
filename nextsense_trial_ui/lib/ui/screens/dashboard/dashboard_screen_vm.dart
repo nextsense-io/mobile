@@ -13,6 +13,7 @@ import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 class DashboardScreenViewModel extends DeviceStateViewModel {
@@ -25,14 +26,16 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   final AuthManager _authManager = getIt<AuthManager>();
 
   List<ScheduledProtocol> scheduledProtocols = [];
-
-  // TODO(alex): make scheduled surveys
+  
   List<ScheduledSurvey> scheduledSurveys = [];
 
   // List of days that will appear for current study
   List<StudyDay>? _days;
 
-  StudyDay _today = StudyDay(DateTime.now());
+  // References today's study day
+  StudyDay? _today;
+
+  // Current selected day in calendar
   StudyDay? selectedDay;
 
   late Timer _protocolCheckTimer;
@@ -64,7 +67,8 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     setBusy(false);
     // TODO(alex): if current day out of range show some warning
     // Select current day
-    selectDay(_today);
+    if (_today!=null)
+      selectDay(_today!);
   }
 
   // Load schedule based on planned assesment
@@ -74,7 +78,13 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     _days = List<StudyDay>.generate(studyDays, (i) {
       DateTime dayDate = _studyManager.currentStudyStartDate
           .add(Duration(days: i));
-      return StudyDay(dayDate);
+      DateTime now = DateTime.now();
+      final dayNumber = i + 1;
+      final studyDay = StudyDay(dayDate, dayNumber);
+      if (now.isSameDay(dayDate)) {
+        _today = studyDay;
+      }
+      return studyDay;
     });
   }
 

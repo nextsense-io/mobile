@@ -38,7 +38,10 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
   PlannedAssessment(FirebaseEntity firebaseEntity, DateTime studyStartDate) :
         super(firebaseEntity.getDocumentSnapshot()) {
     final dayNumber = getValue(PlannedAssessmentKey.day);
-    day = StudyDay(studyStartDate.add(Duration(days: dayNumber - 1)));
+    day = StudyDay(
+        studyStartDate.add(Duration(days: dayNumber - 1)),
+        dayNumber
+    );
     startTimeStr = getValue(PlannedAssessmentKey.time) as String;
     // TODO(alex): check HH:MM string is correctly set
     int startTimeHours = int.parse(startTimeStr.split(":")[0]);
