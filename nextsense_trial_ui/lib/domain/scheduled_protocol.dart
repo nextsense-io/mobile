@@ -86,7 +86,6 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
 
   // Protocol didn't start in time, should be skipped
   bool isLate() {
-    // Protocol is already finished, no need to change its state
     if ([ProtocolState.completed, ProtocolState.skipped].contains(state))
       return false;
     final currentTime = DateTime.now();

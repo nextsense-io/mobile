@@ -12,6 +12,10 @@ class NextsenseButton extends StatelessWidget {
       : backgroundColor = Colors.deepPurple,
         textColor = Colors.white;
 
+  NextsenseButton.secondary(this.text, {this.onPressed})
+      : backgroundColor = Colors.grey,
+        textColor = Colors.white;
+
   NextsenseButton(this.text,
       {required this.backgroundColor,
       required this.textColor,

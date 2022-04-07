@@ -11,7 +11,8 @@ enum Table {
   studies,
   surveys,
   questions,
-  scheduled_protocols
+  scheduled_protocols,
+  scheduled_surveys
 }
 
 extension ParseToString on Table {

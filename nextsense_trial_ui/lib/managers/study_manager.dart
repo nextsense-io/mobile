@@ -6,6 +6,7 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
+import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -22,6 +23,10 @@ class StudyManager {
 
   late DateTime currentStudyStartDate;
   late DateTime currentStudyEndDate;
+
+  String? get currentStudyId => _currentStudy?.id ?? null;
+
+  Study? get currentStudy => _currentStudy;
 
   Future<bool> loadCurrentStudy(String study_id, DateTime startDate, DateTime endDate) async {
     FirebaseEntity studyEntity;
@@ -50,14 +55,13 @@ class StudyManager {
     for (var assesment in assesments) {
       if (assesment.protocol != null) {
         final String time = assesment.startTimeStr.replaceAll(":", "_");
-        String scheduled_protocol_key =
+        String scheduledProtocolKey =
             "day_${assesment.dayNumber}_time_${time}";
         final scheduledProtocol = ScheduledProtocol(
             await _firestoreManager.queryEntity(
                 [Table.users, Table.scheduled_protocols],
-                [_authManager.getUserCode()!, scheduled_protocol_key])
+                [_authManager.getUserCode()!, scheduledProtocolKey])
             , assesment);
-
 
         scheduledProtocol
             ..setValue(ScheduledProtocolKey.protocol, assesment.reference)
@@ -77,23 +81,29 @@ class StudyManager {
   }
 
   Future<List<PlannedAssessment>> _loadPlannedAssesments() async {
-    if (_currentStudy == null) return Future.value([]);
+    if (_currentStudy == null) {
+      return Future.value([]);
+    }
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
-        [Table.studies, Table.planned_assessments],
-        [_currentStudy!.id]
-    );
+        [Table.studies, Table.planned_assessments], [_currentStudy!.id]);
 
-    return entities.map((firebaseEntity) =>
-        PlannedAssessment(firebaseEntity, currentStudyStartDate))
+    return entities
+        .map((firebaseEntity) =>
+            PlannedAssessment(firebaseEntity, currentStudyStartDate))
         .toList();
   }
 
+  Future<List<PlannedSurvey>> loadPlannedSurveys() async {
+    if (_currentStudy == null) {
+      return Future.value([]);
+    }
+    List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
+        [Table.studies, Table.planned_surveys], [_currentStudy!.id]);
 
-  String? getCurrentStudyId() {
-    return _currentStudy?.id ?? null;
+    return entities
+        .map((firebaseEntity) =>
+        PlannedSurvey(firebaseEntity, currentStudyStartDate))
+        .toList();
   }
 
-  Study? getCurrentStudy() {
-    return _currentStudy;
-  }
 }

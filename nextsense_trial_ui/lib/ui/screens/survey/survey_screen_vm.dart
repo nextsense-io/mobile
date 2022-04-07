@@ -1,14 +1,26 @@
 
-import 'package:nextsense_trial_ui/domain/survey.dart';
+import 'package:logging/logging.dart';
+import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/survey.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:stacked/stacked.dart';
 
 class SurveyScreenViewModel extends BaseViewModel {
 
-  final Survey survey;
+  final CustomLogPrinter _logger = CustomLogPrinter('SurveyScreenViewModel');
 
-  SurveyScreenViewModel(this.survey);
+  final ScheduledSurvey scheduledSurvey;
+
+  SurveyScreenViewModel(this.scheduledSurvey);
 
   void init() async {
+  }
+
+  void submit(Map<String, dynamic> formData) {
+    // TODO(alex): save data on server
+    _logger.log(Level.INFO, "submit survey form - $formData");
+
+    scheduledSurvey.update(state: SurveyState.completed);
   }
 
 }

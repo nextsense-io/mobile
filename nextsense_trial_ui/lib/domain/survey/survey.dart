@@ -23,6 +23,13 @@ enum SurveyQuestionType {
   unknown
 }
 
+enum SurveyState {
+  not_started,
+  skipped,
+  completed,
+  unknown
+}
+
 class Question extends FirebaseEntity<SurveyQuestionKey>{
 
   SurveyQuestionType get type =>
@@ -33,6 +40,8 @@ class Question extends FirebaseEntity<SurveyQuestionKey>{
   String get text => getValue(SurveyQuestionKey.text);
 
   dynamic get choices => getValue(SurveyQuestionKey.choices);
+
+  //TODO(alex): add 'optional' flag
 
   Question(FirebaseEntity firebaseEntity)
       : super(firebaseEntity.getDocumentSnapshot());
@@ -64,6 +73,13 @@ class Survey extends FirebaseEntity<SurveyKey> {
 }
 
 SurveyQuestionType surveyQuestionTypeFromString(String typeStr) {
-  return SurveyQuestionType.values.firstWhere((element) => element.name == typeStr,
+  return SurveyQuestionType.values.firstWhere(
+      (element) => element.name == typeStr,
       orElse: () => SurveyQuestionType.unknown);
+}
+
+SurveyState surveyStateFromString(String surveyStateStr) {
+  return SurveyState.values.firstWhere(
+      (element) => element.name == surveyStateStr,
+      orElse: () => SurveyState.unknown);
 }
