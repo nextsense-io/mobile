@@ -278,7 +278,7 @@ class _StudyDayCard extends HookWidget {
                             opacity: 0.5,
                             child: Text(DateFormat('EE').format(studyDay.date),
                                 style: textStyle)),
-                        Text(studyDay.dayNumber.toString(), style: textStyle),
+                        Text(studyDay.dayOfMonth.toString(), style: textStyle),
                       ],
                     )),
                 if (hasProtocols)

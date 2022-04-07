@@ -59,23 +59,25 @@ class SurveyManager {
         continue;
       }
 
-      String scheduledSurveyKey =
-          "day_${plannedSurvey.dayNumber}";
+      for (var day in plannedSurvey.days) {
+        String scheduledSurveyKey =
+            "day_${day.dayNumber}";
 
-      ScheduledSurvey scheduledSurvey = ScheduledSurvey(
-          await _firestoreManager.queryEntity(
-          [Table.users, Table.scheduled_surveys],
-          [_authManager.getUserCode()!, scheduledSurveyKey]),
-          survey, plannedSurvey.day);
+        ScheduledSurvey scheduledSurvey = ScheduledSurvey(
+            await _firestoreManager.queryEntity(
+                [Table.users, Table.scheduled_surveys],
+                [_authManager.getUserCode()!, scheduledSurveyKey]),
+            survey, day);
 
-      if (scheduledSurvey.getValue(ScheduledSurveyKey.status) == null) {
-        scheduledSurvey.setValue(ScheduledSurveyKey.status,
-            SurveyState.not_started.name);
+        if (scheduledSurvey.getValue(ScheduledSurveyKey.status) == null) {
+          scheduledSurvey.setValue(ScheduledSurveyKey.status,
+              SurveyState.not_started.name);
+        }
+
+        scheduledSurvey.save();
+
+        result.add(scheduledSurvey);
       }
-
-      scheduledSurvey.save();
-
-      result.add(scheduledSurvey);
     }
 
     return result;
