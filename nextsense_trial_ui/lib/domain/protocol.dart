@@ -210,7 +210,8 @@ ProtocolType protocolTypeFromString(String typeStr) {
       orElse: () => ProtocolType.unknown);
 }
 
-ProtocolState protocolStateFromString(String protocolStr) {
-  return ProtocolState.values.firstWhere((element) => element.name == protocolStr,
+ProtocolState protocolStateFromString(String protocolStateStr) {
+  return ProtocolState.values.firstWhere(
+      (element) => element.name == protocolStateStr,
       orElse: () => ProtocolState.unknown);
 }

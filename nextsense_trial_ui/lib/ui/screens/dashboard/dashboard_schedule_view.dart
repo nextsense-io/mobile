@@ -128,7 +128,10 @@ class _ScheduledProtocolRow extends HookWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(protocol.description,
-                                    style: TextStyle(color: Colors.white)),
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold)),
                                 SizedBox(
                                   height: 8,
                                 ),

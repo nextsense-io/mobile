@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/domain/survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/ui/components/nextsense_button.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen_vm.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -12,16 +13,18 @@ class SurveyScreen extends HookWidget {
 
   static const String id = 'survey_screen';
 
-  final Survey survey;
+  final CustomLogPrinter _logger = CustomLogPrinter('Assessment');
+
+  final ScheduledSurvey scheduledSurvey;
 
   final _formKey = GlobalKey<FormBuilderState>();
 
-  SurveyScreen(this.survey);
+  SurveyScreen(this.scheduledSurvey);
 
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder<SurveyScreenViewModel>.reactive(
-        viewModelBuilder: () => SurveyScreenViewModel(survey),
+        viewModelBuilder: () => SurveyScreenViewModel(scheduledSurvey),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) =>
             WillPopScope(
@@ -31,6 +34,7 @@ class SurveyScreen extends HookWidget {
   }
 
   Widget _body(BuildContext context, SurveyScreenViewModel viewModel) {
+    final survey = scheduledSurvey.survey;
     return Scaffold(
       body: FormBuilder(
         key: _formKey,
@@ -48,7 +52,7 @@ class SurveyScreen extends HookWidget {
                       shrinkWrap: true,
                       itemBuilder: (BuildContext context, int index) {
                         Question question = survey.questions[index];
-                        return SurveyQuestionWidget(question);
+                        return _SurveyQuestionWidget(question);
                       },
                       separatorBuilder: (context, index) {
                         return Padding(
@@ -58,16 +62,34 @@ class SurveyScreen extends HookWidget {
                       },
                     )),
                 SizedBox(height: 20,),
-                NextsenseButton.primary(
-                    "Submit",
-                  onPressed: () {
-                    _formKey.currentState?.save();
-                    if (_formKey.currentState?.validate() ?? false) {
-                      print(_formKey.currentState?.value);
-                    } else {
-                      print("validation failed");
-                    }
-                  },
+                Row(
+                  children: [
+                    Expanded(
+                      child: NextsenseButton.secondary(
+                        "Cancel",
+                        onPressed: () {
+                          Navigator.pop(context, false);
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 20,),
+                    Expanded(
+                      child: NextsenseButton.primary(
+                          "Submit",
+                        onPressed: () {
+                            if (_formKey.currentState!=null) {
+                              _formKey.currentState?.save();
+                              if (_formKey.currentState!.validate()) {
+                                viewModel.submit(_formKey.currentState!.value);
+                                Navigator.pop(context, true);
+                              } else {
+                                _logger.log(Level.WARNING, "validation failed");
+                              }
+                            }
+                        },
+                      ),
+                    ),
+                  ],
                 )
               ],
             ),
@@ -83,13 +105,13 @@ class SurveyScreen extends HookWidget {
 
 }
 
-class SurveyQuestionWidget extends StatelessWidget {
+class _SurveyQuestionWidget extends StatelessWidget {
 
   final CustomLogPrinter _logger = CustomLogPrinter('SurveyQuestionWidget');
 
   final Question question;
 
-  SurveyQuestionWidget(this.question, {Key? key}) : super(key: key);
+  _SurveyQuestionWidget(this.question, {Key? key}) : super(key: key);
   
   @override
   Widget build(BuildContext context) {
@@ -104,12 +126,18 @@ class SurveyQuestionWidget extends StatelessWidget {
             FormBuilderFieldOption(
                 value: 'No', child: Text('No')),
           ],
+          decoration: InputDecoration(
+              border: InputBorder.none
+          ),
         );
         break;
       case SurveyQuestionType.range:
         formBuilderField = FormBuilderChoiceChip(
           name: question.id,
           options: _generateChoices(),
+          decoration: InputDecoration(
+              border: InputBorder.none
+          ),
         );
         break;
       case SurveyQuestionType.number:
@@ -137,6 +165,9 @@ class SurveyQuestionWidget extends StatelessWidget {
         formBuilderField = FormBuilderChoiceChip(
           name: question.id,
           options: _generateChoices(),
+          decoration: InputDecoration(
+              border: InputBorder.none
+          ),
         );
         break;
       default:

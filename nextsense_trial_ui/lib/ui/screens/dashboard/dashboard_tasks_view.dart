@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
+import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
@@ -13,22 +14,37 @@ class DashboardTasksView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dashboardViewModel = context.watch<DashboardScreenViewModel>();
-    List<Survey> surveys = dashboardViewModel.getCurrentDaySurveys();
+    List<ScheduledSurvey> scheduledSurveys =
+        dashboardViewModel.getCurrentDayScheduledSurveys();
 
     return SingleChildScrollView(
       physics: ScrollPhysics(),
       child: Container(
-          child: ListView.builder(
+          child: scheduledSurveys.isNotEmpty ? ListView.builder(
             scrollDirection: Axis.vertical,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: surveys.length,
+            itemCount: scheduledSurveys.length,
             shrinkWrap: true,
             itemBuilder: (BuildContext context, int index) {
-              Survey survey = surveys[index];
+              ScheduledSurvey survey = scheduledSurveys[index];
               return _SurveyItem(survey);
             },
-          )),
+          ) : _emptyTasksPlaceholder()),
     );
+  }
+
+  Widget _emptyTasksPlaceholder() {
+      return Container(
+          padding: EdgeInsets.all(30.0),
+          child: Column(
+            children: [
+              Icon(Icons.task, size: 50, color: Colors.grey,),
+              SizedBox(height: 20,),
+              Text("There are no tasks for selected day",
+                  textAlign: TextAlign.center, style:
+                  TextStyle(fontSize: 30.0, color: Colors.grey)),
+            ],
+     ));
   }
 }
 
@@ -36,14 +52,15 @@ class _SurveyItem extends HookWidget {
 
   final Navigation _navigation = getIt<Navigation>();
 
-  final Survey survey;
+  final ScheduledSurvey scheduledSurvey;
 
-  _SurveyItem(this.survey, {
+  _SurveyItem(this.scheduledSurvey, {
     Key? key,}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final surveyBackgroundColor = Color(0xFF6DC5D5);
+
     return Padding(
         padding: const EdgeInsets.all(10.0),
         child: Row(
@@ -72,8 +89,18 @@ class _SurveyItem extends HookWidget {
                               MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(survey.name,
-                                    style: TextStyle(color: Colors.white)),
+                                Text(scheduledSurvey.survey.name,
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold)),
+                                SizedBox(
+                                  height: 8,
+                                ),
+                                Text("Please complete survey",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18)),
                                 SizedBox(
                                   height: 8,
                                 ),
@@ -97,7 +124,17 @@ class _SurveyItem extends HookWidget {
   void _onSurveyClicked(BuildContext context) async {
     // TODO(alex): handle return from survey
 
-    await _navigation.navigateTo(SurveyScreen.id, arguments: survey);
+    bool completed = await _navigation.navigateTo(SurveyScreen.id,
+        arguments: scheduledSurvey);
+
+    if (completed) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleAlertDialog(
+            title: 'Success',
+            content: 'Survey successfully completed!'),
+      );
+    }
     // Refresh tasks since survey state can be changed
     //context.read<DashboardScreenViewModel>().notifyListeners();
   }

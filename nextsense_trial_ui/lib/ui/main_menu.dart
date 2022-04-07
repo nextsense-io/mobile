@@ -22,7 +22,7 @@ class MainMenu extends HookWidget {
   Widget build(BuildContext context) {
 
     final dashboardViewModel = context.watch<DashboardScreenViewModel>();
-    final currentStudy = _studyManager.getCurrentStudy()!;
+    final currentStudy = _studyManager.currentStudy!;
 
     return Drawer(
       child: ListView(

@@ -24,7 +24,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
 
   final RunnableProtocol runnableProtocol;
   Protocol get protocol => runnableProtocol.protocol;
@@ -50,9 +49,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   ProtocolScreenViewModel(this.runnableProtocol);
 
-  Study? getCurrentStudy() {
-    return _studyManager.getCurrentStudy();
-  }
+  Study? get currentStudy => _studyManager.currentStudy;
 
   void startSession() {
     _logger.log(Level.INFO, "startSession");
@@ -185,7 +182,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.INFO, 'Starting ${protocol.name} protocol.');
       await _sessionManager.startSession(
           _deviceManager.getConnectedDevice()!.macAddress,
-          _studyManager.getCurrentStudyId()!,
+          _studyManager.currentStudyId!,
           protocol.name);
       runnableProtocol.update(
           state: ProtocolState.running,

@@ -78,7 +78,7 @@ class SessionManager {
     _currentLocalSession = await NextsenseBase.startStreaming(
         deviceMacAddress, /*uploadToCloud=*/true,
         user.getValue(UserKey.bt_key), dataSessionCode,
-        _studyManager.getCurrentStudy()?.getEarbudsConfig() ?? null);
+        _studyManager.currentStudy?.getEarbudsConfig() ?? null);
 
     return true;
   }
