@@ -119,7 +119,7 @@ class SignInScreen extends HookWidget {
     // If there are permissions that need to be granted, go through them one by
     // one with an explanation screen.
     for (PermissionRequest permissionRequest
-    in await _permissionsManager.getPermissionsToRequest()) {
+        in await _permissionsManager.getPermissionsToRequest()) {
       await _navigation.navigateTo(RequestPermissionScreen.id,
           arguments: permissionRequest);
     }
@@ -146,6 +146,7 @@ class SignInScreen extends HookWidget {
     }
 
     // Navigate to the device preparation screen.
+    // TODO(eric): Might want to add a 'Do not show this again'
     await _navigation.navigateWithConnectionChecking(
         context, PrepareDeviceScreen.id);
   }

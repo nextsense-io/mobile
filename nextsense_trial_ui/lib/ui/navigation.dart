@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/runnable_protocol.dart';
-import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
+import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
+import 'package:nextsense_trial_ui/ui/insufficient_space_screen.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
@@ -23,6 +26,8 @@ import 'package:provider/src/provider.dart';
 class Navigation {
 
   final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
+  final DeviceManager _deviceManager = getIt<DeviceManager>();
+  final DiskSpaceManager _diskSpaceManager = getIt<DiskSpaceManager>();
 
   Future<dynamic> navigateTo(String routeName, {Object? arguments,
     bool replace = false, bool pop = false}) {
@@ -60,6 +65,8 @@ class Navigation {
           builder: (context) => SupportScreen());
       case SettingsScreen.id: return MaterialPageRoute(
           builder: (context) => SettingsScreen());
+      case CheckInternetScreen.id: return MaterialPageRoute(
+            builder: (context) => CheckInternetScreen());
 
     // Routes with arguments
       case ProtocolScreen.id:
@@ -69,9 +76,10 @@ class Navigation {
         return MaterialPageRoute(
           builder: (context) => RequestPermissionScreen(
               settings.arguments as PermissionRequest));
-      case CheckInternetScreen.id:
-        return MaterialPageRoute(
-          builder: (context) => CheckInternetScreen());
+      case InsufficientSpaceScreen.id: return MaterialPageRoute(
+          builder: (context) => InsufficientSpaceScreen(
+            settings.arguments as Duration
+          ));
     }
   }
 
@@ -90,15 +98,49 @@ class Navigation {
       }
     } else {
       // Navigate to device scan screen.
-      navigateTo(DeviceScanScreen.id, replace: replace);
+      await navigateTo(DeviceScanScreen.id, replace: replace);
     }
+  }
+
+  // Show connection check screen if needed before navigate to target route
+  Future navigateWithCapabilityChecking(BuildContext context, String routeName, {Object? arguments,
+    bool replace = false, bool pop = false}) async {
+    RunnableProtocol runnableProtocol = arguments as RunnableProtocol;
+    if (!(await _diskSpaceManager.isDiskSpaceSufficient(
+        runnableProtocol.protocol.minDuration))) {
+      await navigateTo(InsufficientSpaceScreen.id,
+          arguments: runnableProtocol.protocol.minDuration);
+      // Check that the space was cleared before continuing.
+      if (!(await _diskSpaceManager.isDiskSpaceSufficient(
+          runnableProtocol.protocol.minDuration))) {
+        return;
+      }
+    }
+
+    if (!context.read<ConnectivityManager>()
+        .isConnectionSufficientForCloudSync()) {
+      await navigateTo(CheckInternetScreen.id);
+      if (!context.read<ConnectivityManager>()
+          .isConnectionSufficientForCloudSync()) {
+        return;
+      }
+    }
+
+    if (_deviceManager.getConnectedDevice() == null) {
+      await navigateToDeviceScan();
+      if (_deviceManager.getConnectedDevice() == null) {
+        return;
+      }
+    }
+
+    await navigateTo(routeName,
+        arguments: arguments, replace: replace, pop: pop);
   }
 
   // Show connection check screen if needed before navigate to target route
   Future navigateWithConnectionChecking(BuildContext context, String routeName, {Object? arguments,
     bool replace = false, bool pop = false}) async {
 
-    // TODO(eric): Might want to add a 'Do not show this again'
     if (!context.read<ConnectivityManager>()
         .isConnectionSufficientForCloudSync()) {
       await navigateTo(CheckInternetScreen.id);
