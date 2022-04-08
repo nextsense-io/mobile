@@ -22,7 +22,6 @@ class DashboardScreen extends StatelessWidget {
 
   static const String id = 'dashboard_screen';
 
-  final Navigation _navigation = getIt<Navigation>();
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
@@ -337,7 +336,6 @@ class _ScheduledProtocolRow extends HookWidget {
 
   void _onProtocolClicked(BuildContext context,
       ScheduledProtocol scheduledProtocol) async {
-    Protocol protocol = scheduledProtocol.protocol;
     if (scheduledProtocol.isCompleted) {
       showDialog(
         context: context,
@@ -370,7 +368,7 @@ class _ScheduledProtocolRow extends HookWidget {
       return;
     }
     
-    await _navigation.navigateWithConnectionChecking(
+    await _navigation.navigateWithCapabilityChecking(
         context,
         ProtocolScreen.id,
         arguments: scheduledProtocol

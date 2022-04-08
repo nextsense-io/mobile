@@ -162,6 +162,7 @@ class DeviceManager {
     NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
     _cancelStateListening?.call();
     _cancelInternalStateListening?.call();
+    deviceState.value = DeviceState.DISCONNECTED;
     _connectedDevice = null;
   }
 

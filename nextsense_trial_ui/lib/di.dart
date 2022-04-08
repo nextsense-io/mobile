@@ -3,6 +3,7 @@ import 'package:nextsense_trial_ui/managers/api.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
@@ -26,6 +27,7 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<StudyManager>(StudyManager());
   getIt.registerSingleton<SessionManager>(SessionManager());
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
+  getIt.registerSingleton<DiskSpaceManager>(DiskSpaceManager());
   getIt.registerSingleton<Navigation>(Navigation());
 
   await getIt.get<NotificationsManager>().initializePlugin();

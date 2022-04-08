@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 enum DeviceInternalStateFields {
   // When the state was sampled in the hardware device.
   timestamp,
-  // Battery level in milli volts.
+  // Battery level in millivolts.
   batteryMilliVolts,
   // If the device is currently busy processing a command.
   busy,
@@ -36,7 +36,7 @@ enum DeviceInternalStateFields {
   lostSamplesCounter,
   // ble RSSI.
   bleRssi,
-  // Boolean array indicating if a channel lead is considered to the off
+  // Boolean array indicating if a channel lead is considered to be off
   // (Impedance too high). Channels 1-8 in order.
   leadsOffPositive
 }

@@ -20,7 +20,7 @@ class StartAdhocDialog extends HookWidget {
         .map((adhocProtocol) =>
         SimpleDialogOption(
           onPressed: () {
-            _navigation.navigateWithConnectionChecking(
+            _navigation.navigateWithCapabilityChecking(
                 context,
                 ProtocolScreen.id, arguments: adhocProtocol);
           },
