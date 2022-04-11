@@ -106,7 +106,7 @@ class _ScheduledProtocolRow extends HookWidget {
             Expanded(
               child: Opacity(
                 opacity: scheduledProtocol.isCompleted
-                    || scheduledProtocol.isSkipped ? 0.8 : 1.0,
+                    || scheduledProtocol.isSkipped ? 0.6 : 1.0,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: InkWell(
@@ -157,9 +157,19 @@ class _ScheduledProtocolRow extends HookWidget {
   Widget _protocolState(ScheduledProtocol scheduledProtocol) {
     switch(scheduledProtocol.state) {
       case ProtocolState.skipped:
-        return Text("Skipped", style: TextStyle(color: Colors.white),);
+        return Column(
+          children: [
+            Icon(Icons.cancel, color: Colors.white),
+            Text("Skipped", style: TextStyle(color: Colors.white),),
+          ],
+        );
       case ProtocolState.cancelled:
-        return Text("Cancelled", style: TextStyle(color: Colors.white),);
+        return Column(
+          children: [
+            Icon(Icons.play_arrow_outlined, color: Colors.white),
+            Text("Cancelled", style: TextStyle(color: Colors.white),),
+          ],
+        );
       case ProtocolState.completed:
         return Icon(Icons.check_circle, color: Colors.white);
       default: break;

@@ -61,7 +61,11 @@ class _SurveyItem extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surveyBackgroundColor = Color(0xFF6DC5D5);
+    var surveyBackgroundColor = Color(0xFF6DC5D5);
+    // TODO(alex): introduce survey type?
+    if (scheduledSurvey.survey.id.contains("phq")) {
+      surveyBackgroundColor = Color(0xFF984DF1);
+    }
 
     return Padding(
         padding: const EdgeInsets.all(10.0),
@@ -71,7 +75,7 @@ class _SurveyItem extends HookWidget {
             Expanded(
               child: Opacity(
                 opacity: scheduledSurvey.isCompleted
-                        || scheduledSurvey.isSkipped ? 0.8 : 1.0,
+                        || scheduledSurvey.isSkipped ? 0.6 : 1.0,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: InkWell(
@@ -123,7 +127,12 @@ class _SurveyItem extends HookWidget {
   Widget _surveyState() {
     switch(scheduledSurvey.state) {
       case SurveyState.skipped:
-        return Text("Skipped", style: TextStyle(color: Colors.white),);
+        return Column(
+          children: [
+            Icon(Icons.cancel, color: Colors.white),
+            Text("Skipped", style: TextStyle(color: Colors.white),),
+          ],
+        );
       case SurveyState.completed:
         return Icon(Icons.check_circle, color: Colors.white);
       default: break;
@@ -146,7 +155,7 @@ class _SurveyItem extends HookWidget {
       );
     }
     // Refresh tasks since survey state can be changed
-    //context.read<DashboardScreenViewModel>().notifyListeners();
+    context.read<DashboardScreenViewModel>().notifyListeners();
   }
 
 }
