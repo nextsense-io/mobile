@@ -73,7 +73,7 @@ class DashboardScreen extends HookWidget {
                         stateManagement: true, // Default is true.
                         hideNavigationBarWhenKeyboardShows: true, // Recommended to set 'resizeToAvoidBottomInset' as true while using this argument. Default is true.
                         decoration: NavBarDecoration(
-                          borderRadius: BorderRadius.circular(10.0),
+                          borderRadius: BorderRadius.circular(20.0),
                           colorBehindNavBar: Colors.white,
                         ),
                         popAllScreensOnTapOfSelectedTab: true,
@@ -82,7 +82,8 @@ class DashboardScreen extends HookWidget {
                           duration: Duration(milliseconds: 200),
                           curve: Curves.ease,
                         ),
-                        navBarStyle: NavBarStyle.style6, // Choose the nav bar style with this property.
+                        navBarStyle: NavBarStyle.style8,
+                        navBarHeight: 65,// Choose the nav bar style with this property.
                       ),
                       ),
                   ],
@@ -132,7 +133,15 @@ class DashboardScreen extends HookWidget {
       DashboardTasksView(),
       SettingsScreen(),
       SupportScreen()
-    ];
+    ].map((element) => Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage("assets/images/dashboard_background.png"),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: element,
+    )).toList();
   }
 
   Widget _appBar(BuildContext context) {

@@ -16,4 +16,13 @@ extension DateUtils on DateTime {
     return year == other.year && month == other.month
         && day == other.day;
   }
+
+  // Returns closest future midnight to desired date
+  DateTime get closestFutureMidnight {
+    return DateTime(
+      this.year,
+      this.month,
+      this.day + 1,
+    );
+  }
 }

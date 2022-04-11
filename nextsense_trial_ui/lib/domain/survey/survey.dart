@@ -30,6 +30,14 @@ enum SurveyState {
   unknown
 }
 
+enum SurveyPeriod {
+  certain_day,
+  daily,
+  weekly,
+  unknown
+}
+
+
 class Question extends FirebaseEntity<SurveyQuestionKey>{
 
   SurveyQuestionType get type =>
@@ -63,8 +71,6 @@ class Survey extends FirebaseEntity<SurveyKey> {
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
         [Table.surveys, Table.questions], [this.id]);
 
-    //print('[TODO] Survey.loadQuestions $entities');
-
     questions = entities.map((firebaseEntity) =>
         Question(firebaseEntity))
         .toList();
@@ -82,4 +88,10 @@ SurveyState surveyStateFromString(String surveyStateStr) {
   return SurveyState.values.firstWhere(
       (element) => element.name == surveyStateStr,
       orElse: () => SurveyState.unknown);
+}
+
+SurveyPeriod surveyPeriodFromString(String surveyPeriodStr) {
+  return SurveyPeriod.values.firstWhere(
+          (element) => element.name == surveyPeriodStr,
+      orElse: () => SurveyPeriod.unknown);
 }

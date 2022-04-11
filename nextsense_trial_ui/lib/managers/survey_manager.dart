@@ -69,6 +69,9 @@ class SurveyManager {
                 [_authManager.getUserCode()!, scheduledSurveyKey]),
             survey, day);
 
+        // Copy period from planned survey
+        scheduledSurvey.setPeriod(plannedSurvey.period);
+
         if (scheduledSurvey.getValue(ScheduledSurveyKey.status) == null) {
           scheduledSurvey.setValue(ScheduledSurveyKey.status,
               SurveyState.not_started.name);

@@ -8,6 +8,7 @@ import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
@@ -26,7 +27,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   final AuthManager _authManager = getIt<AuthManager>();
 
   List<ScheduledProtocol> scheduledProtocols = [];
-  
+
   List<ScheduledSurvey> scheduledSurveys = [];
 
   // List of days that will appear for current study
@@ -46,7 +47,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     await loadData();
 
     _initProtocolCheckTimer();
-    _checkProtocolsTimeConstraints();
+    _checkScheduledEntitiesTimeConstraints();
   }
 
   Future loadData() async {
@@ -97,18 +98,25 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
       Duration(seconds: 1), (_){
         // Only execute beginning of each minute
         if (DateTime.now().second != 0) return;
-        _checkProtocolsTimeConstraints();
+        _checkScheduledEntitiesTimeConstraints();
       },
     );
   }
 
-  // Find and skip protocols that user didn't start at desired time window
-  void _checkProtocolsTimeConstraints() {
+  // Find and skip scheduled protocols/surveys that user didn't start at
+  // desired time window
+  void _checkScheduledEntitiesTimeConstraints() {
     for (final scheduledProtocol in scheduledProtocols) {
       if (scheduledProtocol.isLate()) {
         scheduledProtocol.update(state: ProtocolState.skipped);
       }
     }
+    for (final scheduledSurvey in scheduledSurveys) {
+      if (scheduledSurvey.isLate()) {
+        scheduledSurvey.update(state: SurveyState.skipped);
+      }
+    }
+
     notifyListeners();
   }
 

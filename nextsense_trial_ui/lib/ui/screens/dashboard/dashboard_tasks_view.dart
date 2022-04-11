@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
@@ -20,6 +21,7 @@ class DashboardTasksView extends StatelessWidget {
     return SingleChildScrollView(
       physics: ScrollPhysics(),
       child: Container(
+
           child: scheduledSurveys.isNotEmpty ? ListView.builder(
             scrollDirection: Axis.vertical,
             physics: const NeverScrollableScrollPhysics(),
@@ -68,7 +70,8 @@ class _SurveyItem extends HookWidget {
           children: [
             Expanded(
               child: Opacity(
-                opacity: 1.0,
+                opacity: scheduledSurvey.isCompleted
+                        || scheduledSurvey.isSkipped ? 0.8 : 1.0,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: InkWell(
@@ -118,6 +121,13 @@ class _SurveyItem extends HookWidget {
   }
 
   Widget _surveyState() {
+    switch(scheduledSurvey.state) {
+      case SurveyState.skipped:
+        return Text("Skipped", style: TextStyle(color: Colors.white),);
+      case SurveyState.completed:
+        return Icon(Icons.check_circle, color: Colors.white);
+      default: break;
+    }
     return Container();
   }
 
