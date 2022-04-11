@@ -17,10 +17,12 @@ class SurveyScreenViewModel extends BaseViewModel {
   }
 
   void submit(Map<String, dynamic> formData) {
-    // TODO(alex): save data on server
     _logger.log(Level.INFO, "submit survey form - $formData");
 
-    scheduledSurvey.update(state: SurveyState.completed);
+    scheduledSurvey.update(
+        state: SurveyState.completed,
+        data: formData
+    );
   }
 
 }
