@@ -51,7 +51,7 @@ class SurveyScreen extends HookWidget {
                       itemCount: survey.questions.length,
                       shrinkWrap: true,
                       itemBuilder: (BuildContext context, int index) {
-                        Question question = survey.questions[index];
+                        SurveyQuestion question = survey.questions[index];
                         return _SurveyQuestionWidget(question);
                       },
                       separatorBuilder: (context, index) {
@@ -100,7 +100,7 @@ class SurveyScreen extends HookWidget {
   }
 
   _onBackButtonPressed(BuildContext context, SurveyScreenViewModel viewModel) {
-    Navigator.pop(context);
+    Navigator.pop(context, false);
   }
 
 }
@@ -109,7 +109,7 @@ class _SurveyQuestionWidget extends StatelessWidget {
 
   final CustomLogPrinter _logger = CustomLogPrinter('SurveyQuestionWidget');
 
-  final Question question;
+  final SurveyQuestion question;
 
   _SurveyQuestionWidget(this.question, {Key? key}) : super(key: key);
   
@@ -120,11 +120,20 @@ class _SurveyQuestionWidget extends StatelessWidget {
       case SurveyQuestionType.yesno:
         formBuilderField = FormBuilderChoiceChip(
           name: question.id,
+          padding: EdgeInsets.all(8.0),
           options: [
             FormBuilderFieldOption(
-                value: 'Yes', child: Text('Yes')),
+                value: 'Yes',
+                child: Text(
+                  'Yes',
+                  style: TextStyle(fontSize: 20),
+                )),
             FormBuilderFieldOption(
-                value: 'No', child: Text('No')),
+                value: 'No',
+                child: Text(
+                  'No',
+                  style: TextStyle(fontSize: 20),
+                )),
           ],
           decoration: InputDecoration(
               border: InputBorder.none
@@ -134,6 +143,7 @@ class _SurveyQuestionWidget extends StatelessWidget {
       case SurveyQuestionType.range:
         formBuilderField = FormBuilderChoiceChip(
           name: question.id,
+          padding: EdgeInsets.all(8.0),
           options: _generateChoices(),
           decoration: InputDecoration(
               border: InputBorder.none
@@ -164,6 +174,7 @@ class _SurveyQuestionWidget extends StatelessWidget {
       case SurveyQuestionType.choices:
         formBuilderField = FormBuilderChoiceChip(
           name: question.id,
+          padding: EdgeInsets.all(8.0),
           options: _generateChoices(),
           decoration: InputDecoration(
               border: InputBorder.none
@@ -202,28 +213,11 @@ class _SurveyQuestionWidget extends StatelessWidget {
           value: 'No', child: Text('No')));
         break;
       case SurveyQuestionType.range:
-        final int min,max;
-        try {
-          String choicesStr = question.choices as String;
-          List<String> minMaxStr = choicesStr.split("-");
-          min = int.parse(minMaxStr[0]);
-          max = int.parse(minMaxStr[1]);
-        } catch (e) {
-          _logger.log(Level.WARNING,
-              'Failed to parse choices: ${question.choices}');
-          return [];
-        }
-        for (int choice = min; choice <= max; choice++) {
-          result.add(FormBuilderFieldOption(
-              value: choice.toString(), child: Text(choice.toString())));
-        }
-        break;
       case SurveyQuestionType.choices:
-        List<dynamic> choices = question.choices;
         try {
-          for (Map<String, dynamic> choice in choices) {
+          for (SurveyQuestionChoice choice in question.choices) {
             result.add(FormBuilderFieldOption(
-                value: choice['value'] as String, child: Text(choice['text']!)));
+                value: choice.value, child: Text(choice.text, style: TextStyle(fontSize: 20),)));
           }
         } catch (e) {
           _logger.log(Level.WARNING,

@@ -68,8 +68,6 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> {
         break;
     }
     return false;
-    /*return state == SurveyState.not_started
-        && currentTime.isAfter(allowedStartBefore.subtract(Duration(seconds: 1)));*/
   }
 
   // Update fields and save to firestore by default

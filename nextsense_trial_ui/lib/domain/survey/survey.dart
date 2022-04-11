@@ -1,6 +1,8 @@
+import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum SurveyKey {
   name,
@@ -23,6 +25,13 @@ enum SurveyQuestionType {
   unknown
 }
 
+enum SurveyQuestionSpecialChoices {
+  phq9, // Patient Health Questionnaire (PHQ-9)
+  gad7, // General Anxiety Disorder (GAD-7)
+  sqs, // Sleep Quality Scale
+  unknown
+}
+
 enum SurveyState {
   not_started,
   skipped,
@@ -37,8 +46,15 @@ enum SurveyPeriod {
   unknown
 }
 
+class SurveyQuestionChoice {
+  final String value;
+  final String text;
+  const SurveyQuestionChoice(this.value, this.text);
+}
 
-class Question extends FirebaseEntity<SurveyQuestionKey>{
+class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
+
+  final CustomLogPrinter _logger = CustomLogPrinter('SurveyQuestion');
 
   SurveyQuestionType get type =>
       surveyQuestionTypeFromString(typeString);
@@ -47,20 +63,95 @@ class Question extends FirebaseEntity<SurveyQuestionKey>{
 
   String get text => getValue(SurveyQuestionKey.text);
 
-  dynamic get choices => getValue(SurveyQuestionKey.choices);
+  //dynamic get _choices => getValue(SurveyQuestionKey.choices);
 
+  List<SurveyQuestionChoice> choices = [];
   //TODO(alex): add 'optional' flag
 
-  Question(FirebaseEntity firebaseEntity)
-      : super(firebaseEntity.getDocumentSnapshot());
+  SurveyQuestion(FirebaseEntity firebaseEntity)
+      : super(firebaseEntity.getDocumentSnapshot()) {
+    dynamic choicesValue = getValue(SurveyQuestionKey.choices);
 
+    if (![SurveyQuestionType.range, SurveyQuestionType.choices].contains(
+        type)) {
+      // For other types we don't need to specify choices
+      return;
+    }
+    if (choicesValue is List) {
+      // List of value/text items
+      choices = choicesValue
+          .map((item) => SurveyQuestionChoice(item['value'], item['text']))
+          .toList();
+    }
+    else if (choicesValue is String) {
+      if (type == SurveyQuestionType.range) {
+        // Range of values
+        // Example: '1-4' transforms into list of 1,2,3,4
+        final int min,max;
+        try {
+          List<String> minMaxStr = choicesValue.split("-");
+          min = int.parse(minMaxStr[0]);
+          max = int.parse(minMaxStr[1]);
+        } catch (e) {
+          _logger.log(Level.WARNING,
+              'Failed to parse choices: ${choicesValue}');
+          return;
+        }
+        for (int choice = min; choice <= max; choice++) {
+          choices
+              .add(SurveyQuestionChoice(choice.toString(), choice.toString()));
+        }
+        return;
+      }
+      choices = _getSpecialChoices(
+              surveyQuestionSpecialChoicesFromString(choicesValue));
+    }
+    else {
+      _logger.log(
+          Level.WARNING, 'Invalid value for choices "$choicesValue"');
+    }
+  }
+
+  // Get predefined list of 'special' choices for certain amulatory
+  // surveys
+  List<SurveyQuestionChoice> _getSpecialChoices(
+      SurveyQuestionSpecialChoices specialChoices) {
+    switch (specialChoices) {
+      case SurveyQuestionSpecialChoices.phq9:
+        return [
+          SurveyQuestionChoice("0", "Not at all"),
+          SurveyQuestionChoice("1", "Several days"),
+          SurveyQuestionChoice("2", "More than half the days"),
+          SurveyQuestionChoice("3", "Nearly every day"),
+        ];
+      case SurveyQuestionSpecialChoices.gad7:
+        return [
+          SurveyQuestionChoice("0", "Not at all sure"),
+          SurveyQuestionChoice("1", "Several days"),
+          SurveyQuestionChoice("2", "Over half the days"),
+          SurveyQuestionChoice("3", "Nearly every day"),
+        ];
+      case SurveyQuestionSpecialChoices.sqs:
+        return [
+          SurveyQuestionChoice("0", "Rarely"),
+          SurveyQuestionChoice("1", "Sometimes"),
+          SurveyQuestionChoice("2", "Often"),
+          SurveyQuestionChoice("3", "Almost always"),
+        ];
+      case SurveyQuestionSpecialChoices.unknown:
+        _logger.log(
+            Level.WARNING, 'Unknown set of special choices "$specialChoices"');
+        break;
+    }
+    return [];
+  }
 }
 
 class Survey extends FirebaseEntity<SurveyKey> {
 
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
 
-  List<Question> questions = [];
+  List<SurveyQuestion> questions = [];
 
   String get name => getValue(SurveyKey.name) ?? "";
 
@@ -72,7 +163,7 @@ class Survey extends FirebaseEntity<SurveyKey> {
         [Table.surveys, Table.questions], [this.id]);
 
     questions = entities.map((firebaseEntity) =>
-        Question(firebaseEntity))
+        SurveyQuestion(firebaseEntity))
         .toList();
   }
 
@@ -82,6 +173,12 @@ SurveyQuestionType surveyQuestionTypeFromString(String typeStr) {
   return SurveyQuestionType.values.firstWhere(
       (element) => element.name == typeStr,
       orElse: () => SurveyQuestionType.unknown);
+}
+
+SurveyQuestionSpecialChoices surveyQuestionSpecialChoicesFromString(String choicesStr) {
+  return SurveyQuestionSpecialChoices.values.firstWhere(
+          (element) => element.name == choicesStr,
+      orElse: () => SurveyQuestionSpecialChoices.unknown);
 }
 
 SurveyState surveyStateFromString(String surveyStateStr) {

@@ -60,8 +60,10 @@ class SurveyManager {
       }
 
       for (var day in plannedSurvey.days) {
+        // This value must be unique for each different survey
         String scheduledSurveyKey =
-            "day_${day.dayNumber}";
+            "day_${day.dayNumber}_${plannedSurvey.surveyId}"
+            "_${plannedSurvey.period.name}";
 
         ScheduledSurvey scheduledSurvey = ScheduledSurvey(
             await _firestoreManager.queryEntity(
