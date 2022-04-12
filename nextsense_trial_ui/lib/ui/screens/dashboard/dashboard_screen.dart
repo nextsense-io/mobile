@@ -148,6 +148,7 @@ class DashboardScreen extends HookWidget {
     final viewModel = context.watch<DashboardScreenViewModel>();
     return Container(
       height: 50,
+      color: Colors.white,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
