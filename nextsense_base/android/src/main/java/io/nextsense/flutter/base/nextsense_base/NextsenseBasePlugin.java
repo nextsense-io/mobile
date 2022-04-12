@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
@@ -492,7 +494,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       return;
     }
     try {
-      DeviceState deviceState = device.disconnect().get();
+      DeviceState deviceState = device.disconnect().get(3, TimeUnit.SECONDS);
       if (deviceState == DeviceState.DISCONNECTED) {
         result.success(null);
       } else {
@@ -506,6 +508,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       returnError(result, DISCONNECT_DEVICE_COMMAND, CONNECT_TO_DEVICE_ERROR_INTERRUPTED,
           /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
       Thread.currentThread().interrupt();
+    } catch (TimeoutException e) {
+      returnError(result, DISCONNECT_DEVICE_COMMAND, CONNECT_TO_DEVICE_ERROR_CONNECTION,
+          /*errorMessage=*/"Timeout disconnecting", /*errorDetails=*/null);
     }
   }
 

@@ -392,7 +392,7 @@ public class Uploader {
               localSession.getAccelerationsDeleted() - 1L, /*count=*/1)
           .get(0).getAbsoluteSamplingTimestamp();
       Instant cutOffDate = lastSampleTime.minus(minDurationToKeep);
-      Util.logd(TAG, "Accelration cutoff time: " + formatter.format(cutOffDate));
+      Util.logd(TAG, "Acceleration cutoff time: " + formatter.format(cutOffDate));
       return objectBoxDatabase.deleteFirstAccelerationsData(localSession.id,
           cutOffDate.toEpochMilli());
     }

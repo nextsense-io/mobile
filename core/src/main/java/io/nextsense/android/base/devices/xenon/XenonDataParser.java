@@ -83,8 +83,9 @@ public class XenonDataParser {
       throw new FirmwareMessageParsingException("Data is too small to parse one packet. Expected " +
           "minimum size of " + (packetSize + 1) + " but got " + values.length);
     }
-    while (valuesBuffer.remaining() >= packetSize) {
-      parseDataPacket(valuesBuffer, activeChannels, receptionTimestamp);
+    boolean canParsePacket = true;
+    while (canParsePacket && valuesBuffer.remaining() >= packetSize) {
+      canParsePacket = parseDataPacket(valuesBuffer, activeChannels, receptionTimestamp);
     }
   }
 
@@ -93,12 +94,12 @@ public class XenonDataParser {
     return (float)(data * ((V_REF * 1000000.0f) / (24.0f * (pow(2, 23) - 1))));
   }
 
-  private void parseDataPacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,
+  private boolean parseDataPacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,
                                Instant receptionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
       Log.w(TAG, "Received data packet without an active session, cannot record it.");
-      return;
+      return false;
     }
     LocalSession localSession = localSessionOptional.get();
     valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -123,6 +124,7 @@ public class XenonDataParser {
         null, samplingTime, SampleFlags.create(valuesBuffer.get()));
     EventBus.getDefault().post(acceleration);
     EventBus.getDefault().post(eegSample);
+    return true;
   }
 
   private static int getDataPacketSize(int activeChannelsSize) {

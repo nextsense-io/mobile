@@ -15,7 +15,6 @@ dependencies:
   app_settings: ^4.1.1
   awesome_notifications: ^0.6.21
   cloud_firestore: ^2.5.3
-  crypt: ^4.0.1
   disk_space: ^0.2.1
   firebase_auth: ^3.1.1
   firebase_core: ^1.6.0

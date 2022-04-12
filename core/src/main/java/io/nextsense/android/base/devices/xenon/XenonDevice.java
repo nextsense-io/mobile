@@ -59,6 +59,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private XenonDataParser xenonDataParser;
   private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
   private BluetoothGattCharacteristic dataCharacteristic;
+  private SettableFuture<Boolean> changeNotificationStateFuture;
   private SettableFuture<Boolean> changeStreamingStateFuture;
   private DeviceSettings deviceSettings;
   private StartStreamingCommand.StartMode targetStartStreamingMode;
@@ -113,6 +114,11 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
         // Cannot read device settings, so load the default setting and apply them when connecting.
         applyDeviceSettings(loadDeviceSettings().get());
         Log.i(TAG, "Applied device settings.");
+        if (!peripheral.isNotifying(dataCharacteristic)) {
+          changeNotificationStateFuture = SettableFuture.create();
+          peripheral.setNotify(dataCharacteristic, /*enable=*/true);
+          return changeNotificationStateFuture.get();
+        }
       } catch (ExecutionException e) {
         Log.e(TAG, "Failed to set the time on the device: " + e.getMessage());
         return false;
@@ -149,9 +155,9 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       return Futures.immediateFailedFuture(
           new IllegalStateException("No characteristic to stream on."));
     }
-    changeStreamingStateFuture = SettableFuture.create();
     localSessionManager.startLocalSession(userBigTableKey, dataSessionId, earbudsConfig,
         uploadToCloud, deviceSettings.getEegStreamingRate(), deviceSettings.getImuStreamingRate());
+    changeStreamingStateFuture = SettableFuture.create();
     if (!peripheral.isNotifying(dataCharacteristic)) {
       peripheral.setNotify(dataCharacteristic, /*enable=*/true);
     } else {
@@ -180,9 +186,14 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     if (this.deviceMode == DeviceMode.IDLE) {
       return Futures.immediateFuture(true);
     }
-    changeStreamingStateFuture = SettableFuture.create();
-    writeCharacteristic(dataCharacteristic, new StopStreamingCommand().getCommand());
-    return changeStreamingStateFuture;
+    return executorService.submit(() -> {
+      writeCharacteristic(dataCharacteristic, new StopStreamingCommand().getCommand());
+      // TODO(eric): Wait until device ble buffer is empty before closing the session, or accept
+      //             late packets as long as packets timestamps are valid?
+      localSessionManager.stopLocalSession();
+      deviceMode = DeviceMode.IDLE;
+      return true;
+    });
   }
 
   @Override
@@ -269,7 +280,8 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     public void onNotificationStateUpdate(
         @NonNull BluetoothPeripheral peripheral,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-      if (!changeStreamingStateFuture.isDone() && isDataCharacteristic(characteristic)) {
+      if (changeStreamingStateFuture != null && !changeStreamingStateFuture.isDone() &&
+          isDataCharacteristic(characteristic)) {
         if (status == GattStatus.SUCCESS) {
           Util.logd(TAG, "Notification updated with success to " +
               peripheral.isNotifying(characteristic));
@@ -282,6 +294,17 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           }
         } else {
           changeStreamingStateFuture.setException(new BluetoothException(
+              "Notification state update failed with code " + status));
+        }
+      }
+      if (changeNotificationStateFuture != null && !changeNotificationStateFuture.isDone() &&
+          isDataCharacteristic(characteristic)) {
+        if (status == GattStatus.SUCCESS) {
+          Util.logd(TAG, "Notification updated with success to " +
+              peripheral.isNotifying(characteristic));
+          changeNotificationStateFuture.set(true);
+        } else {
+          changeNotificationStateFuture.setException(new BluetoothException(
               "Notification state update failed with code " + status));
         }
       }
@@ -319,20 +342,17 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
         }
 
         if (status == GattStatus.SUCCESS) {
-          if (targetMode == DeviceMode.IDLE) {
-            // TODO(eric): Add ~2 seconds delay before stopping the notifications to empty the
-            //             device buffer. 36kb of buffer, time can be calculated from frequency *
-            //             packet size.
-            peripheral.setNotify(dataCharacteristic, /*enable=*/false);
-          } else {
-            deviceMode = targetMode;
+          deviceMode = targetMode;
+          if (changeStreamingStateFuture != null) {
             changeStreamingStateFuture.set(true);
           }
           Util.logd(TAG, "Wrote command to writeData characteristic with success.");
         } else {
-          changeStreamingStateFuture.setException(
-              new BluetoothException("Failed to change the mode to " + targetMode.name() +
-                  ", Bluetooth error code: " + status.name()));
+          if (changeStreamingStateFuture != null) {
+            changeStreamingStateFuture.setException(
+                new BluetoothException("Failed to change the mode to " + targetMode.name() +
+                    ", Bluetooth error code: " + status.name()));
+          }
         }
       }
     }

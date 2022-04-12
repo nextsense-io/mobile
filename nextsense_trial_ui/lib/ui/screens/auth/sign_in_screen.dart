@@ -168,7 +168,6 @@ class _SignInInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<SignInScreenViewModel>();
     return Padding(
         padding: EdgeInsets.all(10.0),
         child: TextFormField(
