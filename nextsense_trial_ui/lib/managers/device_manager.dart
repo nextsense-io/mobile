@@ -160,8 +160,6 @@ class DeviceManager {
     _notificationsManager
         .hideAlertNotification(CONNECTION_LOST_NOTIFICATION_ID);
     NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
-    _cancelStateListening?.call();
-    _cancelInternalStateListening?.call();
     deviceState.value = DeviceState.DISCONNECTED;
     _connectedDevice = null;
   }
