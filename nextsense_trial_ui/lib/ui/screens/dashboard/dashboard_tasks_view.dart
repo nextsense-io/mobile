@@ -65,10 +65,12 @@ class _SurveyItem extends HookWidget {
     // TODO(alex): introduce survey type?
     if (scheduledSurvey.survey.id.contains("phq")) {
       surveyBackgroundColor = Color(0xFF984DF1);
+    } else if (scheduledSurvey.survey.id.contains("gad")) {
+      surveyBackgroundColor = Color(0xFFE6AEA0);
     }
 
     return Padding(
-        padding: const EdgeInsets.all(10.0),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -141,7 +143,25 @@ class _SurveyItem extends HookWidget {
   }
 
   void _onSurveyClicked(BuildContext context) async {
-    // TODO(alex): handle return from survey
+    if (scheduledSurvey.isCompleted) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleAlertDialog(
+            title: 'Warning',
+            content: 'Survey is already completed'),
+      );
+      return;
+    }
+
+    if (scheduledSurvey.isSkipped) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleAlertDialog(
+            title: 'Warning',
+            content: 'Cannot start survey cause its already skipped'),
+      );
+      return;
+    }
 
     bool completed = await _navigation.navigateTo(SurveyScreen.id,
         arguments: scheduledSurvey);

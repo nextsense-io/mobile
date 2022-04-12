@@ -13,7 +13,8 @@ enum SurveyKey {
 enum SurveyQuestionKey {
   type,
   text,
-  choices
+  choices,
+  optional
 }
 
 enum SurveyQuestionType {
@@ -56,6 +57,8 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
 
   final CustomLogPrinter _logger = CustomLogPrinter('SurveyQuestion');
 
+  List<SurveyQuestionChoice> choices = [];
+
   SurveyQuestionType get type =>
       surveyQuestionTypeFromString(typeString);
 
@@ -63,10 +66,8 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
 
   String get text => getValue(SurveyQuestionKey.text);
 
-  //dynamic get _choices => getValue(SurveyQuestionKey.choices);
-
-  List<SurveyQuestionChoice> choices = [];
-  //TODO(alex): add 'optional' flag
+  // Optional question can be skipped
+  bool get optional => getValue(SurveyQuestionKey.optional) ?? false;
 
   SurveyQuestion(FirebaseEntity firebaseEntity)
       : super(firebaseEntity.getDocumentSnapshot()) {
@@ -154,6 +155,8 @@ class Survey extends FirebaseEntity<SurveyKey> {
   List<SurveyQuestion> questions = [];
 
   String get name => getValue(SurveyKey.name) ?? "";
+
+  String get introText => getValue(SurveyKey.intro_text) ?? "";
 
   Survey(FirebaseEntity firebaseEntity)
       : super(firebaseEntity.getDocumentSnapshot());
