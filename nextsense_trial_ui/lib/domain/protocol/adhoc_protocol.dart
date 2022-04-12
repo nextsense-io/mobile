@@ -1,5 +1,5 @@
-import 'package:nextsense_trial_ui/domain/protocol.dart';
-import 'package:nextsense_trial_ui/domain/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 
 class AdhocProtocol implements RunnableProtocol {
 

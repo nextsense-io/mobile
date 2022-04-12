@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:nextsense_trial_ui/domain/protocol.dart';
-import 'package:nextsense_trial_ui/domain/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
@@ -54,7 +54,7 @@ class ProtocolScreen extends HookWidget {
                   Container(
                       child: Align(
                           alignment: Alignment.centerRight,
-                          child: DeviceStateDebugMenu())),
+                          child: DeviceStateDebugMenu(iconColor: Colors.white))),
                   /*Text(
                 protocol.getName(),
                 style: whiteTextStyle,

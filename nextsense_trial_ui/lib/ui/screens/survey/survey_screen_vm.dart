@@ -1,6 +1,6 @@
 
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:stacked/stacked.dart';
@@ -14,11 +14,11 @@ class SurveyScreenViewModel extends BaseViewModel {
 
   final CustomLogPrinter _logger = CustomLogPrinter('SurveyScreenViewModel');
 
-  final ScheduledSurvey scheduledSurvey;
+  final RunnableSurvey runnableSurvey;
 
-  Survey get survey => scheduledSurvey.survey;
+  Survey get survey => runnableSurvey.survey;
 
-  SurveyScreenViewModel(this.scheduledSurvey);
+  SurveyScreenViewModel(this.runnableSurvey);
 
   // Intro or form
   int _currentStep = SurveyScreenStep.intro.index;
@@ -35,7 +35,7 @@ class SurveyScreenViewModel extends BaseViewModel {
   void submit(Map<String, dynamic> formData) {
     _logger.log(Level.INFO, "submit survey form - $formData");
 
-    scheduledSurvey.update(
+    runnableSurvey.update(
         state: SurveyState.completed,
         data: formData
     );

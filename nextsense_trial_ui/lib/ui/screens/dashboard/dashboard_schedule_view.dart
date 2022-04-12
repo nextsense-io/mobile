@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/protocol.dart';
-import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
@@ -179,7 +179,7 @@ class _ScheduledProtocolRow extends HookWidget {
 
   void _onProtocolClicked(BuildContext context,
       ScheduledProtocol scheduledProtocol) async {
-    Protocol protocol = scheduledProtocol.protocol;
+
     if (scheduledProtocol.isCompleted) {
       showDialog(
         context: context,
@@ -212,7 +212,7 @@ class _ScheduledProtocolRow extends HookWidget {
       return;
     }
 
-    await _navigation.navigateWithConnectionChecking(
+    await _navigation.navigateWithCapabilityChecking(
         context,
         ProtocolScreen.id,
         arguments: scheduledProtocol

@@ -178,6 +178,7 @@ SurveyQuestionType surveyQuestionTypeFromString(String typeStr) {
       orElse: () => SurveyQuestionType.unknown);
 }
 
+// TODO(alex): make generics for those kind of functions
 SurveyQuestionSpecialChoices surveyQuestionSpecialChoicesFromString(String choicesStr) {
   return SurveyQuestionSpecialChoices.values.firstWhere(
           (element) => element.name == choicesStr,
