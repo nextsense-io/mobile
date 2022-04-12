@@ -1,4 +1,4 @@
-import 'package:nextsense_trial_ui/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 
 enum RunnableProtocolType {
   scheduled,

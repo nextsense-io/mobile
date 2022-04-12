@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/adhoc_protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol.dart';
-import 'package:nextsense_trial_ui/domain/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
@@ -180,6 +180,22 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
     return allowedProtocols.map((protocolType) => AdhocProtocol(protocolType))
         .toList();
+  }
+
+  List<Survey> getAdhocSurveys() {
+    List<String> adhocSurveyIds =
+      _studyManager.currentStudy!.getAllowedSurveys();
+
+    List<Survey> result = [];
+    for (var surveyId in adhocSurveyIds) {
+      Survey? survey = _surveyManager.getSurveyById(surveyId);
+      if (survey == null) {
+        _logger.log(Level.WARNING, 'Survey with id "$surveyId" not found');
+        continue;
+      }
+      result.add(survey);
+    }
+    return result;
   }
 
   @override

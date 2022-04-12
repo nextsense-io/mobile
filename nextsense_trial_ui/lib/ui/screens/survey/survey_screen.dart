@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/nextsense_button.dart';
@@ -16,16 +16,16 @@ class SurveyScreen extends HookWidget {
 
   static const String id = 'survey_screen';
 
-  final CustomLogPrinter _logger = CustomLogPrinter('Assessment');
+  final CustomLogPrinter _logger = CustomLogPrinter('SurveyScreen');
 
-  final ScheduledSurvey scheduledSurvey;
+  final RunnableSurvey runnableSurvey;
 
-  SurveyScreen(this.scheduledSurvey);
+  SurveyScreen(this.runnableSurvey);
 
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder<SurveyScreenViewModel>.reactive(
-        viewModelBuilder: () => SurveyScreenViewModel(scheduledSurvey),
+        viewModelBuilder: () => SurveyScreenViewModel(runnableSurvey),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) {
             final steps = [

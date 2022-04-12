@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
+import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
@@ -14,11 +15,14 @@ enum ScheduledSurveyKey {
   data
 }
 
-class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> {
+class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
+    implements RunnableSurvey {
 
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledSurvey');
 
-  final Survey survey;
+  RunnableSurveyType get type => RunnableSurveyType.scheduled;
+
+  late Survey survey;
 
   late StudyDay day;
 
