@@ -22,6 +22,9 @@ class SettingsScreen extends HookWidget {
     final cellularEnabled = useState<bool>(_preferences.getBool(
         PreferenceKey.allowDataTransmissionViaCellular));
 
+    final showDayTabsForTasks = useState<bool>(_preferences.getBool(
+        PreferenceKey.showDayTabsForTasks));
+
     return Scaffold(
       appBar: fromDashboard ? null : AppBar(
         title: Text('Settings'),
@@ -43,6 +46,21 @@ class SettingsScreen extends HookWidget {
                 initialValue: cellularEnabled.value,
                 leading: Icon(Icons.signal_cellular_alt),
                 title: Text('Allow cellular data for transmission'),
+              )
+              ]
+          ),
+          SettingsSection(
+            title: Text('Debug'),
+            tiles: <SettingsTile>[
+              SettingsTile.switchTile(
+                onToggle: (enabled) {
+                  showDayTabsForTasks.value = enabled;
+                  _preferences.setBool(
+                      PreferenceKey.showDayTabsForTasks, enabled);
+                },
+                initialValue: showDayTabsForTasks.value,
+                leading: Icon(Icons.view_comfortable_sharp),
+                title: Text('Show day tabs for tasks'),
               ),
             ],
           ),

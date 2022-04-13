@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
+import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
 import 'package:nextsense_trial_ui/ui/components/loading_error_widget.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
@@ -30,11 +31,26 @@ class DashboardScreen extends HookWidget {
   static const String id = 'dashboard_screen';
 
   final Navigation _navigation = getIt<Navigation>();
+  final _preferences = getIt<Preferences>();
+
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
-    final currentTab = useState(DashboardTab.schedule);
+    final currentTab = useState<DashboardTab>(DashboardTab.schedule);
+
+    bool showDayTabs() {
+      if (currentTab.value == DashboardTab.schedule)
+        return true;
+
+      if (currentTab.value == DashboardTab.tasks) {
+        return _preferences.getBool(
+            PreferenceKey.showDayTabsForTasks);
+      }
+
+      return false;
+    }
+
     return ViewModelBuilder<DashboardScreenViewModel>.reactive(
       viewModelBuilder: () => DashboardScreenViewModel(),
       onModelReady: (viewModel) => viewModel.init(),
@@ -55,8 +71,7 @@ class DashboardScreen extends HookWidget {
                       })
                     ] : [
                     _appBar(context),
-                    if ([DashboardTab.schedule, DashboardTab.tasks]
-                        .contains(currentTab.value))
+                    if (showDayTabs())
                       _buildDayTabs(context),
                     Expanded(
                       child: PersistentTabView(

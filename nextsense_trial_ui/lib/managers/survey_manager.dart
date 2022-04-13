@@ -9,6 +9,7 @@ import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
 class SurveyManager {
 
@@ -19,6 +20,11 @@ class SurveyManager {
   final StudyManager _studyManager = getIt<StudyManager>();
 
   List<Survey>? _surveys;
+
+  List<ScheduledSurvey> scheduledSurveys = [];
+
+  // Group by planned survey id for stats
+  Map<String, List<ScheduledSurvey>> _scheduledSurveysByPlannedSurveyId = {};
 
   Future<List<Survey>> _loadSurveys() async {
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
@@ -40,12 +46,13 @@ class SurveyManager {
 
   // Load planned surveys from study and convert them to scheduled surveys
   // that persist in user table
-  Future<List<ScheduledSurvey>> loadScheduledSurveys() async {
+  Future loadScheduledSurveys() async {
     if (_surveys == null) {
       _surveys = await _loadSurveys();
     }
 
-    List<ScheduledSurvey> result = [];
+    scheduledSurveys.clear();
+    _scheduledSurveysByPlannedSurveyId.clear();
 
     List<PlannedSurvey> plannedSurveys =
         await _studyManager.loadPlannedSurveys();
@@ -69,7 +76,7 @@ class SurveyManager {
             await _firestoreManager.queryEntity(
                 [Table.users, Table.scheduled_surveys],
                 [_authManager.getUserCode()!, scheduledSurveyKey]),
-            survey, day);
+            survey, day, plannedSurvey.id);
 
         // Copy period from planned survey
         scheduledSurvey.setPeriod(plannedSurvey.period);
@@ -81,14 +88,35 @@ class SurveyManager {
 
         scheduledSurvey.save();
 
-        result.add(scheduledSurvey);
+        scheduledSurveys.add(scheduledSurvey);
+
+        // Add scheduled survey to group by planned survey id
+        _scheduledSurveysByPlannedSurveyId.update(
+            plannedSurvey.id, (value) => [...value, scheduledSurvey],
+            ifAbsent: () => [scheduledSurvey]);
       }
     }
 
-    return result;
-
   }
 
+  // Survey stats are calculated based on count of past and today surveys
+  // from the same planned survey group (all scheduled surveys that were
+  // generated from same planned survey)
+  ScheduledSurveyStats getScheduledSurveyStats(ScheduledSurvey scheduledSurvey) {
+    List<ScheduledSurvey> group =
+        _scheduledSurveysByPlannedSurveyId[scheduledSurvey.plannedSurveyId] ?? [];
+
+    final closestFutureMidnight = DateTime.now().closestFutureMidnight;
+    List<ScheduledSurvey> pastAndTodayScheduledSurveys = group
+        .where((scheduledSurvey) =>
+            scheduledSurvey.day.date.isBefore(closestFutureMidnight))
+        .toList();
+
+    final int total = pastAndTodayScheduledSurveys.length;
+    final int completed = pastAndTodayScheduledSurveys
+        .where((_scheduledSurvey) => _scheduledSurvey.isCompleted).length;
+    return ScheduledSurveyStats(total, completed);
+  }
 
   Survey? getSurveyById(String surveyId) {
     return _surveys?.firstWhereOrNull((survey) => survey.id == surveyId);
@@ -96,4 +124,14 @@ class SurveyManager {
 
 
 
+}
+
+class ScheduledSurveyStats {
+  // Total includes today and past surveys for same planned survey group
+  final int total;
+
+  // Completed today and past surveys for same planned survey group
+  final int completed;
+
+  ScheduledSurveyStats(this.total, this.completed);
 }

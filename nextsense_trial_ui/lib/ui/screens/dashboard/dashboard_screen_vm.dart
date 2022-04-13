@@ -28,13 +28,20 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   List<ScheduledProtocol> scheduledProtocols = [];
 
-  List<ScheduledSurvey> scheduledSurveys = [];
+  List<ScheduledSurvey> get scheduledSurveys => _surveyManager.scheduledSurveys;
 
   // List of days that will appear for current study
   List<StudyDay>? _days;
 
   // References today's study day
-  StudyDay? _today;
+  // Has to be dynamic because next day can start while app is on
+  StudyDay? get _today {
+    if (_days == null) {
+      return null;
+    }
+    DateTime now = DateTime.now();
+    return _days!.firstWhere((StudyDay day) => now.isSameDay(day.date));
+  }
 
   // Current selected day in calendar
   StudyDay? selectedDay;
@@ -56,7 +63,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     setBusy(true);
     try {
       await _loadScheduledProtocols();
-      await _loadScheduledSurveys();
+      await _surveyManager.loadScheduledSurveys();
     } catch (e, stacktrace) {
       _logger.log(Level.SEVERE,
           'Failed to load dashboard data: '
@@ -79,18 +86,10 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     _days = List<StudyDay>.generate(studyDays, (i) {
       DateTime dayDate = _studyManager.currentStudyStartDate
           .add(Duration(days: i));
-      DateTime now = DateTime.now();
       final dayNumber = i + 1;
       final studyDay = StudyDay(dayDate, dayNumber);
-      if (now.isSameDay(dayDate)) {
-        _today = studyDay;
-      }
       return studyDay;
     });
-  }
-
-  Future _loadScheduledSurveys() async {
-    scheduledSurveys = await _surveyManager.loadScheduledSurveys();
   }
 
   void _initProtocolCheckTimer() {
@@ -174,23 +173,8 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return result;
   }
 
-  // Survey stats are calculated based on count of past and today surveys
-  SurveyStats? get surveyStats {
-    if (_today == null) {
-      return null;
-    }
-    List<ScheduledSurvey> pastAndTodaySurveys = scheduledSurveys
-        .where((scheduledSurvey) =>
-            scheduledSurvey.day.date.isBefore(_today!.closestFutureMidnight))
-        .toList();
-
-    final int total = pastAndTodaySurveys.length;
-    final int completed = pastAndTodaySurveys
-        .where(
-            (scheduledSurvey) => scheduledSurvey.state == SurveyState.completed)
-        .length;
-
-    return SurveyStats(total, completed);
+  ScheduledSurveyStats getScheduledSurveyStats(ScheduledSurvey scheduledSurvey) {
+    return _surveyManager.getScheduledSurveyStats(scheduledSurvey);
   }
 
   List<AdhocProtocol> getAdhocProtocols() {
@@ -244,14 +228,4 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
 
 
-}
-
-class SurveyStats {
-  // Total includes today and past surveys
-  final int total;
-
-  // Completed today and past surveys
-  final int completed;
-
-  SurveyStats(this.total, this.completed);
 }

@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
+import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
@@ -18,22 +19,10 @@ class DashboardTasksView extends StatelessWidget {
     List<ScheduledSurvey> scheduledSurveys =
         dashboardViewModel.getCurrentDayScheduledSurveys();
 
-    final SurveyStats? surveyStats = dashboardViewModel.surveyStats;
     return SingleChildScrollView(
       physics: ScrollPhysics(),
       child: Column(
         children: [
-          if (surveyStats != null)
-            Card(
-            color: Colors.deepPurple,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                "Completed ${surveyStats.completed}/${surveyStats.total} Surveys",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
           Container(
               child: scheduledSurveys.isNotEmpty ? ListView.builder(
                 scrollDirection: Axis.vertical,
@@ -92,7 +81,7 @@ class _SurveyItem extends HookWidget {
             Expanded(
               child: Opacity(
                 opacity: scheduledSurvey.isCompleted
-                        || scheduledSurvey.isSkipped ? 0.6 : 1.0,
+                        || scheduledSurvey.isSkipped ? 0.3 : 1.0,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: InkWell(
@@ -121,10 +110,7 @@ class _SurveyItem extends HookWidget {
                                 SizedBox(
                                   height: 8,
                                 ),
-                                Text("Please complete survey",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18)),
+                                _getSubtitle(context),
                                 SizedBox(
                                   height: 8,
                                 ),
@@ -141,6 +127,27 @@ class _SurveyItem extends HookWidget {
         ));
   }
 
+  Widget _getSubtitle(BuildContext context) {
+    final viewModel = context.watch<DashboardScreenViewModel>();
+    String text = '';
+    if (scheduledSurvey.isCompleted) {
+      // Display stats if survey is completed
+      ScheduledSurveyStats stats =
+          viewModel.getScheduledSurveyStats(scheduledSurvey);
+      text = "Completed ${stats.completed} / ${stats.total}";
+    } else if (scheduledSurvey.isSkipped) {
+      text = "Survey is skipped";
+    } else if (scheduledSurvey.notStarted) {
+      text = "Please complete survey";
+    }
+    return Opacity(
+      opacity: 0.7,
+      child: Text(text,
+          style: TextStyle(
+              color: Colors.white, fontSize: 18)),
+    );
+  }
+
   Widget _surveyState() {
     switch(scheduledSurvey.state) {
       case SurveyState.skipped:
@@ -151,7 +158,11 @@ class _SurveyItem extends HookWidget {
           ],
         );
       case SurveyState.completed:
-        return Icon(Icons.check_circle, color: Colors.white);
+        return Column(
+            children: [
+          Icon(Icons.check_circle, color: Colors.white),
+          Text("Completed", style: TextStyle(color: Colors.white),),
+        ]);
       default: break;
     }
     return Container();
