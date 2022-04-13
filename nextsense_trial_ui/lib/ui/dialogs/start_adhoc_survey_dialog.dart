@@ -35,7 +35,7 @@ class StartAdhocSurveyDialog extends HookWidget {
         )).toList();
 
     return SimpleDialog(
-      title: const Text('Select adhoc survey to start'),
+      title: const Text('Select survey to start'),
       children: options,
     );
   }

@@ -28,14 +28,10 @@ class SurveyScreen extends HookWidget {
         viewModelBuilder: () => SurveyScreenViewModel(runnableSurvey),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) {
-            final steps = [
-              _SurveyIntroduction(),
-              _SurveyForm(),
-            ];
             return WillPopScope(
               onWillPop: () => _onBackButtonPressed(context, viewModel),
-              child: steps[viewModel.currentStep],
-            );
+              child: SafeArea(child: Scaffold(body: _SurveyForm())),
+          );
         }
     );
   }
@@ -44,39 +40,6 @@ class SurveyScreen extends HookWidget {
     Navigator.pop(context, false);
   }
 
-}
-
-class _SurveyIntroduction extends StatelessWidget {
-  const _SurveyIntroduction({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final viewModel = context.read<SurveyScreenViewModel>();
-    return SafeArea(
-        child: Scaffold(
-          body: Container(
-            padding: EdgeInsets.all(20.0),
-            child: Column(
-              children: [
-                Expanded(child: Column(children: [
-                Text(viewModel.survey.name,
-                    style:
-                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                SizedBox(
-                  height: 20,
-                ),
-                Text(viewModel.survey.introText, style: TextStyle(fontSize: 20)),
-              ],
-            )),
-            NextsenseButton.primary('Start Survey', onPressed: (){
-              viewModel.currentStep = SurveyScreenStep.form.index;
-            }),
-          ],
-            ),
-          ),
-        )
-    );
-  }
 }
 
 class _SurveyForm extends StatelessWidget {
@@ -89,9 +52,9 @@ class _SurveyForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final survey = context.read<SurveyScreenViewModel>().survey;
-    return Scaffold(
-      body: FormBuilder(
+    final viewModel = context.read<SurveyScreenViewModel>();
+    final survey = viewModel.survey;
+    return FormBuilder(
         key: _formKey,
         child: Container(
           padding: EdgeInsets.all(20.0),
@@ -99,24 +62,34 @@ class _SurveyForm extends StatelessWidget {
             physics: ScrollPhysics(),
             child: Column(
               children: [
+                Text(survey.name,
+                    style:
+                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                SizedBox(
+                  height: 20,
+                ),
+                Text(survey.introText, style: TextStyle(fontSize: 20)),
+                SizedBox(height: 30,),
                 Container(
                     child: ListView.separated(
-                      scrollDirection: Axis.vertical,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: survey.questions.length,
-                      shrinkWrap: true,
-                      itemBuilder: (BuildContext context, int index) {
-                        SurveyQuestion question = survey.questions[index];
-                        return _SurveyQuestionWidget(question);
-                      },
-                      separatorBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Divider(),
-                        );
-                      },
-                    )),
-                SizedBox(height: 20,),
+                  scrollDirection: Axis.vertical,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: survey.questions.length,
+                  shrinkWrap: true,
+                  itemBuilder: (BuildContext context, int index) {
+                    SurveyQuestion question = survey.questions[index];
+                    return _SurveyQuestionWidget(question);
+                  },
+                  separatorBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Divider(),
+                    );
+                  },
+                )),
+                SizedBox(
+                  height: 20,
+                ),
                 Row(
                   children: [
                     Expanded(
@@ -127,7 +100,9 @@ class _SurveyForm extends StatelessWidget {
                         },
                       ),
                     ),
-                    SizedBox(width: 20,),
+                    SizedBox(
+                      width: 20,
+                    ),
                     Expanded(
                       child: _submitButton(context),
                     ),
@@ -137,10 +112,8 @@ class _SurveyForm extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
-
 
   Widget _submitButton(BuildContext context) {
     final viewModel = context.read<SurveyScreenViewModel>();

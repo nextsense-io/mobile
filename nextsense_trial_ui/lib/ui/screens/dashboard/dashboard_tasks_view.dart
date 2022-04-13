@@ -18,20 +18,35 @@ class DashboardTasksView extends StatelessWidget {
     List<ScheduledSurvey> scheduledSurveys =
         dashboardViewModel.getCurrentDayScheduledSurveys();
 
+    final SurveyStats? surveyStats = dashboardViewModel.surveyStats;
     return SingleChildScrollView(
       physics: ScrollPhysics(),
-      child: Container(
-
-          child: scheduledSurveys.isNotEmpty ? ListView.builder(
-            scrollDirection: Axis.vertical,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: scheduledSurveys.length,
-            shrinkWrap: true,
-            itemBuilder: (BuildContext context, int index) {
-              ScheduledSurvey survey = scheduledSurveys[index];
-              return _SurveyItem(survey);
-            },
-          ) : _emptyTasksPlaceholder()),
+      child: Column(
+        children: [
+          if (surveyStats != null)
+            Card(
+            color: Colors.deepPurple,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "Completed ${surveyStats.completed}/${surveyStats.total} Surveys",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+          Container(
+              child: scheduledSurveys.isNotEmpty ? ListView.builder(
+                scrollDirection: Axis.vertical,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: scheduledSurveys.length,
+                shrinkWrap: true,
+                itemBuilder: (BuildContext context, int index) {
+                  ScheduledSurvey survey = scheduledSurveys[index];
+                  return _SurveyItem(survey);
+                },
+              ) : _emptyTasksPlaceholder()),
+        ],
+      ),
     );
   }
 
