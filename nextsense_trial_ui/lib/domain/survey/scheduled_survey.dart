@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
+import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -28,7 +29,11 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
   final StudyDay day;
 
   // Reference to planned survey from study
-  final String plannedSurveyId;
+  late String plannedSurveyId;
+
+  // Time before this survey should be completed, or it will be marked
+  // as skipped
+  late DateTime shouldBeCompletedBefore;
 
   SurveyState get state =>
       surveyStateFromString(getValue(ScheduledSurveyKey.status));
@@ -40,9 +45,17 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
   bool get isSkipped => state == SurveyState.skipped;
   bool get notStarted => state == SurveyState.not_started;
 
+
   ScheduledSurvey(FirebaseEntity firebaseEntity, this.survey, this.day,
-      this.plannedSurveyId)
-      : super(firebaseEntity.getDocumentSnapshot());
+      PlannedSurvey plannedSurvey)
+      : super(firebaseEntity.getDocumentSnapshot()) {
+    this.plannedSurveyId = plannedSurvey.id;
+
+    // Day date is at 00:00, so we need to set completion time next midnight
+    shouldBeCompletedBefore =
+        day.date.add(Duration(days: plannedSurvey.allowedLateStartDays));
+
+  }
 
   // Set state of protocol in firebase
   void setState(SurveyState state) {
@@ -63,21 +76,8 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
     if (state != SurveyState.not_started)
       return false;
     final currentTime = DateTime.now();
-    switch (period) {
-      case SurveyPeriod.daily:
-        // Daily survey ends at 00:00
-        return currentTime
-            .isAfter(day.closestFutureMidnight.subtract(Duration(seconds: 1)));
-      case SurveyPeriod.certain_day:
-      // TODO(alex): Handle this case. Implement grace period.
-        break;
-      case SurveyPeriod.weekly:
-      // TODO(alex): Handle this case. Implement grace period.
-        break;
-      default:
-        break;
-    }
-    return false;
+    return currentTime
+        .isAfter(shouldBeCompletedBefore.subtract(Duration(seconds: 1)));
   }
 
   // Update fields and save to firestore by default
