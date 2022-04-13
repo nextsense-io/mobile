@@ -7,7 +7,8 @@ import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
 enum PlannedSurveyKey {
   day,
-  survey
+  survey,
+  allowed_late_start_days
 }
 
 class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
@@ -21,6 +22,9 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
 
   late SurveyPeriod period;
 
+  late int allowedLateStartDays;
+  int? certainDayNumber;
+
   PlannedSurvey(FirebaseEntity firebaseEntity, DateTime studyStartDate,
       DateTime studyEndDate) :
         super(firebaseEntity.getDocumentSnapshot()) {
@@ -30,27 +34,55 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
     // 1. day number - survey will take place certain day within study
     // 2. 'daily' - survey will take place each day of study
     // 3. 'weekly' - survey will take place on 8th, 15th, etc.
+
     if (day is int) {
       period = SurveyPeriod.certain_day;
+      certainDayNumber = day;
     }
     else if (day is String) {
       if (day == SurveyPeriod.daily.name) {
         period = SurveyPeriod.daily;
-      }
-      if (day == SurveyPeriod.weekly.name) {
+      } else if (day == SurveyPeriod.weekly.name) {
         period = SurveyPeriod.weekly;
+      } else {
+        throw("Invalid day value - $day");
       }
     }
     else {
-      _logger.log(Level.WARNING, 'Invalid day value "$day"');
-      return;
+      throw("Invalid day value - $day");
     }
+
+    _initSurveyDays(studyStartDate, studyEndDate);
+    _initSurveyStartGracePeriod();
+
+  }
+
+  void _initSurveyStartGracePeriod() {
+    int? _allowedLateStartDays = getValue(PlannedSurveyKey.allowed_late_start_days);
+    if (_allowedLateStartDays != null) {
+      allowedLateStartDays = _allowedLateStartDays;
+    } else {
+      // Default values for grace period
+      allowedLateStartDays = 1;
+      switch (period) {
+        case SurveyPeriod.weekly:
+          allowedLateStartDays = 7;
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  // Create list of study days according to period of survey
+  void _initSurveyDays(DateTime studyStartDate,
+      DateTime studyEndDate) {
 
     if (period == SurveyPeriod.certain_day) {
       // For certain day number we just add single day
-      days.add(
-          StudyDay(studyStartDate.add(Duration(days: day - 1)), day)
-      );
+      days.add(StudyDay(
+          studyStartDate.add(Duration(days: certainDayNumber! - 1)),
+          certainDayNumber!));
       return;
     }
 

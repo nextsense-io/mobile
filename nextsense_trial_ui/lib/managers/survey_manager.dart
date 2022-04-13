@@ -57,6 +57,9 @@ class SurveyManager {
     List<PlannedSurvey> plannedSurveys =
         await _studyManager.loadPlannedSurveys();
 
+    // Speed up queries by making parallel requests
+    List<Future> futures = [];
+    Stopwatch stopwatch = new Stopwatch()..start();
     for (var plannedSurvey in plannedSurveys) {
       Survey? survey = getSurveyById(plannedSurvey.surveyId);
 
@@ -71,32 +74,47 @@ class SurveyManager {
         String scheduledSurveyKey =
             "day_${day.dayNumber}_${plannedSurvey.surveyId}"
             "_${plannedSurvey.period.name}";
+        
+        Future future = _firestoreManager.queryEntity(
+            [Table.users, Table.scheduled_surveys],
+            [_authManager.getUserCode()!, scheduledSurveyKey]);
 
-        ScheduledSurvey scheduledSurvey = ScheduledSurvey(
-            await _firestoreManager.queryEntity(
-                [Table.users, Table.scheduled_surveys],
-                [_authManager.getUserCode()!, scheduledSurveyKey]),
-            survey, day, plannedSurvey.id);
+        future.then((firebaseEntity){
 
-        // Copy period from planned survey
-        scheduledSurvey.setPeriod(plannedSurvey.period);
+          ScheduledSurvey scheduledSurvey = ScheduledSurvey(
+              firebaseEntity,
+              survey, day, plannedSurvey);
 
-        if (scheduledSurvey.getValue(ScheduledSurveyKey.status) == null) {
-          scheduledSurvey.setValue(ScheduledSurveyKey.status,
-              SurveyState.not_started.name);
-        }
+          // Copy period from planned survey
+          scheduledSurvey.setPeriod(plannedSurvey.period);
 
-        scheduledSurvey.save();
+          if (scheduledSurvey.getValue(ScheduledSurveyKey.status) == null) {
+            scheduledSurvey.setValue(ScheduledSurveyKey.status,
+                SurveyState.not_started.name);
+          }
 
-        scheduledSurveys.add(scheduledSurvey);
+          scheduledSurvey.save();
 
-        // Add scheduled survey to group by planned survey id
-        _scheduledSurveysByPlannedSurveyId.update(
-            plannedSurvey.id, (value) => [...value, scheduledSurvey],
-            ifAbsent: () => [scheduledSurvey]);
+          scheduledSurveys.add(scheduledSurvey);
+
+          // Add scheduled survey to group by planned survey id
+          _scheduledSurveysByPlannedSurveyId.update(
+              plannedSurvey.id, (value) => [...value, scheduledSurvey],
+              ifAbsent: () => [scheduledSurvey]);
+
+        });
+        futures.add(future);
       }
     }
 
+    await Future.wait(futures);
+
+    _logger.log(Level.INFO, 'Scheduled surveys initialized in '
+        '${stopwatch.elapsedMicroseconds / 1000000.0} sec');
+
+    // Make consistent order
+    scheduledSurveys
+        .sortBy((scheduledSurvey) => scheduledSurvey.plannedSurveyId);
   }
 
   // Survey stats are calculated based on count of past and today surveys
