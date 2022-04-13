@@ -3,7 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum PreferenceKey {
   authToken,
-  allowDataTransmissionViaCellular
+  allowDataTransmissionViaCellular,
+  showDayTabsForTasks
 }
 
 class Preferences {

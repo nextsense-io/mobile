@@ -24,7 +24,11 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
 
   late Survey survey;
 
-  late StudyDay day;
+  // Day survey will appear
+  final StudyDay day;
+
+  // Reference to planned survey from study
+  final String plannedSurveyId;
 
   SurveyState get state =>
       surveyStateFromString(getValue(ScheduledSurveyKey.status));
@@ -34,9 +38,11 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
 
   bool get isCompleted => state == SurveyState.completed;
   bool get isSkipped => state == SurveyState.skipped;
+  bool get notStarted => state == SurveyState.not_started;
 
-  ScheduledSurvey(FirebaseEntity firebaseEntity, this.survey, this.day) :
-        super(firebaseEntity.getDocumentSnapshot());
+  ScheduledSurvey(FirebaseEntity firebaseEntity, this.survey, this.day,
+      this.plannedSurveyId)
+      : super(firebaseEntity.getDocumentSnapshot());
 
   // Set state of protocol in firebase
   void setState(SurveyState state) {
