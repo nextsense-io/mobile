@@ -57,20 +57,19 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
     DateTime currentDate = studyStartDate;
     // This date represents closest 00:00 after study end date
     // TODO(alex): check if already midnight
+    // Default values for 'daily' period
     int dayIncrement = 1;
     int dayNumber = 1;
-    if (period == SurveyPeriod.daily) {
-      // Daily surveys starts each day
-      dayIncrement = 1;
-    } else if (period == SurveyPeriod.weekly) {
+    if (period == SurveyPeriod.weekly) {
       // Weekly surveys start on day 8, 15 etc.
       dayIncrement = 7;
+      dayNumber = 8;
       currentDate = currentDate.add(Duration(days: dayIncrement));
     }
     while (currentDate.isBefore(studyEndDate.closestFutureMidnight)) {
       days.add(StudyDay(currentDate, dayNumber));
       currentDate = currentDate.add(Duration(days: dayIncrement));
-      dayNumber+=1;
+      dayNumber+=dayIncrement;
     }
   }
 

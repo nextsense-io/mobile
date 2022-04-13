@@ -174,6 +174,25 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return result;
   }
 
+  // Survey stats are calculated based on count of past and today surveys
+  SurveyStats? get surveyStats {
+    if (_today == null) {
+      return null;
+    }
+    List<ScheduledSurvey> pastAndTodaySurveys = scheduledSurveys
+        .where((scheduledSurvey) =>
+            scheduledSurvey.day.date.isBefore(_today!.closestFutureMidnight))
+        .toList();
+
+    final int total = pastAndTodaySurveys.length;
+    final int completed = pastAndTodaySurveys
+        .where(
+            (scheduledSurvey) => scheduledSurvey.state == SurveyState.completed)
+        .length;
+
+    return SurveyStats(total, completed);
+  }
+
   List<AdhocProtocol> getAdhocProtocols() {
     List<ProtocolType> allowedProtocols =
     _studyManager.currentStudy!.getAllowedProtocols();
@@ -225,4 +244,14 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
 
 
+}
+
+class SurveyStats {
+  // Total includes today and past surveys
+  final int total;
+
+  // Completed today and past surveys
+  final int completed;
+
+  SurveyStats(this.total, this.completed);
 }
