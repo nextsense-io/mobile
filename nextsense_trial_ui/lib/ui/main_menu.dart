@@ -125,7 +125,6 @@ class MainMenu extends HookWidget {
               value: context.read<DashboardScreenViewModel>(),
               child: StartAdhocSurveyDialog()));
 
-      print('[TODO] MainMenu.build $completed');
       if (completed != null && completed) {
         await showDialog(
           context: scaffoldContext,

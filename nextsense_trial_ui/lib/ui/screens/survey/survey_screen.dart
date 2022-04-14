@@ -9,8 +9,10 @@ import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/nextsense_button.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen_vm.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:provider/src/provider.dart';
 import 'package:stacked/stacked.dart';
+import 'package:intl/intl.dart';
 
 class SurveyScreen extends HookWidget {
 
@@ -220,6 +222,22 @@ class _SurveyQuestionWidget extends StatelessWidget {
           decoration: InputDecoration(
               border: InputBorder.none
           ),
+        );
+        break;
+      case SurveyQuestionType.time:
+        formBuilderField = FormBuilderDateTimePicker(
+          name: question.id,
+          inputType: InputType.time,
+          valueTransformer: (time) {
+            if (time != null) {
+              return time.hhmm;
+            }
+            return null;
+          },
+          decoration: InputDecoration(
+            labelText: 'Click to select time',
+          ),
+          initialTime: TimeOfDay(hour: 12, minute: 0),
         );
         break;
       default:

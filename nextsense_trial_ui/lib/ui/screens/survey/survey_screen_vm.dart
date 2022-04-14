@@ -25,5 +25,4 @@ class SurveyScreenViewModel extends BaseViewModel {
         data: formData
     );
   }
-
 }
