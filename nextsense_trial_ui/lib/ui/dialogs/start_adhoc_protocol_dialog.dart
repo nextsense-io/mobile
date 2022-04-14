@@ -23,6 +23,7 @@ class StartAdhocProtocolDialog extends HookWidget {
             _navigation.navigateWithCapabilityChecking(
                 context,
                 ProtocolScreen.id, arguments: adhocProtocol);
+            Navigator.pop(context);
           },
           child: Container(
               color: Colors.blue,

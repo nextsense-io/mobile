@@ -12,7 +12,9 @@ enum Table {
   surveys,
   questions,
   scheduled_protocols,
-  scheduled_surveys
+  scheduled_surveys,
+  adhoc_protocols,
+  adhoc_surveys,
 }
 
 extension ParseToString on Table {

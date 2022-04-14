@@ -55,10 +55,6 @@ class ProtocolScreen extends HookWidget {
                       child: Align(
                           alignment: Alignment.centerRight,
                           child: DeviceStateDebugMenu(iconColor: Colors.white))),
-                  /*Text(
-                protocol.getName(),
-                style: whiteTextStyle,
-              ),*/
                   Text(protocol.description, style: whiteTextStyle),
                   Opacity(
                     opacity: 0.3,
@@ -113,6 +109,10 @@ class ProtocolScreen extends HookWidget {
                               viewModel);
                           if (confirm) {
                             viewModel.stopSession();
+                          }
+                          // Exit from protocol screen for adhoc
+                          if (runnableProtocol.type == RunnableProtocolType.adhoc) {
+                            Navigator.pop(context);
                           }
                         } else if (viewModel.deviceIsConnected) {
                             viewModel.startSession();

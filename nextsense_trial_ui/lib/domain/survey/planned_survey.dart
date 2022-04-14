@@ -1,4 +1,3 @@
-import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
@@ -8,7 +7,7 @@ import 'package:nextsense_trial_ui/utils/date_utils.dart';
 enum PlannedSurveyKey {
   day,
   survey,
-  allowed_late_start_days
+  days_to_complete
 }
 
 class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
@@ -22,7 +21,7 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
 
   late SurveyPeriod period;
 
-  late int allowedLateStartDays;
+  late int daysToComplete;
   int? certainDayNumber;
 
   PlannedSurvey(FirebaseEntity firebaseEntity, DateTime studyStartDate,
@@ -34,7 +33,6 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
     // 1. day number - survey will take place certain day within study
     // 2. 'daily' - survey will take place each day of study
     // 3. 'weekly' - survey will take place on 8th, 15th, etc.
-
     if (day is int) {
       period = SurveyPeriod.certain_day;
       certainDayNumber = day;
@@ -58,15 +56,15 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
   }
 
   void _initSurveyStartGracePeriod() {
-    int? _allowedLateStartDays = getValue(PlannedSurveyKey.allowed_late_start_days);
-    if (_allowedLateStartDays != null) {
-      allowedLateStartDays = _allowedLateStartDays;
+    int? _daysToComplete = getValue(PlannedSurveyKey.days_to_complete);
+    if (_daysToComplete != null) {
+      daysToComplete = _daysToComplete;
     } else {
       // Default values for grace period
-      allowedLateStartDays = 1;
+      daysToComplete = 1;
       switch (period) {
         case SurveyPeriod.weekly:
-          allowedLateStartDays = 7;
+          daysToComplete = 7;
           break;
         default:
           break;
@@ -104,5 +102,4 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
       dayNumber+=dayIncrement;
     }
   }
-
 }

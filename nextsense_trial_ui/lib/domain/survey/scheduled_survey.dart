@@ -6,9 +6,6 @@ import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
-/**
- * Each entry corresponds to a field name in the database instance.
- */
 enum ScheduledSurveyKey {
   survey,
   status,
@@ -45,7 +42,6 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
   bool get isSkipped => state == SurveyState.skipped;
   bool get notStarted => state == SurveyState.not_started;
 
-
   ScheduledSurvey(FirebaseEntity firebaseEntity, this.survey, this.day,
       PlannedSurvey plannedSurvey)
       : super(firebaseEntity.getDocumentSnapshot()) {
@@ -53,8 +49,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
 
     // Day date is at 00:00, so we need to set completion time next midnight
     shouldBeCompletedBefore =
-        day.date.add(Duration(days: plannedSurvey.allowedLateStartDays));
-
+        day.date.add(Duration(days: plannedSurvey.daysToComplete));
   }
 
   // Set state of protocol in firebase
@@ -106,6 +101,4 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
     }
     return true;
   }
-
-
 }

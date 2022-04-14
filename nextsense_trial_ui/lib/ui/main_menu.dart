@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_protocol_dialog.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_survey_dialog.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
@@ -45,26 +46,12 @@ class MainMenu extends HookWidget {
             _MainMenuItem(
                 icon: Icon(Icons.play_circle_outline),
                 label: Text('Start adhoc protocol'),
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await showDialog(
-                      context: context,
-                      builder: (_) => ChangeNotifierProvider.value(
-                          value: context.read<DashboardScreenViewModel>(),
-                          child: StartAdhocProtocolDialog()));
-                }),
+                onPressed: () =>  _startAdhocProtocol(context)),
           if (currentStudy.adhocSurveysAllowed)
             _MainMenuItem(
                 icon: Icon(Icons.list_alt),
                 label: Text('Start adhoc survey'),
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await showDialog(
-                      context: context,
-                      builder: (_) => ChangeNotifierProvider.value(
-                          value: context.read<DashboardScreenViewModel>(),
-                          child: StartAdhocSurveyDialog()));
-                }),
+                onPressed: () => _startAdhocSurvey(context)),
           _MainMenuItem(
               icon: Icon(Icons.earbuds),
               label: Text('Check earbuds settings'),
@@ -126,6 +113,37 @@ class MainMenu extends HookWidget {
         ],
       ),
     );
+  }
+
+  void _startAdhocSurvey(BuildContext context) async {
+      // Hide drawer
+      final scaffoldContext = Scaffold.of(context).context;
+      Navigator.pop(context);
+      bool? completed = await showDialog(
+          context: context,
+          builder: (_) => ChangeNotifierProvider.value(
+              value: context.read<DashboardScreenViewModel>(),
+              child: StartAdhocSurveyDialog()));
+
+      print('[TODO] MainMenu.build $completed');
+      if (completed != null && completed) {
+        await showDialog(
+          context: scaffoldContext,
+          builder: (_) => SimpleAlertDialog(
+              title: 'Success',
+              content: 'Survey successfully completed!'),
+        );
+      }
+    }
+
+  void _startAdhocProtocol(BuildContext context) async {
+      // Hide drawer
+      Navigator.pop(context);
+      await showDialog(
+          context: context,
+          builder: (_) => ChangeNotifierProvider.value(
+          value: context.read<DashboardScreenViewModel>(),
+          child: StartAdhocProtocolDialog()));
   }
 }
 

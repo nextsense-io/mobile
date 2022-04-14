@@ -133,8 +133,15 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   }
 
   void selectFirstDayOfStudy() {
-    if (_days != null)
+    if (_days != null) {
       selectDay(_days![0]);
+    }
+  }
+
+  void selectToday() {
+    if (_today != null) {
+      selectDay(_today!);
+    }
   }
 
   List<ScheduledProtocol> getScheduledProtocolsByDay(StudyDay day) {
@@ -225,7 +232,4 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     _protocolCheckTimer.cancel();
     super.dispose();
   }
-
-
-
 }

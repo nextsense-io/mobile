@@ -1,9 +1,23 @@
+import 'package:logging/logging.dart';
+import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class AdhocProtocol implements RunnableProtocol {
+  final CustomLogPrinter _logger = CustomLogPrinter('AdhocProtocol');
+
+  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final AuthManager _authManager = getIt<AuthManager>();
 
   late Protocol protocol;
+
+  ProtocolState state = ProtocolState.not_started;
+
+  AdhocProtocolRecord? record;
 
   RunnableProtocolType get type => RunnableProtocolType.adhoc;
 
@@ -12,10 +26,70 @@ class AdhocProtocol implements RunnableProtocol {
   }
 
   @override
-  bool update({required ProtocolState state,
-    String? sessionId, bool persist = true}) {
-    // State is not tracked for now
+  bool update(
+      {required ProtocolState state, String? sessionId, bool persist = true}) {
+    _logger.log(
+        Level.WARNING, 'Protocol state changing from ${this.state} to $state');
+
+    this.state = state;
+
+    if (record != null) {
+      // Adhoc protocol record already exists, update its values
+      record!.setState(state);
+      if (sessionId != null) {
+        record!.setSession(sessionId);
+      }
+      record!.save();
+    } else {
+      // Create new record
+      DateTime now = DateTime.now();
+      String adhocProtocolKey = "${protocol.name}_${now.millisecondsSinceEpoch}";
+      _firestoreManager.queryEntity([
+        Table.users,
+        Table.adhoc_protocols
+      ], [
+        _authManager.getUserCode()!,
+        adhocProtocolKey
+      ]).then((firebaseEntity) {
+        record = AdhocProtocolRecord(firebaseEntity);
+        record!.setTimestamp(now);
+        if (sessionId != null) {
+          record!.setSession(sessionId);
+        }
+        record!.setProtocol(protocol.name);
+        record!.save();
+      });
+    }
     return true;
   }
+}
 
+enum AdhocProtocolRecordKey {
+  protocol,
+  timestamp,
+  session,
+  status
+}
+
+class AdhocProtocolRecord extends FirebaseEntity<AdhocProtocolRecordKey> {
+
+  AdhocProtocolRecord(FirebaseEntity firebaseEntity) :
+        super(firebaseEntity.getDocumentSnapshot());
+
+  void setTimestamp(DateTime timestamp) {
+    setValue(AdhocProtocolRecordKey.timestamp, timestamp.toIso8601String());
+  }
+
+  // Set state of protocol in firebase
+  void setState(ProtocolState state) {
+    setValue(AdhocProtocolRecordKey.status, state.name);
+  }
+
+  void setSession(String sessionId) {
+    setValue(AdhocProtocolRecordKey.session, sessionId);
+  }
+
+  void setProtocol(String protocolName) {
+    setValue(AdhocProtocolRecordKey.protocol, protocolName);
+  }
 }
