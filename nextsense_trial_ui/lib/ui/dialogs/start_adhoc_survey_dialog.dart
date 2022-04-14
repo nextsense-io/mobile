@@ -20,10 +20,10 @@ class StartAdhocSurveyDialog extends HookWidget {
     List<SimpleDialogOption> options = dashboardViewModel.getAdhocSurveys()
         .map((survey) =>
         SimpleDialogOption(
-          onPressed: () {
-            Navigator.pop(context);
-            _navigation.navigateTo(
+          onPressed: () async {
+            bool completed = await _navigation.navigateTo(
                 SurveyScreen.id, arguments: AdhocSurvey(survey));
+            Navigator.pop(context, completed);
           },
           child: Container(
               color: Colors.blue,

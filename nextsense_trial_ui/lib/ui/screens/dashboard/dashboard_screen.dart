@@ -78,6 +78,9 @@ class DashboardScreen extends HookWidget {
                         context,
                         onItemSelected: (index) {
                           currentTab.value = DashboardTab.values[index];
+                          if (currentTab.value == DashboardTab.tasks) {
+                            viewModel.selectToday();
+                          }
                         },
                         screens: _buildTabs(context),
                         items: _navBarsItems(),

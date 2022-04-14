@@ -70,7 +70,6 @@ abstract class Protocol {
 
     return protocol;
   }
-
 }
 
 abstract class BaseProtocol implements Protocol {
@@ -110,8 +109,6 @@ abstract class BaseProtocol implements Protocol {
   void setMaxDuration(Duration duration) {
     _maxDurationOverride = duration;
   }
-
-
 }
 
 class VariableDaytimeProtocol extends BaseProtocol {
