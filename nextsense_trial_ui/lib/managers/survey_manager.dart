@@ -139,9 +139,6 @@ class SurveyManager {
   Survey? getSurveyById(String surveyId) {
     return _surveys?.firstWhereOrNull((survey) => survey.id == surveyId);
   }
-
-
-
 }
 
 class ScheduledSurveyStats {

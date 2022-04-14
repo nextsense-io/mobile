@@ -23,6 +23,7 @@ enum SurveyQuestionType {
   number,
   choices,
   text,
+  time,
   unknown
 }
 
