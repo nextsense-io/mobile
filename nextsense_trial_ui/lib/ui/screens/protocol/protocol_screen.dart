@@ -281,8 +281,7 @@ class ProtocolScreen extends HookWidget {
         statusMsg = 'Protocol canceled because \n'
             'device was unavailable for too long';
       }
-    }
-    else if (viewModel.protocolCompleted) {
+    } else if (viewModel.protocolCompleted) {
       statusMsg = 'Protocol completed!'
           '\nYou can go ahead until you reach max duration.';
       if (viewModel.maxDurationPassed) {

@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
@@ -26,95 +27,158 @@ class SurveyManager {
   // Group by planned survey id for stats
   Map<String, List<ScheduledSurvey>> _scheduledSurveysByPlannedSurveyId = {};
 
-  Future<List<Survey>> _loadSurveys() async {
+  Future<List<Survey>> _loadSurveys({bool fromCache = false}) async {
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
-        [Table.surveys], []
+        [Table.surveys], [],
+        fromCache: fromCache,
     );
 
     List<Survey> result = [];
 
+    // Speed up queries by making parallel requests
+    List<Future> futures = [];
     for (FirebaseEntity entity in entities) {
       final survey = Survey(entity);
-      // TODO(alex): load multiple surveys async to speedup
-      await survey.loadQuestions();
-      result.add(survey);
+      Future future = survey.loadQuestions(fromCache: fromCache).then((_){
+        result.add(survey);
+      });
+      futures.add(future);
     }
 
-    return result;
+    await Future.wait(futures);
 
+    // Make consistent order
+    result
+        .sortBy((survey) => survey.id);
+
+    return result;
   }
 
   // Load planned surveys from study and convert them to scheduled surveys
   // that persist in user table
   Future loadScheduledSurveys() async {
-    if (_surveys == null) {
-      _surveys = await _loadSurveys();
-    }
+
+    final bool studyInitialized = _studyManager.studyInitialized;
+
+    // If study is initialized take surveys from cache
+    _surveys = await _loadSurveys(fromCache: studyInitialized);
 
     scheduledSurveys.clear();
     _scheduledSurveysByPlannedSurveyId.clear();
 
-    List<PlannedSurvey> plannedSurveys =
-        await _studyManager.loadPlannedSurveys();
+    if (studyInitialized) {
+      // If study already initialized, return scheduled surveys from cache
+      _logger.log(Level.WARNING, 'Loading scheduled surveys from cache');
+      scheduledSurveys = await _loadScheduledSurveysFromCache();
+    } else {
+      _logger.log(Level.WARNING,
+          'Creating scheduled surveys based on planned surveys');
 
-    // Speed up queries by making parallel requests
-    List<Future> futures = [];
-    Stopwatch stopwatch = new Stopwatch()..start();
-    for (var plannedSurvey in plannedSurveys) {
-      Survey? survey = getSurveyById(plannedSurvey.surveyId);
+      List<PlannedSurvey> plannedSurveys =
+      await _studyManager.loadPlannedSurveys();
 
-      if (survey == null) {
-        _logger.log(Level.WARNING,
-            'Planned survey "${plannedSurvey.surveyId}" not found');
-        continue;
+      // Speed up queries by making parallel requests
+      List<Future> futures = [];
+      for (var plannedSurvey in plannedSurveys) {
+        Survey? survey = getSurveyById(plannedSurvey.surveyId);
+
+        if (survey == null) {
+          _logger.log(Level.WARNING,
+              'Planned survey "${plannedSurvey.surveyId}" not found');
+          continue;
+        }
+
+        for (var day in plannedSurvey.days) {
+          // This value must be unique for each different survey
+          String scheduledSurveyKey =
+              "day_${day.dayNumber}_${plannedSurvey.surveyId}"
+              "_${plannedSurvey.period.name}";
+
+          Future future = _firestoreManager.queryEntity(
+              [Table.users, Table.scheduled_surveys],
+              [_authManager.getUserCode()!, scheduledSurveyKey]);
+
+          future.then((firebaseEntity) {
+            // Scheduled survey is created based on planned survey
+            ScheduledSurvey scheduledSurvey = ScheduledSurvey(
+                firebaseEntity,
+                survey, day,
+                plannedSurvey: plannedSurvey);
+
+            // Copy period from planned survey
+            scheduledSurvey.setPeriod(plannedSurvey.period);
+
+            if (scheduledSurvey.getValue(ScheduledSurveyKey.status) == null) {
+              scheduledSurvey.setValue(ScheduledSurveyKey.status,
+                  SurveyState.not_started.name);
+            }
+
+            scheduledSurvey.save();
+
+            scheduledSurveys.add(scheduledSurvey);
+          });
+          futures.add(future);
+        }
       }
 
-      for (var day in plannedSurvey.days) {
-        // This value must be unique for each different survey
-        String scheduledSurveyKey =
-            "day_${day.dayNumber}_${plannedSurvey.surveyId}"
-            "_${plannedSurvey.period.name}";
-        
-        Future future = _firestoreManager.queryEntity(
-            [Table.users, Table.scheduled_surveys],
-            [_authManager.getUserCode()!, scheduledSurveyKey]);
+      await Future.wait(futures);
 
-        future.then((firebaseEntity){
-
-          ScheduledSurvey scheduledSurvey = ScheduledSurvey(
-              firebaseEntity,
-              survey, day, plannedSurvey);
-
-          // Copy period from planned survey
-          scheduledSurvey.setPeriod(plannedSurvey.period);
-
-          if (scheduledSurvey.getValue(ScheduledSurveyKey.status) == null) {
-            scheduledSurvey.setValue(ScheduledSurveyKey.status,
-                SurveyState.not_started.name);
-          }
-
-          scheduledSurvey.save();
-
-          scheduledSurveys.add(scheduledSurvey);
-
-          // Add scheduled survey to group by planned survey id
-          _scheduledSurveysByPlannedSurveyId.update(
-              plannedSurvey.id, (value) => [...value, scheduledSurvey],
-              ifAbsent: () => [scheduledSurvey]);
-
-        });
-        futures.add(future);
-      }
+      // Make sure cache is up to date, need to query whole collection
+      // Without this query undesired items can appear in cache
+      await _queryScheduledSurveys();
     }
-
-    await Future.wait(futures);
-
-    _logger.log(Level.INFO, 'Scheduled surveys initialized in '
-        '${stopwatch.elapsedMicroseconds / 1000000.0} sec');
 
     // Make consistent order
     scheduledSurveys
         .sortBy((scheduledSurvey) => scheduledSurvey.plannedSurveyId);
+
+    for (var scheduledSurvey in scheduledSurveys) {
+      // Add scheduled survey to group by planned survey id
+      _scheduledSurveysByPlannedSurveyId.update(
+          scheduledSurvey.plannedSurveyId, (value) => [...value, scheduledSurvey],
+          ifAbsent: () => [scheduledSurvey]);
+    }
+
+  }
+
+  Future<List<ScheduledSurvey>> _loadScheduledSurveysFromCache() async {
+    if (_surveys == null) {
+      throw("Surveys not initialized");
+    }
+
+    List<FirebaseEntity> entities =
+        await _queryScheduledSurveys(fromCache: true);
+
+    List<ScheduledSurvey> result = [];
+
+    for (FirebaseEntity entity in entities) {
+      final surveyId = entity.getValue(ScheduledSurveyKey.survey);
+      final dayNumber = entity.getValue(ScheduledSurveyKey.day_number);
+      Survey? survey = getSurveyById(surveyId);
+      if (survey == null) {
+        _logger.log(Level.SEVERE, 'Survey with id "$surveyId" not found');
+        continue;
+      }
+
+      StudyDay? studyDay = _studyManager.getStudyDayByNumber(dayNumber);
+
+      if (studyDay == null) {
+        _logger.log(Level.SEVERE,
+            'Study day with number "$dayNumber" not found.');
+        continue;
+      }
+
+      final scheduledSurvey = ScheduledSurvey(entity, survey, studyDay);
+      result.add(scheduledSurvey);
+    }
+    return result;
+  }
+
+  Future<List<FirebaseEntity>> _queryScheduledSurveys(
+      {bool fromCache = false}) async {
+    return await _firestoreManager.queryEntities(
+        [Table.users, Table.scheduled_surveys],
+        [_authManager.getUserCode()!], fromCache: fromCache);
   }
 
   // Survey stats are calculated based on count of past and today surveys

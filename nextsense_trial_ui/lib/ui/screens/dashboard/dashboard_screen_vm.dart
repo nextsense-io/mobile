@@ -14,7 +14,6 @@ import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 class DashboardScreenViewModel extends DeviceStateViewModel {
@@ -26,22 +25,16 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final AuthManager _authManager = getIt<AuthManager>();
 
-  List<ScheduledProtocol> scheduledProtocols = [];
+  List<ScheduledProtocol> get scheduledProtocols => _studyManager.scheduledProtocols;
 
   List<ScheduledSurvey> get scheduledSurveys => _surveyManager.scheduledSurveys;
 
-  // List of days that will appear for current study
-  List<StudyDay>? _days;
+  List<StudyDay> get _days => _studyManager.days;
 
-  // References today's study day
-  // Has to be dynamic because next day can start while app is on
-  StudyDay? get _today {
-    if (_days == null) {
-      return null;
-    }
-    DateTime now = DateTime.now();
-    return _days!.firstWhere((StudyDay day) => now.isSameDay(day.date));
-  }
+  bool get studyInitialized => _studyManager.studyInitialized;
+
+  // Returns current day of study
+  StudyDay? get _today => _studyManager.today;
 
   // Current selected day in calendar
   StudyDay? selectedDay;
@@ -62,8 +55,10 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     notifyListeners();
     setBusy(true);
     try {
-      await _loadScheduledProtocols();
+      await _studyManager.loadScheduledProtocols();
       await _surveyManager.loadScheduledSurveys();
+      // Mark study initialized so we can load things from cache
+      await _studyManager.setStudyInitialized(true);
     } catch (e, stacktrace) {
       _logger.log(Level.SEVERE,
           'Failed to load dashboard data: '
@@ -74,22 +69,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     }
     setBusy(false);
     // TODO(alex): if current day out of range show some warning
-    // Select current day
-    if (_today!=null)
-      selectDay(_today!);
-  }
-
-  // Load schedule based on planned assesment
-  Future _loadScheduledProtocols() async {
-    scheduledProtocols = await _studyManager.loadScheduledProtocols();
-    final int studyDays = getCurrentStudy()?.getDurationDays() ?? 0;
-    _days = List<StudyDay>.generate(studyDays, (i) {
-      DateTime dayDate = _studyManager.currentStudyStartDate
-          .add(Duration(days: i));
-      final dayNumber = i + 1;
-      final studyDay = StudyDay(dayDate, dayNumber);
-      return studyDay;
-    });
+    selectDay(_studyManager.today!);
   }
 
   void _initProtocolCheckTimer() {
@@ -124,18 +104,12 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   }
 
   List<StudyDay> getDays() {
-    return _days ?? [];
+    return _days;
   }
 
   void selectDay(StudyDay day) {
     selectedDay = day;
     notifyListeners();
-  }
-
-  void selectFirstDayOfStudy() {
-    if (_days != null) {
-      selectDay(_days![0]);
-    }
   }
 
   void selectToday() {

@@ -34,10 +34,9 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
     // 2. 'daily' - survey will take place each day of study
     // 3. 'weekly' - survey will take place on 8th, 15th, etc.
     if (day is int) {
-      period = SurveyPeriod.certain_day;
+      period = SurveyPeriod.specific_day;
       certainDayNumber = day;
-    }
-    else if (day is String) {
+    } else if (day is String) {
       if (day == SurveyPeriod.daily.name) {
         period = SurveyPeriod.daily;
       } else if (day == SurveyPeriod.weekly.name) {
@@ -45,8 +44,7 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
       } else {
         throw("Invalid day value - $day");
       }
-    }
-    else {
+    } else {
       throw("Invalid day value - $day");
     }
 
@@ -76,7 +74,7 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
   void _initSurveyDays(DateTime studyStartDate,
       DateTime studyEndDate) {
 
-    if (period == SurveyPeriod.certain_day) {
+    if (period == SurveyPeriod.specific_day) {
       // For certain day number we just add single day
       days.add(StudyDay(
           studyStartDate.add(Duration(days: certainDayNumber! - 1)),
@@ -99,7 +97,7 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
     while (currentDate.isBefore(studyEndDate.closestFutureMidnight)) {
       days.add(StudyDay(currentDate, dayNumber));
       currentDate = currentDate.add(Duration(days: dayIncrement));
-      dayNumber+=dayIncrement;
+      dayNumber += dayIncrement;
     }
   }
 }

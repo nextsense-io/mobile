@@ -23,12 +23,25 @@ class DashboardScheduleView extends StatelessWidget {
 
     if (viewModel.isBusy) {
       return Center(
-        child: Container(
-          width: 30,
-          height: 30,
-          child: CircularProgressIndicator(
-            color: Colors.deepPurple,
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Visibility(
+                visible: !viewModel.studyInitialized,
+                child: Text(
+                  "Your study is initializing.\nPlease wait...",
+                  style: TextStyle(color: Colors.deepPurple, fontSize: 20),
+                  textAlign: TextAlign.center,
+                )),
+            SizedBox(height: 20,),
+            Container(
+              width: 30,
+              height: 30,
+              child: CircularProgressIndicator(
+                color: Colors.deepPurple,
+              ),
+            ),
+          ],
         ),
       );
     }

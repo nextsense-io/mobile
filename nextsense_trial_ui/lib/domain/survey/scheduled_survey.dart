@@ -7,8 +7,11 @@ import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum ScheduledSurveyKey {
-  survey,
+  survey, // Reference to doc from 'surveys' collection
+  planned_survey, // Reference to doc from 'study->planned_surveys' collection
   status,
+  day_number,
+  days_to_complete,
   period,
   data
 }
@@ -25,9 +28,6 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
   // Day survey will appear
   final StudyDay day;
 
-  // Reference to planned survey from study
-  late String plannedSurveyId;
-
   // Time before this survey should be completed, or it will be marked
   // as skipped
   late DateTime shouldBeCompletedBefore;
@@ -38,18 +38,30 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
   SurveyPeriod get period =>
       surveyPeriodFromString(getValue(ScheduledSurveyKey.period));
 
+  String get plannedSurveyId => getValue(ScheduledSurveyKey.planned_survey);
+
   bool get isCompleted => state == SurveyState.completed;
   bool get isSkipped => state == SurveyState.skipped;
   bool get notStarted => state == SurveyState.not_started;
 
   ScheduledSurvey(FirebaseEntity firebaseEntity, this.survey, this.day,
-      PlannedSurvey plannedSurvey)
+    {PlannedSurvey? plannedSurvey})
       : super(firebaseEntity.getDocumentSnapshot()) {
-    this.plannedSurveyId = plannedSurvey.id;
+
+    int? _daysToComplete = getValue(ScheduledSurveyKey.days_to_complete);
+    // Initialize from planned survey
+    if (plannedSurvey != null) {
+      setPlannedSurvey(plannedSurvey.id);
+      _daysToComplete = plannedSurvey.daysToComplete;
+      setValue(ScheduledSurveyKey.days_to_complete, _daysToComplete);
+      setValue(ScheduledSurveyKey.survey, survey.id);
+    }
 
     // Day date is at 00:00, so we need to set completion time next midnight
     shouldBeCompletedBefore =
-        day.date.add(Duration(days: plannedSurvey.daysToComplete));
+        day.date.add(Duration(days: _daysToComplete!));
+
+    setValue(ScheduledSurveyKey.day_number, day.dayNumber);
   }
 
   // Set state of protocol in firebase
@@ -64,6 +76,10 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
   // Save submitted survey data
   void setData(Map<String, dynamic> data) {
     setValue(ScheduledSurveyKey.data, data);
+  }
+
+  void setPlannedSurvey(String plannedSurveyId) {
+    setValue(ScheduledSurveyKey.planned_survey, plannedSurveyId);
   }
 
   // Survey didn't start in time, should be skipped
@@ -83,8 +99,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
       _logger.log(Level.INFO, 'Survey ${survey.name} already completed.'
           'Cannot change its state.');
       return false;
-    }
-    else if (this.state == SurveyState.skipped) {
+    } else if (this.state == SurveyState.skipped) {
       _logger.log(Level.INFO, 'Survey ${survey.name} already skipped.'
           'Cannot change its state.');
       return false;

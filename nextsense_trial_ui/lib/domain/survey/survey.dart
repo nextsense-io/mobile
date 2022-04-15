@@ -27,6 +27,7 @@ enum SurveyQuestionType {
   unknown
 }
 
+//TODO(alex): move this to database at some point
 enum SurveyQuestionSpecialChoices {
   phq9, // Patient Health Questionnaire (PHQ-9)
   gad7, // General Anxiety Disorder (GAD-7)
@@ -42,7 +43,7 @@ enum SurveyState {
 }
 
 enum SurveyPeriod {
-  certain_day,
+  specific_day,
   daily,
   weekly,
   unknown
@@ -84,8 +85,7 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
       choices = choicesValue
           .map((item) => SurveyQuestionChoice(item['value'], item['text']))
           .toList();
-    }
-    else if (choicesValue is String) {
+    } else if (choicesValue is String) {
       if (type == SurveyQuestionType.range) {
         // Range of values
         // Example: '1-4' transforms into list of 1,2,3,4
@@ -107,14 +107,13 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
       }
       choices = _getSpecialChoices(
               surveyQuestionSpecialChoicesFromString(choicesValue));
-    }
-    else {
+    } else {
       _logger.log(
           Level.WARNING, 'Invalid value for choices "$choicesValue"');
     }
   }
 
-  // Get predefined list of 'special' choices for certain amulatory
+  // Get predefined list of 'special' choices for certain ambulatory
   // surveys
   List<SurveyQuestionChoice> _getSpecialChoices(
       SurveyQuestionSpecialChoices specialChoices) {
@@ -162,9 +161,11 @@ class Survey extends FirebaseEntity<SurveyKey> {
   Survey(FirebaseEntity firebaseEntity)
       : super(firebaseEntity.getDocumentSnapshot());
 
-  Future loadQuestions() async {
+  Future loadQuestions({bool fromCache = false}) async {
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
-        [Table.surveys, Table.questions], [this.id]);
+        [Table.surveys, Table.questions], [this.id],
+        fromCache: fromCache
+    );
 
     questions = entities.map((firebaseEntity) =>
         SurveyQuestion(firebaseEntity))

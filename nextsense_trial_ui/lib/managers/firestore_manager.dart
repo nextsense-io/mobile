@@ -42,7 +42,8 @@ class FirestoreManager {
    * entityKeys: List of entity keys for each table in the `tables` parameter.
    */
   Future<FirebaseEntity> queryEntity(
-      List<Table> tables, List<String> entityKeys) async {
+      List<Table> tables, List<String> entityKeys,
+      {bool fromCache = false}) async {
     assert(tables.length == entityKeys.length);
     DocumentReference? reference = null;
     for (int i = 0; i < tables.length; ++i) {
@@ -54,7 +55,10 @@ class FirestoreManager {
             entityKeys[i]);
       }
     }
-    DocumentSnapshot snapshot = await reference!.get();
+    DocumentSnapshot snapshot =
+        await reference!.get(
+            GetOptions(source: fromCache ? Source.cache : Source.serverAndCache)
+        );
     return FirebaseEntity(snapshot);
   }
 
@@ -62,7 +66,8 @@ class FirestoreManager {
    * Query multiple entities.
    */
   Future<List<FirebaseEntity>> queryEntities(
-      List<Table> tables, List<String> entityKeys) async {
+      List<Table> tables, List<String> entityKeys,
+      {bool fromCache = false}) async {
     assert(tables.length == entityKeys.length + 1);
     DocumentReference? pathReference = null;
     CollectionReference? collectionReference = null;
@@ -85,7 +90,10 @@ class FirestoreManager {
       }
     }
 
-    List<DocumentSnapshot> documents = (await collectionReference!.get()).docs;
+    List<DocumentSnapshot> documents =
+        (await collectionReference!.get(
+            GetOptions(source: fromCache ? Source.cache : Source.serverAndCache)
+        )).docs;
     List<FirebaseEntity> entities = [];
     for (DocumentSnapshot documentSnapshot in documents) {
       entities.add(FirebaseEntity(documentSnapshot));
@@ -96,6 +104,5 @@ class FirestoreManager {
   Future persistEntity(FirebaseEntity entity) async {
     entity.getDocumentSnapshot().reference.set(entity.getValues());
   }
-
 
 }

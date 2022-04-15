@@ -7,9 +7,9 @@ import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:stacked/stacked.dart';
+import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 
-class SignInScreenViewModel extends BaseViewModel {
+class SignInScreenViewModel extends ViewModel {
 
   final CustomLogPrinter _logger = CustomLogPrinter('SignInScreenViewModel');
 
