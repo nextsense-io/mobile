@@ -5,7 +5,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:stacked/stacked.dart';
+import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 
 abstract class DeviceStateViewModelInterface {
   void onDeviceDisconnected();
@@ -18,7 +18,7 @@ abstract class DeviceStateViewModelInterface {
  * with device state or device internal state
  */
 abstract class DeviceStateViewModel
-    extends BaseViewModel implements DeviceStateViewModelInterface {
+    extends ViewModel implements DeviceStateViewModelInterface {
 
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceStateViewModel');
   final DeviceManager _deviceManager = getIt<DeviceManager>();

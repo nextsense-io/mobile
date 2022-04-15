@@ -20,10 +20,14 @@ enum UserKey {
   // BigTable key. Generated as a UUID.
   bt_key,
   // How many sessions were recorded by this user.
-  session_number
+  session_number,
+  // Study is initialized on device and we can use cached entities
+  study_initialized
 }
 
 class User extends FirebaseEntity<UserKey> {
+
+  bool get studyInitialized => getValue(UserKey.study_initialized) ?? false;
 
   User(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
@@ -45,6 +49,10 @@ class User extends FirebaseEntity<UserKey> {
 
   void setLastPairedDeviceMacAddress(String macAddress) {
     setValue(UserKey.last_paired_device, macAddress);
+  }
+
+  void setStudyInitialized(bool initialized) {
+    setValue(UserKey.study_initialized, true);
   }
   /**
    * Checks that the current date is between the study start and end dates for

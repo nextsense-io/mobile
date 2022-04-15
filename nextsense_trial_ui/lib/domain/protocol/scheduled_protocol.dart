@@ -101,8 +101,7 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
       _logger.log(Level.INFO, 'Protocol ${protocol.name} already completed.'
           'Cannot change its state.');
       return false;
-    }
-    else if (this.state == ProtocolState.skipped) {
+    } else if (this.state == ProtocolState.skipped) {
       _logger.log(Level.INFO, 'Protocol ${protocol.name} already skipped.'
           'Cannot change its state.');
       return false;

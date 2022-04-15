@@ -12,7 +12,6 @@ import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:provider/src/provider.dart';
 import 'package:stacked/stacked.dart';
-import 'package:intl/intl.dart';
 
 class SurveyScreen extends HookWidget {
 
