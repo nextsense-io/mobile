@@ -164,7 +164,7 @@ class Survey extends FirebaseEntity<SurveyKey> {
   Future loadQuestions({bool fromCache = false}) async {
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
         [Table.surveys, Table.questions], [this.id],
-        fromCache: fromCache
+        fromCacheWithKey: fromCache ? "survey_${this.id}_questions" : null
     );
 
     questions = entities.map((firebaseEntity) =>

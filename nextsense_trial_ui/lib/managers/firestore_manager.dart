@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/preferences.dart';
 
 enum Table {
   organizations,
@@ -24,6 +26,9 @@ extension ParseToString on Table {
 }
 
 class FirestoreManager {
+
+  final _preferences = getIt<Preferences>();
+
   Map<Table, CollectionReference> _references = Map();
 
   FirestoreManager() {
@@ -40,10 +45,12 @@ class FirestoreManager {
    * tables: List of tables that makes up the reference, in order. One entityKey
    *         is inserted after each table.
    * entityKeys: List of entity keys for each table in the `tables` parameter.
+   * fromCacheWithKey: Key in shared preferences which will act as criteria that
+   *         entity should be taken from cache.
    */
   Future<FirebaseEntity> queryEntity(
       List<Table> tables, List<String> entityKeys,
-      {bool fromCache = false}) async {
+      {String? fromCacheWithKey}) async {
     assert(tables.length == entityKeys.length);
     DocumentReference? reference = null;
     for (int i = 0; i < tables.length; ++i) {
@@ -55,10 +62,22 @@ class FirestoreManager {
             entityKeys[i]);
       }
     }
+    Source source = Source.serverAndCache;
+    if (fromCacheWithKey != null) {
+      if (_preferences.isCached(fromCacheWithKey)) {
+        source = Source.cache;
+      }
+    }
     DocumentSnapshot snapshot =
         await reference!.get(
-            GetOptions(source: fromCache ? Source.cache : Source.serverAndCache)
-        );
+            GetOptions(source: source
+        ));
+
+    if (fromCacheWithKey != null) {
+      // Mark doc as cached, means further 'fromCacheWithKey' requests
+      // will get doc from cache
+      _preferences.markAsCached(fromCacheWithKey);
+    }
     return FirebaseEntity(snapshot);
   }
 
@@ -67,7 +86,7 @@ class FirestoreManager {
    */
   Future<List<FirebaseEntity>> queryEntities(
       List<Table> tables, List<String> entityKeys,
-      {bool fromCache = false}) async {
+      {String? fromCacheWithKey}) async {
     assert(tables.length == entityKeys.length + 1);
     DocumentReference? pathReference = null;
     CollectionReference? collectionReference = null;
@@ -90,14 +109,28 @@ class FirestoreManager {
       }
     }
 
-    List<DocumentSnapshot> documents =
-        (await collectionReference!.get(
-            GetOptions(source: fromCache ? Source.cache : Source.serverAndCache)
-        )).docs;
+    Source source = Source.serverAndCache;
+    if (fromCacheWithKey != null) {
+      if (_preferences.isCached(fromCacheWithKey)) {
+        source = Source.cache;
+      }
+    }
+
+    QuerySnapshot snapshot = await collectionReference!.get(
+        GetOptions(source: source)
+    );
+    List<DocumentSnapshot> documents = snapshot.docs;
     List<FirebaseEntity> entities = [];
     for (DocumentSnapshot documentSnapshot in documents) {
       entities.add(FirebaseEntity(documentSnapshot));
     }
+
+    if (fromCacheWithKey != null) {
+      // Mark collection as cached, means further 'fromCacheWithKey' requests
+      // will get collection from cache
+      _preferences.markAsCached(fromCacheWithKey);
+    }
+
     return entities;
   }
 

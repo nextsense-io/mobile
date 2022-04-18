@@ -9,6 +9,7 @@ import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
@@ -30,7 +31,7 @@ class SurveyManager {
   Future<List<Survey>> _loadSurveys({bool fromCache = false}) async {
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
         [Table.surveys], [],
-        fromCache: fromCache,
+        fromCacheWithKey: fromCache ? "surveys" : null,
     );
 
     List<Survey> result = [];
@@ -57,7 +58,6 @@ class SurveyManager {
   // Load planned surveys from study and convert them to scheduled surveys
   // that persist in user table
   Future loadScheduledSurveys() async {
-
     final bool studyInitialized = _studyManager.studyInitialized;
 
     // If study is initialized take surveys from cache
@@ -138,7 +138,6 @@ class SurveyManager {
           scheduledSurvey.plannedSurveyId, (value) => [...value, scheduledSurvey],
           ifAbsent: () => [scheduledSurvey]);
     }
-
   }
 
   Future<List<ScheduledSurvey>> _loadScheduledSurveysFromCache() async {
@@ -178,7 +177,8 @@ class SurveyManager {
       {bool fromCache = false}) async {
     return await _firestoreManager.queryEntities(
         [Table.users, Table.scheduled_surveys],
-        [_authManager.getUserCode()!], fromCache: fromCache);
+        [_authManager.getUserCode()!],
+        fromCacheWithKey: fromCache ? "scheduled_surveys" : null);
   }
 
   // Survey stats are calculated based on count of past and today surveys
