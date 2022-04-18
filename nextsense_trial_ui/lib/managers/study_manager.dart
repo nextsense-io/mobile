@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:get_it/get_it.dart';
 import 'package:logging/logging.dart';
@@ -82,41 +83,89 @@ class StudyManager {
 
   Future<bool> loadScheduledProtocols() async {
     scheduledProtocols.clear();
-    List<PlannedAssessment> assesments = await _loadPlannedAssesments();
-    for (var assesment in assesments) {
-      if (assesment.protocol != null) {
-        final String time = assesment.startTimeStr.replaceAll(":", "_");
-        String scheduledProtocolKey =
-            "day_${assesment.dayNumber}_time_${time}";
-        final scheduledProtocol = ScheduledProtocol(
-            await _firestoreManager.queryEntity(
-                [Table.users, Table.scheduled_protocols],
-                [_authManager.getUserCode()!, scheduledProtocolKey])
-            , assesment);
 
-        scheduledProtocol
-            ..setValue(ScheduledProtocolKey.protocol, assesment.reference)
+    if (studyInitialized) {
+      // If study already initialized, return scheduled protocols from cache
+      _logger.log(Level.WARNING, 'Loading scheduled protocols from cache');
+      scheduledProtocols = await _loadScheduledProtocolsFromCache();
+    } else {
+
+      _logger.log(Level.WARNING,
+          'Creating scheduled protocols based on planned assessments');
+
+      List<PlannedAssessment> assessments = await _loadPlannedAssessments();
+      for (var assessment in assessments) {
+        if (assessment.protocol != null) {
+          final String time = assessment.startTimeStr.replaceAll(":", "_");
+          String scheduledProtocolKey =
+              "day_${assessment.dayNumber}_time_${time}";
+          final scheduledProtocol = ScheduledProtocol(
+              await _firestoreManager.queryEntity(
+                  [Table.users, Table.scheduled_protocols],
+                  [_authManager.getUserCode()!, scheduledProtocolKey]),
+              assessment);
+
+          scheduledProtocol
+            ..setValue(ScheduledProtocolKey.protocol, assessment.reference)
             ..setValue(ScheduledProtocolKey.sessions, []);
 
-        // Initial status for protocol is not_started
-        if (scheduledProtocol.getValue(ScheduledProtocolKey.status) == null) {
-          scheduledProtocol.setValue(ScheduledProtocolKey.status,
-              ProtocolState.not_started.name);
-        }
-        scheduledProtocol.save();
+          // Initial status for protocol is not_started
+          if (scheduledProtocol.getValue(ScheduledProtocolKey.status) == null) {
+            scheduledProtocol.setValue(ScheduledProtocolKey.status,
+                ProtocolState.not_started.name);
+          }
+          scheduledProtocol.save();
 
-        scheduledProtocols.add(scheduledProtocol);
+          scheduledProtocols.add(scheduledProtocol);
+        }
       }
     }
     return true;
   }
 
-  Future<List<PlannedAssessment>> _loadPlannedAssesments() async {
+  Future<List<ScheduledProtocol>> _loadScheduledProtocolsFromCache() async {
+    List<FirebaseEntity> entities =
+        await _queryScheduledProtocols(fromCache: true);
+
+    List<PlannedAssessment> assessments =
+        await _loadPlannedAssessments(fromCache: true);
+    List<ScheduledProtocol> result = [];
+
+    for (FirebaseEntity entity in entities) {
+      final assessmentId = (entity.getValue(ScheduledProtocolKey.protocol)
+      as DocumentReference).id;
+      PlannedAssessment? assessment = assessments.firstWhereOrNull(
+          (assesment) => assessmentId == assesment.reference.id);
+
+      if (assessment == null) {
+        _logger.log(Level.SEVERE, 'Assessment with id $assessmentId not found');
+        continue;
+      }
+
+      final scheduledProtocol = ScheduledProtocol(entity, assessment);
+      result.add(scheduledProtocol);
+    }
+
+    return result;
+
+  }
+
+  Future<List<FirebaseEntity>> _queryScheduledProtocols(
+      {bool fromCache = false}) async {
+    return await _firestoreManager.queryEntities(
+        [Table.users, Table.scheduled_protocols],
+        [_authManager.getUserCode()!],
+        fromCacheWithKey: fromCache ? "scheduled_protocols" : null);
+  }
+
+  Future<List<PlannedAssessment>> _loadPlannedAssessments(
+      {bool fromCache = false}) async {
     if (_currentStudy == null) {
       return Future.value([]);
     }
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
-        [Table.studies, Table.planned_assessments], [_currentStudy!.id]);
+        [Table.studies, Table.planned_assessments], [_currentStudy!.id],
+        fromCacheWithKey: fromCache ? "planned_assessments" : null);
 
     return entities
         .map((firebaseEntity) =>
