@@ -147,7 +147,6 @@ class StudyManager {
     }
 
     return result;
-
   }
 
   Future<List<FirebaseEntity>> _queryScheduledProtocols(
