@@ -179,7 +179,7 @@ class _ScheduledProtocolRow extends HookWidget {
       case ProtocolState.cancelled:
         return Column(
           children: [
-            Icon(Icons.play_arrow_outlined, color: Colors.white),
+            Icon(Icons.cancel, color: Colors.white),
             Text("Cancelled", style: TextStyle(color: Colors.white),),
           ],
         );
