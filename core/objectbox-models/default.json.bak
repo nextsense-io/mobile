@@ -172,7 +172,7 @@
     },
     {
       "id": "4:7829109381478237227",
-      "lastPropertyId": "13:4227957113983452926",
+      "lastPropertyId": "14:4744125428289492246",
       "name": "LocalSession",
       "properties": [
         {
@@ -238,6 +238,11 @@
           "name": "accelerationsDeleted",
           "type": 6,
           "flags": 4
+        },
+        {
+          "id": "14:4744125428289492246",
+          "name": "earbudsConfig",
+          "type": 9
         }
       ],
       "relations": []

@@ -43,12 +43,13 @@ public class LocalSession extends BaseRecord {
   private int accelerationsUploaded;
   private long accelerationsDeleted;
   private float accelerationSampleRate;
+  private int deviceInternalStateUploaded;
 
   private LocalSession(@Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
                        @Nullable String earbudsConfig, Status status, boolean uploadNeeded,
                        int eegSamplesUploaded, long eegSamplesDeleted, float eegSampleRate,
                        int accelerationsUploaded, long accelerationsDeleted,
-                       float accelerationSampleRate) {
+                       float accelerationSampleRate, int deviceInternalStateUploaded) {
     super();
     this.userBigTableKey = userBigTableKey;
     this.cloudDataSessionId = cloudDataSessionId;
@@ -61,6 +62,7 @@ public class LocalSession extends BaseRecord {
     this.accelerationsUploaded = accelerationsUploaded;
     this.accelerationsDeleted = accelerationsDeleted;
     this.accelerationSampleRate = accelerationSampleRate;
+    this.deviceInternalStateUploaded = deviceInternalStateUploaded;
   }
 
   public static LocalSession create(
@@ -69,7 +71,8 @@ public class LocalSession extends BaseRecord {
       float accelerationSampleRate) {
     return new LocalSession(cloudDataSessionId, userBigTableKey, earbudsConfig, Status.RECORDING,
         uploadNeeded, /*recordsUploaded=*/0, /*eegSamplesDeleted=*/0, eegSampleRate,
-        /*accelerationsUploaded=*/0, /*accelerationSamplesDeleted=*/0, accelerationSampleRate);
+        /*accelerationsUploaded=*/0, /*accelerationSamplesDeleted=*/0, accelerationSampleRate,
+        /*deviceInternalStateUploaded=*/0);
   }
 
   // Need to be public for ObjectBox performance.
@@ -77,7 +80,7 @@ public class LocalSession extends BaseRecord {
       int id, @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
       @Nullable String earbudsConfig, Status status, boolean uploadNeeded, int eegSamplesUploaded,
       long eegSamplesDeleted, float eegSampleRate, int accelerationsUploaded,
-      long accelerationsDeleted, float accelerationSampleRate) {
+      long accelerationsDeleted, float accelerationSampleRate, int deviceInternalStateUploaded) {
     super(id);
     this.userBigTableKey = userBigTableKey;
     this.cloudDataSessionId = cloudDataSessionId;
@@ -90,6 +93,7 @@ public class LocalSession extends BaseRecord {
     this.accelerationsUploaded = accelerationsUploaded;
     this.accelerationsDeleted = accelerationsDeleted;
     this.accelerationSampleRate = accelerationSampleRate;
+    this.deviceInternalStateUploaded = deviceInternalStateUploaded;
   }
 
   @Nullable
@@ -180,6 +184,14 @@ public class LocalSession extends BaseRecord {
 
   public void setAccelerationSampleRate(float accelerationSampleRate) {
     this.accelerationSampleRate = accelerationSampleRate;
+  }
+
+  public int getDeviceInternalStateUploaded() {
+    return deviceInternalStateUploaded;
+  }
+
+  public void setDeviceInternalStateUploaded(int deviceInternalStateUploaded) {
+    this.deviceInternalStateUploaded = deviceInternalStateUploaded;
   }
 
   public static class StatusConverter implements PropertyConverter<Status, Integer> {

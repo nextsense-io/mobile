@@ -49,8 +49,10 @@ import io.objectbox.reactive.DataSubscription;
 public class Uploader {
   private static final String TAG = Uploader.class.getSimpleName();
   private static final Duration UPLOAD_FUNCTION_TIMEOUT = Duration.ofMillis(10000);
+  private static final String UPLOAD_FUNCTION_NAME = "upload_data_samples_test";
   private static final String EEG_SAMPLES = "eeg_samples";
   private static final String ACC_SAMPLES = "acc_samples";
+  private static final String INT_STATE_SAMPLES = "device_internal_state_samples";
 
   private final ObjectBoxDatabase objectBoxDatabase;
   private final Connectivity connectivity;
@@ -202,6 +204,17 @@ public class Uploader {
     }
     samplesToUpload.put(ACC_SAMPLES, accelerationsToUpload);
 
+    long deviceInternalStatesToUploadCount = objectBoxDatabase.getDeviceInternalStateCount() -
+            localSession.getDeviceInternalStateUploaded();
+    if (deviceInternalStatesToUploadCount >= 1) {
+      List<BaseRecord> deviceInternalStatesToUpload = new ArrayList<>(
+              objectBoxDatabase.getSessionDeviceInternalStates(
+              localSession.id, localSession.getDeviceInternalStateUploaded(),
+              deviceInternalStatesToUploadCount > uploadChunkSize ? uploadChunkSize :
+                      deviceInternalStatesToUploadCount));
+      samplesToUpload.put(INT_STATE_SAMPLES, deviceInternalStatesToUpload);
+    }
+
     return samplesToUpload;
   }
 
@@ -249,6 +262,9 @@ public class Uploader {
                 eegSamplesToUpload.subList(eegSamplesIndex, eegSamplesEndIndex));
             samplesChunkToUpload.put(ACC_SAMPLES,
                 samplesToUpload.get(ACC_SAMPLES).subList(eegSamplesIndex, eegSamplesEndIndex));
+            if (samplesToUpload.containsKey(INT_STATE_SAMPLES)) {
+              samplesChunkToUpload.put(INT_STATE_SAMPLES, samplesToUpload.get(INT_STATE_SAMPLES));
+            }
             DataSamplesProto.DataSamples dataSamplesProto =
                 serializeToProto(samplesChunkToUpload, localSession);
             try {
@@ -399,8 +415,34 @@ public class Uploader {
     return 0;
   }
 
-  private DataSamplesProto.DataSamples serializeToProto(Map<String, List<BaseRecord>> samples,
-                                                        LocalSession localSession) {
+  private DataSamplesProto.DeviceInternalState serializeToProto(
+          DeviceInternalState deviceInternalState) {
+    DataSamplesProto.DeviceInternalState.Builder builder =
+            DataSamplesProto.DeviceInternalState.newBuilder();
+    Timestamp timestamp = Timestamp.newBuilder()
+            .setSeconds(deviceInternalState.getTimestamp().getEpochSecond())
+            .setNanos(deviceInternalState.getTimestamp().getNano()).build();
+    builder.setTimestamp(timestamp);
+    builder.setBatteryMilliVolts(deviceInternalState.getBatteryMilliVolts());
+    builder.setBusy(deviceInternalState.isBusy());
+    builder.setUsdPresent(deviceInternalState.isuSdPresent());
+    builder.setHdmiCablePresent(deviceInternalState.isHdmiCablePresent());
+    builder.setRtcClockSet(deviceInternalState.isRtcClockSet());
+    builder.setCaptureRunning(deviceInternalState.isCaptureRunning());
+    builder.setCharging(deviceInternalState.isCharging());
+    builder.setBatteryLow(deviceInternalState.isBatteryLow());
+    builder.setUsdLoggingEnabled(deviceInternalState.isuSdLoggingEnabled());
+    builder.setInternalErrorDetected(deviceInternalState.isInternalErrorDetected());
+    builder.setSamplesCounter(deviceInternalState.getSamplesCounter());
+    builder.setBleQueueBacklog(deviceInternalState.getBleQueueBacklog());
+    builder.setLostSamplesCounter(deviceInternalState.getLostSamplesCounter());
+    builder.setBleRssi(deviceInternalState.getBleRssi());
+    builder.addAllLeadsOffPositive(deviceInternalState.getLeadsOffPositive());
+    return builder.build();
+  }
+
+  private DataSamplesProto.EegDataSamples serializeEegToProto(
+          Map<String, List<BaseRecord>> samples, LocalSession localSession) {
     // TODO(eric): If acceleration is not on the same frequency as eeg, should send it in a separate
     //             proto?
     List<BaseRecord> eegSamplesToUpload = samples.get(EEG_SAMPLES);
@@ -408,15 +450,9 @@ public class Uploader {
     assert(eegSamplesToUpload != null);
     assert(accelerationsToUpload != null);
     assert(eegSamplesToUpload.size() == accelerationsToUpload.size());
-    DataSamplesProto.DataSamples.Builder dataSamplesProtoBuilder =
-        DataSamplesProto.DataSamples.newBuilder();
-    if (localSession.getUserBigTableKey() != null) {
-      dataSamplesProtoBuilder.setUserId(localSession.getUserBigTableKey());
-    }
-    if (localSession.getCloudDataSessionId() != null) {
-      dataSamplesProtoBuilder.setDataSessionId(localSession.getCloudDataSessionId());
-    }
-    dataSamplesProtoBuilder.setModality(DataSamplesProto.DataSamples.Modality.EAR_EEG);
+    DataSamplesProto.EegDataSamples.Builder dataSamplesProtoBuilder =
+        DataSamplesProto.EegDataSamples.newBuilder();
+    dataSamplesProtoBuilder.setModality(DataSamplesProto.EegDataSamples.Modality.EAR_EEG);
     if (localSession.getEarbudsConfig() != null) {
       dataSamplesProtoBuilder.setEarbudsConfig(localSession.getEarbudsConfig());
     }
@@ -438,13 +474,13 @@ public class Uploader {
       for (Integer channel : eegSample.getEegSamples().keySet()) {
         DataSamplesProto.Channel.Builder channelBuilder = channelBuilders.computeIfAbsent(
             String.valueOf(channel), channelValue ->
-                DataSamplesProto.Channel.newBuilder().setNumber(String.valueOf(channel)));
+                DataSamplesProto.Channel.newBuilder().setName(String.valueOf(channel)));
         channelBuilder.addSample(eegSample.getEegSamples().get(channel));
       }
       Acceleration acceleration = (Acceleration) accelerationsToUpload.get(i);
       for (String accChannel : Acceleration.CHANNELS) {
         DataSamplesProto.Channel.Builder channelBuilder = channelBuilders.computeIfAbsent(
-            accChannel, channelValue -> DataSamplesProto.Channel.newBuilder().setNumber(accChannel));
+            accChannel, channelValue -> DataSamplesProto.Channel.newBuilder().setName(accChannel));
         switch (Acceleration.Channels.valueOf(accChannel.toUpperCase())) {
           case X:
             channelBuilder.addSample(acceleration.getX());
@@ -470,6 +506,25 @@ public class Uploader {
     return dataSamplesProtoBuilder.build();
   }
 
+  private DataSamplesProto.DataSamples serializeToProto(
+          Map<String, List<BaseRecord>> samples, LocalSession localSession) {
+    DataSamplesProto.DataSamples.Builder builder = DataSamplesProto.DataSamples.newBuilder();
+    if (localSession.getUserBigTableKey() != null) {
+      builder.setUserId(localSession.getUserBigTableKey());
+    }
+    if (localSession.getCloudDataSessionId() != null) {
+      builder.setDataSessionId(localSession.getCloudDataSessionId());
+    }
+    builder.setEegDataSamples(serializeEegToProto(samples, localSession));
+    if (samples.containsKey(INT_STATE_SAMPLES)) {
+      for (BaseRecord deviceInternalState : samples.get(INT_STATE_SAMPLES)) {
+        builder.addDeviceInternalStates(
+                serializeToProto((DeviceInternalState) deviceInternalState));
+      }
+    }
+    return builder.build();
+  }
+
   private Task<Map<String, Object>> uploadDataSamplesProto(
       DataSamplesProto.DataSamples dataSamplesProto) throws IOException {
     // Create the arguments to the callable function.
@@ -482,7 +537,7 @@ public class Uploader {
         Base64.encodeToString(byteArrayOutputStream.toByteArray(), Base64.DEFAULT));
 
     return functions
-        .getHttpsCallable("upload_data_samples")
+        .getHttpsCallable(UPLOAD_FUNCTION_NAME)
         .call(data)
         .addOnFailureListener(exception ->
             Log.e(TAG, "Failed to upload data: " + exception.getMessage()))

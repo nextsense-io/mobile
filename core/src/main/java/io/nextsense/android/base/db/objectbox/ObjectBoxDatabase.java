@@ -45,8 +45,10 @@ public class ObjectBoxDatabase implements Database {
   private Query<EegSample> eegSamplesTimestampIsLesserQuery;
   private Query<Acceleration> accelerationQuery;
   private Query<Acceleration> accelerationTimestampIsLesserQuery;
+  private Query<DeviceInternalState> sessionDeviceInternalStateQuery;
   private Query<DeviceInternalState> recentDeviceInternalStateQuery;
   private Query<DeviceInternalState> lastDeviceInternalStateQuery;
+  private Query<DeviceInternalState> deviceInternalStateQueryTimestampIsLesserQuery;
 
   @Override
   public void init(Context context) {
@@ -65,9 +67,13 @@ public class ObjectBoxDatabase implements Database {
     accelerationTimestampIsLesserQuery = accelerationBox.query().equal(
         Acceleration_.localSessionId, 0).less(Acceleration_.absoluteSamplingTimestamp, 0).build();
     deviceInternalStateBox = boxStore.boxFor(DeviceInternalState.class);
+    sessionDeviceInternalStateQuery = deviceInternalStateBox.query().equal(
+            DeviceInternalState_.localSessionId, 0).build();
     lastDeviceInternalStateQuery = deviceInternalStateBox.query().build();
     recentDeviceInternalStateQuery = deviceInternalStateBox.query()
         .greater(DeviceInternalState_.timestamp, 0).build();
+    deviceInternalStateQueryTimestampIsLesserQuery = deviceInternalStateBox.query().equal(
+            DeviceInternalState_.localSessionId, 0).less(DeviceInternalState_.timestamp, 0).build();
     Log.d(TAG, "Size on disk: " + boxStore.sizeOnDisk());
     Log.d(TAG, boxStore.diagnose());
   }
@@ -171,7 +177,13 @@ public class ObjectBoxDatabase implements Database {
 
   public List<DeviceInternalState> getDeviceInternalStates(long offset, long count) {
     return runWithExceptionLog(() ->
-      lastDeviceInternalStateQuery.find(offset, count));
+            lastDeviceInternalStateQuery.find(offset, count));
+  }
+
+  public List<DeviceInternalState> getSessionDeviceInternalStates(
+          long localSessionId, long offset, long count) {
+    return runWithExceptionLog(() -> sessionDeviceInternalStateQuery.setParameter(
+            DeviceInternalState_.localSessionId, localSessionId).find(offset, count));
   }
 
   public long getEegSamplesCount(long localSessionId) {
@@ -213,6 +225,15 @@ public class ObjectBoxDatabase implements Database {
       long offset = count <= deviceInternalStateCount ? deviceInternalStateCount - count : 0;
       return getDeviceInternalStates(offset, count);
     });
+  }
+
+  public long getDeviceInternalStateCount() {
+    return runWithExceptionLog(() -> deviceInternalStateBox.count());
+  }
+
+  public long getSessionDeviceInternalStateCount(long localSessionId) {
+    return runWithExceptionLog(() -> sessionDeviceInternalStateQuery.setParameter(
+            DeviceInternalState_.localSessionId, localSessionId).count());
   }
 
   public boolean deleteLocalSession(long localSessionId) {

@@ -1,4 +1,4 @@
-import 'package:disk_space/disk_space.dart';
+// import 'package:disk_space/disk_space.dart';
 
 class DiskSpaceManager {
 
@@ -16,7 +16,10 @@ class DiskSpaceManager {
   }
 
   Future refreshAvailableDiskSpace() async {
-    _freeDiskSpace = await DiskSpace.getFreeDiskSpace;
+    // TODO(eric): Re-enable once module is fixed for recent flutter version.
+    //             Or replace with own module calls.
+    _freeDiskSpace = 1000000;
+    // _freeDiskSpace = await DiskSpace.getFreeDiskSpace;
   }
 
   double? getFreeDiskSpaceMb() {
