@@ -254,4 +254,12 @@ public class DeviceInternalState extends BaseRecord {
   public void setBleRssi(int bleRssi) {
     this.bleRssi = bleRssi;
   }
+
+  public ArrayList<Boolean> getLeadsOffPositive() {
+    return leadsOffPositive;
+  }
+
+  public void setLeadsOffPositive(ArrayList<Boolean> leadsOffPositive) {
+    this.leadsOffPositive = leadsOffPositive;
+  }
 }

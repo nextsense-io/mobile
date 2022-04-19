@@ -9,18 +9,16 @@ option java_outer_classname = "DataSamplesProto";
 
 // EEG channels start at 1. Acceleration channels are x, y and z.
 message Channel {
-  string number = 1;
+  string name = 1;
   repeated float sample = 2;
 }
 
-message DataSamples {
+message EegDataSamples {
   enum Modality {
     EAR_EEG = 0;
     SCALP_EEG = 1;
     INTRA_CRANIAL_EEG = 2;
   }
-  string data_session_id = 1;
-  string user_id = 2;
   Modality modality = 3;
   int32 frequency = 4;
   google.protobuf.Timestamp expected_start_timestamp = 5;
@@ -34,4 +32,30 @@ message DataSamples {
   repeated bool marker = 13;
   repeated bool button = 14;
   string earbuds_config = 15;
+}
+
+message DeviceInternalState {
+  google.protobuf.Timestamp timestamp = 1;
+  int32 batteryMilliVolts = 2;
+  bool busy = 3;
+  bool usd_present = 4;
+  bool hdmi_cable_present = 5;
+  bool rtc_clock_set = 6;
+  bool capture_running = 7;
+  bool charging = 8;
+  bool battery_low = 9;
+  bool usd_logging_enabled = 10;
+  bool internal_error_detected = 11;
+  int32 samples_counter = 12;
+  int32 ble_queue_backlog = 13;
+  int32 lost_samples_counter = 14;
+  int32 ble_rssi = 15;
+  repeated bool leads_off_positive = 16;
+}
+
+message DataSamples {
+  string data_session_id = 1;
+  string user_id = 2;
+  EegDataSamples eeg_data_samples = 3;
+  repeated DeviceInternalState device_internal_states = 4;
 }
