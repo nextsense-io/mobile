@@ -134,13 +134,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.2.0"
-  crypt:
-    dependency: "direct main"
-    description:
-      name: crypt
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "4.0.1"
   crypto:
     dependency: transitive
     description:
@@ -525,6 +518,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.0.2-dev.9"
+  scrollable_positioned_list:
+    dependency: "direct main"
+    description:
+      name: scrollable_positioned_list
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.3"
   settings_ui:
     dependency: "direct main"
     description:

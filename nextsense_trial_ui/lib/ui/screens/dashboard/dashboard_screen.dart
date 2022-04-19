@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
@@ -16,6 +18,7 @@ import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 import 'package:provider/provider.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:stacked/stacked.dart';
 
@@ -30,7 +33,6 @@ class DashboardScreen extends HookWidget {
 
   static const String id = 'dashboard_screen';
 
-  final Navigation _navigation = getIt<Navigation>();
   final _preferences = getIt<Preferences>();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
@@ -71,14 +73,17 @@ class DashboardScreen extends HookWidget {
                       })
                     ] : [
                     _appBar(context),
-                    if (showDayTabs())
-                      _buildDayTabs(context),
+                    Visibility(
+                        visible: showDayTabs(),
+                        child: _DayTabs()
+                    ),
                     Expanded(
                       child: PersistentTabView(
                         context,
                         onItemSelected: (index) {
                           currentTab.value = DashboardTab.values[index];
-                          if (currentTab.value == DashboardTab.tasks) {
+                          if (currentTab.value == DashboardTab.schedule
+                              || currentTab.value == DashboardTab.tasks) {
                             viewModel.selectToday();
                           }
                         },
@@ -113,7 +118,6 @@ class DashboardScreen extends HookWidget {
   }
 
   List<PersistentBottomNavBarItem> _navBarsItems() {
-
     final activeColorPrimary = Colors.deepPurple;
     final inactiveColorPrimary = Colors.grey;
     return [
@@ -143,7 +147,6 @@ class DashboardScreen extends HookWidget {
       ),
     ];
   }
-
 
   List<Widget> _buildTabs(BuildContext context) {
     return [
@@ -210,8 +213,70 @@ class DashboardScreen extends HookWidget {
       ),
     );
   }
+}
 
-  Widget _buildDayTabs(BuildContext context) {
+class _DayTabs extends StatefulWidget {
+  const _DayTabs({Key? key}) : super(key: key);
+
+  @override
+  State<_DayTabs> createState() => _DayTabsState();
+}
+
+class _DayTabsState extends State<_DayTabs> {
+
+  final ItemScrollController itemScrollController = ItemScrollController();
+  final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
+
+  StreamSubscription? subscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final viewModel = context.read<DashboardScreenViewModel>();
+    subscription = viewModel.studyDayChangeStream.stream.listen(_scrollToDay);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    subscription?.cancel();
+  }
+
+  void _scrollToDay(int dayNumber) {
+    // Add litle delay to make sure scroll initialized
+    Future.delayed(Duration(milliseconds: 10), () {
+      var firstVisibleDayIndex,lastVisibleDayIndex;
+      try {
+        firstVisibleDayIndex =
+            itemPositionsListener.itemPositions.value.first.index;
+        lastVisibleDayIndex =
+            itemPositionsListener.itemPositions.value.last.index;
+      } catch (e) {
+        return;
+      }
+      final selectedDayIndex = dayNumber - 1;
+      // If selected day is near edge of screen, scroll little bit to make
+      // sure nearest days are also visible
+      if (firstVisibleDayIndex == selectedDayIndex ||
+          lastVisibleDayIndex == selectedDayIndex) {
+        if (itemScrollController.isAttached) {
+          var index = dayNumber - 3;
+          if (index < 0) {
+            index = 0;
+          }
+          itemScrollController.scrollTo(
+              index: index,
+              duration: Duration(milliseconds: 400),
+              curve: Curves.ease
+          );
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final viewModel = context.watch<DashboardScreenViewModel>();
     List<StudyDay> days = viewModel.getDays();
 
@@ -229,7 +294,7 @@ class DashboardScreen extends HookWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(5.0),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(10.0),
+                        borderRadius: BorderRadius.circular(10.0),
                         child: Container(height: 80, width: 65, color: Colors.red,)
                     ),
                   )
@@ -239,19 +304,23 @@ class DashboardScreen extends HookWidget {
       );
     }
 
+    var initialScrollIndex = viewModel.selectedDayNumber - 3;
+    if (initialScrollIndex < 0) {
+      initialScrollIndex = 0;
+    }
+
     return Container(
         height: 80.0,
-        child: ListView.builder(
+        child: ScrollablePositionedList.builder(
+          initialScrollIndex: initialScrollIndex,
           scrollDirection: Axis.horizontal,
           itemCount: days.length,
-          shrinkWrap: true,
-          itemBuilder: (BuildContext context, int index) {
-            StudyDay day = days[index];
-            return _StudyDayCard(day);
-          },
-        ));
+          itemBuilder: (context, index) => _StudyDayCard(days[index]),
+          itemScrollController: itemScrollController,
+          itemPositionsListener: itemPositionsListener,
+        )
+    );
   }
-
 }
 
 class _StudyDayCard extends HookWidget {
@@ -264,12 +333,6 @@ class _StudyDayCard extends HookWidget {
     final viewModel = context.watch<DashboardScreenViewModel>();
     final isSelected = viewModel.selectedDay == studyDay;
     final hasProtocols = viewModel.dayHasAnyScheduledProtocols(studyDay);
-
-    useEffect(() {
-      if (isSelected) {
-        _ensureVisible(context);
-      }
-    }, []);
 
     final textStyle = TextStyle(
         fontSize: 20.0,
@@ -326,17 +389,6 @@ class _StudyDayCard extends HookWidget {
             ),
           )),
     );
-  }
-
-  void _ensureVisible(BuildContext context) {
-    Future.delayed(const Duration(milliseconds: 200)).then((value) {
-      Scrollable.ensureVisible(
-          context,
-          alignment: 0.5,
-          curve: Curves.decelerate,
-          duration: const Duration(milliseconds: 160)
-      );
-    });
   }
 }
 
