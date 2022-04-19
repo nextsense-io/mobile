@@ -40,6 +40,7 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
 
   bool get isCompleted => state == ProtocolState.completed;
   bool get isSkipped => state == ProtocolState.skipped;
+  bool get isCancelled => state == ProtocolState.cancelled;
 
   ScheduledProtocol(FirebaseEntity firebaseEntity, PlannedAssessment plannedAssessment) :
         super(firebaseEntity.getDocumentSnapshot()) {

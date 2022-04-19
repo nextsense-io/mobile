@@ -119,7 +119,8 @@ class _ScheduledProtocolRow extends HookWidget {
             Expanded(
               child: Opacity(
                 opacity: scheduledProtocol.isCompleted
-                    || scheduledProtocol.isSkipped ? 0.6 : 1.0,
+                    || scheduledProtocol.isSkipped
+                    || scheduledProtocol.isCancelled ? 0.6 : 1.0,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 12.0),
                   child: InkWell(
@@ -203,12 +204,18 @@ class _ScheduledProtocolRow extends HookWidget {
       return;
     }
 
-    if (scheduledProtocol.isSkipped) {
+    if (scheduledProtocol.isSkipped || scheduledProtocol.isCancelled) {
+      var msg = 'Cannot start protocol cause its already ';
+      if (scheduledProtocol.isSkipped) {
+        msg += 'skipped';
+      } else {
+        msg += 'cancelled';
+      }
       showDialog(
         context: context,
         builder: (_) => SimpleAlertDialog(
             title: 'Warning',
-            content: 'Cannot start protocol cause its already skipped'),
+            content: msg),
       );
       return;
     }
