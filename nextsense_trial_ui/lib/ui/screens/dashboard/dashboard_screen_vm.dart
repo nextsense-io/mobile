@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
@@ -16,7 +15,6 @@ import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class DashboardScreenViewModel extends DeviceStateViewModel {
 
@@ -73,13 +71,21 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
       return;
     }
     setBusy(false);
-    // TODO(alex): if current day out of range show some warning
-    selectDay(_studyManager.today!);
+    StudyDay? studyDay = _studyManager.today;
+    if (studyDay != null) {
+      selectDay(_studyManager.today!);
+    } else {
+      if (DateTime.now().isAfter(_studyManager.currentStudyEndDate)) {
+        selectDay(_studyManager.days.last);
+      } else {
+        selectDay(_studyManager.days.first);
+      }
+    }
   }
 
   void _initProtocolCheckTimer() {
     _protocolCheckTimer = Timer.periodic(
-      Duration(seconds: 1), (_){
+      Duration(seconds: 1), (_) {
         // Only execute beginning of each minute
         if (DateTime.now().second != 0) return;
         _checkScheduledEntitiesTimeConstraints();
