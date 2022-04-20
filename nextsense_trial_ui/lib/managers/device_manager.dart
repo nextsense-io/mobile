@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -40,6 +41,10 @@ class DeviceManager {
       'NextSense device was lost. Please make sure it was not turned off by '
       'accident and make sure your phone is not more than a few meters away. '
       'It should reconnect automatically.';
+  // It takes a maximum of about 1 second to find the device if it is already
+  // powered up. 2 seconds gives enough safety and is not too long to wait if
+  // the device is not powered on or is too far.
+  static final Duration _SCAN_TIMEOUT = Duration(seconds: 2);
 
   final _notificationsManager = getIt<NotificationsManager>();
   final _authManager = getIt<AuthManager>();
@@ -54,6 +59,8 @@ class DeviceManager {
   ValueNotifier<DeviceInternalState?> deviceInternalState = ValueNotifier(null);
   Completer<bool> _deviceInternalStateAvailableCompleter = Completer<bool>();
   Completer<bool> _deviceReadyCompleter = Completer<bool>();
+  Completer<bool> _scanFinishedCompleter = Completer<bool>();
+  Device? _scannedDevice;
   Map<String, dynamic>? _deviceInternalStateValues;
   final _deviceInternalStateChangeController =
       StreamController<DeviceInternalStateEvent>.broadcast();
@@ -111,18 +118,51 @@ class DeviceManager {
       return false;
     }
     bool connected = false;
-    try {
-      connected = await connectDevice(lastPairedDevice);
-    } on PlatformException {}
+
+    CancelListening _cancelScanning =
+        NextsenseBase.startScanning((deviceAttributesJson) {
+      Map<String, dynamic> deviceAttributes = gson.decode(deviceAttributesJson);
+      String macAddress =
+          deviceAttributes[describeEnum(DeviceAttributesFields.macAddress)];
+      _logger.log(Level.INFO, 'Found a device: ' + macAddress);
+      if (macAddress == lastPairedDevice.macAddress) {
+        String name = deviceAttributes[
+          describeEnum(DeviceAttributesFields.name)];
+        _scannedDevice = new Device(macAddress, name);
+        _logger.log(Level.INFO, 'Last paired device found, reconnecting');
+        _scanFinishedCompleter.complete(true);
+      }
+    });
+    _logger.log(Level.FINE, 'Starting to wait on scan');
+    await waitScanFinished(_SCAN_TIMEOUT);
+    _cancelScanning();
+    _logger.log(Level.FINE, 'finished waiting on scan');
+
+    // Connect to device automatically if found
+    if (_scannedDevice != null) {
+      _scannedDevice = null;
+      try {
+        connected = await connectDevice(lastPairedDevice);
+      } on PlatformException {}
+    }
     if (connected) {
       _logger.log(Level.INFO, "Connected to last paired device "
           "${lastPairedDevice.macAddress}");
-    }
-    else {
+    } else {
       _logger.log(Level.WARNING, "Failed connect to last paired device "
           "${lastPairedDevice.macAddress}");
     }
     return connected;
+  }
+
+  Future<bool> waitScanFinished(Duration timeout) async {
+    _scanFinishedCompleter = new Completer<bool>();
+    new Timer(timeout, () {
+      if (!_scanFinishedCompleter.isCompleted) {
+        _scanFinishedCompleter.complete(_scannedDevice != null);
+      }
+    });
+    return _scanFinishedCompleter.future;
   }
 
   Future<bool> waitDeviceReady(Duration timeout) async {
