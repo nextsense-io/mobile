@@ -48,7 +48,7 @@ class StudyManager {
       return null;
     }
     DateTime now = DateTime.now();
-    return _days!.firstWhere((StudyDay day) => now.isSameDay(day.date));
+    return _days!.firstWhereOrNull((StudyDay day) => now.isSameDay(day.date));
   }
 
   Future<bool> loadCurrentStudy(String study_id, DateTime startDate, DateTime endDate) async {
@@ -124,16 +124,16 @@ class StudyManager {
   }
 
   Future<List<ScheduledProtocol>> _loadScheduledProtocolsFromCache() async {
-    List<FirebaseEntity> entities =
+    List<FirebaseEntity> scheduledProtocolEntities =
         await _queryScheduledProtocols(fromCache: true);
 
     List<PlannedAssessment> assessments =
         await _loadPlannedAssessments(fromCache: true);
     List<ScheduledProtocol> result = [];
 
-    for (FirebaseEntity entity in entities) {
+    for (FirebaseEntity entity in scheduledProtocolEntities) {
       final assessmentId = (entity.getValue(ScheduledProtocolKey.protocol)
-      as DocumentReference).id;
+          as DocumentReference).id;
       PlannedAssessment? assessment = assessments.firstWhereOrNull(
           (assesment) => assessmentId == assesment.reference.id);
 
@@ -154,7 +154,7 @@ class StudyManager {
     return await _firestoreManager.queryEntities(
         [Table.users, Table.scheduled_protocols],
         [_authManager.getUserCode()!],
-        fromCacheWithKey: fromCache ? "scheduled_protocols" : null);
+        fromCacheWithKey: fromCache ? Table.scheduled_protocols.name() : null);
   }
 
   Future<List<PlannedAssessment>> _loadPlannedAssessments(
@@ -164,7 +164,7 @@ class StudyManager {
     }
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
         [Table.studies, Table.planned_assessments], [_currentStudy!.id],
-        fromCacheWithKey: fromCache ? "planned_assessments" : null);
+        fromCacheWithKey: fromCache ? Table.planned_assessments.name() : null);
 
     return entities
         .map((firebaseEntity) =>

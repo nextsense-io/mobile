@@ -131,7 +131,6 @@ class VariableDaytimeProtocol extends BaseProtocol {
   @override
   String get intro => 'Run a recording of a variable amount of time at daytime.'
       ' You can stop the recording at any time.';
-
 }
 
 class SleepProtocol extends BaseProtocol {
@@ -155,7 +154,6 @@ class SleepProtocol extends BaseProtocol {
   // TODO(alex): add sleep protocol intro
   @override
   String get intro => 'Sleep protocol intro';
-
 }
 
 class EyesOpenEyesClosedProtocol extends BaseProtocol {
@@ -177,7 +175,6 @@ class EyesOpenEyesClosedProtocol extends BaseProtocol {
 
   @override
   String get intro => 'Eyes open/Eyes closed protocol intro';
-
 }
 
 class EyesMovementProtocol extends BaseProtocol {
@@ -199,7 +196,6 @@ class EyesMovementProtocol extends BaseProtocol {
 
   @override
   String get intro => 'Eyes Movement protocol intro';
-
 }
 
 ProtocolType protocolTypeFromString(String typeStr) {
