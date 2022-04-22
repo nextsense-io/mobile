@@ -22,7 +22,7 @@ class StartAdhocProtocolDialog extends HookWidget {
           onPressed: () {
             _navigation.navigateWithCapabilityChecking(
                 context,
-                ProtocolScreen.id, arguments: adhocProtocol);
+                adhocProtocol.protocol.screenId, arguments: adhocProtocol);
             Navigator.pop(context);
           },
           child: Container(

@@ -18,6 +18,8 @@ import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
@@ -70,10 +72,16 @@ class Navigation {
       case CheckInternetScreen.id: return MaterialPageRoute(
             builder: (context) => CheckInternetScreen());
 
-    // Routes with arguments
+      // Routes with arguments
       case ProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
-          ProtocolScreen(settings.arguments as RunnableProtocol));
+            ProtocolScreen(settings.arguments as RunnableProtocol));
+      case EOECProtocolScreen.id:
+        return MaterialPageRoute(builder: (context) =>
+            EOECProtocolScreen(settings.arguments as RunnableProtocol));
+      case EyesMovementProtocolScreen.id:
+        return MaterialPageRoute(builder: (context) =>
+            EyesMovementProtocolScreen(settings.arguments as RunnableProtocol));
       case SurveyScreen.id:
         return MaterialPageRoute(builder: (context) =>
             SurveyScreen(settings.arguments as RunnableSurvey));

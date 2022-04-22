@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/managers/api.dart';
+import 'package:nextsense_trial_ui/managers/audio_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
@@ -30,6 +31,7 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<SessionManager>(SessionManager());
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
   getIt.registerSingleton<DiskSpaceManager>(DiskSpaceManager());
+  getIt.registerSingleton<AudioManager>(AudioManager());
   getIt.registerSingleton<Navigation>(Navigation());
 
   await getIt.get<NotificationsManager>().initializePlugin();

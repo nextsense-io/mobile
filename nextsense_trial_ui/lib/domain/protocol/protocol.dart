@@ -1,5 +1,8 @@
 // Defines the list of existing protocols and common properties of each.
 import 'package:flutter/foundation.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum ProtocolType {
@@ -22,6 +25,8 @@ enum ProtocolState {
 abstract class Protocol {
 
   ProtocolType get type;
+
+  String get screenId;
 
   DateTime get startTime;
 
@@ -80,6 +85,9 @@ abstract class BaseProtocol implements Protocol {
   Duration? _maxDurationOverride;
 
   ProtocolState _protocolState = ProtocolState.not_started;
+
+  @override
+  String get screenId => ProtocolScreen.id;
 
   @override
   ProtocolType get type => ProtocolType.unknown;
@@ -162,6 +170,9 @@ class EyesOpenEyesClosedProtocol extends BaseProtocol {
   ProtocolType get type => ProtocolType.eoec;
 
   @override
+  String get screenId => EOECProtocolScreen.id;
+
+  @override
   String get nameForUser => "Eyes Open, Eyes Closed";
 
   @override
@@ -181,6 +192,9 @@ class EyesMovementProtocol extends BaseProtocol {
 
   @override
   ProtocolType get type => ProtocolType.eyes_movement;
+
+  @override
+  String get screenId => EyesMovementProtocolScreen.id;
 
   @override
   String get nameForUser => "Eyes Movement";
