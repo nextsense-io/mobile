@@ -65,6 +65,9 @@ class SignInScreenViewModel extends ViewModel {
     final user = _authManager.user!;
 
     final studyId = user.getValue(UserKey.current_study);
+    if (studyId == null) {
+      throw("'current_study' is not set for user");
+    }
     bool enrolledStudyLoaded =
         await _studyManager.loadEnrolledStudy(user.id, studyId);
     if (!enrolledStudyLoaded) {

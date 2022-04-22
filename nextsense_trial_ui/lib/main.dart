@@ -6,6 +6,7 @@ import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
+import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
@@ -26,6 +27,7 @@ void main() async {
   await Firebase.initializeApp();
   await initDependencies();
   await getIt<Preferences>().init();
+  await getIt<NotificationsManager>().init();
   NextsenseBase.startService();
   runApp(NextSenseTrialApp());
 }

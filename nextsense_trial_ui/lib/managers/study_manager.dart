@@ -116,6 +116,8 @@ class StudyManager {
       // If study already initialized, return scheduled protocols from cache
       _logger.log(Level.WARNING, 'Loading scheduled protocols from cache');
       scheduledProtocols = await _loadScheduledProtocolsFromCache();
+      _logger.log(Level.WARNING, 'Loading ${scheduledProtocols.length}'
+          ' scheduled protocols');
     } else {
       _logger.log(Level.WARNING,
           'Creating scheduled protocols based on planned assessments');
@@ -144,6 +146,10 @@ class StudyManager {
           scheduledProtocol.save();
 
           scheduledProtocols.add(scheduledProtocol);
+
+          // Make sure cache is up to date, need to query whole collection
+          // Without this query undesired items can appear in cache
+          await _queryScheduledProtocols();
         }
       }
     }
