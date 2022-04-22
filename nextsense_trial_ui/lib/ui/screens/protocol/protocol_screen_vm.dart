@@ -12,24 +12,47 @@ import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
-enum ProtocolCancelReason {
-  none,
-  deviceDisconnectedTimeout
+enum ProtocolCancelReason { none, deviceDisconnectedTimeout }
+
+// Part of a protocol that works in discrete phases.
+class ProtocolPart {
+  String state;
+  Duration duration;
+  String? text;
+  String? marker;
+
+  ProtocolPart({
+    required String state, required Duration duration, String? text,
+        String? marker}) :
+        this.state = state,
+        this.duration = duration,
+        this.text = text,
+        this.marker = marker;
+}
+
+// Protocol part scheduled in time in the protocol. The schedule can be repeated
+// many times until the protccol time is complete.
+class ScheduledProtocolPart {
+  ProtocolPart protocolPart;
+  int relativeSeconds;
+
+  ScheduledProtocolPart({required ProtocolPart protocolPart,
+    required int relativeSeconds}) :
+        this.protocolPart = protocolPart,
+        this.relativeSeconds = relativeSeconds;
 }
 
 class ProtocolScreenViewModel extends DeviceStateViewModel {
-
   final StudyManager _studyManager = getIt<StudyManager>();
-  final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
-
+  final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
   final RunnableProtocol runnableProtocol;
+
   Protocol get protocol => runnableProtocol.protocol;
 
   int secondsElapsed = 0;
   bool sessionIsActive = false;
-
   int disconnectTimeoutSecondsLeft = 10;
 
   // This indicates that minimum duration of protocol is passed
@@ -37,13 +60,10 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   bool get protocolCompleted => minDurationPassed == true;
   bool minDurationPassed = false;
   bool maxDurationPassed = false;
-
   Timer? timer;
   Timer? disconnectTimeoutTimer;
   bool _timerPaused = false;
   ProtocolCancelReason protocolCancelReason = ProtocolCancelReason.none;
-
-
   bool protocolCompletedHandlerExecuted = false;
 
   ProtocolScreenViewModel(this.runnableProtocol);
@@ -81,14 +101,14 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     final int protocolMaxTimeSeconds = protocol.maxDuration.inSeconds;
     if (timer?.isActive ?? false) timer?.cancel();
     secondsElapsed = 0;
+    onTimerStart();
     notifyListeners();
     timer = Timer.periodic(
       Duration(seconds: 1),
-          (_){
-
+      (_) {
         if (_timerPaused) return;
 
-        secondsElapsed+=1;
+        secondsElapsed += 1;
         if (secondsElapsed >= protocolMinTimeSeconds) {
           minDurationPassed = true;
         }
@@ -97,10 +117,15 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           timer?.cancel();
           onTimerFinished();
         }
+        onTimerTick(secondsElapsed);
         notifyListeners();
       },
     );
   }
+
+  void onTimerTick(int secondsElapsed) {}
+
+  void onTimerStart() {}
 
   void onTimerFinished() {
     _logger.log(Level.INFO, "onTimerFinished");
@@ -131,17 +156,17 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _timerPaused = true;
     disconnectTimeoutTimer?.cancel();
     // TODO(alex): get disconnect timeout from firebase
-    disconnectTimeoutSecondsLeft =
-        protocol.disconnectTimeoutDuration.inSeconds;
+    disconnectTimeoutSecondsLeft = protocol.disconnectTimeoutDuration.inSeconds;
     disconnectTimeoutTimer = Timer.periodic(
-      Duration(seconds: 1), (_){
-      disconnectTimeoutSecondsLeft -= 1;
-      if (disconnectTimeoutSecondsLeft <= 0) {
-        disconnectTimeoutTimer?.cancel();
-        _onDisconnectTimeout();
-      }
-      notifyListeners();
-    },
+      Duration(seconds: 1),
+      (_) {
+        disconnectTimeoutSecondsLeft -= 1;
+        if (disconnectTimeoutSecondsLeft <= 0) {
+          disconnectTimeoutTimer?.cancel();
+          _onDisconnectTimeout();
+        }
+        notifyListeners();
+      },
     );
   }
 
@@ -185,10 +210,11 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           protocol.name);
       runnableProtocol.update(
           state: ProtocolState.running,
-          sessionId: _sessionManager.currentSessionId
-      );
+          sessionId: _sessionManager.currentSessionId);
     } else {
-      _logger.log(Level.WARNING, 'Cannot start ${protocol.name} protocol, device '
+      _logger.log(
+          Level.WARNING,
+          'Cannot start ${protocol.name} protocol, device '
           'not connected.');
     }
   }
@@ -207,9 +233,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   // passed
   void onProtocolCompleted() {
     _logger.log(Level.INFO, 'Protocol ${protocol.name} completed');
-    runnableProtocol.update(
-        state: ProtocolState.completed
-    );
+    runnableProtocol.update(state: ProtocolState.completed);
   }
-
 }

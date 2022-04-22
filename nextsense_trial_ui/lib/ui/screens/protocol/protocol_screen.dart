@@ -11,6 +11,95 @@ import 'package:nextsense_trial_ui/utils/duration.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
+
+Future<bool> _confirmStopSessionDialog(BuildContext context,
+    ProtocolScreenViewModel viewModel) async {
+  String confirmStopText = 'Protocol is not finished yet.\n'
+      'Are you sure you want to stop?';
+  if (viewModel.minDurationPassed) {
+    confirmStopText = 'Protocol minimum time successfully passed!\n'
+        'You can continue protocol until maximum duration reached.\n'
+        'Do you want to stop?';
+  }
+  return await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Stop session?'),
+          content: Text(confirmStopText),
+          actions: <Widget>[
+            TextButton(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: Text('Continue')),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: Text('Stop'),
+            )
+          ],
+        );
+      });
+}
+
+class SessionControlButton extends StatelessWidget {
+
+  final RunnableProtocol _runnableProtocol;
+
+  SessionControlButton(RunnableProtocol runnableProtocol) :
+        _runnableProtocol = runnableProtocol;
+
+  @override
+  Widget build(BuildContext context) {
+    ProtocolScreenViewModel viewModel = context.watch<ProtocolScreenViewModel>();
+    var sessionControlButtonColor = Colors.blue;
+    if (viewModel.sessionIsActive) {
+      sessionControlButtonColor = Colors.red;
+      if (viewModel.protocolCompleted) {
+        sessionControlButtonColor = Colors.green;
+      }
+    }
+
+    return ElevatedButton(
+        style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all<Color>(
+                sessionControlButtonColor)),
+        onPressed: () async {
+          if (viewModel.sessionIsActive) {
+            bool confirm = await _confirmStopSessionDialog(context,
+                viewModel);
+            if (confirm) {
+              viewModel.stopSession();
+            }
+            // Exit from protocol screen for adhoc
+            if (_runnableProtocol.type == RunnableProtocolType.adhoc) {
+              Navigator.pop(context);
+            }
+          } else if (viewModel.deviceIsConnected) {
+            viewModel.startSession();
+          } else {
+            await showDialog(
+                context: context,
+                builder: (_) => SimpleAlertDialog(
+                    title: 'Connection error',
+                    content: 'Device is not connected.')
+            );
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            viewModel.sessionIsActive
+                ? "Stop session"
+                : "Start session",
+            style: TextStyle(fontSize: 30.0),
+          ),
+        ));
+  }
+}
+
 class ProtocolScreen extends HookWidget {
 
   static const String id = 'protocol_screen';
@@ -27,117 +116,89 @@ class ProtocolScreen extends HookWidget {
         viewModelBuilder: () => ProtocolScreenViewModel(runnableProtocol),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) => WillPopScope(
-          onWillPop: () => _onBackButtonPressed(context, viewModel),
-          child: _body(context, viewModel),
+          onWillPop: () => onBackButtonPressed(context, viewModel),
+          child: body(context, viewModel),
         ));
   }
 
-  Widget _body(BuildContext context, ProtocolScreenViewModel viewModel) {
+  Widget runningStateBody(
+      BuildContext context, ProtocolScreenViewModel viewModel) {
+    // The basic body will show a timer while running.
+    return notRunningStateBody(context, viewModel);
+  }
+
+  Widget notRunningStateBody(
+      BuildContext context, ProtocolScreenViewModel viewModel) {
     final whiteTextStyle = TextStyle(color: Colors.white, fontSize: 20);
 
-    var sessionControlButtonColor = Colors.blue;
-    if (viewModel.sessionIsActive) {
-      sessionControlButtonColor = Colors.red;
-      if (viewModel.protocolCompleted) {
-        sessionControlButtonColor = Colors.green;
-      }
-    }
-    return SafeArea(
-      child: Scaffold(
-          body: Container(
-            padding: EdgeInsets.all(10.0),
-            decoration: BoxDecoration(color: Colors.black),
-            child: Center(
+    return Container(
+      padding: EdgeInsets.all(10.0),
+      decoration: BoxDecoration(color: Colors.black),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+                child: Align(
+                    alignment: Alignment.centerRight,
+                    child: DeviceStateDebugMenu(iconColor: Colors.white))),
+            Text(protocol.description, style: whiteTextStyle),
+            Opacity(
+              opacity: 0.3,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                      child: Align(
-                          alignment: Alignment.centerRight,
-                          child: DeviceStateDebugMenu(iconColor: Colors.white))),
-                  Text(protocol.description, style: whiteTextStyle),
-                  Opacity(
-                    opacity: 0.3,
-                    child: Column(
-                      children: [
-                        Text(
-                          "Min duration: " +
-                              humanizeDuration(protocol.minDuration),
-                          style: whiteTextStyle,
-                        ),
-                        Text(
-                          "Max duration: " +
-                              humanizeDuration(protocol.maxDuration),
-                          style: whiteTextStyle,
-                        ),
-                      ],
-                    ),
+                  Text(
+                    "Min duration: " +
+                        humanizeDuration(protocol.minDuration),
+                    style: whiteTextStyle,
                   ),
-                  Stack(
-                    children: [
-                      Center(child: _timer(context)),
-                      if (!viewModel.deviceCanRecord)
-                        _deviceInactiveOverlay(context, viewModel)
-                    ],
+                  Text(
+                    "Max duration: " +
+                        humanizeDuration(protocol.maxDuration),
+                    style: whiteTextStyle,
                   ),
-                  Container(
-                    child: Visibility(
-                      visible:
-                      viewModel.sessionIsActive && viewModel.deviceIsConnected,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: CircularProgressIndicator(),
-                          ),
-                          Text(
-                            "Test in progress",
-                            style: TextStyle(color: Colors.white),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                  _statusMessage(viewModel),
-                  ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.all<Color>(
-                              sessionControlButtonColor)),
-                      onPressed: () async {
-                        if (viewModel.sessionIsActive) {
-                          bool confirm = await _confirmStopSessionDialog(context,
-                              viewModel);
-                          if (confirm) {
-                            viewModel.stopSession();
-                          }
-                          // Exit from protocol screen for adhoc
-                          if (runnableProtocol.type == RunnableProtocolType.adhoc) {
-                            Navigator.pop(context);
-                          }
-                        } else if (viewModel.deviceIsConnected) {
-                            viewModel.startSession();
-                        } else {
-                          await showDialog(
-                            context: context,
-                            builder: (_) => SimpleAlertDialog(
-                                  title: 'Connection error',
-                                  content: 'Device is not connected.')
-                          );
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          viewModel.sessionIsActive
-                              ? "Stop session"
-                              : "Start session",
-                          style: TextStyle(fontSize: 30.0),
-                        ),
-                      )),
                 ],
               ),
             ),
-          )),
+            Stack(
+              children: [
+                Center(child: _timer(context)),
+                if (!viewModel.deviceCanRecord)
+                  _deviceInactiveOverlay(context, viewModel)
+              ],
+            ),
+            Container(
+              child: Visibility(
+                visible:
+                viewModel.sessionIsActive && viewModel.deviceIsConnected,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: CircularProgressIndicator(),
+                    ),
+                    Text(
+                      "Test in progress",
+                      style: TextStyle(color: Colors.white),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            statusMessage(viewModel),
+            SessionControlButton(runnableProtocol),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget body(BuildContext context, ProtocolScreenViewModel viewModel) {
+    return SafeArea(
+      child: Scaffold(
+          body: viewModel.sessionIsActive ?
+              runningStateBody(context, viewModel) :
+              notRunningStateBody(context, viewModel)),
     );
   }
 
@@ -162,7 +223,7 @@ class ProtocolScreen extends HookWidget {
     );
   }
 
-  Future<bool> _onBackButtonPressed(
+  Future<bool> onBackButtonPressed(
       BuildContext context, ProtocolScreenViewModel viewModel) async {
     if (viewModel.sessionIsActive) {
       bool confirm = await _confirmStopSessionDialog(context, viewModel);
@@ -173,38 +234,6 @@ class ProtocolScreen extends HookWidget {
       return false;
     }
     return true;
-  }
-
-  Future<bool> _confirmStopSessionDialog(BuildContext context,
-      ProtocolScreenViewModel viewModel) async {
-    String confirmStopText = 'Protocol is not finished yet.\n'
-        'Are you sure you want to stop?';
-    if (viewModel.minDurationPassed) {
-      confirmStopText = 'Protocol minimum time successfully passed!\n'
-          'You can continue protocol until maximum duration reached.\n'
-          'Do you want to stop?';
-    }
-    return await showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Stop session?'),
-            content: Text(confirmStopText),
-            actions: <Widget>[
-              TextButton(
-                  onPressed: () {
-                    Navigator.pop(context, false);
-                  },
-                  child: Text('Continue')),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context, true);
-                },
-                child: Text('Stop'),
-              )
-            ],
-          );
-        });
   }
 
   Widget _deviceInactiveOverlay(
@@ -268,7 +297,7 @@ class ProtocolScreen extends HookWidget {
     );
   }
 
-  Widget _statusMessage(ProtocolScreenViewModel viewModel) {
+  Widget statusMessage(ProtocolScreenViewModel viewModel) {
     bool isError = !viewModel.protocolCompleted &&
         viewModel.protocolCancelReason != ProtocolCancelReason.none;
 
@@ -300,5 +329,4 @@ class ProtocolScreen extends HookWidget {
                   fontSize: 18)),
         ));
   }
-
 }
