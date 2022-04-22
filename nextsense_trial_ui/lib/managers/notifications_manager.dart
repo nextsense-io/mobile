@@ -1,15 +1,29 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+
+  print("Handling a background message: ${message.messageId}");
+
+  // Use this method to automatically convert the push data,
+  // in case you gonna use our data standard
+  AwesomeNotifications().createNotificationFromJsonData(message.data);
+}
 
 class NotificationsManager {
 
   final CustomLogPrinter _logger = CustomLogPrinter('NotificationsManager');
-
+  
   NotificationManager() {}
 
-  Future initializePlugin() async {
+  Future init() async {
     _logger.log(Level.INFO, 'initializing');
     AwesomeNotifications().initialize(
       // set the icon to null if you want to use the default app icon
@@ -42,6 +56,14 @@ class NotificationsManager {
         AwesomeNotifications().requestPermissionToSendNotifications();
       }
     });
+
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    var messaging = FirebaseMessaging.instance;
+    messaging.getToken().then((value){
+      _onFcmTokenUpdated(value!);
+    });
+
     _logger.log(Level.INFO, 'initialized');
   }
 
@@ -61,4 +83,15 @@ class NotificationsManager {
   Future hideAlertNotification(int id) async {
     await AwesomeNotifications().cancel(id);
   }
+
+  void _onFcmTokenUpdated(String fcmToken) {
+    getIt<Preferences>().setString(PreferenceKey.fcmToken, fcmToken);
+    final _authManager = getIt<AuthManager>();
+    if (_authManager.user!=null) {
+      _authManager.user!
+        ..setFcmToken(fcmToken)
+        ..save();
+    }
+  }
+
 }

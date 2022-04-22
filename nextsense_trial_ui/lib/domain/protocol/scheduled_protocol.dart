@@ -13,7 +13,8 @@ import 'package:nextsense_trial_ui/utils/android_logger.dart';
 enum ScheduledProtocolKey {
   protocol,
   sessions,
-  status
+  status,
+  start_date_time
 }
 
 class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
@@ -62,6 +63,10 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
         .subtract(Duration(minutes: plannedAssessment.allowedEarlyStartTimeMinutes));
     allowedStartBefore = startDateTime
         .add(Duration(minutes: plannedAssessment.allowedLateStartTimeMinutes));
+
+    // Needed for later push notifications processing at backend
+    setValue(
+        ScheduledProtocolKey.start_date_time, startDateTime.toString());
   }
 
   // Set state of protocol in firebase

@@ -38,6 +38,9 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
   PlannedAssessment(FirebaseEntity firebaseEntity, DateTime studyStartDate) :
         super(firebaseEntity.getDocumentSnapshot()) {
     final dayNumber = getValue(PlannedAssessmentKey.day);
+    if (dayNumber == null || !(dayNumber is int)) {
+      throw("'day' is not set or not number in planned assessment");
+    }
     day = StudyDay(
         studyStartDate.add(Duration(days: dayNumber - 1)),
         dayNumber

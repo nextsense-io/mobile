@@ -16,7 +16,11 @@ enum UserKey {
   // BigTable key. Generated as a UUID.
   bt_key,
   // How many sessions were recorded by this user.
-  session_number
+  session_number,
+  // FCM Token for push notifications
+  fcm_token,
+  // Current user's timezone
+  timezone
 }
 
 class User extends FirebaseEntity<UserKey> {
@@ -33,6 +37,18 @@ class User extends FirebaseEntity<UserKey> {
     setValue(UserKey.last_paired_device, macAddress);
   }
 
+  void setFcmToken(String fcmToken) {
+    setValue(UserKey.fcm_token, fcmToken);
+  }
+
+  void updateTimezone() {
+    DateTime dateTime = DateTime.now();
+    // Note inHours can return negative value
+    String hours = dateTime.timeZoneOffset.inHours.toString();
+    int minutesValue = (dateTime.timeZoneOffset.inMinutes % 60).abs();
+    String minutes = minutesValue == 30 ? "30" : "00";
+    setValue(UserKey.timezone, "${hours}:${minutes}");
+  }
   /**
    * Checks that the current date is between the study start and end dates for
    * this subject if present.

@@ -20,8 +20,9 @@ dependencies:
   dart_numerics: ^0.0.6
   # disk_space: ^0.2.1
   dropdown_button2: ^1.2.1
-  firebase_auth: ^3.1.1
-  firebase_core: ^1.6.0
+  firebase_core: ^1.14.1
+  firebase_auth: ^3.3.14
+  firebase_messaging: ^11.2.13
   flutter_dotenv: ^5.0.2
   flutter_form_builder: ^7.1.1
   flutter_hooks: ^0.18.2+1

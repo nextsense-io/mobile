@@ -33,6 +33,4 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<DiskSpaceManager>(DiskSpaceManager());
   getIt.registerSingleton<AudioManager>(AudioManager());
   getIt.registerSingleton<Navigation>(Navigation());
-
-  await getIt.get<NotificationsManager>().initializePlugin();
 }

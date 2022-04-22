@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/api.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:uuid/uuid.dart';
 
@@ -22,6 +23,7 @@ class AuthManager {
   final _logger = CustomLogPrinter('AuthManager');
   final _firestoreManager = getIt<FirestoreManager>();
   final _nextsenseApi = getIt<NextsenseApi>();
+  final _preferences = getIt<Preferences>();
 
   final Uuid _uuid = Uuid();
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -73,10 +75,20 @@ class AuthManager {
 
     // Persist bt_key
     if (_user!.getValue(UserKey.bt_key) == null) {
-      _user!
-        ..setValue(UserKey.bt_key, _uuid.v4())
-        ..save();
+      _user!.setValue(UserKey.bt_key, _uuid.v4());
     }
+
+    // Persist fcm token
+    String? fcmToken = _preferences.getString(PreferenceKey.fcmToken);
+    if (fcmToken != null) {
+      _user!.setFcmToken(fcmToken);
+    }
+
+    // Save timezone
+    // TODO(alex): handle timezone change in broadcast receiver
+    _user!.updateTimezone();
+
+    user!.save();
 
     return AuthenticationResult.success;
   }
