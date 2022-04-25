@@ -189,12 +189,10 @@ class EyesOpenEyesClosedProtocol extends BaseProtocol {
   static final ProtocolPart _eyesOpen = ProtocolPart(
       state: EOECState.EO.name,
       duration: Duration(seconds: 60),
-      text: "Keep your eyes open",
       marker: EOECState.EO.name);
   static final ProtocolPart _eyesClosed = ProtocolPart(
       state: EOECState.EO.name,
       duration: Duration(seconds: 60),
-      text: "Keep your eyes closed",
       marker: EOECState.EC.name);
   static final List<ProtocolPart> _protocolBlock = [_eyesOpen, _eyesClosed];
 
@@ -237,7 +235,6 @@ class EyesMovementProtocol extends BaseProtocol {
   static final ProtocolPart _rest = ProtocolPart(
       state: EyesMovementState.REST.name,
       duration: Duration(seconds: 15),
-      text: "REST",
       marker: "REST");
   static final ProtocolPart _blackScreen = ProtocolPart(
       state: EyesMovementState.BLACK_SCREEN.name,
@@ -245,27 +242,22 @@ class EyesMovementProtocol extends BaseProtocol {
   static final ProtocolPart _blink = ProtocolPart(
       state: EyesMovementState.BLINK.name,
       duration: Duration(seconds: 10),
-      text: "10 x BLINK",
       marker: "BLINKS");
   static final ProtocolPart _rightLeft = ProtocolPart(
       state: EyesMovementState.MOVE_RIGHT_LEFT.name,
       duration: Duration(seconds: 10),
-      text: "5 x RIGHT-LEFT",
       marker: "HEOG");
   static final ProtocolPart _leftRight = ProtocolPart(
       state: EyesMovementState.MOVE_LEFT_RIGHT.name,
       duration: Duration(seconds: 10),
-      text: "5 x LEFT-RIGHT",
       marker: "HEOG");
   static final ProtocolPart _upDown = ProtocolPart(
       state: EyesMovementState.MOVE_UP_DOWN.name,
       duration: Duration(seconds: 10),
-      text: "5 x UP-DOWN",
       marker: "VEOG");
   static final ProtocolPart _downUp = ProtocolPart(
       state: EyesMovementState.MOVE_DOWN_UP.name,
       duration: Duration(seconds: 10),
-      text: "5 x DOWN-UP",
       marker: "VEOG");
   static final List<ProtocolPart> _protocolBlock = [_rest, _blink, _blackScreen,
     _leftRight, _blackScreen, _upDown, _blackScreen, _rest, _blink,
