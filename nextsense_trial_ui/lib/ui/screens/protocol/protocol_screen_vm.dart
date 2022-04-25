@@ -14,24 +14,8 @@ import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 enum ProtocolCancelReason { none, deviceDisconnectedTimeout }
 
-// Part of a protocol that works in discrete phases.
-class ProtocolPart {
-  String state;
-  Duration duration;
-  String? text;
-  String? marker;
-
-  ProtocolPart({
-    required String state, required Duration duration, String? text,
-        String? marker}) :
-        this.state = state,
-        this.duration = duration,
-        this.text = text,
-        this.marker = marker;
-}
-
 // Protocol part scheduled in time in the protocol. The schedule can be repeated
-// many times until the protccol time is complete.
+// many times until the protocol time is complete.
 class ScheduledProtocolPart {
   ProtocolPart protocolPart;
   int relativeSeconds;

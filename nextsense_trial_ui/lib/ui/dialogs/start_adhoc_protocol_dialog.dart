@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
-import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_mapping.dart';
 import 'package:provider/src/provider.dart';
 
 class StartAdhocProtocolDialog extends HookWidget {
@@ -22,7 +22,9 @@ class StartAdhocProtocolDialog extends HookWidget {
           onPressed: () {
             _navigation.navigateWithCapabilityChecking(
                 context,
-                adhocProtocol.protocol.screenId, arguments: adhocProtocol);
+                ProtocolScreenMapping.getProtocolScreenId(
+                    adhocProtocol.protocol.type),
+                arguments: adhocProtocol);
             Navigator.pop(context);
           },
           child: Container(

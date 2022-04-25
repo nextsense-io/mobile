@@ -26,8 +26,6 @@ abstract class Protocol {
 
   ProtocolType get type;
 
-  String get screenId;
-
   DateTime get startTime;
 
   Duration get minDuration;
@@ -43,6 +41,8 @@ abstract class Protocol {
   String get name;
 
   String get nameForUser;
+
+  List<ProtocolPart> get protocolBlock;
 
   factory Protocol(ProtocolType type,
       {DateTime? startTime, Duration? minDuration, Duration? maxDuration}) {
@@ -77,6 +77,20 @@ abstract class Protocol {
   }
 }
 
+// Part of a protocol that works in discrete phases.
+class ProtocolPart {
+  String state;
+  Duration duration;
+  String? marker;
+
+  ProtocolPart({
+    required String state, required Duration duration, String? text,
+    String? marker}) :
+        this.state = state,
+        this.duration = duration,
+        this.marker = marker;
+}
+
 abstract class BaseProtocol implements Protocol {
   final CustomLogPrinter _logger = CustomLogPrinter('BaseProtocol');
 
@@ -85,9 +99,6 @@ abstract class BaseProtocol implements Protocol {
   Duration? _maxDurationOverride;
 
   ProtocolState _protocolState = ProtocolState.not_started;
-
-  @override
-  String get screenId => ProtocolScreen.id;
 
   @override
   ProtocolType get type => ProtocolType.unknown;
@@ -100,6 +111,9 @@ abstract class BaseProtocol implements Protocol {
 
   @override
   Duration get disconnectTimeoutDuration => Duration(minutes: 5);
+
+  @override
+  List<ProtocolPart> get protocolBlock => [];
 
   BaseProtocol();
 
@@ -147,7 +161,7 @@ class SleepProtocol extends BaseProtocol {
   ProtocolType get type => ProtocolType.sleep;
 
   @override
-  String get nameForUser => "Sleep";
+  String get nameForUser => 'Sleep';
 
   @override
   Duration get minDuration => _minDurationOverride ?? Duration(hours: 1);
@@ -164,13 +178,28 @@ class SleepProtocol extends BaseProtocol {
   String get intro => 'Sleep protocol intro';
 }
 
+enum EOECState {
+  UNKNOWN,
+  EO,  // Eyes Open
+  EC  // Eyes Closed
+}
+
 class EyesOpenEyesClosedProtocol extends BaseProtocol {
+
+  static final ProtocolPart _eyesOpen = ProtocolPart(
+      state: EOECState.EO.name,
+      duration: Duration(seconds: 60),
+      text: "Keep your eyes open",
+      marker: EOECState.EO.name);
+  static final ProtocolPart _eyesClosed = ProtocolPart(
+      state: EOECState.EO.name,
+      duration: Duration(seconds: 60),
+      text: "Keep your eyes closed",
+      marker: EOECState.EC.name);
+  static final List<ProtocolPart> _protocolBlock = [_eyesOpen, _eyesClosed];
 
   @override
   ProtocolType get type => ProtocolType.eoec;
-
-  @override
-  String get screenId => EOECProtocolScreen.id;
 
   @override
   String get nameForUser => "Eyes Open, Eyes Closed";
@@ -186,15 +215,64 @@ class EyesOpenEyesClosedProtocol extends BaseProtocol {
 
   @override
   String get intro => 'Eyes open/Eyes closed protocol intro';
+
+  @override
+  List<ProtocolPart> get protocolBlock => _protocolBlock;
+}
+
+enum EyesMovementState {
+  UNKNOWN,
+  NOT_RUNNING,
+  REST,  // Rest period.
+  BLACK_SCREEN,  // Show black screen between activities.
+  BLINK,  // Blink eyes.
+  MOVE_RIGHT_LEFT,  // Moves eyes back and forth horizontally.
+  MOVE_LEFT_RIGHT,  // Moves eyes back and forth horizontally.
+  MOVE_UP_DOWN,  // Moves eyes back and forth vertically.
+  MOVE_DOWN_UP,  // Moves eyes back and forth vertically.
 }
 
 class EyesMovementProtocol extends BaseProtocol {
 
-  @override
-  ProtocolType get type => ProtocolType.eyes_movement;
+  static final ProtocolPart _rest = ProtocolPart(
+      state: EyesMovementState.REST.name,
+      duration: Duration(seconds: 15),
+      text: "REST",
+      marker: "REST");
+  static final ProtocolPart _blackScreen = ProtocolPart(
+      state: EyesMovementState.BLACK_SCREEN.name,
+      duration: Duration(seconds: 5));
+  static final ProtocolPart _blink = ProtocolPart(
+      state: EyesMovementState.BLINK.name,
+      duration: Duration(seconds: 10),
+      text: "10 x BLINK",
+      marker: "BLINKS");
+  static final ProtocolPart _rightLeft = ProtocolPart(
+      state: EyesMovementState.MOVE_RIGHT_LEFT.name,
+      duration: Duration(seconds: 10),
+      text: "5 x RIGHT-LEFT",
+      marker: "HEOG");
+  static final ProtocolPart _leftRight = ProtocolPart(
+      state: EyesMovementState.MOVE_LEFT_RIGHT.name,
+      duration: Duration(seconds: 10),
+      text: "5 x LEFT-RIGHT",
+      marker: "HEOG");
+  static final ProtocolPart _upDown = ProtocolPart(
+      state: EyesMovementState.MOVE_UP_DOWN.name,
+      duration: Duration(seconds: 10),
+      text: "5 x UP-DOWN",
+      marker: "VEOG");
+  static final ProtocolPart _downUp = ProtocolPart(
+      state: EyesMovementState.MOVE_DOWN_UP.name,
+      duration: Duration(seconds: 10),
+      text: "5 x DOWN-UP",
+      marker: "VEOG");
+  static final List<ProtocolPart> _protocolBlock = [_rest, _blink, _blackScreen,
+    _leftRight, _blackScreen, _upDown, _blackScreen, _rest, _blink,
+    _blackScreen, _rightLeft, _blackScreen, _downUp, _blackScreen];
 
   @override
-  String get screenId => EyesMovementProtocolScreen.id;
+  ProtocolType get type => ProtocolType.eyes_movement;
 
   @override
   String get nameForUser => "Eyes Movement";
@@ -210,6 +288,9 @@ class EyesMovementProtocol extends BaseProtocol {
 
   @override
   String get intro => 'Eyes Movement protocol intro';
+
+  @override
+  List<ProtocolPart> get protocolBlock => _protocolBlock;
 }
 
 ProtocolType protocolTypeFromString(String typeStr) {

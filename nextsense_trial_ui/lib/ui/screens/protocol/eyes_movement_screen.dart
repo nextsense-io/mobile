@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
@@ -18,6 +19,7 @@ class EyesMovementProtocolScreen extends ProtocolScreen {
       BuildContext context, ProtocolScreenViewModel viewModel) {
     final viewModel = context.watch<EyesMovementProtocolScreenViewModel>();
     final whiteTextStyle = TextStyle(color: Colors.white, fontSize: 20);
+    final bigWhiteTextStyle = TextStyle(color: Colors.white, fontSize: 36);
     ProtocolPart currentPart = viewModel.getCurrentProtocolPart();
 
     return Container(
@@ -28,7 +30,8 @@ class EyesMovementProtocolScreen extends ProtocolScreen {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(protocol.description, style: whiteTextStyle),
-                  Text(currentPart.text ?? "", style: whiteTextStyle),
+                  Text(viewModel.getTextForProtocolPart(currentPart.state) ?? "",
+                      style: bigWhiteTextStyle),
                   statusMessage(viewModel),
                   SessionControlButton(runnableProtocol)
                 ]
