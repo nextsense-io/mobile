@@ -1,28 +1,18 @@
+import 'package:flutter/foundation.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/managers/audio_manager.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:wakelock/wakelock.dart';
 
-enum EOECState {
-  EO,  // Eyes Open
-  EC  // Eyes Closed
-}
-
 class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
-  static final ProtocolPart _eyesOpen = ProtocolPart(
-      state: EOECState.EO.name,
-      duration: Duration(seconds: 30),
-      text: "Keep your eyes open",
-      marker: EOECState.EO.name);
-  static final ProtocolPart _eyesClosed = ProtocolPart(
-      state: EOECState.EO.name,
-      duration: Duration(seconds: 30),
-      text: "Keep your eyes closed",
-      marker: EOECState.EC.name);
-  static final List<ProtocolPart> _block = [_eyesOpen, _eyesClosed];
   static final String _eoec_transition_sound = "sounds/eoec_transition.wav";
+  static const Map<EOECState, String> _protocolPartsText = {
+    EOECState.EO: 'Keep your eyes open',
+    EOECState.EC: 'Keep your eyes closed'
+  };
 
   final AudioManager _audioManager = getIt<AudioManager>();
   final List<ScheduledProtocolPart> _scheduledProtocolParts = [];
@@ -33,7 +23,7 @@ class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
   EOECProtocolScreenViewModel(RunnableProtocol runnableProtocol) :
         super(runnableProtocol) {
     _audioManager.cacheAudioFile(_eoec_transition_sound);
-    for (ProtocolPart part in _block) {
+    for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
       _scheduledProtocolParts.add(ScheduledProtocolPart(protocolPart: part,
           relativeSeconds: _repetitionTime.inSeconds));
       _repetitionTime += part.duration;
@@ -98,5 +88,15 @@ class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
   ProtocolPart getCurrentProtocolPart() {
     return _scheduledProtocolParts[_currentProtocolPart].protocolPart;
+  }
+
+  String getTextForProtocolPart(String eoecStateString) {
+    EOECState eoecState = EOECState.values.firstWhere(
+        (e) => describeEnum(e) == eoecStateString,
+        orElse: () => EOECState.UNKNOWN);
+    if (eoecState == EOECState.UNKNOWN) {
+      return "";
+    }
+    return _protocolPartsText[eoecState]!;
   }
 }

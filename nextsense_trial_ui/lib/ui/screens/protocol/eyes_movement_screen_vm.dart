@@ -1,56 +1,20 @@
+import 'package:flutter/foundation.dart';
+import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:wakelock/wakelock.dart';
 
-enum EyesMovementState {
-  NOT_RUNNING,
-  REST,  // Rest period.
-  BLACK_SCREEN,  // Show black screen between activities.
-  BLINK,  // Blink eyes.
-  MOVE_RIGHT_LEFT,  // Moves eyes back and forth horizontally.
-  MOVE_LEFT_RIGHT,  // Moves eyes back and forth horizontally.
-  MOVE_UP_DOWN,  // Moves eyes back and forth vertically.
-  MOVE_DOWN_UP,  // Moves eyes back and forth vertically.
-}
-
 class EyesMovementProtocolScreenViewModel extends ProtocolScreenViewModel {
-
-  static final ProtocolPart _rest = ProtocolPart(
-      state: EyesMovementState.REST.name,
-      duration: Duration(seconds: 15),
-      text: "REST",
-      marker: "REST");
-  static final ProtocolPart _blackScreen = ProtocolPart(
-      state: EyesMovementState.BLACK_SCREEN.name,
-      duration: Duration(seconds: 5));
-  static final ProtocolPart _blink = ProtocolPart(
-      state: EyesMovementState.BLINK.name,
-      duration: Duration(seconds: 10),
-      text: "10 x BLINK",
-      marker: "BLINKS");
-  static final ProtocolPart _rightLeft = ProtocolPart(
-      state: EyesMovementState.MOVE_RIGHT_LEFT.name,
-      duration: Duration(seconds: 10),
-      text: "5 x RIGHT-LEFT",
-      marker: "HEOG");
-  static final ProtocolPart _leftRight = ProtocolPart(
-      state: EyesMovementState.MOVE_LEFT_RIGHT.name,
-      duration: Duration(seconds: 10),
-      text: "5 x LEFT-RIGHT",
-      marker: "HEOG");
-  static final ProtocolPart _upDown = ProtocolPart(
-      state: EyesMovementState.MOVE_UP_DOWN.name,
-      duration: Duration(seconds: 10),
-      text: "5 x UP-DOWN",
-      marker: "VEOG");
-  static final ProtocolPart _downUp = ProtocolPart(
-      state: EyesMovementState.MOVE_DOWN_UP.name,
-      duration: Duration(seconds: 10),
-      text: "5 x DOWN-UP",
-      marker: "VEOG");
-  static final List<ProtocolPart> _block = [_rest, _blink, _blackScreen,
-  _leftRight, _blackScreen, _upDown, _blackScreen, _rest, _blink,
-  _blackScreen, _rightLeft, _blackScreen, _downUp, _blackScreen];
+  static const Map<EyesMovementState, String> _protocolPartsText = {
+    EyesMovementState.NOT_RUNNING: "",
+    EyesMovementState.REST: "REST",
+    EyesMovementState.BLACK_SCREEN: "",
+    EyesMovementState.BLINK: "10 x BLINK",
+    EyesMovementState.MOVE_RIGHT_LEFT: "5 x RIGHT-LEFT",
+    EyesMovementState.MOVE_LEFT_RIGHT: "5 x LEFT-RIGHT",
+    EyesMovementState.MOVE_UP_DOWN: "5 x UP-DOWN",
+    EyesMovementState.MOVE_DOWN_UP: "5 x DOWN-UP"
+  };
 
   final List<ScheduledProtocolPart> _scheduledProtocolParts = [];
 
@@ -59,7 +23,7 @@ class EyesMovementProtocolScreenViewModel extends ProtocolScreenViewModel {
 
   EyesMovementProtocolScreenViewModel(RunnableProtocol runnableProtocol) :
         super(runnableProtocol) {
-    for (ProtocolPart part in _block) {
+    for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
       _scheduledProtocolParts.add(ScheduledProtocolPart(protocolPart: part,
           relativeSeconds: _repetitionTime.inSeconds));
       _repetitionTime += part.duration;
@@ -117,5 +81,15 @@ class EyesMovementProtocolScreenViewModel extends ProtocolScreenViewModel {
 
   ProtocolPart getCurrentProtocolPart() {
     return _scheduledProtocolParts[_currentProtocolPart].protocolPart;
+  }
+
+  String getTextForProtocolPart(String eyesMovementStateString) {
+    EyesMovementState eyesMovementState = EyesMovementState.values.firstWhere(
+            (e) => describeEnum(e) == eyesMovementStateString,
+        orElse: () => EyesMovementState.UNKNOWN);
+    if (eyesMovementState == EyesMovementState.UNKNOWN) {
+      return "";
+    }
+    return _protocolPartsText[eyesMovementState]!;
   }
 }
