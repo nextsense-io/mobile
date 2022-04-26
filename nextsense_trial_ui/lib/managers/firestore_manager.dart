@@ -6,19 +6,20 @@ import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum Table {
-  organizations,
-  users,
-  sessions,
-  data_sessions,
-  planned_assessments,
-  planned_surveys,
-  studies,
-  surveys,
-  questions,
-  scheduled_protocols,
-  scheduled_surveys,
   adhoc_protocols,
   adhoc_surveys,
+  data_sessions,
+  events,
+  organizations,
+  questions,
+  planned_assessments,
+  planned_surveys,
+  scheduled_protocols,
+  scheduled_surveys,
+  sessions,
+  studies,
+  surveys,
+  users,
 }
 
 extension ParseToString on Table {

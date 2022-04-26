@@ -3,13 +3,16 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
+import 'package:nextsense_trial_ui/domain/event.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 enum ProtocolCancelReason { none, deviceDisconnectedTimeout }
@@ -30,10 +33,10 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   final StudyManager _studyManager = getIt<StudyManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
-  final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
+  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final RunnableProtocol runnableProtocol;
-
-  Protocol get protocol => runnableProtocol.protocol;
+  final List<ScheduledProtocolPart> _scheduledProtocolParts = [];
+  final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
 
   int secondsElapsed = 0;
   bool sessionIsActive = false;
@@ -49,10 +52,23 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   bool _timerPaused = false;
   ProtocolCancelReason protocolCancelReason = ProtocolCancelReason.none;
   bool protocolCompletedHandlerExecuted = false;
+  DateTime? _currentEventStart;
+  DateTime? _lastEventEnd;
+  String? _currentEventMarker;
+  int _currentProtocolPart = 0;
+  Duration _repetitionTime = Duration(seconds: 0);
 
-  ProtocolScreenViewModel(this.runnableProtocol);
+  ProtocolScreenViewModel(this.runnableProtocol) {
+    for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
+      _scheduledProtocolParts.add(ScheduledProtocolPart(protocolPart: part,
+          relativeSeconds: _repetitionTime.inSeconds));
+      _repetitionTime += part.duration;
+    }
+  }
 
   Study? get currentStudy => _studyManager.currentStudy;
+
+  Protocol get protocol => runnableProtocol.protocol;
 
   void startSession() {
     _logger.log(Level.INFO, "startSession");
@@ -80,11 +96,24 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     notifyListeners();
   }
 
+  ProtocolPart? getCurrentProtocolPart() {
+    if (_scheduledProtocolParts.isNotEmpty) {
+      return _scheduledProtocolParts[_currentProtocolPart].protocolPart;
+    }
+    return null;
+  }
+
   void startTimer() {
     final int protocolMinTimeSeconds = protocol.minDuration.inSeconds;
     final int protocolMaxTimeSeconds = protocol.maxDuration.inSeconds;
     if (timer?.isActive ?? false) timer?.cancel();
     secondsElapsed = 0;
+    if (_scheduledProtocolParts.isNotEmpty &&
+        _scheduledProtocolParts[_currentProtocolPart]
+        .protocolPart.marker != null) {
+      startEvent(_scheduledProtocolParts[_currentProtocolPart]
+          .protocolPart.marker!, sequentialEvent: true);
+    }
     onTimerStart();
     notifyListeners();
     timer = Timer.periodic(
@@ -107,7 +136,47 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     );
   }
 
-  void onTimerTick(int secondsElapsed) {}
+  @override
+  void onTimerTick(int secondsElapsed) {
+    if (_scheduledProtocolParts.isEmpty) {
+      // The code after this is needed only if there are parts in the protocol.
+      return;
+    }
+    bool advanceProtocol = false;
+    int blockSecondsElapsed = secondsElapsed % _repetitionTime.inSeconds;
+    if (blockSecondsElapsed == 0) {
+      // Start of a repetition, reset the block index and finish the current
+      // step.
+      if (_currentProtocolPart != 0) {
+        if (_scheduledProtocolParts[_currentProtocolPart]
+            .protocolPart.marker != null) {
+          endEvent(DateTime.now());
+        }
+        advanceProtocol = true;
+      }
+      _currentProtocolPart = 0;
+    }
+    // Check if can advance the index to the next part.
+    if (_currentProtocolPart < _scheduledProtocolParts.length - 1) {
+      if (blockSecondsElapsed >=
+          _scheduledProtocolParts[_currentProtocolPart + 1].relativeSeconds) {
+        if (_scheduledProtocolParts[_currentProtocolPart]
+            .protocolPart.marker != null) {
+          endEvent(DateTime.now());
+        }
+        ++_currentProtocolPart;
+        advanceProtocol = true;
+      }
+    }
+    if (advanceProtocol) {
+      String? currentMarker = _scheduledProtocolParts[_currentProtocolPart]
+          .protocolPart.marker;
+      if (currentMarker != null) {
+        startEvent(currentMarker, sequentialEvent: true);
+      }
+      onAdvanceProtocol();
+    }
+  }
 
   void onTimerStart() {}
 
@@ -116,8 +185,40 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     stopSession();
   }
 
+  // Called when the protocol progresses to a new part.
+  void onAdvanceProtocol() {}
+
   void cancelTimer() {
     timer?.cancel();
+  }
+
+  void startEvent(String marker, {bool? sequentialEvent}) {
+    if (sequentialEvent != null && sequentialEvent && _lastEventEnd != null) {
+      _currentEventStart = _lastEventEnd;
+    } else {
+      _currentEventStart = DateTime.now();
+    }
+    _currentEventMarker = marker;
+  }
+
+  Future endEvent(DateTime endTime) async {
+    _lastEventEnd = endTime;
+    DateTime eventStart = _currentEventStart!;
+    String? currentMarker = _currentEventMarker;
+    String? sessionId = runnableProtocol.lastSessionId;
+    if (sessionId == null) {
+      _logger.log(Level.SEVERE,
+          "Could not save event $currentMarker, no session id!");
+      return;
+    }
+    String eventId =
+        '${currentMarker}-${eventStart.datetime_string}';
+    Event event = Event(await _firestoreManager.queryEntity(
+        [Table.sessions, Table.events], [sessionId, eventId]));
+    event..setValue(EventKey.start_time, eventStart.toIso8601String())
+        ..setValue(EventKey.end_time, endTime.toIso8601String())
+        ..setValue(EventKey.marker, currentMarker);
+    await event.save();
   }
 
   @override

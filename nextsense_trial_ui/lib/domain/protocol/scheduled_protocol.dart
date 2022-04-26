@@ -25,6 +25,14 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
 
   RunnableProtocolType get type => RunnableProtocolType.scheduled;
 
+  String? get lastSessionId {
+    var sessions = getValue(ScheduledProtocolKey.sessions);
+    if (sessions is List) {
+      return sessions.last;
+    }
+    return sessions;
+  }
+
   late StudyDay day;
 
   // Start time - hours & minutes only
@@ -42,8 +50,9 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
   bool get isSkipped => state == ProtocolState.skipped;
   bool get isCancelled => state == ProtocolState.cancelled;
 
-  ScheduledProtocol(FirebaseEntity firebaseEntity, PlannedAssessment plannedAssessment) :
-        super(firebaseEntity.getDocumentSnapshot()) {
+  ScheduledProtocol(FirebaseEntity firebaseEntity,
+      PlannedAssessment plannedAssessment) :
+      super(firebaseEntity.getDocumentSnapshot()) {
     protocol = plannedAssessment.protocol!;
     day = plannedAssessment.day;
     startTime = plannedAssessment.startTime;
@@ -67,8 +76,7 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
       if (!currentSessionList.contains(sessionId)) {
         currentSessionList.add(sessionId);
       }
-    } else
-    {
+    } else {
       currentSessionList = <String>[sessionId];
     }
 
