@@ -20,7 +20,7 @@ class EyesMovementProtocolScreen extends ProtocolScreen {
     final viewModel = context.watch<EyesMovementProtocolScreenViewModel>();
     final whiteTextStyle = TextStyle(color: Colors.white, fontSize: 20);
     final bigWhiteTextStyle = TextStyle(color: Colors.white, fontSize: 36);
-    ProtocolPart currentPart = viewModel.getCurrentProtocolPart();
+    ProtocolPart currentPart = viewModel.getCurrentProtocolPart()!;
 
     return Container(
         padding: EdgeInsets.all(10.0),
@@ -30,7 +30,7 @@ class EyesMovementProtocolScreen extends ProtocolScreen {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(protocol.description, style: whiteTextStyle),
-                  Text(viewModel.getTextForProtocolPart(currentPart.state) ?? "",
+                  Text(viewModel.getTextForProtocolPart(currentPart.state),
                       style: bigWhiteTextStyle),
                   statusMessage(viewModel),
                   SessionControlButton(runnableProtocol)

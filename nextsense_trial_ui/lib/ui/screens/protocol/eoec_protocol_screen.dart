@@ -20,7 +20,7 @@ class EOECProtocolScreen extends ProtocolScreen {
     final viewModel = context.watch<EOECProtocolScreenViewModel>();
     final whiteTextStyle = TextStyle(color: Colors.white, fontSize: 20);
     final bigWhiteTextStyle = TextStyle(color: Colors.white, fontSize: 30);
-    ProtocolPart currentPart = viewModel.getCurrentProtocolPart();
+    ProtocolPart currentPart = viewModel.getCurrentProtocolPart()!;
 
     return Container(
         padding: EdgeInsets.all(10.0),
@@ -30,7 +30,7 @@ class EOECProtocolScreen extends ProtocolScreen {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(protocol.description, style: whiteTextStyle),
-                  Text(viewModel.getTextForProtocolPart(currentPart.state) ?? "",
+                  Text(viewModel.getTextForProtocolPart(currentPart.state),
                       style: bigWhiteTextStyle),
                   statusMessage(viewModel),
                   SessionControlButton(runnableProtocol)

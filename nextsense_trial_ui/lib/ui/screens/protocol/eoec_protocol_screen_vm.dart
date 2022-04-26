@@ -15,19 +15,10 @@ class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
   };
 
   final AudioManager _audioManager = getIt<AudioManager>();
-  final List<ScheduledProtocolPart> _scheduledProtocolParts = [];
-
-  int _currentProtocolPart = 0;
-  Duration _repetitionTime = Duration(seconds: 0);
 
   EOECProtocolScreenViewModel(RunnableProtocol runnableProtocol) :
         super(runnableProtocol) {
     _audioManager.cacheAudioFile(_eoec_transition_sound);
-    for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
-      _scheduledProtocolParts.add(ScheduledProtocolPart(protocolPart: part,
-          relativeSeconds: _repetitionTime.inSeconds));
-      _repetitionTime += part.duration;
-    }
   }
 
   @override
@@ -49,45 +40,8 @@ class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
   }
 
   @override
-  void onTimerTick(int secondsElapsed) {
-    bool advanceProtocol = false;
-    int blockSecondsElapsed = secondsElapsed % _repetitionTime.inSeconds;
-    if (blockSecondsElapsed == 0) {
-      // Start of a repetition, reset the block index and finish the current
-      // step.
-      if (_currentProtocolPart != 0) {
-        // if (_scheduledProtocolParts[_currentProtocolPart]
-        //     .protocolPart.marker != null) {
-        //   _protocolStatus.endEvent();
-        // }
-        advanceProtocol = true;
-      }
-      _currentProtocolPart = 0;
-    }
-    // Check if can advance the index to the next part.
-    if (_currentProtocolPart < _scheduledProtocolParts.length - 1) {
-      if (blockSecondsElapsed >=
-          _scheduledProtocolParts[_currentProtocolPart + 1].relativeSeconds) {
-        // if (_scheduledProtocolParts[_currentProtocolPart]
-        //     .protocolPart.marker != null) {
-        //   _protocolStatus.endEvent();
-        // }
-        ++_currentProtocolPart;
-        advanceProtocol = true;
-      }
-    }
-    if (advanceProtocol) {
-      _audioManager.playAudioFile(_eoec_transition_sound);
-      // String currentMarker = _scheduledProtocolParts[_currentProtocolPart]
-      //     .protocolPart.marker;
-      // if (currentMarker != null) {
-      //   _protocolStatus.startEvent(currentMarker);
-      // }
-    }
-  }
-
-  ProtocolPart getCurrentProtocolPart() {
-    return _scheduledProtocolParts[_currentProtocolPart].protocolPart;
+  void onAdvanceProtocol() {
+    _audioManager.playAudioFile(_eoec_transition_sound);
   }
 
   String getTextForProtocolPart(String eoecStateString) {

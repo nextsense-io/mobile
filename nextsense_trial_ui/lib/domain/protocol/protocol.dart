@@ -1,9 +1,5 @@
 // Defines the list of existing protocols and common properties of each.
 import 'package:flutter/foundation.dart';
-import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart';
-import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen.dart';
-import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum ProtocolType {
   variable_daytime,  // Daytime recording of variable length.
@@ -92,13 +88,9 @@ class ProtocolPart {
 }
 
 abstract class BaseProtocol implements Protocol {
-  final CustomLogPrinter _logger = CustomLogPrinter('BaseProtocol');
-
   DateTime? _startTime;
   Duration? _minDurationOverride;
   Duration? _maxDurationOverride;
-
-  ProtocolState _protocolState = ProtocolState.not_started;
 
   @override
   ProtocolType get type => ProtocolType.unknown;
@@ -191,7 +183,7 @@ class EyesOpenEyesClosedProtocol extends BaseProtocol {
       duration: Duration(seconds: 60),
       marker: EOECState.EO.name);
   static final ProtocolPart _eyesClosed = ProtocolPart(
-      state: EOECState.EO.name,
+      state: EOECState.EC.name,
       duration: Duration(seconds: 60),
       marker: EOECState.EC.name);
   static final List<ProtocolPart> _protocolBlock = [_eyesOpen, _eyesClosed];
@@ -238,7 +230,8 @@ class EyesMovementProtocol extends BaseProtocol {
       marker: "REST");
   static final ProtocolPart _blackScreen = ProtocolPart(
       state: EyesMovementState.BLACK_SCREEN.name,
-      duration: Duration(seconds: 5));
+      duration: Duration(seconds: 5),
+      marker: "BLACK");
   static final ProtocolPart _blink = ProtocolPart(
       state: EyesMovementState.BLINK.name,
       duration: Duration(seconds: 10),

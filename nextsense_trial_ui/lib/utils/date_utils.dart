@@ -2,10 +2,23 @@ import 'package:intl/intl.dart';
 
 extension DateUtils on DateTime {
 
+  static final DateFormat _hhmmFormatter = new DateFormat('HH:mm');
+
   // Returns hours and minutes of DateTime in 'hh:mm' format
   String get hhmm {
     try {
-      return DateFormat("HH:mm").format(this);
+      return _hhmmFormatter.format(this);
+    } catch (e) {
+      return "";
+    }
+  }
+
+  static final DateFormat _dateTimeStringFormatter =
+      new DateFormat('yyyy_MM_dd_HH_mm_ss');
+
+  String get datetime_string {
+    try {
+      return _dateTimeStringFormatter.format(this);
     } catch (e) {
       return "";
     }

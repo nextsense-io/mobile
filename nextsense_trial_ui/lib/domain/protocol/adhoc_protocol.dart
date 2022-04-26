@@ -21,6 +21,8 @@ class AdhocProtocol implements RunnableProtocol {
 
   RunnableProtocolType get type => RunnableProtocolType.adhoc;
 
+  String? get lastSessionId => record?.getSession() ?? null;
+
   AdhocProtocol(ProtocolType protocolType) {
     protocol = Protocol(protocolType);
   }
@@ -89,6 +91,10 @@ class AdhocProtocolRecord extends FirebaseEntity<AdhocProtocolRecordKey> {
 
   void setSession(String sessionId) {
     setValue(AdhocProtocolRecordKey.session, sessionId);
+  }
+
+  String? getSession() {
+    return getValue(AdhocProtocolRecordKey.session);
   }
 
   void setProtocol(String protocolName) {
