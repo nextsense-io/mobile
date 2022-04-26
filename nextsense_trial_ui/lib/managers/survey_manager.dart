@@ -9,29 +9,28 @@ import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
 class SurveyManager {
 
   final CustomLogPrinter _logger = CustomLogPrinter('SurveyManager');
-
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
 
   List<Survey>? _surveys;
-
   List<ScheduledSurvey> scheduledSurveys = [];
 
   // Group by planned survey id for stats
   Map<String, List<ScheduledSurvey>> _scheduledSurveysByPlannedSurveyId = {};
 
+  String get _currentStudyId => _studyManager.currentStudy!.id;
+
   Future<List<Survey>> _loadSurveys({bool fromCache = false}) async {
     List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
         [Table.surveys], [],
-        fromCacheWithKey: fromCache ? "surveys" : null,
+        fromCacheWithKey: fromCache ? Table.surveys.name() : null,
     );
 
     List<Survey> result = [];
@@ -75,7 +74,7 @@ class SurveyManager {
           'Creating scheduled surveys based on planned surveys');
 
       List<PlannedSurvey> plannedSurveys =
-      await _studyManager.loadPlannedSurveys();
+          await _studyManager.loadPlannedSurveys();
 
       // Speed up queries by making parallel requests
       List<Future> futures = [];
@@ -95,8 +94,9 @@ class SurveyManager {
               "_${plannedSurvey.period.name}";
 
           Future future = _firestoreManager.queryEntity(
-              [Table.users, Table.scheduled_surveys],
-              [_authManager.getUserCode()!, scheduledSurveyKey]);
+              [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
+              [_authManager.getUserCode()!, _currentStudyId,
+                scheduledSurveyKey]);
 
           future.then((firebaseEntity) {
             // Scheduled survey is created based on planned survey
@@ -175,10 +175,11 @@ class SurveyManager {
 
   Future<List<FirebaseEntity>> _queryScheduledSurveys(
       {bool fromCache = false}) async {
+    String cacheKey = "${_currentStudyId}_${Table.scheduled_surveys.name()}";
     return await _firestoreManager.queryEntities(
-        [Table.users, Table.scheduled_surveys],
-        [_authManager.getUserCode()!],
-        fromCacheWithKey: fromCache ? "scheduled_surveys" : null);
+        [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
+        [_authManager.getUserCode()!, _currentStudyId],
+        fromCacheWithKey: fromCache ? cacheKey : null);
   }
 
   // Survey stats are calculated based on count of past and today surveys

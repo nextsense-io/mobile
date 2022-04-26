@@ -104,8 +104,8 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
 
   // Update fields and save to firestore by default
   @override
-  bool update({required ProtocolState state,
-    String? sessionId, bool persist = true}) {
+  bool update({required ProtocolState state, String? sessionId,
+      bool persist = true}) {
     if (this.state == ProtocolState.completed) {
       _logger.log(Level.INFO, 'Protocol ${protocol.name} already completed.'
           'Cannot change its state.');

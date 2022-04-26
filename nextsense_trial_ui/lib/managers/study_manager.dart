@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/assesment.dart';
+import 'package:nextsense_trial_ui/domain/enrolled_study.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
@@ -23,13 +24,14 @@ class StudyManager {
   final CustomLogPrinter _logger = CustomLogPrinter('StudyManager');
   final AuthManager _authManager = getIt<AuthManager>();
 
+  // Study definition.
   Study? _currentStudy;
+  // Enrolled study state for this user.
+  EnrolledStudy? _enrolledStudy;
 
-  late DateTime currentStudyStartDate;
-  late DateTime currentStudyEndDate;
-
-  String? get currentStudyId => _currentStudy?.id ?? null;
-
+  DateTime? get currentStudyStartDate => _enrolledStudy?.getStartDate();
+  DateTime? get currentStudyEndDate => _enrolledStudy?.getEndDate();
+  String? get currentStudyId => _enrolledStudy?.id ?? null;
   Study? get currentStudy => _currentStudy;
 
   // List of days that will appear for current study
@@ -39,7 +41,7 @@ class StudyManager {
 
   List<ScheduledProtocol> scheduledProtocols = [];
 
-  bool get studyInitialized => _authManager.user!.studyInitialized;
+  bool get studyInitialized => _enrolledStudy!.initialized;
 
   // References today's study day
   // Has to be dynamic because next day can start while app is on
@@ -51,34 +53,60 @@ class StudyManager {
     return _days!.firstWhereOrNull((StudyDay day) => now.isSameDay(day.date));
   }
 
-  Future<bool> loadCurrentStudy(String study_id, DateTime startDate, DateTime endDate) async {
+  Future<bool> loadEnrolledStudy(String user_id, String study_id) async {
+    FirebaseEntity enrolledStudyEntity;
+    try {
+      enrolledStudyEntity = await _firestoreManager.queryEntity(
+          [Table.users, Table.enrolled_studies], [user_id, study_id]);
+    } catch(e) {
+      _logger.log(Level.SEVERE,
+          'Error when trying to load the enrolled study ${study_id}: ${e}');
+      return false;
+    }
+    if (!enrolledStudyEntity.getDocumentSnapshot().exists) {
+      _logger.log(Level.SEVERE,
+          'Enrolled Study ${study_id} does not exist');
+      return false;
+    }
+    _enrolledStudy = EnrolledStudy(enrolledStudyEntity);
+    bool studyLoaded = await _loadCurrentStudy();
+    if (!studyLoaded) {
+      return false;
+    }
+    _createStudyDays();
+    return true;
+  }
+
+  // Loads the study static information and generate the list of study days.
+  Future<bool> _loadCurrentStudy() async {
     FirebaseEntity studyEntity;
     try {
       studyEntity = await _firestoreManager.queryEntity(
-          [Table.studies], [study_id]);
+          [Table.studies], [currentStudyId!]);
     } catch(e) {
       _logger.log(Level.SEVERE,
-          'Error when trying to load the study ${study_id}: ${e}');
+          'Error when trying to load the study ${currentStudyId}: ${e}');
       return false;
     }
     if (!studyEntity.getDocumentSnapshot().exists) {
       _logger.log(Level.SEVERE,
-          'Study ${study_id} does not exist');
+          'Study ${_enrolledStudy!.id} does not exist');
       return false;
     }
     _currentStudy = Study(studyEntity);
-    currentStudyStartDate = startDate;
-    currentStudyEndDate = endDate;
+    return true;
+  }
 
-    // Create list of study days
+  // Create list of study days
+  Future _createStudyDays() async {
     final int studyDays = currentStudy?.getDurationDays() ?? 0;
+    DateTime studyDayStartDate = currentStudyStartDate!;
     _days = List<StudyDay>.generate(studyDays, (i) {
-      DateTime dayDate = currentStudyStartDate.add(Duration(days: i));
+      DateTime dayDate = studyDayStartDate.add(Duration(days: i));
       final dayNumber = i + 1;
       final studyDay = StudyDay(dayDate, dayNumber);
       return studyDay;
     });
-    return true;
   }
 
   Future<bool> loadScheduledProtocols() async {
@@ -89,7 +117,6 @@ class StudyManager {
       _logger.log(Level.WARNING, 'Loading scheduled protocols from cache');
       scheduledProtocols = await _loadScheduledProtocolsFromCache();
     } else {
-
       _logger.log(Level.WARNING,
           'Creating scheduled protocols based on planned assessments');
 
@@ -101,9 +128,9 @@ class StudyManager {
               "day_${assessment.dayNumber}_time_${time}";
           final scheduledProtocol = ScheduledProtocol(
               await _firestoreManager.queryEntity(
-                  [Table.users, Table.scheduled_protocols],
-                  [_authManager.getUserCode()!, scheduledProtocolKey]),
-              assessment);
+                  [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
+                  [_authManager.getUserCode()!, currentStudy!.id,
+                    scheduledProtocolKey]), assessment);
 
           scheduledProtocol
             ..setValue(ScheduledProtocolKey.protocol, assessment.reference)
@@ -134,15 +161,15 @@ class StudyManager {
     for (FirebaseEntity entity in scheduledProtocolEntities) {
       final assessmentId = (entity.getValue(ScheduledProtocolKey.protocol)
           as DocumentReference).id;
-      PlannedAssessment? assessment = assessments.firstWhereOrNull(
-          (assesment) => assessmentId == assesment.reference.id);
+      PlannedAssessment? plannedAssessment = assessments.firstWhereOrNull(
+          (assessment) => assessmentId == assessment.reference.id);
 
-      if (assessment == null) {
+      if (plannedAssessment == null) {
         _logger.log(Level.SEVERE, 'Assessment with id $assessmentId not found');
         continue;
       }
 
-      final scheduledProtocol = ScheduledProtocol(entity, assessment);
+      final scheduledProtocol = ScheduledProtocol(entity, plannedAssessment);
       result.add(scheduledProtocol);
     }
 
@@ -152,9 +179,10 @@ class StudyManager {
   Future<List<FirebaseEntity>> _queryScheduledProtocols(
       {bool fromCache = false}) async {
     return await _firestoreManager.queryEntities(
-        [Table.users, Table.scheduled_protocols],
-        [_authManager.getUserCode()!],
-        fromCacheWithKey: fromCache ? Table.scheduled_protocols.name() : null);
+        [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
+        [_authManager.getUserCode()!, _currentStudy!.id],
+        fromCacheWithKey: fromCache ?
+        "${_currentStudy!.id}_${Table.scheduled_protocols.name()}" : null);
   }
 
   Future<List<PlannedAssessment>> _loadPlannedAssessments(
@@ -168,7 +196,7 @@ class StudyManager {
 
     return entities
         .map((firebaseEntity) =>
-            PlannedAssessment(firebaseEntity, currentStudyStartDate))
+            PlannedAssessment(firebaseEntity, currentStudyStartDate!))
         .toList();
   }
 
@@ -182,8 +210,8 @@ class StudyManager {
     return entities
         .map((firebaseEntity) =>
         PlannedSurvey(firebaseEntity,
-            currentStudyStartDate,
-            currentStudyEndDate
+            currentStudyStartDate!,
+            currentStudyEndDate!
         ))
         .toList();
   }
@@ -197,9 +225,8 @@ class StudyManager {
     if (initialized) {
       _logger.log(Level.INFO, "Mark current study as initialized");
     }
-    await _authManager.user!
-      ..setStudyInitialized(initialized)
+    await _enrolledStudy!
+      ..setInitialized(initialized)
       ..save();
   }
-
 }

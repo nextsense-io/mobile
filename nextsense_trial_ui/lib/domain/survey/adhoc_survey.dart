@@ -4,20 +4,17 @@ import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class AdhocSurvey implements RunnableSurvey {
-
-  final CustomLogPrinter _logger = CustomLogPrinter('AdhocSurvey');
-
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
 
   late Survey survey;
+  late String studyId;
 
   RunnableSurveyType get type => RunnableSurveyType.adhoc;
 
-  AdhocSurvey(this.survey);
+  AdhocSurvey(this.survey, this.studyId);
 
   @override
   bool update({required SurveyState state,
@@ -34,9 +31,11 @@ class AdhocSurvey implements RunnableSurvey {
     String adhocProtocolKey = "${survey.id}_at_${now.millisecondsSinceEpoch}";
     _firestoreManager.queryEntity([
       Table.users,
+      Table.enrolled_studies,
       Table.adhoc_surveys
     ], [
       _authManager.getUserCode()!,
+      studyId,
       adhocProtocolKey
     ]).then((firebaseEntity) {
       final record = AdhocSurveyRecord(firebaseEntity);

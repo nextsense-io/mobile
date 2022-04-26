@@ -22,7 +22,8 @@ class StartAdhocSurveyDialog extends HookWidget {
         SimpleDialogOption(
           onPressed: () async {
             bool completed = await _navigation.navigateTo(
-                SurveyScreen.id, arguments: AdhocSurvey(survey));
+                SurveyScreen.id, arguments:
+                AdhocSurvey(survey, dashboardViewModel.studyId));
             Navigator.pop(context, completed);
           },
           child: Container(

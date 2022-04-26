@@ -12,6 +12,7 @@ class AdhocProtocol implements RunnableProtocol {
 
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
+  final String _studyId;
 
   late Protocol protocol;
 
@@ -23,7 +24,8 @@ class AdhocProtocol implements RunnableProtocol {
 
   String? get lastSessionId => record?.getSession() ?? null;
 
-  AdhocProtocol(ProtocolType protocolType) {
+  AdhocProtocol(ProtocolType protocolType, String StudyId) :
+        _studyId = StudyId {
     protocol = Protocol(protocolType);
   }
 
@@ -52,9 +54,11 @@ class AdhocProtocol implements RunnableProtocol {
       String adhocProtocolKey = "${protocol.name}_${now.millisecondsSinceEpoch}";
       _firestoreManager.queryEntity([
         Table.users,
+        Table.enrolled_studies,
         Table.adhoc_protocols
       ], [
         _authManager.getUserCode()!,
+        _studyId,
         adhocProtocolKey
       ]).then((firebaseEntity) {
         record = AdhocProtocolRecord(firebaseEntity);

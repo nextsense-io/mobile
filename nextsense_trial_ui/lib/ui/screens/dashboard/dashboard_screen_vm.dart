@@ -33,6 +33,8 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   bool get studyInitialized => _studyManager.studyInitialized;
 
+  String get studyId => _studyManager.currentStudyId!;
+
   // Returns current day of study
   StudyDay? get _today => _studyManager.today;
 
@@ -75,7 +77,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     if (studyDay != null) {
       selectDay(_studyManager.today!);
     } else {
-      if (DateTime.now().isAfter(_studyManager.currentStudyEndDate)) {
+      if (DateTime.now().isAfter(_studyManager.currentStudyEndDate!)) {
         selectDay(_studyManager.days.last);
       } else {
         selectDay(_studyManager.days.first);
@@ -174,8 +176,8 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     List<ProtocolType> allowedProtocols =
     _studyManager.currentStudy!.getAllowedProtocols();
 
-    return allowedProtocols.map((protocolType) => AdhocProtocol(protocolType))
-        .toList();
+    return allowedProtocols.map((protocolType) => AdhocProtocol(
+        protocolType, _studyManager.currentStudyId!)).toList();
   }
 
   List<Survey> getAdhocSurveys() {

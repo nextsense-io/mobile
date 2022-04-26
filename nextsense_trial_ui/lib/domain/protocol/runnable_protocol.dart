@@ -13,6 +13,6 @@ abstract class RunnableProtocol {
 
   String? get lastSessionId;
 
-  bool update({required ProtocolState state,
-    String? sessionId, bool persist = true});
+  bool update({required ProtocolState state, String? sessionId,
+    bool persist = true});
 }
