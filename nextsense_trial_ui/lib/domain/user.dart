@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
 /**
@@ -9,38 +8,21 @@ enum UserKey {
   last_paired_device,
   // String containing the salt and hashed password.
   password,
-  // Currently enrolled study.
-  study,
-  // Starting date of the currently enrolled study for this subject.
-  study_start_date,
-  // Ending date of the currently enrolled study for this subject.
-  study_end_date,
+  // Currently selected study. Opens by default if there are more than one for
+  // this user, which is possible for some user types.
+  current_study,
   // User type.
   type,
   // BigTable key. Generated as a UUID.
   bt_key,
   // How many sessions were recorded by this user.
-  session_number,
-  // Study is initialized on device and we can use cached entities
-  study_initialized
+  session_number
 }
 
 class User extends FirebaseEntity<UserKey> {
 
-  bool get studyInitialized => getValue(UserKey.study_initialized) ?? false;
-
   User(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
-
-  DateTime? getStudyStartDate() {
-    final value = getValue(UserKey.study_start_date);
-    return value!=null ? (value as Timestamp).toDate() : null;
-  }
-
-  DateTime? getStudyEndDate() {
-    final value = getValue(UserKey.study_end_date);
-    return value!=null ? (value as Timestamp).toDate() : null;
-  }
 
   String? getLastPairedDeviceMacAddress() {
     final value = getValue(UserKey.last_paired_device);
@@ -51,9 +33,6 @@ class User extends FirebaseEntity<UserKey> {
     setValue(UserKey.last_paired_device, macAddress);
   }
 
-  void setStudyInitialized(bool initialized) {
-    setValue(UserKey.study_initialized, true);
-  }
   /**
    * Checks that the current date is between the study start and end dates for
    * this subject if present.

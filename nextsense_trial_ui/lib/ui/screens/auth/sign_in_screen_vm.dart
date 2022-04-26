@@ -51,7 +51,7 @@ class SignInScreenViewModel extends ViewModel {
           errorMsg = 'Connection error';
           break;
         default:
-          errorMsg = 'Unknown error occured';
+          errorMsg = 'Unknown error occurred';
           break;
       }
       notifyListeners();
@@ -64,24 +64,15 @@ class SignInScreenViewModel extends ViewModel {
     // Load the study data.
     final user = _authManager.user!;
 
-    final studyId = user.getValue(UserKey.study);
-    DateTime? studyStartDate = user.getStudyStartDate();
-    DateTime? studyEndDate = user.getStudyEndDate();
-
-    if (studyStartDate == null || studyEndDate == null) {
+    final studyId = user.getValue(UserKey.current_study);
+    bool enrolledStudyLoaded =
+        await _studyManager.loadEnrolledStudy(user.id, studyId);
+    if (!enrolledStudyLoaded) {
       _logger.log(Level.SEVERE,
-          'Error when trying to load the study ${studyId}: '
-              'study start or end date are null');
+          'Error when trying to load the enrolled study ${studyId}');
       return false;
     }
-
-    bool studyLoaded = await _studyManager.loadCurrentStudy(
-      studyId,
-      studyStartDate,
-      studyEndDate,
-    );
-
-    return studyLoaded;
+    return true;
   }
 
   Future<bool> connectToLastPairedDevice() async {

@@ -9,6 +9,7 @@ enum Table {
   adhoc_protocols,
   adhoc_surveys,
   data_sessions,
+  enrolled_studies,
   events,
   organizations,
   questions,
