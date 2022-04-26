@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
@@ -250,6 +249,10 @@ class DeviceManager {
     if (_deviceInternalStateValues != null) {
       for (var key in newStateValues.keys) {
         var oldValue = _deviceInternalStateValues![key];
+        // AT this time only the boolean values need to propagate as events.
+        if (oldValue is! bool) {
+          return;
+        }
         var newValue = newStateValues[key];
         // Compare DeviceInternalState fields
         bool equal(dynamic a, dynamic b) {

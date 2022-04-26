@@ -1,4 +1,3 @@
-
 // Fields list for the DeviceInternalState object received from the native
 // layer.
 import 'package:flutter/foundation.dart';
