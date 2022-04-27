@@ -15,6 +15,7 @@ import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
+import 'package:nextsense_trial_ui/utils/utils.dart';
 
 class StudyManager {
 
@@ -122,12 +123,16 @@ class StudyManager {
       _logger.log(Level.WARNING,
           'Creating scheduled protocols based on planned assessments');
 
+      Stopwatch stopwatch = new Stopwatch()..start();
       List<PlannedAssessment> assessments = await _loadPlannedAssessments();
       for (var assessment in assessments) {
         if (assessment.protocol != null) {
           final String time = assessment.startTimeStr.replaceAll(":", "_");
+          final String dayNumberStr = assessment.dayNumber
+              .toString().padLeft(3, '0');
+
           String scheduledProtocolKey =
-              "day_${assessment.dayNumber}_time_${time}";
+              "${assessment.id}_day_${dayNumberStr}_time_${time}";
           final scheduledProtocol = ScheduledProtocol(
               await _firestoreManager.queryEntity(
                   [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
@@ -152,7 +157,11 @@ class StudyManager {
           await _queryScheduledProtocols();
         }
       }
+
+      _logger.log(Level.WARNING, "Scheduled protocols created in " +
+          '${stopwatch.elapsedMicroseconds / 1000000.0} sec');
     }
+
     return true;
   }
 
