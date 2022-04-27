@@ -182,6 +182,7 @@ public class Uploader {
           localSession.id, relativeEegStartOffset, uploadChunkSize));
     } else if (objectBoxDatabase.getLocalSession(localSession.id).getStatus() ==
         LocalSession.Status.FINISHED) {
+      Util.logv(TAG, "Session finished, adding samples to upload.");
       eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(localSession.id,
           relativeEegStartOffset,
           sessionEegSamplesCount - localSession.getEegSamplesUploaded()));
@@ -248,13 +249,14 @@ public class Uploader {
         Util.logd(TAG, "Session " + localSession.id + " has " +
             localSession.getEegSamplesUploaded() + " uploaded.");
         Map<String, List<BaseRecord>> samplesToUpload = getSamplesToUpload(localSession);
-        List<BaseRecord> eegSamplesToUpload = samplesToUpload.get(EEG_SAMPLES);
-        Util.logd(TAG, "Session " + localSession.id + " has " + eegSamplesToUpload.size() +
-            " eeg records to upload.");
+
         while (dataToUpload(samplesToUpload) && running.get()) {
           boolean uploaded = false;
+          List<BaseRecord> eegSamplesToUpload = samplesToUpload.get(EEG_SAMPLES);
+          Util.logv(TAG, "Session " + localSession.id + " has " + eegSamplesToUpload.size() +
+                  " eeg records to upload.");
           for (int eegSamplesIndex = 0; eegSamplesIndex < eegSamplesToUpload.size();
-               eegSamplesIndex += uploadChunkSize) {
+              eegSamplesIndex += uploadChunkSize) {
             int eegSamplesEndIndex =
                 Math.min(eegSamplesToUpload.size(), eegSamplesIndex + uploadChunkSize);
             Map<String, List<BaseRecord>> samplesChunkToUpload = new HashMap<>();
@@ -343,7 +345,7 @@ public class Uploader {
       eegSampleSubscription =
           objectBoxDatabase.subscribe(EegSample.class, eegSample -> {
             ++recordsSinceLastNotify;
-            if (recordsSinceLastNotify >= uploadChunkSize) {
+            if (recordsSinceLastNotify > uploadChunkSize) {
               Util.logd(TAG, "waking up: " + recordsSinceLastNotify);
               recordsSinceLastNotify = 0;
               recordsToUpload.set(true);
@@ -563,6 +565,7 @@ public class Uploader {
     return objectBoxDatabase.getFinishedLocalSession(localSessionId).subscribe()
         .on(subscriptionsScheduler).observer(finishedSessions -> {
           if (finishedSessions.isEmpty()) {
+            Util.logd(TAG, "No finished sessions, not waking up.");
             return;
           }
           Util.logd(TAG, "Session " + finishedSessions.get(0).id +
