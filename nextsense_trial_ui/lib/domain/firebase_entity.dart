@@ -45,7 +45,7 @@ class FirebaseEntity<T extends Enum> {
   }
 
   // Save entity to firestore
-  Future save() async {
+  Future<void> save() async {
     await _firestoreManager.persistEntity(this);
   }
 }

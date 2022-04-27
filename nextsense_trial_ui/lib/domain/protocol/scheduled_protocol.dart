@@ -14,7 +14,8 @@ enum ScheduledProtocolKey {
   protocol,
   sessions,
   status,
-  start_date_time
+  start_date,
+  start_datetime
 }
 
 class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
@@ -65,8 +66,11 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
         .add(Duration(minutes: plannedAssessment.allowedLateStartTimeMinutes));
 
     // Needed for later push notifications processing at backend
+    final datePart = startDateTime.toString().split(" ")[0];
     setValue(
-        ScheduledProtocolKey.start_date_time, startDateTime.toString());
+        ScheduledProtocolKey.start_date, datePart);
+    setValue(
+        ScheduledProtocolKey.start_datetime, startDateTime.toString());
   }
 
   // Set state of protocol in firebase

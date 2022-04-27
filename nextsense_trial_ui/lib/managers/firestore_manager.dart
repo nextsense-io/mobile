@@ -157,6 +157,6 @@ class FirestoreManager {
   }
 
   Future persistEntity(FirebaseEntity entity) async {
-    entity.getDocumentSnapshot().reference.set(entity.getValues());
+    await entity.getDocumentSnapshot().reference.set(entity.getValues());
   }
 }
