@@ -24,8 +24,8 @@ class AdhocProtocol implements RunnableProtocol {
 
   String? get lastSessionId => record?.getSession() ?? null;
 
-  AdhocProtocol(ProtocolType protocolType, String StudyId) :
-        _studyId = StudyId {
+  AdhocProtocol(ProtocolType protocolType, String studyId) :
+        _studyId = studyId {
     protocol = Protocol(protocolType);
   }
 
