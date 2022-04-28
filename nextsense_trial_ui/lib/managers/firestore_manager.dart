@@ -57,20 +57,11 @@ class FirestoreManager {
       List<Table> tables, List<String> entityKeys,
       {String? fromCacheWithKey}) async {
     assert(tables.length == entityKeys.length);
-    DocumentReference? reference = null;
-    for (int i = 0; i < tables.length; ++i) {
-      if (i == 0) {
-        reference = FirebaseFirestore.instance.collection(tables[i].name()).doc(
-            entityKeys[i]);
-      } else {
-        reference = reference!.collection(tables[i].name()).doc(
-            entityKeys[i]);
-      }
-    }
+    DocumentReference reference = getReference(tables, entityKeys);
     DocumentSnapshot? snapshot;
     if (fromCacheWithKey != null && _preferences.isCached(fromCacheWithKey)) {
         try {
-          snapshot = await reference!.get(GetOptions(source: Source.cache));
+          snapshot = await reference.get(GetOptions(source: Source.cache));
 
           _logger.log(
               Level.WARNING,
@@ -83,7 +74,7 @@ class FirestoreManager {
 
     // Get document from server
     if (snapshot == null) {
-      snapshot = await reference!.get();
+      snapshot = await reference.get();
     }
 
     // Mark doc as cached, means further 'fromCacheWithKey' requests
@@ -93,6 +84,28 @@ class FirestoreManager {
     }
 
     return FirebaseEntity(snapshot);
+  }
+
+  /*
+   * Construct reference to single entity. The number of entries in the tables list needs to
+   * match the entityKeys size.
+   *
+   * tables: List of tables that makes up the reference, in order. One entityKey
+   *         is inserted after each table.
+   * entityKeys: List of entity keys for each table in the `tables` parameter.
+   */
+  DocumentReference getReference(List<Table> tables, List<String> entityKeys) {
+    DocumentReference? reference = null;
+    for (int i = 0; i < tables.length; ++i) {
+      if (i == 0) {
+        reference = FirebaseFirestore.instance.collection(tables[i].name()).doc(
+            entityKeys[i]);
+      } else {
+        reference = reference!.collection(tables[i].name()).doc(
+            entityKeys[i]);
+      }
+    }
+    return reference!;
   }
 
   /*
@@ -158,5 +171,36 @@ class FirestoreManager {
 
   Future persistEntity(FirebaseEntity entity) async {
     await entity.getDocumentSnapshot().reference.set(entity.getValues());
+  }
+
+}
+
+// Automatically create multiple batches for writing new entities and commit
+// them. This can be used to speedup creating multiple entities.
+class FirestoreBatchWriter {
+
+  static const int firestoreMaximumBatchSize = 500;
+
+  List<WriteBatch> batchList = [];
+  WriteBatch? currentBatch;
+  int indexInCurrentBatch = 0;
+
+  int get numberOfBatches => batchList.length;
+
+  // Add entity to batch, when index of adding entity firestoreMaximumBatchSize
+  void add(DocumentReference ref, Map<String, dynamic> entityFields) {
+    if (indexInCurrentBatch == 0) {
+      currentBatch = FirebaseFirestore.instance.batch();
+      batchList.add(currentBatch!);
+    }
+    currentBatch!.set(ref, entityFields);
+    indexInCurrentBatch = (indexInCurrentBatch + 1) % firestoreMaximumBatchSize;
+  }
+
+  // Commit all constructed batches
+  Future<void> commitAll() async {
+    await Future.wait(batchList.map((batch){
+      return batch.commit();
+    }));
   }
 }
