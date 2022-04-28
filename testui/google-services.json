@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:894094054051:android:034683f5ef9e0010272516",
         "android_client_info": {
-          "package_name": "io.nextsense.android.baselibrarytestui"
+          "package_name": "io.nextsense.android.main"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "894094054051-1aouk90fipdu8ff37h527u8b0huc9t0v.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "io.nextsense.android.baselibrarytestui",
+            "package_name": "io.nextsense.android.main",
             "certificate_hash": "05a96ff56fe5a743c3ae042490ca4b5e3a00b873"
           }
         },
@@ -26,7 +26,7 @@
           "client_id": "894094054051-5fngp8qlqupecaa98gcketle6g5psdt7.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "io.nextsense.android.baselibrarytestui",
+            "package_name": "io.nextsense.android.main",
             "certificate_hash": "9db4914f5ada563d8fab6b2fc47bdc445e1e4fa7"
           }
         },

@@ -1,10 +1,11 @@
-package io.nextsense.android.baselibrarytestui;
+package io.nextsense.android.main;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -12,6 +13,7 @@ import android.util.Log;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
+
 import io.nextsense.android.service.ForegroundService;
 
 /**
@@ -22,6 +24,15 @@ public class MainActivity extends AppCompatActivity {
 
   private static final String TAG = MainActivity.class.getSimpleName();
   private static final boolean AUTOSTART_FLUTTER = true;
+  // This value cannot be changed so that the flutter plugin refers to the same preference file. See
+  // https://github.com/flutter/plugins/blob/main/packages/shared_preferences/shared_preferences_android/android/src/main/java/io/flutter/plugins/sharedpreferences/MethodCallHandlerImpl.java
+  private static final String SHARED_PREF_FILE_KEY =
+          "FlutterSharedPreferences";
+  // Needs to add "flutter." as a prefix to the key that is retrieved on the flutter side. This is
+  // silently added to keys that are saved by the flutter plugin. See
+  // https://github.com/flutter/plugins/blob/main/packages/shared_preferences/shared_preferences/lib/shared_preferences.dart
+  private static final String FLUTTER_PREF_PREFIX = "flutter.";
+  private static final String FLAVOR_PREF_KEY = "flavor";
 
   private Intent foregroundServiceIntent;
   private ForegroundService nextSenseService;
@@ -31,9 +42,14 @@ public class MainActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+
+    SharedPreferences sharedPref = getSharedPreferences(SHARED_PREF_FILE_KEY, Context.MODE_PRIVATE);
+    SharedPreferences.Editor editor = sharedPref.edit();
+    editor.putString(FLUTTER_PREF_PREFIX + FLAVOR_PREF_KEY, BuildConfig.FLAVOR);
+    editor.apply();
+
     foregroundServiceIntent = new Intent(getApplicationContext(), ForegroundService.class);
     foregroundServiceIntent.putExtra("ui_class", MainActivity.class);
-
     // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
     getApplicationContext().startService(foregroundServiceIntent);
 

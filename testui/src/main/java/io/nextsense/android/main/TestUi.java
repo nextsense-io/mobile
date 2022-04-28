@@ -1,4 +1,4 @@
-package io.nextsense.android.baselibrarytestui;
+package io.nextsense.android.main;
 
 import android.app.Application;
 import android.util.Log;

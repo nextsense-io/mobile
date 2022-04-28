@@ -12,6 +12,8 @@ import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:provider/provider.dart';
 
+import 'utils/android_logger.dart';
+
 void _initLogging() {
   Logger.root.level = Level.ALL;  // defaults to Level.INFO
   Logger.root.onRecord.listen((record) {
@@ -29,6 +31,9 @@ void main() async {
   await getIt<Preferences>().init();
   await getIt<NotificationsManager>().init();
   NextsenseBase.startService();
+  Preferences prefs = getIt<Preferences>();
+  String? flavor = prefs.getString(PreferenceKey.flavor);
+  getLogger("XenonImpedanceScreen").log(Level.INFO, "Flavor: $flavor");
   runApp(NextSenseTrialApp());
 }
 

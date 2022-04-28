@@ -2,10 +2,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum PreferenceKey {
+  allowDataTransmissionViaCellular,
   authToken,
   fcmToken,
-  allowDataTransmissionViaCellular,
-  showDayTabsForTasks,
+  flavor,
+  showDayTabsForTasks
 }
 
 class Preferences {
@@ -40,5 +41,4 @@ class Preferences {
   void markAsCached(String key) {
     sharedPrefs.setBool(key, true);
   }
-
 }
