@@ -1,4 +1,4 @@
-package io.nextsense.android.baselibrarytestui;
+package io.nextsense.android.main;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;

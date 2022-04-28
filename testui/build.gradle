@@ -8,7 +8,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "io.nextsense.android.baselibrarytestui"
+        applicationId "io.nextsense.android.main"
         minSdkVersion 24
         targetSdkVersion 31
         versionCode 1
@@ -17,12 +17,24 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    flavorDimensions "target_user_type"
+    productFlavors {
+        subject {
+            dimension "target_user_type"
+        }
+
+        researcher {
+            dimension "target_user_type"
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         // Flag to enable support for the new language APIs.
         // coreLibraryDesugaringEnabled true
@@ -37,9 +49,9 @@ dependencies {
     implementation project(path: ':flutter')
     implementation project(path: ':service')
     implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'com.google.android.material:material:1.4.0'
+    implementation 'com.google.android.material:material:1.5.0'
     implementation 'com.google.guava:guava:30.1.1-jre'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
