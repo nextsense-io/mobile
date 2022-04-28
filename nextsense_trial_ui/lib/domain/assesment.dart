@@ -27,8 +27,21 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
   // Get day # of study
   int get dayNumber => day.dayNumber;
 
+  // Start time string in format "HH:MM"
   late String startTimeStr;
+
+  // Contains only time part
   late DateTime startTime;
+
+  // Returns absolute datetime of protocol start
+  DateTime get startDateTime => day.date.add(
+      Duration(hours: startTime.hour, minutes: startTime.minute));
+
+  // Returns start date in format "YYYY-MM-DD"
+  String get startDateAsString => startDateTime.toString().split(" ")[0];
+
+  // Returns start datetime in format "YYYY-MM-DD HH:MM"
+  String get startDateTimeAsString => startDateTime.toString();
 
   late int allowedEarlyStartTimeMinutes;
   late int allowedLateStartTimeMinutes;

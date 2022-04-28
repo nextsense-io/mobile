@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:get_it/get_it.dart';
@@ -15,7 +17,6 @@ import 'package:nextsense_trial_ui/managers/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
-import 'package:nextsense_trial_ui/utils/utils.dart';
 
 class StudyManager {
 
@@ -115,50 +116,71 @@ class StudyManager {
 
     if (studyInitialized) {
       // If study already initialized, return scheduled protocols from cache
-      _logger.log(Level.WARNING, 'Loading scheduled protocols from cache');
+      _logger.log(Level.INFO, 'Loading scheduled protocols from cache');
       scheduledProtocols = await _loadScheduledProtocolsFromCache();
-      _logger.log(Level.WARNING, 'Loading ${scheduledProtocols.length}'
+      _logger.log(Level.INFO, 'Loading ${scheduledProtocols.length}'
           ' scheduled protocols');
     } else {
-      _logger.log(Level.WARNING,
+      _logger.log(Level.INFO,
           'Creating scheduled protocols based on planned assessments');
 
       Stopwatch stopwatch = new Stopwatch()..start();
       List<PlannedAssessment> assessments = await _loadPlannedAssessments();
+
+      _logger.log(Level.INFO, "Load planned assessments complete in " +
+          '${stopwatch.elapsedMicroseconds / 1000000.0} sec');
+
+      final batchWriter = FirestoreBatchWriter();
       for (var assessment in assessments) {
-        if (assessment.protocol != null) {
-          final String time = assessment.startTimeStr.replaceAll(":", "_");
-          final String dayNumberStr = assessment.dayNumber
-              .toString().padLeft(3, '0');
-
-          String scheduledProtocolKey =
-              "${assessment.id}_day_${dayNumberStr}_time_${time}";
-          final scheduledProtocol = ScheduledProtocol(
-              await _firestoreManager.queryEntity(
-                  [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
-                  [_authManager.getUserCode()!, currentStudy!.id,
-                    scheduledProtocolKey]), assessment);
-
-          scheduledProtocol
-            ..setValue(ScheduledProtocolKey.protocol, assessment.reference)
-            ..setValue(ScheduledProtocolKey.sessions, []);
-
-          // Initial status for protocol is not_started
-          if (scheduledProtocol.getValue(ScheduledProtocolKey.status) == null) {
-            scheduledProtocol.setValue(ScheduledProtocolKey.status,
-                ProtocolState.not_started.name);
-          }
-          scheduledProtocol.save();
-
-          scheduledProtocols.add(scheduledProtocol);
-
-          // Make sure cache is up to date, need to query whole collection
-          // Without this query undesired items can appear in cache
-          await _queryScheduledProtocols();
+        if (assessment.protocol == null) {
+          _logger.log(Level.WARNING, 'assessment protocol is null');
+          continue;
         }
+        final String time = assessment.startTimeStr.replaceAll(":", "_");
+        final String dayNumberStr = assessment.dayNumber
+            .toString().padLeft(3, '0');
+
+        String scheduledProtocolKey =
+            "${assessment.id}_day_${dayNumberStr}_time_${time}";
+
+        DocumentReference ref = _firestoreManager.getReference(
+            [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
+            [_authManager.getUserCode()!, currentStudy!.id,
+              scheduledProtocolKey]);
+
+        Map<String, dynamic> fields = {};
+
+        fields[ScheduledProtocolKey.protocol.name] = assessment.reference;
+        fields[ScheduledProtocolKey.sessions.name] = [];
+        fields[ScheduledProtocolKey.status.name] =
+            ProtocolState.not_started.name;
+        fields[ScheduledProtocolKey.start_date.name] =
+            assessment.startDateAsString;
+        fields[ScheduledProtocolKey.start_datetime.name] =
+            assessment.startDateTimeAsString;
+
+        batchWriter.add(ref, fields);
       }
 
-      _logger.log(Level.WARNING, "Scheduled protocols created in " +
+      _logger.log(Level.INFO, "Commiting ${batchWriter.numberOfBatches} batches");
+
+      await batchWriter.commitAll();
+
+      // Make sure cache is up to date, need to query whole collection
+      // Without this query undesired items can appear in cache
+      List<FirebaseEntity> scheduledProtocolEntities =
+          await _queryScheduledProtocols();
+
+      for (var entity in scheduledProtocolEntities) {
+        PlannedAssessment? plannedAssessment = assessments.firstWhereOrNull(
+                (assessment) =>
+            entity.getValue(ScheduledProtocolKey.protocol) ==
+                assessment.reference);
+
+        scheduledProtocols.add(ScheduledProtocol(entity, plannedAssessment!));
+      }
+
+      _logger.log(Level.INFO, "Scheduled protocols created in " +
           '${stopwatch.elapsedMicroseconds / 1000000.0} sec');
     }
 

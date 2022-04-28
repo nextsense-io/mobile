@@ -12,8 +12,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   print("Handling a background message: ${message.messageId}");
 
-  // Use this method to automatically convert the push data,
-  // in case you gonna use our data standard
+  // Сreate notification using the AwesomeNotifications FCM message parser
   AwesomeNotifications().createNotificationFromJsonData(message.data);
 }
 
@@ -60,9 +59,8 @@ class NotificationsManager {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     var messaging = FirebaseMessaging.instance;
-    messaging.getToken().then((value){
-      _onFcmTokenUpdated(value!);
-    });
+    messaging.getToken().then((token)=> _onFcmTokenUpdated(token!));
+    messaging.onTokenRefresh.listen(_onFcmTokenUpdated);
 
     _logger.log(Level.INFO, 'initialized');
   }
@@ -87,11 +85,10 @@ class NotificationsManager {
   void _onFcmTokenUpdated(String fcmToken) {
     getIt<Preferences>().setString(PreferenceKey.fcmToken, fcmToken);
     final _authManager = getIt<AuthManager>();
-    if (_authManager.user!=null) {
+    if (_authManager.user != null) {
       _authManager.user!
         ..setFcmToken(fcmToken)
         ..save();
     }
   }
-
 }

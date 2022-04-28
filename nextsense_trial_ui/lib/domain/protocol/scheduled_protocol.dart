@@ -58,19 +58,17 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
     protocol = plannedAssessment.protocol!;
     day = plannedAssessment.day;
     startTime = plannedAssessment.startTime;
-    final startDateTime = plannedAssessment.day.date
-        .add(Duration(hours: startTime.hour, minutes: startTime.minute));
+    final startDateTime = plannedAssessment.startDateTime;
     allowedStartAfter = startDateTime
         .subtract(Duration(minutes: plannedAssessment.allowedEarlyStartTimeMinutes));
     allowedStartBefore = startDateTime
         .add(Duration(minutes: plannedAssessment.allowedLateStartTimeMinutes));
 
     // Needed for later push notifications processing at backend
-    final datePart = startDateTime.toString().split(" ")[0];
     setValue(
-        ScheduledProtocolKey.start_date, datePart);
+        ScheduledProtocolKey.start_date, plannedAssessment.startDateAsString);
     setValue(
-        ScheduledProtocolKey.start_datetime, startDateTime.toString());
+        ScheduledProtocolKey.start_datetime, plannedAssessment.startDateTimeAsString);
   }
 
   // Set state of protocol in firebase
