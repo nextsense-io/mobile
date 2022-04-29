@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/flavors.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
@@ -35,59 +37,95 @@ class SignInScreen extends HookWidget {
             )));
   }
 
+  Widget _buildNextSenseAuth(
+      BuildContext context, SignInScreenViewModel viewModel) {
+    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      _UserPasswordSignInInputField(
+          field: viewModel.username,
+          labelText: "Enter your id",
+          helperText:
+              'Please contact NextSense support if you did not get an id',
+          icon: Icon(Icons.account_circle)),
+      _UserPasswordSignInInputField(
+          field: viewModel.password,
+          labelText: "Enter your password",
+          helperText: 'Contact NextSense to reset your password',
+          icon: Icon(Icons.lock)),
+      Padding(
+          padding: EdgeInsets.all(10.0),
+          child: ElevatedButton(
+            child: const Text('Continue'),
+            onPressed: () async {
+              _signIn(context, AuthMethod.user_code);
+            },
+          ))
+    ]);
+  }
+
+  Widget _buildGoogleAuth(
+      BuildContext context, SignInScreenViewModel viewModel) {
+    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      SignInButton(
+        Buttons.Google,
+        onPressed: () {
+          _signIn(context, AuthMethod.google_auth);
+        },
+      )
+    ]);
+  }
+
   Widget _buildBody(BuildContext context) {
     final viewModel = context.watch<SignInScreenViewModel>();
+
+    List<Widget> _signInWidgets = [
+      Padding(
+        padding: EdgeInsets.all(10.0),
+        child: Text(viewModel.appTitle,
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 30,
+                fontFamily: 'Roboto')),
+      ),
+    ];
+
+    for (AuthMethod authMethod in viewModel.authMethods) {
+      switch (authMethod) {
+        case AuthMethod.user_code:
+          _signInWidgets.add(_buildNextSenseAuth(context, viewModel));
+          break;
+        case AuthMethod.google_auth:
+          _signInWidgets.add(_buildGoogleAuth(context, viewModel));
+          break;
+      }
+    }
+
+    _signInWidgets.addAll([
+      Visibility(
+          visible: viewModel.errorMsg.isNotEmpty,
+          child: Text(
+            viewModel.errorMsg,
+            style: TextStyle(fontSize: 20, color: Color(0xFF5A0000)),
+          )
+      ),
+      Visibility(
+        visible: viewModel.isBusy,
+        child: CircularProgressIndicator(
+          color: Colors.white,
+        ),
+      ),
+    ]);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-        Padding(
-          padding: EdgeInsets.all(10.0),
-          child: Text('NextSense Trial',
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 30,
-                  fontFamily: 'Roboto')),
-        ),
-        _SignInInputField(
-            field: viewModel.username,
-            labelText: "Enter your id",
-            helperText:
-                'Please contact NextSense support if you did not get an id',
-            icon: Icon(Icons.account_circle)),
-        _SignInInputField(
-            field: viewModel.password,
-            labelText: "Enter your password",
-            helperText: 'Contact NextSense to reset your password',
-            icon: Icon(Icons.lock)),
-        Visibility(
-            visible: viewModel.errorMsg.isNotEmpty,
-            child: Text(
-                viewModel.errorMsg,
-              style: TextStyle(fontSize: 20, color: Color(0xFF5A0000)),
-            )
-        ),
-        Visibility(
-          visible: viewModel.isBusy,
-          child: CircularProgressIndicator(
-            color: Colors.white,
-          ),
-        ),
-        Padding(
-            padding: EdgeInsets.all(10.0),
-            child: ElevatedButton(
-              child: const Text('Continue'),
-              onPressed: () async {
-                _signIn(context);
-              },
-            ))
-      ]),
+          children: _signInWidgets),
     );
   }
 
-  Future _signIn(BuildContext context) async {
+  Future _signIn(BuildContext context, AuthMethod authMethod) async {
     final viewModel = context.read<SignInScreenViewModel>();
-    AuthenticationResult authResult = await viewModel.signIn();
+    AuthenticationResult authResult =
+        await viewModel.signIn(authMethod);
 
     if (authResult != AuthenticationResult.success) {
       var dialogTitle, dialogContent;
@@ -104,7 +142,7 @@ class SignInScreen extends HookWidget {
         case AuthenticationResult.user_fetch_failed:
         case AuthenticationResult.error:
           dialogTitle = 'Error';
-          dialogContent = 'Error occured. Please contact support';
+          dialogContent = 'Error occurred. Please contact support';
           break;
       }
       await showDialog(
@@ -152,13 +190,13 @@ class SignInScreen extends HookWidget {
   }
 }
 
-class _SignInInputField extends StatelessWidget {
+class _UserPasswordSignInInputField extends StatelessWidget {
   final ValueNotifier field;
   final String labelText;
   final String? helperText;
   final Icon? icon;
 
-  const _SignInInputField({
+  const _UserPasswordSignInInputField({
     Key? key,
     required this.field,
     required this.labelText,

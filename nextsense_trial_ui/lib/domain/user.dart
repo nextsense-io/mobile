@@ -23,6 +23,17 @@ enum UserKey {
   timezone
 }
 
+enum UserType {
+  // Unknown user type as a fallback.
+  unknown,
+  // Participant in a clinical study. One code per participant per study to
+  // maintain anonymity. So will only have one enrolled study.
+  subject,
+  // Researcher using the device run tests. Can have multiple active enrolled
+  // studies at the same time.
+  researcher
+}
+
 class User extends FirebaseEntity<UserKey> {
 
   User(FirebaseEntity firebaseEntity) :
@@ -49,6 +60,13 @@ class User extends FirebaseEntity<UserKey> {
     String minutes = minutesValue == 30 ? "30" : "00";
     setValue(UserKey.timezone, "${hours}:${minutes}");
   }
+
+  UserType getUserType() {
+    final value = getValue(UserKey.type);
+    return UserType.values.firstWhere((element) => element.name == value,
+        orElse: () => UserType.unknown);
+  }
+
   /**
    * Checks that the current date is between the study start and end dates for
    * this subject if present.

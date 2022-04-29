@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 
 class SetPasswordScreen extends HookWidget {
 
   static const String id = 'set_password_screen';
-
-  final AuthManager _authManager = getIt<AuthManager>();
 
   Future _showDialog(BuildContext context, String title, String message,
       bool popNavigator) async {

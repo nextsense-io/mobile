@@ -1,10 +1,10 @@
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/environment.dart';
+import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
@@ -21,25 +21,36 @@ void _initLogging() {
   });
 }
 
+Future _initPreferences() async {
+  initPreferences();
+  await getIt<Preferences>().init();
+}
+
+Future _initFlavor() async {
+  Preferences prefs = getIt<Preferences>();
+  String? flavorName = prefs.getString(PreferenceKey.flavor);
+  getLogger("Main").log(Level.INFO, "Flavor: $flavorName");
+  Flavor flavor = FlavorFactory.createFlavor(flavorName);
+  initFlavor(flavor);
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   _initLogging();
   await initEnvironment();
   await Firebase.initializeApp();
+  await _initPreferences();
+  await _initFlavor();
   await initDependencies();
-  await getIt<Preferences>().init();
   await getIt<NotificationsManager>().init();
   NextsenseBase.startService();
-  Preferences prefs = getIt<Preferences>();
-  String? flavor = prefs.getString(PreferenceKey.flavor);
-  getLogger("XenonImpedanceScreen").log(Level.INFO, "Flavor: $flavor");
   runApp(NextSenseTrialApp());
 }
 
 class NextSenseTrialApp extends StatelessWidget {
 
   final Navigation _navigation = getIt<Navigation>();
+  final Flavor _flavor = getIt<Flavor>();
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +60,7 @@ class NextSenseTrialApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'NextSense Trial',
+        title: _flavor.getAppTitle(),
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
