@@ -1,7 +1,8 @@
 import 'package:get_it/get_it.dart';
+import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/api.dart';
 import 'package:nextsense_trial_ui/managers/audio_manager.dart';
-import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
@@ -16,10 +17,18 @@ import 'package:nextsense_trial_ui/ui/navigation.dart';
 
 GetIt getIt = GetIt.instance;
 
+
+void initPreferences() {
+  getIt.registerSingleton<Preferences>(Preferences());
+}
+
+void initFlavor(Flavor flavor) {
+  getIt.registerSingleton<Flavor>(flavor);
+}
+
 Future<void> initDependencies() async {
   // The order here matters as some of these components might use a component
   // that was initialised before.
-  getIt.registerSingleton<Preferences>(Preferences());
   getIt.registerSingleton<NotificationsManager>(NotificationsManager());
   getIt.registerSingleton<NextsenseApi>(NextsenseApi());
   getIt.registerSingleton<FirestoreManager>(FirestoreManager());

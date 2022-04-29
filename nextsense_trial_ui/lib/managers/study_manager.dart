@@ -13,7 +13,7 @@ import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
-import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';

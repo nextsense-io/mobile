@@ -3,7 +3,8 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/environment.dart';
-import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/flavors.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -16,6 +17,7 @@ class SignInScreenViewModel extends ViewModel {
   final StudyManager _studyManager = getIt<StudyManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
+  final Flavor _flavor = getIt<Flavor>();
 
   final username = ValueNotifier<String>("");
   final password = ValueNotifier<String>("");
@@ -23,6 +25,8 @@ class SignInScreenViewModel extends ViewModel {
   String errorMsg = '';
 
   bool get hadPairedDevice => _deviceManager.getLastPairedDevice() != null;
+  List<AuthMethod> get authMethods => _flavor.getAuthMethods();
+  String get appTitle => _flavor.getAppTitle();
 
   void init() async {
     if (envGet(EnvironmentKey.USERNAME).isNotEmpty) {
@@ -35,12 +39,20 @@ class SignInScreenViewModel extends ViewModel {
     password.value = envGet(EnvironmentKey.PASSWORD, fallback: "");
   }
 
-  Future<AuthenticationResult> signIn() async {
+  Future<AuthenticationResult> signIn(AuthMethod authMethod) async {
     errorMsg = '';
     notifyListeners();
     setBusy(true);
-    AuthenticationResult authResult =
-      await _authManager.signIn(username.value, password.value);
+    AuthenticationResult authResult;
+    switch (authMethod) {
+      case AuthMethod.user_code:
+        authResult = await _authManager.signInNextSense(
+            username.value, password.value);
+        break;
+      case AuthMethod.google_auth:
+        authResult = await _authManager.signInGoogle();
+        break;
+    }
     setBusy(false);
     if (authResult != AuthenticationResult.success) {
       switch(authResult) {
@@ -56,7 +68,6 @@ class SignInScreenViewModel extends ViewModel {
       }
       notifyListeners();
     }
-
     return authResult;
   }
 
