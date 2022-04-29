@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_protocol_dialog.dart';
@@ -19,6 +20,7 @@ class MainMenu extends HookWidget {
 
   final Navigation _navigation = getIt<Navigation>();
   final StudyManager _studyManager = getIt<StudyManager>();
+  final AuthManager _authManager = getIt<AuthManager>();
 
   @override
   Widget build(BuildContext context) {
@@ -37,8 +39,9 @@ class MainMenu extends HookWidget {
                   backgroundColor: Colors.white,
                   child: Icon(Icons.person),
                 ),
-                title: Text("User Name"),
-                subtitle: Text("username@gmail.com"),
+                title: Text(_authManager.user?.id ?? 'Signed out',
+                  style: TextStyle(fontSize: 20),
+                ),
               ),
             ),
           ),
