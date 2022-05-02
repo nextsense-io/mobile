@@ -1,7 +1,7 @@
 import 'dart:collection';
 
 import 'package:collection/collection.dart';
-import 'package:dart_numerics/dart_numerics.dart';
+// import 'package:dart_numerics/dart_numerics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:gson/values.dart';
@@ -231,9 +231,10 @@ class XenonImpedanceCalculator {
   }
 
   static int nextPowerOf2(int x) {
+    return 0;
     // Crash on log2(1024), opened an issue:
     // https://github.com/zlumyo/dart_numerics/issues/6
-    return x == 0 ? 1 : pow(2, log2(x)).ceil();
+    // return x == 0 ? 1 : pow(2, log2(x)).ceil();
   }
 
 }

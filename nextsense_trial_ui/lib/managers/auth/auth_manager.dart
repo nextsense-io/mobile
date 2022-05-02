@@ -6,6 +6,7 @@ import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/google_auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/nextsense_auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:uuid/uuid.dart';
 
@@ -21,6 +22,7 @@ class AuthManager {
   static const minimumPasswordLength = 8;
 
   final _logger = CustomLogPrinter('AuthManager');
+  final _preferences = getIt<Preferences>();
   final _firestoreManager = getIt<FirestoreManager>();
   final _flavor = getIt<Flavor>();
   final Uuid _uuid = Uuid();

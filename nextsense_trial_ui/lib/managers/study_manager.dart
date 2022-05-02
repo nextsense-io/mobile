@@ -145,7 +145,7 @@ class StudyManager {
 
         DocumentReference ref = _firestoreManager.getReference(
             [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
-            [_authManager.getUserCode()!, currentStudy!.id,
+            [_authManager.userCode!, currentStudy!.id,
               scheduledProtocolKey]);
 
         Map<String, dynamic> fields = {};

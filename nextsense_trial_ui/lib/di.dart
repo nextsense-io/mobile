@@ -29,10 +29,10 @@ void initFlavor(Flavor flavor) {
 Future<void> initDependencies() async {
   // The order here matters as some of these components might use a component
   // that was initialised before.
-  getIt.registerSingleton<NotificationsManager>(NotificationsManager());
   getIt.registerSingleton<NextsenseApi>(NextsenseApi());
   getIt.registerSingleton<FirestoreManager>(FirestoreManager());
   getIt.registerSingleton<AuthManager>(AuthManager());
+  getIt.registerSingleton<NotificationsManager>(NotificationsManager());
   getIt.registerSingleton<PermissionsManager>(PermissionsManager());
   getIt.registerSingleton<DeviceManager>(DeviceManager());
   getIt.registerSingleton<StudyManager>(StudyManager());
