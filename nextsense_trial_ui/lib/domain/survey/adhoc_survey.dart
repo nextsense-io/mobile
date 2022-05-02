@@ -34,7 +34,7 @@ class AdhocSurvey implements RunnableSurvey {
       Table.enrolled_studies,
       Table.adhoc_surveys
     ], [
-      _authManager.getUserCode()!,
+      _authManager.userCode!,
       studyId,
       adhocProtocolKey
     ]).then((firebaseEntity) {
@@ -69,5 +69,4 @@ class AdhocSurveyRecord extends FirebaseEntity<AdhocSurveyRecordKey> {
   void setData(Map<String, dynamic> data) {
     setValue(AdhocSurveyRecordKey.data, data);
   }
-
 }

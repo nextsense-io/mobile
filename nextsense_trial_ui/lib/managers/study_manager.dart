@@ -217,7 +217,7 @@ class StudyManager {
       {bool fromCache = false}) async {
     return await _firestoreManager.queryEntities(
         [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
-        [_authManager.getUserCode()!, _currentStudy!.id],
+        [_authManager.userCode!, _currentStudy!.id],
         fromCacheWithKey: fromCache ?
         "${_currentStudy!.id}_${Table.scheduled_protocols.name()}" : null);
   }

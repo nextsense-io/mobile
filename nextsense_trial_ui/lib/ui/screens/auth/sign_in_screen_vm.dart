@@ -25,8 +25,8 @@ class SignInScreenViewModel extends ViewModel {
   String errorMsg = '';
 
   bool get hadPairedDevice => _deviceManager.getLastPairedDevice() != null;
-  List<AuthMethod> get authMethods => _flavor.getAuthMethods();
-  String get appTitle => _flavor.getAppTitle();
+  List<AuthMethod> get authMethods => _flavor.authMethods;
+  String get appTitle => _flavor.appTitle;
 
   void init() async {
     if (envGet(EnvironmentKey.USERNAME).isNotEmpty) {

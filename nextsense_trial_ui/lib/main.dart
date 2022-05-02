@@ -60,7 +60,7 @@ class NextSenseTrialApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: _flavor.getAppTitle(),
+        title: _flavor.appTitle,
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),

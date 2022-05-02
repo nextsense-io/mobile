@@ -95,7 +95,7 @@ class SurveyManager {
 
           Future future = _firestoreManager.queryEntity(
               [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
-              [_authManager.getUserCode()!, _currentStudyId,
+              [_authManager.userCode!, _currentStudyId,
                 scheduledSurveyKey]);
 
           future.then((firebaseEntity) {
@@ -178,7 +178,7 @@ class SurveyManager {
     String cacheKey = "${_currentStudyId}_${Table.scheduled_surveys.name()}";
     return await _firestoreManager.queryEntities(
         [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
-        [_authManager.getUserCode()!, _currentStudyId],
+        [_authManager.userCode!, _currentStudyId],
         fromCacheWithKey: fromCache ? cacheKey : null);
   }
 
