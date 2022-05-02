@@ -63,7 +63,11 @@ class User extends FirebaseEntity<UserKey> {
 
   UserType getUserType() {
     final value = getValue(UserKey.type);
-    return UserType.values.firstWhere((element) => element.name == value,
+    return getUserTypeFromString(value);
+  }
+
+  static UserType getUserTypeFromString(String? userTypeStr) {
+    return UserType.values.firstWhere((element) => element.name == userTypeStr,
         orElse: () => UserType.unknown);
   }
 

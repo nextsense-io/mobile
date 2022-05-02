@@ -57,7 +57,7 @@ class AdhocProtocol implements RunnableProtocol {
         Table.enrolled_studies,
         Table.adhoc_protocols
       ], [
-        _authManager.getUserCode()!,
+        _authManager.userCode!,
         _studyId,
         adhocProtocolKey
       ]).then((firebaseEntity) {

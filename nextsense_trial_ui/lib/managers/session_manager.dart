@@ -29,7 +29,7 @@ class SessionManager {
 
   Future<bool> startSession(String deviceMacAddress, String studyId,
       String protocolName) async {
-    String? userCode = _authManager.getUserCode();
+    String? userCode = _authManager.userCode;
     if (userCode == null) {
       return false;
     }

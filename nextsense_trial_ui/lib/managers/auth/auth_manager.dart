@@ -31,8 +31,12 @@ class AuthManager {
   User? _user;
   AuthMethod? _signedInAuthMethod;
 
+  bool get isAuthorized => _user != null;
+  User? get user => _user;
+  String? get userCode => _userCode;
+
   AuthManager() {
-    for (AuthMethod authMethod in _flavor.getAuthMethods()) {
+    for (AuthMethod authMethod in _flavor.authMethods) {
       switch (authMethod) {
         case AuthMethod.user_code:
           _nextSenseAuthManager = NextSenseAuthManager();
@@ -42,13 +46,6 @@ class AuthManager {
           break;
       }
     }
-  }
-
-  bool get isAuthorized => _user != null;
-  User? get user => _user;
-
-  String? getUserCode() {
-    return _userCode;
   }
 
   Future<AuthenticationResult> signInNextSense(
@@ -83,7 +80,7 @@ class AuthManager {
       return AuthenticationResult.user_fetch_failed;
     }
 
-    if (_user!.getUserType() != _flavor.getUserType()) {
+    if (_user!.getUserType() != _flavor.userType) {
       await signOut();
       return AuthenticationResult.invalid_username_or_password;
     }

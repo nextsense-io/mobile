@@ -7,52 +7,37 @@ enum AuthMethod {
 }
 
 abstract class Flavor {
-  String getAppTitle();
+  String get appTitle;
 
-  UserType getUserType();
+  UserType get userType;
 
-  List<AuthMethod> getAuthMethods();
+  List<AuthMethod> get authMethods;
 }
 
 class SubjectFlavor extends Flavor {
   @override
-  String getAppTitle() {
-    return "NextSense Trial";
-  }
+  String get appTitle => "NextSense Trial";
 
   @override
-  List<AuthMethod> getAuthMethods() {
-    return [AuthMethod.user_code];
-  }
+  List<AuthMethod> get authMethods => [AuthMethod.user_code];
 
   @override
-  UserType getUserType() {
-    return UserType.subject;
-  }
+  UserType get userType => UserType.subject;
 }
 
 class ResearcherFlavor extends Flavor {
   @override
-  String getAppTitle() {
-    return "NextSense Research";
-  }
+  String get appTitle => "NextSense Research";
 
   @override
-  List<AuthMethod> getAuthMethods() {
-    return [AuthMethod.google_auth];
-  }
+  List<AuthMethod> get authMethods => [AuthMethod.google_auth];
 
-  @override
-  UserType getUserType() {
-    return UserType.researcher;
-  }
+  UserType get userType => UserType.researcher;
 }
 
 class FlavorFactory {
   static Flavor createFlavor(String? flavor) {
-    UserType userType = UserType.values.firstWhere(
-            (element) => element.name == flavor,
-        orElse: () => UserType.unknown);
+    UserType userType = User.getUserTypeFromString(flavor);
     switch (userType) {
       case UserType.researcher:
         return ResearcherFlavor();
