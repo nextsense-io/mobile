@@ -22,18 +22,23 @@ class DashboardScheduleView extends StatelessWidget {
     List<ScheduledProtocol> scheduledProtocols = viewModel.getCurrentDayScheduledProtocols();
 
     if (viewModel.isBusy) {
+      var loadingTextVisible =
+          viewModel.studyInitialized != null && !viewModel.studyInitialized!;
+
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Visibility(
-                visible: !viewModel.studyInitialized,
+                visible: loadingTextVisible,
                 child: Text(
                   "Your study is initializing.\nPlease wait...",
                   style: TextStyle(color: Colors.deepPurple, fontSize: 20),
                   textAlign: TextAlign.center,
                 )),
-            SizedBox(height: 20,),
+            SizedBox(
+              height: 20,
+            ),
             Container(
               width: 30,
               height: 30,

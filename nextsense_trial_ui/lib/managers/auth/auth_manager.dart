@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
@@ -12,10 +13,11 @@ import 'package:uuid/uuid.dart';
 
 enum AuthenticationResult {
   success,
+  invalid_user_setup, // Invalid user configuration in Firestore
   invalid_username_or_password,
-  user_fetch_failed,
+  user_fetch_failed, // Failed to load user entity
   connection_error,
-  error
+  error // Some other errors
 }
 
 class AuthManager {
@@ -24,7 +26,9 @@ class AuthManager {
   final _logger = CustomLogPrinter('AuthManager');
   final _preferences = getIt<Preferences>();
   final _firestoreManager = getIt<FirestoreManager>();
+  final _firebaseAuth = FirebaseAuth.instance;
   final _flavor = getIt<Flavor>();
+
   final Uuid _uuid = Uuid();
 
   NextSenseAuthManager? _nextSenseAuthManager;
@@ -33,7 +37,12 @@ class AuthManager {
   User? _user;
   AuthMethod? _signedInAuthMethod;
 
+  // User has logged in with firebase account
+  bool get isAuthenticated => _firebaseAuth.currentUser != null;
+
+  // User is fetched from firestore and allowed to use his account
   bool get isAuthorized => _user != null;
+
   User? get user => _user;
   String? get userCode => _userCode;
 
@@ -77,37 +86,54 @@ class AuthManager {
     _logger.log(Level.INFO, 'Starting NextSense user check for $username');
     _user = await fetchUserFromFirestore(username);
 
+    _user = await loadUser(username);
+
     if (_user == null) {
       await signOut();
       return AuthenticationResult.user_fetch_failed;
     }
 
-    if (_user!.getUserType() != _flavor.userType) {
+    // Check user type match current flavor of app
+    // 'researcher' user can only use 'researcher' flavored app
+    // 'subject' user can only use 'subject' flavored app
+    if (_user!.userType != _flavor.userType) {
       await signOut();
-      return AuthenticationResult.invalid_username_or_password;
+      return AuthenticationResult.invalid_user_setup;
+    }
+    return AuthenticationResult.success;
+
+    return AuthenticationResult.success;
+  }
+
+  // Load user from Firestore and update some data
+  Future<User?> loadUser(String username) async {
+    final User? user = await fetchUserFromFirestore(username);
+
+    if (user == null) {
+      _logger.log(Level.WARNING, 'Failed to fetch user from firestore');
+      return null;
     }
 
-    _userCode = username;
-
     // Persist bt_key
-    if (_user!.getValue(UserKey.bt_key) == null) {
-      _user!.setValue(UserKey.bt_key, _uuid.v4());
+    if (user.getValue(UserKey.bt_key) == null) {
+      user.setValue(UserKey.bt_key, _uuid.v4());
     }
 
     // Persist fcm token
     String? fcmToken = _preferences.getString(PreferenceKey.fcmToken);
     if (fcmToken != null) {
-      _user!.setFcmToken(fcmToken);
+      user.setFcmToken(fcmToken);
     }
 
     // Save timezone
     // TODO(alex): handle timezone change in broadcast receiver
-    _user!.updateTimezone();
+    user.updateTimezone();
 
-    user!.save();
+    user.save();
 
-    _logger.log(Level.INFO, "SignIn successful");
-    return AuthenticationResult.success;
+    _userCode = username;
+
+    return user;
   }
 
   Future<User?> fetchUserFromFirestore(String code) async {
@@ -138,5 +164,29 @@ class AuthManager {
     _userCode = null;
     _user = null;
     _signedInAuthMethod = null;
+  }
+
+  // Make sure user data is loaded from firestore before we are doing any
+  // authorized operations.
+  // Returns true if user is successfully initialized, otherwise returns false
+  // and further actions must be taken
+  Future<bool> ensureUserLoaded() async {
+    _logger.log(Level.WARNING, 'ensure user loaded');
+    if (_user != null) {
+      // User already initialized
+      return true;
+    }
+
+    // Try to get user from username stored in firebase auth instance
+    if (_firebaseAuth.currentUser != null) {
+      final username = _firebaseAuth.currentUser!.uid;
+      _user = await loadUser(username);
+      if (_user != null) {
+        return true;
+      }
+    }
+
+    _logger.log(Level.WARNING, 'Failed to initialize user');
+    return false;
   }
 }

@@ -13,6 +13,7 @@ import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
+import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -43,7 +44,8 @@ class StudyManager {
 
   List<ScheduledProtocol> scheduledProtocols = [];
 
-  bool get studyInitialized => _enrolledStudy!.initialized;
+  // Can be null if enrolled study isn't loaded at the moment
+  bool? get studyInitialized => _enrolledStudy?.initialized;
 
   // References today's study day
   // Has to be dynamic because next day can start while app is on
@@ -55,7 +57,8 @@ class StudyManager {
     return _days!.firstWhereOrNull((StudyDay day) => now.isSameDay(day.date));
   }
 
-  Future<bool> loadEnrolledStudy(String user_id, String study_id) async {
+  // Loads EnrolledStudy entity which holds state of current study
+  Future<bool> _loadEnrolledStudy(String user_id, String study_id) async {
     FirebaseEntity enrolledStudyEntity;
     try {
       enrolledStudyEntity = await _firestoreManager.queryEntity(
@@ -71,16 +74,28 @@ class StudyManager {
       return false;
     }
     _enrolledStudy = EnrolledStudy(enrolledStudyEntity);
-    bool studyLoaded = await _loadCurrentStudy();
-    if (!studyLoaded) {
-      return false;
-    }
-    _createStudyDays();
     return true;
   }
 
   // Loads the study static information and generate the list of study days.
-  Future<bool> _loadCurrentStudy() async {
+  Future<bool> loadCurrentStudy() async {
+    // Load the study data.
+    final user = _authManager.user!;
+
+    final studyId = user.getValue(UserKey.current_study);
+    if (studyId == null) {
+      throw("'current_study' is not set for user");
+    }
+
+    // We start with loading enrolled study, which holds current study state
+    bool enrolledStudyLoaded = await _loadEnrolledStudy(user.id, studyId);
+    if (!enrolledStudyLoaded) {
+      _logger.log(Level.SEVERE,
+          'Error when trying to load the enrolled study ${studyId}');
+      return false;
+    }
+
+    // Then we need to load current study
     FirebaseEntity studyEntity;
     try {
       studyEntity = await _firestoreManager.queryEntity(
@@ -96,6 +111,7 @@ class StudyManager {
       return false;
     }
     _currentStudy = Study(studyEntity);
+    _createStudyDays();
     return true;
   }
 
@@ -114,7 +130,11 @@ class StudyManager {
   Future<bool> loadScheduledProtocols() async {
     scheduledProtocols.clear();
 
-    if (studyInitialized) {
+    if (studyInitialized == null) {
+      throw("study not initialized. cannot load scheduled protocols");
+    }
+
+    if (studyInitialized!) {
       // If study already initialized, return scheduled protocols from cache
       _logger.log(Level.INFO, 'Loading scheduled protocols from cache');
       scheduledProtocols = await _loadScheduledProtocolsFromCache();

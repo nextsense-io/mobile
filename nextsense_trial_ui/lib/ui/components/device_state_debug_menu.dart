@@ -52,7 +52,7 @@ class _DebugMenuItemWidget extends HookWidget {
   bool getInitialValue() {
     switch (type) {
       case DebugMenuItemType.connect:
-        return _deviceManager.deviceState.value == DeviceState.READY;
+        return _deviceManager.deviceState.value == DeviceState.ready;
       case DebugMenuItemType.hdmi:
         return _deviceManager.isHdmiCablePresent;
       case DebugMenuItemType.uSd:

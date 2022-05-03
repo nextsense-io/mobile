@@ -31,7 +31,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   List<StudyDay> get _days => _studyManager.days;
 
-  bool get studyInitialized => _studyManager.studyInitialized;
+  bool? get studyInitialized => _studyManager.studyInitialized;
 
   String get studyId => _studyManager.currentStudyId!;
 
@@ -60,6 +60,14 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     notifyListeners();
     setBusy(true);
     try {
+      bool userLoaded = await _authManager.ensureUserLoaded();
+      if (!userLoaded) {
+        _logger.log(Level.WARNING,
+            'Failed to load user. Fallback to signup');
+        logout();
+        return;
+      }
+      await _studyManager.loadCurrentStudy();
       await _studyManager.loadScheduledProtocols();
       await _surveyManager.loadScheduledSurveys();
       // Mark study initialized so we can load things from cache

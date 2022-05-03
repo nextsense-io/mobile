@@ -57,7 +57,11 @@ class SurveyManager {
   // Load planned surveys from study and convert them to scheduled surveys
   // that persist in user table
   Future loadScheduledSurveys() async {
-    final bool studyInitialized = _studyManager.studyInitialized;
+    final bool? studyInitialized = _studyManager.studyInitialized;
+
+    if (studyInitialized == null) {
+      throw("study not initialized. cannot load surveys");
+    }
 
     // If study is initialized take surveys from cache
     _surveys = await _loadSurveys(fromCache: studyInitialized);

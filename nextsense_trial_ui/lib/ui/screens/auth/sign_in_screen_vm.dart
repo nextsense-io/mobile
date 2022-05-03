@@ -72,21 +72,7 @@ class SignInScreenViewModel extends ViewModel {
   }
 
   Future<bool> loadCurrentStudy() async {
-    // Load the study data.
-    final user = _authManager.user!;
-
-    final studyId = user.getValue(UserKey.current_study);
-    if (studyId == null) {
-      throw("'current_study' is not set for user");
-    }
-    bool enrolledStudyLoaded =
-        await _studyManager.loadEnrolledStudy(user.id, studyId);
-    if (!enrolledStudyLoaded) {
-      _logger.log(Level.SEVERE,
-          'Error when trying to load the enrolled study ${studyId}');
-      return false;
-    }
-    return true;
+    return await _studyManager.loadCurrentStudy();
   }
 
   Future<bool> connectToLastPairedDevice() async {

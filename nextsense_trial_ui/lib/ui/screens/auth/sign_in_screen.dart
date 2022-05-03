@@ -139,8 +139,7 @@ class SignInScreen extends HookWidget {
           dialogContent = 'An internet connection is needed to validate your '
               'password.';
           break;
-        case AuthenticationResult.user_fetch_failed:
-        case AuthenticationResult.error:
+        default:
           dialogTitle = 'Error';
           dialogContent = 'Error occurred. Please contact support';
           break;

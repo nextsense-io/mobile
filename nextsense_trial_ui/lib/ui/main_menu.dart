@@ -82,6 +82,7 @@ class MainMenu extends HookWidget {
               label: Text('Logout'),
               onPressed: () {
                 dashboardViewModel.disconnectDevice();
+                _authManager.signOut();
                 _navigation.signOut();
               }
           ),

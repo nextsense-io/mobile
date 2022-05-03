@@ -3,12 +3,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/managers/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+Future<void> _onBackgroundMessageReceived(RemoteMessage message) async {
 
   print("Handling a background message: ${message.messageId}");
 
@@ -56,7 +56,11 @@ class NotificationsManager {
       }
     });
 
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    // This provided handler must be a top-level function and cannot be
+    // anonymous otherwise an [ArgumentError] will be thrown.
+    FirebaseMessaging.onBackgroundMessage(_onBackgroundMessageReceived);
+
+    FirebaseMessaging.onMessage.listen((message) => _onForegroundMessageReceived(message));
 
     var messaging = FirebaseMessaging.instance;
     messaging.getToken().then((token)=> _onFcmTokenUpdated(token!));
@@ -65,8 +69,25 @@ class NotificationsManager {
     _logger.log(Level.INFO, 'initialized');
   }
 
+  _onForegroundMessageReceived(RemoteMessage message) {
+    _logger.log(Level.INFO, 'foreground message received: '
+        'title: "${message.notification?.title}" '
+        'text: "${message.notification?.body}" '
+        'from: ${message.from} - data: ${message.data}');
+
+    // Сreate notification using the AwesomeNotifications FCM message parser
+    AwesomeNotifications().createNotificationFromJsonData(message.data);
+
+    final title = message.notification?.title ?? "";
+    final body = message.notification?.body ?? "";
+
+    // TODO(alex): discuss notification types that can be replaced
+    final int messageId = 999;
+    showAlertNotification(messageId, title, body);
+  }
+
   Future showAlertNotification(
-      int id, String title, String body, String payload) async {
+      int id, String title, String body, {String? payload}) async {
     AwesomeNotifications().createNotification(
         content: NotificationContent(
             id: id,
