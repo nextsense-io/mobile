@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -11,7 +12,7 @@ import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
-import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'utils/android_logger.dart';
@@ -67,7 +68,7 @@ class NextSenseTrialApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: _authManager.isAuthenticated ? DashboardScreen() : SignInScreen(),
+        home: _authManager.isAuthenticated ? StartupScreen() : SignInScreen(),
         navigatorKey: _navigation.navigatorKey,
         onGenerateRoute: _navigation.onGenerateRoute,
       ),

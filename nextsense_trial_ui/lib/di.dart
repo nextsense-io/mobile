@@ -4,6 +4,7 @@ import 'package:nextsense_trial_ui/managers/api.dart';
 import 'package:nextsense_trial_ui/managers/audio_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
+import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
@@ -37,6 +38,7 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<DeviceManager>(DeviceManager());
   getIt.registerSingleton<StudyManager>(StudyManager());
   getIt.registerSingleton<SurveyManager>(SurveyManager());
+  getIt.registerSingleton<DataManager>(DataManager());
   getIt.registerSingleton<SessionManager>(SessionManager());
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
   getIt.registerSingleton<DiskSpaceManager>(DiskSpaceManager());
