@@ -44,6 +44,7 @@ dependencies:
   stacked: ^2.2.8
   uuid: ^3.0.5
   wakelock: ^0.6.1+2
+  flutter_native_splash: ^2.1.6
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   # cupertino_icons: ^1.0.2
@@ -51,7 +52,6 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_native_splash: ^2.1.6
 
 
 
@@ -117,8 +117,12 @@ flutter:
 
 # Run "./scripts/update_splash.sh" after update any fields here
 flutter_native_splash:
-  # Background will be stretched full screen
-  background_image: assets/images/splash_background.png
+  android_12:
+    #TODO(alex): figure out image size and resolution for Android 12
+    image: assets/images/splash_logo_android_12.png
+  # Warning: need to change color for Android 12 manually in values-v31/themes.xml
+  # 'windowSplashScreenBackground'
+  color: "#984df1"
   # Logo image that will be placed at center
   image: assets/images/splash_logo.png
   # Right now we only support Android app
