@@ -151,10 +151,10 @@ class Navigation {
   }
 
   // Show connection check screen if needed before navigate to target route
-  Future navigateWithConnectionChecking(BuildContext context, String routeName, {Object? arguments,
+  Future navigateWithConnectionChecking(String routeName, {Object? arguments,
     bool replace = false, bool pop = false}) async {
 
-    if (!context.read<ConnectivityManager>()
+    if (!getIt<ConnectivityManager>()
         .isConnectionSufficientForCloudSync()) {
       await navigateTo(CheckInternetScreen.id);
     }

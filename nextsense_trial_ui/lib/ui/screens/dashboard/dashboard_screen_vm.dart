@@ -10,6 +10,7 @@ import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
@@ -24,6 +25,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   final SurveyManager _surveyManager = getIt<SurveyManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final AuthManager _authManager = getIt<AuthManager>();
+  final DataManager _dataManager = getIt<DataManager>();
 
   List<ScheduledProtocol> get scheduledProtocols => _studyManager.scheduledProtocols;
 
@@ -60,18 +62,15 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     notifyListeners();
     setBusy(true);
     try {
-      bool userLoaded = await _authManager.ensureUserLoaded();
-      if (!userLoaded) {
-        _logger.log(Level.WARNING,
-            'Failed to load user. Fallback to signup');
-        logout();
-        return;
+      if (!_dataManager.userDataLoaded) {
+        bool success = await _dataManager.loadUserData();
+        if (!success) {
+          _logger.log(Level.WARNING,
+              'Failed to load user. Fallback to signup');
+          logout();
+          return;
+        }
       }
-      await _studyManager.loadCurrentStudy();
-      await _studyManager.loadScheduledProtocols();
-      await _surveyManager.loadScheduledSurveys();
-      // Mark study initialized so we can load things from cache
-      await _studyManager.setStudyInitialized(true);
     } catch (e, stacktrace) {
       _logger.log(Level.SEVERE,
           'Failed to load dashboard data: '

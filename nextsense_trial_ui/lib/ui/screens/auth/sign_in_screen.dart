@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
@@ -13,6 +14,7 @@ import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:provider/src/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -20,8 +22,10 @@ class SignInScreen extends HookWidget {
 
   static const String id = 'sign_in_screen';
 
+  final _logger = CustomLogPrinter('SignInScreen');
   final _permissionsManager = getIt<PermissionsManager>();
   final _navigation = getIt<Navigation>();
+
 
   @override
   Widget build(BuildContext context) {
@@ -177,15 +181,13 @@ class SignInScreen extends HookWidget {
 
     if (viewModel.hadPairedDevice) {
       await viewModel.connectToLastPairedDevice();
-      await _navigation.navigateWithConnectionChecking(
-          context, DashboardScreen.id);
+      await _navigation.navigateWithConnectionChecking(DashboardScreen.id);
       return;
     }
 
     // Navigate to the device preparation screen.
     // TODO(eric): Might want to add a 'Do not show this again'
-    await _navigation.navigateWithConnectionChecking(
-        context, PrepareDeviceScreen.id);
+    await _navigation.navigateWithConnectionChecking(PrepareDeviceScreen.id);
   }
 }
 
