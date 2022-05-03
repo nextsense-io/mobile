@@ -51,9 +51,11 @@ class AuthManager {
       switch (authMethod) {
         case AuthMethod.user_code:
           _nextSenseAuthManager = NextSenseAuthManager();
+          _signedInAuthMethod = AuthMethod.user_code;
           break;
         case AuthMethod.google_auth:
           _googleAuthManager = GoogleAuthManager();
+          _signedInAuthMethod = AuthMethod.google_auth;
           break;
       }
     }
@@ -67,9 +69,6 @@ class AuthManager {
       return authResult;
     }
     authResult = await _signIn(username);
-    if (authResult == AuthenticationResult.success) {
-      _signedInAuthMethod = AuthMethod.user_code;
-    }
     return authResult;
   }
 
@@ -163,7 +162,6 @@ class AuthManager {
     }
     _userCode = null;
     _user = null;
-    _signedInAuthMethod = null;
   }
 
   // Make sure user data is loaded from firestore before we are doing any

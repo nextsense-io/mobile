@@ -51,5 +51,6 @@ class GoogleAuthManager {
   Future<void> handleSignOut() async {
     _googleSignInAccount = null;
     await _googleSignIn.signOut();
+    await _firebaseAuth.signOut();
   }
 }
