@@ -5,11 +5,13 @@ import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'utils/android_logger.dart';
@@ -51,6 +53,7 @@ class NextSenseTrialApp extends StatelessWidget {
 
   final Navigation _navigation = getIt<Navigation>();
   final Flavor _flavor = getIt<Flavor>();
+  final AuthManager _authManager = getIt<AuthManager>();
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +67,7 @@ class NextSenseTrialApp extends StatelessWidget {
         theme: ThemeData(
           primarySwatch: Colors.blue,
         ),
-        home: SignInScreen(),
+        home: _authManager.isAuthenticated ? DashboardScreen() : SignInScreen(),
         navigatorKey: _navigation.navigatorKey,
         onGenerateRoute: _navigation.onGenerateRoute,
       ),

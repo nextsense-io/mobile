@@ -24,7 +24,7 @@ abstract class DeviceStateViewModel
   final DeviceManager _deviceManager = getIt<DeviceManager>();
 
   DeviceState get deviceState => _deviceManager.deviceState.value;
-  bool get deviceIsConnected => deviceState == DeviceState.READY;
+  bool get deviceIsConnected => deviceState == DeviceState.ready;
   bool get deviceCanRecord =>
       deviceIsConnected && isHdmiCablePresent && isUSdPresent;
 
@@ -44,10 +44,10 @@ abstract class DeviceStateViewModel
 
   void _onDeviceStateChanged() {
     switch (deviceState) {
-      case DeviceState.DISCONNECTED:
+      case DeviceState.disconnected:
         onDeviceDisconnected();
         break;
-      case DeviceState.READY:
+      case DeviceState.ready:
         onDeviceReconnected();
         break;
       default:

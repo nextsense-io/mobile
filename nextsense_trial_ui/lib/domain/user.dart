@@ -35,6 +35,8 @@ enum UserType {
 }
 
 class User extends FirebaseEntity<UserKey> {
+  
+  UserType get userType => getUserTypeFromString(getValue(UserKey.type));
 
   User(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
@@ -59,11 +61,6 @@ class User extends FirebaseEntity<UserKey> {
     int minutesValue = (dateTime.timeZoneOffset.inMinutes % 60).abs();
     String minutes = minutesValue == 30 ? "30" : "00";
     setValue(UserKey.timezone, "${hours}:${minutes}");
-  }
-
-  UserType getUserType() {
-    final value = getValue(UserKey.type);
-    return getUserTypeFromString(value);
   }
 
   static UserType getUserTypeFromString(String? userTypeStr) {
