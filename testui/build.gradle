@@ -48,6 +48,11 @@ dependencies {
     implementation project(path: ':core')
     implementation project(path: ':flutter')
     implementation project(path: ':service')
+    // Import the BoM for the Firebase platform
+    implementation platform('com.google.firebase:firebase-bom:29.3.1')
+    // Declare the dependencies for the Crashlytics and Analytics libraries
+    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-analytics'
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'com.google.guava:guava:30.1.1-jre'
@@ -58,3 +63,5 @@ dependencies {
 }
 
 apply plugin: 'com.google.gms.google-services'
+// This must appear at the bottom of the file
+apply plugin: 'com.google.firebase.crashlytics'
