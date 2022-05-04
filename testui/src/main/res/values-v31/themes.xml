@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <!-- This file will apply since Android 12 (instead of res/values/themes.xml) -->
+    <!-- Show a splash screen on the activity. Automatically removed when Flutter draws its
+             first frame -->
     <style name="LaunchTheme" parent="@style/Theme.AppCompat.Light.NoActionBar">
-        <!-- Show a splash screen on the activity. Automatically removed when
-             Flutter draws its first frame -->
+        <!--Warning: this color need to be in sync manually with one in
+            pubspec.yaml:flutter_native_splash:color -->
         <item name="android:windowSplashScreenBackground">#984df1</item>
         <item name="android:forceDarkAllowed">false</item>
         <item name="android:windowFullscreen">true</item>
+        <!-- Icon that will be located in the middle of splash screen for Android 12 -->
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/android12splash</item>
     </style>
 </resources>
