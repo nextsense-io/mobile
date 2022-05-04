@@ -44,7 +44,7 @@ class DeviceManager {
   // It takes a maximum of about 1 second to find the device if it is already
   // powered up. 2 seconds gives enough safety and is not too long to wait if
   // the device is not powered on or is too far.
-  static final Duration scanTimeout = Duration(seconds: 2);
+  static final Duration _scanTimeout = Duration(seconds: 2);
 
   final _notificationsManager = getIt<NotificationsManager>();
   final _authManager = getIt<AuthManager>();
@@ -134,7 +134,7 @@ class DeviceManager {
       }
     });
     _logger.log(Level.FINE, 'Starting to wait on scan');
-    await waitScanFinished(scanTimeout);
+    await waitScanFinished(_scanTimeout);
     _cancelScanning();
     _logger.log(Level.FINE, 'finished waiting on scan');
 

@@ -1,8 +1,4 @@
-import 'dart:collection';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:gson/values.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';

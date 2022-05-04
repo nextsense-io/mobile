@@ -6,5 +6,5 @@ flutter pub run flutter_native_splash:create
 rm android/app
 rmdir android
 # Cleanup generated styles.xml which we don't need
-# Base theme that contain splash properties are instead placed in themes.xml
+# Base themes that contain splash screen properties are instead placed in themes.xml
 find $ANDROID_APP_FOLDER/src/main/res -name "styles.xml" -exec rm {} \;

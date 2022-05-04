@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';

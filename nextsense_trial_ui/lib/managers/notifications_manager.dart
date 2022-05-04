@@ -18,6 +18,10 @@ Future<void> _onBackgroundMessageReceived(RemoteMessage message) async {
 
 class NotificationsManager {
 
+  // TODO(alex): discuss notification types that can be replaced and fix
+  // _notificationMessageId depends on notification entity type
+  static const int _notificationMessageId = 999;
+
   final CustomLogPrinter _logger = CustomLogPrinter('NotificationsManager');
   
   NotificationManager() {}
@@ -81,9 +85,8 @@ class NotificationsManager {
     final title = message.notification?.title ?? "";
     final body = message.notification?.body ?? "";
 
-    // TODO(alex): discuss notification types that can be replaced
-    final int messageId = 999;
-    showAlertNotification(messageId, title, body);
+
+    showAlertNotification(_notificationMessageId, title, body);
   }
 
   Future showAlertNotification(

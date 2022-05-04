@@ -28,6 +28,7 @@ class DataManager {
     await _surveyManager.loadScheduledSurveys();
     // Mark study initialized so we can load things from cache
     await _studyManager.setStudyInitialized(true);
+
     userDataLoaded = true;
     return true;
   }

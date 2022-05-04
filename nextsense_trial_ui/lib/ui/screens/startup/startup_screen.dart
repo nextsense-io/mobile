@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
 import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen_vm.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:stacked/stacked.dart';
@@ -14,13 +12,7 @@ class StartupScreen extends StatefulWidget {
 
 class _StartupScreenState extends State<StartupScreen> {
 
-  final CustomLogPrinter _logger = CustomLogPrinter('LoadingScreen');
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    precacheImage(const AssetImage('assets/images/background.png'), context);
-  }
+  final CustomLogPrinter _logger = CustomLogPrinter('StartupScreen');
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +27,7 @@ class _StartupScreenState extends State<StartupScreen> {
                   children: [
                     Container(
                       decoration: const BoxDecoration(
+                        // TODO(alex): move color to separate style file
                         color: Color(0xFF984df1)
                         //color: Colors.lightBlue
                       )

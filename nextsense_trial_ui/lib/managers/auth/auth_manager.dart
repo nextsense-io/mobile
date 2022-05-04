@@ -83,7 +83,6 @@ class AuthManager {
 
   Future<AuthenticationResult> _signIn(String username) async {
     _logger.log(Level.INFO, 'Starting NextSense user check for $username');
-    _user = await fetchUserFromFirestore(username);
 
     _user = await loadUser(username);
 
@@ -166,6 +165,7 @@ class AuthManager {
 
   // Make sure user data is loaded from firestore before we are doing any
   // authorized operations.
+  //
   // Returns true if user is successfully initialized, otherwise returns false
   // and further actions must be taken
   Future<bool> ensureUserLoaded() async {

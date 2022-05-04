@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
-import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';

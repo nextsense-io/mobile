@@ -24,7 +24,7 @@ class StartupScreenViewModel extends ViewModel {
         success = await _dataManager.loadUserData();
       } catch (e, stacktrace) {
         _logger.log(Level.SEVERE,
-            'load user data failed: '
+            'load user data failed with exception: '
                 '${e.toString()}, ${stacktrace.toString()}');
       }
       if (!success) {
@@ -42,5 +42,4 @@ class StartupScreenViewModel extends ViewModel {
     _authManager.signOut();
     _navigation.signOut();
   }
-
 }
