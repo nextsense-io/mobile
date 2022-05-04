@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
@@ -37,16 +40,19 @@ Future _initFlavor() async {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  _initLogging();
-  await initEnvironment();
-  await Firebase.initializeApp();
-  await _initPreferences();
-  await _initFlavor();
-  await initDependencies();
-  await getIt<NotificationsManager>().init();
-  NextsenseBase.startService();
-  runApp(NextSenseTrialApp());
+  runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    _initLogging();
+    await initEnvironment();
+    await Firebase.initializeApp();
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+    await _initPreferences();
+    await _initFlavor();
+    await initDependencies();
+    await getIt<NotificationsManager>().init();
+    NextsenseBase.startService();
+    runApp(NextSenseTrialApp());
+  }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));
 }
 
 class NextSenseTrialApp extends StatelessWidget {
