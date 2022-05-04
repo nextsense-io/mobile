@@ -5,9 +5,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.StatFs;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -69,6 +71,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       "get_device_internal_state_data";
   public static final String SET_UPLOADER_MINIMUM_CONNECTIVITY_COMMAND =
       "set_uploader_minimum_connectivity";
+  public static final String GET_FREE_DISK_SPACE_COMMAND = "get_free_disk_space";
   public static final String EMULATOR_COMMAND = "emulator_command";
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
@@ -272,6 +275,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case SET_UPLOADER_MINIMUM_CONNECTIVITY_COMMAND:
         String minConnectionType = call.argument(MIN_CONNECTION_TYPE_ARGUMENT);
         setUploaderMinimumConnectivity(result, minConnectionType);
+        break;
+      case GET_FREE_DISK_SPACE_COMMAND:
+        getFreeDiskSpace(result);
         break;
       case EMULATOR_COMMAND:
         String command = call.argument("command");
@@ -684,6 +690,13 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     } else {
       result.error(ERROR_SERVICE_NOT_AVAILABLE, null, null);
     }
+  }
+
+  private void getFreeDiskSpace(Result result) {
+    StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+    long bytesAvailable;
+    bytesAvailable = stat.getBlockSizeLong() * stat.getAvailableBlocksLong();
+    result.success(bytesAvailable / (1024f * 1024f));
   }
 
   private void returnError(
