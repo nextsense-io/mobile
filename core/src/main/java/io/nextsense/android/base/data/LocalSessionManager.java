@@ -4,6 +4,8 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Optional;
 
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
@@ -12,10 +14,17 @@ import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
  * Manages the local sessions. The main rules is that only one session can be running at a time.
  */
 public class LocalSessionManager {
+  // There can be a delay between the time to send a stop command to the hardware device and that
+  // device stopping plus the remaining of the in-memory buffer emptying where valid data will be
+  // received after a session is stopped.
+  public static final Duration ACTIVE_SESSION_EXTRA_TIME = Duration.ofSeconds(30);
+
   private static final String TAG = LocalSessionManager.class.getSimpleName();
 
   private final ObjectBoxDatabase objectBoxDatabase;
   private LocalSession activeLocalSession;
+  private LocalSession lastActiveSession;
+  private Instant lastActiveSessionEnd;
 
   private LocalSessionManager(ObjectBoxDatabase objectBoxDatabase) {
     this.objectBoxDatabase = objectBoxDatabase;
@@ -28,12 +37,6 @@ public class LocalSessionManager {
   public synchronized void init() {
     Optional<LocalSession> activeSession = objectBoxDatabase.getActiveSession();
     activeSession.ifPresent(localSession -> activeLocalSession = localSession);
-  }
-
-  public synchronized void stop() {
-    if (activeLocalSession != null) {
-      stopLocalSession();
-    }
   }
 
   public synchronized long startLocalSession(
@@ -61,10 +64,16 @@ public class LocalSessionManager {
       activeLocalSession.setStatus(LocalSession.Status.FINISHED);
       objectBoxDatabase.putLocalSession(activeLocalSession);
     });
+    lastActiveSessionEnd = Instant.now();
+    lastActiveSession = activeLocalSession;
     activeLocalSession = null;
   }
 
   public synchronized Optional<LocalSession> getActiveLocalSession() {
+    if (activeLocalSession == null && lastActiveSession != null &&
+        Instant.now().isBefore(lastActiveSessionEnd.plus(ACTIVE_SESSION_EXTRA_TIME))) {
+      return Optional.of(lastActiveSession);
+    }
     return Optional.ofNullable(activeLocalSession);
   }
 }
