@@ -178,15 +178,17 @@ class SignInScreen extends HookWidget {
       return;
     }
 
+    // Navigate to the device preparation screen by default, but in case we
+    // already have paired device before, then navigate directly to dashboard
+    // Note: we have same logic in startup screen
+    // TODO(eric): Might want to add a 'Do not show this again'
+    String screen = PrepareDeviceScreen.id;
     if (viewModel.hadPairedDevice) {
       await viewModel.connectToLastPairedDevice();
-      await _navigation.navigateWithConnectionChecking(DashboardScreen.id);
-      return;
+      screen = DashboardScreen.id;
     }
 
-    // Navigate to the device preparation screen.
-    // TODO(eric): Might want to add a 'Do not show this again'
-    await _navigation.navigateWithConnectionChecking(PrepareDeviceScreen.id);
+    _navigation.navigateWithConnectionChecking(screen);
   }
 }
 

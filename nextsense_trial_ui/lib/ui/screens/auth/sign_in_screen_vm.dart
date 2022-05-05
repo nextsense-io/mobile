@@ -23,7 +23,7 @@ class SignInScreenViewModel extends ViewModel {
 
   String errorMsg = '';
 
-  bool get hadPairedDevice => _deviceManager.getLastPairedDevice() != null;
+  bool get hadPairedDevice => _deviceManager.hadPairedDevice;
   List<AuthMethod> get authMethods => _flavor.authMethods;
   String get appTitle => _flavor.appTitle;
 
@@ -83,6 +83,6 @@ class SignInScreenViewModel extends ViewModel {
   }
 
   Future<bool> connectToLastPairedDevice() async {
-    return _deviceManager.connectLastPairedDevice();
+    return _deviceManager.connectToLastPairedDevice();
   }
 }

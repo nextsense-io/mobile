@@ -76,6 +76,9 @@ class DeviceManager {
 
   bool get isUSdPresent => deviceInternalState.value?.uSdPresent ?? false;
 
+  // There is already paired device, which we could connect to
+  bool get hadPairedDevice => getLastPairedDevice() != null;
+
   Future<bool> connectDevice(Device device,
       {Duration timeout = const Duration(seconds: 10)}) async {
     _listenToState(device.macAddress);
@@ -112,7 +115,7 @@ class DeviceManager {
   }
 
   // Try connect to last paired device, returns true on success
-  Future<bool> connectLastPairedDevice() async {
+  Future<bool> connectToLastPairedDevice() async {
     Device? lastPairedDevice = getLastPairedDevice();
     if (lastPairedDevice == null) {
       return false;
