@@ -35,7 +35,8 @@ class StartupScreenViewModel extends ViewModel {
       }
       setBusy(false);
     }
-    await _navigation.navigateWithConnectionChecking(DashboardScreen.id);
+    await _navigation.navigateWithConnectionChecking(DashboardScreen.id,
+        replace: true);
   }
 
   void logout() {
