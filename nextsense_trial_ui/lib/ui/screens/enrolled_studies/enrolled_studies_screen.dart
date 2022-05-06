@@ -55,7 +55,7 @@ class _EnrolledStudiesSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     EnrolledStudiesScreenViewModel viewModel =
-        context.read<EnrolledStudiesScreenViewModel>();
+        context.watch<EnrolledStudiesScreenViewModel>();
 
     if (!viewModel.initialised) {
       return Padding(padding: EdgeInsets.only(top: 50), child:
