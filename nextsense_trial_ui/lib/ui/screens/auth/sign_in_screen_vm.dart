@@ -26,6 +26,7 @@ class SignInScreenViewModel extends ViewModel {
   bool get hadPairedDevice => _deviceManager.hadPairedDevice;
   List<AuthMethod> get authMethods => _flavor.authMethods;
   String get appTitle => _flavor.appTitle;
+  bool get isTempPassword => _authManager.user!.isTempPassword();
 
   void init() async {
     if (envGet(EnvironmentKey.USERNAME).isNotEmpty) {

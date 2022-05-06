@@ -11,9 +11,9 @@ import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:provider/src/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -21,10 +21,8 @@ class SignInScreen extends HookWidget {
 
   static const String id = 'sign_in_screen';
 
-  final _logger = CustomLogPrinter('SignInScreen');
   final _permissionsManager = getIt<PermissionsManager>();
   final _navigation = getIt<Navigation>();
-
 
   @override
   Widget build(BuildContext context) {
@@ -58,10 +56,10 @@ class SignInScreen extends HookWidget {
           padding: EdgeInsets.all(10.0),
           child: ElevatedButton(
             child: const Text('Continue'),
-            onPressed: () async {
-              _signIn(context, AuthMethod.user_code);
-            },
-          ))
+            onPressed: viewModel.isBusy ? () => {} :
+                () => _signIn(context, AuthMethod.user_code)
+          )
+      )
     ]);
   }
 
@@ -153,6 +151,12 @@ class SignInScreen extends HookWidget {
               title: dialogTitle,
               content: dialogContent)
       );
+      return;
+    }
+
+    // If the user had a temporary password, first ask to change it before proceeding.
+    if (viewModel.isTempPassword) {
+      _navigation.navigateWithConnectionChecking(SetPasswordScreen.id, replace: true);
       return;
     }
 

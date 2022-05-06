@@ -5,9 +5,10 @@ class SimpleAlertDialog extends StatelessWidget {
   final String content;
   final String buttonText;
   final bool popNavigator;
+  final Function? onPressed;
 
   SimpleAlertDialog({required this.title, required this.content,
-      this.buttonText = 'ok', this.popNavigator = false});
+      this.buttonText = 'ok', this.popNavigator = false, this.onPressed = null});
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +16,9 @@ class SimpleAlertDialog extends StatelessWidget {
       child: Text(buttonText),
       onPressed: () {
         Navigator.pop(context);
+        if (onPressed != null) {
+          onPressed!();
+        }
         if (popNavigator) {
           Navigator.pop(context);
         }
