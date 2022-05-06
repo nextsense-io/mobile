@@ -6,6 +6,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
@@ -25,30 +26,9 @@ class DashboardScheduleView extends StatelessWidget {
       var loadingTextVisible =
           viewModel.studyInitialized != null && !viewModel.studyInitialized!;
 
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Visibility(
-                visible: loadingTextVisible,
-                child: Text(
-                  "Your study is initializing.\nPlease wait...",
-                  style: TextStyle(color: Colors.deepPurple, fontSize: 20),
-                  textAlign: TextAlign.center,
-                )),
-            SizedBox(
-              height: 20,
-            ),
-            Container(
-              width: 30,
-              height: 30,
-              child: CircularProgressIndicator(
-                color: Colors.deepPurple,
-              ),
-            ),
-          ],
-        ),
-      );
+      return WaitWidget(message: Text("Your study is initializing.\nPlease wait...",
+          style: TextStyle(color: Colors.deepPurple, fontSize: 20),
+          textAlign: TextAlign.center), textVisible: loadingTextVisible);
     }
 
     if (scheduledProtocols.length == 0) {
