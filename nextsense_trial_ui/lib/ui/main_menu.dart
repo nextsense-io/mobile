@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/user.dart';
+import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
@@ -9,6 +11,7 @@ import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_survey_dialog.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
@@ -21,6 +24,7 @@ class MainMenu extends HookWidget {
   final Navigation _navigation = getIt<Navigation>();
   final StudyManager _studyManager = getIt<StudyManager>();
   final AuthManager _authManager = getIt<AuthManager>();
+  final Flavor _flavor = getIt<Flavor>();
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +49,12 @@ class MainMenu extends HookWidget {
               ),
             ),
           ),
+          if (_flavor.userType == UserType.researcher)
+            _MainMenuItem(
+                icon: Icon(Icons.alt_route),
+                label: Text('Switch study'),
+                onPressed: () =>
+                    _navigation.navigateTo(EnrolledStudiesScreen.id, pop: true)),
           if (currentStudy.isAdhocRecordingAllowed)
             _MainMenuItem(
                 icon: Icon(Icons.play_circle_outline),

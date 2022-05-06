@@ -57,6 +57,30 @@ class StudyManager {
     return _days!.firstWhereOrNull((StudyDay day) => now.isSameDay(day.date));
   }
 
+  // Get the enrolled studies from the database. This data could change at
+  // anytime so always get it from the database and not from a cache.
+  Future<List<EnrolledStudy>> getEnrolledStudies(String user_id) async {
+    List<FirebaseEntity> _enrolledStudiesEntities;
+    try {
+      _enrolledStudiesEntities = await _firestoreManager.queryEntities(
+          [Table.users, Table.enrolled_studies], [user_id]);
+    } catch(e) {
+      _logger.log(Level.SEVERE,
+          'Error when trying to load the enrolled studies for ${user_id}: ${e}');
+      return [];
+    }
+    if (_enrolledStudiesEntities.isEmpty) {
+      _logger.log(Level.SEVERE,
+          'No enrolled studies for ${user_id}');
+      return [];
+    }
+    List<EnrolledStudy> _enrolledStudies = [];
+    for (FirebaseEntity enrolledStudyEntity in _enrolledStudiesEntities) {
+      _enrolledStudies.add(new EnrolledStudy(enrolledStudyEntity));
+    }
+    return _enrolledStudies;
+  }
+
   // Loads EnrolledStudy entity which holds state of current study
   Future<bool> _loadEnrolledStudy(String user_id, String study_id) async {
     FirebaseEntity enrolledStudyEntity;

@@ -15,6 +15,7 @@ import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
@@ -71,6 +72,8 @@ class Navigation {
           builder: (context) => SettingsScreen());
       case CheckInternetScreen.id: return MaterialPageRoute(
             builder: (context) => CheckInternetScreen());
+      case EnrolledStudiesScreen.id: return MaterialPageRoute(
+          builder: (context) => EnrolledStudiesScreen());
 
       // Routes with arguments
       case ProtocolScreen.id:

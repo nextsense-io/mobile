@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen_vm.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:stacked/stacked.dart';
 
 class StartupScreen extends StatefulWidget {
@@ -11,8 +10,6 @@ class StartupScreen extends StatefulWidget {
 }
 
 class _StartupScreenState extends State<StartupScreen> {
-
-  final CustomLogPrinter _logger = CustomLogPrinter('StartupScreen');
 
   @override
   Widget build(BuildContext context) {
@@ -69,8 +66,9 @@ class _StartupScreenState extends State<StartupScreen> {
         ));
   }
 
-  _onBackButtonPressed(BuildContext context, StartupScreenViewModel viewModel) {
+  Future<bool> _onBackButtonPressed(
+      BuildContext context, StartupScreenViewModel viewModel) async {
     Navigator.pop(context, false);
+    return true;
   }
-
 }

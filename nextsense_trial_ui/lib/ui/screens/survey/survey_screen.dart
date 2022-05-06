@@ -17,8 +17,6 @@ class SurveyScreen extends HookWidget {
 
   static const String id = 'survey_screen';
 
-  final CustomLogPrinter _logger = CustomLogPrinter('SurveyScreen');
-
   final RunnableSurvey runnableSurvey;
 
   SurveyScreen(this.runnableSurvey);
@@ -37,8 +35,10 @@ class SurveyScreen extends HookWidget {
     );
   }
 
-  _onBackButtonPressed(BuildContext context, SurveyScreenViewModel viewModel) {
+  Future<bool> _onBackButtonPressed(
+      BuildContext context, SurveyScreenViewModel viewModel) async {
     Navigator.pop(context, false);
+    return true;
   }
 
 }
