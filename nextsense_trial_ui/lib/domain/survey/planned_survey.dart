@@ -7,7 +7,8 @@ import 'package:nextsense_trial_ui/utils/date_utils.dart';
 enum PlannedSurveyKey {
   day,
   survey,
-  days_to_complete
+  days_to_complete,
+  period
 }
 
 class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
@@ -19,33 +20,22 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
 
   String get surveyId => getValue(PlannedSurveyKey.survey);
 
-  late SurveyPeriod period;
+  SurveyPeriod get period =>
+      surveyPeriodFromString(getValue(PlannedSurveyKey.period));
 
   late int daysToComplete;
-  int? certainDayNumber;
+  int? specificDayNumber;
 
   PlannedSurvey(FirebaseEntity firebaseEntity, DateTime studyStartDate,
       DateTime studyEndDate) :
         super(firebaseEntity.getDocumentSnapshot()) {
-    dynamic day = getValue(PlannedSurveyKey.day);
 
-    // We have following possible values for day field
-    // 1. day number - survey will take place certain day within study
+    // We have following possible values for period field
+    // 1. 'specific_day' - survey will take place certain day within study
     // 2. 'daily' - survey will take place each day of study
-    // 3. 'weekly' - survey will take place on 8th, 15th, etc.
-    if (day is int) {
-      period = SurveyPeriod.specific_day;
-      certainDayNumber = day;
-    } else if (day is String) {
-      if (day == SurveyPeriod.daily.name) {
-        period = SurveyPeriod.daily;
-      } else if (day == SurveyPeriod.weekly.name) {
-        period = SurveyPeriod.weekly;
-      } else {
-        throw("Invalid day value - $day");
-      }
-    } else {
-      throw("Invalid day value - $day");
+    // 3. 'weekly' - survey will take place on 8th day, 15th, etc.
+    if (period == SurveyPeriod.specific_day) {
+      specificDayNumber = getValue(PlannedSurveyKey.day);
     }
 
     _initSurveyDays(studyStartDate, studyEndDate);
@@ -77,8 +67,8 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
     if (period == SurveyPeriod.specific_day) {
       // For certain day number we just add single day
       days.add(StudyDay(
-          studyStartDate.add(Duration(days: certainDayNumber! - 1)),
-          certainDayNumber!));
+          studyStartDate.add(Duration(days: specificDayNumber! - 1)),
+          specificDayNumber!));
       return;
     }
 
