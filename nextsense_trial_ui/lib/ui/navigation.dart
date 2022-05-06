@@ -24,7 +24,7 @@ import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen.dart
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
-import 'package:nextsense_trial_ui/ui/set_password_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
 import 'package:provider/src/provider.dart';
 

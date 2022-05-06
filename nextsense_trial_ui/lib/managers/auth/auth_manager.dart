@@ -37,10 +37,10 @@ class AuthManager {
   User? _user;
   AuthMethod? _signedInAuthMethod;
 
-  // User has logged in with firebase account
+  // User has logged in with Firebase account.
   bool get isAuthenticated => _firebaseAuth.currentUser != null;
 
-  // User is fetched from firestore and allowed to use his account
+  // User is fetched from Firestore and allowed to use his account.
   bool get isAuthorized => _user != null;
 
   User? get user => _user;
@@ -81,6 +81,10 @@ class AuthManager {
     return await _signIn(_googleAuthManager!.email);
   }
 
+  Future<bool> changePassword(String newPassword) async {
+    return true;
+  }
+
   Future<AuthenticationResult> _signIn(String username) async {
     _logger.log(Level.INFO, 'Starting NextSense user check for $username');
 
@@ -98,8 +102,6 @@ class AuthManager {
       await signOut();
       return AuthenticationResult.invalid_user_setup;
     }
-    return AuthenticationResult.success;
-
     return AuthenticationResult.success;
   }
 

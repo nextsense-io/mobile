@@ -8,6 +8,8 @@ enum UserKey {
   last_paired_device,
   // String containing the salt and hashed password.
   password,
+  // If the password is temporary (first login or reset by our support).
+  is_temp_password,
   // Currently selected study. Opens by default if there are more than one for
   // this user, which is possible for some user types.
   current_study,
@@ -61,6 +63,11 @@ class User extends FirebaseEntity<UserKey> {
     int minutesValue = (dateTime.timeZoneOffset.inMinutes % 60).abs();
     String minutes = minutesValue == 30 ? "30" : "00";
     setValue(UserKey.timezone, "${hours}:${minutes}");
+  }
+
+  bool isTempPassword() {
+    bool? isTempPassword = getValue(UserKey.is_temp_password);
+    return isTempPassword != null ? isTempPassword : false;
   }
 
   static UserType getUserTypeFromString(String? userTypeStr) {

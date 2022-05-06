@@ -10,6 +10,7 @@ import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_protocol_dialog.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_survey_dialog.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
@@ -55,6 +56,12 @@ class MainMenu extends HookWidget {
                 label: Text('Switch study'),
                 onPressed: () =>
                     _navigation.navigateTo(EnrolledStudiesScreen.id, pop: true)),
+          if (_flavor.userType == UserType.subject)
+            _MainMenuItem(
+                icon: Icon(Icons.password),
+                label: Text('Change password'),
+                onPressed: () =>
+                    _navigation.navigateTo(SetPasswordScreen.id, pop: true)),
           if (currentStudy.isAdhocRecordingAllowed)
             _MainMenuItem(
                 icon: Icon(Icons.play_circle_outline),
