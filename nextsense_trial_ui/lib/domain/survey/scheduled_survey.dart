@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
@@ -38,7 +39,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
   SurveyPeriod get period =>
       surveyPeriodFromString(getValue(ScheduledSurveyKey.period));
 
-  String get plannedSurveyId => getValue(ScheduledSurveyKey.planned_survey);
+  String get plannedSurveyId => getValue(ScheduledSurveyKey.planned_survey).id;
 
   bool get isCompleted => state == SurveyState.completed;
   bool get isSkipped => state == SurveyState.skipped;
@@ -51,7 +52,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
     int? _daysToComplete = getValue(ScheduledSurveyKey.days_to_complete);
     // Initialize from planned survey
     if (plannedSurvey != null) {
-      setPlannedSurvey(plannedSurvey.id);
+      setPlannedSurvey(plannedSurvey.reference);
       _daysToComplete = plannedSurvey.daysToComplete;
       setValue(ScheduledSurveyKey.days_to_complete, _daysToComplete);
       setValue(ScheduledSurveyKey.survey, survey.id);
@@ -78,8 +79,8 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
     setValue(ScheduledSurveyKey.data, data);
   }
 
-  void setPlannedSurvey(String plannedSurveyId) {
-    setValue(ScheduledSurveyKey.planned_survey, plannedSurveyId);
+  void setPlannedSurvey(DocumentReference plannedSurvey) {
+    setValue(ScheduledSurveyKey.planned_survey, plannedSurvey);
   }
 
   // Survey didn't start in time, should be skipped
