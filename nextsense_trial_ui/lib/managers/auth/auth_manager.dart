@@ -82,7 +82,7 @@ class AuthManager {
   }
 
   Future<bool> changePassword(String newPassword) async {
-    return true;
+    return await _nextSenseAuthManager!.changePassword(userCode!, newPassword);
   }
 
   Future<AuthenticationResult> _signIn(String username) async {

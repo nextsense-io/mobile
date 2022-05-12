@@ -117,7 +117,8 @@ class SetPasswordScreen extends HookWidget {
         ));
   }
 
-  Future<void> _onSubmitButtonPressed(BuildContext context, SetPasswordScreenViewModel viewModel) async {
+  Future<void> _onSubmitButtonPressed(BuildContext context,
+      SetPasswordScreenViewModel viewModel) async {
     final String password = _password;
     if (password.isEmpty) {
       return;
@@ -126,8 +127,7 @@ class SetPasswordScreen extends HookWidget {
       _showDialog(
           context,
           'Error',
-          'Password should be at least ${viewModel.minimumPasswordLength} '
-              'characters long',
+          'Password should be at least ${viewModel.minimumPasswordLength} characters long',
           false, null);
       return;
     }
@@ -145,8 +145,8 @@ class SetPasswordScreen extends HookWidget {
         _showDialog(
             context,
             'Error',
-            'Could not set password, make sure you have an active internet '
-                'connection and try again.',
+            'Could not set password, make sure you have an active internet connection and try '
+                'again.',
             false, null);
         return;
       }
@@ -154,8 +154,7 @@ class SetPasswordScreen extends HookWidget {
       _showDialog(
           context,
           'Error',
-          'Could not set password, make sure you have an active internet '
-              'connection and try again.',
+          'Could not set password, make sure you have an active internet connection and try again.',
           false, null);
       return;
     }
