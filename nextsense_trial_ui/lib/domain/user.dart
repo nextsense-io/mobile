@@ -22,7 +22,9 @@ enum UserKey {
   // FCM Token for push notifications
   fcm_token,
   // Current user's timezone
-  timezone
+  timezone,
+  // User name
+  username
 }
 
 enum UserType {

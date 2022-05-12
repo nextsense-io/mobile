@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/managers/api.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/nextsense_api.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class NextSenseAuthManager {
@@ -11,8 +11,7 @@ class NextSenseAuthManager {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final _logger = CustomLogPrinter('NextSenseAuthManager');
 
-  Future<AuthenticationResult> handleSignIn(
-      String username, String password) async {
+  Future<AuthenticationResult> handleSignIn(String username, String password) async {
     ApiResponse resp = await _nextsenseApi.auth(username, password);
 
     if (resp.isError) {
@@ -37,6 +36,15 @@ class NextSenseAuthManager {
     }
 
     return AuthenticationResult.success;
+  }
+
+  Future<bool> changePassword(String username, String newPassword) async {
+    ApiResponse resp = await _nextsenseApi.changePassword(
+        await _firebaseAuth.currentUser!.getIdToken(), username, newPassword);
+    if (resp.isError) {
+      return false;
+    }
+    return true;
   }
 
   Future<void> handleSignOut() async {

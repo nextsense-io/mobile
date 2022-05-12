@@ -18,7 +18,6 @@ import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:provider/src/provider.dart';
 
 class MainMenu extends HookWidget {
 
@@ -58,7 +57,7 @@ class MainMenu extends HookWidget {
                     _navigation.navigateTo(EnrolledStudiesScreen.id, pop: true)),
           if (_flavor.userType == UserType.subject)
             _MainMenuItem(
-                icon: Icon(Icons.password),
+                icon: Icon(Icons.vpn_key),
                 label: Text('Change password'),
                 onPressed: () =>
                     _navigation.navigateTo(SetPasswordScreen.id, pop: true)),

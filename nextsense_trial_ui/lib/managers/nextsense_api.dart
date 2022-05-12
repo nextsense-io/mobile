@@ -20,28 +20,20 @@ class ApiResponse {
 }
 
 class NextsenseApi {
-
+  final String _baseUrl = Config.nextsenseApiUrl;
+  final _client = http.Client();
   final CustomLogPrinter _logger = CustomLogPrinter('NextsenseApi');
 
-  final String baseUrl = Config.nextsenseApiUrl;
-
-  Uri get endpointAuth => Uri.parse('$baseUrl/auth');
-
-  final client = http.Client();
+  Uri get _endpointAuth => Uri.parse('$_baseUrl/auth');
+  Uri get _endpointChangePassword => Uri.parse('$_baseUrl/change_password');
 
   NextsenseApi() {}
 
-  // Returns `token` that app can use to authorize in Firebase
-  Future<ApiResponse> auth(String username, String password) async {
-
-    var data = {
-      'username': username,
-      'password': password
-    };
-
+  Future<ApiResponse> _callApi({required Map<String, dynamic> data, required Uri endpoint,
+      required String errorMsg}) async {
     var response;
     try {
-      response = await client.post(endpointAuth, headers: {
+      response = await _client.post(endpoint, headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       }, body: jsonEncode(data)).timeout(const Duration(seconds: 5));
@@ -53,7 +45,7 @@ class NextsenseApi {
       );
     }
 
-    _logger.log(Level.INFO, "Api::auth()::response: ${response.body}");
+    _logger.log(Level.INFO, endpoint.path + "::response: ${response.body}");
 
     if (response.statusCode == 200) {
       var responseJson = json.decode(response.body) as Map<String, dynamic>;
@@ -66,7 +58,6 @@ class NextsenseApi {
         errorMsg = responseJson['error'];
       } catch (e) {
         _logger.log(Level.WARNING, e);
-        errorMsg = "Authentication request failed";
       }
       return ApiResponse(
           data: responseJson,
@@ -76,4 +67,23 @@ class NextsenseApi {
     }
   }
 
+  // Returns `token` that app can use to authorize in Firebase
+  Future<ApiResponse> auth(String username, String password) async {
+    var data = {
+      'username': username,
+      'password': password
+    };
+    return _callApi(endpoint: _endpointAuth, data: data, errorMsg: "Authentication request failed");
+  }
+
+  // Changes the user password.
+  Future<ApiResponse> changePassword(String token, String username, String new_password) async {
+    var data = {
+      'token': token,
+      'username': username,
+      'new_password': new_password
+    };
+    return _callApi(endpoint: _endpointChangePassword, data: data,
+        errorMsg: "Password change request failed");
+  }
 }
