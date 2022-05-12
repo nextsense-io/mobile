@@ -17,23 +17,37 @@ class DataManager {
   final SurveyManager _surveyManager = getIt<SurveyManager>();
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
 
-  bool userDataLoaded = false;
+  bool userLoaded = false;
+  bool userStudyDataLoaded = false;
 
-  Future<bool> loadUserData() async {
-    bool userLoaded = await _authManager.ensureUserLoaded();
+  Future<bool> loadUser() async {
+    userLoaded = await _authManager.ensureUserLoaded();
     if (!userLoaded) {
       _logger.log(Level.WARNING,
           'Failed to load user. Fallback to signup');
       return false;
     }
+    userLoaded = true;
+    return true;
+  }
+
+  Future<bool> loadUserStudyData() async {
     await _studyManager.loadCurrentStudy();
     await _studyManager.loadScheduledProtocols();
     await _surveyManager.loadScheduledSurveys();
     // Mark study initialized so we can load things from cache
     await _studyManager.setStudyInitialized(true);
 
-    userDataLoaded = true;
+    userStudyDataLoaded = true;
     return true;
+  }
+
+  Future<bool> loadUserData() async {
+    bool loaded = await loadUser();
+    if (userLoaded) {
+      loaded = await loadUserStudyData();
+    }
+    return loaded;
   }
 
   Future<bool> switchCurrentStudy(EnrolledStudy enrolledStudy) async {

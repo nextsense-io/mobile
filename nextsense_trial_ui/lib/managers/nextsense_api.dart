@@ -20,6 +20,8 @@ class ApiResponse {
 }
 
 class NextsenseApi {
+  static final Duration _timeout = Duration(seconds: 10);
+
   final String _baseUrl = Config.nextsenseApiUrl;
   final _client = http.Client();
   final CustomLogPrinter _logger = CustomLogPrinter('NextsenseApi');
@@ -36,7 +38,7 @@ class NextsenseApi {
       response = await _client.post(endpoint, headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-      }, body: jsonEncode(data)).timeout(const Duration(seconds: 5));
+      }, body: jsonEncode(data)).timeout(_timeout);
     } catch (e) {
       _logger.log(Level.WARNING, e);
       return ApiResponse(

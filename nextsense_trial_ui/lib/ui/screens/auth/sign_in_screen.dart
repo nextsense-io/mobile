@@ -49,6 +49,7 @@ class SignInScreen extends HookWidget {
           icon: Icon(Icons.account_circle)),
       _UserPasswordSignInInputField(
           field: viewModel.password,
+          obscureText: true,
           labelText: "Enter your password",
           helperText: 'Contact NextSense to reset your password',
           icon: Icon(Icons.lock)),
@@ -192,7 +193,7 @@ class SignInScreen extends HookWidget {
       screen = DashboardScreen.id;
     }
 
-    _navigation.navigateWithConnectionChecking(screen);
+    _navigation.navigateWithConnectionChecking(screen, replace: true);
   }
 }
 
@@ -201,6 +202,7 @@ class _UserPasswordSignInInputField extends StatelessWidget {
   final String labelText;
   final String? helperText;
   final Icon? icon;
+  final bool? obscureText;
 
   const _UserPasswordSignInInputField({
     Key? key,
@@ -208,6 +210,7 @@ class _UserPasswordSignInInputField extends StatelessWidget {
     required this.labelText,
     this.helperText,
     this.icon,
+    this.obscureText
   }) : super(key: key);
 
   @override
@@ -218,6 +221,7 @@ class _UserPasswordSignInInputField extends StatelessWidget {
           cursorColor: TextSelectionTheme.of(context).cursorColor,
           initialValue: field.value,
           maxLength: 20,
+          obscureText: obscureText ?? false,
           //enabled: !_askForPassword,
           decoration: InputDecoration(
             icon: icon,

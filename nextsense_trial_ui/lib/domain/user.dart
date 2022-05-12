@@ -2,6 +2,8 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
 /**
  * Each entry corresponds to a field name in the database instance.
+ * If any fields are added here, they need to be added to the User class in
+ * https://github.com/nextsense-io/mobile_backend/lib/models/user.py
  */
 enum UserKey {
   // MAC address of the last paired device.

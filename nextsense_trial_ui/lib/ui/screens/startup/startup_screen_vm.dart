@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
@@ -21,18 +22,39 @@ class StartupScreenViewModel extends ViewModel {
 
   void init() async {
     setBusy(true);
-    if (!_dataManager.userDataLoaded) {
+    if (!_dataManager.userLoaded) {
       bool success = false;
       try {
-        success = await _dataManager.loadUserData();
+        success = await _dataManager.loadUser();
       } catch (e, stacktrace) {
         _logger.log(Level.SEVERE,
-            'load user data failed with exception: '
-                '${e.toString()}, ${stacktrace.toString()}');
+            'load user failed with exception: ${e.toString()}, ${stacktrace.toString()}');
+      }
+      if (!success) {
+        _logger.log(Level.SEVERE, 'Failed to load user. Fallback to sign in');
+        logout();
+        return;
+      }
+    }
+
+    if (_authManager.isTempPassword) {
+      setBusy(false);
+      // If the user got a temp password, make him sign in again and then change it.
+      _navigation.navigateTo(SignInScreen.id, replace: true);
+      return;
+    }
+
+    if (!_dataManager.userStudyDataLoaded) {
+      bool success = false;
+      try {
+        success = await _dataManager.loadUserStudyData();
+      } catch (e, stacktrace) {
+        _logger.log(Level.SEVERE, 'load user data failed with exception: ${e.toString()}, '
+            '${stacktrace.toString()}');
       }
       if (!success) {
         _logger.log(
-            Level.SEVERE, 'Failed to load user data. Fallback to sign in');
+            Level.SEVERE, 'Failed to load user. Fallback to sign in');
         logout();
         return;
       }
