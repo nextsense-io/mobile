@@ -35,13 +35,16 @@ class Navigation {
   final DiskSpaceManager _diskSpaceManager = getIt<DiskSpaceManager>();
 
   Future<dynamic> navigateTo(String routeName, {Object? arguments,
-    bool replace = false, bool pop = false}) {
+    bool replace = false, bool pop = false, bool popAll = false}) {
     final currentState = navigatorKey.currentState!;
     if (replace) {
       return currentState.pushReplacementNamed(routeName, arguments: arguments);
     }
     if (pop) {
       return currentState.popAndPushNamed(routeName, arguments: arguments);
+    }
+    if (popAll) {
+      return currentState.pushNamedAndRemoveUntil(routeName, (Route<dynamic> route) => false);
     }
     return currentState.pushNamed(routeName, arguments: arguments);
   }
@@ -167,6 +170,6 @@ class Navigation {
   }
 
   void signOut() {
-    navigateTo(SignInScreen.id, replace: true);
+    navigateTo(SignInScreen.id, popAll: true);
   }
 }

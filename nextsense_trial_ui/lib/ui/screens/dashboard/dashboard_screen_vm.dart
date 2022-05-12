@@ -62,7 +62,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     notifyListeners();
     setBusy(true);
     try {
-      if (!_dataManager.userDataLoaded) {
+      if (!_dataManager.userStudyDataLoaded) {
         bool success = await _dataManager.loadUserData();
         if (!success) {
           _logger.log(Level.WARNING,

@@ -43,6 +43,8 @@ class AuthManager {
   // User is fetched from Firestore and allowed to use his account.
   bool get isAuthorized => _user != null;
 
+  bool get isTempPassword => _user?.isTempPassword() ?? false;
+
   User? get user => _user;
   String? get userCode => _userCode;
 
