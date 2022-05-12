@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/config.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -21,6 +22,7 @@ class ApiResponse {
 
 class NextsenseApi {
   static final Duration _timeout = Duration(seconds: 10);
+  static final int _maxRetries = 3;
 
   final String _baseUrl = Config.nextsenseApiUrl;
   final _client = http.Client();
@@ -33,14 +35,19 @@ class NextsenseApi {
 
   Future<ApiResponse> _callApi({required Map<String, dynamic> data, required Uri endpoint,
       required String errorMsg}) async {
-    var response;
-    try {
-      response = await _client.post(endpoint, headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      }, body: jsonEncode(data)).timeout(_timeout);
-    } catch (e) {
-      _logger.log(Level.WARNING, e);
+    Response? response = null;
+    int attemptNumber = 0;
+    while (response == null && attemptNumber < _maxRetries) {
+      try {
+        response = await _client.post(endpoint, headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        }, body: jsonEncode(data)).timeout(_timeout);
+      } catch (e) {
+        _logger.log(Level.WARNING, e);
+      }
+    }
+    if (response == null) {
       return ApiResponse(
         isError: true,
         isConnectionError: true,
