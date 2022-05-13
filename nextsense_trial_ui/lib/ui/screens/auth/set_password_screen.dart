@@ -138,8 +138,8 @@ class SetPasswordScreen extends HookWidget {
     try {
       bool passwordChanged = await viewModel.changePassword(password);
       if (passwordChanged) {
-        await _showDialog(context, 'Password Set', 'Please login again to access the system.',
-            false, () => _navigation.signOut());
+        await _showDialog(context, 'Password changed', '',
+            false, () => _navigation.navigateToNextRoute());
         return;
       } else {
         _showDialog(

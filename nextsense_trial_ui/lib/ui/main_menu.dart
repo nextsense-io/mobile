@@ -59,8 +59,10 @@ class MainMenu extends HookWidget {
             _MainMenuItem(
                 icon: Icon(Icons.vpn_key),
                 label: Text('Change password'),
-                onPressed: () =>
-                    _navigation.navigateTo(SetPasswordScreen.id, pop: true)),
+                onPressed: () {
+                  _navigation.navigateTo(SetPasswordScreen.id, pop: true,
+                      nextRoute: NavigationRoute(pop: true));
+                }),
           if (currentStudy.isAdhocRecordingAllowed)
             _MainMenuItem(
                 icon: Icon(Icons.play_circle_outline),
