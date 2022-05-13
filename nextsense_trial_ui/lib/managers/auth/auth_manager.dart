@@ -129,7 +129,7 @@ class AuthManager {
 
     // Save timezone
     // TODO(alex): handle timezone change in broadcast receiver
-    user.updateTimezone();
+    await user.updateTimezone();
 
     user.save();
 
