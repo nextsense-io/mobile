@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -72,6 +73,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String SET_UPLOADER_MINIMUM_CONNECTIVITY_COMMAND =
       "set_uploader_minimum_connectivity";
   public static final String GET_FREE_DISK_SPACE_COMMAND = "get_free_disk_space";
+  public static final String GET_TIMEZONE_ID = "get_timezone_id";
   public static final String EMULATOR_COMMAND = "emulator_command";
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
@@ -278,6 +280,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case GET_FREE_DISK_SPACE_COMMAND:
         getFreeDiskSpace(result);
+        break;
+      case GET_TIMEZONE_ID:
+        getTimezoneId(result);
         break;
       case EMULATOR_COMMAND:
         String command = call.argument("command");
@@ -697,6 +702,11 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     long bytesAvailable;
     bytesAvailable = stat.getBlockSizeLong() * stat.getAvailableBlocksLong();
     result.success(bytesAvailable / (1024f * 1024f));
+  }
+
+  private void getTimezoneId(Result result) {
+    String timeZone = TimeZone.getDefault().getID();
+    result.success(timeZone);
   }
 
   private void returnError(

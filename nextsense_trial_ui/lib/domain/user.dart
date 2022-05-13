@@ -1,3 +1,4 @@
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
 /**
@@ -60,13 +61,8 @@ class User extends FirebaseEntity<UserKey> {
     setValue(UserKey.fcm_token, fcmToken);
   }
 
-  void updateTimezone() {
-    DateTime dateTime = DateTime.now();
-    // Note inHours can return negative value
-    String hours = dateTime.timeZoneOffset.inHours.toString();
-    int minutesValue = (dateTime.timeZoneOffset.inMinutes % 60).abs();
-    String minutes = minutesValue == 30 ? "30" : "00";
-    setValue(UserKey.timezone, "${hours}:${minutes}");
+  Future updateTimezone() async {
+    setValue(UserKey.timezone, await NextsenseBase.getTimezoneId());
   }
 
   bool isTempPassword() {
