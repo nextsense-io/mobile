@@ -28,14 +28,26 @@ import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
 import 'package:provider/src/provider.dart';
 
+class NavigationRoute {
+  String? routeName;
+  Object? arguments;
+  bool? replace;
+  bool? pop;
+  bool? popAll;
+
+  NavigationRoute({this.routeName, this.arguments, this.replace, this.pop, this.popAll});
+}
+
 class Navigation {
 
   final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final DiskSpaceManager _diskSpaceManager = getIt<DiskSpaceManager>();
+  NavigationRoute? _nextNavigationRoute;
 
   Future<dynamic> navigateTo(String routeName, {Object? arguments,
-    bool replace = false, bool pop = false, bool popAll = false}) {
+    bool replace = false, bool pop = false, bool popAll = false, NavigationRoute? nextRoute}) {
+    _nextNavigationRoute = nextRoute;
     final currentState = navigatorKey.currentState!;
     if (replace) {
       return currentState.pushReplacementNamed(routeName, arguments: arguments);
@@ -47,6 +59,24 @@ class Navigation {
       return currentState.pushNamedAndRemoveUntil(routeName, (Route<dynamic> route) => false);
     }
     return currentState.pushNamed(routeName, arguments: arguments);
+  }
+
+  Future<dynamic> navigateToNextRoute() {
+    if (_nextNavigationRoute == null) {
+      return Future.value(false);
+    }
+    if (_nextNavigationRoute!.routeName == null) {
+      if (_nextNavigationRoute!.pop == true) {
+        pop();
+      }
+      return Future.value(false);
+    }
+    return navigateTo(_nextNavigationRoute!.routeName!,
+        arguments: _nextNavigationRoute!.arguments,
+        replace: _nextNavigationRoute!.replace ?? false,
+        pop: _nextNavigationRoute!.pop ?? false,
+        popAll: _nextNavigationRoute!.popAll ?? false,
+        nextRoute: null);
   }
 
   Route<dynamic>? onGenerateRoute(RouteSettings settings) {

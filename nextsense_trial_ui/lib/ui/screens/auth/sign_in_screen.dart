@@ -157,8 +157,7 @@ class SignInScreen extends HookWidget {
 
     // If the user had a temporary password, first ask to change it before proceeding.
     if (viewModel.isTempPassword) {
-      _navigation.navigateWithConnectionChecking(SetPasswordScreen.id, replace: true);
-      return;
+      await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true));
     }
 
     // If there are permissions that need to be granted, go through them one by

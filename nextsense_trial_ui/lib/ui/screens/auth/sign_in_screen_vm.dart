@@ -72,18 +72,21 @@ class SignInScreenViewModel extends ViewModel {
   }
 
   Future<bool> loadCurrentStudy() async {
+    setBusy(true);
     try {
       return await _studyManager.loadCurrentStudy();
     } catch (e, stacktrace) {
       _logger.log(Level.SEVERE,
-          'Failed to load dashboard data: '
-              '${e.toString()}, ${stacktrace.toString()}');
+          'Failed to load study data: ${e.toString()}, ${stacktrace.toString()}');
       setBusy(false);
       return false;
     }
   }
 
   Future<bool> connectToLastPairedDevice() async {
-    return _deviceManager.connectToLastPairedDevice();
+    setBusy(true);
+    bool connected = await _deviceManager.connectToLastPairedDevice();
+    setBusy(false);
+    return connected;
   }
 }
