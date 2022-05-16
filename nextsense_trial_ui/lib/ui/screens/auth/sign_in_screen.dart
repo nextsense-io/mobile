@@ -160,8 +160,8 @@ class SignInScreen extends HookWidget {
       await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true));
     }
 
-    // If there are permissions that need to be granted, go through them one by
-    // one with an explanation screen.
+    // If there are permissions that need to be granted, go through them one by one with an
+    // explanation screen.
     for (PermissionRequest permissionRequest
         in await _permissionsManager.getPermissionsToRequest()) {
       await _navigation.navigateTo(RequestPermissionScreen.id,

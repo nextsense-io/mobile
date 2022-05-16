@@ -61,9 +61,9 @@ class StartupScreenViewModel extends ViewModel {
       setBusy(false);
     }
 
-    // Navigate to the device preparation screen by default, but in case we
-    // already have paired device before, then navigate directly to dashboard
-    // Note: we have same logic in sign in screen
+    // Navigate to the device preparation screen by default, but in case we already have paired
+    // device before, then navigate directly to dashboard. Note: we have same logic in sign in
+    // screen.
     String screen = PrepareDeviceScreen.id;
     if (_deviceManager.hadPairedDevice) {
       await _deviceManager.connectToLastPairedDevice();
