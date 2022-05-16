@@ -55,7 +55,7 @@ public class TestActivity extends AppCompatActivity {
   private ForegroundService nextSenseService;
   private boolean nextSenseServiceBound = false;
 
-  private Device.DeviceStateChangeListener stateChangeListener = deviceState ->
+  private final Device.DeviceStateChangeListener stateChangeListener = deviceState ->
       Toast.makeText(TestActivity.this, "Device status: " + deviceState.toString(),
           Toast.LENGTH_SHORT).show();
 

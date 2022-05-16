@@ -28,7 +28,7 @@ public class Connectivity {
   private final Set<StateListener> stateListeners = Sets.newConcurrentHashSet();
 
   // Determines if there is a sufficient internet connection to upload data to the cloud.
-  private AtomicReference<State> state = new AtomicReference<>(State.NO_CONNECTION);
+  private final AtomicReference<State> state = new AtomicReference<>(State.NO_CONNECTION);
   private boolean hasConnection = false;
   private boolean isMetered = false;
   private boolean hasWifi = false;
@@ -75,7 +75,7 @@ public class Connectivity {
     }
   }
 
-  private ConnectivityManager.NetworkCallback networkCallback =
+  private final ConnectivityManager.NetworkCallback networkCallback =
       new ConnectivityManager.NetworkCallback() {
     @Override
     public void onAvailable(@NonNull Network network) {

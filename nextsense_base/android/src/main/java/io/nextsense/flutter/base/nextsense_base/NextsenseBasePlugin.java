@@ -160,12 +160,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         new EventChannel(flutterPluginBinding.getBinaryMessenger(), DEVICE_STATE_CHANNEL_NAME);
     deviceStateChannel.setStreamHandler(new EventChannel.StreamHandler() {
       @Override
+      @SuppressWarnings("unchecked")
       public void onListen(Object arguments, EventChannel.EventSink eventSink) {
         Log.i(TAG, "Starting to listen to Android device state...");
         List<Object> argumentList = (ArrayList<Object>) arguments;
         startListeningToDeviceState(eventSink, (String) argumentList.get(1));
       }
       @Override
+      @SuppressWarnings("unchecked")
       public void onCancel(Object arguments) {
         if (arguments == null) {
           return;

@@ -380,7 +380,7 @@ public class Uploader {
     }
   }
 
-  DateTimeFormatter formatter =
+  private final DateTimeFormatter formatter =
       DateTimeFormatter.ISO_LOCAL_DATE_TIME.withZone(ZoneId.from(ZoneOffset.UTC));
 
   private long deleteEegOldRecords(LocalSession localSession) {
