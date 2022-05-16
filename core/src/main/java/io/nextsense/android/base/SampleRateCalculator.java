@@ -28,8 +28,8 @@ public class SampleRateCalculator {
 
   private final DecimalFormat sampleRateFormat = new DecimalFormat("###.##");
   private final Set<RateUpdateListener> rateUpdateListeners = new HashSet<>();
-  private int expectedSampleRate;
-  private Duration expectedSampleInterval;
+  private final int expectedSampleRate;
+  private final Duration expectedSampleInterval;
   private Instant firstSampleReceptionTime;
   private Instant lastSamplingTime;
   private int samplesReceived;
