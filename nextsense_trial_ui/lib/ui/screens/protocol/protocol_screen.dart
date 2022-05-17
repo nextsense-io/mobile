@@ -29,9 +29,7 @@ Future<bool> _confirmStopSessionDialog(BuildContext context,
           content: Text(confirmStopText),
           actions: <Widget>[
             TextButton(
-                onPressed: () {
-                  Navigator.pop(context, false);
-                },
+                onPressed: () => Navigator.pop(context, false),
                 child: Text('Continue')),
             TextButton(
               onPressed: () {
@@ -185,12 +183,10 @@ class ProtocolScreen extends HookWidget {
             ),
             Container(
               child: Visibility(
-                visible:
-                viewModel.hasError,
+                visible: viewModel.hasError,
                 child: Column(
                   children: [
-                    Text(
-                      viewModel.modelError,
+                    Text(viewModel.modelError ?? "",
                       style: TextStyle(color: Colors.white),
                     )
                   ],
