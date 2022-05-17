@@ -172,7 +172,7 @@
     },
     {
       "id": "4:7829109381478237227",
-      "lastPropertyId": "14:4744125428289492246",
+      "lastPropertyId": "15:307491958777430755",
       "name": "LocalSession",
       "properties": [
         {
@@ -243,6 +243,12 @@
           "id": "14:4744125428289492246",
           "name": "earbudsConfig",
           "type": 9
+        },
+        {
+          "id": "15:307491958777430755",
+          "name": "deviceInternalStateUploaded",
+          "type": 5,
+          "flags": 4
         }
       ],
       "relations": []
