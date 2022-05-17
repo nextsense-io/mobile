@@ -35,5 +35,4 @@ class Session extends FirebaseEntity<SessionKey> {
 
   Session(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
-
 }

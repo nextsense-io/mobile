@@ -17,19 +17,19 @@ class AdhocSurvey implements RunnableSurvey {
   AdhocSurvey(this.survey, this.studyId);
 
   @override
-  bool update({required SurveyState state,
-    Map<String, dynamic>? data, bool persist = true}) {
+  Future<bool> update({required SurveyState state, Map<String, dynamic>? data,
+      bool persist = true}) async {
     // Create new record only when we submit some data
     if (data != null) {
-      save(data);
+      return await save(data);
     }
     return true;
   }
 
-  void save(Map<String, dynamic> data) {
+  Future<bool> save(Map<String, dynamic> data) async {
     DateTime now = DateTime.now();
     String adhocProtocolKey = "${survey.id}_at_${now.millisecondsSinceEpoch}";
-    _firestoreManager.queryEntity([
+    FirebaseEntity? surveyRecordEntity = await _firestoreManager.queryEntity([
       Table.users,
       Table.enrolled_studies,
       Table.adhoc_surveys
@@ -37,13 +37,15 @@ class AdhocSurvey implements RunnableSurvey {
       _authManager.userCode!,
       studyId,
       adhocProtocolKey
-    ]).then((firebaseEntity) {
-      final record = AdhocSurveyRecord(firebaseEntity);
-      record.setSurvey(survey.id);
-      record.setTimestamp(now);
-      record.setData(data);
-      record.save();
-    });
+    ]);
+    if (surveyRecordEntity == null) {
+      return false;
+    }
+    final record = AdhocSurveyRecord(surveyRecordEntity);
+    record.setSurvey(survey.id);
+    record.setTimestamp(now);
+    record.setData(data);
+    return await record.save();
   }
 }
 

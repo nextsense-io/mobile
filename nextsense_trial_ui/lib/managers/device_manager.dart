@@ -122,8 +122,7 @@ class DeviceManager {
     }
     bool connected = false;
 
-    CancelListening _cancelScanning =
-        NextsenseBase.startScanning((deviceAttributesJson) {
+    CancelListening _cancelScanning = NextsenseBase.startScanning((deviceAttributesJson) {
       Map<String, dynamic> deviceAttributes = gson.decode(deviceAttributesJson);
       String macAddress =
           deviceAttributes[describeEnum(DeviceAttributesFields.macAddress)];
@@ -149,8 +148,7 @@ class DeviceManager {
       } on PlatformException {}
     }
     if (connected) {
-      _logger.log(Level.INFO, "Connected to last paired device "
-          "${lastPairedDevice.macAddress}");
+      _logger.log(Level.INFO, "Connected to last paired device ${lastPairedDevice.macAddress}");
     } else {
       _logger.log(Level.WARNING, "Failed connect to last paired device "
           "${lastPairedDevice.macAddress}");

@@ -1,17 +1,13 @@
 import 'package:flutter/cupertino.dart';
-import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 
 class SignInScreenViewModel extends ViewModel {
-
-  final CustomLogPrinter _logger = CustomLogPrinter('SignInScreenViewModel');
 
   final StudyManager _studyManager = getIt<StudyManager>();
   final AuthManager _authManager = getIt<AuthManager>();
@@ -73,14 +69,9 @@ class SignInScreenViewModel extends ViewModel {
 
   Future<bool> loadCurrentStudy() async {
     setBusy(true);
-    try {
-      return await _studyManager.loadCurrentStudy();
-    } catch (e, stacktrace) {
-      _logger.log(Level.SEVERE,
-          'Failed to load study data: ${e.toString()}, ${stacktrace.toString()}');
-      setBusy(false);
-      return false;
-    }
+    bool loaded = await _studyManager.loadCurrentStudy();
+    setBusy(false);
+    return loaded;
   }
 
   Future<bool> connectToLastPairedDevice() async {

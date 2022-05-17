@@ -11,7 +11,7 @@ class FirebaseEntity<T extends Enum> {
   // Current user values. Valid keys are in the UserKey enum.
   final Map<String, dynamic> _values;
 
-  // Id of entity
+  // Id of entity.
   String get id => _documentSnapshot.id;
 
   DocumentReference get reference => _documentSnapshot.reference;
@@ -44,8 +44,8 @@ class FirebaseEntity<T extends Enum> {
     return "$type($id) [${getValues()}]";
   }
 
-  // Save entity to firestore
-  Future<void> save() async {
-    await _firestoreManager.persistEntity(this);
+  // Save entity to Firestore.
+  Future<bool> save() async {
+    return await _firestoreManager.persistEntity(this);
   }
 }

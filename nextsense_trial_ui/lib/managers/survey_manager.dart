@@ -27,36 +27,33 @@ class SurveyManager {
 
   String get _currentStudyId => _studyManager.currentStudy!.id;
 
-  Future<List<Survey>> _loadSurveys({bool fromCache = false}) async {
-    List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
-        [Table.surveys], [],
-        fromCacheWithKey: fromCache ? Table.surveys.name() : null,
-    );
 
-    List<Survey> result = [];
+  // Survey stats are calculated based on count of past and today surveys
+  // from the same planned survey group (all scheduled surveys that were
+  // generated from same planned survey)
+  ScheduledSurveyStats getScheduledSurveyStats(ScheduledSurvey scheduledSurvey) {
+    List<ScheduledSurvey> group =
+        _scheduledSurveysByPlannedSurveyId[scheduledSurvey.plannedSurveyId] ?? [];
 
-    // Speed up queries by making parallel requests
-    List<Future> futures = [];
-    for (FirebaseEntity entity in entities) {
-      final survey = Survey(entity);
-      Future future = survey.loadQuestions(fromCache: fromCache).then((_){
-        result.add(survey);
-      });
-      futures.add(future);
-    }
+    final closestFutureMidnight = DateTime.now().closestFutureMidnight;
+    List<ScheduledSurvey> pastAndTodayScheduledSurveys = group
+        .where((scheduledSurvey) =>
+        scheduledSurvey.day.date.isBefore(closestFutureMidnight))
+        .toList();
 
-    await Future.wait(futures);
+    final int total = pastAndTodayScheduledSurveys.length;
+    final int completed = pastAndTodayScheduledSurveys
+        .where((_scheduledSurvey) => _scheduledSurvey.isCompleted).length;
+    return ScheduledSurveyStats(total, completed);
+  }
 
-    // Make consistent order
-    result
-        .sortBy((survey) => survey.id);
-
-    return result;
+  Survey? getSurveyById(String surveyId) {
+    return _surveys?.firstWhereOrNull((survey) => survey.id == surveyId);
   }
 
   // Load planned surveys from study and convert them to scheduled surveys
   // that persist in user table
-  Future loadScheduledSurveys() async {
+  Future<bool> loadScheduledSurveys() async {
     final bool? studyInitialized = _studyManager.studyInitialized;
 
     if (studyInitialized == null) {
@@ -72,13 +69,20 @@ class SurveyManager {
     if (studyInitialized) {
       // If study already initialized, return scheduled surveys from cache
       _logger.log(Level.WARNING, 'Loading scheduled surveys from cache');
-      scheduledSurveys = await _loadScheduledSurveysFromCache();
+      List<ScheduledSurvey>? scheduledSurveys = await _loadScheduledSurveysFromCache();
+      if (scheduledSurveys != null) {
+        scheduledSurveys = await _loadScheduledSurveysFromCache();
+      } else {
+        return false;
+      }
     } else {
       _logger.log(Level.WARNING,
           'Creating scheduled surveys based on planned surveys');
 
-      List<PlannedSurvey> plannedSurveys =
-          await _studyManager.loadPlannedSurveys();
+      List<PlannedSurvey>? plannedSurveys = await _studyManager.loadPlannedSurveys();
+      if (plannedSurveys == null) {
+        return false;
+      }
 
       // Speed up queries by making parallel requests
       List<Future> futures = [];
@@ -142,15 +146,57 @@ class SurveyManager {
           scheduledSurvey.plannedSurveyId, (value) => [...value, scheduledSurvey],
           ifAbsent: () => [scheduledSurvey]);
     }
+    return true;
   }
 
-  Future<List<ScheduledSurvey>> _loadScheduledSurveysFromCache() async {
+  Future<List<Survey>?> _loadSurveys({bool fromCache = false}) async {
+    List<FirebaseEntity>? entities = await _firestoreManager.queryEntities(
+        [Table.surveys], [],
+        fromCacheWithKey: fromCache ? Table.surveys.name() : null,
+    );
+    if (entities == null) {
+      return null;
+    }
+
+    List<Survey> results = [];
+    // Speed up queries by making parallel requests
+    List<Future<bool>> futures = [];
+    for (FirebaseEntity entity in entities) {
+      final survey = Survey(entity);
+      Future<bool> futureResult = survey.loadQuestions(fromCache: fromCache).then((loadResult) {
+        if (!loadResult) {
+          return false;
+        }
+        results.add(survey);
+        return true;
+      });
+      futures.add(futureResult);
+    }
+
+    List<bool> futureResults = await Future.wait(futures);
+    for (bool futureResult in futureResults) {
+      if (!futureResult) {
+        // Failed to load questions.
+        return null;
+      }
+    }
+
+    // Make consistent order
+    results.sortBy((survey) => survey.id);
+
+    return results;
+  }
+
+  Future<List<ScheduledSurvey>?> _loadScheduledSurveysFromCache() async {
     if (_surveys == null) {
       throw("Surveys not initialized");
     }
 
-    List<FirebaseEntity> entities =
+    List<FirebaseEntity>? entities =
         await _queryScheduledSurveys(fromCache: true);
+    if (entities == null) {
+      return null;
+    }
 
     List<ScheduledSurvey> result = [];
 
@@ -177,36 +223,13 @@ class SurveyManager {
     return result;
   }
 
-  Future<List<FirebaseEntity>> _queryScheduledSurveys(
+  Future<List<FirebaseEntity>?> _queryScheduledSurveys(
       {bool fromCache = false}) async {
     String cacheKey = "${_currentStudyId}_${Table.scheduled_surveys.name()}";
     return await _firestoreManager.queryEntities(
         [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
         [_authManager.userCode!, _currentStudyId],
         fromCacheWithKey: fromCache ? cacheKey : null);
-  }
-
-  // Survey stats are calculated based on count of past and today surveys
-  // from the same planned survey group (all scheduled surveys that were
-  // generated from same planned survey)
-  ScheduledSurveyStats getScheduledSurveyStats(ScheduledSurvey scheduledSurvey) {
-    List<ScheduledSurvey> group =
-        _scheduledSurveysByPlannedSurveyId[scheduledSurvey.plannedSurveyId] ?? [];
-
-    final closestFutureMidnight = DateTime.now().closestFutureMidnight;
-    List<ScheduledSurvey> pastAndTodayScheduledSurveys = group
-        .where((scheduledSurvey) =>
-            scheduledSurvey.day.date.isBefore(closestFutureMidnight))
-        .toList();
-
-    final int total = pastAndTodayScheduledSurveys.length;
-    final int completed = pastAndTodayScheduledSurveys
-        .where((_scheduledSurvey) => _scheduledSurvey.isCompleted).length;
-    return ScheduledSurveyStats(total, completed);
-  }
-
-  Survey? getSurveyById(String surveyId) {
-    return _surveys?.firstWhereOrNull((survey) => survey.id == surveyId);
   }
 }
 

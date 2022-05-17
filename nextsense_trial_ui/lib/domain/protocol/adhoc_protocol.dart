@@ -30,10 +30,9 @@ class AdhocProtocol implements RunnableProtocol {
   }
 
   @override
-  bool update(
-      {required ProtocolState state, String? sessionId, bool persist = true}) {
-    _logger.log(
-        Level.WARNING, 'Protocol state changing from ${this.state} to $state');
+  Future<bool> update(
+      {required ProtocolState state, String? sessionId, bool persist = true}) async {
+    _logger.log(Level.WARNING, 'Protocol state changing from ${this.state} to $state');
 
     this.state = state;
 
@@ -46,13 +45,13 @@ class AdhocProtocol implements RunnableProtocol {
       // Adhoc protocol record already exists, update its values
       record!
         ..setState(state)
-        ..setSession(sessionId)
-        ..save();
+        ..setSession(sessionId);
+      return await record!.save();
     } else {
       // Create new record
       DateTime now = DateTime.now();
       String adhocProtocolKey = "${protocol.name}_${now.millisecondsSinceEpoch}";
-      _firestoreManager.queryEntity([
+      FirebaseEntity? firebaseEntity = await _firestoreManager.queryEntity([
         Table.users,
         Table.enrolled_studies,
         Table.adhoc_protocols
@@ -60,15 +59,16 @@ class AdhocProtocol implements RunnableProtocol {
         _authManager.userCode!,
         _studyId,
         adhocProtocolKey
-      ]).then((firebaseEntity) {
-        record = AdhocProtocolRecord(firebaseEntity);
-        record!..setTimestamp(now)
-          ..setSession(sessionId)
-          ..setProtocol(protocol.name)
-          ..save();
-      });
+      ]);
+      if (firebaseEntity == null) {
+        return false;
+      }
+      record = AdhocProtocolRecord(firebaseEntity);
+      record!..setTimestamp(now)
+        ..setSession(sessionId)
+        ..setProtocol(protocol.name);
+      return await record!.save();
     }
-    return true;
   }
 }
 

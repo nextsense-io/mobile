@@ -4,6 +4,7 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/event.dart';
+import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
@@ -136,7 +137,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     );
   }
 
-  @override
   void onTimerTick(int secondsElapsed) {
     if (_scheduledProtocolParts.isEmpty) {
       // The code after this is needed only if there are parts in the protocol.
@@ -148,8 +148,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       // Start of a repetition, reset the block index and finish the current
       // step.
       if (_currentProtocolPart != 0) {
-        if (_scheduledProtocolParts[_currentProtocolPart]
-            .protocolPart.marker != null) {
+        if (_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
           endEvent(DateTime.now());
         }
         advanceProtocol = true;
@@ -160,8 +159,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     if (_currentProtocolPart < _scheduledProtocolParts.length - 1) {
       if (blockSecondsElapsed >=
           _scheduledProtocolParts[_currentProtocolPart + 1].relativeSeconds) {
-        if (_scheduledProtocolParts[_currentProtocolPart]
-            .protocolPart.marker != null) {
+        if (_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
           endEvent(DateTime.now());
         }
         ++_currentProtocolPart;
@@ -169,8 +167,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       }
     }
     if (advanceProtocol) {
-      String? currentMarker = _scheduledProtocolParts[_currentProtocolPart]
-          .protocolPart.marker;
+      String? currentMarker = _scheduledProtocolParts[_currentProtocolPart].protocolPart.marker;
       if (currentMarker != null) {
         startEvent(currentMarker, sequentialEvent: true);
       }
@@ -201,24 +198,26 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _currentEventMarker = marker;
   }
 
-  Future endEvent(DateTime endTime) async {
+  Future<bool> endEvent(DateTime endTime) async {
     _lastEventEnd = endTime;
     DateTime eventStart = _currentEventStart!;
     String? currentMarker = _currentEventMarker;
     String? sessionId = runnableProtocol.lastSessionId;
     if (sessionId == null) {
-      _logger.log(Level.SEVERE,
-          "Could not save event $currentMarker, no session id!");
-      return;
+      _logger.log(Level.SEVERE, "Could not save event $currentMarker, no session id!");
+      return false;
     }
-    String eventId =
-        '${currentMarker}-${eventStart.datetime_string}';
-    Event event = Event(await _firestoreManager.queryEntity(
-        [Table.sessions, Table.events], [sessionId, eventId]));
+    String eventId = '${currentMarker}-${eventStart.datetime_string}';
+    FirebaseEntity? firebaseEntity = await _firestoreManager.queryEntity(
+        [Table.sessions, Table.events], [sessionId, eventId]);
+    if (firebaseEntity == null) {
+      return false;
+    }
+    Event event = Event(firebaseEntity);
     event..setValue(EventKey.start_time, eventStart.toIso8601String())
         ..setValue(EventKey.end_time, endTime.toIso8601String())
         ..setValue(EventKey.marker, currentMarker);
-    await event.save();
+    return await event.save();
   }
 
   @override
@@ -289,25 +288,31 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   void _startProtocol() async {
     if (_deviceManager.getConnectedDevice() != null) {
       _logger.log(Level.INFO, 'Starting ${protocol.name} protocol.');
-      await _sessionManager.startSession(
+      bool started = await _sessionManager.startSession(
           _deviceManager.getConnectedDevice()!.macAddress,
           _studyManager.currentStudyId!,
           protocol.name);
-      runnableProtocol.update(
+      if (!started) {
+        setError("Failed to start streaming. Please try again and contact support if you need "
+            "additional help.");
+        return;
+      }
+      bool updated = await runnableProtocol.update(
           state: ProtocolState.running,
           sessionId: _sessionManager.currentSessionId);
+      if (!updated) {
+        setError("Failed to start streaming. Please try again and contact support if you need "
+            "additional help.");
+      }
     } else {
       _logger.log(
-          Level.WARNING,
-          'Cannot start ${protocol.name} protocol, device '
-          'not connected.');
+          Level.WARNING, 'Cannot start ${protocol.name} protocol, device not connected.');
     }
   }
 
   void _stopProtocol() async {
     _logger.log(Level.INFO, 'Stopping ${protocol.name} protocol.');
-    await _sessionManager
-        .stopSession(_deviceManager.getConnectedDevice()!.macAddress);
+    await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
     runnableProtocol.update(
         state: protocolCompleted
             ? ProtocolState.completed

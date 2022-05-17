@@ -23,22 +23,29 @@ class DataManager {
   Future<bool> loadUser() async {
     userLoaded = await _authManager.ensureUserLoaded();
     if (!userLoaded) {
-      _logger.log(Level.WARNING,
-          'Failed to load user. Fallback to signup');
+      _logger.log(Level.WARNING, 'Failed to load user. Fallback to signup');
       return false;
     }
     userLoaded = true;
+    _logger.log(Level.INFO, 'User loaded.');
     return true;
   }
 
   Future<bool> loadUserStudyData() async {
-    await _studyManager.loadCurrentStudy();
+    _logger.log(Level.INFO, 'Starting to load user study data.');
+    bool loaded = await _studyManager.loadCurrentStudy();
+    if (!loaded) return false;
     await _studyManager.loadScheduledProtocols();
-    await _surveyManager.loadScheduledSurveys();
+    loaded = await _surveyManager.loadScheduledSurveys();
+    if (!loaded) return false;
     // Mark study initialized so we can load things from cache
-    await _studyManager.setStudyInitialized(true);
+    bool initialized = await _studyManager.setStudyInitialized(true);
+    if (!initialized) {
+      return false;
+    }
 
     userStudyDataLoaded = true;
+    _logger.log(Level.INFO, 'User study data loaded.');
     return true;
   }
 
@@ -52,7 +59,10 @@ class DataManager {
 
   Future<bool> switchCurrentStudy(EnrolledStudy enrolledStudy) async {
       _authManager.user!.setValue(UserKey.current_study, enrolledStudy.id);
-      await _firestoreManager.persistEntity(_authManager.user!);
+      bool success = await _firestoreManager.persistEntity(_authManager.user!);
+      if (!success) {
+        return false;
+      }
       return await loadUserData();
   }
 }

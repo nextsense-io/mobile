@@ -14,12 +14,14 @@ class SurveyScreenViewModel extends ViewModel {
 
   SurveyScreenViewModel(this.runnableSurvey);
 
-  void submit(Map<String, dynamic> formData) {
-    _logger.log(Level.INFO, "submit survey form - $formData");
-
-    runnableSurvey.update(
+  Future<bool> submit(Map<String, dynamic> formData) async {
+    _logger.log(Level.INFO, "Submitting survey form.");
+    setBusy(true);
+    bool updated = await runnableSurvey.update(
         state: SurveyState.completed,
         data: formData
     );
+    setBusy(false);
+    return updated;
   }
 }

@@ -75,8 +75,18 @@ class _EnrolledStudiesSelector extends StatelessWidget {
           )));
     }
 
+    if (viewModel.enrolledStudies == null) {
+      showDialog(
+          context: context,
+          builder: (_) => SimpleAlertDialog(
+          title: "Error loading enrolled studies",
+          content: "Please try again and make sure you have an active internet connection.")
+      );
+      return Padding(padding: EdgeInsets.all(10));
+    }
+
     List<Widget> studyElements = [];
-    for (EnrolledStudy enrolledStudy in viewModel.enrolledStudies) {
+    for (EnrolledStudy enrolledStudy in viewModel.enrolledStudies!) {
       if (enrolledStudy.id == viewModel.currentStudyId) {
         // Don't show the current study as a choice to switch to.
         continue;
