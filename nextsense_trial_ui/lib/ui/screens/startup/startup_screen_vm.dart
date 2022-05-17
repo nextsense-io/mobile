@@ -31,15 +31,18 @@ class StartupScreenViewModel extends ViewModel {
             'load user failed with exception: ${e.toString()}, ${stacktrace.toString()}');
       }
       if (!success) {
+        setBusy(false);
         _logger.log(Level.SEVERE, 'Failed to load user. Fallback to sign in');
         logout();
         return;
       }
     }
 
+    _logger.log(Level.INFO, 'Checking if temporary password.');
     if (_authManager.isTempPassword) {
       setBusy(false);
       // If the user got a temp password, make him sign in again and then change it.
+      _logger.log(Level.INFO, 'Temporary password. Navigating to password change screen.');
       _navigation.navigateTo(SignInScreen.id, replace: true);
       return;
     }
@@ -53,12 +56,11 @@ class StartupScreenViewModel extends ViewModel {
             '${stacktrace.toString()}');
       }
       if (!success) {
-        _logger.log(
-            Level.SEVERE, 'Failed to load user. Fallback to sign in');
+        setBusy(false);
+        _logger.log(Level.SEVERE, 'Failed to load user. Fallback to sign in');
         logout();
         return;
       }
-      setBusy(false);
     }
 
     // Navigate to the device preparation screen by default, but in case we already have paired
@@ -70,6 +72,7 @@ class StartupScreenViewModel extends ViewModel {
       screen = DashboardScreen.id;
     }
 
+    setBusy(false);
     _navigation.navigateWithConnectionChecking(screen, replace: true);
   }
 

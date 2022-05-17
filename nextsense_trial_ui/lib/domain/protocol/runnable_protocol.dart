@@ -13,6 +13,5 @@ abstract class RunnableProtocol {
 
   String? get lastSessionId;
 
-  bool update({required ProtocolState state, String? sessionId,
-    bool persist = true});
+  Future<bool> update({required ProtocolState state, String? sessionId, bool persist = true});
 }

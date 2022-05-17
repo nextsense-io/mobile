@@ -74,7 +74,6 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
     ProtocolType protocolType = protocolTypeFromString(protocolTypeString);
 
     if (protocolType != ProtocolType.unknown) {
-
       // Override default min/max durations
       Duration? minDurationOverride = getDurationOverride(
           PlannedAssessmentParameter.minDuration.name
@@ -90,7 +89,6 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
           minDuration: minDurationOverride,
           maxDuration: maxDurationOverride
       );
-
     }
     else {
       _logger.log(Level.WARNING, 'Unknown protocol "$protocolTypeString"');

@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/data_session.dart';
+import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
@@ -27,8 +28,7 @@ class SessionManager {
   String? get currentSessionId => _currentSession?.id;
   int? _currentLocalSession;
 
-  Future<bool> startSession(String deviceMacAddress, String studyId,
-      String protocolName) async {
+  Future<bool> startSession(String deviceMacAddress, String studyId, String protocolName) async {
     String? userCode = _authManager.userCode;
     if (userCode == null) {
       return false;
@@ -43,21 +43,31 @@ class SessionManager {
     String sessionCode = userCode + '_sess_' + nextSessionNumber.toString();
 
     // Add the session.
-    _currentSession = Session(await _firestoreManager.queryEntity(
-        [Table.sessions], [sessionCode]));
+    FirebaseEntity? sessionEntity =
+        await _firestoreManager.queryEntity([Table.sessions], [sessionCode]);
+    if (sessionEntity == null) {
+      return false;
+    }
+    _currentSession = Session(sessionEntity);
     DateTime startTime = DateTime.now();
     _currentSession!..setValue(
         SessionKey.start_datetime, startTime.toIso8601String())
                     ..setValue(SessionKey.user_id, userCode)
                     ..setValue(SessionKey.study_id, studyId)
                     ..setValue(SessionKey.protocol, protocolName);
-    await _currentSession!.save();
+    bool success = await _currentSession!.save();
+    if (!success) {
+      return false;
+    }
 
     // Add the data session.
-    _currentDataSession = DataSession(
-        await _firestoreManager.queryEntity(
-            [Table.sessions, Table.data_sessions],
-            [sessionCode, Modality.eeeg.name]));
+    FirebaseEntity? dataSessionEntity = await _firestoreManager.queryEntity(
+        [Table.sessions, Table.data_sessions],
+        [sessionCode, Modality.eeeg.name]);
+    if (dataSessionEntity == null) {
+      return false;
+    }
+    _currentDataSession = DataSession(dataSessionEntity);
     _currentDataSession!.setValue(
         DataSessionKey.start_datetime, startTime.toIso8601String());
     // TODO(eric): Add an API to get this from the connected device.
@@ -66,21 +76,31 @@ class SessionManager {
     _currentDataSession!.setValue(DataSessionKey.streaming_rate,
         deviceSettings[describeEnum(DeviceSettingsFields.eegStreamingRate)]
             .value);
-    await _currentDataSession!.save();
+    success = await _currentDataSession!.save();
+    if (!success) {
+      return false;
+    }
 
     // Update the session number in the user entry.
     user.setValue(UserKey.session_number, nextSessionNumber);
-    await user.save();
+    success = await user.save();
+    if (!success) {
+      return false;
+    }
 
     // TODO(eric): Start streaming should return the exact start time of the
     //             session, and then that should be persisted in the table?
     String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
-    _currentLocalSession = await NextsenseBase.startStreaming(
-        deviceMacAddress, /*uploadToCloud=*/true,
-        user.getValue(UserKey.bt_key), dataSessionCode,
-        _studyManager.currentStudy?.getEarbudsConfig() ?? null);
-
-    return true;
+    try {
+      _currentLocalSession = await NextsenseBase.startStreaming(
+          deviceMacAddress, /*uploadToCloud=*/true,
+          user.getValue(UserKey.bt_key), dataSessionCode,
+          _studyManager.currentStudy?.getEarbudsConfig() ?? null);
+      return true;
+    } catch (exception) {
+      _logger.log(Level.SEVERE, "Failed to start streaming. Message: ${exception}");
+    }
+    return false;
   }
 
   Session? getCurrentSession() {

@@ -90,29 +90,29 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
     setValue(ScheduledProtocolKey.sessions, currentSessionList);
   }
 
-  // Protocol is within desired window to start
+  // Protocol is within desired window to start.
   bool isAllowedToStart() {
     final currentTime = DateTime.now();
-    // Substract 1 second to make sure isAfter method works
-    // correct on beginning of each minute
-    // i.e 11:00:00 is after 10:59:59
+    // Subtracts 1 second to make sure isAfter method works correctly on beginning of each minute
+    // i.e 11:00:00 is after 10:59:59.
     return currentTime.isAfter(allowedStartAfter.subtract(Duration(seconds: 1)))
         && currentTime.isBefore(allowedStartBefore);
   }
 
-  // Protocol didn't start in time, should be skipped
+  // Protocol didn't start in time, should be skipped.
   bool isLate() {
-    if ([ProtocolState.completed, ProtocolState.skipped].contains(state))
+    if ([ProtocolState.completed, ProtocolState.skipped].contains(state)) {
       return false;
+    }
     final currentTime = DateTime.now();
     return state == ProtocolState.not_started
         && currentTime.isAfter(allowedStartBefore.subtract(Duration(seconds: 1)));
   }
 
-  // Update fields and save to firestore by default
+  // Update fields and save to Firestore by default.
   @override
-  bool update({required ProtocolState state, String? sessionId,
-      bool persist = true}) {
+  Future<bool> update({required ProtocolState state, String? sessionId, bool persist = true})
+      async {
     if (this.state == ProtocolState.completed) {
       _logger.log(Level.INFO, 'Protocol ${protocol.name} already completed.'
           'Cannot change its state.');
@@ -129,9 +129,8 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
       addSession(sessionId);
     }
     if (persist) {
-      save();
+      return await save();
     }
     return true;
   }
-
 }

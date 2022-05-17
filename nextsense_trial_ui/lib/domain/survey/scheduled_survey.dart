@@ -8,8 +8,8 @@ import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum ScheduledSurveyKey {
-  survey, // Reference to doc from 'surveys' collection
-  planned_survey, // Reference to doc from 'study->planned_surveys' collection
+  survey,  // Reference to doc from 'surveys' collection
+  planned_survey,  // Reference to doc from 'study->planned_surveys' collection
   status,
   day_number,
   days_to_complete,
@@ -26,11 +26,10 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
 
   late Survey survey;
 
-  // Day survey will appear
+  // Day survey will appear.
   final StudyDay day;
 
-  // Time before this survey should be completed, or it will be marked
-  // as skipped
+  // Time before this survey should be completed, or it will be marked as skipped.
   late DateTime shouldBeCompletedBefore;
 
   SurveyState get state =>
@@ -50,7 +49,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
       : super(firebaseEntity.getDocumentSnapshot()) {
 
     int? _daysToComplete = getValue(ScheduledSurveyKey.days_to_complete);
-    // Initialize from planned survey
+    // Initialize from planned survey.
     if (plannedSurvey != null) {
       setPlannedSurvey(plannedSurvey.reference);
       _daysToComplete = plannedSurvey.daysToComplete;
@@ -58,14 +57,14 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
       setValue(ScheduledSurveyKey.survey, survey.id);
     }
 
-    // Day date is at 00:00, so we need to set completion time next midnight
+    // Day date is at 00:00, so we need to set completion time next midnight.
     shouldBeCompletedBefore =
         day.date.add(Duration(days: _daysToComplete!));
 
     setValue(ScheduledSurveyKey.day_number, day.dayNumber);
   }
 
-  // Set state of protocol in firebase
+  // Set state of protocol in Firestore.
   void setState(SurveyState state) {
     setValue(ScheduledSurveyKey.status, state.name);
   }
@@ -74,7 +73,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
     setValue(ScheduledSurveyKey.period, period.name);
   }
 
-  // Save submitted survey data
+  // Save submitted survey data.
   void setData(Map<String, dynamic> data) {
     setValue(ScheduledSurveyKey.data, data);
   }
@@ -83,19 +82,19 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
     setValue(ScheduledSurveyKey.planned_survey, plannedSurvey);
   }
 
-  // Survey didn't start in time, should be skipped
+  // Survey didn't start in time, should be skipped.
   bool isLate() {
-    if (state != SurveyState.not_started)
+    if (state != SurveyState.not_started) {
       return false;
+    }
     final currentTime = DateTime.now();
-    return currentTime
-        .isAfter(shouldBeCompletedBefore.subtract(Duration(seconds: 1)));
+    return currentTime.isAfter(shouldBeCompletedBefore.subtract(Duration(seconds: 1)));
   }
 
-  // Update fields and save to firestore by default
+  // Update fields and save to Firestore by default.
   @override
-  bool update({required SurveyState state,
-    Map<String, dynamic>? data, bool persist = true}) {
+  Future<bool> update({required SurveyState state, Map<String, dynamic>? data,
+      bool persist = true}) async {
     if (this.state == SurveyState.completed) {
       _logger.log(Level.INFO, 'Survey ${survey.name} already completed.'
           'Cannot change its state.');
@@ -113,7 +112,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
       setData(data);
     }
     if (persist) {
-      save();
+      return await save();
     }
     return true;
   }

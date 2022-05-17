@@ -161,15 +161,19 @@ class Survey extends FirebaseEntity<SurveyKey> {
   Survey(FirebaseEntity firebaseEntity)
       : super(firebaseEntity.getDocumentSnapshot());
 
-  Future loadQuestions({bool fromCache = false}) async {
-    List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
+  Future<bool> loadQuestions({bool fromCache = false}) async {
+    List<FirebaseEntity>? entities = await _firestoreManager.queryEntities(
         [Table.surveys, Table.questions], [this.id],
         fromCacheWithKey: fromCache ? "survey_${this.id}_questions" : null
     );
 
+    if (entities == null) {
+      return false;
+    }
     questions = entities.map((firebaseEntity) =>
         SurveyQuestion(firebaseEntity))
         .toList();
+    return true;
   }
 
 }

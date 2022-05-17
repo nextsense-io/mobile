@@ -148,13 +148,11 @@ class ProtocolScreen extends HookWidget {
               child: Column(
                 children: [
                   Text(
-                    "Min duration: " +
-                        humanizeDuration(protocol.minDuration),
+                    "Min duration: " + humanizeDuration(protocol.minDuration),
                     style: whiteTextStyle,
                   ),
                   Text(
-                    "Max duration: " +
-                        humanizeDuration(protocol.maxDuration),
+                    "Max duration: " + humanizeDuration(protocol.maxDuration),
                     style: whiteTextStyle,
                   ),
                 ],
@@ -178,7 +176,21 @@ class ProtocolScreen extends HookWidget {
                       child: CircularProgressIndicator(),
                     ),
                     Text(
-                      "Test in progress",
+                      "Recording in progress",
+                      style: TextStyle(color: Colors.white),
+                    )
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              child: Visibility(
+                visible:
+                viewModel.hasError,
+                child: Column(
+                  children: [
+                    Text(
+                      viewModel.modelError,
                       style: TextStyle(color: Colors.white),
                     )
                   ],

@@ -112,7 +112,7 @@ class AuthManager {
     final User? user = await fetchUserFromFirestore(username);
 
     if (user == null) {
-      _logger.log(Level.WARNING, 'Failed to fetch user from firestore');
+      _logger.log(Level.WARNING, 'Failed to fetch user from Firestore');
       return null;
     }
 
@@ -139,16 +139,10 @@ class AuthManager {
   }
 
   Future<User?> fetchUserFromFirestore(String code) async {
-    FirebaseEntity userEntity;
-    try {
-      userEntity = await _firestoreManager.queryEntity([Table.users], [code]);
-    } catch(e) {
+    FirebaseEntity? userEntity = await _firestoreManager.queryEntity([Table.users], [code]);
+    if (userEntity == null || !userEntity.getDocumentSnapshot().exists) {
       return null;
     }
-    if (!userEntity.getDocumentSnapshot().exists) {
-      return null;
-    }
-
     return User(userEntity);
   }
 
@@ -173,7 +167,7 @@ class AuthManager {
   // Returns true if user is successfully initialized, otherwise returns false
   // and further actions must be taken
   Future<bool> ensureUserLoaded() async {
-    _logger.log(Level.WARNING, 'ensure user loaded');
+    _logger.log(Level.INFO, 'ensure user loaded');
     if (_user != null) {
       // User already initialized
       return true;

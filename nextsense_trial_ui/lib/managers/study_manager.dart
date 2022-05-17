@@ -59,19 +59,15 @@ class StudyManager {
 
   // Get the enrolled studies from the database. This data could change at
   // anytime so always get it from the database and not from a cache.
-  Future<List<EnrolledStudy>> getEnrolledStudies(String user_id) async {
-    List<FirebaseEntity> enrolledStudiesEntities;
-    try {
-      enrolledStudiesEntities = await _firestoreManager.queryEntities(
-          [Table.users, Table.enrolled_studies], [user_id]);
-    } catch(e) {
-      _logger.log(Level.SEVERE,
-          'Error when trying to load the enrolled studies for ${user_id}: ${e}');
-      return [];
+  Future<List<EnrolledStudy>?> getEnrolledStudies(String user_id) async {
+    List<FirebaseEntity>? enrolledStudiesEntities;
+    enrolledStudiesEntities = await _firestoreManager.queryEntities(
+        [Table.users, Table.enrolled_studies], [user_id]);
+    if (enrolledStudiesEntities == null) {
+      return null;
     }
     if (enrolledStudiesEntities.isEmpty) {
-      _logger.log(Level.SEVERE,
-          'No enrolled studies for ${user_id}');
+      _logger.log(Level.SEVERE, 'No enrolled studies for ${user_id}');
       return [];
     }
     return enrolledStudiesEntities.map((entity) => EnrolledStudy(entity)).toList();
@@ -79,13 +75,9 @@ class StudyManager {
 
   // Loads EnrolledStudy entity which holds state of current study
   Future<bool> _loadEnrolledStudy(String user_id, String study_id) async {
-    FirebaseEntity enrolledStudyEntity;
-    try {
-      enrolledStudyEntity = await _firestoreManager.queryEntity(
-          [Table.users, Table.enrolled_studies], [user_id, study_id]);
-    } catch(e) {
-      _logger.log(Level.SEVERE,
-          'Error when trying to load the enrolled study ${study_id}: ${e}');
+    FirebaseEntity? enrolledStudyEntity = await _firestoreManager.queryEntity(
+        [Table.users, Table.enrolled_studies], [user_id, study_id]);
+    if (enrolledStudyEntity == null) {
       return false;
     }
     if (!enrolledStudyEntity.getDocumentSnapshot().exists) {
@@ -116,13 +108,9 @@ class StudyManager {
     }
 
     // Then we need to load current study
-    FirebaseEntity studyEntity;
-    try {
-      studyEntity = await _firestoreManager.queryEntity(
+    FirebaseEntity? studyEntity = await _firestoreManager.queryEntity(
           [Table.studies], [currentStudyId!]);
-    } catch(e) {
-      _logger.log(Level.SEVERE,
-          'Error when trying to load the study ${currentStudyId}: ${e}');
+    if (studyEntity == null) {
       return false;
     }
     if (!studyEntity.getDocumentSnapshot().exists) {
@@ -157,7 +145,11 @@ class StudyManager {
     if (studyInitialized!) {
       // If study already initialized, return scheduled protocols from cache
       _logger.log(Level.INFO, 'Loading scheduled protocols from cache');
-      scheduledProtocols = await _loadScheduledProtocolsFromCache();
+      List<ScheduledProtocol>? protocols = await _loadScheduledProtocolsFromCache();
+      if (protocols == null) {
+        return false;
+      }
+      scheduledProtocols = protocols;
       _logger.log(Level.INFO, 'Loading ${scheduledProtocols.length}'
           ' scheduled protocols');
     } else {
@@ -165,10 +157,12 @@ class StudyManager {
           'Creating scheduled protocols based on planned assessments');
 
       Stopwatch stopwatch = new Stopwatch()..start();
-      List<PlannedAssessment> assessments = await _loadPlannedAssessments();
-
+      List<PlannedAssessment>? assessments = await _loadPlannedAssessments();
       _logger.log(Level.INFO, "Load planned assessments complete in " +
           '${stopwatch.elapsedMicroseconds / 1000000.0} sec');
+      if (assessments == null) {
+        return false;
+      }
 
       final batchWriter = FirestoreBatchWriter();
       for (var assessment in assessments) {
@@ -177,46 +171,42 @@ class StudyManager {
           continue;
         }
         final String time = assessment.startTimeStr.replaceAll(":", "_");
-        final String dayNumberStr = assessment.dayNumber
-            .toString().padLeft(3, '0');
+        final String dayNumberStr = assessment.dayNumber.toString().padLeft(3, '0');
 
-        String scheduledProtocolKey =
-            "${assessment.id}_day_${dayNumberStr}_time_${time}";
+        String scheduledProtocolKey = "${assessment.id}_day_${dayNumberStr}_time_${time}";
 
         DocumentReference ref = _firestoreManager.getReference(
             [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
-            [_authManager.userCode!, currentStudy!.id,
-              scheduledProtocolKey]);
+            [_authManager.userCode!, currentStudy!.id, scheduledProtocolKey]);
 
         Map<String, dynamic> fields = {};
 
         fields[ScheduledProtocolKey.protocol.name] = assessment.reference;
         fields[ScheduledProtocolKey.sessions.name] = [];
-        fields[ScheduledProtocolKey.status.name] =
-            ProtocolState.not_started.name;
-        fields[ScheduledProtocolKey.start_date.name] =
-            assessment.startDateAsString;
-        fields[ScheduledProtocolKey.start_datetime.name] =
-            assessment.startDateTimeAsString;
+        fields[ScheduledProtocolKey.status.name] = ProtocolState.not_started.name;
+        fields[ScheduledProtocolKey.start_date.name] = assessment.startDateAsString;
+        fields[ScheduledProtocolKey.start_datetime.name] = assessment.startDateTimeAsString;
 
         batchWriter.add(ref, fields);
       }
 
-      _logger.log(Level.INFO, "Commiting ${batchWriter.numberOfBatches} batches");
+      _logger.log(Level.INFO, "Committing ${batchWriter.numberOfBatches} batches");
 
-      await batchWriter.commitAll();
+      bool success = await batchWriter.commitAll();
+      if (!success) {
+        return false;
+      }
 
-      // Make sure cache is up to date, need to query whole collection
-      // Without this query undesired items can appear in cache
-      List<FirebaseEntity> scheduledProtocolEntities =
-          await _queryScheduledProtocols();
+      // Need to query the whole collection to make sure the cache is up to date.
+      // Without this query undesired items can appear in the cache.
+      List<FirebaseEntity>? scheduledProtocolEntities = await _queryScheduledProtocols();
+      if (scheduledProtocolEntities == null) {
+        return false;
+      }
 
       for (var entity in scheduledProtocolEntities) {
-        PlannedAssessment? plannedAssessment = assessments.firstWhereOrNull(
-                (assessment) =>
-            entity.getValue(ScheduledProtocolKey.protocol) ==
-                assessment.reference);
-
+        PlannedAssessment? plannedAssessment = assessments.firstWhereOrNull((assessment) =>
+            entity.getValue(ScheduledProtocolKey.protocol) == assessment.reference);
         scheduledProtocols.add(ScheduledProtocol(entity, plannedAssessment!));
       }
 
@@ -227,17 +217,21 @@ class StudyManager {
     return true;
   }
 
-  Future<List<ScheduledProtocol>> _loadScheduledProtocolsFromCache() async {
-    List<FirebaseEntity> scheduledProtocolEntities =
+  Future<List<ScheduledProtocol>?> _loadScheduledProtocolsFromCache() async {
+    List<FirebaseEntity>? scheduledProtocolEntities =
         await _queryScheduledProtocols(fromCache: true);
+    if (scheduledProtocolEntities == null) {
+      return null;
+    }
 
-    List<PlannedAssessment> assessments =
-        await _loadPlannedAssessments(fromCache: true);
+    List<PlannedAssessment>? assessments = await _loadPlannedAssessments(fromCache: true);
+    if (assessments == null) {
+      return null;
+    }
+
     List<ScheduledProtocol> result = [];
-
     for (FirebaseEntity entity in scheduledProtocolEntities) {
-      final assessmentId = (entity.getValue(ScheduledProtocolKey.protocol)
-          as DocumentReference).id;
+      final assessmentId = (entity.getValue(ScheduledProtocolKey.protocol) as DocumentReference).id;
       PlannedAssessment? plannedAssessment = assessments.firstWhereOrNull(
           (assessment) => assessmentId == assessment.reference.id);
 
@@ -249,11 +243,10 @@ class StudyManager {
       final scheduledProtocol = ScheduledProtocol(entity, plannedAssessment);
       result.add(scheduledProtocol);
     }
-
     return result;
   }
 
-  Future<List<FirebaseEntity>> _queryScheduledProtocols(
+  Future<List<FirebaseEntity>?> _queryScheduledProtocols(
       {bool fromCache = false}) async {
     return await _firestoreManager.queryEntities(
         [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
@@ -262,28 +255,30 @@ class StudyManager {
         "${_currentStudy!.id}_${Table.scheduled_protocols.name()}" : null);
   }
 
-  Future<List<PlannedAssessment>> _loadPlannedAssessments(
+  Future<List<PlannedAssessment>?> _loadPlannedAssessments(
       {bool fromCache = false}) async {
     if (_currentStudy == null) {
       return Future.value([]);
     }
-    List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
+    List<FirebaseEntity>? entities = await _firestoreManager.queryEntities(
         [Table.studies, Table.planned_assessments], [_currentStudy!.id],
         fromCacheWithKey: fromCache ? Table.planned_assessments.name() : null);
-
-    return entities
-        .map((firebaseEntity) =>
-            PlannedAssessment(firebaseEntity, currentStudyStartDate!))
-        .toList();
+    if (entities == null) {
+      return null;
+    }
+    return entities.map((firebaseEntity) =>
+            PlannedAssessment(firebaseEntity, currentStudyStartDate!)).toList();
   }
 
-  Future<List<PlannedSurvey>> loadPlannedSurveys() async {
+  Future<List<PlannedSurvey>?> loadPlannedSurveys() async {
     if (_currentStudy == null) {
       return Future.value([]);
     }
-    List<FirebaseEntity> entities = await _firestoreManager.queryEntities(
+    List<FirebaseEntity>? entities = await _firestoreManager.queryEntities(
         [Table.studies, Table.planned_surveys], [_currentStudy!.id]);
-
+    if (entities == null) {
+      return null;
+    }
     return entities
         .map((firebaseEntity) =>
         PlannedSurvey(firebaseEntity,
@@ -298,12 +293,11 @@ class StudyManager {
             (studyDay) => studyDay.dayNumber == dayNumber);
   }
 
-  Future setStudyInitialized(bool initialized) async {
+  Future<bool> setStudyInitialized(bool initialized) async {
     if (initialized) {
       _logger.log(Level.INFO, "Mark current study as initialized");
     }
-    await _enrolledStudy!
-      ..setInitialized(initialized)
-      ..save();
+    _enrolledStudy!.setInitialized(initialized);
+    return await _enrolledStudy!.save();
   }
 }

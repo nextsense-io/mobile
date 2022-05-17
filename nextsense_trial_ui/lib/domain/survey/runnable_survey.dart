@@ -11,6 +11,6 @@ abstract class RunnableSurvey {
 
   RunnableSurveyType get type;
 
-  bool update({required SurveyState state,
-    Map<String, dynamic>? data, bool persist = true});
+  Future<bool> update(
+      {required SurveyState state, Map<String, dynamic>? data, bool persist = true});
 }

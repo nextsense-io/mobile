@@ -10,14 +10,13 @@ class EnrolledStudiesScreenViewModel extends ViewModel {
   final StudyManager _studyManager = getIt<StudyManager>();
   final AuthManager _authManager = getIt<AuthManager>();
 
-  List<EnrolledStudy> enrolledStudies = [];
+  List<EnrolledStudy>? enrolledStudies = [];
 
   String get currentStudyId => _studyManager.currentStudyId!;
 
   @override
   void init() async {
-    enrolledStudies =
-        await _studyManager.getEnrolledStudies(_authManager.user!.id);
+    enrolledStudies = await _studyManager.getEnrolledStudies(_authManager.user!.id);
     setInitialised(true);
     notifyListeners();
   }

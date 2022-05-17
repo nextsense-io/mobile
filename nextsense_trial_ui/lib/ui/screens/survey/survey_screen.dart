@@ -7,6 +7,7 @@ import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/nextsense_button.dart';
+import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen_vm.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
@@ -55,6 +56,9 @@ class _SurveyForm extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = context.read<SurveyScreenViewModel>();
     final survey = viewModel.survey;
+    if (viewModel.isBusy) {
+      return WaitWidget(message: Text("Submitting the form..."));
+    }
     return FormBuilder(
         key: _formKey,
         child: Container(
@@ -64,8 +68,7 @@ class _SurveyForm extends StatelessWidget {
             child: Column(
               children: [
                 Text(survey.name,
-                    style:
-                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 SizedBox(
                   height: 20,
                 ),
@@ -118,29 +121,35 @@ class _SurveyForm extends StatelessWidget {
 
   Widget _submitButton(BuildContext context) {
     final viewModel = context.read<SurveyScreenViewModel>();
-    return NextsenseButton.primary(
-      "Submit",
-      onPressed: () {
-        if (_formKey.currentState!=null) {
+    return NextsenseButton.primary("Submit",
+      onPressed: () async {
+        if (_formKey.currentState != null) {
           _formKey.currentState?.save();
           if (_formKey.currentState!.validate()) {
-            viewModel.submit(_formKey.currentState!.value);
-            Navigator.pop(context, true);
+            bool submitted = await viewModel.submit(_formKey.currentState!.value);
+            if (submitted) {
+              Navigator.pop(context, true);
+            } else {
+              showDialog(
+                  context: context,
+                  builder: (_) => SimpleAlertDialog(
+                      title: 'Error submitting the form',
+                      content: 'Please try again and contact support if you get additional '
+                          'errors.'));
+            }
           } else {
-            _logger.log(Level.WARNING, "validation failed");
+            _logger.log(Level.WARNING, "Validation failed");
             showDialog(
                 context: context,
                 builder: (_) => SimpleAlertDialog(
                     title: 'Form error',
-                    content:
-                    'Please fill missing or incorrect fields'));
+                    content: 'Please fill missing or incorrect fields'));
           }
         }
       },
     );
   }
 }
-
 
 class _SurveyQuestionWidget extends StatelessWidget {
 
@@ -275,24 +284,26 @@ class _SurveyQuestionWidget extends StatelessWidget {
   List<FormFieldValidator> _getValidators() {
     List<FormFieldValidator> validators = [];
     switch (question.type) {
-
       case SurveyQuestionType.yesno:
-      // TODO: Handle this case.
+        // TODO: Handle this case.
         break;
       case SurveyQuestionType.range:
-      // TODO: Handle this case.
+        // TODO: Handle this case.
         break;
       case SurveyQuestionType.number:
-      // TODO: Handle this case.
+        // TODO: Handle this case.
         break;
       case SurveyQuestionType.choices:
-      // TODO: Handle this case.
+        // TODO: Handle this case.
         break;
       case SurveyQuestionType.text:
-      // TODO: Handle this case.
+        // TODO: Handle this case.
+        break;
+      case SurveyQuestionType.time:
+        // TODO: Handle this case.
         break;
       case SurveyQuestionType.unknown:
-      // TODO: Handle this case.
+        // TODO: Handle this case.
         break;
     }
 

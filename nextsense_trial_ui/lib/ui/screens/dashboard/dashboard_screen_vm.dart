@@ -65,16 +65,14 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
       if (!_dataManager.userStudyDataLoaded) {
         bool success = await _dataManager.loadUserData();
         if (!success) {
-          _logger.log(Level.WARNING,
-              'Failed to load user. Fallback to signup');
+          _logger.log(Level.WARNING, 'Failed to load user. Fallback to signup');
           logout();
           return;
         }
       }
     } catch (e, stacktrace) {
-      _logger.log(Level.SEVERE,
-          'Failed to load dashboard data: '
-              '${e.toString()}, ${stacktrace.toString()}');
+      _logger.log(Level.SEVERE, 'Failed to load dashboard data: ${e.toString()}, '
+          '${stacktrace.toString()}');
       setError("Failed to load data. Please contact support");
       setBusy(false);
       return;
@@ -102,16 +100,17 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     );
   }
 
-  // Find and skip scheduled protocols/surveys that user didn't start at
-  // desired time window
+  // Find and skip scheduled protocols/surveys that user didn't start at desired time window.
   void _checkScheduledEntitiesTimeConstraints() {
     for (final scheduledProtocol in scheduledProtocols) {
       if (scheduledProtocol.isLate()) {
+        // This can run again so not a big problem if fails once, no need to check.
         scheduledProtocol.update(state: ProtocolState.skipped);
       }
     }
     for (final scheduledSurvey in scheduledSurveys) {
       if (scheduledSurvey.isLate()) {
+        // This can run again so not a big problem if fails once, no need to check.
         scheduledSurvey.update(state: SurveyState.skipped);
       }
     }
@@ -146,8 +145,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
         result.add(scheduledProtocol);
       }
     }
-    result.sort((p1, p2) =>
-        p1.startTime.compareTo(p2.startTime));
+    result.sort((p1, p2) => p1.startTime.compareTo(p2.startTime));
     return result;
   }
 
@@ -180,16 +178,14 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   }
 
   List<AdhocProtocol> getAdhocProtocols() {
-    List<ProtocolType> allowedProtocols =
-    _studyManager.currentStudy!.getAllowedProtocols();
+    List<ProtocolType> allowedProtocols = _studyManager.currentStudy!.getAllowedProtocols();
 
     return allowedProtocols.map((protocolType) => AdhocProtocol(
         protocolType, _studyManager.currentStudyId!)).toList();
   }
 
   List<Survey> getAdhocSurveys() {
-    List<String> adhocSurveyIds =
-      _studyManager.currentStudy!.getAllowedSurveys();
+    List<String> adhocSurveyIds = _studyManager.currentStudy!.getAllowedSurveys();
 
     List<Survey> result = [];
     for (var surveyId in adhocSurveyIds) {
