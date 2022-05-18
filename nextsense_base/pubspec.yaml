@@ -11,7 +11,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  gson: ^0.1.4
+  gson: ^0.1.6-dev
 
 dev_dependencies:
   flutter_test:
