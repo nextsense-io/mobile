@@ -12,12 +12,17 @@ Future<void> _onBackgroundMessageReceived(RemoteMessage message) async {
 
   print("Handling a background message: ${message.messageId}");
 
-  // Сreate notification using the AwesomeNotifications FCM message parser
+  // Creates a notification using the AwesomeNotifications FCM message parser.
   AwesomeNotifications().createNotificationFromJsonData(message.data);
 }
 
-class NotificationsManager {
+// Navigation target type for a notification.
+enum TargetType {
+  protocol,
+  survey
+}
 
+class NotificationsManager {
   // TODO(alex): discuss notification types that can be replaced and fix
   // _notificationMessageId depends on notification entity type
   static const int _notificationMessageId = 999;
@@ -36,8 +41,7 @@ class NotificationsManager {
               channelGroupKey: 'basic_channel_group',
               channelKey: 'basic_channel',
               channelName: 'NextSense Alerts',
-              channelDescription:
-                  'Important alerts on NextSense device and application',
+              channelDescription: 'Important alerts on NextSense device and application',
               importance: NotificationImportance.Max,
               enableVibration: true,
               defaultColor: Color(0xFF9D50DD),
@@ -60,8 +64,8 @@ class NotificationsManager {
       }
     });
 
-    // This provided handler must be a top-level function and cannot be
-    // anonymous otherwise an [ArgumentError] will be thrown.
+    // This provided handler must be a top-level function and cannot be anonymous otherwise an
+    // [ArgumentError] will be thrown.
     FirebaseMessaging.onBackgroundMessage(_onBackgroundMessageReceived);
 
     FirebaseMessaging.onMessage.listen((message) => _onForegroundMessageReceived(message));
@@ -70,23 +74,20 @@ class NotificationsManager {
     messaging.getToken().then((token)=> _onFcmTokenUpdated(token!));
     messaging.onTokenRefresh.listen(_onFcmTokenUpdated);
 
+    AwesomeNotifications().actionStream.listen((ReceivedNotification notification) {
+      _logger.log(Level.INFO, "User clicked on a notification.");
+      _logger.log(Level.INFO, "User clicked on a notification going to "
+          "${notification.payload?[TargetType.protocol.name] ?? "dashboard."}");
+      // Navigator.of(context).pushNamed(
+      //     '/NotificationPage',
+      //     arguments: {
+      //       // your page params. I recommend you to pass the
+      //       // entire *receivedNotification* object
+      //       id: receivedNotification.id
+      //     }
+      // );
+    });
     _logger.log(Level.INFO, 'initialized');
-  }
-
-  _onForegroundMessageReceived(RemoteMessage message) {
-    _logger.log(Level.INFO, 'foreground message received: '
-        'title: "${message.notification?.title}" '
-        'text: "${message.notification?.body}" '
-        'from: ${message.from} - data: ${message.data}');
-
-    // Сreate notification using the AwesomeNotifications FCM message parser
-    AwesomeNotifications().createNotificationFromJsonData(message.data);
-
-    final title = message.notification?.title ?? "";
-    final body = message.notification?.body ?? "";
-
-
-    showAlertNotification(_notificationMessageId, title, body);
   }
 
   Future showAlertNotification(
@@ -104,6 +105,21 @@ class NotificationsManager {
 
   Future hideAlertNotification(int id) async {
     await AwesomeNotifications().cancel(id);
+  }
+
+  _onForegroundMessageReceived(RemoteMessage message) {
+    _logger.log(Level.INFO, 'foreground message received: '
+        'title: "${message.notification?.title}" '
+        'text: "${message.notification?.body}" '
+        'from: ${message.from} - data: ${message.data}');
+
+    // Creates a notification using the AwesomeNotifications FCM message parser.
+    AwesomeNotifications().createNotificationFromJsonData(message.data);
+
+    final title = message.notification?.title ?? "";
+    final body = message.notification?.body ?? "";
+
+    showAlertNotification(_notificationMessageId, title, body);
   }
 
   void _onFcmTokenUpdated(String fcmToken) {
