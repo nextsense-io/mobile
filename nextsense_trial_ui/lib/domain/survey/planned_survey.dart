@@ -26,8 +26,7 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
   late int daysToComplete;
   int? specificDayNumber;
 
-  PlannedSurvey(FirebaseEntity firebaseEntity, DateTime studyStartDate,
-      DateTime studyEndDate) :
+  PlannedSurvey(FirebaseEntity firebaseEntity, DateTime studyStartDate, DateTime studyEndDate) :
         super(firebaseEntity.getDocumentSnapshot()) {
 
     // We have following possible values for period field
@@ -61,8 +60,7 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
   }
 
   // Create list of study days according to period of survey
-  void _initSurveyDays(DateTime studyStartDate,
-      DateTime studyEndDate) {
+  void _initSurveyDays(DateTime studyStartDate, DateTime studyEndDate) {
 
     if (period == SurveyPeriod.specific_day) {
       // For certain day number we just add single day

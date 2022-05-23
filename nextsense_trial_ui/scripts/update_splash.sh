@@ -1,5 +1,5 @@
 #!/bin/bash
-ANDROID_APP_FOLDER="$(pwd)/../testui"
+ANDROID_APP_FOLDER="$(pwd)/../android_host"
 # Create symbolic link makes flutter_native_splash:create think that we have android app
 mkdir android && ln -s $ANDROID_APP_FOLDER android/app
 flutter pub run flutter_native_splash:create

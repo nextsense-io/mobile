@@ -79,8 +79,8 @@ class DeviceManager {
   // There is already paired device, which we could connect to
   bool get hadPairedDevice => getLastPairedDevice() != null;
 
-  Future<bool> connectDevice(Device device,
-      {Duration timeout = const Duration(seconds: 10)}) async {
+  Future<bool> connectDevice(
+      Device device, {Duration timeout = const Duration(seconds: 10)}) async {
     _listenToState(device.macAddress);
     _listenToInternalState();
     await NextsenseBase.connectDevice(device.macAddress);
@@ -124,12 +124,10 @@ class DeviceManager {
 
     CancelListening _cancelScanning = NextsenseBase.startScanning((deviceAttributesJson) {
       Map<String, dynamic> deviceAttributes = gson.decode(deviceAttributesJson);
-      String macAddress =
-          deviceAttributes[describeEnum(DeviceAttributesFields.macAddress)];
+      String macAddress = deviceAttributes[describeEnum(DeviceAttributesFields.macAddress)];
       _logger.log(Level.INFO, 'Found a device: ' + macAddress);
       if (macAddress == lastPairedDevice.macAddress) {
-        String name = deviceAttributes[
-          describeEnum(DeviceAttributesFields.name)];
+        String name = deviceAttributes[describeEnum(DeviceAttributesFields.name)];
         _scannedDevice = new Device(macAddress, name);
         _logger.log(Level.INFO, 'Last paired device found, reconnecting');
         _scanFinishedCompleter.complete(true);
@@ -170,8 +168,7 @@ class DeviceManager {
     _deviceReadyCompleter = new Completer<bool>();
     new Timer(timeout, () {
       if (!_deviceReadyCompleter.isCompleted) {
-        _deviceReadyCompleter
-            .complete(deviceState.value == DeviceState.ready);
+        _deviceReadyCompleter.complete(deviceState.value == DeviceState.ready);
       }
     });
     return _deviceReadyCompleter.future;
@@ -181,8 +178,7 @@ class DeviceManager {
     _deviceInternalStateAvailableCompleter = new Completer<bool>();
     new Timer(timeout, () {
       if (!_deviceInternalStateAvailableCompleter.isCompleted) {
-        _deviceInternalStateAvailableCompleter
-            .complete(deviceInternalStateAvailable);
+        _deviceInternalStateAvailableCompleter.complete(deviceInternalStateAvailable);
       }
     });
     return _deviceInternalStateAvailableCompleter.future;
@@ -198,8 +194,7 @@ class DeviceManager {
     }
     _cancelStateListening?.call();
     _cancelInternalStateListening?.call();
-    _notificationsManager
-        .hideAlertNotification(connectionLostNotificationId);
+    _notificationsManager.hideAlertNotification(connectionLostNotificationId);
     NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
     deviceState.value = DeviceState.disconnected;
     _connectedDevice = null;
@@ -228,8 +223,7 @@ class DeviceManager {
     _cancelInternalStateListening =
         NextsenseBase.listenToDeviceInternalState((newDeviceInternalStateJson) {
       _logger.log(Level.FINE, 'Device internal state changed');
-      Map<String, dynamic> newStateValues =
-          jsonDecode(newDeviceInternalStateJson);
+      Map<String, dynamic> newStateValues = jsonDecode(newDeviceInternalStateJson);
 
       DeviceInternalState state =
           new DeviceInternalState(newStateValues);
@@ -263,8 +257,7 @@ class DeviceManager {
           }
           return oldValue == newValue;
         }
-        if (_deviceInternalStateValues!.containsKey(key)
-            && !equal(oldValue, newValue)) {
+        if (_deviceInternalStateValues!.containsKey(key) && !equal(oldValue, newValue)) {
           final event = DeviceInternalStateEvent.create(key, newValue);
           _deviceInternalStateChangeController.add(event);
         }
@@ -274,14 +267,12 @@ class DeviceManager {
 
   void _onDeviceDisconnected() {
     // Disconnected without being requested by the user.
-    _notificationsManager.showAlertNotification(connectionLostNotificationId,
-        connectionLostTitle, connectionLostBody);
+    showAlertNotification(connectionLostNotificationId, connectionLostTitle, connectionLostBody);
     deviceState.value = DeviceState.disconnected;
   }
 
   void _onDeviceReady() {
-    _notificationsManager
-        .hideAlertNotification(connectionLostNotificationId);
+    _notificationsManager.hideAlertNotification(connectionLostNotificationId);
     deviceState.value = DeviceState.ready;
     if (!_deviceReadyCompleter.isCompleted) {
       _deviceReadyCompleter.complete(true);

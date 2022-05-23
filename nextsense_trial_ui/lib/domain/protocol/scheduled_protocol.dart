@@ -52,8 +52,7 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
   bool get isSkipped => state == ProtocolState.skipped;
   bool get isCancelled => state == ProtocolState.cancelled;
 
-  ScheduledProtocol(FirebaseEntity firebaseEntity,
-      PlannedAssessment plannedAssessment) :
+  ScheduledProtocol(FirebaseEntity firebaseEntity, PlannedAssessment plannedAssessment) :
       super(firebaseEntity.getDocumentSnapshot()) {
     protocol = plannedAssessment.protocol!;
     day = plannedAssessment.day;
@@ -65,10 +64,8 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
         .add(Duration(minutes: plannedAssessment.allowedLateStartTimeMinutes));
 
     // Needed for later push notifications processing at backend
-    setValue(
-        ScheduledProtocolKey.start_date, plannedAssessment.startDateAsString);
-    setValue(
-        ScheduledProtocolKey.start_datetime, plannedAssessment.startDateTimeAsString);
+    setValue(ScheduledProtocolKey.start_date, plannedAssessment.startDateAsString);
+    setValue(ScheduledProtocolKey.start_datetime, plannedAssessment.startDateTimeAsString);
   }
 
   // Set state of protocol in firebase

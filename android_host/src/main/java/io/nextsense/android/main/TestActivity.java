@@ -236,12 +236,12 @@ public class TestActivity extends AppCompatActivity {
   public void onDestroy() {
     super.onDestroy();
     // The flutter engine would survive the application.
-    FlutterEngine flutterEngine = FlutterEngineCache.getInstance().get(TestUi.FLUTTER_ENGINE_NAME);
+    FlutterEngine flutterEngine = FlutterEngineCache.getInstance().get(NextSenseApplication.FLUTTER_ENGINE_NAME);
     if (flutterEngine != null) {
       Log.i(TAG, "Detaching flutter engine.");
       flutterEngine.getPlatformViewsController().detachFromView();
       flutterEngine.getLifecycleChannel().appIsDetached();
-      FlutterEngineCache.getInstance().remove(TestUi.FLUTTER_ENGINE_NAME);
+      FlutterEngineCache.getInstance().remove(NextSenseApplication.FLUTTER_ENGINE_NAME);
     }
   }
 
@@ -259,10 +259,10 @@ public class TestActivity extends AppCompatActivity {
   }
 
   private void startFlutter() {
-    if (FlutterEngineCache.getInstance().get(TestUi.FLUTTER_ENGINE_NAME) == null) {
-      ((TestUi) getApplicationContext()).initFlutterEngineCache();
+    if (FlutterEngineCache.getInstance().get(NextSenseApplication.FLUTTER_ENGINE_NAME) == null) {
+      ((NextSenseApplication) getApplicationContext()).initFlutterEngineCache();
     }
-    startActivity(FlutterActivity.withCachedEngine(TestUi.FLUTTER_ENGINE_NAME)
+    startActivity(FlutterActivity.withCachedEngine(NextSenseApplication.FLUTTER_ENGINE_NAME)
         .build(this));
   }
 

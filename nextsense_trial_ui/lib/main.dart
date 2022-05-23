@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
+import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/environment.dart';
@@ -39,6 +41,24 @@ Future _initFlavor() async {
   initFlavor(flavor);
 }
 
+Future<intent.Intent?> _getInitialIntent() async {
+  // Platform messages may fail, so we use a try/catch PlatformException.
+  try {
+    final receivedIntent = await intent.ReceiveIntent.getInitialIntent();
+    getLogger("Main").log(Level.INFO, "Initial Intent: ${receivedIntent}");
+    // Validate receivedIntent and warn the user, if it is not correct,
+    // but keep in mind it could be `null` or "empty"(`receivedIntent.isNull`).
+    if (receivedIntent == null || receivedIntent.extra == null) {
+      getLogger("Main").log(Level.INFO, "Initial intent does not have extras, ignoring.");
+      return null;
+    }
+    return receivedIntent;
+  } on PlatformException {
+    getLogger("Main").log(Level.INFO, "Error getting initial intent.");
+  }
+  return null;
+}
+
 void main() async {
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +70,7 @@ void main() async {
     await _initFlavor();
     await initDependencies();
     await getIt<NotificationsManager>().init();
+    await getIt<Navigation>().init(await _getInitialIntent());
     NextsenseBase.startService();
     runApp(NextSenseTrialApp());
   }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));

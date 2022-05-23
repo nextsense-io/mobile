@@ -8,11 +8,11 @@ import io.flutter.embedding.engine.FlutterEngineCache;
 import io.flutter.embedding.engine.dart.DartExecutor;
 
 /**
- * Custom application class for the TestUi application.
+ * Custom application class for the NextSense application.
  */
-public class TestUi extends Application {
+public class NextSenseApplication extends Application {
 
-  public static final String FLUTTER_ENGINE_NAME = "testui_engine_id";
+  public static final String FLUTTER_ENGINE_NAME = "nextsense_engine_id";
 
   private FlutterEngine flutterEngine;
 
@@ -23,7 +23,7 @@ public class TestUi extends Application {
   }
 
   public void initFlutterEngineCache() {
-    Log.i("TestUi", "Initializing the flutter engine.");
+    Log.i("NextSenseApplication", "Initializing the flutter engine.");
     // Instantiate a FlutterEngine.
     flutterEngine = new FlutterEngine(this);
 
