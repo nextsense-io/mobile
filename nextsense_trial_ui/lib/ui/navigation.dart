@@ -1,12 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
+import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
@@ -26,7 +34,9 @@ import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:provider/src/provider.dart';
+import 'package:receive_intent/receive_intent.dart' as intent;
 
 class NavigationRoute {
   String? routeName;
@@ -43,7 +53,79 @@ class Navigation {
   final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final DiskSpaceManager _diskSpaceManager = getIt<DiskSpaceManager>();
+  final StudyManager _studyManager = getIt<StudyManager>();
+  final SurveyManager _surveyManager = getIt<SurveyManager>();
+  final CustomLogPrinter _logger = CustomLogPrinter('Navigation');
+
   NavigationRoute? _nextNavigationRoute;
+  StreamSubscription? _intentSubscription;
+  intent.Intent? _initialIntent;
+
+  Future<void> _initReceiveIntent() async {
+    _intentSubscription = intent.ReceiveIntent.receivedIntentStream.listen(
+            (intent.Intent? intent) async {
+      _logger.log(Level.INFO, "Intent: ${intent}");
+      if (intent == null) {
+        _logger.log(Level.SEVERE, "Intent received with no intent.");
+        return;
+      }
+      await _navigateToIntent(intent);
+    }, onError: (err) {
+      _logger.log(Level.INFO, "Error on intent: ${err}");
+    });
+    // No need to call dispose() on the subscription as it runs until the app is stopped.
+  }
+
+  // Navigate to the target defined in the intent extras.
+  Future<bool> _navigateToIntent(intent.Intent intent, {bool replace = false}) async {
+    if (intent.extra == null) {
+      _logger.log(Level.INFO, "No extra, probably not a notification that will navigate.");
+      return false;
+    }
+    if (intent.extra!.containsKey(TargetType.protocol.name)) {
+      String scheduledProtocolId = intent.extra![TargetType.protocol.name];
+      _logger.log(Level.INFO, "Scheduled protocol id: ${scheduledProtocolId}");
+      ScheduledProtocol? scheduledProtocol =
+      await _studyManager.queryScheduledProtocol(scheduledProtocolId);
+      if (scheduledProtocol != null) {
+        navigateWithCapabilityChecking(navigatorKey.currentState!.context, ProtocolScreen.id,
+            replace: replace, arguments: scheduledProtocol);
+      } else {
+        _logger.log(Level.SEVERE, "Scheduled protocol ${scheduledProtocolId} does not exists");
+      }
+      return true;
+    }
+    if (intent.extra!.containsKey(TargetType.survey.name)) {
+      String scheduledSurveyId = intent.extra![TargetType.survey.name];
+      _logger.log(Level.INFO, "Scheduled survey id: ${scheduledSurveyId}");
+      ScheduledSurvey? scheduledSurvey =
+      await _surveyManager.queryScheduledSurvey(scheduledSurveyId);
+      if (scheduledSurvey != null) {
+        await navigateTo(SurveyScreen.id, replace: replace, arguments: scheduledSurvey);
+      } else {
+        _logger.log(Level.SEVERE, "Scheduled survey ${scheduledSurveyId} does not exists");
+      }
+      return true;
+    }
+    _logger.log(Level.WARNING, "Intent received with no valid target.");
+    return false;
+  }
+
+  Future init(intent.Intent? initialIntent) async {
+    _initialIntent = initialIntent;
+    await _initReceiveIntent();
+  }
+
+  bool hasInitialIntent() {
+    return _initialIntent != null;
+  }
+
+  Future<bool> navigateToInitialIntent() async {
+    if (_initialIntent != null) {
+      return await _navigateToIntent(_initialIntent!, replace: false);
+    }
+    return false;
+  }
 
   Future<dynamic> navigateTo(String routeName, {Object? arguments,
     bool replace = false, bool pop = false, bool popAll = false, NavigationRoute? nextRoute}) {

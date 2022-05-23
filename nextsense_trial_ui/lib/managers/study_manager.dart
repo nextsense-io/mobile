@@ -246,6 +246,23 @@ class StudyManager {
     return result;
   }
 
+  Future<ScheduledProtocol?> queryScheduledProtocol(String scheduledProtocolId) async {
+    FirebaseEntity? scheduledProtocolEntity = await _firestoreManager.queryEntity(
+        [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
+        [_authManager.userCode!, _currentStudy!.id, scheduledProtocolId]);
+    if (scheduledProtocolEntity != null) {
+      final assessmentId = (scheduledProtocolEntity.getValue(ScheduledProtocolKey.protocol)
+          as DocumentReference).id;
+      FirebaseEntity? plannedAssessmentEntity = await _firestoreManager.queryEntity(
+          [Table.studies, Table.planned_assessments], [_currentStudy!.id, assessmentId]);
+      if (plannedAssessmentEntity != null) {
+        return ScheduledProtocol(scheduledProtocolEntity,
+            PlannedAssessment(plannedAssessmentEntity, _enrolledStudy!.getStartDate()!));
+      }
+    }
+    return null;
+  }
+
   Future<List<FirebaseEntity>?> _queryScheduledProtocols(
       {bool fromCache = false}) async {
     return await _firestoreManager.queryEntities(

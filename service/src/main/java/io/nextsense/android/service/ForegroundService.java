@@ -43,6 +43,9 @@ import io.nextsense.android.base.utils.Util;
  * to our device if that is something we want to do.
  */
 public class ForegroundService extends Service {
+  // Class reference to know what to launch when the service notification is pressed.
+  public static final String EXTRA_UI_CLASS = "ui_class";
+
   private static final String TAG = ForegroundService.class.getSimpleName();
   private static final String CHANNEL_ID = "NextSenseChannel";
   private static final String CHANNEL_NAME = "NextSense";
@@ -74,15 +77,13 @@ public class ForegroundService extends Service {
       return START_STICKY;
     }
     createNotificationChannel();
-    Class<Activity> uiClass = (Class<Activity>) intent.getSerializableExtra("ui_class");
+    Class<Activity> uiClass = (Class<Activity>) intent.getSerializableExtra(EXTRA_UI_CLASS);
     Intent notificationIntent = new Intent(this, uiClass);
-    // Re-use existing activity if it is already running.
-    notificationIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
     PendingIntent pendingIntent = PendingIntent.getActivity(this,
         UI_INTENT_REQUEST_CODE, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
     Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-        .setContentTitle("Foreground Service")
-        .setContentText("Press to control the device")
+        .setContentTitle(getString(R.string.app_name))
+        .setContentText(getString(R.string.notif_content))
         .setSmallIcon(R.drawable.ic_launcher)
         .setContentIntent(pendingIntent)
         .build();

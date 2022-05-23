@@ -7,13 +7,36 @@ import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
+const int _notificationMessageId = 999;
+
+Future showAlertNotification(
+    int id, String title, String body, {Map<String, String>? payload}) async {
+  await AwesomeNotifications().createNotification(
+      content: NotificationContent(
+          id: id,
+          channelKey: 'basic_channel',
+          title: title,
+          body: body,
+          payload: payload,
+          wakeUpScreen: true
+      )
+  );
+}
 
 Future<void> _onBackgroundMessageReceived(RemoteMessage message) async {
-
   print("Handling a background message: ${message.messageId}");
+  print("message data: ${message.data}");
 
-  // Creates a notification using the AwesomeNotifications FCM message parser.
-  AwesomeNotifications().createNotificationFromJsonData(message.data);
+  final title = message.data["title"] ?? "";
+  final body = message.data["body"] ?? "";
+
+  Map<String, String> payload = {};
+  for (String dataKey in message.data.keys) {
+    if (message.data[dataKey] is String) {
+      payload[dataKey] = message.data[dataKey];
+    }
+  }
+  await showAlertNotification(_notificationMessageId, title, body, payload: payload);
 }
 
 // Navigation target type for a notification.
@@ -25,7 +48,6 @@ enum TargetType {
 class NotificationsManager {
   // TODO(alex): discuss notification types that can be replaced and fix
   // _notificationMessageId depends on notification entity type
-  static const int _notificationMessageId = 999;
 
   final CustomLogPrinter _logger = CustomLogPrinter('NotificationsManager');
   
@@ -67,7 +89,6 @@ class NotificationsManager {
     // This provided handler must be a top-level function and cannot be anonymous otherwise an
     // [ArgumentError] will be thrown.
     FirebaseMessaging.onBackgroundMessage(_onBackgroundMessageReceived);
-
     FirebaseMessaging.onMessage.listen((message) => _onForegroundMessageReceived(message));
 
     var messaging = FirebaseMessaging.instance;
@@ -90,19 +111,6 @@ class NotificationsManager {
     _logger.log(Level.INFO, 'initialized');
   }
 
-  Future showAlertNotification(
-      int id, String title, String body, {String? payload}) async {
-    AwesomeNotifications().createNotification(
-        content: NotificationContent(
-            id: id,
-            channelKey: 'basic_channel',
-            title: title,
-            body: body,
-            wakeUpScreen: true
-        )
-    );
-  }
-
   Future hideAlertNotification(int id) async {
     await AwesomeNotifications().cancel(id);
   }
@@ -113,13 +121,16 @@ class NotificationsManager {
         'text: "${message.notification?.body}" '
         'from: ${message.from} - data: ${message.data}');
 
-    // Creates a notification using the AwesomeNotifications FCM message parser.
-    AwesomeNotifications().createNotificationFromJsonData(message.data);
+    final title = message.data["title"] ?? "";
+    final body = message.data["body"] ?? "";
 
-    final title = message.notification?.title ?? "";
-    final body = message.notification?.body ?? "";
-
-    showAlertNotification(_notificationMessageId, title, body);
+    Map<String, String> payload = {};
+    for (String dataKey in message.data.keys) {
+      if (message.data[dataKey] is String) {
+        payload[dataKey] = message.data[dataKey];
+      }
+    }
+    showAlertNotification(_notificationMessageId, title, body, payload: payload);
   }
 
   void _onFcmTokenUpdated(String fcmToken) {

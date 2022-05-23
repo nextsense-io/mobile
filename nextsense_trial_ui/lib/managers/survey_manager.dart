@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -137,8 +138,7 @@ class SurveyManager {
     }
 
     // Make consistent order
-    scheduledSurveys
-        .sortBy((scheduledSurvey) => scheduledSurvey.plannedSurveyId);
+    scheduledSurveys.sortBy((scheduledSurvey) => scheduledSurvey.plannedSurveyId);
 
     for (var scheduledSurvey in scheduledSurveys) {
       // Add scheduled survey to group by planned survey id
@@ -147,6 +147,35 @@ class SurveyManager {
           ifAbsent: () => [scheduledSurvey]);
     }
     return true;
+  }
+
+  Future<ScheduledSurvey?> queryScheduledSurvey(String scheduledSurveyId) async {
+    _logger.log(Level.INFO, scheduledSurveys);
+    FirebaseEntity? scheduledSurveyEntity = await _firestoreManager.queryEntity(
+        [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
+        [_authManager.userCode!, _currentStudyId, scheduledSurveyId]);
+    if (scheduledSurveyEntity != null) {
+      final plannedSurveyId = (scheduledSurveyEntity.getValue(ScheduledSurveyKey.planned_survey)
+          as DocumentReference).id;
+      FirebaseEntity? plannedSurveyEntity = await _firestoreManager.queryEntity(
+          [Table.studies, Table.planned_surveys], [_currentStudyId, plannedSurveyId]);
+      if (plannedSurveyEntity != null) {
+        PlannedSurvey plannedSurvey = PlannedSurvey(plannedSurveyEntity,
+            _studyManager.currentStudyStartDate!, _studyManager.currentStudyEndDate!);
+        if (_surveys == null) {
+          _surveys = await _loadSurveys(fromCache: true);
+        }
+        Survey? survey = _surveys?.firstWhere(
+            (element) => element.id == plannedSurvey.surveyId) ?? null;
+        if (survey == null) {
+          return null;
+        }
+        return ScheduledSurvey(scheduledSurveyEntity, survey, StudyDay(DateTime.now(),
+            scheduledSurveyEntity.getValue(ScheduledSurveyKey.day_number)),
+            plannedSurvey: plannedSurvey);
+      }
+    }
+    return null;
   }
 
   Future<List<Survey>?> _loadSurveys({bool fromCache = false}) async {

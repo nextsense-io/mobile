@@ -21,32 +21,23 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
     implements RunnableSurvey {
 
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledSurvey');
-
-  RunnableSurveyType get type => RunnableSurveyType.scheduled;
-
-  late Survey survey;
-
   // Day survey will appear.
   final StudyDay day;
 
+  late Survey survey;
   // Time before this survey should be completed, or it will be marked as skipped.
   late DateTime shouldBeCompletedBefore;
 
-  SurveyState get state =>
-      surveyStateFromString(getValue(ScheduledSurveyKey.status));
-
-  SurveyPeriod get period =>
-      surveyPeriodFromString(getValue(ScheduledSurveyKey.period));
-
+  RunnableSurveyType get type => RunnableSurveyType.scheduled;
+  SurveyState get state => surveyStateFromString(getValue(ScheduledSurveyKey.status));
+  SurveyPeriod get period => surveyPeriodFromString(getValue(ScheduledSurveyKey.period));
   String get plannedSurveyId => getValue(ScheduledSurveyKey.planned_survey).id;
-
   bool get isCompleted => state == SurveyState.completed;
   bool get isSkipped => state == SurveyState.skipped;
   bool get notStarted => state == SurveyState.not_started;
 
   ScheduledSurvey(FirebaseEntity firebaseEntity, this.survey, this.day,
-    {PlannedSurvey? plannedSurvey})
-      : super(firebaseEntity.getDocumentSnapshot()) {
+      {PlannedSurvey? plannedSurvey}) : super(firebaseEntity.getDocumentSnapshot()) {
 
     int? _daysToComplete = getValue(ScheduledSurveyKey.days_to_complete);
     // Initialize from planned survey.
@@ -78,8 +69,8 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
     setValue(ScheduledSurveyKey.data, data);
   }
 
-  void setPlannedSurvey(DocumentReference plannedSurvey) {
-    setValue(ScheduledSurveyKey.planned_survey, plannedSurvey);
+  void setPlannedSurvey(DocumentReference plannedSurveyRef) {
+    setValue(ScheduledSurveyKey.planned_survey, plannedSurveyRef);
   }
 
   // Survey didn't start in time, should be skipped.

@@ -1,6 +1,5 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
@@ -176,9 +175,7 @@ class _ScheduledProtocolRow extends HookWidget {
     return Container();
   }
 
-  void _onProtocolClicked(BuildContext context,
-      ScheduledProtocol scheduledProtocol) async {
-
+  void _onProtocolClicked(BuildContext context, ScheduledProtocol scheduledProtocol) async {
     if (scheduledProtocol.isCompleted) {
       showDialog(
         context: context,

@@ -176,8 +176,8 @@ class SignInScreen extends HookWidget {
           context: context,
           builder: (_) => SimpleAlertDialog(
               title: 'Error with your account',
-              content: 'Please contact NextSense support and mention that there'
-                  ' is an issue with your account study setup.')
+              content: 'Please contact NextSense support and mention that there is an issue with '
+                  'your account study setup.')
       );
       return;
     }
@@ -193,6 +193,11 @@ class SignInScreen extends HookWidget {
     }
 
     _navigation.navigateWithConnectionChecking(screen, replace: true);
+
+    // If there is an initial intent, navigate to the screen that it asks for.
+    if (_navigation.hasInitialIntent()) {
+      _navigation.navigateToInitialIntent();
+    }
   }
 }
 

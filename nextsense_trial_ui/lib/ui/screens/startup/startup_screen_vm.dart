@@ -72,8 +72,17 @@ class StartupScreenViewModel extends ViewModel {
       screen = DashboardScreen.id;
     }
 
+    if (_navigation.hasInitialIntent()) {
+      _navigation.navigateWithConnectionChecking(screen, replace: true);
+      _navigation.navigateToInitialIntent();
+      setBusy(false);
+      return;
+    }
+
+    await _navigation.navigateWithConnectionChecking(screen, replace: true).then(
+            (value) => _navigation.navigateToInitialIntent());
+
     setBusy(false);
-    _navigation.navigateWithConnectionChecking(screen, replace: true);
   }
 
   void logout() {

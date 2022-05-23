@@ -95,6 +95,32 @@ class FirestoreManager {
   }
 
   /*
+   * Query a single entity by its complete reference path.
+   *
+   * documentPath: Complete document path to the entity.
+   */
+  Future<FirebaseEntity?> queryReference(String documentPath) async {
+    DocumentReference? reference = FirebaseFirestore.instance.doc(documentPath);
+
+    DocumentSnapshot? snapshot;
+    int attemptNumber = 0;
+    bool success = false;
+    while (!success && attemptNumber < _retriesAttemptsNumber) {
+      try {
+        snapshot = await reference.get();
+        success = true;
+      } catch (exception) {
+        _logger.log(Level.WARNING, "Failed to query. Message: ${exception.toString()}");
+      }
+    }
+    if (!success) {
+      return null;
+    }
+
+    return FirebaseEntity(snapshot!);
+  }
+
+  /*
    * Construct reference to single entity. The number of entries in the tables list needs to
    * match the entityKeys size.
    *
