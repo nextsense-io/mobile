@@ -602,6 +602,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.1+1"
+  receive_intent:
+    dependency: "direct main"
+    description:
+      path: "../../receive_intent"
+      relative: true
+    source: path
+    version: "0.2.0"
   scidart:
     dependency: "direct main"
     description:

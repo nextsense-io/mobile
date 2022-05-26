@@ -38,6 +38,10 @@ dependencies:
   permission_handler: ^8.3.0
   persistent_bottom_nav_bar: ^4.0.2
   provider: ^6.0.1
+  # Need to use fixed fork until the pull request is merged in the real repo.
+  # It crashes because it uses a version of Kotlin that is too old.
+  receive_intent: # ^0.2.0
+    path: ../../receive_intent
   scidart: ^0.0.2-dev.9
   scrollable_positioned_list: ^0.2.3
   settings_ui: ^2.0.2
