@@ -131,8 +131,8 @@ class _SurveyItem extends HookWidget {
     final viewModel = context.watch<DashboardScreenViewModel>();
     String text = '';
     if (scheduledSurvey.isCompleted) {
-      // Display stats if survey is completed
-      ScheduledSurveyStats stats =
+      // Display stats if survey is completed.
+      SurveyStats stats =
           viewModel.getScheduledSurveyStats(scheduledSurvey);
       text = "Completed ${stats.completed} / ${stats.total}";
     } else if (scheduledSurvey.isSkipped) {

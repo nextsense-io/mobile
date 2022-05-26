@@ -28,24 +28,30 @@ class SurveyManager {
 
   String get _currentStudyId => _studyManager.currentStudy!.id;
 
-
-  // Survey stats are calculated based on count of past and today surveys
-  // from the same planned survey group (all scheduled surveys that were
-  // generated from same planned survey)
-  ScheduledSurveyStats getScheduledSurveyStats(ScheduledSurvey scheduledSurvey) {
-    List<ScheduledSurvey> group =
-        _scheduledSurveysByPlannedSurveyId[scheduledSurvey.plannedSurveyId] ?? [];
-
-    final closestFutureMidnight = DateTime.now().closestFutureMidnight;
-    List<ScheduledSurvey> pastAndTodayScheduledSurveys = group
+  SurveyStats _getSurveyStats(List<ScheduledSurvey> scheduledSurveys, DateTime dateUntil) {
+    List<ScheduledSurvey> pastAndTodayScheduledSurveys = scheduledSurveys
         .where((scheduledSurvey) =>
-        scheduledSurvey.day.date.isBefore(closestFutureMidnight))
+        scheduledSurvey.day.date.isBefore(dateUntil))
         .toList();
 
     final int total = pastAndTodayScheduledSurveys.length;
     final int completed = pastAndTodayScheduledSurveys
         .where((_scheduledSurvey) => _scheduledSurvey.isCompleted).length;
-    return ScheduledSurveyStats(total, completed);
+    return SurveyStats(total, completed);
+  }
+
+  // Scheduled survey stats are calculated based on count of past and today surveys from the same
+  // planned survey group (all scheduled surveys that were generated from same planned survey).
+  SurveyStats getScheduledSurveyStats(ScheduledSurvey scheduledSurvey) {
+    List<ScheduledSurvey> group =
+        _scheduledSurveysByPlannedSurveyId[scheduledSurvey.plannedSurveyId] ?? [];
+    return _getSurveyStats(group, DateTime.now().closestFutureMidnight);
+  }
+
+  // Global survey stats are calculated based on count of past and today surveys from all scheduled
+  // surveys.
+  SurveyStats getGlobalSurveyStats() {
+    return _getSurveyStats(scheduledSurveys, DateTime.now().closestFutureMidnight);
   }
 
   Survey? getSurveyById(String surveyId) {
@@ -262,12 +268,12 @@ class SurveyManager {
   }
 }
 
-class ScheduledSurveyStats {
-  // Total includes today and past surveys for same planned survey group
+class SurveyStats {
+  // Total includes today and past surveys for a planned survey group or all surveys.
   final int total;
 
-  // Completed today and past surveys for same planned survey group
+  // Completed today and past surveys for a planned survey group or all surveys,
   final int completed;
 
-  ScheduledSurveyStats(this.total, this.completed);
+  SurveyStats(this.total, this.completed);
 }

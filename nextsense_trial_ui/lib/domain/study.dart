@@ -18,6 +18,8 @@ enum StudyKey {
   adhoc_recording_allowed,
   // Allow adhoc surveys.
   adhoc_surveys_allowed,
+  // Short study description to show in the home page.
+  description,
   // Duration in days for a single subject.
   duration_days,
   //NextSense device earbuds configuration that is used in this study.
