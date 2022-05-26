@@ -4,6 +4,8 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
@@ -15,31 +17,44 @@ import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
-class DashboardScreenViewModel extends DeviceStateViewModel {
+class DashboardScreenOldViewModel extends DeviceStateViewModel {
 
   final CustomLogPrinter _logger = CustomLogPrinter('DashboardScreenViewModel');
 
-  final DataManager _dataManager = getIt<DataManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
   final SurveyManager _surveyManager = getIt<SurveyManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final AuthManager _authManager = getIt<AuthManager>();
-  final studyDayChangeStream = StreamController<int>.broadcast();
+  final DataManager _dataManager = getIt<DataManager>();
+
+  List<ScheduledProtocol> get scheduledProtocols => _studyManager.scheduledProtocols;
+
+  List<ScheduledSurvey> get scheduledSurveys => _surveyManager.scheduledSurveys;
+
+  List<StudyDay> get _days => _studyManager.days;
+
+  bool? get studyInitialized => _studyManager.studyInitialized;
+
+  String get studyId => _studyManager.currentStudyId!;
 
   // Returns current day of study
   StudyDay? get _today => _studyManager.today;
-  List<ScheduledSurvey> get scheduledSurveys => _surveyManager.scheduledSurveys;
-  String get studyId => _studyManager.currentStudyId!;
-  int get selectedDayNumber => selectedDay?.dayNumber ?? 0;
 
   // Current selected day in calendar
   StudyDay? selectedDay;
+  int get selectedDayNumber => selectedDay?.dayNumber ?? 0;
 
+  late Timer _protocolCheckTimer;
+
+  final studyDayChangeStream = StreamController<int>.broadcast();
 
   void init() async {
     super.init();
 
     await loadData();
+
+    _initProtocolCheckTimer();
+    _checkScheduledEntitiesTimeConstraints();
   }
 
   Future loadData() async {
@@ -75,6 +90,42 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     }
   }
 
+  void _initProtocolCheckTimer() {
+    _protocolCheckTimer = Timer.periodic(
+      Duration(seconds: 1), (_) {
+        // Only execute beginning of each minute
+        if (DateTime.now().second != 0) return;
+        _checkScheduledEntitiesTimeConstraints();
+      },
+    );
+  }
+
+  // Find and skip scheduled protocols/surveys that user didn't start at desired time window.
+  void _checkScheduledEntitiesTimeConstraints() {
+    for (final scheduledProtocol in scheduledProtocols) {
+      if (scheduledProtocol.isLate()) {
+        // This can run again so not a big problem if fails once, no need to check.
+        scheduledProtocol.update(state: ProtocolState.skipped);
+      }
+    }
+    for (final scheduledSurvey in scheduledSurveys) {
+      if (scheduledSurvey.isLate()) {
+        // This can run again so not a big problem if fails once, no need to check.
+        scheduledSurvey.update(state: SurveyState.skipped);
+      }
+    }
+
+    notifyListeners();
+  }
+
+  Study? getCurrentStudy() {
+    return _studyManager.currentStudy;
+  }
+
+  List<StudyDay> getDays() {
+    return _days;
+  }
+
   void selectDay(StudyDay day) {
     selectedDay = day;
     notifyListeners();
@@ -85,6 +136,26 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     if (_today != null) {
       selectDay(_today!);
     }
+  }
+
+  List<ScheduledProtocol> getScheduledProtocolsByDay(StudyDay day) {
+    List<ScheduledProtocol> result = [];
+    for (var scheduledProtocol in scheduledProtocols) {
+      if (scheduledProtocol.day == day) {
+        result.add(scheduledProtocol);
+      }
+    }
+    result.sort((p1, p2) => p1.startTime.compareTo(p2.startTime));
+    return result;
+  }
+
+  bool dayHasAnyScheduledProtocols(StudyDay day) {
+    return getScheduledProtocolsByDay(day).isNotEmpty;
+  }
+
+  List<ScheduledProtocol> getCurrentDayScheduledProtocols() {
+    if (selectedDay == null) return [];
+    return getScheduledProtocolsByDay(selectedDay!);
   }
 
   List<ScheduledSurvey> getCurrentDayScheduledSurveys() {
@@ -128,6 +199,16 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return result;
   }
 
+  @override
+  void onDeviceDisconnected() {
+    // TODO(alex): implement logic onDeviceDisconnected if needed
+  }
+
+  @override
+  void onDeviceReconnected() {
+    // TODO(alex): implement logic onDeviceReconnected if need
+  }
+
   void disconnectDevice() {
     _deviceManager.disconnectDevice();
   }
@@ -138,12 +219,8 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   }
 
   @override
-  void onDeviceDisconnected() {
-    // TODO(alex): implement logic onDeviceDisconnected if needed
-  }
-
-  @override
-  void onDeviceReconnected() {
-    // TODO(alex): implement logic onDeviceReconnected if needed
+  void dispose() {
+    _protocolCheckTimer.cancel();
+    super.dispose();
   }
 }
