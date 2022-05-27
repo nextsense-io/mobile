@@ -73,13 +73,14 @@ class MainMenu extends HookWidget {
                 icon: Icon(Icons.list_alt),
                 label: Text('Start adhoc survey'),
                 onPressed: () => _startAdhocSurvey(context)),
-          _MainMenuItem(
-              icon: Icon(Icons.earbuds),
-              label: Text('Check earbuds settings'),
-              onPressed: () {
-                _navigation.navigateTo(ImpedanceCalculationScreen.id, pop: true);
-              }
-          ),
+          if (_flavor.userType == UserType.researcher)
+            _MainMenuItem(
+                icon: Icon(Icons.earbuds),
+                label: Text('Check impedance'),
+                onPressed: () {
+                  _navigation.navigateTo(ImpedanceCalculationScreen.id, pop: true);
+                }
+            ),
           if (dashboardViewModel.deviceIsConnected)
             _MainMenuItem(
                 icon: Icon(Icons.power_off),

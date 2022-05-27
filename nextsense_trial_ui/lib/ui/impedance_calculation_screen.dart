@@ -98,6 +98,15 @@ class _ImpedanceCalculationScreenState extends
                     child: ElevatedButton(
                       child: const Text('Continue'),
                       onPressed: () async {
+                        if (!_deviceManager.deviceIsConnected) {
+                          await showDialog(
+                              context: context,
+                              builder: (_) => SimpleAlertDialog(
+                                  title: 'Device is not connected',
+                                  content: 'Use the Connect button to connect with a device first.')
+                          );
+                          return;
+                        }
                         _calculateImpedance();
                       },
                     )),
