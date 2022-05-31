@@ -3,15 +3,14 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 
 class SignInScreenViewModel extends ViewModel {
-
-  final StudyManager _studyManager = getIt<StudyManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
+  final DataManager _dataManager = getIt<DataManager>();
   final Flavor _flavor = getIt<Flavor>();
 
   final username = ValueNotifier<String>("");
@@ -69,7 +68,7 @@ class SignInScreenViewModel extends ViewModel {
 
   Future<bool> loadCurrentStudy() async {
     setBusy(true);
-    bool loaded = await _studyManager.loadCurrentStudy();
+    bool loaded = await _dataManager.loadUserStudyData();
     setBusy(false);
     return loaded;
   }

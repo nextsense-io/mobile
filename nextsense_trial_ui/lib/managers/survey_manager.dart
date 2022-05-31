@@ -76,15 +76,14 @@ class SurveyManager {
     if (studyInitialized) {
       // If study already initialized, return scheduled surveys from cache
       _logger.log(Level.WARNING, 'Loading scheduled surveys from cache');
-      List<ScheduledSurvey>? scheduledSurveys = await _loadScheduledSurveysFromCache();
+      List<ScheduledSurvey>? scheduledSurveysFromCache = await _loadScheduledSurveysFromCache();
       if (scheduledSurveys != null) {
-        scheduledSurveys = await _loadScheduledSurveysFromCache();
+        scheduledSurveys = scheduledSurveysFromCache!;
       } else {
         return false;
       }
     } else {
-      _logger.log(Level.WARNING,
-          'Creating scheduled surveys based on planned surveys');
+      _logger.log(Level.WARNING, 'Creating scheduled surveys based on planned surveys');
 
       List<PlannedSurvey>? plannedSurveys = await _studyManager.loadPlannedSurveys();
       if (plannedSurveys == null) {
@@ -227,8 +226,7 @@ class SurveyManager {
       throw("Surveys not initialized");
     }
 
-    List<FirebaseEntity>? entities =
-        await _queryScheduledSurveys(fromCache: true);
+    List<FirebaseEntity>? entities = await _queryScheduledSurveys(fromCache: true);
     if (entities == null) {
       return null;
     }
@@ -247,12 +245,13 @@ class SurveyManager {
       StudyDay? studyDay = _studyManager.getStudyDayByNumber(dayNumber);
 
       if (studyDay == null) {
-        _logger.log(Level.SEVERE,
-            'Study day with number "$dayNumber" not found.');
+        _logger.log(Level.SEVERE, 'Study day with number "$dayNumber" not found.');
         continue;
       }
 
       final scheduledSurvey = ScheduledSurvey(entity, survey, studyDay);
+      _logger.log(Level.INFO, 'loaded scheduled survey: ' + scheduledSurvey.id + ' on day ' +
+          scheduledSurvey.day.dayNumber.toString());
       result.add(scheduledSurvey);
     }
     return result;
