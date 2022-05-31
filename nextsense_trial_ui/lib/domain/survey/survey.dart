@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum SurveyKey {
+  duration_minutes,
   name,
   intro_text,
   intro_image
@@ -157,6 +158,8 @@ class Survey extends FirebaseEntity<SurveyKey> {
   String get name => getValue(SurveyKey.name) ?? "";
 
   String get introText => getValue(SurveyKey.intro_text) ?? "";
+
+  Duration get duration => Duration(minutes: getValue(SurveyKey.duration_minutes) ?? 0);
 
   Survey(FirebaseEntity firebaseEntity)
       : super(firebaseEntity.getDocumentSnapshot());
