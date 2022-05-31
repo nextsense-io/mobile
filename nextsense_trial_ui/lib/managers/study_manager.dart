@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:core';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
@@ -308,6 +309,28 @@ class StudyManager {
   StudyDay? getStudyDayByNumber(int dayNumber) {
     return _days?.firstWhereOrNull(
             (studyDay) => studyDay.dayNumber == dayNumber);
+  }
+
+  Duration getStudyLength() {
+    if (_enrolledStudy == null || _enrolledStudy!.getStartDate() == null ||
+        _enrolledStudy!.getEndDate() == null) {
+      return Duration(days: 0);
+    }
+    return _enrolledStudy!.getEndDate()!.difference(_enrolledStudy!.getStartDate()!);
+  }
+
+  bool isStudyStarted() {
+    if (currentStudyStartDate == null) {
+      return false;
+    }
+    return DateTime.now().isAfter(currentStudyStartDate!);
+  }
+
+  bool isStudyFinished() {
+    if (currentStudyEndDate == null) {
+      return false;
+    }
+    return DateTime.now().isAfter(currentStudyEndDate!);
   }
 
   Future<bool> setStudyInitialized(bool initialized) async {
