@@ -27,10 +27,15 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   final studyDayChangeStream = StreamController<int>.broadcast();
 
   // Returns current day of study
-  StudyDay? get _today => _studyManager.today;
+  StudyDay? get today => _studyManager.today;
   List<ScheduledSurvey> get scheduledSurveys => _surveyManager.scheduledSurveys;
   String get studyId => _studyManager.currentStudyId!;
-  int get selectedDayNumber => selectedDay?.dayNumber ?? 0;
+  String get studyName => _studyManager.currentStudy!.getName();
+  String get studyDescription => _studyManager.currentStudy!.getDescription();
+  String get studyLengthDays => _studyManager.getStudyLength().inDays.toString();
+  String get completedSurveys => _surveyManager.getGlobalSurveyStats().completed.toString();
+  bool get studyStarted => _studyManager.isStudyStarted();
+  bool get studyFinished => _studyManager.isStudyFinished();
 
   // Current selected day in calendar
   StudyDay? selectedDay;
@@ -82,8 +87,8 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   }
 
   void selectToday() {
-    if (_today != null) {
-      selectDay(_today!);
+    if (today != null) {
+      selectDay(today!);
     }
   }
 

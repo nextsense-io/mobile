@@ -93,6 +93,7 @@ class NextSenseTrialApp extends StatelessWidget {
         title: _flavor.appTitle,
         theme: ThemeData(
           primarySwatch: Colors.blue,
+          fontFamily: 'DMMono'
         ),
         home: _authManager.isAuthenticated ? StartupScreen() : SignInScreen(),
         navigatorKey: _navigation.navigatorKey,

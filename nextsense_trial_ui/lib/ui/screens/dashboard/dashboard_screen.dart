@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:nextsense_trial_ui/ui/components/background_container.dart';
 import 'package:nextsense_trial_ui/ui/components/loading_error_widget.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/main_menu.dart';
@@ -141,15 +142,6 @@ class DashboardScreen extends HookWidget {
       DashboardHomeView(),
       DashboardTasksView(),
       DashboardProgressView()
-    ].map((element) => Container(
-      decoration: BoxDecoration(
-        image: DecorationImage(
-          image: AssetImage("assets/images/dashboard_background.png"),
-          fit: BoxFit.cover,
-        ),
-      ),
-      child: element,
-    )).toList();
+    ].map((element) => BackgroundContainer(child: element)).toList();
   }
-
 }
