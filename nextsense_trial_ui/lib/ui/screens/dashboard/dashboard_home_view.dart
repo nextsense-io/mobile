@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
 import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
@@ -6,6 +6,7 @@ import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_container.dart';
 import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 
@@ -15,6 +16,15 @@ class DashboardHomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dashboardViewModel = context.watch<DashboardScreenViewModel>();
+
+    if (dashboardViewModel.isBusy) {
+      var loadingTextVisible =
+          dashboardViewModel.studyInitialized != null && !dashboardViewModel.studyInitialized!;
+
+      return WaitWidget(message: Text("Your study is initializing.\nPlease wait...",
+          style: TextStyle(color: Colors.deepPurple, fontSize: 20),
+          textAlign: TextAlign.center), textVisible: loadingTextVisible);
+    }
 
     String studyStatusHeader;
     String studyStatusContent;
@@ -89,9 +99,8 @@ class DashboardHomeView extends StatelessWidget {
     return PageContainer(child: elements);
   }
 
-  void _dummy() {
-
-  }
+  // TODO(eric): Use real targets when available.
+  void _dummy() {}
 }
 
 class MenuCard extends StatelessWidget {
@@ -105,7 +114,8 @@ class MenuCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final column = Column(children: [
       CardTitleText(text: title),
-      Container(padding: EdgeInsets.all(5), child: image)
+      Container(
+          padding: EdgeInsets.all(5), child: Align(alignment: Alignment.bottomRight, child: image))
     ]);
     return Expanded(
         child: ClickableZone(

@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
+import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum ScheduledSurveyKey {
@@ -17,8 +19,7 @@ enum ScheduledSurveyKey {
   data
 }
 
-class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
-    implements RunnableSurvey {
+class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task, RunnableSurvey {
 
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledSurvey');
   // Day survey will appear.
@@ -49,8 +50,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
     }
 
     // Day date is at 00:00, so we need to set completion time next midnight.
-    shouldBeCompletedBefore =
-        day.date.add(Duration(days: _daysToComplete!));
+    shouldBeCompletedBefore = day.date.add(Duration(days: _daysToComplete!));
 
     setValue(ScheduledSurveyKey.day_number, day.dayNumber);
   }
@@ -107,4 +107,22 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey>
     }
     return true;
   }
+
+  // Task implementation.
+  @override
+  bool get completed => isCompleted;
+
+  @override
+  Duration? get duration => survey.duration;
+
+  @override
+  String get title => survey.name + ' survey';
+
+  @override
+  // Surveys can be completed anywhere in the day.
+  TimeOfDay? get windowEndTime => TimeOfDay(hour: 23, minute: 59);
+
+  @override
+  // Surveys can be completed anywhere in the day.
+  TimeOfDay get windowStartTime => TimeOfDay(hour: 0, minute: 0);
 }

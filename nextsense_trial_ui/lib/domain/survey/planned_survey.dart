@@ -1,7 +1,6 @@
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
 enum PlannedSurveyKey {
@@ -13,15 +12,12 @@ enum PlannedSurveyKey {
 
 class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
 
-  final CustomLogPrinter _logger = CustomLogPrinter('PlannedSurvey');
-
-  // Days on which survey will appear
+  // Days on which survey will appear.
   List<StudyDay> days = [];
 
   String get surveyId => getValue(PlannedSurveyKey.survey);
 
-  SurveyPeriod get period =>
-      surveyPeriodFromString(getValue(PlannedSurveyKey.period));
+  SurveyPeriod get period => surveyPeriodFromString(getValue(PlannedSurveyKey.period));
 
   late int daysToComplete;
   int? specificDayNumber;
@@ -39,7 +35,6 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
 
     _initSurveyDays(studyStartDate, studyEndDate);
     _initSurveyStartGracePeriod();
-
   }
 
   void _initSurveyStartGracePeriod() {
@@ -61,7 +56,6 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
 
   // Create list of study days according to period of survey
   void _initSurveyDays(DateTime studyStartDate, DateTime studyEndDate) {
-
     if (period == SurveyPeriod.specific_day) {
       // For certain day number we just add single day
       days.add(StudyDay(

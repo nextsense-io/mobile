@@ -1,5 +1,6 @@
 /* A widget that contains the background decoration. */
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 
 class BackgroundContainer extends StatelessWidget {
   final Widget child;
@@ -11,7 +12,7 @@ class BackgroundContainer extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
           image: DecorationImage(
-              image: AssetImage("assets/images/dashboard_background.png"), fit: BoxFit.cover)),
+              image: Svg("assets/images/background.svg"), fit: BoxFit.cover)),
       child: child,
     );
   }
