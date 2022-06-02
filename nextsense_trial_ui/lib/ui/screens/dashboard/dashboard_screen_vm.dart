@@ -4,9 +4,11 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
+import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
@@ -26,8 +28,10 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   final AuthManager _authManager = getIt<AuthManager>();
   final studyDayChangeStream = StreamController<int>.broadcast();
 
+  bool? get studyInitialized => _studyManager.studyInitialized;
   // Returns current day of study
   StudyDay? get today => _studyManager.today;
+  List<ScheduledProtocol> get scheduledProtocols => _studyManager.scheduledProtocols;
   List<ScheduledSurvey> get scheduledSurveys => _surveyManager.scheduledSurveys;
   String get studyId => _studyManager.currentStudyId!;
   String get studyName => _studyManager.currentStudy!.getName();
@@ -39,7 +43,6 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   // Current selected day in calendar
   StudyDay? selectedDay;
-
 
   void init() async {
     super.init();
@@ -92,15 +95,39 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     }
   }
 
-  List<ScheduledSurvey> getCurrentDayScheduledSurveys() {
-    if (selectedDay == null) return [];
-    return getScheduledSurveysByDay(selectedDay!);
+  List<ScheduledProtocol> getScheduledProtocolsByDay(StudyDay day) {
+    List<ScheduledProtocol> result = [];
+    for (var scheduledProtocol in scheduledProtocols) {
+      if (scheduledProtocol.day == day) {
+        result.add(scheduledProtocol);
+      }
+    }
+    result.sort((p1, p2) => p1.startTime.compareTo(p2.startTime));
+    return result;
   }
 
-  List<ScheduledSurvey> getScheduledSurveysByDay(StudyDay day) {
+  List<ScheduledProtocol> getCurrentDayScheduledProtocols() {
+    if (selectedDay == null) return [];
+    return getScheduledProtocolsByDay(selectedDay!);
+  }
+
+  List<ScheduledSurvey> getCurrentDayScheduledSurveys() {
+    if (selectedDay == null) return [];
+    List<ScheduledSurvey> surveys =
+        _getScheduledSurveysByDay(selectedDay!, period: SurveyPeriod.daily);
+    surveys.addAll(_getScheduledSurveysByDay(selectedDay!, period: SurveyPeriod.specific_day));
+    return surveys;
+  }
+
+  List<ScheduledSurvey> getCurrentWeekScheduledSurveys() {
+    if (selectedDay == null) return [];
+    return _getScheduledSurveysByDay(selectedDay!, period: SurveyPeriod.weekly);
+  }
+
+  List<ScheduledSurvey> _getScheduledSurveysByDay(StudyDay day, {SurveyPeriod? period}) {
     List<ScheduledSurvey> result = [];
     for (var scheduledSurvey in scheduledSurveys) {
-      if (scheduledSurvey.day == day) {
+      if (scheduledSurvey.day == day && (period == null || period == scheduledSurvey.period)) {
         result.add(scheduledSurvey);
       }
     }
@@ -131,6 +158,19 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
       result.add(survey);
     }
     return result;
+  }
+
+  List<dynamic> getTodayTasks() {
+    List<Task> protocols = getCurrentDayScheduledProtocols();
+    List<Task> surveys = getCurrentDayScheduledSurveys();
+    List<Task> allTasks = [];
+    allTasks.addAll(protocols);
+    allTasks.addAll(surveys);
+    return allTasks;
+  }
+
+  List<dynamic> getWeeklyTasks() {
+    return getCurrentWeekScheduledSurveys();
   }
 
   void disconnectDevice() {

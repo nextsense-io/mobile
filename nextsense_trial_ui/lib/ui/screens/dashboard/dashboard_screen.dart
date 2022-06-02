@@ -4,10 +4,11 @@ import 'package:nextsense_trial_ui/ui/components/background_container.dart';
 import 'package:nextsense_trial_ui/ui/components/loading_error_widget.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/main_menu.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_home_view.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_progress_view.dart';
+import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_schedule_view.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
-import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_tasks_view.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 import 'package:stacked/stacked.dart';
 
@@ -91,8 +92,8 @@ class DashboardScreen extends HookWidget {
   }
 
   List<PersistentBottomNavBarItem> _navBarsItems() {
-    final activeColorPrimary = Colors.deepPurple;
-    final inactiveColorPrimary = Colors.grey;
+    final activeColorPrimary = NextSenseColors.purple;
+    final inactiveColorPrimary = NextSenseColors.grey;
     return [
       PersistentBottomNavBarItem(
           icon: Icon(Icons.home_outlined),
@@ -140,7 +141,7 @@ class DashboardScreen extends HookWidget {
   List<Widget> _buildTabs(BuildContext context) {
     return [
       DashboardHomeView(),
-      DashboardTasksView(),
+      DashboardScheduleView(),
       DashboardProgressView()
     ].map((element) => BackgroundContainer(child: element)).toList();
   }

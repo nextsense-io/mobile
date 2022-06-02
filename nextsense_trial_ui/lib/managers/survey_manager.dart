@@ -77,8 +77,8 @@ class SurveyManager {
       // If study already initialized, return scheduled surveys from cache
       _logger.log(Level.WARNING, 'Loading scheduled surveys from cache');
       List<ScheduledSurvey>? scheduledSurveysFromCache = await _loadScheduledSurveysFromCache();
-      if (scheduledSurveys != null) {
-        scheduledSurveys = scheduledSurveysFromCache!;
+      if (scheduledSurveysFromCache != null) {
+        scheduledSurveys = scheduledSurveysFromCache;
       } else {
         return false;
       }

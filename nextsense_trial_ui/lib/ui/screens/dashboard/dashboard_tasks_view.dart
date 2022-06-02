@@ -60,8 +60,7 @@ class _SurveyItem extends HookWidget {
 
   final ScheduledSurvey scheduledSurvey;
 
-  _SurveyItem(this.scheduledSurvey, {
-    Key? key,}) : super(key: key);
+  _SurveyItem(this.scheduledSurvey, {Key? key,}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -189,8 +188,7 @@ class _SurveyItem extends HookWidget {
       return;
     }
 
-    bool completed = await _navigation.navigateTo(SurveyScreen.id,
-        arguments: scheduledSurvey);
+    bool completed = await _navigation.navigateTo(SurveyScreen.id, arguments: scheduledSurvey);
 
     if (completed) {
       showDialog(

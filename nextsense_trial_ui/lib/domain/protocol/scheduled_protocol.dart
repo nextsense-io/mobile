@@ -1,10 +1,11 @@
-
+import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/assesment.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
+import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 /**
@@ -14,12 +15,12 @@ enum ScheduledProtocolKey {
   protocol,
   sessions,
   status,
-  start_date,
-  start_datetime
+  start_date,  // Used to query by date
+  start_datetime  // Used to get the exact datetime
 }
 
-class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
-    implements RunnableProtocol {
+class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements Task,
+    RunnableProtocol {
 
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledProtocol');
 
@@ -45,9 +46,7 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
   late DateTime allowedStartBefore;
   late DateTime allowedStartAfter;
 
-  ProtocolState get state =>
-      protocolStateFromString(getValue(ScheduledProtocolKey.status));
-
+  ProtocolState get state => protocolStateFromString(getValue(ScheduledProtocolKey.status));
   bool get isCompleted => state == ProtocolState.completed;
   bool get isSkipped => state == ProtocolState.skipped;
   bool get isCancelled => state == ProtocolState.cancelled;
@@ -130,4 +129,22 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey>
     }
     return true;
   }
+
+  // Task implementation.
+  @override
+  bool get completed => isCompleted;
+
+  @override
+  Duration? get duration => protocol.minDuration;
+
+  @override
+  String get title => protocol.nameForUser + ' recording';
+
+  @override
+  // Surveys can be completed anywhere in the day.
+  TimeOfDay? get windowEndTime => TimeOfDay.fromDateTime(allowedStartBefore);
+
+  @override
+  // Surveys can be completed anywhere in the day.
+  TimeOfDay get windowStartTime => TimeOfDay.fromDateTime(allowedStartAfter);
 }

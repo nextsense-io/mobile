@@ -29,6 +29,7 @@ dependencies:
   flutter_native_splash: ^2.1.6
   flutter_signin_button: ^2.0.0
   flutter_svg: ^1.1.0
+  flutter_svg_provider: ^1.0.3
   form_builder_validators: ^8.0.0
   get_it: ^7.2.0
   google_sign_in: ^5.1.0
