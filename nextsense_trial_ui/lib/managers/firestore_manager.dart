@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/managers/firebase_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
@@ -32,15 +33,22 @@ extension ParseToString on Table {
 class FirestoreManager {
   static const int _retriesAttemptsNumber = 3;
 
-  final CustomLogPrinter _logger = CustomLogPrinter('FirestoreManager');
+  final _firebaseApp = getIt<FirebaseManager>().getFirebaseApp();
   final _preferences = getIt<Preferences>();
+  late FirebaseFirestore _firestore;
+  final CustomLogPrinter _logger = CustomLogPrinter('FirestoreManager');
 
   Map<Table, CollectionReference> _references = Map();
 
   FirestoreManager() {
+    _firestore = FirebaseFirestore.instanceFor(app: _firebaseApp);
     for (Table table in Table.values) {
-      _references[table] = FirebaseFirestore.instance.collection(table.name());
+      _references[table] = _firestore.collection(table.name());
     }
+  }
+
+  FirestoreBatchWriter getFirebaseBatchWriter() {
+    return FirestoreBatchWriter(_firestore);
   }
 
   /*
@@ -100,7 +108,7 @@ class FirestoreManager {
    * documentPath: Complete document path to the entity.
    */
   Future<FirebaseEntity?> queryReference(String documentPath) async {
-    DocumentReference? reference = FirebaseFirestore.instance.doc(documentPath);
+    DocumentReference? reference = _firestore.doc(documentPath);
 
     DocumentSnapshot? snapshot;
     int attemptNumber = 0;
@@ -132,7 +140,7 @@ class FirestoreManager {
     DocumentReference? reference = null;
     for (int i = 0; i < tables.length; ++i) {
       if (i == 0) {
-        reference = FirebaseFirestore.instance.collection(tables[i].name()).doc(entityKeys[i]);
+        reference = _firestore.collection(tables[i].name()).doc(entityKeys[i]);
       } else {
         reference = reference!.collection(tables[i].name()).doc(entityKeys[i]);
       }
@@ -152,10 +160,9 @@ class FirestoreManager {
     for (int i = 0; i < tables.length; ++i) {
       if (i == 0) {
         if (entityKeys.isEmpty) {
-          collectionReference = FirebaseFirestore.instance.collection(tables[i].name());
+          collectionReference = _firestore.collection(tables[i].name());
         } else {
-          pathReference = FirebaseFirestore.instance.collection(
-              tables[i].name()).doc(entityKeys[i]);
+          pathReference = _firestore.collection(tables[i].name()).doc(entityKeys[i]);
         }
       } else {
         if (i >= entityKeys.length) {
@@ -168,8 +175,7 @@ class FirestoreManager {
 
     QuerySnapshot? snapshot;
     if (fromCacheWithKey != null && _preferences.isCached(fromCacheWithKey)) {
-      snapshot = await collectionReference!.get(
-          GetOptions(source: Source.cache));
+      snapshot = await collectionReference!.get(GetOptions(source: Source.cache));
       if (snapshot.size == 0) {
         _logger.log(Level.WARNING,
             'Empty cached collection "$fromCacheWithKey", fallback to server');
@@ -234,6 +240,7 @@ class FirestoreBatchWriter {
 
   static const int _firestoreMaximumBatchSize = 500;
 
+  final FirebaseFirestore _firestore;
   final CustomLogPrinter _logger = CustomLogPrinter('FirestoreBatchWriter');
   List<WriteBatch> _batchList = [];
   WriteBatch? _currentBatch;
@@ -241,10 +248,12 @@ class FirestoreBatchWriter {
 
   int get numberOfBatches => _batchList.length;
 
+  FirestoreBatchWriter(this._firestore);
+
   // Add entity to batch, when index of adding entity firestoreMaximumBatchSize.
   void add(DocumentReference ref, Map<String, dynamic> entityFields) {
     if (_indexInCurrentBatch == 0) {
-      _currentBatch = FirebaseFirestore.instance.batch();
+      _currentBatch = _firestore.batch();
       _batchList.add(_currentBatch!);
     }
     _currentBatch!.set(ref, entityFields);
