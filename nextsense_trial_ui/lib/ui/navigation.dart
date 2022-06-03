@@ -27,6 +27,7 @@ import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_
 import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
@@ -189,6 +190,8 @@ class Navigation {
             builder: (context) => CheckInternetScreen());
       case EnrolledStudiesScreen.id: return MaterialPageRoute(
           builder: (context) => EnrolledStudiesScreen());
+      case StudyIntroScreen.id: return MaterialPageRoute(
+          builder: (context) => StudyIntroScreen());
 
       // Routes with arguments
       case ProtocolScreen.id:

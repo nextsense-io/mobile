@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
@@ -61,6 +63,7 @@ class IntroPageContent {
   String title;
   String content;
   String imageGoogleStorageUrl;
+  File? localCachedImage;
 
   IntroPageContent(this.title, this.content, this.imageGoogleStorageUrl);
 }
@@ -122,8 +125,13 @@ class Study extends FirebaseEntity<StudyKey> {
   }
 
   List<IntroPageContent> getIntroPageContents() {
-    List<Map<String, dynamic>> introPages = getValue(StudyKey.intro) ?? [];
-    return introPages.map((introPageMap) => IntroPageContent(introPageMap[StudyIntroKey.title],
-        introPageMap[StudyIntroKey.content], introPageMap[StudyIntroKey.image_gs_url])).toList();
+    List<dynamic>? introPages = getValue(StudyKey.intro);
+    if (introPages == null) {
+      return [];
+    }
+    return introPages.map((introPageMap) => IntroPageContent(introPageMap[StudyIntroKey.title.name],
+        introPageMap[StudyIntroKey.content.name],
+        introPageMap[StudyIntroKey.image_gs_url.name]))
+        .toList();
   }
 }

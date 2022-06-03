@@ -41,7 +41,6 @@ class SurveyScreen extends HookWidget {
     Navigator.pop(context, false);
     return true;
   }
-
 }
 
 class _SurveyForm extends StatelessWidget {
