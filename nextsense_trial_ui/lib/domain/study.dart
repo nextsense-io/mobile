@@ -7,8 +7,8 @@ import 'package:nextsense_trial_ui/utils/android_logger.dart';
  * Each entry corresponds to a field name in the database instance.
  */
 enum StudyKey {
-  // Determines if the study is currently active. If the study is inactive, new
-  // data cannot be added to it.
+  // Determines if the study is currently active. If the study is inactive, new data cannot be added
+  // to it.
   active,
   // Array of allowed protocols that can be recorded in this study.
   allowed_protocols,
@@ -24,9 +24,9 @@ enum StudyKey {
   duration_days,
   //NextSense device earbuds configuration that is used in this study.
   earbuds_config,
-  // Array of lines to show when enrolling a new patient in the study or
-  // whenever they want to see it again.
-  intro_text,
+  // Array of screens to show when enrolling a new patient in the study or whenever they want to see
+  // it again.
+  intro,
   // If medication tracking is enabled for this study.
   medication_tracking,
   // Name of the study.
@@ -44,6 +44,25 @@ enum StudyKey {
   splash_page,
   // organization id of the main sponsor to this study.
   sponsor_id
+}
+
+enum StudyIntroKey {
+  // Title of the intro page.
+  title,
+  // Content text of the intro page.
+  content,
+  // Firebase Storage URL of the image to show in the intro page. Images need to be 1080 pixels wide
+  // and 1024 pixels high.
+  image_gs_url
+}
+
+// Content for a study introduction page.
+class IntroPageContent {
+  String title;
+  String content;
+  String imageGoogleStorageUrl;
+
+  IntroPageContent(this.title, this.content, this.imageGoogleStorageUrl);
 }
 
 class Study extends FirebaseEntity<StudyKey> {
@@ -100,5 +119,11 @@ class Study extends FirebaseEntity<StudyKey> {
 
   bool get adhocSurveysAllowed {
     return getValue(StudyKey.adhoc_surveys_allowed) == true;
+  }
+
+  List<IntroPageContent> getIntroPageContents() {
+    List<Map<String, dynamic>> introPages = getValue(StudyKey.intro) ?? [];
+    return introPages.map((introPageMap) => IntroPageContent(introPageMap[StudyIntroKey.title],
+        introPageMap[StudyIntroKey.content], introPageMap[StudyIntroKey.image_gs_url])).toList();
   }
 }

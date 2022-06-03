@@ -1,12 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logging/logging.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/firebase_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class GoogleAuthManager {
+  final FirebaseApp _firebaseApp = getIt<FirebaseManager>().getFirebaseApp();
   final GoogleSignIn _googleSignIn;
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  late FirebaseAuth _firebaseAuth;
   final _logger = CustomLogPrinter('GoogleAuthManager');
 
   GoogleSignInAccount? _googleSignInAccount;
@@ -14,7 +18,9 @@ class GoogleAuthManager {
   GoogleAuthManager() : _googleSignIn = GoogleSignIn(
     scopes: [
       'email',
-    ],) {}
+    ],) {
+    _firebaseAuth = FirebaseAuth.instanceFor(app: _firebaseApp);
+  }
 
   String get email => _googleSignInAccount?.email ?? "";
 

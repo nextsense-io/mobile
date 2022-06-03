@@ -6,6 +6,8 @@ import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
+import 'package:nextsense_trial_ui/managers/firebase_manager.dart';
+import 'package:nextsense_trial_ui/managers/firebase_storage_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/nextsense_api.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
@@ -27,11 +29,16 @@ void initFlavor(Flavor flavor) {
   getIt.registerSingleton<Flavor>(flavor);
 }
 
+void initFirebase() {
+  getIt.registerSingleton<FirebaseManager>(FirebaseManager());
+}
+
 Future<void> initDependencies() async {
   // The order here matters as some of these components might use a component
   // that was initialised before.
   getIt.registerSingleton<NextsenseApi>(NextsenseApi());
   getIt.registerSingleton<FirestoreManager>(FirestoreManager());
+  getIt.registerSingleton<FirebaseStorageManager>(FirebaseStorageManager());
   getIt.registerSingleton<AuthManager>(AuthManager());
   getIt.registerSingleton<NotificationsManager>(NotificationsManager());
   getIt.registerSingleton<PermissionsManager>(PermissionsManager());

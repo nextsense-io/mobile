@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
+import 'package:nextsense_trial_ui/managers/firebase_manager.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -41,6 +41,11 @@ Future _initFlavor() async {
   initFlavor(flavor);
 }
 
+Future _initFirebase() async {
+  initFirebase();
+  await getIt<FirebaseManager>().initializeFirebase();
+}
+
 Future<intent.Intent?> _getInitialIntent() async {
   // Platform messages may fail, so we use a try/catch PlatformException.
   try {
@@ -64,7 +69,7 @@ void main() async {
     WidgetsFlutterBinding.ensureInitialized();
     _initLogging();
     await initEnvironment();
-    await Firebase.initializeApp();
+    await _initFirebase();
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
     await _initPreferences();
     await _initFlavor();

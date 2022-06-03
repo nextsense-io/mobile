@@ -1,9 +1,8 @@
-import 'dart:async';
 import 'dart:core';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
-import 'package:get_it/get_it.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/assesment.dart';
@@ -16,22 +15,26 @@ import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/firebase_storage_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
+import 'package:path_provider/path_provider.dart';
 
 class StudyManager {
+  static const String _studiesDir = 'studies';
+  static const String _introDir = 'intro';
 
-  final FirestoreManager _firestoreManager =
-      GetIt.instance.get<FirestoreManager>();
-
-  final CustomLogPrinter _logger = CustomLogPrinter('StudyManager');
+  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final FirebaseStorageManager _firebaseStorageManager = getIt<FirebaseStorageManager>();
   final AuthManager _authManager = getIt<AuthManager>();
+  final CustomLogPrinter _logger = CustomLogPrinter('StudyManager');
 
   // Study definition.
   Study? _currentStudy;
   // Enrolled study state for this user.
   EnrolledStudy? _enrolledStudy;
+  Directory? _appDocumentsRoot;
 
   DateTime? get currentStudyStartDate => _enrolledStudy?.getStartDate();
   DateTime? get currentStudyEndDate => _enrolledStudy?.getEndDate();
@@ -82,8 +85,7 @@ class StudyManager {
       return false;
     }
     if (!enrolledStudyEntity.getDocumentSnapshot().exists) {
-      _logger.log(Level.SEVERE,
-          'Enrolled Study ${study_id} does not exist');
+      _logger.log(Level.SEVERE, 'Enrolled Study ${study_id} does not exist');
       return false;
     }
     _enrolledStudy = EnrolledStudy(enrolledStudyEntity);
@@ -100,27 +102,27 @@ class StudyManager {
       throw("'current_study' is not set for user");
     }
 
-    // We start with loading enrolled study, which holds current study state
+    // We start with loading enrolled study, which holds the current study state.
     bool enrolledStudyLoaded = await _loadEnrolledStudy(user.id, studyId);
     if (!enrolledStudyLoaded) {
-      _logger.log(Level.SEVERE,
-          'Error when trying to load the enrolled study ${studyId}');
+      _logger.log(Level.SEVERE, 'Error when trying to load the enrolled study ${studyId}');
       return false;
     }
 
-    // Then we need to load current study
+    // Then we need to load the current study.
     FirebaseEntity? studyEntity = await _firestoreManager.queryEntity(
           [Table.studies], [currentStudyId!]);
     if (studyEntity == null) {
       return false;
     }
     if (!studyEntity.getDocumentSnapshot().exists) {
-      _logger.log(Level.SEVERE,
-          'Study ${_enrolledStudy!.id} does not exist');
+      _logger.log(Level.SEVERE, 'Study ${_enrolledStudy!.id} does not exist');
       return false;
     }
     _currentStudy = Study(studyEntity);
     _createStudyDays();
+    await _initAppRootDir();
+    await _cacheStudyImages();
     return true;
   }
 
@@ -134,6 +136,21 @@ class StudyManager {
       final studyDay = StudyDay(dayDate, dayNumber);
       return studyDay;
     });
+  }
+
+  // Download the study introduction images from Firebase Storage and cache them locally.
+  Future _cacheStudyImages() async {
+    for (IntroPageContent introPageContent in currentStudy!.getIntroPageContents()) {
+      String fileName = introPageContent.imageGoogleStorageUrl.split('/').last;
+      File localFile = File(_getIntroDir().absolute.path + '/' + fileName);
+      if (localFile.existsSync()) {
+        // Already cached, no need to download again.
+        continue;
+      }
+      // Don't check if actually downloaded, not critical, will be tried again next time.
+      await _firebaseStorageManager.downloadFile(
+          introPageContent.imageGoogleStorageUrl, localFile);
+    }
   }
 
   Future<bool> loadScheduledProtocols() async {
@@ -151,11 +168,9 @@ class StudyManager {
         return false;
       }
       scheduledProtocols = protocols;
-      _logger.log(Level.INFO, 'Loading ${scheduledProtocols.length}'
-          ' scheduled protocols');
+      _logger.log(Level.INFO, 'Loading ${scheduledProtocols.length} scheduled protocols');
     } else {
-      _logger.log(Level.INFO,
-          'Creating scheduled protocols based on planned assessments');
+      _logger.log(Level.INFO, 'Creating scheduled protocols based on planned assessments');
 
       Stopwatch stopwatch = new Stopwatch()..start();
       List<PlannedAssessment>? assessments = await _loadPlannedAssessments();
@@ -165,7 +180,7 @@ class StudyManager {
         return false;
       }
 
-      final batchWriter = FirestoreBatchWriter();
+      final batchWriter = _firestoreManager.getFirebaseBatchWriter();
       for (var assessment in assessments) {
         if (assessment.protocol == null) {
           _logger.log(Level.WARNING, 'assessment protocol is null');
@@ -339,5 +354,19 @@ class StudyManager {
     }
     _enrolledStudy!.setInitialized(initialized);
     return await _enrolledStudy!.save();
+  }
+
+  Future _initAppRootDir() async {
+    if (_appDocumentsRoot == null) {
+      _appDocumentsRoot = await getApplicationDocumentsDirectory();
+    }
+  }
+
+  Directory _getStudyDir() {
+    return Directory("${_appDocumentsRoot!.absolute}/${_studiesDir}/${_currentStudy!.id}");
+  }
+
+  Directory _getIntroDir() {
+    return Directory("${_getStudyDir().absolute}/${_introDir}");
   }
 }
