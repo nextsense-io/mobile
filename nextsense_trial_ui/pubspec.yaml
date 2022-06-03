@@ -15,10 +15,11 @@ dependencies:
   app_settings: ^4.1.5
   audioplayers: ^0.20.1
   awesome_notifications: ^0.6.21
-  cloud_firestore: ^2.5.3
+  cloud_firestore: ^3.1.17
+  # cloud_firestore: ^2.5.3
   connectivity_plus: ^2.2.1
   dart_numerics: ^0.0.6
-  dropdown_button2: ^1.2.1
+  dropdown_button2: ^1.5.2
   firebase_auth: ^3.3.14
   firebase_core: ^1.14.1
   firebase_crashlytics: ^2.7.2
@@ -36,9 +37,10 @@ dependencies:
   google_sign_in: ^5.1.0
   gson: ^0.1.6-dev
   http: ^0.13.4
+  introduction_screen: ^3.0.2
   logging: ^1.0.2
   path_provider: ^2.0.8
-  permission_handler: ^8.3.0
+  permission_handler: ^9.2.0
   persistent_bottom_nav_bar: ^4.0.2
   provider: ^6.0.1
   # Need to use fixed fork until the pull request is merged in the real repo.
@@ -46,11 +48,11 @@ dependencies:
   receive_intent: # ^0.2.0
     path: ../../receive_intent
   scidart: ^0.0.2-dev.9
-  scrollable_positioned_list: ^0.2.3
+  scrollable_positioned_list: ^0.3.2
   settings_ui: ^2.0.2
   shared_preferences: ^2.0.13
   shimmer: ^2.0.0
-  stacked: ^2.2.8
+  stacked: ^2.3.8
   uuid: ^3.0.5
   wakelock: ^0.6.1+2
 

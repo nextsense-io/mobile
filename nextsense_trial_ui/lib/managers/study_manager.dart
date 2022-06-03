@@ -35,6 +35,7 @@ class StudyManager {
   // Enrolled study state for this user.
   EnrolledStudy? _enrolledStudy;
   Directory? _appDocumentsRoot;
+  List<IntroPageContent> introPageContents = [];
 
   DateTime? get currentStudyStartDate => _enrolledStudy?.getStartDate();
   DateTime? get currentStudyEndDate => _enrolledStudy?.getEndDate();
@@ -140,16 +141,19 @@ class StudyManager {
 
   // Download the study introduction images from Firebase Storage and cache them locally.
   Future _cacheStudyImages() async {
-    for (IntroPageContent introPageContent in currentStudy!.getIntroPageContents()) {
+    introPageContents = currentStudy!.getIntroPageContents();
+    for (IntroPageContent introPageContent in introPageContents) {
       String fileName = introPageContent.imageGoogleStorageUrl.split('/').last;
+      _getIntroDir().createSync(recursive: true);
       File localFile = File(_getIntroDir().absolute.path + '/' + fileName);
       if (localFile.existsSync()) {
         // Already cached, no need to download again.
+        introPageContent.localCachedImage = localFile;
         continue;
       }
       // Don't check if actually downloaded, not critical, will be tried again next time.
-      await _firebaseStorageManager.downloadFile(
-          introPageContent.imageGoogleStorageUrl, localFile);
+      await _firebaseStorageManager.downloadFile(introPageContent.imageGoogleStorageUrl, localFile);
+      introPageContent.localCachedImage = localFile;
     }
   }
 
@@ -363,10 +367,10 @@ class StudyManager {
   }
 
   Directory _getStudyDir() {
-    return Directory("${_appDocumentsRoot!.absolute}/${_studiesDir}/${_currentStudy!.id}");
+    return Directory("${_appDocumentsRoot!.absolute.path}/${_studiesDir}/${_currentStudy!.id}");
   }
 
   Directory _getIntroDir() {
-    return Directory("${_getStudyDir().absolute}/${_introDir}");
+    return Directory("${_getStudyDir().absolute.path}/${_introDir}");
   }
 }
