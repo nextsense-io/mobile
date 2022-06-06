@@ -9,9 +9,9 @@ import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
 import 'package:nextsense_trial_ui/ui/components/loading_error_widget.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
-import 'package:nextsense_trial_ui/ui/main_menu.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_old_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_tasks_view.dart';
+import 'package:nextsense_trial_ui/ui/screens/profile/profile_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
@@ -58,7 +58,7 @@ class DashboardOldScreen extends HookWidget {
           child: SafeArea(
             child: Scaffold(
               key: _scaffoldKey,
-              drawer: MainMenu(),
+              drawer: ProfileScreen(),
               body: Container(
                 //padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
                 child: Column(

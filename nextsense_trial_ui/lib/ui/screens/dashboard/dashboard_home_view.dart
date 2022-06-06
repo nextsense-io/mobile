@@ -4,14 +4,16 @@ import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
 import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/nextsense_app_bar.dart';
 import 'package:nextsense_trial_ui/ui/components/page_container.dart';
 import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
-import 'package:provider/provider.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
+import 'package:provider/provider.dart';
 
 class DashboardHomeView extends StatelessWidget {
-  const DashboardHomeView({Key? key}) : super(key: key);
+
+  DashboardHomeView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +88,7 @@ class DashboardHomeView extends StatelessWidget {
     final elements = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        NextSenseAppBar(),
         HeaderText(text: dashboardViewModel.studyName),
         SizedBox(height: 10),
         RoundedBackground(child: ContentText(text: dashboardViewModel.studyDescription)),

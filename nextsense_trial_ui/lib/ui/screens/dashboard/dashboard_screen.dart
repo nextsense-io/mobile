@@ -3,7 +3,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/ui/components/background_container.dart';
 import 'package:nextsense_trial_ui/ui/components/loading_error_widget.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
-import 'package:nextsense_trial_ui/ui/main_menu.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_home_view.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_progress_view.dart';
@@ -35,19 +34,16 @@ class DashboardScreen extends HookWidget {
           child: SafeArea(
             child: Scaffold(
               key: _scaffoldKey,
-              drawer: MainMenu(),
               body: Container(
-                // padding: EdgeInsets.only(bottom: 10.0, left: 10.0, right: 10.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: viewModel.hasError ? [
-                    _appBar(context),
                     LoadingErrorWidget(viewModel.error(viewModel) as String,
                         onTap: () {
                           viewModel.loadData();
                         })
                   ] : [
-                    _appBar(context),
+                    // _appBar(context),
                     // Visibility(
                     //     visible: showDayTabs(),
                     //     child: _DayTabs()
@@ -114,28 +110,6 @@ class DashboardScreen extends HookWidget {
           inactiveColorPrimary: inactiveColorPrimary
       ),
     ];
-  }
-
-  Widget _appBar(BuildContext context) {
-    return Container(
-      height: 50,
-      color: Colors.white,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: const Icon(
-              Icons.menu,
-              size: 30,
-              color: Colors.black,
-            ),
-            onPressed: () {
-              _scaffoldKey.currentState?.openDrawer();
-            },
-          ),
-        ],
-      ),
-    );
   }
 
   List<Widget> _buildTabs(BuildContext context) {

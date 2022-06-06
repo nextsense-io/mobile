@@ -10,7 +10,7 @@
 .svn/
 
 *.swp
-profile
+/profile
 
 DerivedData/
 

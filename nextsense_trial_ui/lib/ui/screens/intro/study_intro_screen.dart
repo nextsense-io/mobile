@@ -20,7 +20,7 @@ class StudyIntroScreen extends HookWidget {
 
   List<PageViewModel> _getPageViewModels(BuildContext context, StudyIntroScreenViewModel viewModel) {
     return viewModel.getIntroPageContents().map((e) => PageViewModel(
-        titleWidget: HeaderText(text: e.title),
+        titleWidget: Align(alignment: Alignment.centerLeft, child: HeaderText(text: e.title)),
         bodyWidget: ContentText(text: e.content, color: NextSenseColors.purple),
         image: e.localCachedImage != null ?
             Image.file(e.localCachedImage!, width: MediaQuery.of(context).size.width) :
