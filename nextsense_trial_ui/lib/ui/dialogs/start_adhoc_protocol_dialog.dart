@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
-import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/profile/profile_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_mapping.dart';
 import 'package:provider/src/provider.dart';
 
@@ -14,9 +14,9 @@ class StartAdhocProtocolDialog extends HookWidget {
   @override
   Widget build(BuildContext context) {
 
-    final dashboardViewModel = context.read<DashboardScreenViewModel>();
+    final profileViewModel = context.read<ProfileScreenViewModel>();
 
-    List<SimpleDialogOption> options = dashboardViewModel.getAdhocProtocols()
+    List<SimpleDialogOption> options = profileViewModel.getAdhocProtocols()
         .map((adhocProtocol) =>
         SimpleDialogOption(
           onPressed: () {

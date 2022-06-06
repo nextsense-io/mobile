@@ -2,8 +2,6 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
@@ -138,28 +136,6 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return _surveyManager.getScheduledSurveyStats(scheduledSurvey);
   }
 
-  List<AdhocProtocol> getAdhocProtocols() {
-    List<ProtocolType> allowedProtocols = _studyManager.currentStudy!.getAllowedProtocols();
-
-    return allowedProtocols.map((protocolType) => AdhocProtocol(
-        protocolType, _studyManager.currentStudyId!)).toList();
-  }
-
-  List<Survey> getAdhocSurveys() {
-    List<String> adhocSurveyIds = _studyManager.currentStudy!.getAllowedSurveys();
-
-    List<Survey> result = [];
-    for (var surveyId in adhocSurveyIds) {
-      Survey? survey = _surveyManager.getSurveyById(surveyId);
-      if (survey == null) {
-        _logger.log(Level.WARNING, 'Survey with id "$surveyId" not found');
-        continue;
-      }
-      result.add(survey);
-    }
-    return result;
-  }
-
   List<dynamic> getTodayTasks() {
     List<Task> protocols = getCurrentDayScheduledProtocols();
     List<Task> surveys = getCurrentDayScheduledSurveys();
@@ -171,10 +147,6 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   List<dynamic> getWeeklyTasks() {
     return getCurrentWeekScheduledSurveys();
-  }
-
-  void disconnectDevice() {
-    _deviceManager.disconnectDevice();
   }
 
   void logout() {

@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/survey/adhoc_survey.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
-import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/profile/profile_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:provider/src/provider.dart';
 
@@ -15,15 +15,15 @@ class StartAdhocSurveyDialog extends HookWidget {
   @override
   Widget build(BuildContext context) {
 
-    final dashboardViewModel = context.read<DashboardScreenViewModel>();
+    final profileViewModel = context.read<ProfileScreenViewModel>();
 
-    List<SimpleDialogOption> options = dashboardViewModel.getAdhocSurveys()
+    List<SimpleDialogOption> options = profileViewModel.getAdhocSurveys()
         .map((survey) =>
         SimpleDialogOption(
           onPressed: () async {
             bool completed = await _navigation.navigateTo(
                 SurveyScreen.id, arguments:
-                AdhocSurvey(survey, dashboardViewModel.studyId));
+                AdhocSurvey(survey, profileViewModel.studyId));
             Navigator.pop(context, completed);
           },
           child: Container(
