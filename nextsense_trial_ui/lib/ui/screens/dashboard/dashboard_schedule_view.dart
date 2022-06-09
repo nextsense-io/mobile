@@ -110,7 +110,7 @@ class DashboardScheduleView extends StatelessWidget {
     context.read<DashboardScreenViewModel>().notifyListeners();
   }
 
-  Function(BuildContext, dynamic) getOnTap(Task task) {
+  Function(BuildContext, dynamic) _getOnTap(Task task) {
     if (task is ScheduledSurvey) {
       return _onSurveyClicked;
     }
@@ -128,9 +128,8 @@ class DashboardScheduleView extends StatelessWidget {
       var loadingTextVisible =
           viewModel.studyInitialized != null && !viewModel.studyInitialized!;
 
-      return WaitWidget(message: Text("Your study is initializing.\nPlease wait...",
-          style: TextStyle(color: Colors.deepPurple, fontSize: 20),
-          textAlign: TextAlign.center), textVisible: loadingTextVisible);
+      return WaitWidget(message: 'Your study is initializing.\nPlease wait...',
+          textVisible: loadingTextVisible);
     }
 
     List<dynamic> todayTasks = viewModel.getTodayTasks();
@@ -159,7 +158,7 @@ class DashboardScheduleView extends StatelessWidget {
                 shrinkWrap: true,
                 itemBuilder: (BuildContext context, int index) {
                   Task task = todayTasks[index];
-                  return TaskCard(task, getOnTap(task));
+                  return TaskCard(task, _getOnTap(task));
                 },
               )),
         )
@@ -181,7 +180,7 @@ class DashboardScheduleView extends StatelessWidget {
                 shrinkWrap: true,
                 itemBuilder: (BuildContext context, int index) {
                   Task task = weeklyTasks[index];
-                  return TaskCard(task, getOnTap(task));
+                  return TaskCard(task, _getOnTap(task));
                 },
               )),
         )

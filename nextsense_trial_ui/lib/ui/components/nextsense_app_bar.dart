@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/ui/components/icon_background.dart';
+import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:nextsense_trial_ui/ui/components/round_background.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/profile/profile_screen.dart';
@@ -11,8 +12,10 @@ class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Navigation _navigation = getIt<Navigation>();
   final bool showBackButton;
   final bool showProfileButton;
+  final VoidCallback? backButtonCallback;
 
-  NextSenseAppBar({this.showBackButton = false, this.showProfileButton = true});
+  NextSenseAppBar(
+      {this.showBackButton = false, this.showProfileButton = true, this.backButtonCallback});
 
   @override
   Widget build(BuildContext context) {
@@ -24,15 +27,20 @@ class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           showBackButton
-              ? RoundBackground(
-                  onPressed: () => _navigation.pop(),
-                  child: Image(image: Svg('assets/images/arrow_left.svg'), height: 14, width: 14),
-                  color: NextSenseColors.translucentGrey)
+              ? ClickableZone(
+                  child: RoundBackground(
+                      child:
+                          Image(image: Svg('assets/images/arrow_left.svg'), height: 14, width: 14),
+                      color: NextSenseColors.translucentGrey),
+                  onTap: backButtonCallback != null
+                      ? () => backButtonCallback!.call()
+                      : () => _navigation.pop(),
+                )
               : SizedBox(width: 1, height: 1),
           showProfileButton
-              ? RoundBackground(
-                  onPressed: () => _navigation.navigateTo(ProfileScreen.id),
-                  child: Icon(Icons.person, size: 24, color: Colors.black))
+              ? ClickableZone(
+                  child: RoundBackground(child: Icon(Icons.person, size: 24, color: Colors.black)),
+                  onTap: () => _navigation.navigateTo(ProfileScreen.id))
               : SizedBox(width: 1),
         ],
       ),

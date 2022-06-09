@@ -14,7 +14,5 @@ enum EventKey {
 
 class Event extends FirebaseEntity<EventKey> {
 
-  Event(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot());
-
+  Event(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
 }

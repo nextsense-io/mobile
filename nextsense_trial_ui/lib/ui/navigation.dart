@@ -6,6 +6,7 @@ import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/seizure.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
@@ -32,6 +33,8 @@ import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/seizures/seizure_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
@@ -195,6 +198,8 @@ class Navigation {
           builder: (context) => StudyIntroScreen());
       case ProfileScreen.id: return MaterialPageRoute(
           builder: (context) => ProfileScreen());
+      case SeizuresScreen.id: return MaterialPageRoute(
+          builder: (context) => SeizuresScreen());
 
       // Routes with arguments
       case ProtocolScreen.id:
@@ -209,6 +214,9 @@ class Navigation {
       case SurveyScreen.id:
         return MaterialPageRoute(builder: (context) =>
             SurveyScreen(settings.arguments as RunnableSurvey));
+      case SeizureScreen.id:
+        return MaterialPageRoute(builder: (context) =>
+            SeizureScreen(settings.arguments != null ? settings.arguments as Seizure : null));
       case RequestPermissionScreen.id:
         return MaterialPageRoute(
           builder: (context) => RequestPermissionScreen(

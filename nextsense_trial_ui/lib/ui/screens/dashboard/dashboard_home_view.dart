@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
 import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
@@ -8,10 +9,14 @@ import 'package:nextsense_trial_ui/ui/components/nextsense_app_bar.dart';
 import 'package:nextsense_trial_ui/ui/components/page_container.dart';
 import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:provider/provider.dart';
 
 class DashboardHomeView extends StatelessWidget {
+
+  final Navigation _navigation = getIt<Navigation>();
 
   DashboardHomeView({Key? key}) : super(key: key);
 
@@ -22,10 +27,8 @@ class DashboardHomeView extends StatelessWidget {
     if (dashboardViewModel.isBusy) {
       var loadingTextVisible =
           dashboardViewModel.studyInitialized != null && !dashboardViewModel.studyInitialized!;
-
-      return WaitWidget(message: Text("Your study is initializing.\nPlease wait...",
-          style: TextStyle(color: Colors.deepPurple, fontSize: 20),
-          textAlign: TextAlign.center), textVisible: loadingTextVisible);
+      return WaitWidget(message: 'Your study is initializing.\nPlease wait...',
+          textVisible: loadingTextVisible);
     }
 
     String studyStatusHeader;
@@ -63,7 +66,7 @@ class DashboardHomeView extends StatelessWidget {
         MenuCard(title: 'Seizures',
             image: SvgPicture.asset('assets/images/brain.svg', semanticsLabel: 'Seizures',
                 height: 75),
-            onTap: _dummy),
+            onTap: () => _navigation.navigateTo(SeizuresScreen.id)),
         SizedBox(height: 20, width: 20),
         MenuCard(title: 'Medications',
             image: SvgPicture.asset('assets/images/pill.svg', semanticsLabel: 'Medications',

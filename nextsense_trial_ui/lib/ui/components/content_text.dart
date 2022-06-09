@@ -18,7 +18,7 @@ class ContentText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headerStyle = TextStyle(fontSize: 14, color: color);
+    final headerStyle = TextStyle(fontSize: 14, color: color, fontWeight: FontWeight.w400);
     return Container(
       margin: EdgeInsets.only(
         top: marginTop,
