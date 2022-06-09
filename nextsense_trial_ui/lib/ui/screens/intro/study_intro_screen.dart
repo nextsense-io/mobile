@@ -19,6 +19,10 @@ class StudyIntroScreen extends HookWidget {
   final Navigation _navigation = getIt<Navigation>();
 
   List<PageViewModel> _getPageViewModels(BuildContext context, StudyIntroScreenViewModel viewModel) {
+    final ThemeData theme = Theme.of(context);
+    theme.copyWith(
+      scaffoldBackgroundColor: Colors.white,
+    );
     return viewModel.getIntroPageContents().map((e) => PageViewModel(
         titleWidget: Align(alignment: Alignment.centerLeft, child: HeaderText(text: e.title)),
         bodyWidget: ContentText(text: e.content, color: NextSenseColors.purple),

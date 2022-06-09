@@ -164,7 +164,7 @@ class SeizureScreen extends HookWidget {
                     WaitWidget(message: 'Saving seizure...')
                   else
                     Expanded(
-                        child: IntroductionScreen(
+                        child: ThemeOverride(IntroductionScreen(
                       globalBackgroundColor: Colors.transparent,
                       pages: _getPageViewModels(context, viewModel),
                       showSkipButton: false,
@@ -195,11 +195,27 @@ class SeizureScreen extends HookWidget {
                         color: NextSenseColors.translucentPurple,
                         activeColor: NextSenseColors.purple,
                       ),
-                    )),
+                    ))),
                 ])),
             onWillPop: () async {
               _navigation.navigateTo(SeizuresScreen.id, replace: true);
               return true;
             }));
+  }
+}
+
+class ThemeOverride extends StatelessWidget {
+  final Widget child;
+
+  const ThemeOverride(this.child);
+
+  @override
+  Widget build(BuildContext context) {
+    final themeData = Theme.of(context);
+    return Theme(
+        child: child,
+        data: themeData.copyWith(
+          scaffoldBackgroundColor: Colors.white,
+        ));
   }
 }
