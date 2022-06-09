@@ -14,9 +14,12 @@ extension TimeUtils on TimeOfDay {
 
 extension DateUtils on DateTime {
 
+  static final DateFormat _dateOnlyFormatter = new DateFormat('d MMM, yyyy');
   static final DateFormat _hhmmFormatter = new DateFormat('HH:mm');
   static final DateFormat _hmmFormatter = new DateFormat('h:mm');
   static final DateFormat _hmmaFormatter = new DateFormat('h:mma');
+  static final DateFormat _dateTimeStringFormatter = new DateFormat('yyyy_MM_dd_HH_mm_ss');
+  static final DateFormat _dateTimeHumanizedFormatter = new DateFormat('d MMM, yyyy \'at\' H:mma');
 
   // Returns hours and minutes of DateTime in 'hh:mm' format
   String get hhmm {
@@ -45,12 +48,26 @@ extension DateUtils on DateTime {
     }
   }
 
-  static final DateFormat _dateTimeStringFormatter =
-      new DateFormat('yyyy_MM_dd_HH_mm_ss');
+  // Returns date only
+  String get date {
+    try {
+      return _dateOnlyFormatter.format(this);
+    } catch (e) {
+      return "";
+    }
+  }
 
-  String get datetime_string {
+  String get string {
     try {
       return _dateTimeStringFormatter.format(this);
+    } catch (e) {
+      return "";
+    }
+  }
+
+  String get humanized {
+    try {
+      return _dateTimeHumanizedFormatter.format(this);
     } catch (e) {
       return "";
     }

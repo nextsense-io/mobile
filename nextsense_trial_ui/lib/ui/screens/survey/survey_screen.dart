@@ -56,7 +56,7 @@ class _SurveyForm extends StatelessWidget {
     final viewModel = context.read<SurveyScreenViewModel>();
     final survey = viewModel.survey;
     if (viewModel.isBusy) {
-      return WaitWidget(message: Text("Submitting the form..."));
+      return WaitWidget(message: 'Submitting the form...');
     }
     return FormBuilder(
         key: _formKey,

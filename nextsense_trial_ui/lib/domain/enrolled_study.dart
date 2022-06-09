@@ -27,11 +27,11 @@ class EnrolledStudy extends FirebaseEntity<EnrolledStudyKey> {
 
   DateTime? getStartDate() {
     final value = getValue(EnrolledStudyKey.start_date);
-    return value!=null ? (value as Timestamp).toDate() : null;
+    return value != null ? (value as Timestamp).toDate() : null;
   }
 
   DateTime? getEndDate() {
     final value = getValue(EnrolledStudyKey.end_date);
-    return value!=null ? (value as Timestamp).toDate() : null;
+    return value != null ? (value as Timestamp).toDate() : null;
   }
 }

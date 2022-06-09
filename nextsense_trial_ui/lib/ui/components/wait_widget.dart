@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 
 class WaitWidget extends StatelessWidget {
-  final Widget message;
+  final String message;
   final bool textVisible;
 
   const WaitWidget({required this.message, this.textVisible = true});
@@ -14,7 +16,7 @@ class WaitWidget extends StatelessWidget {
         children: [
           Visibility(
             visible: textVisible,
-            child: message,),
+            child: MediumText(text: message),),
           SizedBox(
             height: 20,
           ),
@@ -22,7 +24,7 @@ class WaitWidget extends StatelessWidget {
             width: 30,
             height: 30,
             child: CircularProgressIndicator(
-              color: Colors.deepPurple,
+              color: NextSenseColors.purple,
             ),
           ),
         ],

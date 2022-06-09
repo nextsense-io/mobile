@@ -58,21 +58,15 @@ class _EnrolledStudiesSelector extends StatelessWidget {
         context.watch<EnrolledStudiesScreenViewModel>();
 
     if (!viewModel.initialised) {
-      return Padding(padding: EdgeInsets.only(top: 50), child:
-          WaitWidget(message: Text(
-            "Loading the enrolled studies.\nPlease wait...",
-            style: TextStyle(color: Colors.deepPurple, fontSize: 20),
-            textAlign: TextAlign.center,
-      )));
+      return Padding(
+          padding: EdgeInsets.only(top: 50),
+          child: WaitWidget(message: 'Loading the enrolled studies.\nPlease wait...'));
     }
 
     if (viewModel.isBusy) {
-      return Padding(padding: EdgeInsets.only(top: 50), child:
-          WaitWidget(message: Text(
-            "Initializing the new study.\nPlease wait...",
-            style: TextStyle(color: Colors.deepPurple, fontSize: 20),
-            textAlign: TextAlign.center,
-          )));
+      return Padding(
+          padding: EdgeInsets.only(top: 50),
+          child: WaitWidget(message: 'Initializing the new study.\nPlease wait...'));
     }
 
     if (viewModel.enrolledStudies == null) {

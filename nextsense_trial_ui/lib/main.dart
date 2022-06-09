@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/managers/firebase_manager.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -97,9 +98,11 @@ class NextSenseTrialApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: _flavor.appTitle,
         theme: ThemeData(
+          primaryColor: NextSenseColors.purple,
+          backgroundColor: Colors.white,
           primarySwatch: Colors.blue,
           fontFamily: 'DMMono',
-          scaffoldBackgroundColor: Colors.transparent
+          scaffoldBackgroundColor: NextSenseColors.lightGrey
         ),
         home: _authManager.isAuthenticated ? StartupScreen() : SignInScreen(),
         navigatorKey: _navigation.navigatorKey,

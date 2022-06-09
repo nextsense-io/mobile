@@ -2,13 +2,13 @@
 import 'package:flutter/widgets.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 
-class HeaderText extends StatelessWidget {
+class BigText extends StatelessWidget {
   final String text;
   final double marginTop;
   final double marginRight;
   final double marginLeft;
   final double marginBottom;
-  HeaderText(
+  BigText(
       {required this.text,
         this.marginTop = 0,
         this.marginRight = 0,
@@ -18,7 +18,7 @@ class HeaderText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final headerStyle =
-        TextStyle(fontWeight: FontWeight.w500, fontSize: 24, color: NextSenseColors.darkBlue);
+    TextStyle(fontWeight: FontWeight.w400, fontSize: 48, color: NextSenseColors.purple);
     return Container(
       margin: EdgeInsets.only(
         top: marginTop,

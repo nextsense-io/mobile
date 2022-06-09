@@ -19,6 +19,7 @@ enum Table {
   scheduled_protocols,
   scheduled_surveys,
   sessions,
+  seizures,
   studies,
   surveys,
   users,
@@ -62,9 +63,8 @@ class FirestoreManager {
    *         entity should be taken from cache.
    */
   Future<FirebaseEntity?> queryEntity(
-      List<Table> tables, List<String> entityKeys,
-      {String? fromCacheWithKey}) async {
-    assert(tables.length == entityKeys.length);
+      List<Table> tables, List<String> entityKeys, {String? fromCacheWithKey}) async {
+    assert(tables.length == entityKeys.length || tables.length == entityKeys.length + 1);
     DocumentReference reference = getReference(tables, entityKeys);
     DocumentSnapshot? snapshot;
     if (fromCacheWithKey != null && _preferences.isCached(fromCacheWithKey)) {
@@ -148,12 +148,32 @@ class FirestoreManager {
     return reference!;
   }
 
+  Future<FirebaseEntity> addAutoIdReference(List<Table> tables, List<String> entityKeys) async {
+    assert(tables.length == entityKeys.length + 1);
+    DocumentReference? reference = null;
+    for (int i = 0; i < tables.length; ++i) {
+      if (i == 0) {
+        if (entityKeys.isEmpty) {
+          reference = await _firestore.collection(tables[i].name()).add({});
+        } else {
+          reference = _firestore.collection(tables[i].name()).doc(entityKeys[i]);
+        }
+      } else {
+        if (i >= entityKeys.length) {
+          reference = await reference!.collection(tables[i].name()).add({});
+        } else {
+          reference = reference!.collection(tables[i].name()).doc(entityKeys[i]);
+        }
+      }
+    }
+    return FirebaseEntity(await reference!.get());
+  }
+
   /*
    * Query multiple entities.
    */
   Future<List<FirebaseEntity>?> queryEntities(
-      List<Table> tables, List<String> entityKeys,
-      {String? fromCacheWithKey}) async {
+      List<Table> tables, List<String> entityKeys, {String? fromCacheWithKey}) async {
     assert(tables.length == entityKeys.length + 1);
     DocumentReference? pathReference = null;
     CollectionReference? collectionReference = null;
@@ -227,6 +247,21 @@ class FirestoreManager {
         success = true;
       } catch (exception) {
         _logger.log(Level.WARNING, "Failed to persist ${entity.reference}. Message: "
+            "${exception.toString()}");
+      }
+    }
+    return success;
+  }
+
+  Future<bool> deleteEntity(FirebaseEntity entity) async {
+    int attemptNumber = 0;
+    bool success = false;
+    while (!success && attemptNumber < _retriesAttemptsNumber) {
+      try {
+        await entity.getDocumentSnapshot().reference.delete();
+        success = true;
+      } catch (exception) {
+        _logger.log(Level.WARNING, "Failed to delete ${entity.reference}. Message: "
             "${exception.toString()}");
       }
     }

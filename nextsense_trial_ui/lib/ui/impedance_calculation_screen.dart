@@ -12,16 +12,14 @@ class ImpedanceCalculationScreen extends StatefulWidget {
   static const String id = 'impedance_calculation_screen';
 
   @override
-  _ImpedanceCalculationScreenState createState() =>
-      _ImpedanceCalculationScreenState();
+  _ImpedanceCalculationScreenState createState() => _ImpedanceCalculationScreenState();
 }
 
 class _ImpedanceCalculationScreenState extends
     State<ImpedanceCalculationScreen> {
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
-  final CustomLogPrinter _logger =
-      CustomLogPrinter('ImpedanceCalculationScreen');
+  final CustomLogPrinter _logger = CustomLogPrinter('ImpedanceCalculationScreen');
   XenonImpedanceCalculator? _impedanceCalculator;
   Map<int, double>? _impedanceResults;
   Map<String, dynamic>? _deviceSettings;
