@@ -33,7 +33,15 @@ class SeizuresScreenViewModel extends ViewModel {
 
   Future _loadSeizures() async {
     _seizures = await _seizuresManager.getSeizures();
-    // Reverse sort order (newer first).
-    _seizures!.sort((a, b) => b.getStartDateTime()!.compareTo(a.getStartDateTime()!));
+    _seizures!.sort((a, b) {
+      if (a.getStartDateTime() == null) {
+        return -1;
+      }
+      if (b.getStartDateTime() == null) {
+        return 1;
+      }
+      // Reverse sort order (newer first).
+      return b.getStartDateTime()!.compareTo(a.getStartDateTime()!);
+    });
   }
 }

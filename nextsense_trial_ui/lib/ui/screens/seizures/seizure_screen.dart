@@ -12,6 +12,7 @@ import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizure_screen_vm.dart';
@@ -45,27 +46,27 @@ class SeizureScreen extends HookWidget {
             ClickableZone(
                 onTap: () async {
                   viewModel.changeSeizureDate(await showDatePicker(
-                      context: context,
-                      firstDate: DateTime(2022),
-                      lastDate: DateTime.now(),
-                      initialDate: viewModel.getSeizureDate(),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: NextSenseColors.lightGrey, // header background color
-                              onPrimary: NextSenseColors.purple, // header text color
-                              onSurface: NextSenseColors.purple, // body text color
-                            ),
-                            textButtonTheme: TextButtonThemeData(
-                              style: TextButton.styleFrom(
-                                primary: NextSenseColors.purple, // button text color
-                              ),
+                    context: context,
+                    firstDate: DateTime(2022),
+                    lastDate: DateTime.now(),
+                    initialDate: viewModel.getSeizureDate(),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: ColorScheme.light(
+                            primary: NextSenseColors.lightGrey, // header background color
+                            onPrimary: NextSenseColors.purple, // header text color
+                            onSurface: NextSenseColors.purple, // body text color
+                          ),
+                          textButtonTheme: TextButtonThemeData(
+                            style: TextButton.styleFrom(
+                              primary: NextSenseColors.purple, // button text color
                             ),
                           ),
-                          child: child!,
-                        );
-                      },
+                        ),
+                        child: child!,
+                      );
+                    },
                   ));
                 },
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
@@ -77,25 +78,25 @@ class SeizureScreen extends HookWidget {
             ClickableZone(
                 onTap: () async {
                   viewModel.changeSeizureTime(await showTimePicker(
-                      context: context,
-                      initialTime: viewModel.getSeizureTime(),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: NextSenseColors.lightGrey, // header background color
-                              onPrimary: NextSenseColors.purple, // header text color
-                              onSurface: NextSenseColors.purple, // body text color
-                            ),
-                            textButtonTheme: TextButtonThemeData(
-                              style: TextButton.styleFrom(
-                                primary: NextSenseColors.purple, // button text color
-                              ),
+                    context: context,
+                    initialTime: viewModel.getSeizureTime(),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: ColorScheme.light(
+                            primary: NextSenseColors.lightGrey, // header background color
+                            onPrimary: NextSenseColors.purple, // header text color
+                            onSurface: NextSenseColors.purple, // body text color
+                          ),
+                          textButtonTheme: TextButtonThemeData(
+                            style: TextButton.styleFrom(
+                              primary: NextSenseColors.purple, // button text color
                             ),
                           ),
-                          child: child!,
-                        );
-                      },
+                        ),
+                        child: child!,
+                      );
+                    },
                   ));
                 },
                 child: BigText(text: viewModel.getSeizureTime().hmma)),
@@ -155,42 +156,46 @@ class SeizureScreen extends HookWidget {
                 backgroundColor: NextSenseColors.lightGrey,
                 showBackground: false,
                 showProfileButton: false,
-                backButtonCallback: () => _navigation.navigateTo(SeizuresScreen.id, replace: true),
-                child:
-                Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                  Expanded(
-                      child: IntroductionScreen(
-                    globalBackgroundColor: Colors.transparent,
-                    pages: _getPageViewModels(context, viewModel),
-                    showSkipButton: false,
-                    showNextButton: true,
-                    showBackButton: true,
-                    showDoneButton: true,
-                    onDone: () => {},
-                    onSkip: () => _navigation.navigateTo(SeizuresScreen.id, replace: true),
-                    back: const Icon(Icons.arrow_back, color: NextSenseColors.purple),
-                    skip: MediumText(text: 'Skip', color: NextSenseColors.purple),
-                    next: const Icon(Icons.arrow_forward, color: NextSenseColors.purple),
-                    done: SimpleButton(
-                        text: MediumText(text: 'Save', color: NextSenseColors.purple),
-                        onTap: () async {
-                          bool saved = await viewModel.saveSeizure();
-                          if (!saved) {
-                            showDialog(
-                                context: context,
-                                builder: (_) => SimpleAlertDialog(
-                                    title: 'Error saving',
-                                    content: 'Please try again and contact support if you get '
-                                        'additional errors.'));
-                          } else {
-                            _navigation.navigateTo(SeizuresScreen.id, replace: true);
-                          }
-                        }),
-                    dotsDecorator: const DotsDecorator(
-                      color: NextSenseColors.translucentPurple,
-                      activeColor: NextSenseColors.purple,
-                    ),
-                  )),
+                backButtonCallback: viewModel.isBusy
+                    ? () => {}
+                    : () => _navigation.navigateTo(SeizuresScreen.id, replace: true),
+                child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                  if (viewModel.isBusy)
+                    WaitWidget(message: 'Saving seizure...')
+                  else
+                    Expanded(
+                        child: IntroductionScreen(
+                      globalBackgroundColor: Colors.transparent,
+                      pages: _getPageViewModels(context, viewModel),
+                      showSkipButton: false,
+                      showNextButton: true,
+                      showBackButton: true,
+                      showDoneButton: true,
+                      onDone: () => {},
+                      onSkip: () => _navigation.navigateTo(SeizuresScreen.id, replace: true),
+                      back: const Icon(Icons.arrow_back, color: NextSenseColors.purple),
+                      skip: MediumText(text: 'Skip', color: NextSenseColors.purple),
+                      next: const Icon(Icons.arrow_forward, color: NextSenseColors.purple),
+                      done: SimpleButton(
+                          text: MediumText(text: 'Save', color: NextSenseColors.purple),
+                          onTap: () async {
+                            bool saved = await viewModel.saveSeizure();
+                            if (!saved) {
+                              showDialog(
+                                  context: context,
+                                  builder: (_) => SimpleAlertDialog(
+                                      title: 'Error saving',
+                                      content: 'Please try again and contact support if you get '
+                                          'additional errors.'));
+                            } else {
+                              _navigation.navigateTo(SeizuresScreen.id, replace: true);
+                            }
+                          }),
+                      dotsDecorator: const DotsDecorator(
+                        color: NextSenseColors.translucentPurple,
+                        activeColor: NextSenseColors.purple,
+                      ),
+                    )),
                 ])),
             onWillPop: () async {
               _navigation.navigateTo(SeizuresScreen.id, replace: true);

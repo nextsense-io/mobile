@@ -12,7 +12,7 @@ class SeizuresManager {
     required List<String> triggers, required String userNotes}) async {
     FirebaseEntity seizureEntity = await _firestoreManager.addAutoIdReference(
         [Table.users, Table.seizures], [_authManager.userCode!]);
-    return _saveSeizureEntity(seizureEntity: seizureEntity, startTime: startTime,
+    return await _saveSeizureEntity(seizureEntity: seizureEntity, startTime: startTime,
         triggers: triggers, userNotes: userNotes);
   }
 
@@ -23,7 +23,7 @@ class SeizuresManager {
     if (seizureEntity == null) {
       return false;
     }
-    return _saveSeizureEntity(seizureEntity: seizureEntity, startTime: startTime,
+    return await _saveSeizureEntity(seizureEntity: seizureEntity, startTime: startTime,
         triggers: triggers, userNotes: userNotes);
   }
 
