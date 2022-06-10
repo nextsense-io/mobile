@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 class MediumText extends StatelessWidget {
   final String text;
   final Color color;
+  final TextAlign textAlign;
   final double marginTop;
   final double marginRight;
   final double marginLeft;
@@ -12,6 +13,7 @@ class MediumText extends StatelessWidget {
   MediumText(
       {required this.text,
         this.color = NextSenseColors.grey,
+        this.textAlign = TextAlign.left,
         this.marginTop = 0,
         this.marginRight = 0,
         this.marginBottom = 0,
@@ -28,7 +30,7 @@ class MediumText extends StatelessWidget {
         left: marginLeft,
         bottom: marginBottom,
       ),
-      child: Text(text, style: headerStyle, textAlign: TextAlign.center),
+      child: Text(text, style: headerStyle, textAlign: textAlign),
     );
   }
 }

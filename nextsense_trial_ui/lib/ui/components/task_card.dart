@@ -16,13 +16,14 @@ class TaskCard extends StatelessWidget {
   final TimeOfDay? windowEndTime;
   final bool completed;
 
-  TaskCard(Task task, Function(BuildContext, dynamic) onTap) : this.task = task,
-        this.title = task.title, this.duration = task.duration,
-        this.windowStartTime = task.windowStartTime, this.windowEndTime = task.windowEndTime,
-        this.completed = task.completed, this.onTap = onTap;
-
-  // TaskCard({required this.title, required this.windowStartTime, this.windowEndTime, this.duration,
-  //     required this.onTap, this.completed = false});
+  TaskCard(Task task, Function(BuildContext, dynamic) onTap)
+      : this.task = task,
+        this.title = task.title,
+        this.duration = task.duration,
+        this.windowStartTime = task.windowStartTime,
+        this.windowEndTime = task.windowEndTime,
+        this.completed = task.completed,
+        this.onTap = onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -41,32 +42,42 @@ class TaskCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          completed
-              ? SvgPicture.asset('assets/images/circle_checked.svg',
-                  semanticsLabel: 'completed', height: 20)
-              : SvgPicture.asset('assets/images/circle.svg',
-                  semanticsLabel: 'completed', height: 20),
+          Column(children: [
+            completed
+                ? Expanded(
+                    child: SvgPicture.asset('assets/images/circle_checked.svg',
+                        semanticsLabel: 'completed', height: 20))
+                : Expanded(
+                    child: SvgPicture.asset('assets/images/circle.svg',
+                        semanticsLabel: 'completed', height: 20)),
+            Expanded(child: SizedBox(height: 1)),
+          ]),
           SizedBox(width: 10),
-          Expanded(
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                Expanded(child: CardTitleText(text: title)),
-                if (duration != null)
-                  Expanded(
-                      child: Align(
-                          alignment: Alignment.bottomLeft,
-                          child: MediumText(text: 'Duration: ${duration!.inMinutes} min')))
-              ])),
-          SizedBox(width: 5),
-          if (showClock)
-            SvgPicture.asset('assets/images/clock.svg', semanticsLabel: 'specific time', width: 16),
-          SizedBox(height: 5),
-          Expanded(
-              child: Align(
-                  alignment: Alignment.topRight,
-                  child: MediumText(text: whenText, color: NextSenseColors.blue)))
+          Expanded(child: Column(children: [
+            Expanded(child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Flexible(child: CardTitleText(text: title)),
+                  SizedBox(width: 5),
+                  if (duration != null)
+                    if (showClock)
+                      SvgPicture.asset('assets/images/clock.svg',
+                          semanticsLabel: 'specific time', width: 16),
+                  SizedBox(height: 5),
+                  Align(
+                      alignment: Alignment.topRight,
+                      child: MediumText(text: whenText, color: NextSenseColors.blue,
+                        textAlign: TextAlign.right,))
+                ])),
+            Row(mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+              Align(
+                  alignment: Alignment.bottomLeft,
+                  child: MediumText(text: 'Duration: ${duration!.inMinutes} min'))
+            ])
+          ])),
         ]);
 
     return Container(

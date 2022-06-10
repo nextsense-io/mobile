@@ -9,6 +9,7 @@ import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
+import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
@@ -71,10 +72,10 @@ class SideEffectScreen extends HookWidget {
                   ));
                 },
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.calendar_today_outlined, size: 16, color: NextSenseColors.purple),
+                  Icon(Icons.calendar_today_outlined, size: 20, color: NextSenseColors.purple),
                   SizedBox(width: 5),
-                  MediumText(
-                      text: viewModel.getSideEffectDate().date, color: NextSenseColors.purple)
+                  HeaderText(text: viewModel.getSideEffectDate().date,
+                      color: NextSenseColors.purple)
                 ])),
             SizedBox(height: 20),
             ClickableZone(
@@ -130,6 +131,7 @@ class SideEffectScreen extends HookWidget {
             FormBuilderTextField(
               name: 'note',
               decoration: InputDecoration(
+                hintText: 'Add a detailed description about your side effect.',
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(

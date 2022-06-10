@@ -16,7 +16,7 @@ class WaitWidget extends StatelessWidget {
         children: [
           Visibility(
             visible: textVisible,
-            child: MediumText(text: message),),
+            child: MediumText(text: message, textAlign: TextAlign.center)),
           SizedBox(
             height: 20,
           ),

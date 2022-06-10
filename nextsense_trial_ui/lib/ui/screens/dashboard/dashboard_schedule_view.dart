@@ -149,7 +149,7 @@ class DashboardScheduleView extends StatelessWidget {
       ];
     } else {
       todayTasksWidgets = [
-        MediumText(text: 'Today', color: NextSenseColors.purple),
+        MediumText(text: 'Today', color: NextSenseColors.darkBlue),
         SingleChildScrollView(
           physics: ScrollPhysics(),
           child: Container(
@@ -171,7 +171,7 @@ class DashboardScheduleView extends StatelessWidget {
     List<Widget> weeklyTasksWidgets = [];
     if (weeklyTasks.length != 0) {
       weeklyTasksWidgets = [
-        MediumText(text: 'Weekly', color: NextSenseColors.purple),
+        MediumText(text: 'Weekly', color: NextSenseColors.darkBlue),
         SingleChildScrollView(
           physics: ScrollPhysics(),
           child: Container(

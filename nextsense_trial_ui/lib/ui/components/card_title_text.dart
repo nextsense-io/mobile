@@ -17,7 +17,8 @@ class CardTitleText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headerStyle = TextStyle(fontSize: 16, color: NextSenseColors.purple);
+    final headerStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.w500,
+        color: NextSenseColors.darkBlue);
     return Container(
       margin: EdgeInsets.only(
         top: marginTop,
