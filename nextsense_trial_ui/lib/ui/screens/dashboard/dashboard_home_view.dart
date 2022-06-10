@@ -8,6 +8,7 @@ import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/nextsense_app_bar.dart';
 import 'package:nextsense_trial_ui/ui/components/page_container.dart';
 import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:nextsense_trial_ui/ui/components/thick_content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
@@ -48,11 +49,11 @@ class DashboardHomeView extends StatelessWidget {
 
     final daysInStudy = Column(children: [
       HeaderText(text: studyStatusHeader),
-      ContentText(text: studyStatusContent),
+      ThickContentText(text: studyStatusContent),
     ]);
     final completedSurveys = Column(children: [
       HeaderText(text: dashboardViewModel.completedSurveys),
-      ContentText(text: 'completed surveys'),
+      ThickContentText(text: 'completed surveys'),
     ]);
     final studySummaryRow = Row(children: [
       Spacer(),
@@ -120,9 +121,9 @@ class MenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final column = Column(children: [
-      CardTitleText(text: title),
+      Align(alignment: Alignment.centerLeft, child: CardTitleText(text: title)),
       Container(
-          padding: EdgeInsets.all(5), child: Align(alignment: Alignment.bottomRight, child: image))
+          padding: EdgeInsets.only(top: 5), child: Align(alignment: Alignment.bottomRight, child: image))
     ]);
     return Expanded(
         child: ClickableZone(

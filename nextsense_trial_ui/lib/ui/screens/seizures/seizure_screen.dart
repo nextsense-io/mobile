@@ -9,6 +9,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/seizure.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
+import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
@@ -70,9 +71,9 @@ class SeizureScreen extends HookWidget {
                   ));
                 },
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  Icon(Icons.calendar_today_outlined, size: 16, color: NextSenseColors.purple),
+                  Icon(Icons.calendar_today_outlined, size: 20, color: NextSenseColors.purple),
                   SizedBox(width: 5),
-                  MediumText(text: viewModel.getSeizureDate().date, color: NextSenseColors.purple)
+                  HeaderText(text: viewModel.getSeizureDate().date, color: NextSenseColors.purple)
                 ])),
             SizedBox(height: 20),
             ClickableZone(
@@ -130,6 +131,8 @@ class SeizureScreen extends HookWidget {
             FormBuilderTextField(
               name: 'note',
               decoration: InputDecoration(
+                hintText: 'e.g I had an aura before the seizure and got to a safe place before my '
+                    'seizure started.',
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(

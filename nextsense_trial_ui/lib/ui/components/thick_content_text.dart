@@ -1,17 +1,16 @@
 /* A widget to display header text. */
-import 'package:flutter/widgets.dart';
-import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
+import 'package:flutter/material.dart';
 
-class HeaderText extends StatelessWidget {
+class ThickContentText extends StatelessWidget {
   final String text;
   final Color color;
   final double marginTop;
   final double marginRight;
   final double marginLeft;
   final double marginBottom;
-  HeaderText(
+  ThickContentText(
       {required this.text,
-        this.color = NextSenseColors.darkBlue,
+        this.color = Colors.black,
         this.marginTop = 0,
         this.marginRight = 0,
         this.marginBottom = 0,
@@ -19,8 +18,7 @@ class HeaderText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headerStyle =
-        TextStyle(fontWeight: FontWeight.w500, fontSize: 24, color: color);
+    final headerStyle = TextStyle(fontSize: 14, color: color, fontWeight: FontWeight.w500);
     return Container(
       margin: EdgeInsets.only(
         top: marginTop,
