@@ -14,6 +14,7 @@ import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/seizures_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
+import 'package:nextsense_trial_ui/managers/side_effects_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
@@ -48,6 +49,7 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<DataManager>(DataManager());
   getIt.registerSingleton<SessionManager>(SessionManager());
   getIt.registerSingleton<SeizuresManager>(SeizuresManager());
+  getIt.registerSingleton<SideEffectsManager>(SideEffectsManager());
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
   getIt.registerSingleton<DiskSpaceManager>(DiskSpaceManager());
   getIt.registerSingleton<AudioManager>(AudioManager());

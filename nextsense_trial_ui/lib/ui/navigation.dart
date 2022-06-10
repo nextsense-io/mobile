@@ -7,6 +7,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/seizure.dart';
+import 'package:nextsense_trial_ui/domain/side_effect.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
@@ -36,6 +37,8 @@ import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizure_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effect_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
@@ -200,6 +203,8 @@ class Navigation {
           builder: (context) => ProfileScreen());
       case SeizuresScreen.id: return MaterialPageRoute(
           builder: (context) => SeizuresScreen());
+      case SideEffectsScreen.id: return MaterialPageRoute(
+          builder: (context) => SideEffectsScreen());
 
       // Routes with arguments
       case ProtocolScreen.id:
@@ -217,6 +222,9 @@ class Navigation {
       case SeizureScreen.id:
         return MaterialPageRoute(builder: (context) =>
             SeizureScreen(settings.arguments != null ? settings.arguments as Seizure : null));
+      case SideEffectScreen.id:
+        return MaterialPageRoute(builder: (context) =>
+            SideEffectScreen(settings.arguments != null ? settings.arguments as SideEffect : null));
       case RequestPermissionScreen.id:
         return MaterialPageRoute(
           builder: (context) => RequestPermissionScreen(

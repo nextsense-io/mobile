@@ -6,6 +6,8 @@ import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
+import 'package:nextsense_trial_ui/ui/components/nextsense_app_bar.dart';
+import 'package:nextsense_trial_ui/ui/components/page_container.dart';
 import 'package:nextsense_trial_ui/ui/components/task_card.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -188,14 +190,14 @@ class DashboardScheduleView extends StatelessWidget {
     }
 
     List<Widget> contents = [
+      NextSenseAppBar(),
       HeaderText(text: 'My Tasks'),
       SizedBox(height: 15),
     ];
     contents.addAll(todayTasksWidgets);
     contents.addAll(weeklyTasksWidgets);
 
-    return Padding(
-        padding: const EdgeInsets.only(left: 10, right: 10),
+    return PageContainer(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents));
   }
 }
