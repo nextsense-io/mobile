@@ -12,6 +12,7 @@ import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:provider/provider.dart';
 
 class DashboardHomeView extends StatelessWidget {
@@ -78,7 +79,7 @@ class DashboardHomeView extends StatelessWidget {
         MenuCard(title: 'Side Effects',
             image: SvgPicture.asset('assets/images/head.svg', semanticsLabel: 'Side Effects',
                 height: 75),
-            onTap: _dummy),
+            onTap: () => _navigation.navigateTo(SideEffectsScreen.id)),
         SizedBox(height: 20, width: 20),
         MenuCard(title: 'Surveys',
             image: SvgPicture.asset('assets/images/tasks.svg', semanticsLabel: 'Surveys',

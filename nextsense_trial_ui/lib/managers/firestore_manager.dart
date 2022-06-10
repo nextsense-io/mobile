@@ -20,6 +20,7 @@ enum Table {
   scheduled_surveys,
   sessions,
   seizures,
+  side_effects,
   studies,
   surveys,
   users,
