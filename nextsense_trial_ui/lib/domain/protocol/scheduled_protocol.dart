@@ -141,6 +141,9 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
   String get title => protocol.nameForUser + ' recording';
 
   @override
+  String get intro => protocol.intro;
+
+  @override
   // Surveys can be completed anywhere in the day.
   TimeOfDay? get windowEndTime => TimeOfDay.fromDateTime(allowedStartBefore);
 

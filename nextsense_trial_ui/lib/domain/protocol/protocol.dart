@@ -204,7 +204,16 @@ class EyesOpenEyesClosedProtocol extends BaseProtocol {
   String get description => 'Eyes Open, Eyes Closed';
 
   @override
-  String get intro => 'Eyes open/Eyes closed protocol intro';
+  String get intro => 'IMPORTANT: Make sure the sound is perceivable and adjust the '
+      'volume if needed.\n\n'
+      'You will be asked to do the following:\n'
+      '-1 min: Eyes open\n'
+      '-1 min: Eyes closed\n'
+      '-1 min: Eyes open\n'
+      '-1 min: Eyes closed\n\n'
+      ' • Sounds will be played to indicate transitions from EO to EC and EC to EO.\n'
+      ' • Sit down comfortably at your desk.\n'
+      ' • Place the phone at your desk with the sound output facing.';
 
   @override
   List<ProtocolPart> get protocolBlock => _protocolBlock;

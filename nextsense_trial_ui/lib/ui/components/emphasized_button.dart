@@ -7,14 +7,15 @@ class EmphasizedButton extends StatelessWidget {
 
   final Widget text;
   final Function onTap;
+  final bool enabled;
 
-  EmphasizedButton({required this.text, required this.onTap});
+  EmphasizedButton({required this.text, required this.onTap, this.enabled = true});
 
   @override
   Widget build(BuildContext context) {
     return ClickableZone(
-      onTap: onTap,
-        child: RoundedBackground(
+      onTap: enabled ? onTap : () => {},
+        child: Opacity(opacity: enabled ? 1.0 : 0.5, child: RoundedBackground(
             child: text,
             gradient: LinearGradient(
               begin: Alignment.centerLeft,
@@ -24,6 +25,6 @@ class EmphasizedButton extends StatelessWidget {
                 Color(0xff984DF1),
               ],
             )
-        ));
+        )));
   }
 }

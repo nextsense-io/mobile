@@ -119,6 +119,9 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
   String get title => survey.name + ' survey';
 
   @override
+  String get intro => survey.introText;
+
+  @override
   // Surveys can be completed anywhere in the day.
   TimeOfDay? get windowEndTime => TimeOfDay(hour: 23, minute: 59);
 
