@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 abstract class Task {
   String get title;
+  String get intro;
   Duration? get duration;
   TimeOfDay get windowStartTime;
   TimeOfDay? get windowEndTime;

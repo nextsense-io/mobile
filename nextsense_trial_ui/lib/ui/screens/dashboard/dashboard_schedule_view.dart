@@ -23,15 +23,14 @@ class DashboardScheduleView extends StatelessWidget {
 
   final Navigation _navigation = getIt<Navigation>();
 
-  Future<dynamic> _onProtocolClicked(BuildContext context, dynamic task) async {
+  _onProtocolClicked(BuildContext context, dynamic task) {
     ScheduledProtocol scheduledProtocol = task as ScheduledProtocol;
 
     if (scheduledProtocol.isCompleted) {
       showDialog(
         context: context,
-        builder: (_) => SimpleAlertDialog(
-            title: 'Warning',
-            content: 'Protocol is already completed'),
+        builder: (_) =>
+            SimpleAlertDialog(title: 'Warning', content: 'Protocol is already completed'),
       );
       return;
     }
@@ -45,9 +44,7 @@ class DashboardScheduleView extends StatelessWidget {
       }
       showDialog(
         context: context,
-        builder: (_) => SimpleAlertDialog(
-            title: 'Warning',
-            content: msg),
+        builder: (_) => SimpleAlertDialog(title: 'Warning', content: msg),
       );
       return;
     }
@@ -64,26 +61,21 @@ class DashboardScheduleView extends StatelessWidget {
       return;
     }
 
-    await _navigation.navigateWithCapabilityChecking(
-        context,
-        ProtocolScreen.id,
-        arguments: scheduledProtocol
-    );
+    _navigation.navigateWithCapabilityChecking(context, ProtocolScreen.id,
+        arguments: scheduledProtocol);
 
     // Refresh dashboard since protocol state can be changed
     // TODO(alex): find better way to rebuild after pop
     context.read<DashboardScreenViewModel>().notifyListeners();
   }
 
-  Future<dynamic> _onSurveyClicked(BuildContext context, dynamic task) async {
+  _onSurveyClicked(BuildContext context, dynamic task) async {
     ScheduledSurvey scheduledSurvey = task as ScheduledSurvey;
 
     if (scheduledSurvey.completed) {
       showDialog(
         context: context,
-        builder: (_) => SimpleAlertDialog(
-            title: 'Warning',
-            content: 'Survey is already completed'),
+        builder: (_) => SimpleAlertDialog(title: 'Warning', content: 'Survey is already completed'),
       );
       return;
     }
@@ -92,8 +84,7 @@ class DashboardScheduleView extends StatelessWidget {
       showDialog(
         context: context,
         builder: (_) => SimpleAlertDialog(
-            title: 'Warning',
-            content: 'Cannot start survey cause its already skipped'),
+            title: 'Warning', content: 'Cannot start survey cause its already skipped'),
       );
       return;
     }
@@ -103,21 +94,20 @@ class DashboardScheduleView extends StatelessWidget {
     if (completed) {
       showDialog(
         context: context,
-        builder: (_) => SimpleAlertDialog(
-            title: 'Success',
-            content: 'Survey successfully completed!'),
+        builder: (_) =>
+            SimpleAlertDialog(title: 'Success', content: 'Survey successfully completed!'),
       );
     }
     // Refresh tasks since survey state can be changed
     context.read<DashboardScreenViewModel>().notifyListeners();
   }
 
-  Function(BuildContext, dynamic) _getOnTap(Task task) {
+  _getOnTap(BuildContext context, Task task) {
     if (task is ScheduledSurvey) {
-      return _onSurveyClicked;
+      return _onSurveyClicked(context, task);
     }
     if (task is ScheduledProtocol) {
-      return _onProtocolClicked;
+      return _onProtocolClicked(context, task);
     }
     throw UnimplementedError('Task navigation not implemented!');
   }
@@ -127,43 +117,49 @@ class DashboardScheduleView extends StatelessWidget {
     final viewModel = context.watch<DashboardScreenViewModel>();
 
     if (viewModel.isBusy) {
-      var loadingTextVisible =
-          viewModel.studyInitialized != null && !viewModel.studyInitialized!;
+      var loadingTextVisible = viewModel.studyInitialized != null && !viewModel.studyInitialized!;
 
-      return WaitWidget(message: 'Your study is initializing.\nPlease wait...',
-          textVisible: loadingTextVisible);
+      return WaitWidget(
+          message: 'Your study is initializing.\nPlease wait...', textVisible: loadingTextVisible);
     }
 
     List<dynamic> todayTasks = viewModel.getTodayTasks();
     List<Widget> todayTasksWidgets;
     if (todayTasks.length == 0) {
-      todayTasksWidgets = [Container(
-          padding: EdgeInsets.all(30.0),
-          child: Column(
-            children: [
-              Icon(Icons.event_note, size: 50, color: Colors.grey,),
-              SizedBox(height: 20,),
-              MediumText(text: 'No tasks'),
-            ],
-          ))
+      todayTasksWidgets = [
+        Container(
+            padding: EdgeInsets.all(30.0),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.event_note,
+                  size: 50,
+                  color: Colors.grey,
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                MediumText(text: 'No tasks'),
+              ],
+            ))
       ];
     } else {
       todayTasksWidgets = [
         MediumText(text: 'Today', color: NextSenseColors.darkBlue),
-        SingleChildScrollView(
+        Expanded(
+            child: SingleChildScrollView(
           physics: ScrollPhysics(),
-          child: Container(
-              child: ListView.builder(
-                scrollDirection: Axis.vertical,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: todayTasks.length,
-                shrinkWrap: true,
-                itemBuilder: (BuildContext context, int index) {
-                  Task task = todayTasks[index];
-                  return TaskCard(task, _getOnTap(task));
-                },
-              )),
-        )
+          child: ListView.builder(
+            scrollDirection: Axis.vertical,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: todayTasks.length,
+            shrinkWrap: true,
+            itemBuilder: (BuildContext context, int index) {
+              Task task = todayTasks[index];
+              return TaskCard(task, () => _getOnTap(context, task));
+            },
+          ),
+        ))
       ];
     }
 
@@ -173,19 +169,17 @@ class DashboardScheduleView extends StatelessWidget {
       weeklyTasksWidgets = [
         MediumText(text: 'Weekly', color: NextSenseColors.darkBlue),
         SingleChildScrollView(
-          physics: ScrollPhysics(),
-          child: Container(
-              child: ListView.builder(
-                scrollDirection: Axis.vertical,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: weeklyTasks.length,
-                shrinkWrap: true,
-                itemBuilder: (BuildContext context, int index) {
-                  Task task = weeklyTasks[index];
-                  return TaskCard(task, _getOnTap(task));
-                },
-              )),
-        )
+            physics: ScrollPhysics(),
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: weeklyTasks.length,
+              shrinkWrap: true,
+              itemBuilder: (BuildContext context, int index) {
+                Task task = weeklyTasks[index];
+                return TaskCard(task, () => _getOnTap(context, task));
+              },
+            )),
       ];
     }
 
