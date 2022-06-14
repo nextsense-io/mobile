@@ -25,19 +25,18 @@ abstract class DeviceStateViewModel
 
   DeviceState get deviceState => _deviceManager.deviceState.value;
   bool get deviceIsConnected => deviceState == DeviceState.ready;
-  bool get deviceCanRecord =>
-      deviceIsConnected && isHdmiCablePresent && isUSdPresent;
+  bool get deviceCanRecord => deviceIsConnected && isHdmiCablePresent && isUSdPresent;
 
-  StreamSubscription<DeviceInternalStateEvent>?
-    _deviceInternalStateChangesSubscription;
+  StreamSubscription<DeviceInternalStateEvent>? _deviceInternalStateChangesSubscription;
 
   // Internal state shortcuts
   bool get isHdmiCablePresent => _deviceManager.isHdmiCablePresent;
   bool get isUSdPresent => _deviceManager.isUSdPresent;
 
+  @override
   void init() {
+    super.init();
     _deviceManager.deviceState.addListener(_onDeviceStateChanged);
-
     _deviceInternalStateChangesSubscription = _deviceManager
         .deviceInternalStateChangeStream.listen(onDeviceInternalStateChanged);
   }

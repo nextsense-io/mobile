@@ -9,12 +9,13 @@ class PageScaffold extends StatelessWidget {
   final bool showBackground;
   final bool showBackButton;
   final bool showProfileButton;
+  final bool showCancelButton;
   final Color backgroundColor;
   final Widget? floatingActionButton;
   final VoidCallback? backButtonCallback;
 
   PageScaffold({required this.child, this.showBackground = true, this.showBackButton = true,
-    this.showProfileButton = true, this.floatingActionButton,
+    this.showProfileButton = true, this.floatingActionButton, this.showCancelButton = false,
     this.backgroundColor = Colors.transparent, this.backButtonCallback});
 
   @override
@@ -31,7 +32,7 @@ class PageScaffold extends StatelessWidget {
           backgroundColor: backgroundColor,
           appBar: NextSenseAppBar(
               showBackButton: showBackButton, showProfileButton: showProfileButton,
-              backButtonCallback: backButtonCallback,),
+              backButtonCallback: backButtonCallback, showCancelButton: showCancelButton),
           body: PageContainer(child: child),
           floatingActionButton: floatingActionButton,
       ),

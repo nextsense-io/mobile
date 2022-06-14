@@ -23,7 +23,9 @@ class SignInScreenViewModel extends ViewModel {
   String get appTitle => _flavor.appTitle;
   bool get isTempPassword => _authManager.user!.isTempPassword();
 
+  @override
   void init() async {
+    super.init();
     if (envGet(EnvironmentKey.USERNAME).isNotEmpty) {
       loadCredentialsFromEnvironment();
     }

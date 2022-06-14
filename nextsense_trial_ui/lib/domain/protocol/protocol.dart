@@ -201,6 +201,9 @@ class EyesOpenEyesClosedProtocol extends BaseProtocol {
   Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 4);
 
   @override
+  Duration get disconnectTimeoutDuration => Duration(seconds: 20);
+
+  @override
   String get description => 'Eyes Open, Eyes Closed';
 
   @override
@@ -276,6 +279,9 @@ class EyesMovementProtocol extends BaseProtocol {
 
   @override
   Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 5);
+
+  @override
+  Duration get disconnectTimeoutDuration => Duration(seconds: 20);
 
   @override
   String get description => 'Eyes Movement';

@@ -16,6 +16,7 @@ class EnrolledStudiesScreenViewModel extends ViewModel {
 
   @override
   void init() async {
+    super.init();
     enrolledStudies = await _studyManager.getEnrolledStudies(_authManager.user!.id);
     setInitialised(true);
     notifyListeners();

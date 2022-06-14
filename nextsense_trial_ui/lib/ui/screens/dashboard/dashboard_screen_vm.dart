@@ -42,9 +42,9 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   // Current selected day in calendar
   StudyDay? selectedDay;
 
+  @override
   void init() async {
     super.init();
-
     await loadData();
   }
 

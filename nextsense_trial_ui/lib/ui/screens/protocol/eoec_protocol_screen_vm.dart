@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
@@ -10,8 +12,12 @@ class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
   static final String _eoec_transition_sound = "sounds/eoec_transition.wav";
   static const Map<EOECState, String> _protocolPartsText = {
-    EOECState.EO: 'Keep your eyes open',
-    EOECState.EC: 'Keep your eyes closed'
+    EOECState.EO: 'Eyes Open',
+    EOECState.EC: 'Eyes Closed'
+  };
+  static const Map<EOECState, ImageProvider> _protocolPartsImage = {
+    EOECState.EO: Svg('assets/images/eye_open.svg'),
+    EOECState.EC: Svg('assets/images/eye_closed.svg')
   };
 
   final AudioManager _audioManager = getIt<AudioManager>();
@@ -52,5 +58,15 @@ class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
       return "";
     }
     return _protocolPartsText[eoecState]!;
+  }
+
+  ImageProvider getImageForProtocolPart(String eoecStateString) {
+    EOECState eoecState = EOECState.values.firstWhere(
+            (e) => describeEnum(e) == eoecStateString,
+        orElse: () => EOECState.UNKNOWN);
+    if (eoecState == EOECState.UNKNOWN) {
+      throw('Unknown EOEC state.');
+    }
+    return _protocolPartsImage[eoecState]!;
   }
 }

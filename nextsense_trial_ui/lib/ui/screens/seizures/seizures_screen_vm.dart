@@ -11,6 +11,7 @@ class SeizuresScreenViewModel extends ViewModel {
   @override
   void init() async {
     setBusy(true);
+    super.init();
     await _loadSeizures();
     setBusy(false);
     setInitialised(true);

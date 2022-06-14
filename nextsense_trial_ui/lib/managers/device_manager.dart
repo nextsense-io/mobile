@@ -225,8 +225,7 @@ class DeviceManager {
       _logger.log(Level.FINE, 'Device internal state changed');
       Map<String, dynamic> newStateValues = jsonDecode(newDeviceInternalStateJson);
 
-      DeviceInternalState state =
-          new DeviceInternalState(newStateValues);
+      DeviceInternalState state = new DeviceInternalState(newStateValues);
 
       deviceInternalState.value = state;
       if (!_deviceInternalStateAvailableCompleter.isCompleted) {
@@ -245,9 +244,9 @@ class DeviceManager {
     if (_deviceInternalStateValues != null) {
       for (var key in newStateValues.keys) {
         var oldValue = _deviceInternalStateValues![key];
-        // AT this time only the boolean values need to propagate as events.
+        // At this time only the boolean values need to propagate as events.
         if (oldValue is! bool) {
-          return;
+          continue;
         }
         var newValue = newStateValues[key];
         // Compare DeviceInternalState fields
