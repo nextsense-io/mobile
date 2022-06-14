@@ -34,6 +34,7 @@ import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/entry_added_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizure_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
@@ -223,11 +224,20 @@ class Navigation {
         return MaterialPageRoute(builder: (context) =>
             SeizureScreen(settings.arguments != null ? settings.arguments as Seizure : null));
       case SideEffectScreen.id:
-        return MaterialPageRoute(builder: (context) =>
-            SideEffectScreen(settings.arguments != null ? settings.arguments as SideEffect : null));
+        return MaterialPageRoute(
+            builder: (context) => SideEffectScreen(
+                settings.arguments != null ? settings.arguments as SideEffect : null));
+      case EntryAddedScreen.id:
+        {
+          assert(settings.arguments != null);
+          List<dynamic> argsList = settings.arguments as List;
+          assert(argsList.length >= 2);
+          return MaterialPageRoute(
+              builder: (context) => EntryAddedScreen(argsList[0] as String, argsList[1] as Image));
+        }
       case RequestPermissionScreen.id:
         return MaterialPageRoute(
-          builder: (context) => RequestPermissionScreen(
+            builder: (context) => RequestPermissionScreen(
               settings.arguments as PermissionRequest));
       case InsufficientSpaceScreen.id: return MaterialPageRoute(
           builder: (context) => InsufficientSpaceScreen(

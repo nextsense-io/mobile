@@ -123,7 +123,8 @@ class MenuCard extends StatelessWidget {
     final column = Column(children: [
       Align(alignment: Alignment.centerLeft, child: CardTitleText(text: title)),
       Container(
-          padding: EdgeInsets.only(top: 5), child: Align(alignment: Alignment.bottomRight, child: image))
+          padding: EdgeInsets.only(top: 5), child: Align(alignment: Alignment.bottomRight,
+          child: image))
     ]);
     return Expanded(
         child: ClickableZone(
