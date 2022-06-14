@@ -63,32 +63,52 @@ class DashboardHomeView extends StatelessWidget {
       Spacer(),
     ]);
 
-    final menuCards = Column(children: [
-      Row(children: [
-        MenuCard(title: 'Seizures',
-            image: SvgPicture.asset('assets/images/brain.svg', semanticsLabel: 'Seizures',
-                height: 75),
-            onTap: () => _navigation.navigateTo(SeizuresScreen.id)),
-        SizedBox(height: 20, width: 20),
-        MenuCard(title: 'Medications',
-            image: SvgPicture.asset('assets/images/pill.svg', semanticsLabel: 'Medications',
-                height: 75),
-            onTap: _dummy),
-      ]),
-      SizedBox(height: 20, width: 20),
-      Row(children: [
-        MenuCard(title: 'Side Effects',
-            image: SvgPicture.asset('assets/images/head.svg', semanticsLabel: 'Side Effects',
-                height: 75),
-            onTap: () => _navigation.navigateTo(SideEffectsScreen.id)),
-        SizedBox(height: 20, width: 20),
-        MenuCard(title: 'Surveys',
-            image: SvgPicture.asset('assets/images/tasks.svg', semanticsLabel: 'Surveys',
-                height: 75),
-            onTap: _dummy),
-      ]),
-    ]
-    );
+    List<Widget> menuCards = [];
+    if (dashboardViewModel.study.seizureTrackingEnabled) {
+      menuCards.add(MenuCard(title: 'Seizures',
+          image: SvgPicture.asset('assets/images/brain.svg', semanticsLabel: 'Seizures',
+              height: 75),
+          onTap: () => _navigation.navigateTo(SeizuresScreen.id)));
+    }
+    if (dashboardViewModel.study.seizureTrackingEnabled) {
+      menuCards.add(MenuCard(title: 'Medications',
+          image: SvgPicture.asset('assets/images/pill.svg', semanticsLabel: 'Medications',
+              height: 75),
+          onTap: _dummy));
+    }
+    if (dashboardViewModel.study.sideEffectsTrackingEnabled) {
+      menuCards.add(MenuCard(title: 'Side Effects',
+          image: SvgPicture.asset('assets/images/head.svg', semanticsLabel: 'Side Effects',
+              height: 75),
+          onTap: () => _navigation.navigateTo(SideEffectsScreen.id)));
+    }
+    if (dashboardViewModel.study.surveysEnabled) {
+      menuCards.add(MenuCard(title: 'Surveys',
+          image: SvgPicture.asset('assets/images/tasks.svg', semanticsLabel: 'Surveys',
+              height: 75),
+          onTap: _dummy));
+    }
+
+    List<Row> menuCardRows = [];
+    for (int i = 0; i < menuCards.length; ++i) {
+      if (i != 0) {
+        menuCardRows.add(Row(children: [SizedBox(height: 20, width: 20)]));
+      }
+      if (menuCards.length > i + 1) {
+        menuCardRows.add(Row(children: [
+          Expanded(child: menuCards[i]),
+          SizedBox(height: 20, width: 20),
+          Expanded(child: menuCards[i + 1]),
+        ]));
+        ++i;
+      } else {
+        menuCardRows.add(Row(children: [
+          Expanded(child: menuCards[i]),
+          SizedBox(height: 20, width: 20),
+          Spacer(),
+        ]));
+      }
+    }
 
     final elements = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +120,7 @@ class DashboardHomeView extends StatelessWidget {
         Spacer(),
         studySummaryRow,
         Spacer(),
-        menuCards,
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: menuCardRows),
         Spacer(),
       ],
     );
@@ -126,10 +146,9 @@ class MenuCard extends StatelessWidget {
           padding: EdgeInsets.only(top: 5), child: Align(alignment: Alignment.bottomRight,
           child: image))
     ]);
-    return Expanded(
-        child: ClickableZone(
+    return ClickableZone(
           onTap: onTap,
           child: RoundedBackground(child: column),
-    ));
+    );
   }
 }

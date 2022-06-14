@@ -19,7 +19,7 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
   final CustomLogPrinter _logger = CustomLogPrinter('ProfileScreenViewModel');
 
   String? get currentStudyName => _studyManager.currentStudy!.getName();
-  bool get isAdhocRecordingAllowed => _studyManager.currentStudy?.isAdhocRecordingAllowed ?? false;
+  bool get isAdhocRecordingAllowed => _studyManager.currentStudy?.adhocRecordingAllowed ?? false;
   bool get isAdhocSurveysAllowed => _studyManager.currentStudy?.adhocSurveysAllowed ?? false;
   String get studyId => _studyManager.currentStudyId!;
   String? get userId => _authManager.user?.id;
