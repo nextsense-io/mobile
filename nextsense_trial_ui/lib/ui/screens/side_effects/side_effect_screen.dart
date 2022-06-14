@@ -16,6 +16,7 @@ import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
+import 'package:nextsense_trial_ui/ui/screens/entry_added_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effect_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
@@ -190,7 +191,9 @@ class SideEffectScreen extends HookWidget {
                                       content: 'Please try again and contact support if you get '
                                           'additional errors.'));
                             } else {
-                              _navigation.navigateTo(SideEffectsScreen.id, replace: true);
+                              _navigation.navigateTo(EntryAddedScreen.id, replace: true,
+                                  arguments: ['You have logged a side effect',
+                                    Image(image: AssetImage('assets/images/hand_pen.png'))]);
                             }
                           }),
                       dotsDecorator: const DotsDecorator(

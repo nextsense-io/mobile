@@ -16,6 +16,7 @@ import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
+import 'package:nextsense_trial_ui/ui/screens/entry_added_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizure_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
@@ -191,7 +192,9 @@ class SeizureScreen extends HookWidget {
                                       content: 'Please try again and contact support if you get '
                                           'additional errors.'));
                             } else {
-                              _navigation.navigateTo(SeizuresScreen.id, replace: true);
+                              _navigation.navigateTo(EntryAddedScreen.id, replace: true,
+                                  arguments: ['You have reported a seizure',
+                                    Image(image: AssetImage('assets/images/hand_pen_writing.png'))]);
                             }
                           }),
                       dotsDecorator: const DotsDecorator(
