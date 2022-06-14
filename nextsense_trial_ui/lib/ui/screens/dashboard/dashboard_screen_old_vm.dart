@@ -48,6 +48,7 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
 
   final studyDayChangeStream = StreamController<int>.broadcast();
 
+  @override
   void init() async {
     super.init();
 

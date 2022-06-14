@@ -32,7 +32,6 @@ class EyesMovementProtocolScreen extends ProtocolScreen {
                   Text(protocol.description, style: whiteTextStyle),
                   Text(viewModel.getTextForProtocolPart(currentPart.state),
                       style: bigWhiteTextStyle),
-                  statusMessage(viewModel),
                   SessionControlButton(runnableProtocol)
                 ]
             )

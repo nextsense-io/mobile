@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
@@ -37,14 +38,14 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final RunnableProtocol runnableProtocol;
   final List<ScheduledProtocolPart> _scheduledProtocolParts = [];
+  final CountDownController countDownController = CountDownController();
   final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
 
   int secondsElapsed = 0;
   bool sessionIsActive = false;
   int disconnectTimeoutSecondsLeft = 10;
-
-  // This indicates that minimum duration of protocol is passed
-  // and we can mark protocol as completed
+  // This indicates that the minimum duration of the protocol is passed and can mark is as
+  // completed.
   bool get protocolCompleted => minDurationPassed == true;
   bool minDurationPassed = false;
   bool maxDurationPassed = false;
@@ -57,7 +58,14 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   DateTime? _lastEventEnd;
   String? _currentEventMarker;
   int _currentProtocolPart = 0;
+  int _currentRepetition = 0;
   Duration _repetitionTime = Duration(seconds: 0);
+
+  Study? get currentStudy => _studyManager.currentStudy;
+  Protocol get protocol => runnableProtocol.protocol;
+  int get repetitions => (protocol.minDuration.inSeconds / _repetitionTime.inSeconds).round();
+  int get protocolIndex =>
+      _currentRepetition * _scheduledProtocolParts.length + _currentProtocolPart;
 
   ProtocolScreenViewModel(this.runnableProtocol) {
     for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
@@ -67,9 +75,11 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     }
   }
 
-  Study? get currentStudy => _studyManager.currentStudy;
-
-  Protocol get protocol => runnableProtocol.protocol;
+  @override
+  void init() {
+    super.init();
+    startSession();
+  }
 
   void startSession() {
     _logger.log(Level.INFO, "startSession");
@@ -78,11 +88,11 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     sessionIsActive = true;
     minDurationPassed = false;
     maxDurationPassed = false;
+    _currentProtocolPart = 0;
+    _currentRepetition = 0;
     protocolCancelReason = ProtocolCancelReason.none;
     startTimer();
     _startProtocol();
-
-    notifyListeners();
   }
 
   void stopSession() {
@@ -104,6 +114,17 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     return null;
   }
 
+  ScheduledProtocolPart? getCurrentScheduledProtocolPart() {
+    if (_scheduledProtocolParts.isNotEmpty) {
+      return _scheduledProtocolParts[_currentProtocolPart];
+    }
+    return null;
+  }
+
+  List<ScheduledProtocolPart> getScheduledProtocolParts() {
+    return _scheduledProtocolParts;
+  }
+
   void startTimer() {
     final int protocolMinTimeSeconds = protocol.minDuration.inSeconds;
     final int protocolMaxTimeSeconds = protocol.maxDuration.inSeconds;
@@ -116,7 +137,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           .protocolPart.marker!, sequentialEvent: true);
     }
     onTimerStart();
-    notifyListeners();
     timer = Timer.periodic(
       Duration(seconds: 1),
       (_) {
@@ -145,9 +165,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     bool advanceProtocol = false;
     int blockSecondsElapsed = secondsElapsed % _repetitionTime.inSeconds;
     if (blockSecondsElapsed == 0) {
-      // Start of a repetition, reset the block index and finish the current
-      // step.
+      // Start of a repetition, reset the block index and finish the current step.
       if (_currentProtocolPart != 0) {
+        ++_currentRepetition;
         if (_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
           endEvent(DateTime.now());
         }
@@ -237,6 +257,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   }
 
   void _pauseProtocol() {
+    countDownController.pause();
     _timerPaused = true;
     disconnectTimeoutTimer?.cancel();
     // TODO(alex): get disconnect timeout from firebase
@@ -255,6 +276,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   }
 
   void _restartProtocol() {
+    countDownController.resume();
     _timerPaused = false;
     disconnectTimeoutTimer?.cancel();
   }
@@ -312,7 +334,14 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   void _stopProtocol() async {
     _logger.log(Level.INFO, 'Stopping ${protocol.name} protocol.');
-    await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
+    _timerPaused = false;
+    try {
+      if (_deviceManager.deviceIsConnected) {
+        await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
+      }
+    } catch (e) {
+      _logger.log(Level.WARNING, "Failed to stop streaming");
+    }
     runnableProtocol.update(
         state: protocolCompleted
             ? ProtocolState.completed

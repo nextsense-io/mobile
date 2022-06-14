@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
+import 'package:nextsense_trial_ui/ui/components/protocol_step_card.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
@@ -18,26 +21,46 @@ class EOECProtocolScreen extends ProtocolScreen {
   Widget runningStateBody(
       BuildContext context, ProtocolScreenViewModel viewModel) {
     final viewModel = context.watch<EOECProtocolScreenViewModel>();
-    final whiteTextStyle = TextStyle(color: Colors.white, fontSize: 20);
-    final bigWhiteTextStyle = TextStyle(color: Colors.white, fontSize: 30);
-    ProtocolPart currentPart = viewModel.getCurrentProtocolPart()!;
 
-    return Container(
-        padding: EdgeInsets.all(10.0),
-        decoration: BoxDecoration(color: Colors.black),
-        child: Center(
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(protocol.description, style: whiteTextStyle),
-                  Text(viewModel.getTextForProtocolPart(currentPart.state),
-                      style: bigWhiteTextStyle),
-                  statusMessage(viewModel),
+    List<ScheduledProtocolPart> scheduledProtocolParts = viewModel.getScheduledProtocolParts();
+    List<Widget> protocolStepCards = [];
+    for (int i = 0; i < viewModel.repetitions; ++i) {
+      List<Widget> repetitionStepCards = [];
+      for (int j = 0; j < scheduledProtocolParts.length; ++j) {
+        repetitionStepCards.add(ProtocolStepCard(
+            image: viewModel.getImageForProtocolPart(scheduledProtocolParts[j].protocolPart.state),
+            text: viewModel.getTextForProtocolPart(scheduledProtocolParts[j].protocolPart.state),
+            currentStep: i * scheduledProtocolParts.length + j == viewModel.protocolIndex));
+      }
+      protocolStepCards.addAll(repetitionStepCards);
+    }
+
+    return PageScaffold(
+        backgroundColor: NextSenseColors.lightGrey,
+        showBackground: false,
+        showProfileButton: false,
+        showBackButton: false,
+        showCancelButton: true,
+        backButtonCallback: () => onBackButtonPressed(context, viewModel),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+                  LightHeaderText(text: protocol.description + ' EEG Recording'),
+                  SizedBox(height: 10),
+                  Stack(
+                    children: [
+                      Center(child: CountDownTimer(duration: viewModel.protocol.minDuration)),
+                      if (!viewModel.deviceCanRecord)
+                        deviceInactiveOverlay(context, viewModel),
+                    ]),
+                  SizedBox(height: 10),
+                ] +
+                protocolStepCards +
+                [
+                  Spacer(),
                   SessionControlButton(runnableProtocol)
-                ]
-            )
-        )
-    );
+                ]));
   }
 
   @override

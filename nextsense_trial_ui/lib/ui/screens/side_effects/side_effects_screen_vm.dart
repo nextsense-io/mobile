@@ -11,6 +11,7 @@ class SideEffectsScreenViewModel extends ViewModel {
   @override
   void init() async {
     setBusy(true);
+    super.init();
     await _loadSideEffects();
     setBusy(false);
     setInitialised(true);

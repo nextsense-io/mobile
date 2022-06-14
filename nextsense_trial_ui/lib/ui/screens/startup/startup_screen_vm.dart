@@ -20,8 +20,10 @@ class StartupScreenViewModel extends ViewModel {
 
   StartupScreenViewModel();
 
+  @override
   void init() async {
     setBusy(true);
+    super.init();
     if (!_dataManager.userLoaded) {
       bool success = false;
       try {

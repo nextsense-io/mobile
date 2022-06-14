@@ -12,16 +12,18 @@ class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Navigation _navigation = getIt<Navigation>();
   final bool showBackButton;
   final bool showProfileButton;
+  final bool showCancelButton;
   final VoidCallback? backButtonCallback;
 
   NextSenseAppBar(
-      {this.showBackButton = false, this.showProfileButton = true, this.backButtonCallback});
+      {this.showBackButton = false, this.showProfileButton = true, this.showCancelButton = false,
+        this.backButtonCallback});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 34,
-      padding: EdgeInsets.only(left: 0, right: 0, top: 6, bottom: 0),
+      padding: EdgeInsets.only(left: 10, right: 10, top: 6, bottom: 0),
       color: Colors.transparent,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -36,12 +38,18 @@ class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ? () => backButtonCallback!.call()
                       : () => _navigation.pop(),
                 )
-              : SizedBox(width: 1, height: 1),
+              : SizedBox.shrink(),
+          Spacer(),
           showProfileButton
               ? ClickableZone(
                   child: RoundBackground(child: Icon(Icons.person, size: 24, color: Colors.black)),
                   onTap: () => _navigation.navigateTo(ProfileScreen.id))
-              : SizedBox(width: 1),
+              : SizedBox.shrink(),
+          showCancelButton
+              ? ClickableZone(child: Icon(Icons.cancel, size: 40, color: NextSenseColors.red),
+                  onTap: backButtonCallback != null
+                      ? () => backButtonCallback!.call()
+                      : () => _navigation.pop()) : SizedBox.shrink()
         ],
       ),
     );
