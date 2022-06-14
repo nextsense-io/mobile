@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
@@ -36,6 +37,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   String get studyDescription => _studyManager.currentStudy!.getDescription();
   String get studyLengthDays => _studyManager.getStudyLength().inDays.toString();
   String get completedSurveys => _surveyManager.getGlobalSurveyStats().completed.toString();
+  Study get study =>_studyManager.currentStudy!;
   bool get studyStarted => _studyManager.isStudyStarted();
   bool get studyFinished => _studyManager.isStudyFinished();
 

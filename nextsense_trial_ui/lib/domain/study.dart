@@ -116,12 +116,28 @@ class Study extends FirebaseEntity<StudyKey> {
   }
 
   // Allow recording of adhoc protocols
-  bool get isAdhocRecordingAllowed {
+  bool get adhocRecordingAllowed {
     return getValue(StudyKey.adhoc_recording_allowed) == true;
   }
 
   bool get adhocSurveysAllowed {
     return getValue(StudyKey.adhoc_surveys_allowed) == true;
+  }
+
+  bool get seizureTrackingEnabled {
+    return getValue(StudyKey.seizure_tracking) == true;
+  }
+
+  bool get sideEffectsTrackingEnabled {
+    return getValue(StudyKey.side_effects_tracking) == true;
+  }
+
+  bool get medicationTrackingEnabled {
+    return getValue(StudyKey.medication_tracking) == true;
+  }
+
+  bool get surveysEnabled {
+    return getAllowedSurveys().isNotEmpty;
   }
 
   List<IntroPageContent> getIntroPageContents() {
