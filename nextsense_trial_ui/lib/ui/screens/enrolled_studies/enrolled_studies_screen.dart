@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/domain/enrolled_study.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
+import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_screen_vm.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
@@ -19,25 +23,22 @@ class EnrolledStudiesScreen extends HookWidget {
         builder: (context, viewModel, child) {
           return WillPopScope(
             onWillPop: () => _onBackButtonPressed(context, viewModel),
-            child: SafeArea(child: Scaffold(
-                appBar: AppBar(
-                  title: Text('Switch study'),
-                ),
-                body: _buildBody(context, viewModel))),
+            child: SafeArea(child: PageScaffold(child: _buildBody(context, viewModel))),
           );
         }
     );
   }
 
   Widget _buildBody(BuildContext context, EnrolledStudiesScreenViewModel viewModel) {
-    TextStyle textStyle = TextStyle(fontSize: 22);
     return Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
             Padding(padding: EdgeInsets.only(top: 20),
-                child: Text('Current study: ' + viewModel.currentStudyId, style: textStyle)),
+                child: MediumText(text: 'Current study: ' + viewModel.currentStudyId,
+                    color: NextSenseColors.darkBlue)),
             Padding(padding: EdgeInsets.only(top: 20),
-                child: Text('Select the study to switch to', style: textStyle)),
+                child: MediumText(text: 'Select the study to switch to',
+                    color: NextSenseColors.darkBlue)),
             _EnrolledStudiesSelector()
           ]
     );
@@ -54,8 +55,7 @@ class _EnrolledStudiesSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    EnrolledStudiesScreenViewModel viewModel =
-        context.watch<EnrolledStudiesScreenViewModel>();
+    EnrolledStudiesScreenViewModel viewModel = context.watch<EnrolledStudiesScreenViewModel>();
 
     if (!viewModel.initialised) {
       return Padding(
@@ -87,7 +87,7 @@ class _EnrolledStudiesSelector extends StatelessWidget {
       }
       studyElements.add(_StudySelectionItem(
           label: Padding(padding: EdgeInsets.all(10),
-              child: Text(enrolledStudy.id, style: TextStyle(fontSize: 20.0))),
+              child: MediumText(text: enrolledStudy.id, color: NextSenseColors.darkBlue)),
               onPressed: () async {
                 bool studyChanged = await viewModel.changeCurrentStudy(enrolledStudy);
                 if (studyChanged) {
@@ -110,24 +110,19 @@ class _EnrolledStudiesSelector extends StatelessWidget {
 
 class _StudySelectionItem extends StatelessWidget {
   final Widget label;
-  final VoidCallback? onPressed;
+  final Function onPressed;
 
   const _StudySelectionItem({
     Key? key,
     required this.label,
-    this.onPressed,
+    required this.onPressed,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.all(10),
-      child: Align(
-        child: ElevatedButton(
-          child: label,
-          onPressed: onPressed,
-        ),
-      ),
+      child: SimpleButton(text: label, onTap: onPressed),
     );
   }
 }
