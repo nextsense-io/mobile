@@ -150,8 +150,7 @@ class ProfileScreen extends HookWidget {
   void _startAdhocProtocol(BuildContext context) async {
     await showDialog(
         context: context,
-        builder: (_) => ChangeNotifierProvider.value(
-            value: context.read<ProfileScreenViewModel>(), child: StartAdhocProtocolDialog()));
+        builder: (_) => StartAdhocProtocolDialog());
   }
 }
 

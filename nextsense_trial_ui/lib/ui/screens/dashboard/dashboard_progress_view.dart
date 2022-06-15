@@ -1,13 +1,20 @@
 import 'package:flutter/widgets.dart';
-import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
-import 'package:provider/provider.dart';
+import 'package:nextsense_trial_ui/ui/components/header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/nextsense_app_bar.dart';
+import 'package:nextsense_trial_ui/ui/components/page_container.dart';
 
 class DashboardProgressView extends StatelessWidget {
   const DashboardProgressView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final dashboardViewModel = context.watch<DashboardScreenViewModel>();
-    return Text("Progress");
+    List<Widget> contents = [
+      NextSenseAppBar(),
+      HeaderText(text: 'My Progress'),
+      SizedBox(height: 15),
+    ];
+
+    return PageContainer(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents));
   }
 }
