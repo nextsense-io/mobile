@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
@@ -5,8 +8,12 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
-import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
+import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
+import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:wakelock/wakelock.dart';
 
 class ImpedanceCalculationScreen extends StatefulWidget {
   static const String id = 'impedance_calculation_screen';
@@ -15,14 +22,18 @@ class ImpedanceCalculationScreen extends StatefulWidget {
   _ImpedanceCalculationScreenState createState() => _ImpedanceCalculationScreenState();
 }
 
-class _ImpedanceCalculationScreenState extends
-    State<ImpedanceCalculationScreen> {
+class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen> {
+  static const Duration _refreshInterval = Duration(milliseconds: 1000);
+  static const int _impedanceSampleSize = 1024;
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('ImpedanceCalculationScreen');
+  bool _impedanceRunning = false;
+  bool _calculatingImpedance = false;
   XenonImpedanceCalculator? _impedanceCalculator;
-  Map<int, double>? _impedanceResults;
   Map<String, dynamic>? _deviceSettings;
+  Timer? _screenRefreshTimer;
+  String _impedanceResult = 'Waiting for results';
 
   @override
   void initState() {
@@ -36,79 +47,96 @@ class _ImpedanceCalculationScreenState extends
     if (connectedDevice != null) {
       String macAddress = connectedDevice.macAddress;
       _deviceSettings = await NextsenseBase.getDeviceSettings(macAddress);
-      _impedanceCalculator = new XenonImpedanceCalculator(samplesSize: 1024,
-          deviceSettings: _deviceSettings!);
+      _impedanceCalculator = new XenonImpedanceCalculator(
+          samplesSize: _impedanceSampleSize, deviceSettings: _deviceSettings!);
     }
   }
 
-  Future _calculateImpedance() async {
-    _impedanceResults = await _impedanceCalculator
-        ?.calculateAllChannelsImpedance(ImpedanceMode.ON_1299_AC);
-    if (_impedanceResults != null) {
+  String _spaceInt(int integer) {
+    String intString = integer.toString();
+    String spacedIntString = '';
+    while (intString.length > 3) {
+      spacedIntString = intString.substring(max(0, intString.length - 3), intString.length) +
+          ' ' +
+          spacedIntString;
+      intString = intString.substring(0, max(1, intString.length - 3));
+    }
+    return intString + ' ' + spacedIntString.trim();
+  }
+
+  _calculateImpedance(Timer timer) {
+    _logger.log(Level.INFO, 'starting impedance calculation');
+    if (_calculatingImpedance) {
+      return;
+    }
+    _calculatingImpedance = true;
+    _impedanceCalculator
+        ?.calculateAllChannelsImpedance(ImpedanceMode.ON_1299_AC)
+        .then((impedanceData) {
       // TODO(Eric): Should map these in an earbud configuration.
       String resultsText = '';
-      resultsText += 'Channel Left Channel: ' +
-          _impedanceResults![7]!.round().toString() + '\n\n';
-      resultsText += 'Channel Right Channel: ' +
-          _impedanceResults![8]!.round().toString() + '\n\n';
-      resultsText += 'Channel Left Helix: ' +
-          _impedanceResults![1]!.round().toString() + '\n\n';
-      // for (Integer channel in _deviceSettings![
-      //     describeEnum(DeviceSettingsFields.enabledChannels)]) {
-      //   resultsText += 'Channel ${channel.toSimple()}: ' +
-      //       _impedanceResults![channel.toSimple()]!.round().toString() + '\n\n';
-      // }
+      resultsText += 'Left Canal: ' + _spaceInt(impedanceData[7]!.round()) + '\n\n';
+      resultsText += 'Right Canal: ' + _spaceInt(impedanceData[8]!.round()) + '\n\n';
+      resultsText += 'Left Helix: ' + _spaceInt(impedanceData[1]!.round()) + '\n\n';
       _logger.log(Level.INFO, resultsText);
-      showDialog(
-        context: context,
-        builder: (_) => SimpleAlertDialog(
-              title: 'Impedance Results',
-              content: resultsText)
-      );
-    }
+      _logger.log(Level.INFO, 'updating impedance result');
+      setState(() {
+        _impedanceResult = resultsText;
+      });
+      _logger.log(Level.INFO, 'updated impedance result');
+      _calculatingImpedance = false;
+    });
+  }
 
+  @override
+  dispose() {
+    super.dispose();
+    _screenRefreshTimer?.cancel();
+    _impedanceCalculator?.stopCalculatingImpedance();
+    Wakelock.disable();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Check earbuds seating'),
-      ),
-      body: Container(
-        decoration: baseBackgroundDecoration,
+    return PageScaffold(
+      child: Container(
         child: Center(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: Text('Press continue once the earbuds are inserted '
-                      'in your ears and stay still while checking if there is '
-                      'a good contact. It will take around 30 seconds.',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 24,
-                          fontFamily: 'Roboto')),
-                ),
-                Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: ElevatedButton(
-                      child: const Text('Continue'),
-                      onPressed: () async {
-                        if (!_deviceManager.deviceIsConnected) {
-                          await showDialog(
-                              context: context,
-                              builder: (_) => SimpleAlertDialog(
-                                  title: 'Device is not connected',
-                                  content: 'Use the Connect button to connect with a device first.')
-                          );
-                          return;
-                        }
-                        _calculateImpedance();
-                      },
-                    )),
-              ]),
+          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+            Padding(
+              padding: EdgeInsets.all(10.0),
+              child: MediumText(
+                text: 'Press start once the earbuds are inserted in your ears and stay still '
+                    'while checking if there is a good contact. It will take a few seconds to get '
+                    'values, -1 might be displayed until then.',
+                color: NextSenseColors.darkBlue,
+              ),
+            ),
+            SizedBox(height: 10),
+            MediumText(text: _impedanceResult, color: NextSenseColors.darkBlue),
+            SizedBox(height: 10),
+            Padding(
+                padding: EdgeInsets.all(10.0),
+                child: SimpleButton(
+                  text: MediumText(text: 'Start', color: NextSenseColors.purple),
+                  onTap: () async {
+                    if (!_deviceManager.deviceIsConnected) {
+                      await showDialog(
+                          context: context,
+                          builder: (_) => SimpleAlertDialog(
+                              title: 'Device is not connected',
+                              content: 'Use the Connect button to connect with a device first.'));
+                      return;
+                    }
+                    if (!_impedanceRunning) {
+                      _impedanceRunning = true;
+                      Wakelock.enable();
+                      await _impedanceCalculator?.startADS1299AcImpedance();
+                      _screenRefreshTimer =
+                          new Timer.periodic(_refreshInterval, _calculateImpedance);
+                    }
+                  },
+                )),
+          ]),
         ),
       ),
     );
