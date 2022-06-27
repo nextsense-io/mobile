@@ -72,7 +72,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     }
     setBusy(false);
     StudyDay? studyDay = _studyManager.today;
-    if (studyDay != null) {
+    if (studyDay != null && _studyManager.currentStudyEndDate != null) {
       selectDay(_studyManager.today!);
     } else {
       if (DateTime.now().isAfter(_studyManager.currentStudyEndDate!)) {
