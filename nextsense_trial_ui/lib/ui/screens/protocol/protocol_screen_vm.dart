@@ -95,7 +95,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _startProtocol();
   }
 
-  void stopSession() {
+  Future stopSession() async {
     _logger.log(Level.INFO, "stopSession");
 
     cancelTimer();
@@ -311,7 +311,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     if (_deviceManager.getConnectedDevice() != null) {
       _logger.log(Level.INFO, 'Starting ${protocol.name} protocol.');
       bool started = await _sessionManager.startSession(
-          _deviceManager.getConnectedDevice()!.macAddress,
+          _deviceManager.getConnectedDevice()!,
           _studyManager.currentStudyId!,
           protocol.name);
       if (!started) {

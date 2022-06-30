@@ -2,6 +2,9 @@ package io.nextsense.android.base.data;
 
 import androidx.annotation.Nullable;
 
+import java.time.Instant;
+
+import io.nextsense.android.base.db.objectbox.Converters;
 import io.objectbox.annotation.Convert;
 import io.objectbox.annotation.Entity;
 import io.objectbox.converter.PropertyConverter;
@@ -13,10 +16,11 @@ import io.objectbox.converter.PropertyConverter;
 public class LocalSession extends BaseRecord {
 
   public enum Status {
-    NOT_STARTED(0),
-    RECORDING(1),
-    FINISHED(2),
-    UPLOADED(3);
+    NOT_STARTED(0),  // Recording not started yet, getting ready.
+    RECORDING(1),  // Currently recording samples from the device.
+    FINISHED(2),  // Session is finished, new samples should not be acquired anymore.
+    UPLOADED(3),  // All samples were uploaded to the cloud.
+    COMPLETED(4);  // Session marked as completed in the cloud after the upload is done.
 
     public final int id;
 
@@ -44,12 +48,18 @@ public class LocalSession extends BaseRecord {
   private long accelerationsDeleted;
   private float accelerationSampleRate;
   private int deviceInternalStateUploaded;
+  @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
+  private Instant startTime;
+  @Nullable
+  @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
+  private Instant endTime;
 
   private LocalSession(@Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
                        @Nullable String earbudsConfig, Status status, boolean uploadNeeded,
                        int eegSamplesUploaded, long eegSamplesDeleted, float eegSampleRate,
                        int accelerationsUploaded, long accelerationsDeleted,
-                       float accelerationSampleRate, int deviceInternalStateUploaded) {
+                       float accelerationSampleRate, int deviceInternalStateUploaded,
+                       Instant startTime) {
     super();
     this.userBigTableKey = userBigTableKey;
     this.cloudDataSessionId = cloudDataSessionId;
@@ -63,16 +73,17 @@ public class LocalSession extends BaseRecord {
     this.accelerationsDeleted = accelerationsDeleted;
     this.accelerationSampleRate = accelerationSampleRate;
     this.deviceInternalStateUploaded = deviceInternalStateUploaded;
+    this.startTime = startTime;
   }
 
   public static LocalSession create(
       @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
       @Nullable String earbudsConfig, boolean uploadNeeded, float eegSampleRate,
-      float accelerationSampleRate) {
+      float accelerationSampleRate, Instant startTime) {
     return new LocalSession(cloudDataSessionId, userBigTableKey, earbudsConfig, Status.RECORDING,
         uploadNeeded, /*recordsUploaded=*/0, /*eegSamplesDeleted=*/0, eegSampleRate,
         /*accelerationsUploaded=*/0, /*accelerationSamplesDeleted=*/0, accelerationSampleRate,
-        /*deviceInternalStateUploaded=*/0);
+        /*deviceInternalStateUploaded=*/0, startTime);
   }
 
   // Need to be public for ObjectBox performance.
@@ -80,7 +91,8 @@ public class LocalSession extends BaseRecord {
       int id, @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
       @Nullable String earbudsConfig, Status status, boolean uploadNeeded, int eegSamplesUploaded,
       long eegSamplesDeleted, float eegSampleRate, int accelerationsUploaded,
-      long accelerationsDeleted, float accelerationSampleRate, int deviceInternalStateUploaded) {
+      long accelerationsDeleted, float accelerationSampleRate, int deviceInternalStateUploaded,
+      Instant startTime, @Nullable Instant endTime) {
     super(id);
     this.userBigTableKey = userBigTableKey;
     this.cloudDataSessionId = cloudDataSessionId;
@@ -94,6 +106,8 @@ public class LocalSession extends BaseRecord {
     this.accelerationsDeleted = accelerationsDeleted;
     this.accelerationSampleRate = accelerationSampleRate;
     this.deviceInternalStateUploaded = deviceInternalStateUploaded;
+    this.startTime = startTime;
+    this.endTime = endTime;
   }
 
   @Nullable
@@ -192,6 +206,23 @@ public class LocalSession extends BaseRecord {
 
   public void setDeviceInternalStateUploaded(int deviceInternalStateUploaded) {
     this.deviceInternalStateUploaded = deviceInternalStateUploaded;
+  }
+
+  public Instant getStartTime() {
+    return startTime;
+  }
+
+  public void setStartTime(Instant startTime) {
+    this.startTime = startTime;
+  }
+
+  @Nullable
+  public Instant getEndTime() {
+    return endTime;
+  }
+
+  public void setEndTime(@Nullable Instant endTime) {
+    this.endTime = endTime;
   }
 
   public static class StatusConverter implements PropertyConverter<Status, Integer> {
