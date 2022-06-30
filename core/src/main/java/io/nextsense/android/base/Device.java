@@ -9,7 +9,6 @@ import com.welie.blessed.BluetoothPeripheral;
 import io.nextsense.android.Config;
 import io.nextsense.android.base.ble.BleDevice;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
-import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.emulated.EmulatedDevice;
 
@@ -24,11 +23,11 @@ import java.util.Set;
  */
 public abstract class Device {
 
-  public Device() {}
+  protected Device() {}
 
   public static Device create(BleCentralManagerProxy centralProxy, NextSenseDevice nextSenseDevice,
                               BluetoothPeripheral btPeripheral) {
-    if (Config.useEmulatedBle)
+    if (Config.USE_EMULATED_BLE)
       return new EmulatedDevice();
 
     return new BleDevice(centralProxy, nextSenseDevice, btPeripheral);
@@ -47,8 +46,6 @@ public abstract class Device {
     HARD  // Disconnect not initiated by the user.
   }
 
-  private static final String TAG = Device.class.getSimpleName();
-  private static final Duration RECONNECTION_ATTEMPTS_INTERVAL = Duration.ofSeconds(30);
   private final Set<DeviceStateChangeListener> deviceStateChangeListeners = new HashSet<>();
   protected SettableFuture<DeviceState> deviceConnectionFuture;
   protected SettableFuture<DeviceState> deviceDisconnectionFuture;

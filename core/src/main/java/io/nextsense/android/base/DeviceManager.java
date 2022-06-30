@@ -22,7 +22,7 @@ public interface DeviceManager {
   void stopFindingDevices(DeviceScanner.DeviceScanListener deviceScanListener);
 
   static DeviceManager create(DeviceScanner deviceScanner, LocalSessionManager localSessionManager) {
-    if (Config.useEmulatedBle)
+    if (Config.USE_EMULATED_BLE)
       return new EmulatedDeviceManager(deviceScanner, localSessionManager);
 
     return new BleDeviceManager(deviceScanner);
