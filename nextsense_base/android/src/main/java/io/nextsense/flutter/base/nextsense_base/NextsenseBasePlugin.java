@@ -220,7 +220,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
             result);
         break;
       case IS_BLUETOOTH_ENABLED:
-        if (!Config.useEmulatedBle)
+        if (!Config.USE_EMULATED_BLE)
           result.success(BluetoothAdapter.getDefaultAdapter().isEnabled());
         else
           result.success(true);

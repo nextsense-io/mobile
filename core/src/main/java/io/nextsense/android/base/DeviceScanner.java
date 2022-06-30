@@ -44,7 +44,7 @@ public interface DeviceScanner {
 
     static DeviceScanner create(NextSenseDeviceManager deviceManager,
                                 BleCentralManagerProxy centralManagerProxy) {
-        if (Config.useEmulatedBle)
+        if (Config.USE_EMULATED_BLE)
             return new EmulatedDeviceScanner();
 
         return new BleDeviceScanner(deviceManager, centralManagerProxy);

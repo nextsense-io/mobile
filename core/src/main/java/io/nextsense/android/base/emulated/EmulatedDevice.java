@@ -8,26 +8,19 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.SettableFuture;
 
 import org.greenrobot.eventbus.EventBus;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceData;
@@ -41,7 +34,6 @@ import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.xenon.SampleFlags;
-import io.nextsense.android.base.devices.xenon.XenonDataParser;
 import io.nextsense.android.base.utils.Util;
 
 public class EmulatedDevice extends Device {
@@ -57,9 +49,6 @@ public class EmulatedDevice extends Device {
 
   private final ListeningExecutorService executorService =
           MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
-
-  public EmulatedDevice() {
-  }
 
   public void setLocalSessionManager(LocalSessionManager localSessionManager) {
     this.localSessionManager = localSessionManager;
@@ -96,7 +85,6 @@ public class EmulatedDevice extends Device {
   }
 
   private void postEmulatedSamples() {
-
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
       Log.w(TAG, "Received data packet without an active session, cannot record it.");
@@ -133,7 +121,7 @@ public class EmulatedDevice extends Device {
       localSessionManager.startLocalSession(userBigTableKey, dataSessionId, earbudsConfig,
           uploadToCloud, getSettings().getEegStreamingRate(), getSettings().getImuStreamingRate());
 
-      final Integer fireEachMillis = Math.round(1000 / getSettings().getEegStreamingRate());
+      final int fireEachMillis = Math.round(1000 / getSettings().getEegStreamingRate());
       sendSamplesTimer = new Timer();
       sendSamplesTimer.schedule(new TimerTask() {
         @Override
@@ -151,13 +139,14 @@ public class EmulatedDevice extends Device {
   @Override
   public ListenableFuture<Boolean> stopStreaming() {
     Util.logd(TAG, "stopStreaming");
+    if (sendSamplesTimer != null) {
+      sendSamplesTimer.purge();
+      sendSamplesTimer.cancel();
+      sendSamplesTimer = null;
+    }
 
     if (localSessionManager != null) {
       localSessionManager.stopLocalSession();
-    }
-    if (sendSamplesTimer != null) {
-      sendSamplesTimer.cancel();
-      sendSamplesTimer = null;
     }
 
     currentMode = DeviceMode.IDLE;

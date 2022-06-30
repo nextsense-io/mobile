@@ -137,7 +137,7 @@ public class ForegroundService extends Service {
     objectBoxDatabase = new ObjectBoxDatabase();
     objectBoxDatabase.init(this);
     localSessionManager = LocalSessionManager.create(objectBoxDatabase);
-    centralManagerProxy = (!Config.useEmulatedBle) ?
+    centralManagerProxy = (!Config.USE_EMULATED_BLE) ?
             new BleCentralManagerProxy(getApplicationContext()) : null;
     deviceScanner = DeviceScanner.create(NextSenseDeviceManager.create(localSessionManager),
         centralManagerProxy);
@@ -150,7 +150,7 @@ public class ForegroundService extends Service {
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
     // minRecordsToKeep is set at 5000 as ~4000 records is the upper limit we are considering for
     // impedance calculation.
-    uploader = Uploader.create(objectBoxDatabase, connectivity, /*uploadChunk=*/250,
+    uploader = Uploader.create(objectBoxDatabase, connectivity, /*uploadChunk=*/1250,
         /*minRecordsToKeep=*/5000, Duration.ofMillis((5000 / 250) * 1000L));
     uploader.start();
     initialized = true;
