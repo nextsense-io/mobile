@@ -7,6 +7,7 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -28,7 +29,7 @@ class SessionManager {
   String? get currentSessionId => _currentSession?.id;
   int? _currentLocalSession;
 
-  Future<bool> startSession(String deviceMacAddress, String studyId, String protocolName) async {
+  Future<bool> startSession(Device device, String studyId, String protocolName) async {
     String? userCode = _authManager.userCode;
     if (userCode == null) {
       return false;
@@ -50,9 +51,10 @@ class SessionManager {
     }
     _currentSession = Session(sessionEntity);
     DateTime startTime = DateTime.now();
-    _currentSession!..setValue(
-        SessionKey.start_datetime, startTime.toIso8601String())
+    _currentSession!..setValue(SessionKey.start_datetime, startTime)
                     ..setValue(SessionKey.user_id, userCode)
+                    ..setValue(SessionKey.device_id, device.name)
+                    ..setValue(SessionKey.device_mac_address, device.macAddress)
                     ..setValue(SessionKey.study_id, studyId)
                     ..setValue(SessionKey.protocol, protocolName);
     bool success = await _currentSession!.save();
@@ -68,11 +70,10 @@ class SessionManager {
       return false;
     }
     _currentDataSession = DataSession(dataSessionEntity);
-    _currentDataSession!.setValue(
-        DataSessionKey.start_datetime, startTime.toIso8601String());
+    _currentDataSession!.setValue(DataSessionKey.start_datetime, startTime);
     // TODO(eric): Add an API to get this from the connected device.
     Map<String, dynamic> deviceSettings =
-        await NextsenseBase.getDeviceSettings(deviceMacAddress);
+        await NextsenseBase.getDeviceSettings(device.macAddress);
     _currentDataSession!.setValue(DataSessionKey.streaming_rate,
         deviceSettings[describeEnum(DeviceSettingsFields.eegStreamingRate)]
             .value);
@@ -93,7 +94,7 @@ class SessionManager {
     String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
     try {
       _currentLocalSession = await NextsenseBase.startStreaming(
-          deviceMacAddress, /*uploadToCloud=*/true,
+          device.macAddress, /*uploadToCloud=*/true,
           user.getValue(UserKey.bt_key), dataSessionCode,
           _studyManager.currentStudy?.getEarbudsConfig() ?? null);
       return true;
@@ -115,12 +116,10 @@ class SessionManager {
     }
     NextsenseBase.stopStreaming(deviceMacAddress);
     DateTime stopTime = DateTime.now();
-    _currentSession!.setValue(SessionKey.end_datetime,
-        stopTime.toIso8601String());
+    _currentSession!.setValue(SessionKey.end_datetime, stopTime);
     await _currentSession!.save();
     _currentSession = null;
-    _currentDataSession!.setValue(
-        DataSessionKey.end_datetime, stopTime.toIso8601String());
+    _currentDataSession!.setValue(DataSessionKey.end_datetime, stopTime);
     await _currentDataSession!.save();
     _currentDataSession = null;
   }

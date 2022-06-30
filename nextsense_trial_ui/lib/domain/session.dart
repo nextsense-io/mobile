@@ -9,6 +9,8 @@ enum SessionKey {
   channel_config,
   // Id of the NextSense device that was used to record the session.
   device_id,
+  // BLE mac address of the NextSense device that was used to record the session.
+  device_mac_address,
   // Id of the earbuds that were plugged in the NextSense device to record the
   // session.
   earbud_id,

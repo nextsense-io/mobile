@@ -1,9 +1,7 @@
 package io.nextsense.android.base.data;
 
 import android.util.Log;
-
 import androidx.annotation.Nullable;
-
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
@@ -49,7 +47,7 @@ public class LocalSessionManager {
       return -1;
     }
     activeLocalSession = LocalSession.create(userBigTableKey, cloudDataSessionId, earbudsConfig,
-        uploadNeeded, eegSampleRate, accelerationSampleRate);
+        uploadNeeded, eegSampleRate, accelerationSampleRate, Instant.now());
     return objectBoxDatabase.putLocalSession(activeLocalSession);
   }
 
@@ -62,7 +60,9 @@ public class LocalSessionManager {
       // There must be an active session at this point so no need to check.
       activeLocalSession = objectBoxDatabase.getActiveSession().get();
       activeLocalSession.setStatus(LocalSession.Status.FINISHED);
+      activeLocalSession.setEndTime(Instant.now());
       objectBoxDatabase.putLocalSession(activeLocalSession);
+      Log.i(TAG, "Local session " + activeLocalSession.getCloudDataSessionId() + " finished.");
     });
     lastActiveSessionEnd = Instant.now();
     lastActiveSession = activeLocalSession;
