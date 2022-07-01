@@ -127,12 +127,19 @@ public class ObjectBoxDatabase implements Database {
       List<LocalSession> activeSessions = activeSessionQuery.find();
       if (activeSessions.size() > 1) {
         Log.w(TAG, "More than one active session");
+        for (LocalSession session : activeSessions) {
+          Log.w(TAG, "Active session : " + session.getCloudDataSessionId());
+        }
       }
       if (!activeSessions.isEmpty()) {
         return Optional.of(activeSessions.get(activeSessions.size() - 1));
       }
       return Optional.empty();
     });
+  }
+
+  public List<LocalSession> getActiveSessions() {
+    return runWithExceptionLog(() -> activeSessionQuery.find());
   }
 
   public List<EegSample> getEegSamples(int localSessionId) {
