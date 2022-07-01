@@ -21,9 +21,7 @@ Future<bool> _confirmStopSessionDialog(BuildContext context,
   String confirmStopText = 'Protocol is not finished yet.\n'
       'Are you sure you want to stop?';
   if (viewModel.minDurationPassed) {
-    confirmStopText = 'Protocol minimum time successfully passed!\n'
-        'You can continue protocol until maximum duration reached.\n'
-        'Do you want to stop?';
+    confirmStopText = 'Are you sure you want to stop?';
   }
   return await showDialog(
       context: context,
@@ -47,14 +45,16 @@ Future<bool> _confirmStopSessionDialog(BuildContext context,
 class SessionControlButton extends StatelessWidget {
 
   final RunnableProtocol _runnableProtocol;
+  final String text;
 
-  SessionControlButton(RunnableProtocol runnableProtocol) : _runnableProtocol = runnableProtocol;
+  SessionControlButton(RunnableProtocol runnableProtocol, {this.text = 'Stop'}) :
+        _runnableProtocol = runnableProtocol;
 
   @override
   Widget build(BuildContext context) {
     ProtocolScreenViewModel viewModel = context.watch<ProtocolScreenViewModel>();
     return SimpleButton(
-      text: Center(child: MediumText(text: 'Stop', color: NextSenseColors.purple)),
+      text: Center(child: MediumText(text: text, color: NextSenseColors.purple)),
       border: Border.all(width: 2, color: NextSenseColors.purple),
       onTap: () async {
         if (viewModel.sessionIsActive) {
@@ -100,10 +100,49 @@ class ProtocolScreen extends HookWidget {
         ));
   }
 
-  Widget runningStateBody(
-      BuildContext context, ProtocolScreenViewModel viewModel) {
+  Widget runningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
     // The basic body will show a timer while running.
-    return notRunningStateBody(context, viewModel);
+    bool isError = !viewModel.protocolCompleted &&
+        viewModel.protocolCancelReason != ProtocolCancelReason.none;
+    var statusMsg = ' Recording';
+    if (isError) {
+      statusMsg = ' EEG Recording Canceled because the device was unavailable for too long';
+    }
+
+    return PageScaffold(
+        backgroundColor: NextSenseColors.lightGrey,
+        showBackground: false,
+        showProfileButton: false,
+        showBackButton: false,
+        showCancelButton: true,
+        backButtonCallback: () => onBackButtonPressed(context, viewModel),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(height: 20),
+              Align(alignment: Alignment.centerLeft, child:
+              LightHeaderText(text: protocol.nameForUser + statusMsg,
+                  textAlign: TextAlign.center)),
+              Spacer(),
+              // if (isError)
+              //   SimpleButton(
+              //     text: Center(child: MediumText(text: 'Restart',
+              //         color: NextSenseColors.purple)),
+              //     border: Border.all(width: 2, color: NextSenseColors.purple),
+              //     onTap: () async {
+              //       viewModel.startSession();
+              //     }),
+              // if (isError) SizedBox(height: 10),
+              CountDownTimer(duration: protocol.maxDuration, reverse: false),
+              Spacer(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  SessionControlButton(runnableProtocol, text: 'Log recording'),
+                ],
+              )
+            ]));
   }
 
   Widget notRunningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
@@ -127,7 +166,7 @@ class ProtocolScreen extends HookWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Spacer(),
+              SizedBox(height: 20),
               LightHeaderText(text: protocol.description + statusMsg,
                   textAlign: TextAlign.center),
               Spacer(),
@@ -140,13 +179,17 @@ class ProtocolScreen extends HookWidget {
               //       viewModel.startSession();
               //     }),
               // if (isError) SizedBox(height: 10),
-              SimpleButton(
-                  text: Center(child: MediumText(text: 'Back to Tasks',
-                      color: NextSenseColors.purple)),
-                  border: Border.all(width: 2, color: NextSenseColors.purple),
-                  onTap: () async {
-                    Navigator.pop(context);
-                  })
+              CountDownTimer(duration: protocol.maxDuration, reverse: false),
+              Spacer(),
+              Row(children: [
+                SimpleButton(
+                    text: Center(child: MediumText(text: 'Log recording',
+                        color: NextSenseColors.purple)),
+                    border: Border.all(width: 2, color: NextSenseColors.purple),
+                    onTap: () async {
+                      viewModel.stopSession();
+                    })
+              ],)
             ]));
 
     // Re-add status messages.
@@ -178,7 +221,11 @@ class ProtocolScreen extends HookWidget {
     if (viewModel.sessionIsActive) {
       bool confirm = await _confirmStopSessionDialog(context, viewModel);
       if (confirm) {
-        viewModel.stopSession();
+        await viewModel.stopSession();
+        // Exit from protocol screen for adhoc
+        if (runnableProtocol.type == RunnableProtocolType.adhoc) {
+          Navigator.pop(context);
+        }
         return true;
       }
       return false;
@@ -238,8 +285,9 @@ class ProtocolScreen extends HookWidget {
 
 class CountDownTimer extends StatelessWidget {
   final Duration duration;
+  final bool reverse;
 
-  CountDownTimer({required this.duration});
+  CountDownTimer({required this.duration, required this.reverse});
 
   @override
   Widget build(BuildContext context) {
@@ -249,7 +297,7 @@ class CountDownTimer extends StatelessWidget {
       controller: viewModel.countDownController,
       width: MediaQuery.of(context).size.width / 2.5,
       height: MediaQuery.of(context).size.width / 2.5,
-      ringColor: NextSenseColors.transparent,
+      ringColor: reverse ? NextSenseColors.transparent : NextSenseColors.purple,
       fillColor: NextSenseColors.purple,
       backgroundColor: Colors.transparent,
       strokeWidth: 4.0,
@@ -257,8 +305,8 @@ class CountDownTimer extends StatelessWidget {
       textStyle:
           TextStyle(fontSize: 36.0, color: NextSenseColors.purple, fontWeight: FontWeight.w500),
       textFormat: CountdownTextFormat.MM_SS,
-      isReverse: true,
-      isReverseAnimation: true,
+      isReverse: reverse,
+      isReverseAnimation: reverse,
       isTimerTextShown: true,
       autoStart: true,
     ));

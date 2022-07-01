@@ -131,10 +131,10 @@ class VariableDaytimeProtocol extends BaseProtocol {
   ProtocolType get type => ProtocolType.variable_daytime;
 
   @override
-  String get nameForUser => "Variable Daytime";
+  String get nameForUser => "Daytime";
 
   @override
-  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 10);
+  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 0);
 
   @override
   Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 24);
@@ -156,10 +156,10 @@ class SleepProtocol extends BaseProtocol {
   String get nameForUser => 'Sleep';
 
   @override
-  Duration get minDuration => _minDurationOverride ?? Duration(hours: 1);
+  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 0);
 
   @override
-  Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 10);
+  Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 12);
 
   // TODO(alex): add sleep protocol description
   @override
