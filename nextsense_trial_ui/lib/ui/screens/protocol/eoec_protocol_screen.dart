@@ -50,7 +50,7 @@ class EOECProtocolScreen extends ProtocolScreen {
                   SizedBox(height: 10),
                   Stack(
                     children: [
-                      Center(child: CountDownTimer(duration: viewModel.protocol.minDuration)),
+                      Center(child: CountDownTimer(duration: protocol.minDuration, reverse: true),),
                       if (!viewModel.deviceCanRecord)
                         deviceInactiveOverlay(context, viewModel),
                     ]),
