@@ -78,6 +78,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
   public static final String UPLOAD_TO_CLOUD_ARGUMENT = "upload_to_cloud";
+  public static final String CONTINUOUS_IMPEDANCE_ARGUMENT = "continuous_impedance";
   public static final String USER_BT_KEY_ARGUMENT = "user_bigtable_key";
   public static final String DATA_SESSION_ID_ARGUMENT = "data_session_id";
   public static final String EARBUDS_CONFIG_ARGUMENT = "earbuds_config";
@@ -228,10 +229,12 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case START_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         Boolean uploadToCloud = call.argument(UPLOAD_TO_CLOUD_ARGUMENT);
+        Boolean continuousImpedance = call.argument(CONTINUOUS_IMPEDANCE_ARGUMENT);
         String userBtKey = call.argument(USER_BT_KEY_ARGUMENT);
         String dataSessionId = call.argument(DATA_SESSION_ID_ARGUMENT);
         String earbudsConfig = call.argument(EARBUDS_CONFIG_ARGUMENT);
-        startStreaming(result, macAddress, uploadToCloud, userBtKey, dataSessionId, earbudsConfig);
+        startStreaming(result, macAddress, uploadToCloud, continuousImpedance, userBtKey,
+            dataSessionId, earbudsConfig);
         break;
       case STOP_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -527,8 +530,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private void startStreaming(Result result, String macAddress, Boolean uploadToCloud,
-                              String userBigTableKey, String dataSessionId, String earbudsConfig) {
+  private void startStreaming(
+      Result result, String macAddress, Boolean uploadToCloud, Boolean continuousImpedance,
+      String userBigTableKey, String dataSessionId, String earbudsConfig) {
     Device device = devices.get(macAddress);
     if (device == null) {
       returnError(result, START_STREAMING_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
@@ -537,7 +541,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
     try {
       boolean started = device.startStreaming(
-          uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig).get();
+          uploadToCloud, continuousImpedance, userBigTableKey, dataSessionId, earbudsConfig).get();
       if (!started) {
         returnError(result, START_STREAMING_COMMAND, ERROR_STREAMING_START_FAILED,
             /*errorMessage=*/null, /*errorDetails=*/null);

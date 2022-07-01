@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 enum PreferenceKey {
   allowDataTransmissionViaCellular,
   authToken,
+  continuousImpedance,
   fcmToken,
   flavor,
   showDayTabsForTasks
