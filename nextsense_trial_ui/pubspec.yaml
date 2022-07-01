@@ -42,7 +42,7 @@ dependencies:
   logging: ^1.0.2
   path_provider: ^2.0.8
   permission_handler: ^9.2.0
-  persistent_bottom_nav_bar: ^4.0.2
+  persistent_bottom_nav_bar_v2: ^4.2.3
   provider: ^6.0.1
   # Need to use fixed fork until the pull request is merged in the real repo.
   # It crashes because it uses a version of Kotlin that is too old.

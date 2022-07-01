@@ -8,7 +8,7 @@ import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_home_view.dart
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_progress_view.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_schedule_view.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
-import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
+import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
 import 'package:stacked/stacked.dart';
 
 enum HomeTab {
