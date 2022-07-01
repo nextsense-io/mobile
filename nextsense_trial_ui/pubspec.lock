@@ -162,13 +162,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "3.0.2"
-  dart_numerics:
-    dependency: "direct main"
-    description:
-      name: dart_numerics
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "0.0.6"
   dbus:
     dependency: transitive
     description:
@@ -658,13 +651,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.1.0"
-  persistent_bottom_nav_bar:
+  persistent_bottom_nav_bar_v2:
     dependency: "direct main"
     description:
-      name: persistent_bottom_nav_bar
+      name: persistent_bottom_nav_bar_v2
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "4.0.2"
+    version: "4.2.3"
   petitparser:
     dependency: transitive
     description:
@@ -859,13 +852,6 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.4.9"
-  tuple:
-    dependency: transitive
-    description:
-      name: tuple
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "2.0.0"
   typed_data:
     dependency: transitive
     description:
