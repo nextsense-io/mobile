@@ -10,6 +10,7 @@ import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum Modality {
@@ -22,6 +23,7 @@ class SessionManager {
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
+  final Preferences _preferences = getIt<Preferences>();
   final CustomLogPrinter _logger = CustomLogPrinter('SessionManager');
 
   Session? _currentSession;
@@ -39,8 +41,7 @@ class SessionManager {
       return false;
     }
     int? sessionNumber = user.getValue(UserKey.session_number);
-    int nextSessionNumber =
-        sessionNumber == null ? _firstSessionNumber : sessionNumber + 1;
+    int nextSessionNumber = sessionNumber == null ? _firstSessionNumber : sessionNumber + 1;
     String sessionCode = userCode + '_sess_' + nextSessionNumber.toString();
 
     // Add the session.
@@ -72,11 +73,9 @@ class SessionManager {
     _currentDataSession = DataSession(dataSessionEntity);
     _currentDataSession!.setValue(DataSessionKey.start_datetime, startTime);
     // TODO(eric): Add an API to get this from the connected device.
-    Map<String, dynamic> deviceSettings =
-        await NextsenseBase.getDeviceSettings(device.macAddress);
+    Map<String, dynamic> deviceSettings = await NextsenseBase.getDeviceSettings(device.macAddress);
     _currentDataSession!.setValue(DataSessionKey.streaming_rate,
-        deviceSettings[describeEnum(DeviceSettingsFields.eegStreamingRate)]
-            .value);
+        deviceSettings[describeEnum(DeviceSettingsFields.eegStreamingRate)].value);
     success = await _currentDataSession!.save();
     if (!success) {
       return false;
@@ -89,12 +88,16 @@ class SessionManager {
       return false;
     }
 
-    // TODO(eric): Start streaming should return the exact start time of the
-    //             session, and then that should be persisted in the table?
+    // TODO(eric): Start streaming should return the exact start time of the session, and then that
+    //             should be persisted in the table?
     String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
     try {
+      if (_preferences.getBool(PreferenceKey.continuousImpedance)) {
+
+      }
       _currentLocalSession = await NextsenseBase.startStreaming(
           device.macAddress, /*uploadToCloud=*/true,
+          /*continuousImpedance=*/_preferences.getBool(PreferenceKey.continuousImpedance),
           user.getValue(UserKey.bt_key), dataSessionCode,
           _studyManager.currentStudy?.getEarbudsConfig() ?? null);
       return true;

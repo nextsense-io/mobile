@@ -112,8 +112,8 @@ public class EmulatedDevice extends Device {
 
   @Override
   public ListenableFuture<Boolean> startStreaming(
-      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
-      @Nullable String earbudsConfig) {
+      boolean uploadToCloud, boolean continuousImpedance, @Nullable String userBigTableKey,
+      @Nullable String dataSessionId, @Nullable String earbudsConfig) {
 
     Util.logd(TAG, "startStreaming");
 
