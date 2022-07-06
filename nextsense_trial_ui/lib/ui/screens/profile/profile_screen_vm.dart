@@ -9,6 +9,7 @@ import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class ProfileScreenViewModel extends DeviceStateViewModel {
 
@@ -23,6 +24,15 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
   bool get isAdhocSurveysAllowed => _studyManager.currentStudy?.adhocSurveysAllowed ?? false;
   String get studyId => _studyManager.currentStudyId!;
   String? get userId => _authManager.user?.id;
+  String? version = '';
+
+  @override
+  void init() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    version = packageInfo.version;
+    setInitialised(true);
+    notifyListeners();
+  }
 
   List<AdhocProtocol> getAdhocProtocols() {
     List<ProtocolType> allowedProtocols = _studyManager.currentStudy!.getAllowedProtocols();

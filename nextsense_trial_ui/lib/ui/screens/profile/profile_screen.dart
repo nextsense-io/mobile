@@ -6,6 +6,7 @@ import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
@@ -123,6 +124,9 @@ class ProfileScreen extends HookWidget {
                     onPressed: () {
                       _navigation.navigateTo(SupportScreen.id);
                     }),
+                SizedBox(height: 10),
+                Row(children: [SizedBox(width: 20),
+                  EmphasizedText(text: 'Version ${viewModel.version ?? ''}')])
               ],
             ),
           ]),
