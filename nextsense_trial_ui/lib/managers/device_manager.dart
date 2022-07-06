@@ -188,14 +188,14 @@ class DeviceManager {
     return _connectedDevice;
   }
 
-  void disconnectDevice() {
+  Future disconnectDevice() async {
     if (getConnectedDevice() == null) {
       return;
     }
     _cancelStateListening?.call();
     _cancelInternalStateListening?.call();
     _notificationsManager.hideAlertNotification(connectionLostNotificationId);
-    NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
+    await NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
     deviceState.value = DeviceState.disconnected;
     _connectedDevice = null;
   }
@@ -207,10 +207,14 @@ class DeviceManager {
         final DeviceState state = deviceStateFromString(newDeviceState);
         switch (state) {
           case DeviceState.disconnected:
-            _onDeviceDisconnected();
+            if (deviceState.value != DeviceState.disconnected) {
+              _onDeviceDisconnected();
+            }
             break;
           case DeviceState.ready:
-            _onDeviceReady();
+            if (deviceState != DeviceState.ready) {
+              _onDeviceReady();
+            }
             break;
           default:
             break;

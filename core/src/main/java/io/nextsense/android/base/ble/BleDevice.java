@@ -339,11 +339,13 @@ public class BleDevice extends Device {
                                    @NonNull HciStatus status) {
       Log.w(TAG, "Connection with device " + peripheral.getName() + " failed. HCI status: " +
           status);
-      deviceState = DeviceState.DISCONNECTED;
       if (deviceConnectionFuture != null) {
         deviceConnectionFuture.set(deviceState);
       }
-      notifyDeviceStateChangeListeners(DeviceState.DISCONNECTED);
+      if (deviceState != DeviceState.DISCONNECTED) {
+        deviceState = DeviceState.DISCONNECTED;
+        notifyDeviceStateChangeListeners(DeviceState.DISCONNECTED);
+      }
     }
 
     @Override
@@ -382,7 +384,7 @@ public class BleDevice extends Device {
     @Override
     public void onServicesDiscovered(@NonNull BluetoothPeripheral peripheral) {
       Util.logd(TAG, "Services discovered.");
-      if (nextSenseDevice.getTargetMTU() != 23) {
+      if (nextSenseDevice.getTargetMTU() != 23 && btPeripheral.getCurrentMtu() <= 23) {
         btPeripheral.requestMtu(nextSenseDevice.getTargetMTU());
       } else {
         // No need to change the MTU, device is ready to use.
