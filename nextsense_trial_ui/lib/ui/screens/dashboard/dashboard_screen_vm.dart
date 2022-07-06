@@ -75,10 +75,11 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     if (studyDay != null && _studyManager.currentStudyEndDate != null) {
       selectDay(_studyManager.today!);
     } else {
-      if (DateTime.now().isAfter(_studyManager.currentStudyEndDate!)) {
+      if (_studyManager.currentStudyEndDate != null &&
+          DateTime.now().isAfter(_studyManager.currentStudyEndDate!)) {
         selectDay(_studyManager.days.last);
-      } else {
-        selectDay(_studyManager.days.first);
+      } else if (_studyManager.days.isNotEmpty) {
+          selectDay(_studyManager.days.first);
       }
     }
   }
