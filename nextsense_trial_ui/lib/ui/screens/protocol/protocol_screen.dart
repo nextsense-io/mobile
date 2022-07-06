@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
@@ -11,8 +12,10 @@ import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol_finished_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -44,6 +47,7 @@ Future<bool> _confirmStopSessionDialog(BuildContext context,
 
 class SessionControlButton extends StatelessWidget {
 
+  final Navigation _navigation = getIt<Navigation>();
   final RunnableProtocol _runnableProtocol;
   final String text;
 
@@ -61,10 +65,8 @@ class SessionControlButton extends StatelessWidget {
           bool confirm = await _confirmStopSessionDialog(context, viewModel);
           if (confirm) {
             viewModel.stopSession();
-            // Exit from protocol screen for adhoc
-            if (_runnableProtocol.type == RunnableProtocolType.adhoc) {
-              Navigator.pop(context);
-            }
+            _navigation.navigateTo(ProtocolFinishedScreen.id, replace: true,
+                arguments: viewModel.protocol.nameForUser + ' Recording Completed!');
           }
         } else if (viewModel.deviceIsConnected) {
           viewModel.startSession();

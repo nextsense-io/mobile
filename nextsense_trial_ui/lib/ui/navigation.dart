@@ -35,6 +35,7 @@ import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart
 import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/entry_added_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol_finished_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizure_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
@@ -217,6 +218,8 @@ class Navigation {
       case EyesMovementProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
             EyesMovementProtocolScreen(settings.arguments as RunnableProtocol));
+      case ProtocolFinishedScreen.id: return MaterialPageRoute(
+          builder: (context) => ProtocolFinishedScreen(settings.arguments as String));
       case SurveyScreen.id:
         return MaterialPageRoute(builder: (context) =>
             SurveyScreen(settings.arguments as RunnableSurvey));
