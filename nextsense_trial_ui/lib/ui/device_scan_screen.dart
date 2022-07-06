@@ -13,6 +13,7 @@ import 'package:nextsense_trial_ui/ui/components/scan_result_list.dart';
 import 'package:nextsense_trial_ui/ui/components/search_device_bluetooth.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class DeviceScanScreen extends StatefulWidget {
@@ -53,6 +54,11 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
     setState(() {
       _scanResultsMap.clear();
     });
+    if (_deviceManager.deviceIsConnected) {
+      _logger.log(
+          Level.INFO, 'Disconnecting device in case it is tryign to reconnect automatically');
+      await _deviceManager.disconnectDevice();
+    }
     _logger.log(Level.INFO, 'Starting Bluetooth scan.');
     setState(() {
       _isScanning = true;
@@ -92,7 +98,12 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
         if (Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
         }
-        _navigation.navigateTo(DashboardScreen.id, replace: true);
+        // TODO(eric): Check in study manager if need to show this.
+        if (false) {
+          _navigation.navigateTo(StudyIntroScreen.id, replace: true);
+        } else {
+          _navigation.navigateTo(DashboardScreen.id, replace: true);
+        }
       } else {
         _onConnectionError(context);
       }
