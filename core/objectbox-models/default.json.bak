@@ -172,7 +172,7 @@
     },
     {
       "id": "4:7829109381478237227",
-      "lastPropertyId": "15:307491958777430755",
+      "lastPropertyId": "17:8889022787978996324",
       "name": "LocalSession",
       "properties": [
         {
@@ -249,6 +249,18 @@
           "name": "deviceInternalStateUploaded",
           "type": 5,
           "flags": 4
+        },
+        {
+          "id": "16:6993072420839072805",
+          "name": "startTime",
+          "type": 6,
+          "flags": 2
+        },
+        {
+          "id": "17:8889022787978996324",
+          "name": "endTime",
+          "type": 6,
+          "flags": 2
         }
       ],
       "relations": []
