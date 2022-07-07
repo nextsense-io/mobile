@@ -265,8 +265,7 @@ class EyesMovementProtocol extends BaseProtocol {
       duration: Duration(seconds: 10),
       marker: "VEOG");
   static final List<ProtocolPart> _protocolBlock = [_rest, _blink, _blackScreen,
-    _leftRight, _blackScreen, _upDown, _blackScreen, _rest, _blink,
-    _blackScreen, _rightLeft, _blackScreen, _downUp, _blackScreen];
+    _leftRight, _blackScreen, _upDown, _blackScreen];
 
   @override
   ProtocolType get type => ProtocolType.eyes_movement;
