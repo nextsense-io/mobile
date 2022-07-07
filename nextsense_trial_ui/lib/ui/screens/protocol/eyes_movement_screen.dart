@@ -1,42 +1,81 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
+import 'package:nextsense_trial_ui/ui/components/protocol_step_card.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:provider/provider.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:stacked/stacked.dart';
 
-class EyesMovementProtocolScreen extends ProtocolScreen {
+class ProtocolPartScrollView extends StatelessWidget {
 
-  static const String id = 'eyes_movement_protocol_screen';
-
-  EyesMovementProtocolScreen(RunnableProtocol runnableProtocol) :
-        super(runnableProtocol);
+  final ItemScrollController itemScrollController = ItemScrollController();
 
   @override
-  Widget runningStateBody(
-      BuildContext context, ProtocolScreenViewModel viewModel) {
+  Widget build(BuildContext context) {
     final viewModel = context.watch<EyesMovementProtocolScreenViewModel>();
-    final whiteTextStyle = TextStyle(color: Colors.white, fontSize: 20);
-    final bigWhiteTextStyle = TextStyle(color: Colors.white, fontSize: 36);
-    ProtocolPart currentPart = viewModel.getCurrentProtocolPart()!;
+    viewModel.protocolPartChangeStream.stream.listen(scrollTo);
+    List<ProtocolPart> protocolParts = viewModel.runnableProtocol.protocol.protocolBlock;
 
-    return Container(
-        padding: EdgeInsets.all(10.0),
-        decoration: BoxDecoration(color: Colors.black),
-        child: Center(
-            child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(protocol.description, style: whiteTextStyle),
-                  Text(viewModel.getTextForProtocolPart(currentPart.state),
-                      style: bigWhiteTextStyle),
-                  SessionControlButton(runnableProtocol)
-                ]
-            )
-        )
+    return ScrollablePositionedList.builder(
+      initialScrollIndex: 0,
+      itemCount: protocolParts.length,
+      itemScrollController: itemScrollController,
+      shrinkWrap: true,
+      itemBuilder: (context, index) => ProtocolStepCard(
+          image: viewModel.getImageForProtocolPart(protocolParts[index].state),
+          text: viewModel.getTextForProtocolPart(protocolParts[index].state),
+          currentStep: index == viewModel.protocolIndex % protocolParts.length),
     );
+  }
+
+  void scrollTo(int index) {
+    if (itemScrollController.isAttached) {
+      itemScrollController.scrollTo(
+          index: index,
+          duration: Duration(milliseconds: 400),
+          curve: Curves.ease
+      );
+    }
+  }
+}
+
+class EyesMovementProtocolScreen extends ProtocolScreen {
+  static const String id = 'eyes_movement_protocol_screen';
+
+  EyesMovementProtocolScreen(RunnableProtocol runnableProtocol) : super(runnableProtocol);
+
+  @override
+  Widget runningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
+    final viewModel = context.watch<EyesMovementProtocolScreenViewModel>();
+
+    return PageScaffold(
+        backgroundColor: NextSenseColors.lightGrey,
+        showBackground: false,
+        showProfileButton: false,
+        showBackButton: false,
+        showCancelButton: true,
+        backButtonCallback: () => onBackButtonPressed(context, viewModel),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+                  LightHeaderText(text: protocol.description + ' EEG Recording'),
+                  SizedBox(height: 10),
+                  Stack(children: [
+                    Center(child: CountDownTimer(duration: protocol.minDuration, reverse: true)),
+                    if (!viewModel.deviceCanRecord) deviceInactiveOverlay(context, viewModel),
+                  ]),
+                  SizedBox(height: 10),
+                  Expanded(child: ProtocolPartScrollView())
+                ] +
+                [SizedBox(height: 20),
+                  SessionControlButton(runnableProtocol)]));
   }
 
   @override
@@ -46,13 +85,12 @@ class EyesMovementProtocolScreen extends ProtocolScreen {
     return ViewModelBuilder<EyesMovementProtocolScreenViewModel>.reactive(
         viewModelBuilder: () => EyesMovementProtocolScreenViewModel(runnableProtocol),
         onModelReady: (viewModel) => viewModel.init(),
-        builder: (context, viewModel, child) =>
-        ViewModelBuilder<ProtocolScreenViewModel>.reactive(
+        builder: (context, viewModel, child) => ViewModelBuilder<ProtocolScreenViewModel>.reactive(
             viewModelBuilder: () => viewModel,
             onModelReady: (viewModel) => viewModel.init(),
             builder: (context, viewModel, child) => WillPopScope(
-              onWillPop: () => onBackButtonPressed(context, viewModel),
-              child: body(context, viewModel),
-            )));
+                  onWillPop: () => onBackButtonPressed(context, viewModel),
+                  child: body(context, viewModel),
+                )));
   }
 }
