@@ -6,6 +6,7 @@ enum ProtocolType {
   sleep,  // Nighttime sleep recording.
   eoec,  // Eyes-Open, Eyes-Closed recording.
   eyes_movement, // Eyes movement recording
+  nap,  // Nap recording.
   unknown
 }
 
@@ -143,7 +144,7 @@ class VariableDaytimeProtocol extends BaseProtocol {
   String get description => 'Record at daytime';
 
   @override
-  String get intro => 'Run a recording of a variable amount of time at daytime.'
+  String get intro => 'Records for a variable amount of time at daytime.'
       ' You can stop the recording at any time.';
 }
 
@@ -167,7 +168,31 @@ class SleepProtocol extends BaseProtocol {
 
   // TODO(alex): add sleep protocol intro
   @override
-  String get intro => 'Sleep protocol intro';
+  String get intro => 'Lay down in bed to get ready for your night then press the start button.';
+}
+
+class NapProtocol extends BaseProtocol {
+
+  @override
+  ProtocolType get type => ProtocolType.nap;
+
+  @override
+  String get nameForUser => 'Nap';
+
+  @override
+  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 0);
+
+  @override
+  Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 4);
+
+  // TODO(alex): add sleep protocol description
+  @override
+  String get description => 'Nap';
+
+  // TODO(alex): add sleep protocol intro
+  @override
+  String get intro =>
+      'Get ready in a comfortable position for your nap then press the start button.';
 }
 
 enum EOECState {
