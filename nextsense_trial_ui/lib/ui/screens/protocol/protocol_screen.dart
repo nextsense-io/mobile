@@ -225,7 +225,9 @@ class ProtocolScreen extends HookWidget {
       if (confirm) {
         await viewModel.stopSession();
         // Exit from protocol screen for adhoc
-        if (runnableProtocol.type == RunnableProtocolType.adhoc) {
+        if (runnableProtocol.protocol.type == ProtocolType.nap) {
+          // Navigator.
+        } else if (runnableProtocol.type == RunnableProtocolType.adhoc) {
           Navigator.pop(context);
         }
         return true;
@@ -305,8 +307,9 @@ class CountDownTimer extends StatelessWidget {
       strokeWidth: 4.0,
       strokeCap: StrokeCap.round,
       textStyle:
-          TextStyle(fontSize: 36.0, color: NextSenseColors.purple, fontWeight: FontWeight.w500),
-      textFormat: CountdownTextFormat.MM_SS,
+          TextStyle(fontSize: 28.0, color: NextSenseColors.purple, fontWeight: FontWeight.w500),
+      textFormat: duration.inMinutes >= 60 ? CountdownTextFormat.HH_MM_SS :
+          CountdownTextFormat.MM_SS,
       isReverse: reverse,
       isReverseAnimation: reverse,
       isTimerTextShown: true,
