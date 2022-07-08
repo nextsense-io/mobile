@@ -310,11 +310,17 @@ public class Uploader {
             final int accelerationsToUploadSize = samplesToUpload.containsKey(ACC_SAMPLES) &&
                     samplesToUpload.get(ACC_SAMPLES) != null ?
                     samplesToUpload.get(ACC_SAMPLES).size() : 0;
+            final int deviceInternalStateToUploadSize =
+                    samplesToUpload.get(INT_STATE_SAMPLES) != null ?
+                    samplesToUpload.get(INT_STATE_SAMPLES).size() : 0;
             objectBoxDatabase.runInTx(() -> {
               localSession.setEegSamplesUploaded(
                   localSession.getEegSamplesUploaded() + eegSamplesToUploadSize);
               localSession.setAccelerationsUploaded(
                   localSession.getAccelerationsUploaded() + accelerationsToUploadSize);
+              localSession.setDeviceInternalStateUploaded(
+                      localSession.getDeviceInternalStateUploaded() +
+                              deviceInternalStateToUploadSize);
               Util.logv(TAG, "Uploaded " + localSession.getEegSamplesUploaded() +
                   " eeg samples from session " + localSession.id);
               // Need to check the status from the DB as it could get updated to finished in another
