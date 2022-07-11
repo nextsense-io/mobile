@@ -24,11 +24,11 @@ import io.nextsense.android.base.utils.Util;
  */
 public class CloudFunctions {
     private static final String TAG = CloudFunctions.class.getSimpleName();
-    private static final String UPLOAD_FUNCTION_NAME = "upload_data_samples_test";
-    private static final String UPLOAD_FUNCTION_DISPLAY_NAME = "upload data samples";
+    private static final String UPLOAD_FUNCTION_NAME = "enqueue_upload_data_samples_test";
+    private static final String UPLOAD_FUNCTION_DISPLAY_NAME = "enqueue upload data samples";
     private static final Duration UPLOAD_FUNCTION_TIMEOUT = Duration.ofMillis(10000);
-    private static final String COMPLETE_SESSION_FUNCTION_NAME = "complete_session";
-    private static final String COMPLETE_SESSION_FUNCTION_DISPLAY_NAME = "complete session";
+    private static final String COMPLETE_SESSION_FUNCTION_NAME = "enqueue_complete_session";
+    private static final String COMPLETE_SESSION_FUNCTION_DISPLAY_NAME = "enqueue complete session";
     private static final Duration COMPLETE_SESSION_FUNCTION_TIMEOUT = null;
     private static final String DATA_SAMPLES_PARAM_NAME = "data_samples_proto";
     private static final String SESSION_PARAM_NAME = "session_proto";

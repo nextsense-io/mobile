@@ -590,7 +590,6 @@ public class Uploader {
     return firebaseFunctions.uploadDataSamples(byteArrayOutputStream);
   }
 
-
   private SessionProto.Session serializeSessionToProto(LocalSession localSession) {
     SessionProto.Session.Builder builder = SessionProto.Session.newBuilder();
     if (localSession.getCloudDataSessionId() != null) {
