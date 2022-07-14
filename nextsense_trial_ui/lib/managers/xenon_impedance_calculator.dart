@@ -137,12 +137,16 @@ class XenonImpedanceCalculator {
     if (macAddress == null || _localSessionId == null) {
       return -1;
     }
+    _logger.log(Level.INFO, "Starting imp calc for channel ${channelNumbers}");
     Map<int, List<double>> eegArrays = new HashMap();
     for (int channelNumber in channelNumbers) {
       List<double> eegArray = [];
       try {
+        DateTime startTime = DateTime.now();
         eegArray = await NextsenseBase.getChannelData(
             macAddress, _localSessionId!, channelNumber, _impedanceCalculationPeriod);
+        _logger.log(Level.INFO,
+            "read imp data in ${DateTime.now().difference(startTime).inMilliseconds} ms");
       } catch (e) {
         _logger.log(Level.WARNING, "Failed to get channel data: ${e.toString()}");
       }
@@ -184,6 +188,7 @@ class XenonImpedanceCalculator {
     Complex frequencyBin = eegArrayComplex[impedanceBinIndex] /
         Complex(real: eegArrayComplex.length.toDouble() / 2, imaginary: 0);
     double magnitude = sqrt(pow(frequencyBin.real, 2) + pow(frequencyBin.imaginary, 2));
+    _logger.log(Level.INFO, "Finished imp calc for channel ${channelNumbers}");
     return magnitude * impedanceConstant;
   }
 

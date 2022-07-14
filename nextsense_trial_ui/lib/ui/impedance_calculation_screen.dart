@@ -23,7 +23,7 @@ class ImpedanceCalculationScreen extends StatefulWidget {
 }
 
 class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen> {
-  static const Duration _refreshInterval = Duration(milliseconds: 1000);
+  static const Duration _refreshInterval = Duration(milliseconds: 5000);
   static const int _impedanceSampleSize = 1024;
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
@@ -80,9 +80,11 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
       resultsText += 'Left Helix: ' + _spaceInt(impedanceData[1]!.round()) + '\n\n';
       _logger.log(Level.INFO, resultsText);
       _logger.log(Level.INFO, 'updating impedance result');
-      setState(() {
-        _impedanceResult = resultsText;
-      });
+      if (mounted) {
+        setState(() {
+          _impedanceResult = resultsText;
+        });
+      }
       _logger.log(Level.INFO, 'updated impedance result');
       _calculatingImpedance = false;
     });
