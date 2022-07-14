@@ -106,8 +106,16 @@ public class ObjectBoxDatabase implements Database {
     return runWithExceptionLog(() -> eegSampleBox.put(eegSample));
   }
 
+  public void putEegSamples(List<EegSample> eegSamples) {
+    eegSampleBox.put(eegSamples);
+  }
+
   public long putAcceleration(Acceleration acceleration) {
     return runWithExceptionLog(() -> accelerationBox.put(acceleration));
+  }
+
+  public void putAccelerations(List<Acceleration> accelerations) {
+    accelerationBox.put(accelerations);
   }
 
   public long putDeviceInternalState(DeviceInternalState deviceInternalState) {

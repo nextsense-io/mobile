@@ -6,8 +6,10 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.time.Instant;
+
 import io.nextsense.android.base.data.DeviceInternalState;
-import io.nextsense.android.base.data.Sample;
+import io.nextsense.android.base.data.Samples;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 
 /**
@@ -42,12 +44,16 @@ public class DatabaseSink {
   }
 
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
-  public void onSample(Sample sample) {
+  public void onSamples(Samples samples) {
+    Instant saveStartTime = Instant.now();
     boxDatabase.runInTx(() -> {
-      boxDatabase.putEegSample(sample.getEegSample());
-      boxDatabase.putAcceleration(sample.getAcceleration());
+      boxDatabase.putEegSamples(samples.getEegSamples());
+      boxDatabase.putAccelerations(samples.getAccelerations());
     });
-
+    long saveTime = Instant.now().toEpochMilli() - saveStartTime.toEpochMilli();
+    if (saveTime > 20) {
+      Log.d(TAG, "It took " + saveTime + " to write xenon data.");
+    }
   }
 
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
