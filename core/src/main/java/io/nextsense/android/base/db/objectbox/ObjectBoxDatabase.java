@@ -152,7 +152,7 @@ public class ObjectBoxDatabase implements Database {
       accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).find());
   }
 
-  public List<EegSample> getLastEegSamples(int localSessionId, long count) {
+  public List<EegSample> getLastEegSamples(long localSessionId, long count) {
     return runWithExceptionLog(() -> {
       long sessionEegSamplesCount = getEegSamplesCount(localSessionId);
       long offset = count <= sessionEegSamplesCount ? sessionEegSamplesCount - count : 0;

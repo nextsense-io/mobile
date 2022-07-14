@@ -1,18 +1,21 @@
 package io.nextsense.android.base.db;
 
+import android.util.Log;
+
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.data.DeviceInternalState;
-import io.nextsense.android.base.data.EegSample;
+import io.nextsense.android.base.data.Sample;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 
 /**
  * Listens for incoming data and saves it in the ObjectBox database.
  */
 public class DatabaseSink {
+
+  private static final String TAG = DatabaseSink.class.getSimpleName();
 
   private final ObjectBoxDatabase boxDatabase;
 
@@ -25,21 +28,26 @@ public class DatabaseSink {
   }
 
   public void startListening() {
+    if (EventBus.getDefault().isRegistered(this)) {
+      Log.w(TAG, "Already registered to EventBus!");
+      return;
+    }
     EventBus.getDefault().register(this);
+    Log.i(TAG, "Started listening to EventBus.");
   }
 
   public void stopListening() {
     EventBus.getDefault().unregister(this);
+    Log.i(TAG, "Stopped listening to EventBus.");
   }
 
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
-  public void onEegSample(EegSample eegSample) {
-    boxDatabase.putEegSample(eegSample);
-  }
+  public void onSample(Sample sample) {
+    boxDatabase.runInTx(() -> {
+      boxDatabase.putEegSample(sample.getEegSample());
+      boxDatabase.putAcceleration(sample.getAcceleration());
+    });
 
-  @Subscribe(threadMode = ThreadMode.BACKGROUND)
-  public void onAcceleration(Acceleration acceleration) {
-    boxDatabase.putAcceleration(acceleration);
   }
 
   @Subscribe(threadMode = ThreadMode.BACKGROUND)

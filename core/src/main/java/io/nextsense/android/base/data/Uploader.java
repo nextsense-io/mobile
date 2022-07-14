@@ -22,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -68,6 +70,9 @@ public class Uploader {
   private DataSubscription activeSessionSubscription;
   private HandlerThread subscriptionsHandlerThread;
   private AndroidScheduler subscriptionsScheduler;
+  // Once the session is marked as finished, run a timer to see when all data is transferred. Once
+  // that is done, can upload the remaining data that is less than the chunk size.
+  private Timer waitForDataTimer;
   private boolean started;
   private Connectivity.State minimumConnectivityState = Connectivity.State.FULL_CONNECTION;
   private Connectivity.State currentConnectivityState = Connectivity.State.NO_CONNECTION;
@@ -144,6 +149,11 @@ public class Uploader {
     if (activeSessionSubscription != null) {
       activeSessionSubscription.cancel();
     }
+    if (waitForDataTimer != null) {
+      waitForDataTimer.purge();
+      waitForDataTimer.cancel();
+      waitForDataTimer = null;
+    }
     if (subscriptionsHandlerThread != null) {
       subscriptionsHandlerThread.quit();
       subscriptionsHandlerThread = null;
@@ -184,17 +194,23 @@ public class Uploader {
       // If null, already deleted (Upload complete).
       if (refreshedLocalSession != null && refreshedLocalSession.getStatus() ==
               LocalSession.Status.FINISHED) {
-        Util.logv(TAG, "Session finished, adding samples to upload.");
-        eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(localSession.id,
-                relativeEegStartOffset,
-                sessionEegSamplesCount - localSession.getEegSamplesUploaded()));
-        if (eegSamplesToUpload.isEmpty()) {
-          // Nothing to upload, marking it as UPLOADED.
-          Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
-          localSession.setStatus(LocalSession.Status.UPLOADED);
-          // This could be deleted at a later time in case the data needs to be analyzed or
-          // displayed in the app.
-          objectBoxDatabase.deleteLocalSession(localSession.id);
+        List<EegSample> eegSamples =
+                objectBoxDatabase.getLastEegSamples(localSession.id, /*count=*/1);
+        if (!eegSamples.isEmpty() && Instant.now().isAfter(
+                  eegSamples.get(0).getReceptionTimestamp().plus(Duration.ofSeconds(1)))) {
+          Util.logv(TAG, "Session finished, adding samples to upload.");
+          eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(localSession.id,
+                  relativeEegStartOffset,
+                  sessionEegSamplesCount - localSession.getEegSamplesUploaded()));
+          if (eegSamplesToUpload.isEmpty()) {
+            // Nothing to upload, marking it as UPLOADED.
+            Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
+            localSession.setStatus(LocalSession.Status.UPLOADED);
+            completeSession(localSession);
+            // This could be deleted at a later time in case the data needs to be analyzed or
+            // displayed in the app.
+            objectBoxDatabase.deleteLocalSession(localSession.id);
+          }
         }
       }
     }
@@ -391,6 +407,8 @@ public class Uploader {
       Optional<LocalSession> activeSessionOptional = objectBoxDatabase.getActiveSession();
       if (activeSessionOptional.isPresent()) {
         activeSessionSubscription = subscribeToFinishedSession(activeSessionOptional.get().id);
+      } else {
+        scheduleDataUploadFinishedTimer(localSessions.get(localSessions.size() - 1).id);
       }
 
       synchronized (syncToken) {
@@ -407,6 +425,11 @@ public class Uploader {
       eegSampleSubscription.cancel();
       if (activeSessionSubscription != null) {
         activeSessionSubscription.cancel();
+      }
+      if (waitForDataTimer != null) {
+        waitForDataTimer.purge();
+        waitForDataTimer.cancel();
+        waitForDataTimer = null;
       }
       Util.logd(TAG, "New records to upload, wait finished.");
     }
@@ -632,18 +655,46 @@ public class Uploader {
   private DataSubscription subscribeToFinishedSession(long localSessionId) {
     return objectBoxDatabase.getFinishedLocalSession(localSessionId).subscribe()
         .on(subscriptionsScheduler).observer(finishedSessions -> {
-          LocalSession finishedSession = objectBoxDatabase.getFinishedLocalSession(localSessionId).findFirst();
+          LocalSession finishedSession =
+                  objectBoxDatabase.getFinishedLocalSession(localSessionId).findFirst();
           if (finishedSession == null) {
             Util.logd(TAG, "No finished session, not waking up.");
             return;
           }
-          Util.logd(TAG, "Session " + finishedSession.id + " finished, waking Uploader.");
-          recordsSinceLastNotify = 0;
-          recordsToUpload.set(true);
-          synchronized (syncToken) {
-            syncToken.notifyAll();
-          }
+          scheduleDataUploadFinishedTimer(localSessionId);
         });
+  }
+
+  private void scheduleDataUploadFinishedTimer(long localSessionId) {
+    waitForDataTimer = new Timer();
+    TimerTask checkTransmissionFinishedTask = new TimerTask() {
+      @Override
+      public void run() {
+        Log.i(TAG, "checking is upload finish to send remaining data.");
+        // Check if the most recent record of that finished session is over a second old. If that
+        // is the case then the upload from the device is considered finished.
+        List<EegSample> eegSamples =
+                objectBoxDatabase.getLastEegSamples(localSessionId, /*count=*/1);
+        if (!eegSamples.isEmpty()) {
+          if (Instant.now().isAfter(
+                  eegSamples.get(0).getReceptionTimestamp().plus(Duration.ofSeconds(1)))) {
+            Util.logd(TAG, "Session " + localSessionId + " finished, waking Uploader.");
+            recordsSinceLastNotify = 0;
+            recordsToUpload.set(true);
+            synchronized (syncToken) {
+              syncToken.notifyAll();
+            }
+          }
+        } else {
+          Log.i(TAG, "Empty session, no need to keep checking.");
+          waitForDataTimer.purge();
+          waitForDataTimer.cancel();
+          waitForDataTimer = null;
+        }
+      }
+    };
+    waitForDataTimer.scheduleAtFixedRate(checkTransmissionFinishedTask, /*delay=*/0,
+            Duration.ofSeconds(1).toMillis());
   }
 
   private void onConnectivityStateChanged() {
