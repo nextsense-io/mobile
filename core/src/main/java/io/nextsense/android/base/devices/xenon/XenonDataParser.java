@@ -25,6 +25,7 @@ import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Sample;
+import io.nextsense.android.base.data.Samples;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
 import io.nextsense.android.base.utils.Util;
 
@@ -84,9 +85,22 @@ public class XenonDataParser {
       throw new FirmwareMessageParsingException("Data is too small to parse one packet. Expected " +
           "minimum size of " + (packetSize + 1) + " but got " + values.length);
     }
+    Samples samples = Samples.create();
     boolean canParsePacket = true;
     while (canParsePacket && valuesBuffer.remaining() >= packetSize) {
-      canParsePacket = parseDataPacket(valuesBuffer, activeChannels, receptionTimestamp);
+      Optional<Sample> sampleOptional =
+          parseDataPacket(valuesBuffer, activeChannels, receptionTimestamp);
+      sampleOptional.ifPresent(sample -> {
+        samples.addEegSample(sample.getEegSample());
+        samples.addAcceleration(sample.getAcceleration());
+      });
+      canParsePacket = sampleOptional.isPresent();
+    }
+    EventBus.getDefault().post(samples);
+    Instant parseEndTime = Instant.now();
+    long parseTime = parseEndTime.toEpochMilli() - receptionTimestamp.toEpochMilli();
+    if (parseTime > 30) {
+      Log.d(TAG, "It took " + parseTime + " to parse xenon data.");
     }
   }
 
@@ -95,12 +109,12 @@ public class XenonDataParser {
     return (float)(data * ((V_REF * 1000000.0f) / (24.0f * (pow(2, 23) - 1))));
   }
 
-  private boolean parseDataPacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,
+  private Optional<Sample> parseDataPacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,
                                Instant receptionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
       Log.w(TAG, "Received data packet without an active session, cannot record it.");
-      return false;
+      return Optional.empty();
     }
     LocalSession localSession = localSessionOptional.get();
     valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -123,8 +137,7 @@ public class XenonDataParser {
         null, samplingTime);
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
         null, samplingTime, SampleFlags.create(valuesBuffer.get()));
-    EventBus.getDefault().post(Sample.create(eegSample, acceleration));
-    return true;
+    return Optional.of(Sample.create(eegSample, acceleration));
   }
 
   private static int getDataPacketSize(int activeChannelsSize) {
