@@ -74,9 +74,12 @@ public class ForegroundService extends Service {
     Util.logd(TAG, "onStartCommand start.");
     if (initialized) {
       Log.i(TAG, "Already initialized, keep running.");
-      return START_STICKY;
+      return START_REDELIVER_INTENT;
     }
     createNotificationChannel();
+    if (intent.getExtras() == null) {
+      return START_REDELIVER_INTENT;
+    }
     Class<Activity> uiClass = (Class<Activity>) intent.getSerializableExtra(EXTRA_UI_CLASS);
     Intent notificationIntent = new Intent(this, uiClass);
     PendingIntent pendingIntent = PendingIntent.getActivity(this,
@@ -90,7 +93,7 @@ public class ForegroundService extends Service {
     startForeground(NOTIFICATION_ID, notification);
     initialize();
     Util.logd(TAG, "Service initialized.");
-    return START_NOT_STICKY;
+    return START_REDELIVER_INTENT;
   }
 
   @Override
@@ -144,21 +147,21 @@ public class ForegroundService extends Service {
     deviceManager = DeviceManager.create(deviceScanner, localSessionManager);
     databaseSink = DatabaseSink.create(objectBoxDatabase);
     databaseSink.startListening();
-    sampleRateCalculator = SampleRateCalculator.create(500);
-    sampleRateCalculator.startListening();
+    // sampleRateCalculator = SampleRateCalculator.create(250);
+    // sampleRateCalculator.startListening();
     connectivity = Connectivity.create(this);
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
     // minRecordsToKeep is set at 5000 as ~4000 records is the upper limit we are considering for
     // impedance calculation.
     uploader = Uploader.create(objectBoxDatabase, connectivity, /*uploadChunk=*/1250,
-        /*minRecordsToKeep=*/5000, Duration.ofMillis((5000 / 250) * 1000L));
+        /*minRecordsToKeep=*/5000, /*minDurationToKeep=*/Duration.ofMillis((5000 / 250) * 1000L));
     uploader.start();
     initialized = true;
   }
 
   private void destroy() {
     Log.i(TAG, "destroy started.");
-    sampleRateCalculator.stopListening();
+    // sampleRateCalculator.stopListening();
     if (deviceScanner != null) {
       deviceScanner.close();
     }

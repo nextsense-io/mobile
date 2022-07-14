@@ -33,6 +33,7 @@ import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.data.Sample;
 import io.nextsense.android.base.devices.xenon.SampleFlags;
 import io.nextsense.android.base.utils.Util;
 
@@ -106,8 +107,7 @@ public class EmulatedDevice extends Device {
 
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
             null, samplingTime, SampleFlags.create((byte)0));
-    EventBus.getDefault().post(acceleration);
-    EventBus.getDefault().post(eegSample);
+    EventBus.getDefault().post(Sample.create(eegSample, acceleration));
   }
 
   @Override

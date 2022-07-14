@@ -24,6 +24,7 @@ import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.data.Sample;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
 import io.nextsense.android.base.utils.Util;
 
@@ -122,8 +123,7 @@ public class XenonDataParser {
         null, samplingTime);
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
         null, samplingTime, SampleFlags.create(valuesBuffer.get()));
-    EventBus.getDefault().post(acceleration);
-    EventBus.getDefault().post(eegSample);
+    EventBus.getDefault().post(Sample.create(eegSample, acceleration));
     return true;
   }
 
