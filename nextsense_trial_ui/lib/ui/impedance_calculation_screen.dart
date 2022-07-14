@@ -15,6 +15,12 @@ import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:wakelock/wakelock.dart';
 
+enum ImpedanceRunState {
+  STOPPED,
+  STARTING,
+  STARTED
+}
+
 class ImpedanceCalculationScreen extends StatefulWidget {
   static const String id = 'impedance_calculation_screen';
 
@@ -28,7 +34,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('ImpedanceCalculationScreen');
-  bool _impedanceRunning = false;
+  ImpedanceRunState _impedanceRunState = ImpedanceRunState.STOPPED;
   bool _calculatingImpedance = false;
   XenonImpedanceCalculator? _impedanceCalculator;
   Map<String, dynamic>? _deviceSettings;
@@ -67,6 +73,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
   _calculateImpedance(Timer timer) {
     _logger.log(Level.INFO, 'starting impedance calculation');
     if (_calculatingImpedance) {
+      _logger.log(Level.INFO, 'already calculating, returning');
       return;
     }
     _calculatingImpedance = true;
@@ -91,15 +98,35 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
   }
 
   @override
-  dispose() {
+  dispose() async {
     super.dispose();
+    _stopCalculating();
+  }
+
+  Future _stopCalculating() async {
     _screenRefreshTimer?.cancel();
-    _impedanceCalculator?.stopCalculatingImpedance();
-    Wakelock.disable();
+    await _impedanceCalculator?.stopCalculatingImpedance();
+    await Wakelock.disable();
+    _impedanceRunState = ImpedanceRunState.STOPPED;
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    String buttonText;
+    switch (_impedanceRunState) {
+      case ImpedanceRunState.STOPPED:
+        buttonText = 'Start';
+        break;
+      case ImpedanceRunState.STARTING:
+        buttonText = 'Start';
+        break;
+      case ImpedanceRunState.STARTED:
+        buttonText = 'Stop';
+        break;
+    }
     return PageScaffold(
       child: Container(
         child: Center(
@@ -119,22 +146,29 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
             Padding(
                 padding: EdgeInsets.all(10.0),
                 child: SimpleButton(
-                  text: MediumText(text: 'Start', color: NextSenseColors.purple),
+                  text: MediumText(text: buttonText, color: NextSenseColors.purple),
                   onTap: () async {
-                    if (!_deviceManager.deviceIsConnected) {
-                      await showDialog(
-                          context: context,
-                          builder: (_) => SimpleAlertDialog(
-                              title: 'Device is not connected',
-                              content: 'Use the Connect button to connect with a device first.'));
-                      return;
-                    }
-                    if (!_impedanceRunning) {
-                      _impedanceRunning = true;
+                    if (_impedanceRunState == ImpedanceRunState.STOPPED) {
+                      if (!_deviceManager.deviceIsConnected) {
+                        await showDialog(
+                            context: context,
+                            builder: (_) => SimpleAlertDialog(
+                                title: 'Device is not connected',
+                                content: 'Use the Connect button to connect with a device first.'));
+                        return;
+                      }
+                      setState(() {
+                        _impedanceRunState = ImpedanceRunState.STARTING;
+                      });
                       Wakelock.enable();
                       await _impedanceCalculator?.startADS1299AcImpedance();
                       _screenRefreshTimer =
                           new Timer.periodic(_refreshInterval, _calculateImpedance);
+                      setState(() {
+                        _impedanceRunState = ImpedanceRunState.STARTED;
+                      });
+                    } else if (_impedanceRunState == ImpedanceRunState.STARTED) {
+                      _stopCalculating();
                     }
                   },
                 )),
