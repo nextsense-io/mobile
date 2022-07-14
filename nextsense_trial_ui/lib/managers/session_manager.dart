@@ -27,6 +27,7 @@ class SessionManager {
   final CustomLogPrinter _logger = CustomLogPrinter('SessionManager');
 
   Session? _currentSession;
+  Session? _lastSession;
   DataSession? _currentDataSession;
   String? get currentSessionId => _currentSession?.id;
   int? _currentLocalSession;
@@ -113,17 +114,27 @@ class SessionManager {
 
   Future stopSession(String deviceMacAddress) async {
     if (_currentSession == null || _currentDataSession == null) {
-      _logger.log(Level.WARNING,
-          'Tried to stop a session while none was running.');
+      _logger.log(Level.WARNING, 'Tried to stop a session while none was running.');
       return;
     }
     NextsenseBase.stopStreaming(deviceMacAddress);
     DateTime stopTime = DateTime.now();
     _currentSession!.setValue(SessionKey.end_datetime, stopTime);
     await _currentSession!.save();
+    _lastSession = _currentSession;
     _currentSession = null;
     _currentDataSession!.setValue(DataSessionKey.end_datetime, stopTime);
     await _currentDataSession!.save();
     _currentDataSession = null;
+  }
+
+  Future<bool> addProtocolData(Map protocolData) async {
+    if (_currentSession == null && _lastSession == null) {
+      _logger.log(Level.WARNING, 'Tried to add info on a session while none was ran or running.');
+      return false;
+    }
+    Session lastSession = _currentSession != null ? _currentSession! : _lastSession!;
+    lastSession.setValue(SessionKey.protocol_data, protocolData);
+    return await lastSession.save();
   }
 }
