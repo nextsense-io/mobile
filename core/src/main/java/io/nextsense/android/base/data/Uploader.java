@@ -18,6 +18,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -165,7 +166,8 @@ public class Uploader {
       try {
         uploadTask.get();
       } catch (ExecutionException e) {
-        Log.e(TAG, "Error when stopping. " + e.getMessage());
+        Log.e(TAG, "Error when stopping. " + e.getMessage() + " " +
+                Arrays.toString(e.getStackTrace()));
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
