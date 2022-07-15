@@ -1,5 +1,7 @@
 package io.nextsense.android.base.communication.ble;
 
+import android.util.Log;
+
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
 
@@ -25,7 +27,7 @@ public class ReconnectionManager {
   private final BleCentralManagerProxy centralManagerProxy;
   private final AtomicBoolean reconnecting = new AtomicBoolean(false);
   private final Duration attemptInterval;
-  private ScheduledExecutorService reconnectionExecutor = Executors.newSingleThreadScheduledExecutor();
+  private ScheduledExecutorService reconnectionExecutor;
   private BluetoothPeripheral btPeripheral;
   private BluetoothPeripheralCallback callback;
   private ScheduledFuture<?> reconnectionsFuture;
@@ -67,7 +69,11 @@ public class ReconnectionManager {
 
   private void reconnect() {
     Util.logd(TAG, "Starting reconnection attempt.");
-    centralManagerProxy.getCentralManager().connectPeripheral(
-        btPeripheral, callback);
+    if (centralManagerProxy.getCentralManager().getConnectedPeripherals().isEmpty()) {
+      centralManagerProxy.getCentralManager().connectPeripheral(
+              btPeripheral, callback);
+    } else {
+      Log.w(TAG, "Trying to reconnect when there is already a connected device.");
+    }
   }
 }
