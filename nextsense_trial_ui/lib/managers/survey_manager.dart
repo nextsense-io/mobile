@@ -30,9 +30,7 @@ class SurveyManager {
 
   SurveyStats _getSurveyStats(List<ScheduledSurvey> scheduledSurveys, DateTime dateUntil) {
     List<ScheduledSurvey> pastAndTodayScheduledSurveys = scheduledSurveys
-        .where((scheduledSurvey) =>
-        scheduledSurvey.day.date.isBefore(dateUntil))
-        .toList();
+        .where((scheduledSurvey) => scheduledSurvey.day.date.isBefore(dateUntil)).toList();
 
     final int total = pastAndTodayScheduledSurveys.length;
     final int completed = pastAndTodayScheduledSurveys
@@ -58,8 +56,8 @@ class SurveyManager {
     return _surveys?.firstWhereOrNull((survey) => survey.id == surveyId);
   }
 
-  // Load planned surveys from study and convert them to scheduled surveys
-  // that persist in user table
+  // Load planned surveys from study and convert them to scheduled surveys that persist in the user
+  // table.
   Future<bool> loadScheduledSurveys() async {
     final bool? studyInitialized = _studyManager.studyInitialized;
 
@@ -103,28 +101,23 @@ class SurveyManager {
 
         for (var day in plannedSurvey.days) {
           // This value must be unique for each different survey
-          String scheduledSurveyKey =
-              "day_${day.dayNumber}_${plannedSurvey.surveyId}"
+          String scheduledSurveyKey = "day_${day.dayNumber}_${plannedSurvey.surveyId}"
               "_${plannedSurvey.period.name}";
 
           Future future = _firestoreManager.queryEntity(
               [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
-              [_authManager.userCode!, _currentStudyId,
-                scheduledSurveyKey]);
+              [_authManager.userCode!, _currentStudyId, scheduledSurveyKey]);
 
           future.then((firebaseEntity) {
             // Scheduled survey is created based on planned survey
             ScheduledSurvey scheduledSurvey = ScheduledSurvey(
-                firebaseEntity,
-                survey, day,
-                plannedSurvey: plannedSurvey);
+                firebaseEntity, survey, day, plannedSurvey: plannedSurvey);
 
             // Copy period from planned survey
             scheduledSurvey.setPeriod(plannedSurvey.period);
 
             if (scheduledSurvey.getValue(ScheduledSurveyKey.status) == null) {
-              scheduledSurvey.setValue(ScheduledSurveyKey.status,
-                  SurveyState.not_started.name);
+              scheduledSurvey.setValue(ScheduledSurveyKey.status, SurveyState.not_started.name);
             }
 
             scheduledSurvey.save();
@@ -146,7 +139,7 @@ class SurveyManager {
     scheduledSurveys.sortBy((scheduledSurvey) => scheduledSurvey.plannedSurveyId);
 
     for (var scheduledSurvey in scheduledSurveys) {
-      // Add scheduled survey to group by planned survey id
+      // Add scheduled survey to group by planned survey id.
       _scheduledSurveysByPlannedSurveyId.update(
           scheduledSurvey.plannedSurveyId, (value) => [...value, scheduledSurvey],
           ifAbsent: () => [scheduledSurvey]);
@@ -155,7 +148,6 @@ class SurveyManager {
   }
 
   Future<ScheduledSurvey?> queryScheduledSurvey(String scheduledSurveyId) async {
-    _logger.log(Level.INFO, scheduledSurveys);
     FirebaseEntity? scheduledSurveyEntity = await _firestoreManager.queryEntity(
         [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
         [_authManager.userCode!, _currentStudyId, scheduledSurveyId]);
@@ -171,7 +163,7 @@ class SurveyManager {
           _surveys = await _loadSurveys(fromCache: true);
         }
         Survey? survey = _surveys?.firstWhere(
-            (element) => element.id == plannedSurvey.surveyId) ?? null;
+                (element) => element.id == plannedSurvey.surveyId) ?? null;
         if (survey == null) {
           return null;
         }
@@ -185,15 +177,14 @@ class SurveyManager {
 
   Future<List<Survey>?> _loadSurveys({bool fromCache = false}) async {
     List<FirebaseEntity>? entities = await _firestoreManager.queryEntities(
-        [Table.surveys], [],
-        fromCacheWithKey: fromCache ? Table.surveys.name() : null,
+        [Table.surveys], [], fromCacheWithKey: fromCache ? Table.surveys.name() : null,
     );
     if (entities == null) {
       return null;
     }
 
     List<Survey> results = [];
-    // Speed up queries by making parallel requests
+    // Speed up queries by making parallel requests.
     List<Future<bool>> futures = [];
     for (FirebaseEntity entity in entities) {
       final survey = Survey(entity);
@@ -257,8 +248,7 @@ class SurveyManager {
     return result;
   }
 
-  Future<List<FirebaseEntity>?> _queryScheduledSurveys(
-      {bool fromCache = false}) async {
+  Future<List<FirebaseEntity>?> _queryScheduledSurveys({bool fromCache = false}) async {
     String cacheKey = "${_currentStudyId}_${Table.scheduled_surveys.name()}";
     return await _firestoreManager.queryEntities(
         [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
