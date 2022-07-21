@@ -19,7 +19,7 @@ class AdhocSurvey implements RunnableSurvey {
   @override
   Future<bool> update({required SurveyState state, Map<String, dynamic>? data,
       bool persist = true}) async {
-    // Create new record only when we submit some data
+    // Create new record only when we submit some data.
     if (data != null) {
       return await save(data);
     }

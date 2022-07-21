@@ -82,7 +82,7 @@ class CustomLogPrinter {
       [dynamic error, StackTrace? stackTrace]) {
     String log = '${_dateFormatter.format(new DateTime.now())} - $logLevel -'
         ' $className - $message';
-    _logger.log(logLevel, message, error, stackTrace);
+    _logger.log(logLevel, '$className - $message', error, stackTrace);
     LogFile().appendToAppLogs('$log');
   }
 }

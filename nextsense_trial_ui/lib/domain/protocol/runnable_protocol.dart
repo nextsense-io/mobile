@@ -1,4 +1,5 @@
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 
 enum RunnableProtocolType {
   scheduled,
@@ -12,6 +13,8 @@ abstract class RunnableProtocol {
   RunnableProtocolType get type;
 
   String? get lastSessionId;
+
+  List<Survey>? get postSurveys;
 
   Future<bool> update({required ProtocolState state, String? sessionId, bool persist = true});
 }

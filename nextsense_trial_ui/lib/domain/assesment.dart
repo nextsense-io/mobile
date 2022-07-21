@@ -1,7 +1,10 @@
 import 'package:logging/logging.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
+import 'package:nextsense_trial_ui/domain/survey/survey.dart';
+import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum PlannedAssessmentKey {
@@ -10,7 +13,8 @@ enum PlannedAssessmentKey {
   time,
   parameters,
   allowed_early_start_time_minutes,
-  allowed_late_start_time_minutes
+  allowed_late_start_time_minutes,
+  post_surveys
 }
 
 enum PlannedAssessmentParameter {
@@ -20,6 +24,7 @@ enum PlannedAssessmentParameter {
 
 class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
 
+  final SurveyManager _surveyManager = getIt<SurveyManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('Assessment');
 
   late StudyDay day;
@@ -43,6 +48,7 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
   // Returns start datetime in format "YYYY-MM-DD HH:MM"
   String get startDateTimeAsString => startDateTime.toString();
 
+  late List<Survey> postSurveys;
   late int allowedEarlyStartTimeMinutes;
   late int allowedLateStartTimeMinutes;
 
@@ -89,8 +95,18 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
           minDuration: minDurationOverride,
           maxDuration: maxDurationOverride
       );
-    }
-    else {
+      List<Survey> surveys = [];
+      for (String surveyId in getValue(PlannedAssessmentKey.post_surveys) ?? []) {
+        Survey? survey = _surveyManager.getSurveyById(surveyId);
+        if (survey == null) {
+          _logger.log(Level.SEVERE, "Survey ${surveyId} not found.");
+          continue;
+        }
+        surveys.add(survey);
+      }
+      postSurveys = surveys;
+      _logger.log(Level.INFO, postSurveys);
+    } else {
       _logger.log(Level.WARNING, 'Unknown protocol "$protocolTypeString"');
     }
   }

@@ -59,7 +59,7 @@ class EOECProtocolScreen extends ProtocolScreen {
                 protocolStepCards +
                 [
                   Spacer(),
-                  SessionControlButton(runnableProtocol)
+                  SessionControlButton(stopSession)
                 ]));
   }
 

@@ -6,6 +6,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/survey/protocol_survey.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/big_text.dart';
 import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';
@@ -16,6 +17,8 @@ import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol_finished_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -37,7 +40,9 @@ Future<bool> _confirmStopSessionDialog(BuildContext context,
                 onPressed: () => Navigator.pop(context, false),
                 child: Text('Continue')),
             TextButton(
-              onPressed: () => Navigator.pop(context, true),
+              onPressed: () async => {
+                Navigator.pop(context, true)
+              },
               child: Text('Stop'),
             )
           ],
@@ -47,12 +52,10 @@ Future<bool> _confirmStopSessionDialog(BuildContext context,
 
 class SessionControlButton extends StatelessWidget {
 
-  final Navigation _navigation = getIt<Navigation>();
-  final RunnableProtocol _runnableProtocol;
   final String text;
+  final Future<bool> Function(BuildContext, ProtocolScreenViewModel) stopSession;
 
-  SessionControlButton(RunnableProtocol runnableProtocol, {this.text = 'Stop'}) :
-        _runnableProtocol = runnableProtocol;
+  SessionControlButton(this.stopSession, {this.text = 'Stop'});
 
   @override
   Widget build(BuildContext context) {
@@ -62,12 +65,7 @@ class SessionControlButton extends StatelessWidget {
       border: Border.all(width: 2, color: NextSenseColors.purple),
       onTap: () async {
         if (viewModel.sessionIsActive) {
-          bool confirm = await _confirmStopSessionDialog(context, viewModel);
-          if (confirm) {
-            viewModel.stopSession();
-            _navigation.navigateTo(ProtocolFinishedScreen.id, replace: true,
-                arguments: viewModel.protocol.nameForUser + ' Recording Completed!');
-          }
+          await stopSession.call(context, viewModel);
         } else if (viewModel.deviceIsConnected) {
           viewModel.startSession();
         } else {
@@ -86,6 +84,8 @@ class ProtocolScreen extends HookWidget {
   static const String id = 'protocol_screen';
 
   final RunnableProtocol runnableProtocol;
+  final Navigation _navigation = getIt<Navigation>();
+  final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreen');
 
   Protocol get protocol => runnableProtocol.protocol;
 
@@ -141,7 +141,7 @@ class ProtocolScreen extends HookWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  SessionControlButton(runnableProtocol, text: 'Log recording'),
+                  SessionControlButton(stopSession, text: 'Log recording'),
                 ],
               )
             ]));
@@ -221,20 +221,25 @@ class ProtocolScreen extends HookWidget {
   Future<bool> onBackButtonPressed(
       BuildContext context, ProtocolScreenViewModel viewModel) async {
     if (viewModel.sessionIsActive) {
-      bool confirm = await _confirmStopSessionDialog(context, viewModel);
-      if (confirm) {
-        await viewModel.stopSession();
-        // Exit from protocol screen for adhoc
-        if (runnableProtocol.protocol.type == ProtocolType.nap) {
-          // Navigator.
-        } else if (runnableProtocol.type == RunnableProtocolType.adhoc) {
-          Navigator.pop(context);
-        }
-        return true;
-      }
-      return false;
+      return await stopSession(context, viewModel);
     }
     return true;
+  }
+
+  Future<bool> stopSession(BuildContext context, ProtocolScreenViewModel viewModel) async {
+    bool confirm = await _confirmStopSessionDialog(context, viewModel);
+    if (confirm) {
+      await viewModel.stopSession();
+      if (viewModel.postRecordingSurveys.isNotEmpty) {
+        for (ProtocolSurvey survey in viewModel.postRecordingSurveys) {
+          await _navigation.navigateTo(SurveyScreen.id, arguments: survey);
+        }
+      }
+      await _navigation.navigateTo(ProtocolFinishedScreen.id, replace: true,
+          arguments: viewModel.protocol.nameForUser + ' Recording Completed!');
+      return false;
+    }
+    return false;
   }
 
   Widget deviceInactiveOverlay(BuildContext context, ProtocolScreenViewModel viewModel) {

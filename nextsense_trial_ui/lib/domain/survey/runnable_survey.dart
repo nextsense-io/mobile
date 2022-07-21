@@ -2,7 +2,8 @@ import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 
 enum RunnableSurveyType {
   scheduled,
-  adhoc
+  adhoc,
+  protocol
 }
 
 // Class to represents survey and track its state and data

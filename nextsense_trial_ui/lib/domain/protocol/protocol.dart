@@ -20,25 +20,16 @@ enum ProtocolState {
 }
 
 abstract class Protocol {
-
   ProtocolType get type;
-
   DateTime get startTime;
-
   Duration get minDuration;
-
   Duration get maxDuration;
-
   Duration get disconnectTimeoutDuration;
-
   String get description;
-
   String get intro;
-
   String get name;
-
   String get nameForUser;
-
+  List<String> get postRecordingSurveys;
   List<ProtocolPart> get protocolBlock;
 
   factory Protocol(ProtocolType type,
@@ -50,6 +41,9 @@ abstract class Protocol {
         break;
       case ProtocolType.sleep:
         protocol = SleepProtocol();
+        break;
+      case ProtocolType.nap:
+        protocol = NapProtocol();
         break;
       case ProtocolType.eoec:
         protocol = EyesOpenEyesClosedProtocol();
@@ -81,8 +75,7 @@ class ProtocolPart {
   String? marker;
 
   ProtocolPart({
-    required String state, required Duration duration, String? text,
-    String? marker}) :
+    required String state, required Duration duration, String? text, String? marker}) :
         this.state = state,
         this.duration = duration,
         this.marker = marker;
@@ -107,6 +100,9 @@ abstract class BaseProtocol implements Protocol {
 
   @override
   List<ProtocolPart> get protocolBlock => [];
+
+  @override
+  List<String> get postRecordingSurveys => [];
 
   BaseProtocol();
 
@@ -162,11 +158,9 @@ class SleepProtocol extends BaseProtocol {
   @override
   Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 12);
 
-  // TODO(alex): add sleep protocol description
   @override
   String get description => 'Sleep';
 
-  // TODO(alex): add sleep protocol intro
   @override
   String get intro => 'Lay down in bed to get ready for your night then press the start button.';
 }
@@ -185,14 +179,15 @@ class NapProtocol extends BaseProtocol {
   @override
   Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 4);
 
-  // TODO(alex): add sleep protocol description
   @override
   String get description => 'Nap';
 
-  // TODO(alex): add sleep protocol intro
   @override
   String get intro =>
       'Get ready in a comfortable position for your nap then press the start button.';
+
+  @override
+  List<String> get postRecordingSurveys => ['nap'];
 }
 
 enum EOECState {

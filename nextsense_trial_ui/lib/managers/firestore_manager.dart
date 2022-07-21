@@ -16,6 +16,7 @@ enum Table {
   questions,
   planned_assessments,
   planned_surveys,
+  protocol_surveys,
   scheduled_protocols,
   scheduled_surveys,
   sessions,
