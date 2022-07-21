@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/survey/condition.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
@@ -12,20 +13,27 @@ enum SurveyKey {
 }
 
 enum SurveyQuestionKey {
-  type,
-  text,
-  choices,
-  optional
+  choices,  // Possible choices for choices and range types
+  conditions,  // Conditions for this question to appear
+  hint,  // hint shown for text types
+  text,  // Question prompt at the top
+  type,  // type of question, see `SurveyQuestionType`
+  optional,  // If the question is optional
 }
 
 enum SurveyQuestionType {
-  yesno,
-  range,
-  number,
-  choices,
-  text,
-  time,
+  yesno,  // Yes or No buttons
+  range,  // Select between values
+  number,  // Valid number selector
+  choices,  // List of choices buttons
+  text,  // Free text
+  time,  // DateTime entry
   unknown
+}
+
+enum SurveyYesNoChoices {
+  yes,
+  no
 }
 
 //TODO(alex): move this to database at some point
@@ -61,31 +69,35 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
   final CustomLogPrinter _logger = CustomLogPrinter('SurveyQuestion');
 
   List<SurveyQuestionChoice> choices = [];
+  Conditions? _conditions;
 
-  SurveyQuestionType get type =>
-      surveyQuestionTypeFromString(typeString);
+  SurveyQuestionType get type => surveyQuestionTypeFromString(typeString);
 
   String get typeString => getValue(SurveyQuestionKey.type);
 
   String get text => getValue(SurveyQuestionKey.text);
 
+  String? get hint => getValue(SurveyQuestionKey.hint);
+
+  List<Condition> get conditions => _conditions?.getConditions() ?? [];
+
   // Optional question can be skipped
   bool get optional => getValue(SurveyQuestionKey.optional) ?? false;
 
-  SurveyQuestion(FirebaseEntity firebaseEntity)
-      : super(firebaseEntity.getDocumentSnapshot()) {
-    dynamic choicesValue = getValue(SurveyQuestionKey.choices);
+  SurveyQuestion(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot()) {
+    if (getValue(SurveyQuestionKey.conditions) != null) {
+      _conditions = Conditions.fromArray(getValue(SurveyQuestionKey.conditions));
+    }
 
-    if (![SurveyQuestionType.range, SurveyQuestionType.choices].contains(
-        type)) {
+    dynamic choicesValue = getValue(SurveyQuestionKey.choices);
+    if (![SurveyQuestionType.range, SurveyQuestionType.choices].contains(type)) {
       // For other types we don't need to specify choices
       return;
     }
     if (choicesValue is List) {
       // List of value/text items
-      choices = choicesValue
-          .map((item) => SurveyQuestionChoice(item['value'], item['text']))
-          .toList();
+      choices = choicesValue.map(
+              (item) => SurveyQuestionChoice(item['value'], item['text'])).toList();
     } else if (choicesValue is String) {
       if (type == SurveyQuestionType.range) {
         // Range of values
@@ -96,21 +108,17 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
           min = int.parse(minMaxStr[0]);
           max = int.parse(minMaxStr[1]);
         } catch (e) {
-          _logger.log(Level.WARNING,
-              'Failed to parse choices: ${choicesValue}');
+          _logger.log(Level.WARNING, 'Failed to parse choices: ${choicesValue}');
           return;
         }
         for (int choice = min; choice <= max; choice++) {
-          choices
-              .add(SurveyQuestionChoice(choice.toString(), choice.toString()));
+          choices.add(SurveyQuestionChoice(choice.toString(), choice.toString()));
         }
         return;
       }
-      choices = _getSpecialChoices(
-              surveyQuestionSpecialChoicesFromString(choicesValue));
+      choices = _getSpecialChoices(surveyQuestionSpecialChoicesFromString(choicesValue));
     } else {
-      _logger.log(
-          Level.WARNING, 'Invalid value for choices "$choicesValue"');
+      _logger.log(Level.WARNING, 'Invalid value for choices "$choicesValue"');
     }
   }
 
@@ -153,16 +161,13 @@ class Survey extends FirebaseEntity<SurveyKey> {
 
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
 
-  List<SurveyQuestion> questions = [];
+  List<SurveyQuestion> _questions = [];
 
   String get name => getValue(SurveyKey.name) ?? "";
-
   String get introText => getValue(SurveyKey.intro_text) ?? "";
-
   Duration get duration => Duration(minutes: getValue(SurveyKey.duration_minutes) ?? 0);
 
-  Survey(FirebaseEntity firebaseEntity)
-      : super(firebaseEntity.getDocumentSnapshot());
+  Survey(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
 
   Future<bool> loadQuestions({bool fromCache = false}) async {
     List<FirebaseEntity>? entities = await _firestoreManager.queryEntities(
@@ -173,35 +178,32 @@ class Survey extends FirebaseEntity<SurveyKey> {
     if (entities == null) {
       return false;
     }
-    questions = entities.map((firebaseEntity) =>
-        SurveyQuestion(firebaseEntity))
-        .toList();
+    _questions = entities.map((firebaseEntity) => SurveyQuestion(firebaseEntity)).toList();
     return true;
   }
 
+  List<SurveyQuestion> getQuestions() {
+    return _questions;
+  }
 }
 
 SurveyQuestionType surveyQuestionTypeFromString(String typeStr) {
-  return SurveyQuestionType.values.firstWhere(
-      (element) => element.name == typeStr,
+  return SurveyQuestionType.values.firstWhere((element) => element.name == typeStr,
       orElse: () => SurveyQuestionType.unknown);
 }
 
 // TODO(alex): make generics for those kind of functions
 SurveyQuestionSpecialChoices surveyQuestionSpecialChoicesFromString(String choicesStr) {
-  return SurveyQuestionSpecialChoices.values.firstWhere(
-          (element) => element.name == choicesStr,
+  return SurveyQuestionSpecialChoices.values.firstWhere((element) => element.name == choicesStr,
       orElse: () => SurveyQuestionSpecialChoices.unknown);
 }
 
 SurveyState surveyStateFromString(String surveyStateStr) {
-  return SurveyState.values.firstWhere(
-      (element) => element.name == surveyStateStr,
+  return SurveyState.values.firstWhere((element) => element.name == surveyStateStr,
       orElse: () => SurveyState.unknown);
 }
 
 SurveyPeriod surveyPeriodFromString(String surveyPeriodStr) {
-  return SurveyPeriod.values.firstWhere(
-          (element) => element.name == surveyPeriodStr,
+  return SurveyPeriod.values.firstWhere((element) => element.name == surveyPeriodStr,
       orElse: () => SurveyPeriod.unknown);
 }

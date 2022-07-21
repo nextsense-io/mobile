@@ -9,6 +9,10 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
+import 'package:nextsense_trial_ui/domain/survey/protocol_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/survey.dart';
+import 'package:nextsense_trial_ui/domain/user.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
@@ -38,6 +42,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final AuthManager _authManager = getIt<AuthManager>();
   final Navigation _navigation = getIt<Navigation>();
   final RunnableProtocol runnableProtocol;
   final List<ScheduledProtocolPart> _scheduledProtocolParts = [];
@@ -54,6 +59,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   bool maxDurationPassed = false;
   Timer? timer;
   Timer? disconnectTimeoutTimer;
+  List<ProtocolSurvey> postRecordingSurveys = [];
   bool _timerPaused = false;
   ProtocolCancelReason protocolCancelReason = ProtocolCancelReason.none;
   bool protocolCompletedHandlerExecuted = false;
@@ -79,12 +85,18 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   }
 
   @override
-  void init() {
+  void init() async {
     super.init();
-    startSession();
+    await startSession();
+    if (runnableProtocol.type == RunnableProtocolType.scheduled ||
+        _authManager.user!.userType == UserType.researcher) {
+      for (Survey survey in runnableProtocol.postSurveys ?? []) {
+        postRecordingSurveys.add(ProtocolSurvey(survey, _sessionManager.currentSessionId!));
+      }
+    }
   }
 
-  void startSession() {
+  Future startSession() async {
     _logger.log(Level.INFO, "startSession");
 
     secondsElapsed = 0;
@@ -95,7 +107,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     currentRepetition = 0;
     protocolCancelReason = ProtocolCancelReason.none;
     startTimer();
-    _startProtocol();
+    await _startProtocol();
   }
 
   Future stopSession() async {
@@ -313,7 +325,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     }
   }
 
-  void _startProtocol() async {
+  Future _startProtocol() async {
     if (_deviceManager.getConnectedDevice() != null) {
       _logger.log(Level.INFO, 'Starting ${protocol.name} protocol.');
       bool started = await _sessionManager.startSession(

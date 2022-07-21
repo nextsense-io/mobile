@@ -1,8 +1,5 @@
 import 'dart:core';
 
-import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-
 enum ConditionField {
   key,
   op,
@@ -22,12 +19,10 @@ class Condition {
   final String key;
   final String operator;
   final dynamic value;
-  final CustomLogPrinter _logger = CustomLogPrinter('Condition');
 
   Condition(this.key, this.operator, this.value);
 
   static Condition fromMap(Map<String, dynamic> conditionFields) {
-    CustomLogPrinter('Condition').log(Level.INFO, "conditions: " + conditionFields.toString());
     for (ConditionField conditionField in ConditionField.values) {
       if (conditionFields[conditionField.name] == null) {
         throw FormatException("${conditionField.name} is missing in the fields.");

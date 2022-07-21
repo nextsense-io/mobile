@@ -38,7 +38,8 @@ dependencies:
   google_sign_in: ^5.1.0
   gson: ^0.1.6-dev
   http: ^0.13.4
-  introduction_screen: ^3.0.2
+  introduction_screen: # ^3.0.2
+    path: ../../introduction_screen
   logging: ^1.0.2
   package_info_plus: ^1.4.2
   path_provider: ^2.0.8

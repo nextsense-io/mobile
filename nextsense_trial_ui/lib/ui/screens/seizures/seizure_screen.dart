@@ -19,6 +19,7 @@ import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/entry_added_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizure_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
+import 'package:nextsense_trial_ui/ui/ui_utils.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:stacked/stacked.dart';
 
@@ -168,7 +169,7 @@ class SeizureScreen extends HookWidget {
                     WaitWidget(message: 'Saving seizure...')
                   else
                     Expanded(
-                        child: ThemeOverride(IntroductionScreen(
+                        child: WhiteThemeOverride(IntroductionScreen(
                       globalBackgroundColor: Colors.transparent,
                       pages: _getPageViewModels(context, viewModel),
                       showSkipButton: false,
@@ -207,21 +208,5 @@ class SeizureScreen extends HookWidget {
               _navigation.navigateTo(SeizuresScreen.id, replace: true);
               return true;
             }));
-  }
-}
-
-class ThemeOverride extends StatelessWidget {
-  final Widget child;
-
-  const ThemeOverride(this.child);
-
-  @override
-  Widget build(BuildContext context) {
-    final themeData = Theme.of(context);
-    return Theme(
-        child: child,
-        data: themeData.copyWith(
-          scaffoldBackgroundColor: Colors.white,
-        ));
   }
 }

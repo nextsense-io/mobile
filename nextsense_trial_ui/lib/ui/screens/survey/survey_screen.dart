@@ -2,188 +2,224 @@ import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:introduction_screen/introduction_screen.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/components/content_text.dart';
+import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/nextsense_button.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/ui_utils.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:provider/src/provider.dart';
 import 'package:stacked/stacked.dart';
 
 class SurveyScreen extends HookWidget {
-
   static const String id = 'survey_screen';
 
   final RunnableSurvey runnableSurvey;
+  GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
+  final CustomLogPrinter _logger = CustomLogPrinter('SurveyScreen');
 
   SurveyScreen(this.runnableSurvey);
 
+  bool canProgress(SurveyScreenViewModel viewModel) {
+    SurveyQuestion currentQuestion = viewModel.getVisibleQuestions()[viewModel.currentPageNumber];
+    if (!currentQuestion.optional) {
+      _logger.log(Level.INFO, viewModel.formValues);
+      if (_formKey.currentState?.instantValue[currentQuestion.id] != null) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
+    _formKey = GlobalKey<FormBuilderState>();
     return ViewModelBuilder<SurveyScreenViewModel>.reactive(
         viewModelBuilder: () => SurveyScreenViewModel(runnableSurvey),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) {
-            return WillPopScope(
-              onWillPop: () => _onBackButtonPressed(context, viewModel),
-              child: SafeArea(child: Scaffold(body: _SurveyForm())),
+          return WillPopScope(
+            onWillPop: () => _onBackButtonPressed(context, viewModel),
+            child: SafeArea(
+              child: PageScaffold(
+                  backgroundColor: NextSenseColors.lightGrey,
+                  showBackground: false,
+                  showProfileButton: false,
+                  backButtonCallback:
+                      viewModel.isBusy ? () => {} : () => Navigator.pop(context, false),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                    if (viewModel.isBusy)
+                      WaitWidget(message: 'Submitting...')
+                    else
+                      Expanded(
+                          child: WhiteThemeOverride(FormBuilder(
+                              key: _formKey,
+                              initialValue:
+                                  viewModel.formValues != null ? viewModel.formValues! : {},
+                              child: IntroductionScreen(
+                                globalBackgroundColor: Colors.transparent,
+                                pages: _getPageViewModels(context, viewModel, _formKey),
+                                initialPage: viewModel.currentPageNumber,
+                                showSkipButton: false,
+                                showNextButton: true,
+                                showBackButton: true,
+                                showDoneButton: true,
+                                onDone: () => {},
+                                onSkip: () => Navigator.pop(context, false),
+                                canProgress: () => canProgress(viewModel),
+                                onChange: (pageNum) => {
+                                  _logger.log(Level.INFO, "page ${pageNum}"),
+                                  viewModel.currentPageNumber = pageNum,
+                                  viewModel.notifyListeners(),
+                                },
+                                back: const Icon(Icons.arrow_back, color: NextSenseColors.purple),
+                                skip: MediumText(text: 'Skip', color: NextSenseColors.purple),
+                                next:
+                                    const Icon(Icons.arrow_forward, color: NextSenseColors.purple),
+                                done: _submitButton(context, _formKey),
+                                dotsDecorator: const DotsDecorator(
+                                  color: NextSenseColors.translucentPurple,
+                                  activeColor: NextSenseColors.purple,
+                                ),
+                              )))),
+                  ])),
+            ),
           );
-        }
-    );
+        });
   }
 
-  Future<bool> _onBackButtonPressed(
-      BuildContext context, SurveyScreenViewModel viewModel) async {
+  Future<bool> _onBackButtonPressed(BuildContext context, SurveyScreenViewModel viewModel) async {
     Navigator.pop(context, false);
     return true;
   }
-}
 
-class _SurveyForm extends StatelessWidget {
-
-  final CustomLogPrinter _logger = CustomLogPrinter('_SurveyForm');
-
-  final _formKey = GlobalKey<FormBuilderState>();
-
-  _SurveyForm({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final viewModel = context.read<SurveyScreenViewModel>();
-    final survey = viewModel.survey;
-    if (viewModel.isBusy) {
-      return WaitWidget(message: 'Submitting the form...');
+  List<PageViewModel> _getPageViewModels(
+      BuildContext context, SurveyScreenViewModel viewModel, GlobalKey<FormBuilderState> formKey) {
+    List<PageViewModel> pageViewModels = [];
+    for (SurveyQuestion question in viewModel.getVisibleQuestions()) {
+      pageViewModels.add(_getQuestionPage(question, viewModel, formKey));
     }
-    return FormBuilder(
-        key: _formKey,
-        child: Container(
-          padding: EdgeInsets.all(20.0),
-          child: SingleChildScrollView(
-            physics: ScrollPhysics(),
-            child: Column(
-              children: [
-                Text(survey.name,
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                SizedBox(
-                  height: 20,
-                ),
-                Text(survey.introText, style: TextStyle(fontSize: 20)),
-                SizedBox(height: 30,),
-                Container(
-                    child: ListView.separated(
-                  scrollDirection: Axis.vertical,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: survey.questions.length,
-                  shrinkWrap: true,
-                  itemBuilder: (BuildContext context, int index) {
-                    SurveyQuestion question = survey.questions[index];
-                    return _SurveyQuestionWidget(question);
-                  },
-                  separatorBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Divider(),
-                    );
-                  },
-                )),
-                SizedBox(
-                  height: 20,
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: NextsenseButton.secondary(
-                        "Cancel",
-                        onPressed: () {
-                          Navigator.pop(context, false);
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: 20,
-                    ),
-                    Expanded(
-                      child: _submitButton(context),
-                    ),
-                  ],
-                )
-              ],
+    return pageViewModels;
+  }
+
+  PageViewModel _getQuestionPage(SurveyQuestion question, SurveyScreenViewModel viewModel,
+      GlobalKey<FormBuilderState> formKey) {
+    return PageViewModel(
+        titleWidget: Align(
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                      text: question.text,
+                      style: TextStyle(
+                          fontSize: 18,
+                          color: NextSenseColors.darkBlue,
+                          fontWeight: FontWeight.w400,
+                          fontStyle: FontStyle.italic)),
+                  if (!question.optional)
+                    TextSpan(
+                        text: ' *',
+                        style:
+                            TextStyle(color: Colors.red, fontSize: 18, fontWeight: FontWeight.w400))
+                ],
+              ),
             ),
           ),
         ),
-      );
-  }
-
-  Widget _submitButton(BuildContext context) {
-    final viewModel = context.read<SurveyScreenViewModel>();
-    return NextsenseButton.primary("Submit",
-      onPressed: () async {
-        if (_formKey.currentState != null) {
-          _formKey.currentState?.save();
-          if (_formKey.currentState!.validate()) {
-            bool submitted = await viewModel.submit(_formKey.currentState!.value);
-            if (submitted) {
-              Navigator.pop(context, true);
-            } else {
-              showDialog(
-                  context: context,
-                  builder: (_) => SimpleAlertDialog(
-                      title: 'Error submitting the form',
-                      content: 'Please try again and contact support if you get additional '
-                          'errors.'));
-            }
-          } else {
-            _logger.log(Level.WARNING, "Validation failed");
-            showDialog(
-                context: context,
-                builder: (_) => SimpleAlertDialog(
-                    title: 'Form error',
-                    content: 'Please fill missing or incorrect fields'));
-          }
-        }
-      },
-    );
+        bodyWidget: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 20),
+              Row(mainAxisAlignment: MainAxisAlignment.end, children:[
+                SizedBox(height: 20),
+                Flexible(child: _SurveyQuestionWidget(question, formKey)),
+                SizedBox(height: 20),
+                ])
+            ]));
   }
 }
 
-class _SurveyQuestionWidget extends StatelessWidget {
+Widget _submitButton(BuildContext context, GlobalKey<FormBuilderState> formKey) {
+  final viewModel = context.read<SurveyScreenViewModel>();
+  final CustomLogPrinter _logger = CustomLogPrinter('SubmitButton');
 
-  final CustomLogPrinter _logger = CustomLogPrinter('SurveyQuestionWidget');
+  return NextsenseButton.primary(
+    "Done",
+    onPressed: () async {
+      if (formKey.currentState != null) {
+        formKey.currentState?.save();
+        if (formKey.currentState!.validate()) {
+          bool submitted = await viewModel.submit(formKey.currentState!.value);
+          if (submitted) {
+            Navigator.pop(context, true);
+          } else {
+            showDialog(
+                context: context,
+                builder: (_) => SimpleAlertDialog(
+                    title: 'Error submitting the form',
+                    content: 'Please try again and contact support if you get additional '
+                        'errors.'));
+          }
+        } else {
+          _logger.log(Level.INFO, "Validation failed");
+          showDialog(
+              context: context,
+              builder: (_) => SimpleAlertDialog(
+                  title: 'Form error', content: 'Please fill missing or incorrect fields'));
+        }
+      }
+    },
+  );
+}
+
+class _SurveyQuestionWidget extends StatelessWidget {
+  static const int maxVerticalChoiceChips = 5;
 
   final SurveyQuestion question;
+  final GlobalKey<FormBuilderState> formKey;
+  final CustomLogPrinter _logger = CustomLogPrinter('SurveyQuestionWidget');
 
-  _SurveyQuestionWidget(this.question, {Key? key}) : super(key: key);
+  _SurveyQuestionWidget(this.question, this.formKey, {Key? key}) : super(key: key);
+
+  void reloadAfterChange(SurveyScreenViewModel viewModel) {
+    viewModel.formValues = formKey.currentState != null ?
+        Map.from(formKey.currentState!.instantValue) : null;
+    // viewModel.formValues = formKey.currentState?.instantValue ?? null;
+    _logger.log(Level.INFO, "formValues onChanged: ${viewModel.formValues}");
+    viewModel.notifyListeners();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.read<SurveyScreenViewModel>();
     FormBuilderField formBuilderField;
     switch (question.type) {
       case SurveyQuestionType.yesno:
         formBuilderField = FormBuilderChoiceChip(
           name: question.id,
-          padding: EdgeInsets.all(8.0),
-          options: [
-            FormBuilderFieldOption(
-                value: 'Yes',
-                child: Text(
-                  'Yes',
-                  style: TextStyle(fontSize: 20),
-                )),
-            FormBuilderFieldOption(
-                value: 'No',
-                child: Text(
-                  'No',
-                  style: TextStyle(fontSize: 20),
-                )),
-          ],
+          padding: EdgeInsets.all(0.0),
+          options: _generateChoices(),
+          direction: Axis.vertical,
+          alignment: WrapAlignment.spaceAround,
+          crossAxisAlignment: WrapCrossAlignment.center,
           validator: FormBuilderValidators.compose(_getValidators()),
-          decoration: InputDecoration(
-              border: InputBorder.none
-          ),
+          decoration: InputDecoration(border: InputBorder.none),
+          onChanged: (dynamic) => reloadAfterChange(viewModel),
         );
         break;
       case SurveyQuestionType.range:
@@ -192,29 +228,25 @@ class _SurveyQuestionWidget extends StatelessWidget {
           padding: EdgeInsets.all(8.0),
           options: _generateChoices(),
           validator: FormBuilderValidators.compose(_getValidators()),
-          decoration: InputDecoration(
-              border: InputBorder.none
-          ),
+          decoration: InputDecoration(border: InputBorder.none),
         );
         break;
       case SurveyQuestionType.number:
         formBuilderField = FormBuilderTextField(
           name: question.id,
           decoration: InputDecoration(
-            border: OutlineInputBorder(),
+            border: OutlineInputBorder(), hintText: question.hint ?? "",
           ),
           validator: FormBuilderValidators.compose(_getValidators()),
-          onChanged: (value){},
+          onChanged: (value) {},
           keyboardType: TextInputType.number,
         );
         break;
       case SurveyQuestionType.text:
         formBuilderField = FormBuilderTextField(
           name: question.id,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-          ),
-          onChanged: (value){},
+          decoration: InputDecoration(border: OutlineInputBorder(), hintText: question.hint ?? ""),
+          onChanged: (value) {},
           validator: FormBuilderValidators.compose(_getValidators()),
           keyboardType: TextInputType.text,
           maxLines: 10,
@@ -223,12 +255,15 @@ class _SurveyQuestionWidget extends StatelessWidget {
       case SurveyQuestionType.choices:
         formBuilderField = FormBuilderChoiceChip(
           name: question.id,
-          padding: EdgeInsets.all(8.0),
+          direction: question.choices.length > maxVerticalChoiceChips ? Axis.horizontal
+              : Axis.vertical,
+          padding: EdgeInsets.all(0.0),
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
           options: _generateChoices(),
           validator: FormBuilderValidators.compose(_getValidators()),
-          decoration: InputDecoration(
-              border: InputBorder.none
-          ),
+          decoration: InputDecoration(border: InputBorder.none),
+          onChanged: (dynamic) => reloadAfterChange(viewModel),
         );
         break;
       case SurveyQuestionType.time:
@@ -241,9 +276,7 @@ class _SurveyQuestionWidget extends StatelessWidget {
             }
             return null;
           },
-          decoration: InputDecoration(
-            labelText: 'Click to select time',
-          ),
+          decoration: InputDecoration(labelText: 'Click to select time'),
           initialTime: TimeOfDay(hour: 12, minute: 0),
         );
         break;
@@ -251,33 +284,7 @@ class _SurveyQuestionWidget extends StatelessWidget {
         _logger.log(Level.WARNING, 'Unknown question type ${question.typeString}');
         return Container();
     }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
-          child: RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(text: question.text,
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
-                if (!question.optional)
-                  TextSpan(text: ' *',
-                      style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold))
-              ],
-            ),
-          ),
-        ),
-        formBuilderField
-      ],
-    );
+    return formBuilderField;
   }
 
   List<FormFieldValidator> _getValidators() {
@@ -307,8 +314,7 @@ class _SurveyQuestionWidget extends StatelessWidget {
     }
 
     if (!question.optional) {
-      validators.add(
-          FormBuilderValidators.required(errorText: "This field is required"));
+      validators.add(FormBuilderValidators.required(errorText: "This field is required"));
     }
     return validators;
   }
@@ -319,27 +325,56 @@ class _SurveyQuestionWidget extends StatelessWidget {
     switch (question.type) {
       case SurveyQuestionType.yesno:
         result.add(FormBuilderFieldOption(
-            value: 'Yes', child: Text('Yes')));
+            value: SurveyYesNoChoices.no.name,
+            child: WideChoiceChip('No')));
         result.add(FormBuilderFieldOption(
-            value: 'No', child: Text('No')));
+            value: SurveyYesNoChoices.yes.name,
+            child: WideChoiceChip('Yes')));
         break;
       case SurveyQuestionType.range:
       case SurveyQuestionType.choices:
         try {
           for (SurveyQuestionChoice choice in question.choices) {
+            Widget choiceChip = question.choices.length > maxVerticalChoiceChips
+                ? SmallChoiceChip(choice.text) : WideChoiceChip(choice.text);
             result.add(FormBuilderFieldOption(
-                value: choice.value, child: Text(choice.text, style: TextStyle(fontSize: 20),)));
+                value: choice.value,
+                child: choiceChip));
           }
         } catch (e) {
-          _logger.log(Level.WARNING,
-              'Failed to parse choices: ${question.choices}, $e');
+          _logger.log(Level.WARNING, 'Failed to parse choices: ${question.choices}, $e');
           return [];
         }
         break;
-
       default:
         break;
     }
     return result;
+  }
+}
+
+class SmallChoiceChip extends StatelessWidget {
+  final String text;
+
+  SmallChoiceChip(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return ContentText(text: text, color: NextSenseColors.darkBlue, marginBottom: 4,
+            marginTop: 4, marginLeft: 4, marginRight: 4);
+  }
+}
+
+class WideChoiceChip extends StatelessWidget {
+  final String text;
+
+  WideChoiceChip(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    int width = MediaQuery.of(context).size.width.round();
+    return Container(width: width - 100, child: Align(alignment: Alignment.center,
+        child: ContentText(text: text, color: NextSenseColors.darkBlue, marginBottom: 12,
+            marginTop: 12)));
   }
 }

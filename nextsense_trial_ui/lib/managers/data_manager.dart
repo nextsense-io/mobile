@@ -35,8 +35,9 @@ class DataManager {
     _logger.log(Level.INFO, 'Starting to load user study data.');
     bool loaded = await _studyManager.loadCurrentStudy();
     if (!loaded) return false;
-    await _studyManager.loadScheduledProtocols();
     loaded = await _surveyManager.loadScheduledSurveys();
+    if (!loaded) return false;
+    loaded = await _studyManager.loadScheduledProtocols();
     if (!loaded) return false;
     // Mark study initialized so we can load things from cache
     bool initialized = await _studyManager.setStudyInitialized(true);

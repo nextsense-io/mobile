@@ -75,7 +75,7 @@ class EyesMovementProtocolScreen extends ProtocolScreen {
                   Expanded(child: ProtocolPartScrollView())
                 ] +
                 [SizedBox(height: 20),
-                  SessionControlButton(runnableProtocol)]));
+                  SessionControlButton(stopSession)]));
   }
 
   @override

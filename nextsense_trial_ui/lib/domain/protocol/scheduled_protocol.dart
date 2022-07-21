@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
+import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
@@ -25,18 +26,8 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledProtocol');
 
   late Protocol protocol;
-
-  RunnableProtocolType get type => RunnableProtocolType.scheduled;
-
-  String? get lastSessionId {
-    var sessions = getValue(ScheduledProtocolKey.sessions);
-    if (sessions is List) {
-      return sessions.last;
-    }
-    return sessions;
-  }
-
   late StudyDay day;
+  late List<Survey> postRecordingSurveys;
 
   // Start time - hours & minutes only
   late DateTime startTime;
@@ -50,6 +41,14 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
   bool get isCompleted => state == ProtocolState.completed;
   bool get isSkipped => state == ProtocolState.skipped;
   bool get isCancelled => state == ProtocolState.cancelled;
+  RunnableProtocolType get type => RunnableProtocolType.scheduled;
+  String? get lastSessionId {
+    var sessions = getValue(ScheduledProtocolKey.sessions);
+    if (sessions is List) {
+      return sessions.last;
+    }
+    return sessions;
+  }
 
   ScheduledProtocol(FirebaseEntity firebaseEntity, PlannedAssessment plannedAssessment) :
       super(firebaseEntity.getDocumentSnapshot()) {
@@ -61,6 +60,7 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
         .subtract(Duration(minutes: plannedAssessment.allowedEarlyStartTimeMinutes));
     allowedStartBefore = startDateTime
         .add(Duration(minutes: plannedAssessment.allowedLateStartTimeMinutes));
+    postRecordingSurveys = plannedAssessment.postSurveys;
 
     // Needed for later push notifications processing at backend
     setValue(ScheduledProtocolKey.start_date, plannedAssessment.startDateAsString);
@@ -150,4 +150,6 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
   @override
   // Surveys can be completed anywhere in the day.
   TimeOfDay get windowStartTime => TimeOfDay.fromDateTime(allowedStartAfter);
+
+  List<Survey>? get postSurveys => postRecordingSurveys;
 }
