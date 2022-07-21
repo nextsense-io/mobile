@@ -77,7 +77,7 @@ public class ForegroundService extends Service {
       return START_REDELIVER_INTENT;
     }
     createNotificationChannel();
-    if (intent.getExtras() == null) {
+    if (intent == null || intent.getExtras() == null) {
       return START_REDELIVER_INTENT;
     }
     Class<Activity> uiClass = (Class<Activity>) intent.getSerializableExtra(EXTRA_UI_CLASS);
