@@ -135,7 +135,7 @@ class DashboardHomeView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         NextSenseAppBar(),
-        HeaderText(text: dashboardViewModel.studyName),
+        HeaderText(text: dashboardViewModel.studyName, marginLeft: 10),
         SizedBox(height: 10),
         RoundedBackground(child: ContentText(text: dashboardViewModel.studyDescription)),
         Spacer(),
