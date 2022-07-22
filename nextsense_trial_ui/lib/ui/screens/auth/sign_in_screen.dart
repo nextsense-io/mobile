@@ -14,6 +14,8 @@ import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/src/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -162,10 +164,14 @@ class SignInScreen extends HookWidget {
 
     // If there are permissions that need to be granted, go through them one by one with an
     // explanation screen.
-    for (PermissionRequest permissionRequest
-        in await _permissionsManager.getPermissionsToRequest()) {
-      await _navigation.navigateTo(RequestPermissionScreen.id,
-          arguments: permissionRequest);
+    for (PermissionRequest permissionRequest in
+        await _permissionsManager.getPermissionsToRequest()) {
+      if (permissionRequest.showRequest) {
+        await _navigation.navigateTo(RequestPermissionScreen.id,
+            arguments: permissionRequest);
+      } else {
+        await permissionRequest.permission.request();
+      }
     }
 
     bool studyLoaded = await viewModel.loadCurrentStudy();
@@ -181,6 +187,9 @@ class SignInScreen extends HookWidget {
       );
       return;
     }
+
+    // _navigation.navigateTo(StudyIntroScreen.id, replace: true);
+    // return;
 
     // Navigate to the device preparation screen by default, but in case we
     // already have paired device before, then navigate directly to dashboard

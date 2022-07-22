@@ -5,9 +5,10 @@ class PermissionRequest {
   bool required;
   String requestText;
   String? deniedText;
+  bool showRequest;
 
   PermissionRequest({required this.permission, required this.required,
-    required this.requestText, this.deniedText});
+    required this.requestText, this.showRequest = true, this.deniedText});
 }
 
 class PermissionsManager {
@@ -19,7 +20,7 @@ class PermissionsManager {
             'pressing continue.',
         deniedText: 'Please try again and allow the Bluetooth scan permission. '
             'It is not possible to find your NextSense device without it.'),
-    PermissionRequest(permission: Permission.bluetoothConnect, required: true,
+    PermissionRequest(permission: Permission.bluetoothConnect, required: false, showRequest: false,
         requestText: 'Bluetooth connect permission is needed to connect to '
             'your NextSense device, please accept the permission in the popup '
             'after pressing continue.',
