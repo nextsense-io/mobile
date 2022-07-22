@@ -41,7 +41,11 @@ class EOECProtocolScreen extends ProtocolScreen {
         showProfileButton: false,
         showBackButton: false,
         showCancelButton: true,
-        backButtonCallback: () => onBackButtonPressed(context, viewModel),
+        backButtonCallback: () async => {
+          if (await onBackButtonPressed(context, viewModel)) {
+            Navigator.of(context).pop()
+          }
+        },
         child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -50,7 +54,7 @@ class EOECProtocolScreen extends ProtocolScreen {
                   SizedBox(height: 10),
                   Stack(
                     children: [
-                      Center(child: CountDownTimer(duration: protocol.minDuration, reverse: true),),
+                      Center(child: CountDownTimer(duration: protocol.minDuration, reverse: true)),
                       if (!viewModel.deviceCanRecord)
                         deviceInactiveOverlay(context, viewModel),
                     ]),

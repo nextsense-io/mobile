@@ -16,7 +16,6 @@ import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
-import 'package:nextsense_trial_ui/ui/screens/protocol_finished_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:provider/provider.dart';
@@ -108,7 +107,7 @@ class ProtocolScreen extends HookWidget {
         viewModel.protocolCancelReason != ProtocolCancelReason.none;
     var statusMsg = ' Recording';
     if (isError) {
-      statusMsg = ' EEG Recording Canceled because the device was unavailable for too long';
+      statusMsg = ' EEG Recording stopped because the device was unavailable for too long';
     }
 
     return PageScaffold(
@@ -117,7 +116,11 @@ class ProtocolScreen extends HookWidget {
         showProfileButton: false,
         showBackButton: false,
         showCancelButton: true,
-        backButtonCallback: () => onBackButtonPressed(context, viewModel),
+        backButtonCallback: () async => {
+          if (await onBackButtonPressed(context, viewModel)) {
+            Navigator.of(context).pop()
+          }
+        },
         child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -136,7 +139,12 @@ class ProtocolScreen extends HookWidget {
               //       viewModel.startSession();
               //     }),
               // if (isError) SizedBox(height: 10),
-              CountDownTimer(duration: protocol.maxDuration, reverse: false),
+              Stack(
+                  children: [
+                    Center(child: CountDownTimer(duration: protocol.maxDuration, reverse: false)),
+                    if (!viewModel.deviceCanRecord)
+                      deviceInactiveOverlay(context, viewModel),
+                  ]),
               Spacer(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -148,14 +156,17 @@ class ProtocolScreen extends HookWidget {
   }
 
   Widget notRunningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
-    bool isError = !viewModel.protocolCompleted &&
-        viewModel.protocolCancelReason != ProtocolCancelReason.none;
     var statusMsg = '';
-    if (isError) {
-      statusMsg = ' EEG Recording Canceled because the device was unavailable for too long';
+    if (viewModel.isError) {
+      statusMsg = ' Recording Canceled because the device was unavailable for too long';
     } else if (viewModel.protocolCompleted) {
-      statusMsg = ' EEG Recording Completed!';
+      statusMsg = ' Recording Completed';
+    } else {
+      statusMsg = ' Recording Cancelled';
     }
+
+    String finishButtonText = !viewModel.isError && viewModel.postRecordingSurveys.isNotEmpty
+        ? 'Fill Survey' : 'Go to Tasks';
 
     return PageScaffold(
         backgroundColor: NextSenseColors.lightGrey,
@@ -163,33 +174,27 @@ class ProtocolScreen extends HookWidget {
         showProfileButton: false,
         showBackButton: false,
         showCancelButton: true,
-        backButtonCallback: () => onBackButtonPressed(context, viewModel),
+        backButtonCallback: () async => {
+          if (await onBackButtonPressed(context, viewModel)) {
+            Navigator.of(context).pop()
+          }
+        },
         child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               SizedBox(height: 20),
-              LightHeaderText(text: protocol.description + statusMsg,
+              LightHeaderText(text: viewModel.protocol.nameForUser + statusMsg,
                   textAlign: TextAlign.center),
               Spacer(),
-              // if (isError)
-              //   SimpleButton(
-              //     text: Center(child: MediumText(text: 'Restart',
-              //         color: NextSenseColors.purple)),
-              //     border: Border.all(width: 2, color: NextSenseColors.purple),
-              //     onTap: () async {
-              //       viewModel.startSession();
-              //     }),
-              // if (isError) SizedBox(height: 10),
-              CountDownTimer(duration: protocol.maxDuration, reverse: false),
-              Spacer(),
-              Row(children: [
+              Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+                Spacer(),
                 SimpleButton(
-                    text: Center(child: MediumText(text: 'Log recording',
+                    text: Center(child: MediumText(text: finishButtonText,
                         color: NextSenseColors.purple)),
                     border: Border.all(width: 2, color: NextSenseColors.purple),
                     onTap: () async {
-                      viewModel.stopSession();
+                      navigateOut(context, viewModel);
                     })
               ],)
             ]));
@@ -226,20 +231,21 @@ class ProtocolScreen extends HookWidget {
     return true;
   }
 
+  Future navigateOut(BuildContext context, ProtocolScreenViewModel viewModel) async {
+    if (viewModel.protocolCompleted && viewModel.postRecordingSurveys.isNotEmpty) {
+      for (ProtocolSurvey survey in viewModel.postRecordingSurveys) {
+        await _navigation.navigateTo(SurveyScreen.id, arguments: survey);
+      }
+    }
+    Navigator.of(context).pop();
+  }
+
   Future<bool> stopSession(BuildContext context, ProtocolScreenViewModel viewModel) async {
     bool confirm = await _confirmStopSessionDialog(context, viewModel);
     if (confirm) {
       await viewModel.stopSession();
-      if (viewModel.postRecordingSurveys.isNotEmpty) {
-        for (ProtocolSurvey survey in viewModel.postRecordingSurveys) {
-          await _navigation.navigateTo(SurveyScreen.id, arguments: survey);
-        }
-      }
-      await _navigation.navigateTo(ProtocolFinishedScreen.id, replace: true,
-          arguments: viewModel.protocol.nameForUser + ' Recording Completed!');
-      return false;
     }
-    return false;
+    return confirm;
   }
 
   Widget deviceInactiveOverlay(BuildContext context, ProtocolScreenViewModel viewModel) {
