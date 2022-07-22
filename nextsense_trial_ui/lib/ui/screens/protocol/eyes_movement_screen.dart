@@ -60,7 +60,11 @@ class EyesMovementProtocolScreen extends ProtocolScreen {
         showProfileButton: false,
         showBackButton: false,
         showCancelButton: true,
-        backButtonCallback: () => onBackButtonPressed(context, viewModel),
+        backButtonCallback: () async => {
+          if (await onBackButtonPressed(context, viewModel)) {
+            Navigator.of(context).pop()
+          }
+        },
         child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,

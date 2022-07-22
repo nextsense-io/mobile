@@ -17,8 +17,6 @@ import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/ui/navigation.dart';
-import 'package:nextsense_trial_ui/ui/screens/protocol_finished_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
@@ -43,7 +41,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   final SessionManager _sessionManager = getIt<SessionManager>();
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
-  final Navigation _navigation = getIt<Navigation>();
   final RunnableProtocol runnableProtocol;
   final List<ScheduledProtocolPart> _scheduledProtocolParts = [];
   final CountDownController countDownController = CountDownController();
@@ -52,9 +49,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   int secondsElapsed = 0;
   bool sessionIsActive = false;
   int disconnectTimeoutSecondsLeft = 10;
-  // This indicates that the minimum duration of the protocol is passed and can mark is as
-  // completed.
-  bool get protocolCompleted => minDurationPassed == true;
   bool minDurationPassed = false;
   bool maxDurationPassed = false;
   Timer? timer;
@@ -70,11 +64,15 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   int currentRepetition = 0;
   Duration _repetitionTime = Duration(seconds: 0);
 
+  // This indicates that the minimum duration of the protocol is passed and can mark is as
+  // completed.
+  bool get protocolCompleted => minDurationPassed == true;
   Study? get currentStudy => _studyManager.currentStudy;
   Protocol get protocol => runnableProtocol.protocol;
   int get repetitions => (protocol.minDuration.inSeconds / _repetitionTime.inSeconds).round();
   int get protocolIndex =>
       currentRepetition * _scheduledProtocolParts.length + _currentProtocolPart;
+  bool get isError => !protocolCompleted && protocolCancelReason != ProtocolCancelReason.none;
 
   ProtocolScreenViewModel(this.runnableProtocol) {
     for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
@@ -216,8 +214,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _logger.log(Level.INFO, "onTimerFinished");
     countDownController.pause();
     stopSession();
-    _navigation.navigateTo(ProtocolFinishedScreen.id, replace: true,
-        arguments: protocol.nameForUser + ' Recording Completed!');
   }
 
   // Called when the protocol progresses to a new part.
