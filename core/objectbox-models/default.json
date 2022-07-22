@@ -17,45 +17,39 @@
         {
           "id": "2:6270588610746783010",
           "name": "x",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "3:7390502527269194648",
           "name": "y",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "4:3495735850726738029",
           "name": "z",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "5:2260023409202753285",
           "name": "receptionTimestamp",
-          "type": 6,
-          "flags": 2
+          "type": 6
         },
         {
           "id": "6:2718408363096941834",
           "name": "relativeSamplingTimestamp",
-          "type": 5,
-          "flags": 2
+          "type": 5
         },
         {
           "id": "7:3599223326442562352",
           "name": "absoluteSamplingTimestamp",
-          "type": 6,
-          "flags": 2
+          "type": 6
         },
         {
           "id": "8:4163970389268528287",
           "name": "localSessionId",
           "indexId": "1:8816028416433126273",
           "type": 11,
-          "flags": 1548,
+          "flags": 520,
           "relationTarget": "LocalSession"
         }
       ],
@@ -94,77 +88,68 @@
         {
           "id": "3:9217311519292577988",
           "name": "receptionTimestamp",
-          "type": 6,
-          "flags": 2
+          "type": 6
         },
         {
           "id": "4:3141188964553715676",
           "name": "relativeSamplingTimestamp",
           "indexId": "5:4976751085054561409",
           "type": 5,
-          "flags": 10
+          "flags": 8
         },
         {
           "id": "5:2161923181385908254",
           "name": "absoluteSamplingTimestamp",
           "indexId": "6:8757822738783033429",
           "type": 6,
-          "flags": 10
+          "flags": 8
         },
         {
           "id": "6:3394089932842450801",
           "name": "sync",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "7:8782592525651390911",
           "name": "trigOut",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "8:6374573288853488058",
           "name": "trigIn",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "9:6602109085153755855",
           "name": "zMod",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "10:7766223348197797431",
           "name": "marker",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "11:2258544700067478525",
           "name": "tbd6",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "12:330530214154588309",
           "name": "tbd7",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "13:8062287022729870208",
           "name": "button",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "14:1983560963269143168",
           "name": "localSessionId",
           "indexId": "2:5334745580860206316",
           "type": 11,
-          "flags": 1548,
+          "flags": 520,
           "relationTarget": "LocalSession"
         }
       ],
@@ -184,26 +169,22 @@
         {
           "id": "3:1309886517756714001",
           "name": "status",
-          "type": 5,
-          "flags": 2
+          "type": 5
         },
         {
           "id": "4:821309137090656557",
           "name": "uploadNeeded",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "5:5002650484267278739",
           "name": "eegSamplesUploaded",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "6:4999159638621476428",
           "name": "accelerationsUploaded",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "7:4432640892103709674",
@@ -218,26 +199,22 @@
         {
           "id": "9:2974662696027236480",
           "name": "eegSampleRate",
-          "type": 7,
-          "flags": 4
+          "type": 7
         },
         {
           "id": "10:8586600348773026135",
           "name": "accelerationSampleRate",
-          "type": 7,
-          "flags": 4
+          "type": 7
         },
         {
           "id": "11:2875620631030566538",
           "name": "eegSamplesDeleted",
-          "type": 6,
-          "flags": 4
+          "type": 6
         },
         {
           "id": "13:4227957113983452926",
           "name": "accelerationsDeleted",
-          "type": 6,
-          "flags": 4
+          "type": 6
         },
         {
           "id": "14:4744125428289492246",
@@ -247,20 +224,17 @@
         {
           "id": "15:307491958777430755",
           "name": "deviceInternalStateUploaded",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "16:6993072420839072805",
           "name": "startTime",
-          "type": 6,
-          "flags": 2
+          "type": 6
         },
         {
           "id": "17:8889022787978996324",
           "name": "endTime",
-          "type": 6,
-          "flags": 2
+          "type": 6
         }
       ],
       "relations": []
@@ -279,100 +253,85 @@
         {
           "id": "2:7926095795754375461",
           "name": "timestamp",
-          "type": 6,
-          "flags": 2
+          "type": 6
         },
         {
           "id": "3:6626354131202844329",
           "name": "batteryMilliVolts",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "4:3618416129092813533",
           "name": "busy",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "5:7756759788999576971",
           "name": "uSdPresent",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "6:7777544790653234549",
           "name": "hdmiCablePresent",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "7:6101931642962316245",
           "name": "rtcClockSet",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "8:4751259833255399780",
           "name": "captureRunning",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "9:5568936724571738804",
           "name": "charging",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "10:7000632878515319964",
           "name": "batteryLow",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "11:1416090079674484796",
           "name": "uSdLoggingEnabled",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "12:4680439520304025876",
           "name": "internalErrorDetected",
-          "type": 1,
-          "flags": 4
+          "type": 1
         },
         {
           "id": "13:696357043725367907",
           "name": "bleQueueBacklog",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "14:133002755920422073",
           "name": "lostSamplesCounter",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "15:3365346689582140019",
           "name": "bleRssi",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "16:1978241505719588141",
           "name": "localSessionId",
           "indexId": "4:6731599744930573538",
           "type": 11,
-          "flags": 1548,
+          "flags": 520,
           "relationTarget": "LocalSession"
         },
         {
           "id": "17:4655228295370405909",
           "name": "samplesCounter",
-          "type": 5,
-          "flags": 4
+          "type": 5
         },
         {
           "id": "18:5745297287327352785",
