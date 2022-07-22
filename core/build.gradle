@@ -86,14 +86,15 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'androidx.test:core:1.4.0'
     implementation 'com.github.nextsense-io:blessed-android:2.0.11-nextsense'
-    implementation platform('com.google.firebase:firebase-bom:28.3.0')
+    implementation platform('com.google.firebase:firebase-bom:30.3.0')
     compileOnly "com.google.firebase:firebase-analytics"
     compileOnly "com.google.firebase:firebase-firestore"
     implementation "com.google.firebase:firebase-functions"
+    implementation "com.google.code.gson:gson:2.9.0"
     implementation 'com.google.guava:guava:30.1.1-jre'
     implementation 'com.google.protobuf:protobuf-javalite:3.19.2'
     implementation 'com.google.protobuf:protoc:3.13.0'
-    implementation 'org.greenrobot:eventbus:3.2.0'
+    implementation 'org.greenrobot:eventbus:3.3.1'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.6.1'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
