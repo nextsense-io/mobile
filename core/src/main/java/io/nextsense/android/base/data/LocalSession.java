@@ -110,6 +110,9 @@ public class LocalSession extends BaseRecord {
     this.endTime = endTime;
   }
 
+  // Needed for ObjectBox performance.
+  public LocalSession() {}
+
   @Nullable
   public String getUserBigTableKey() {
     return userBigTableKey;
