@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import java.time.Duration;
+import java.util.Arrays;
 
 import io.nextsense.android.Config;
 import io.nextsense.android.base.DeviceManager;
@@ -25,7 +26,9 @@ import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Uploader;
+import io.nextsense.android.base.db.CacheSink;
 import io.nextsense.android.base.db.DatabaseSink;
+import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.utils.Util;
@@ -59,7 +62,9 @@ public class ForegroundService extends Service {
   private DeviceScanner deviceScanner;
   private DeviceManager deviceManager;
   private ObjectBoxDatabase objectBoxDatabase;
+  private MemoryCache memoryCache;
   private DatabaseSink databaseSink;
+  private CacheSink cacheSink;
   private LocalSessionManager localSessionManager;
   private Connectivity connectivity;
   private Uploader uploader;
@@ -116,6 +121,10 @@ public class ForegroundService extends Service {
     return objectBoxDatabase;
   }
 
+  public MemoryCache getMemoryCache() {
+    return memoryCache;
+  }
+
   public LocalSessionManager getLocalSessionManager() {
     return localSessionManager;
   }
@@ -149,6 +158,10 @@ public class ForegroundService extends Service {
     databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);
     // sampleRateCalculator.startListening();
+    memoryCache = MemoryCache.create(
+            Arrays.asList("1", "3", "6", "7", "8"), Arrays.asList("x", "y", "z"));
+    cacheSink = CacheSink.create(memoryCache);
+    cacheSink.startListening();
     connectivity = Connectivity.create(this);
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
     // minRecordsToKeep is set at 5000 as ~4000 records is the upper limit we are considering for
@@ -171,6 +184,8 @@ public class ForegroundService extends Service {
     if (centralManagerProxy != null) {
       centralManagerProxy.close();
     }
+    cacheSink.stopListening();
+    memoryCache = null;
     databaseSink.stopListening();
     if (uploader != null) {
       uploader.stop();
