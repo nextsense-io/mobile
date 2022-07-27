@@ -72,7 +72,7 @@ class Navigation {
 
   Future<void> _initReceiveIntent() async {
     _intentSubscription = intent.ReceiveIntent.receivedIntentStream.listen(
-            (intent.Intent? intent) async {
+        (intent.Intent? intent) async {
       _logger.log(Level.INFO, "Intent: ${intent}");
       if (intent == null) {
         _logger.log(Level.SEVERE, "Intent received with no intent.");
@@ -108,7 +108,7 @@ class Navigation {
       String scheduledSurveyId = intent.extra![TargetType.survey.name];
       _logger.log(Level.INFO, "Scheduled survey id: ${scheduledSurveyId}");
       ScheduledSurvey? scheduledSurvey =
-      await _surveyManager.queryScheduledSurvey(scheduledSurveyId);
+          await _surveyManager.queryScheduledSurvey(scheduledSurveyId);
       if (scheduledSurvey != null) {
         await navigateTo(SurveyScreen.id, replace: replace, arguments: scheduledSurvey);
       } else {
@@ -154,11 +154,16 @@ class Navigation {
 
   Future<dynamic> navigateToNextRoute() {
     if (_nextNavigationRoute == null) {
+      _logger.log(Level.INFO, 'no next route');
       return Future.value(false);
     }
     if (_nextNavigationRoute!.routeName == null) {
+      _logger.log(Level.INFO, 'no route name');
       if (_nextNavigationRoute!.pop == true) {
+        _logger.log(Level.INFO, 'before pop');
         pop();
+        _logger.log(Level.INFO, 'after pop');
+        return Future.value(true);
       }
       return Future.value(false);
     }
@@ -237,8 +242,7 @@ class Navigation {
         }
       case RequestPermissionScreen.id:
         return MaterialPageRoute(
-            builder: (context) => RequestPermissionScreen(
-              settings.arguments as PermissionRequest));
+            builder: (context) => RequestPermissionScreen(settings.arguments as PermissionRequest));
       case InsufficientSpaceScreen.id: return MaterialPageRoute(
           builder: (context) => InsufficientSpaceScreen(
             settings.arguments as Duration
@@ -250,18 +254,18 @@ class Navigation {
     return navigatorKey.currentState!.pop();
   }
 
-  Future navigateToDeviceScan({bool replace = false}) async {
+  Future navigateToDeviceScan({bool replace = false, NavigationRoute? nextRoute}) async {
     // Check if Bluetooth is ON.
     if (!await NextsenseBase.isBluetoothEnabled()) {
       // Ask the user to turn on Bluetooth.
       // Navigate to device scan screen.
-      await navigateTo(TurnOnBluetoothScreen.id);
+      await navigateTo(TurnOnBluetoothScreen.id, nextRoute: nextRoute);
       if (await NextsenseBase.isBluetoothEnabled()) {
-        navigateTo(DeviceScanScreen.id, replace: replace);
+        navigateTo(DeviceScanScreen.id, replace: replace, nextRoute: nextRoute);
       }
     } else {
       // Navigate to device scan screen.
-      await navigateTo(DeviceScanScreen.id, replace: replace);
+      await navigateTo(DeviceScanScreen.id, replace: replace, nextRoute: nextRoute);
     }
   }
 
@@ -269,22 +273,18 @@ class Navigation {
   Future navigateWithCapabilityChecking(BuildContext context, String routeName, {Object? arguments,
     bool replace = false, bool pop = false}) async {
     RunnableProtocol runnableProtocol = arguments as RunnableProtocol;
-    if (!(await _diskSpaceManager.isDiskSpaceSufficient(
-        runnableProtocol.protocol.minDuration))) {
+    if (!(await _diskSpaceManager.isDiskSpaceSufficient(runnableProtocol.protocol.minDuration))) {
       await navigateTo(InsufficientSpaceScreen.id,
           arguments: runnableProtocol.protocol.minDuration);
       // Check that the space was cleared before continuing.
-      if (!(await _diskSpaceManager.isDiskSpaceSufficient(
-          runnableProtocol.protocol.minDuration))) {
+      if (!(await _diskSpaceManager.isDiskSpaceSufficient(runnableProtocol.protocol.minDuration))) {
         return;
       }
     }
 
-    if (!context.read<ConnectivityManager>()
-        .isConnectionSufficientForCloudSync()) {
+    if (!context.read<ConnectivityManager>().isConnectionSufficientForCloudSync()) {
       await navigateTo(CheckInternetScreen.id);
-      if (!context.read<ConnectivityManager>()
-          .isConnectionSufficientForCloudSync()) {
+      if (!context.read<ConnectivityManager>().isConnectionSufficientForCloudSync()) {
         return;
       }
     }
@@ -296,21 +296,18 @@ class Navigation {
       }
     }
 
-    await navigateTo(routeName,
-        arguments: arguments, replace: replace, pop: pop);
+    await navigateTo(routeName, arguments: arguments, replace: replace, pop: pop);
   }
 
   // Show connection check screen if needed before navigate to target route
-  Future navigateWithConnectionChecking(String routeName, {Object? arguments,
-    bool replace = false, bool pop = false}) async {
+  Future navigateWithConnectionChecking(String routeName,
+      {Object? arguments, bool replace = false, bool pop = false}) async {
 
-    if (!getIt<ConnectivityManager>()
-        .isConnectionSufficientForCloudSync()) {
+    if (!getIt<ConnectivityManager>().isConnectionSufficientForCloudSync()) {
       await navigateTo(CheckInternetScreen.id);
     }
 
-    await navigateTo(routeName,
-        arguments: arguments, replace: replace, pop: pop);
+    await navigateTo(routeName, arguments: arguments, replace: replace, pop: pop);
   }
 
   void signOut() {

@@ -95,13 +95,13 @@ class ProfileScreen extends HookWidget {
                       label: 'Disconnect',
                       onPressed: () {
                         viewModel.disconnectDevice();
-                        _navigation.navigateToDeviceScan();
+                        _navigation.navigateToDeviceScan(nextRoute: NavigationRoute(pop: true));
                       })
                 else
                   _MainMenuItem(
                       label: 'Connect',
                       onPressed: () {
-                        _navigation.navigateToDeviceScan();
+                        _navigation.navigateToDeviceScan(nextRoute: NavigationRoute(pop: true));
                       }),
                 _MainMenuItem(
                     label: 'Logout',
