@@ -410,7 +410,10 @@ public class Uploader {
       if (activeSessionOptional.isPresent()) {
         activeSessionSubscription = subscribeToFinishedSession(activeSessionOptional.get().id);
       } else {
-        scheduleDataUploadFinishedTimer(localSessions.get(localSessions.size() - 1).id);
+        if (!localSessions.isEmpty() &&
+            localSessions.get(localSessions.size() - 1).isUploadNeeded()) {
+          scheduleDataUploadFinishedTimer(localSessions.get(localSessions.size() - 1).id);
+        }
       }
 
       synchronized (syncToken) {
