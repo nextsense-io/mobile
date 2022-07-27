@@ -3,7 +3,7 @@ package io.nextsense.android.base.db;
 import android.content.Context;
 
 /**
- * Created by Eric Bouchard on 7/27/2021.
+ * Main interface that should be implemented by all databases.
  */
 public interface Database {
 

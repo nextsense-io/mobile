@@ -143,8 +143,8 @@ class XenonImpedanceCalculator {
       List<double> eegArray = [];
       try {
         DateTime startTime = DateTime.now();
-        eegArray = await NextsenseBase.getChannelData(
-            macAddress, _localSessionId!, channelNumber, _impedanceCalculationPeriod);
+        eegArray = await NextsenseBase.getChannelData(macAddress, _localSessionId!, channelNumber,
+            _impedanceCalculationPeriod, /*fromDatabase=*/false);
         _logger.log(Level.INFO,
             "read imp data in ${DateTime.now().difference(startTime).inMilliseconds} ms");
       } catch (e) {

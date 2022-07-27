@@ -29,7 +29,7 @@ class ImpedanceCalculationScreen extends StatefulWidget {
 }
 
 class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen> {
-  static const Duration _refreshInterval = Duration(milliseconds: 5000);
+  static const Duration _refreshInterval = Duration(milliseconds: 1000);
   static const int _impedanceSampleSize = 1024;
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
@@ -99,8 +99,8 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
 
   @override
   dispose() async {
-    super.dispose();
     _stopCalculating();
+    super.dispose();
   }
 
   Future _stopCalculating() async {

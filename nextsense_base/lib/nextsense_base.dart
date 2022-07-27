@@ -80,6 +80,7 @@ class NextsenseBase {
   static const String _impedanceModeArg = 'impedance_mode';
   static const String _frequencyDividerArg = 'frequency_divider';
   static const String _minConnectionTypeArg = 'min_connection_type';
+  static const String _fromDatabaseArg = 'from_database';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
@@ -114,12 +115,13 @@ class NextsenseBase {
 
   static Future<List<double>> getChannelData(
       String macAddress, int localSessionId, int channelNumber,
-      Duration duration) async {
+      Duration duration, bool fromDatabase) async {
     final List<Object?> channelData =
         await _channel.invokeMethod(_getChannelDataCommand,
         {_macAddressArg: macAddress, _localSessionIdArg: localSessionId,
-          _channelNumberArg: channelNumber,
-          _durationMillisArg: duration.inMilliseconds});
+          _channelNumberArg: channelNumber.toString(),
+          _durationMillisArg: duration.inMilliseconds,
+          _fromDatabaseArg: fromDatabase});
     return channelData.cast<double>();
   }
 

@@ -77,6 +77,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String EMULATOR_COMMAND = "emulator_command";
   public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
+  public static final String FROM_DATABASE_ARGUMENT = "from_database";
   public static final String UPLOAD_TO_CLOUD_ARGUMENT = "upload_to_cloud";
   public static final String CONTINUOUS_IMPEDANCE_ARGUMENT = "continuous_impedance";
   public static final String USER_BT_KEY_ARGUMENT = "user_bigtable_key";
@@ -261,9 +262,11 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case GET_CHANNEL_DATA_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         Integer localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
-        channelNumber = call.argument(CHANNEL_NUMBER_ARGUMENT);
+        String channelName = call.argument(CHANNEL_NUMBER_ARGUMENT);
         Integer durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
-        getChannelData(result, macAddress, localSessionId, channelNumber, durationMillis);
+        Boolean fromDatabase= call.argument(FROM_DATABASE_ARGUMENT);
+        getChannelData(result, macAddress, localSessionId, channelName, durationMillis,
+            fromDatabase);
         break;
       case DELETE_LOCAL_SESSION_COMMAND:
         localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
@@ -540,6 +543,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       return;
     }
     try {
+      // Clear the memory cache from the previous recording data, if any.
+      nextSenseService.getMemoryCache().clear();
       boolean started = device.startStreaming(
           uploadToCloud, continuousImpedance, userBigTableKey, dataSessionId, earbudsConfig).get();
       if (!started) {
@@ -663,15 +668,23 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void getChannelData(
-      Result result, String macAddress, int localSessionId, int channelNumber, int durationMillis) {
+      Result result, String macAddress, int localSessionId, String channelName, int durationMillis,
+      boolean fromDatabase) {
     Device device = devices.get(macAddress);
     if (device == null) {
       returnError(result, GET_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
-    result.success(nextSenseService.getObjectBoxDatabase().getLastChannelData(
-        localSessionId, channelNumber, Duration.ofMillis(durationMillis)));
+    if (fromDatabase) {
+      result.success(nextSenseService.getObjectBoxDatabase().getLastChannelData(
+              localSessionId, channelName, Duration.ofMillis(durationMillis)));
+    } else {
+      int numberOfSamples = (int) Math.round(Math.ceil(
+          (float) durationMillis / Math.round(1000f / device.getSettings().getEegStreamingRate())));
+      result.success(nextSenseService.getMemoryCache().getLastEegChannelData(
+              channelName, numberOfSamples));
+    }
   }
 
   private void getDeviceInternalStateData(
