@@ -106,19 +106,25 @@ public class BlePeripheralCallbackProxy {
     public void onCharacteristicUpdate(
         @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
+
+      // Copy the values for thread-safety, they could be overwritten in the gatt object before
+      // processing is finished.
+      final byte[] valueCopy = new byte[value.length];
+      System.arraycopy(value, 0, valueCopy, 0, value.length);
+
       SettableFuture<byte[]> readFuture = readFutures.get(peripheral.getAddress());
       if (readFuture != null && !readFuture.isDone()) {
         // Return a response on the future.
         if (status == GattStatus.SUCCESS) {
-          readFuture.set(value);
+          readFuture.set(valueCopy);
         } else {
           readFuture.setException(
-              new BluetoothException("Failed to read with status " + status.toString()));
+              new BluetoothException("Failed to read with status " + status));
         }
       } else {
         // Use the async callback instead.
         for (BluetoothPeripheralCallback callback : componentCallbacks) {
-          callback.onCharacteristicUpdate(peripheral, value, characteristic, status);
+          callback.onCharacteristicUpdate(peripheral, valueCopy, characteristic, status);
         }
       }
     }
@@ -134,7 +140,7 @@ public class BlePeripheralCallbackProxy {
           writeFuture.set(value);
         } else {
           writeFuture.setException(
-              new BluetoothException("Failed to write with status " + status.toString()));
+              new BluetoothException("Failed to write with status " + status));
         }
       } else {
         // Use the async callback instead.
