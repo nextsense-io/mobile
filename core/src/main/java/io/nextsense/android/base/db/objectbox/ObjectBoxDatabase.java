@@ -168,7 +168,7 @@ public class ObjectBoxDatabase implements Database {
     });
   }
 
-  public List<Float> getLastChannelData(int localSessionId, int channelNumber, Duration duration) {
+  public List<Float> getLastChannelData(int localSessionId, String channelName, Duration duration) {
     return runWithExceptionLog(() -> {
       LocalSession localSession = getLocalSession(localSessionId);
       float seconds = duration.toMillis() / 1000.0f;
@@ -176,7 +176,7 @@ public class ObjectBoxDatabase implements Database {
           Math.round(Math.floor(seconds * localSession.getEegSampleRate())));
       List<Float> channelSamples = new ArrayList<>(eegSamples.size());
       for (EegSample eegSample : eegSamples) {
-        channelSamples.add(eegSample.getEegSamples().get(channelNumber));
+        channelSamples.add(eegSample.getEegSamples().get(Integer.valueOf(channelName)));
       }
       return channelSamples;
     });
