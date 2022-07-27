@@ -102,7 +102,10 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
         if (false) {
           _navigation.navigateTo(StudyIntroScreen.id, replace: true);
         } else {
-          _navigation.navigateTo(DashboardScreen.id, replace: true);
+          bool navigated = await _navigation.navigateToNextRoute();
+          if (!navigated) {
+            _navigation.navigateTo(DashboardScreen.id, replace: true);
+          }
         }
       } else {
         _onConnectionError(context);

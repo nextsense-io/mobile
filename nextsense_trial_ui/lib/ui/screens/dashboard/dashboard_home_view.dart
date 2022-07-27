@@ -141,7 +141,8 @@ class DashboardHomeView extends StatelessWidget {
         Spacer(),
         studySummaryRow,
         Spacer(),
-        Expanded(flex: 20, child: SingleChildScrollView(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: menuCardRows))),
+        Expanded(flex: 20, child: SingleChildScrollView(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: menuCardRows))),
         Spacer(),
       ],
     );
