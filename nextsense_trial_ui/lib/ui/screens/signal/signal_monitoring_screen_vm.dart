@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_settings.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
+import 'package:nextsense_trial_ui/utils/algorithms.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 enum DataType {
@@ -74,6 +76,13 @@ class AccelerationData implements Comparable<AccelerationData> {
   }
 }
 
+class PlotDataPoint {
+  final double index;
+  final double value;
+
+  PlotDataPoint(this.index, this.value);
+}
+
 class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
 
   static const Duration _eegTimeWindowDefault = Duration(seconds: 5);
@@ -84,6 +93,11 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   static const Duration _accTimeWindowMax = Duration(seconds: 30);
   static const Duration _refreshInterval = Duration(milliseconds: 100);
   static const double _defaultMaxAmplitudeMicroVolts = 50;
+  static const Duration _filterSettleTime = Duration(seconds: 2);
+  static const double defaultMaxAmplitudeMicroVolts = 50;
+  static const double _defaultLowPassFreq = 1;
+  static const double _defaultHighPassFreq = 55;
+  static const int _defaultPowerLineFreq = 60;
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final _preferences = getIt<Preferences>();
@@ -100,7 +114,8 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   int samplesToShow = 1250;
   double streamingFrequencyHz = 250;
   double _eegAmplitudeMicroVolts = _defaultMaxAmplitudeMicroVolts;
-  // List<AccelerationData>? accData = [];
+  List<AccelerationData> accData = [];
+  List<PlotDataPoint> eegData = [];
   Timer? _screenRefreshTimer;
 
   SignalMonitoringScreenViewModel() {
@@ -139,23 +154,61 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
     super.dispose();
   }
 
-  // Future _getAccData() async {
-  //   List<int> timestamps = await NextsenseBase.getTimestampsData(
-  //       macAddress: device!.macAddress, duration: graphTimeWindow);
-  //   List<int> accXData = await NextsenseBase.getAccChannelData(macAddress: device!.macAddress,
-  //       channelName: 'x', duration: graphTimeWindow, fromDatabase: false);
-  //   List<int> accYData = await NextsenseBase.getAccChannelData(macAddress: device!.macAddress,
-  //       channelName: 'y', duration: graphTimeWindow, fromDatabase: false);
-  //   List<int> accZData = await NextsenseBase.getAccChannelData(macAddress: device!.macAddress,
-  //       channelName: 'z', duration: graphTimeWindow, fromDatabase: false);
-  //   List<AccelerationData> accelerations = [];
-  //   for (int i = 0; i < timestamps.length; ++i) {
-  //     accelerations.add(AccelerationData(x: accXData[i].toInt(), y: accYData[i].toInt(),
-  //         z: accZData[i].toInt(), timestamp:
-  //         DateTime.fromMillisecondsSinceEpoch(timestamps[i].toInt())));
-  //   }
-  //   accData = accelerations;
-  // }
+  Future _getAccData() async {
+    List<int> timestamps = await NextsenseBase.getTimestampsData(
+        macAddress: device!.macAddress, duration: graphTimeWindow);
+    List<int> accXData = await NextsenseBase.getAccChannelData(macAddress: device!.macAddress,
+        channelName: 'x', duration: graphTimeWindow, fromDatabase: false);
+    List<int> accYData = await NextsenseBase.getAccChannelData(macAddress: device!.macAddress,
+        channelName: 'y', duration: graphTimeWindow, fromDatabase: false);
+    List<int> accZData = await NextsenseBase.getAccChannelData(macAddress: device!.macAddress,
+        channelName: 'z', duration: graphTimeWindow, fromDatabase: false);
+    List<AccelerationData> accelerations = [];
+    for (int i = 0; i < timestamps.length; ++i) {
+      accelerations.add(AccelerationData(x: accXData[i].toInt(), y: accYData[i].toInt(),
+          z: accZData[i].toInt(), timestamp:
+          DateTime.fromMillisecondsSinceEpoch(timestamps[i].toInt())));
+    }
+    accData = accelerations;
+  }
+
+  Future _getEegData() async {
+    // Add some data to be able to hide the filter settle time in the result.
+    List<double> currentEegData;
+    // Filter the data.
+    if (_eegSignalProcessing == SignalProcessing.filtered) {
+      currentEegData = await NextsenseBase.getChannelData(macAddress: device!.macAddress,
+          channelName: _selectedChannel!, duration: _graphTimeWindow + _filterSettleTime,
+          fromDatabase: false);
+      double samplingFrequencyHz = _deviceSettings!.eegSamplingRate!;
+      // Make sure the high cut off is not higher than the actual signal.
+      double effectiveHighCutFreq = _defaultHighPassFreq;
+      if (samplingFrequencyHz / 2 < _defaultHighPassFreq) {
+        effectiveHighCutFreq = samplingFrequencyHz / 2 - 1;
+      }
+      if (effectiveHighCutFreq > _defaultPowerLineFreq) {
+        currentEegData = Algorithms.filterNotch(
+            currentEegData, samplingFrequencyHz, _defaultPowerLineFreq, /*notchWidth=*/ 4, /*order=*/ 2);
+      }
+      currentEegData = Algorithms.filterBandpass(
+          currentEegData, samplingFrequencyHz, _defaultLowPassFreq, _defaultHighPassFreq, /*order=*/ 2);
+      // Remove some part of the data to account for the filter settle time.
+      currentEegData =
+          currentEegData.sublist([0, currentEegData.length - samplesToShow].reduce(max));
+    } else {
+      currentEegData = await NextsenseBase.getChannelData(macAddress: device!.macAddress,
+          channelName: _selectedChannel!, duration: _graphTimeWindow + _filterSettleTime,
+          fromDatabase: false);
+    }
+    // Display the X axis in seconds.
+    double samplesToTimeRatio = _graphTimeWindow.inSeconds / currentEegData.length;
+    // Load an array with the data indexed by relative seconds.
+    List<PlotDataPoint> eegData = [];
+    for (int i = 0; i < currentEegData.length; ++i) {
+      eegData.add(new PlotDataPoint(i * samplesToTimeRatio, currentEegData[i]));
+    }
+    this.eegData = eegData;
+  }
 
   void _updateTimeSlider() {
     if (dataType == DataType.eeg) {
@@ -175,11 +228,11 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   }
 
   void _updateScreen(Timer timer) {
-    // if (dataType == DataType.eeg) {
-    //
-    // } else {
-    //   _getAccData();
-    // }
+    if (dataType == DataType.eeg) {
+      _getEegData();
+    } else {
+      _getAccData();
+    }
     notifyListeners();
   }
 

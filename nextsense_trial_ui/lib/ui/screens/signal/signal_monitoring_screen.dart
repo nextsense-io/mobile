@@ -162,20 +162,9 @@ class SignalMonitoringScreen extends HookWidget {
           Expanded(
             flex: 60,
             child: EegFixedPlotData(
-              deviceMacAddress: viewModel.device?.macAddress ?? "Unknown",
-              channelName: viewModel.selectedChannel,
+              eegData: viewModel.eegData,
               title: 'EEG Channel ${viewModel.selectedChannel}',
-              numberOfSamples: viewModel.samplesToShow,
-              samplingFrequencyHz: viewModel.streamingFrequencyHz,
-              timeWindow: viewModel.graphTimeWindow,
               maxAmplitudeMicroVolts: viewModel.eegAmplitudeMicroVolts,
-              signalProcessingType: viewModel.eegSignalProcessing,
-              lowCutFreqHz: 1,
-              // _user.settings.getSetting(AppSettings.lowCutFreqKey),
-              highCutFreqHz: 55,
-              // _user.settings.getSetting(AppSettings.highCutFreqKey),
-              powerLineFreqHz: 60,
-              // _user.settings.getSetting(AppSettings.powerLineFreqKey),
             ),
           ),
         ];
@@ -186,9 +175,7 @@ class SignalMonitoringScreen extends HookWidget {
               flex: 70,
               child: Container(
                   margin: EdgeInsets.all(10),
-                  child: AccelerationPlotData(timeWindow: viewModel.graphTimeWindow,
-                    deviceMacAddress: viewModel.device!.macAddress,
-                    accChannelNames: ["x", "y", "z"],)))
+                  child: AccelerationPlotData(accData: viewModel.accData)))
         ];
         break;
     }

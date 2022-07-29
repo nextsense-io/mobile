@@ -1,100 +1,44 @@
 import 'package:flutter/material.dart';
 
 import 'package:charts_flutter/flutter.dart' as charts;
-
-import 'package:nextsense_base/nextsense_base.dart';
-
-/* Acceleration data class. */
-class AccelerationData implements Comparable<AccelerationData> {
-  final int x;
-  final int y;
-  final int z;
-  final DateTime timestamp;
-
-  AccelerationData({required this.x, required this.y, required this.z, required this.timestamp});
-
-  int getX() {
-    return x;
-  }
-
-  int getY() {
-    return y;
-  }
-
-  int getZ() {
-    return z;
-  }
-
-  int getTimestampMs() {
-    return timestamp.millisecondsSinceEpoch;
-  }
-
-  List<int> asList() {
-    return [x, y, z];
-  }
-
-  List<int> asListWithTimestamp() {
-    return [x, y, z, timestamp.millisecondsSinceEpoch];
-  }
-
-  @override
-  int compareTo(AccelerationData other) {
-    return timestamp.difference(other.timestamp).inMilliseconds;
-  }
-}
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen_vm.dart';
 
 /* A view to display live plot for eeg signal. */
-class AccelerationPlotData extends StatelessWidget {
-  final Duration timeWindow;
-  final String deviceMacAddress;
-  final List<String> accChannelNames;
+class AccelerationPlotData extends HookWidget {
+  final List<AccelerationData> accData;
 
-  AccelerationPlotData({required this.timeWindow, required this.deviceMacAddress,
-    required this.accChannelNames});
+  AccelerationPlotData({required this.accData});
 
-  Future<List<charts.Series<AccelerationData, DateTime>>> _getData() async {
-    List<int> timestamps = await NextsenseBase.getTimestampsData(
-        macAddress: deviceMacAddress, duration: timeWindow);
-    List<int> accXData = await NextsenseBase.getAccChannelData(macAddress: deviceMacAddress,
-        channelName: 'x', duration: timeWindow, fromDatabase: false);
-    List<int> accYData = await NextsenseBase.getAccChannelData(macAddress: deviceMacAddress,
-        channelName: 'y', duration: timeWindow, fromDatabase: false);
-    List<int> accZData = await NextsenseBase.getAccChannelData(macAddress: deviceMacAddress,
-        channelName: 'z', duration: timeWindow, fromDatabase: false);
-    List<AccelerationData> accelerations = [];
-    for (int i = 0; i < timestamps.length; ++i) {
-      accelerations.add(AccelerationData(x: accXData[i].toInt(), y: accYData[i].toInt(),
-          z: accZData[i].toInt(), timestamp:
-          DateTime.fromMillisecondsSinceEpoch(timestamps[i].toInt())));
-    }
+  List<charts.Series<AccelerationData, DateTime>> _getData() {
     return [
       new charts.Series<AccelerationData, DateTime>(
         id: 'X',
         colorFn: (_, __) => charts.MaterialPalette.red.shadeDefault,
         domainFn: (AccelerationData acc, _) => acc.timestamp,
         measureFn: (AccelerationData acc, _) => acc.x,
-        data: accelerations,
+        data: accData,
       ),
       new charts.Series<AccelerationData, DateTime>(
         id: 'Y',
         colorFn: (_, __) => charts.MaterialPalette.green.shadeDefault,
         domainFn: (AccelerationData acc, _) => acc.timestamp,
         measureFn: (AccelerationData acc, _) => acc.y,
-        data: accelerations,
+        data: accData,
       ),
       new charts.Series<AccelerationData, DateTime>(
         id: 'Z',
         colorFn: (_, __) => charts.MaterialPalette.blue.shadeDefault,
         domainFn: (AccelerationData acc, _) => acc.timestamp,
         measureFn: (AccelerationData acc, _) => acc.z,
-        data: accelerations,
+        data: accData,
       )
     ];
   }
 
-  Future<Widget> _buildLineChart() async {
+  Widget _buildLineChart() {
     return new charts.TimeSeriesChart(
-      await _getData(),
+      _getData(),
       // If true, it apparently does not have the time to display before the
       // next refresh.
       animate: false,
@@ -113,17 +57,6 @@ class AccelerationPlotData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("build start");
-    return FutureBuilder<Widget>(
-        future: _buildLineChart(),
-        builder: (context, AsyncSnapshot<Widget> snapshot) {
-          if (snapshot.hasData) {
-            print("build have data");
-            return snapshot.data!;
-          } else {
-
-            return CircularProgressIndicator();
-          }
-        });
+    return _buildLineChart();
   }
 }
