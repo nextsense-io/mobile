@@ -7,6 +7,15 @@ enum PreferenceKey {
   continuousImpedance,
   fcmToken,
   flavor,
+  displayDataType,
+  displayEegSignalProcessing,
+  displaySelectedChannel,
+  displayMaxAmplitude,
+  displayLowCutFreq,
+  displayHighCutFreq,
+  displayPowerLineFreq,
+  displayEegTimeWindowSeconds,
+  displayAccTimeWindowSeconds,
   showDayTabsForTasks
 }
 
@@ -31,6 +40,22 @@ class Preferences {
 
   bool getBool(PreferenceKey key) {
     return sharedPrefs.getBool(key.name) ?? false;
+  }
+
+  void setInt(PreferenceKey key, int val) {
+    sharedPrefs.setInt(key.name, val);
+  }
+
+  int? getInt(PreferenceKey key) {
+    return sharedPrefs.getInt(key.name);
+  }
+
+  void setDouble(PreferenceKey key, double val) {
+    sharedPrefs.setDouble(key.name, val);
+  }
+
+  double? getDouble(PreferenceKey key) {
+    return sharedPrefs.getDouble(key.name);
   }
 
   // Determines that entity specified by 'key' is cached

@@ -40,6 +40,7 @@ import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effect_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
@@ -211,6 +212,8 @@ class Navigation {
           builder: (context) => SeizuresScreen());
       case SideEffectsScreen.id: return MaterialPageRoute(
           builder: (context) => SideEffectsScreen());
+      case SignalMonitoringScreen.id: return MaterialPageRoute(
+          builder: (context) => SignalMonitoringScreen());
 
       // Routes with arguments
       case ProtocolScreen.id:

@@ -1,11 +1,11 @@
 import 'dart:collection';
 
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:gson/values.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/domain/device_settings.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:scidart/numdart.dart';
@@ -39,7 +39,7 @@ class XenonImpedanceCalculator {
 
   final int samplesSize;
   final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
-  final Map<String, dynamic> deviceSettings;
+  final Map<String, dynamic> deviceSettingsValues;
   final CustomLogPrinter _logger;
   List<dynamic>? _eegChannelList;
   int? _impedanceDivider;
@@ -48,15 +48,14 @@ class XenonImpedanceCalculator {
   int? _localSessionId;
   ImpedanceMode? _impedanceMode;
 
-  XenonImpedanceCalculator({required this.samplesSize, required this.deviceSettings})
+  XenonImpedanceCalculator({required this.samplesSize, required this.deviceSettingsValues})
       : _logger = getLogger("XenonImpedanceScreen") {
-    double samplingFrequency =
-        deviceSettings[describeEnum(DeviceSettingsFields.eegSamplingRate)].toSimple();
+    DeviceSettings deviceSettings = DeviceSettings(deviceSettingsValues);
+    double samplingFrequency = deviceSettings.eegSamplingRate!;
     _impedanceDivider = (samplingFrequency / defaultTargetFrequency).round();
     _impedanceFrequency = samplingFrequency / _impedanceDivider!;
-    _eegChannelList = deviceSettings[describeEnum(DeviceSettingsFields.enabledChannels)];
-    _streamingFrequency =
-        deviceSettings[describeEnum(DeviceSettingsFields.eegStreamingRate)].toSimple();
+    _eegChannelList = deviceSettings.enabledChannels;
+    _streamingFrequency = deviceSettings.eegStreamingRate;
   }
 
   Future<bool> startADS1299DcImpedance() async {
@@ -143,8 +142,9 @@ class XenonImpedanceCalculator {
       List<double> eegArray = [];
       try {
         DateTime startTime = DateTime.now();
-        eegArray = await NextsenseBase.getChannelData(macAddress, _localSessionId!, channelNumber,
-            _impedanceCalculationPeriod, /*fromDatabase=*/false);
+        eegArray = await NextsenseBase.getChannelData(macAddress: macAddress,
+            localSessionId: _localSessionId!, channelName: channelNumber.toString(),
+            duration: _impedanceCalculationPeriod, fromDatabase: false);
         _logger.log(Level.INFO,
             "read imp data in ${DateTime.now().difference(startTime).inMilliseconds} ms");
       } catch (e) {

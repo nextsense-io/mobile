@@ -71,6 +71,20 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.3.1"
+  charts_common:
+    dependency: transitive
+    description:
+      name: charts_common
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.12.0"
+  charts_flutter:
+    dependency: "direct main"
+    description:
+      name: charts_flutter
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.12.0"
   circular_countdown_timer:
     dependency: "direct main"
     description:
@@ -113,6 +127,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.16.0"
+  complex:
+    dependency: transitive
+    description:
+      name: complex
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.7.2"
   connectivity_plus:
     dependency: "direct main"
     description:
@@ -462,6 +483,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "4.0.1"
+  iirjdart:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: master
+      resolved-ref: "0532f14066896914af907acc5f892de2378e9fc7"
+      url: "https://github.com/Supercaly/iirjdart"
+    source: git
+    version: "0.0.1"
   image:
     dependency: transitive
     description:

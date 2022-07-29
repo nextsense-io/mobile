@@ -25,10 +25,19 @@ enum DeviceSettingsFields {
 // This should stay in sync with
 // io.nextsense.android.base.DeviceSettings.ImpedanceMode.
 enum ImpedanceMode {
-  OFF,
-  ON_EXTERNAL_CURRENT,
-  ON_1299_DC,
-  ON_1299_AC
+  UNKNOWN(-1),
+  OFF(0x00),
+  ON_EXTERNAL_CURRENT(0x01),
+  ON_1299_DC(0x02),
+  ON_1299_AC(0x03);
+
+  final int code;
+
+  const ImpedanceMode(this.code);
+
+  factory ImpedanceMode.create(int code) {
+    return values.firstWhere((mode) => mode.code == code, orElse: () => UNKNOWN);
+  }
 }
 
 // Changes in those commands should match constants in EmulatedDeviceManager.java
@@ -59,6 +68,8 @@ class NextsenseBase {
   static const String _stopImpedanceCommand = 'stop_impedance';
   static const String _isBluetoothEnabledCommand = 'is_bluetooth_enabled';
   static const String _getChannelDataCommand = 'get_channel_data';
+  static const String _getAccChannelDataCommand = 'get_acc_channel_data';
+  static const String _getTimestampsDataCommand = 'get_timestamps_data';
   static const String _getDeviceSettingsCommand = 'get_device_settings';
   static const String _deleteLocalSessionCommand = 'delete_local_session';
   static const String _requestDeviceInternalStateUpdateCommand =
@@ -113,16 +124,34 @@ class NextsenseBase {
         {_macAddressArg: macAddress});
   }
 
-  static Future<List<double>> getChannelData(
-      String macAddress, int localSessionId, int channelNumber,
-      Duration duration, bool fromDatabase) async {
+  static Future<List<double>> getChannelData({
+      required String macAddress, required String channelName, required Duration duration,
+          int? localSessionId, bool fromDatabase = false}) async {
     final List<Object?> channelData =
         await _channel.invokeMethod(_getChannelDataCommand,
         {_macAddressArg: macAddress, _localSessionIdArg: localSessionId,
-          _channelNumberArg: channelNumber.toString(),
+          _channelNumberArg: channelName,
           _durationMillisArg: duration.inMilliseconds,
           _fromDatabaseArg: fromDatabase});
     return channelData.cast<double>();
+  }
+
+  static Future<List<int>> getAccChannelData({
+    required String macAddress, required String channelName, required Duration duration,
+    int? localSessionId, bool fromDatabase = false}) async {
+    final List<Object?> channelData = await _channel.invokeMethod(_getAccChannelDataCommand,
+        {_macAddressArg: macAddress, _localSessionIdArg: localSessionId,
+          _channelNumberArg: channelName,
+          _durationMillisArg: duration.inMilliseconds,
+          _fromDatabaseArg: fromDatabase});
+    return channelData.cast<int>();
+  }
+
+  static Future<List<int>> getTimestampsData({
+      required String macAddress, required Duration duration}) async {
+    final List<Object?> channelData = await _channel.invokeMethod(_getTimestampsDataCommand,
+        {_macAddressArg: macAddress, _durationMillisArg: duration.inMilliseconds});
+    return channelData.cast<int>();
   }
 
   static Future deleteLocalSession(int localSessionId) async {
