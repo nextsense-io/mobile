@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/data_session.dart';
+import 'package:nextsense_trial_ui/domain/device_settings.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
@@ -74,9 +74,9 @@ class SessionManager {
     _currentDataSession = DataSession(dataSessionEntity);
     _currentDataSession!.setValue(DataSessionKey.start_datetime, startTime);
     // TODO(eric): Add an API to get this from the connected device.
-    Map<String, dynamic> deviceSettings = await NextsenseBase.getDeviceSettings(device.macAddress);
-    _currentDataSession!.setValue(DataSessionKey.streaming_rate,
-        deviceSettings[describeEnum(DeviceSettingsFields.eegStreamingRate)].value);
+    DeviceSettings deviceSettings =
+        DeviceSettings(await NextsenseBase.getDeviceSettings(device.macAddress));
+    _currentDataSession!.setValue(DataSessionKey.streaming_rate, deviceSettings.eegStreamingRate);
     success = await _currentDataSession!.save();
     if (!success) {
       return false;

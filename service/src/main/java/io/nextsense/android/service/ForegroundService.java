@@ -158,6 +158,7 @@ public class ForegroundService extends Service {
     databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);
     // sampleRateCalculator.startListening();
+    // TODO(eric) Get from device config.
     memoryCache = MemoryCache.create(
             Arrays.asList("1", "3", "6", "7", "8"), Arrays.asList("x", "y", "z"));
     cacheSink = CacheSink.create(memoryCache);

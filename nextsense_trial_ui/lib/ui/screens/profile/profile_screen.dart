@@ -22,6 +22,7 @@ import 'package:nextsense_trial_ui/ui/screens/info/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/profile/profile_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -89,6 +90,12 @@ class ProfileScreen extends HookWidget {
                       label: 'Check impedance',
                       onPressed: () {
                         _navigation.navigateTo(ImpedanceCalculationScreen.id);
+                      }),
+                if (_flavor.userType == UserType.researcher)
+                  _MainMenuItem(
+                      label: 'Check Signal',
+                      onPressed: () {
+                        _navigation.navigateTo(SignalMonitoringScreen.id);
                       }),
                 if (viewModel.deviceIsConnected)
                   _MainMenuItem(

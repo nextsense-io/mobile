@@ -71,8 +71,7 @@ class DeviceManager {
   bool get deviceInternalStateAvailable => deviceInternalState.value != null;
 
   // Internal state shortcuts
-  bool get isHdmiCablePresent =>
-      deviceInternalState.value?.hdmiCablePresent ?? false;
+  bool get isHdmiCablePresent => deviceInternalState.value?.hdmiCablePresent ?? false;
 
   bool get isUSdPresent => deviceInternalState.value?.uSdPresent ?? false;
 

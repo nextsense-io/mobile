@@ -46,6 +46,7 @@ import io.nextsense.android.base.ble.EmulatedDeviceManager;
 import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.LocalSession;
+import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.service.ForegroundService;
 import io.objectbox.android.AndroidScheduler;
 import io.objectbox.reactive.DataSubscription;
@@ -65,6 +66,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
   public static final String GET_DEVICE_SETTINGS_COMMAND = "get_device_settings";
   public static final String GET_CHANNEL_DATA_COMMAND = "get_channel_data";
+  public static final String GET_ACC_CHANNEL_DATA_COMMAND = "get_acc_channel_data";
+  public static final String GET_TIMESTAMPS_DATA_COMMAND = "get_timestamps_data";
   public static final String DELETE_LOCAL_SESSION_COMMAND = "delete_local_session";
   public static final String REQUEST_DEVICE_INTERNAL_STATE_COMMAND =
       "request_device_internal_state";
@@ -267,6 +270,20 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         Boolean fromDatabase= call.argument(FROM_DATABASE_ARGUMENT);
         getChannelData(result, macAddress, localSessionId, channelName, durationMillis,
             fromDatabase);
+        break;
+      case GET_ACC_CHANNEL_DATA_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
+        channelName = call.argument(CHANNEL_NUMBER_ARGUMENT);
+        durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
+        fromDatabase= call.argument(FROM_DATABASE_ARGUMENT);
+        getAccChannelData(result, macAddress, localSessionId, channelName, durationMillis,
+            fromDatabase);
+        break;
+      case GET_TIMESTAMPS_DATA_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
+        getTimestampsData(result, macAddress, durationMillis);
         break;
       case DELETE_LOCAL_SESSION_COMMAND:
         localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
@@ -668,15 +685,15 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void getChannelData(
-      Result result, String macAddress, int localSessionId, String channelName, int durationMillis,
-      boolean fromDatabase) {
+      Result result, String macAddress, Integer localSessionId, String channelName,
+      Integer durationMillis, Boolean fromDatabase) {
     Device device = devices.get(macAddress);
     if (device == null) {
       returnError(result, GET_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
-    if (fromDatabase) {
+    if (fromDatabase != null && fromDatabase) {
       result.success(nextSenseService.getObjectBoxDatabase().getLastChannelData(
               localSessionId, channelName, Duration.ofMillis(durationMillis)));
     } else {
@@ -685,6 +702,38 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       result.success(nextSenseService.getMemoryCache().getLastEegChannelData(
               channelName, numberOfSamples));
     }
+  }
+
+  private void getAccChannelData(
+      Result result, String macAddress, Integer localSessionId, String channelName,
+      Integer durationMillis, Boolean fromDatabase) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      returnError(result, GET_ACC_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    if (fromDatabase != null && fromDatabase) {
+      result.success(nextSenseService.getObjectBoxDatabase().getLastChannelData(
+          localSessionId, channelName, Duration.ofMillis(durationMillis)));
+    } else {
+      int numberOfSamples = (int) Math.round(Math.ceil(
+          (float) durationMillis / Math.round(1000f / device.getSettings().getImuStreamingRate())));
+      result.success(nextSenseService.getMemoryCache().getLastAccChannelData(
+          channelName, numberOfSamples));
+    }
+  }
+
+  private void getTimestampsData(Result result, String macAddress, int durationMillis) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      returnError(result, GET_TIMESTAMPS_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND,
+          /*errorMessage=*/null, /*errorDetails=*/null);
+      return;
+    }
+    int numberOfSamples = (int) Math.round(Math.ceil(
+        (float) durationMillis / Math.round(1000f / device.getSettings().getEegStreamingRate())));
+    result.success(nextSenseService.getMemoryCache().getLastTimestamps(numberOfSamples));
   }
 
   private void getDeviceInternalStateData(

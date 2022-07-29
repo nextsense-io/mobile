@@ -54,7 +54,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
       String macAddress = connectedDevice.macAddress;
       _deviceSettings = await NextsenseBase.getDeviceSettings(macAddress);
       _impedanceCalculator = new XenonImpedanceCalculator(
-          samplesSize: _impedanceSampleSize, deviceSettings: _deviceSettings!);
+          samplesSize: _impedanceSampleSize, deviceSettingsValues: _deviceSettings!);
     }
   }
 

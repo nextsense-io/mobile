@@ -6,6 +6,7 @@ version: 0.1.0
 
 environment:
   sdk: ">=2.17.0 <3.0.0"
+  flutter: ">=1.20.0"
 
 dependencies:
   flutter:
@@ -15,6 +16,7 @@ dependencies:
   app_settings: ^4.1.5
   audioplayers: ^0.20.1
   awesome_notifications: ^0.6.21
+  charts_flutter: ^0.12.0
   circular_countdown_timer: ^0.2.1
   cloud_firestore: ^3.1.17
   connectivity_plus: ^2.2.1
@@ -38,6 +40,12 @@ dependencies:
   google_sign_in: ^5.1.0
   gson: ^0.1.6-dev
   http: ^0.13.4
+  # The version 0.0.1 in pub.dev does not include the thread-safe changes committed to master in
+  # github.
+  iirjdart:
+    git:
+      url: https://github.com/Supercaly/iirjdart
+      ref: master # branch name
   introduction_screen: # ^3.0.2
     path: ../../introduction_screen
   logging: ^1.0.2
