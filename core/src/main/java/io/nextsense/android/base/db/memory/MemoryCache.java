@@ -21,7 +21,6 @@ public class MemoryCache {
   private final EvictingArray<Long> timestamps;
   private final Object eegLock = new Object();
   private final Object accLock = new Object();
-  private final Object timestampLock = new Object();
 
   private MemoryCache(List<String> eegChannelNames, List<String> accChannelNames) {
     for (String eegChannelName : eegChannelNames) {
@@ -76,7 +75,7 @@ public class MemoryCache {
   }
 
   public List<Long> getLastTimestamps(int numberOfSamples) {
-    synchronized (timestampLock) {
+    synchronized (eegLock) {
       return timestamps.getLastValues(numberOfSamples);
     }
   }
@@ -92,7 +91,7 @@ public class MemoryCache {
         array.clear();
       }
     }
-    synchronized (timestampLock) {
+    synchronized (eegLock) {
       timestamps.clear();
     }
   }
