@@ -128,7 +128,8 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
     device = _deviceManager.getConnectedDevice();
     eegAmplitudeMicroVolts = _preferences.getDouble(PreferenceKey.displayMaxAmplitude) ??
         _defaultMaxAmplitudeMicroVolts;
-    if (device != null) {
+    _updateTimeSlider();
+    if (device != null && _deviceManager.deviceIsReady) {
       _deviceSettings = DeviceSettings(await NextsenseBase.getDeviceSettings(device!.macAddress));
       dataType = DataType.create(_preferences.getString(PreferenceKey.displayDataType));
       eegChannelList = _deviceSettings!.enabledChannels;
@@ -137,9 +138,8 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
       await NextsenseBase.startStreaming(
           device!.macAddress, /*uploadToCloud=*/false, /*continuousImpedance=*/false,
           /*userBigTableKey=*/"", /*dataSessionId=*/"", /*earbudsConfig=*/null);
+      _screenRefreshTimer = new Timer.periodic(_refreshInterval, _updateScreen);
     }
-    _updateTimeSlider();
-    _screenRefreshTimer = new Timer.periodic(_refreshInterval, _updateScreen);
     setBusy(false);
     setInitialised(true);
     notifyListeners();
