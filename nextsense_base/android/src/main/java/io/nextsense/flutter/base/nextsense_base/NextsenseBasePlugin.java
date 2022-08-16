@@ -31,11 +31,13 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.plugin.common.StandardMethodCodec;
 import io.nextsense.android.Config;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceManager;
@@ -143,8 +145,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     Log.i(TAG, "Attaching to engine.");
+    BinaryMessenger messenger = flutterPluginBinding.getBinaryMessenger();
+    BinaryMessenger.TaskQueue taskQueue = messenger.makeBackgroundTaskQueue();
     methodChannel =
-        new MethodChannel(flutterPluginBinding.getBinaryMessenger(), METHOD_CHANNEL_NAME);
+        new MethodChannel(messenger, METHOD_CHANNEL_NAME, StandardMethodCodec.INSTANCE, taskQueue);
     methodChannel.setMethodCallHandler(this);
     Log.i(TAG, "Getting context.");
     applicationContext = flutterPluginBinding.getApplicationContext();
