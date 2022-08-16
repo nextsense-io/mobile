@@ -7,6 +7,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -22,6 +23,7 @@ public class DatabaseSink {
 
   private final ObjectBoxDatabase boxDatabase;
   private final LocalSessionManager localSessionManager;
+  private final AtomicInteger eegRecordsCounter = new AtomicInteger(0);
 
   private DatabaseSink(ObjectBoxDatabase boxDatabase, LocalSessionManager localSessionManager) {
     this.boxDatabase = boxDatabase;
@@ -47,6 +49,14 @@ public class DatabaseSink {
     Log.i(TAG, "Stopped listening to EventBus.");
   }
 
+  public int getEegRecordsCounter() {
+    return eegRecordsCounter.get();
+  }
+
+  public void resetEegRecordsCounter() {
+    eegRecordsCounter.set(0);
+  }
+
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
   public void onSamples(Samples samples) {
     localSessionManager.getActiveLocalSession().ifPresent((currentLocalSession) -> {
@@ -56,6 +66,7 @@ public class DatabaseSink {
           boxDatabase.putEegSamples(samples.getEegSamples());
           boxDatabase.putAccelerations(samples.getAccelerations());
         });
+        eegRecordsCounter.getAndAdd(samples.getEegSamples().size());
         long saveTime = Instant.now().toEpochMilli() - saveStartTime.toEpochMilli();
         if (saveTime > 20) {
           Log.d(TAG, "It took " + saveTime + " to write xenon data.");

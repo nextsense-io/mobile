@@ -35,6 +35,7 @@ import io.nextsense.android.base.DataSamplesProto;
 import io.nextsense.android.base.SessionProto;
 import io.nextsense.android.base.communication.firebase.CloudFunctions;
 import io.nextsense.android.base.communication.internet.Connectivity;
+import io.nextsense.android.base.db.DatabaseSink;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.utils.Util;
 import io.objectbox.android.AndroidScheduler;
@@ -53,6 +54,7 @@ public class Uploader {
   private static final String INT_STATE_SAMPLES = "device_internal_state_samples";
 
   private final ObjectBoxDatabase objectBoxDatabase;
+  private final DatabaseSink databaseSink;
   private final CloudFunctions firebaseFunctions;
   private final Connectivity connectivity;
   private final AtomicBoolean running = new AtomicBoolean(false);
@@ -66,7 +68,6 @@ public class Uploader {
   private final Object syncToken = new Object();
   private ExecutorService executor;
   private Future<?> uploadTask;
-  private int recordsSinceLastNotify;
   private DataSubscription eegSampleSubscription;
   private DataSubscription activeSessionSubscription;
   private HandlerThread subscriptionsHandlerThread;
@@ -80,9 +81,11 @@ public class Uploader {
   // Used to generate test data manually, should always be false in production.
   private boolean saveData = false;
 
-  private Uploader(ObjectBoxDatabase objectBoxDatabase, Connectivity connectivity,
-                   int uploadChunkSize, int minRecordsToKeep, Duration minDurationToKeep) {
+  private Uploader(ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
+                   Connectivity connectivity, int uploadChunkSize, int minRecordsToKeep,
+                   Duration minDurationToKeep) {
     this.objectBoxDatabase = objectBoxDatabase;
+    this.databaseSink = databaseSink;
     this.connectivity = connectivity;
     this.uploadChunkSize = uploadChunkSize;
     this.minRecordsToKeep = minRecordsToKeep;
@@ -90,11 +93,11 @@ public class Uploader {
     this.firebaseFunctions = CloudFunctions.create();
   }
 
-  public static Uploader create(ObjectBoxDatabase objectBoxDatabase, Connectivity connectivity,
-                                int uploadChunkSize, int minRecordsToKeep,
-                                Duration minDurationToKeep) {
-    return new Uploader(objectBoxDatabase, connectivity, uploadChunkSize, minRecordsToKeep,
-        minDurationToKeep);
+  public static Uploader create(
+      ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink, Connectivity connectivity,
+      int uploadChunkSize, int minRecordsToKeep, Duration minDurationToKeep) {
+    return new Uploader(objectBoxDatabase, databaseSink, connectivity, uploadChunkSize,
+        minRecordsToKeep, minDurationToKeep);
   }
 
   public void start() {
@@ -127,7 +130,7 @@ public class Uploader {
     }
     Log.i(TAG, "Starting to run.");
     cleanActiveSessions();
-    recordsSinceLastNotify = 0;
+    databaseSink.resetEegRecordsCounter();
     subscriptionsHandlerThread = new HandlerThread("UploaderSubscriptionsHandlerThread");
     subscriptionsHandlerThread.start();
     subscriptionsScheduler = new AndroidScheduler(subscriptionsHandlerThread.getLooper());
@@ -388,16 +391,14 @@ public class Uploader {
           samplesToUpload = getSamplesToUpload(localSession);
         }
       }
-      recordsSinceLastNotify = 0;
       recordsToUpload.set(false);
       Util.logd(TAG, "All upload done, waiting for new samples.");
       // Wait until there are new samples to upload.
       eegSampleSubscription =
           objectBoxDatabase.subscribe(EegSample.class, eegSample -> {
-            ++recordsSinceLastNotify;
-            if (recordsSinceLastNotify > uploadChunkSize) {
-              Util.logd(TAG, "waking up: " + recordsSinceLastNotify);
-              recordsSinceLastNotify = 0;
+            if (databaseSink.getEegRecordsCounter() > uploadChunkSize) {
+              Util.logd(TAG, "waking up: " + databaseSink.getEegRecordsCounter());
+              databaseSink.resetEegRecordsCounter();
               recordsToUpload.set(true);
               synchronized (syncToken) {
                 syncToken.notifyAll();
@@ -684,7 +685,7 @@ public class Uploader {
           if (Instant.now().isAfter(
                   eegSamples.get(0).getReceptionTimestamp().plus(Duration.ofSeconds(1)))) {
             Util.logd(TAG, "Session " + localSessionId + " finished, waking Uploader.");
-            recordsSinceLastNotify = 0;
+            databaseSink.resetEegRecordsCounter();
             recordsToUpload.set(true);
             synchronized (syncToken) {
               syncToken.notifyAll();
