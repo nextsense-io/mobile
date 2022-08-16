@@ -86,13 +86,13 @@ class DeviceManager {
     _connectedDevice = device;
     bool deviceReady = await waitDeviceReady(timeout);
     if (!deviceReady) {
-      _connectedDevice = null;
+      await disconnectDevice();
       return false;
     }
     NextsenseBase.requestDeviceStateUpdate(device.macAddress);
     bool stateAvailable = await waitInternalStateAvailable(timeout);
     if (!stateAvailable) {
-      _connectedDevice = null;
+      await disconnectDevice();
       return false;
     }
 
