@@ -54,9 +54,9 @@ class _DeviceScanScreenState extends State<DeviceScanScreen> {
     setState(() {
       _scanResultsMap.clear();
     });
-    if (_deviceManager.deviceIsConnected) {
+    if (_deviceManager.getConnectedDevice() != null) {
       _logger.log(
-          Level.INFO, 'Disconnecting device in case it is tryign to reconnect automatically');
+          Level.INFO, 'Disconnecting device in case it is trying to reconnect automatically');
       await _deviceManager.disconnectDevice();
     }
     _logger.log(Level.INFO, 'Starting Bluetooth scan.');
