@@ -67,7 +67,7 @@ class DeviceManager {
   Stream<DeviceInternalStateEvent> get deviceInternalStateChangeStream
       => _deviceInternalStateChangeController.stream;
 
-  bool get deviceIsConnected => deviceState.value == DeviceState.ready;
+  bool get deviceIsReady => deviceState.value == DeviceState.ready;
   bool get deviceInternalStateAvailable => deviceInternalState.value != null;
 
   // Internal state shortcuts

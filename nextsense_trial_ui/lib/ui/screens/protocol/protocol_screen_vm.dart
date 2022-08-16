@@ -350,7 +350,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _logger.log(Level.INFO, 'Stopping ${protocol.name} protocol.');
     _timerPaused = false;
     try {
-      if (_deviceManager.deviceIsConnected) {
+      if (_deviceManager.deviceIsReady) {
         await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
       }
     } catch (e) {

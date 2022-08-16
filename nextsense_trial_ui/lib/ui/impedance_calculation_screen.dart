@@ -149,7 +149,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
                   text: MediumText(text: buttonText, color: NextSenseColors.purple),
                   onTap: () async {
                     if (_impedanceRunState == ImpedanceRunState.STOPPED) {
-                      if (!_deviceManager.deviceIsConnected) {
+                      if (!_deviceManager.deviceIsReady) {
                         await showDialog(
                             context: context,
                             builder: (_) => SimpleAlertDialog(
