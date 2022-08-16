@@ -167,7 +167,7 @@ public class ForegroundService extends Service {
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
     // minRecordsToKeep is set at 5000 as ~4000 records is the upper limit we are considering for
     // impedance calculation.
-    uploader = Uploader.create(objectBoxDatabase, connectivity, /*uploadChunk=*/1250,
+    uploader = Uploader.create(objectBoxDatabase, databaseSink, connectivity, /*uploadChunk=*/1250,
         /*minRecordsToKeep=*/5000, /*minDurationToKeep=*/Duration.ofMillis((5000 / 250) * 1000L));
     uploader.start();
     initialized = true;
