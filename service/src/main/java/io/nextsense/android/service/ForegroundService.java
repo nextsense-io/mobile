@@ -154,7 +154,7 @@ public class ForegroundService extends Service {
     deviceScanner = DeviceScanner.create(NextSenseDeviceManager.create(localSessionManager),
         centralManagerProxy);
     deviceManager = DeviceManager.create(deviceScanner, localSessionManager);
-    databaseSink = DatabaseSink.create(objectBoxDatabase);
+    databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
     databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);
     // sampleRateCalculator.startListening();
