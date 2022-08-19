@@ -5,8 +5,8 @@ import java.util.List;
 
 import io.nextsense.android.Config;
 import io.nextsense.android.base.ble.BleDeviceManager;
-import io.nextsense.android.base.ble.EmulatedDeviceManager;
 import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.emulated.EmulatedDeviceManager;
 
 /**
  * Interface to outside clients. Helps to manage the lifecycle of devices and common errors.
