@@ -82,16 +82,18 @@ class DeviceManager {
       Device device, {Duration timeout = const Duration(seconds: 10)}) async {
     _listenToState(device.macAddress);
     _listenToInternalState();
-    await NextsenseBase.connectDevice(device.macAddress);
     _connectedDevice = device;
+    await NextsenseBase.connectDevice(device.macAddress);
     bool deviceReady = await waitDeviceReady(timeout);
     if (!deviceReady) {
+      _logger.log(Level.WARNING, 'Timeout waiting for ready state');
       await disconnectDevice();
       return false;
     }
     NextsenseBase.requestDeviceStateUpdate(device.macAddress);
     bool stateAvailable = await waitInternalStateAvailable(timeout);
     if (!stateAvailable) {
+      _logger.log(Level.WARNING, 'Timeout waiting for internal state available');
       await disconnectDevice();
       return false;
     }
@@ -217,6 +219,10 @@ class DeviceManager {
             break;
           default:
             break;
+        }
+      } else {
+        if (deviceState == DeviceState.ready) {
+          _logger.log(Level.WARNING, "State changed to READY but not connected device.");
         }
       }
     }, macAddress);

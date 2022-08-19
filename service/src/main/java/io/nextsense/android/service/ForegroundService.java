@@ -23,6 +23,7 @@ import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.SampleRateCalculator;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
+import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Uploader;
@@ -58,6 +59,7 @@ public class ForegroundService extends Service {
   // Binder given to clients.
   private final IBinder binder = new LocalBinder();
 
+  private BluetoothStateManager bluetoothStateManager;
   private BleCentralManagerProxy centralManagerProxy;
   private DeviceScanner deviceScanner;
   private DeviceManager deviceManager;
@@ -149,10 +151,11 @@ public class ForegroundService extends Service {
     objectBoxDatabase = new ObjectBoxDatabase();
     objectBoxDatabase.init(this);
     localSessionManager = LocalSessionManager.create(objectBoxDatabase);
+    bluetoothStateManager = BluetoothStateManager.create(getApplicationContext());
     centralManagerProxy = (!Config.USE_EMULATED_BLE) ?
             new BleCentralManagerProxy(getApplicationContext()) : null;
     deviceScanner = DeviceScanner.create(NextSenseDeviceManager.create(localSessionManager),
-        centralManagerProxy);
+        centralManagerProxy, bluetoothStateManager);
     deviceManager = DeviceManager.create(deviceScanner, localSessionManager);
     databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
     databaseSink.startListening();

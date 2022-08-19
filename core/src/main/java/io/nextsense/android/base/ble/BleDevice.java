@@ -34,6 +34,7 @@ import io.nextsense.android.base.DeviceSettings;
 import io.nextsense.android.base.DeviceState;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
+import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.xenon.StartStreamingCommand;
@@ -46,8 +47,8 @@ import io.nextsense.android.base.utils.Util;
  */
 public class BleDevice extends Device {
 
+  public static final Duration RECONNECTION_ATTEMPTS_INTERVAL = Duration.ofSeconds(30);
   private static final String TAG = BleDevice.class.getSimpleName();
-  private static final Duration RECONNECTION_ATTEMPTS_INTERVAL = Duration.ofSeconds(30);
 
   private final NextSenseDevice nextSenseDevice;
   private final BluetoothPeripheral btPeripheral;
@@ -59,20 +60,20 @@ public class BleDevice extends Device {
       MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 
   private DeviceState deviceState = DeviceState.DISCONNECTED;
-  private boolean autoReconnect = false;
+  private boolean autoReconnect = true;
   private DisconnectionStatus disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
   private DeviceSettings deviceSettings;
   private DeviceSettings savedDeviceSettings;
 
-  public BleDevice(BleCentralManagerProxy centralProxy, NextSenseDevice nextSenseDevice,
-                   BluetoothPeripheral btPeripheral) {
+  public BleDevice(BleCentralManagerProxy centralProxy, BluetoothStateManager bluetoothStateManager,
+                   NextSenseDevice nextSenseDevice, BluetoothPeripheral btPeripheral,
+                   ReconnectionManager reconnectionManager) {
     this.centralManagerProxy = centralProxy;
     this.nextSenseDevice = nextSenseDevice;
     this.btPeripheral = btPeripheral;
     centralProxy.addPeripheralListener(bluetoothCentralManagerCallback, btPeripheral.getAddress());
     callbackProxy.addPeripheralCallbackListener(peripheralCallback);
-    reconnectionManager = ReconnectionManager.create(
-        centralManagerProxy, RECONNECTION_ATTEMPTS_INTERVAL);
+    this.reconnectionManager = reconnectionManager;
   }
 
   @Override
@@ -370,7 +371,11 @@ public class BleDevice extends Device {
         disconnectionStatus = DisconnectionStatus.HARD;
         if (autoReconnect) {
           reconnectionManager.startReconnecting(peripheral, callbackProxy.getMainCallback());
+        } else {
+          Util.logd(TAG, "autoReconnect is OFF, no need to try to reconnect.");
         }
+      } else {
+        Util.logd(TAG, "Disconnection was by request, no need to try to reconnect.");
       }
       deviceState = DeviceState.DISCONNECTED;
       if (deviceDisconnectionFuture != null) {

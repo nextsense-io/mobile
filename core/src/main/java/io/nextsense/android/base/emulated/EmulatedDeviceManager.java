@@ -1,4 +1,4 @@
-package io.nextsense.android.base.ble;
+package io.nextsense.android.base.emulated;
 
 import android.util.Log;
 
@@ -42,7 +42,7 @@ public class EmulatedDeviceManager implements DeviceManager {
     @Override
     public void findDevices(DeviceScanner.DeviceScanListener deviceScanListener) {
         Log.w(TAG, "EmulatedDeviceManager::findDevices");
-        emulatedDevice = (EmulatedDevice) Device.create(null, null, null);
+        emulatedDevice = (EmulatedDevice) Device.create(null, null, null, null, null);
         // Have to pass localSessionManager to emulated device
         emulatedDevice.setLocalSessionManager(localSessionManager);
         devices.add(emulatedDevice);
@@ -72,6 +72,5 @@ public class EmulatedDeviceManager implements DeviceManager {
                 emulatedDevice.emulateInternalStateChange(params);
                 break;
         }
-
     }
 }

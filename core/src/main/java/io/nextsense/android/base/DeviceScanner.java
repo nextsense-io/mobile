@@ -3,6 +3,7 @@ package io.nextsense.android.base;
 import io.nextsense.android.Config;
 import io.nextsense.android.base.ble.BleDeviceScanner;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
+import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.emulated.EmulatedDeviceScanner;
 
@@ -43,11 +44,12 @@ public interface DeviceScanner {
     }
 
     static DeviceScanner create(NextSenseDeviceManager deviceManager,
-                                BleCentralManagerProxy centralManagerProxy) {
+                                BleCentralManagerProxy centralManagerProxy,
+                                BluetoothStateManager bluetoothStateManager) {
         if (Config.USE_EMULATED_BLE)
             return new EmulatedDeviceScanner();
 
-        return new BleDeviceScanner(deviceManager, centralManagerProxy);
+        return new BleDeviceScanner(deviceManager, centralManagerProxy, bluetoothStateManager);
     }
 
     void close();
