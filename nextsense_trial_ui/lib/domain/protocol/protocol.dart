@@ -263,7 +263,7 @@ class EyesMovementProtocol extends BaseProtocol {
   static final ProtocolPart _blackScreen = ProtocolPart(
       state: EyesMovementState.BLACK_SCREEN.name,
       duration: Duration(seconds: 5),
-      marker: "BLACK");
+      marker: "REST");
   static final ProtocolPart _blink = ProtocolPart(
       state: EyesMovementState.BLINK.name,
       duration: Duration(seconds: 10),
