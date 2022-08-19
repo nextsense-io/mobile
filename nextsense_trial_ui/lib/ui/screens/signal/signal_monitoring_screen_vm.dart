@@ -148,7 +148,7 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   @override
   void dispose() async {
     _screenRefreshTimer?.cancel();
-    if (device != null) {
+    if (device != null && _deviceManager.deviceIsReady) {
       await NextsenseBase.stopStreaming(device!.macAddress);
     }
     super.dispose();
