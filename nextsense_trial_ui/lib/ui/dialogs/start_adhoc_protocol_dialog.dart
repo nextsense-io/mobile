@@ -26,7 +26,7 @@ class StartAdhocProtocolDialog extends HookWidget {
                     _navigation.navigateWithCapabilityChecking(context,
                         ProtocolScreenMapping.getProtocolScreenId(adhocProtocol.protocol.type),
                         arguments: adhocProtocol);
-                    Navigator.pop(context);
+                    _navigation.pop();
                   }),
             ))
         .toList();

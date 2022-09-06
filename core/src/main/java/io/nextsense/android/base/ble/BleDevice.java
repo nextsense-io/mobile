@@ -368,6 +368,7 @@ public class BleDevice extends Device {
                                          @NonNull HciStatus status) {
       Util.logd(TAG, "Device " + peripheral.getName() + " disconnected.");
       if (disconnectionStatus != DisconnectionStatus.BY_REQUEST) {
+        Util.logd(TAG, "Hard disconnect, try to reconnect.");
         disconnectionStatus = DisconnectionStatus.HARD;
         if (autoReconnect) {
           reconnectionManager.startReconnecting(peripheral, callbackProxy.getMainCallback());

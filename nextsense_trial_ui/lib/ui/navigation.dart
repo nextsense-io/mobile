@@ -254,7 +254,9 @@ class Navigation {
   }
 
   void pop() {
-    return navigatorKey.currentState!.pop();
+    if (navigatorKey.currentState!.canPop()) {
+      return navigatorKey.currentState!.pop();
+    }
   }
 
   Future navigateToDeviceScan({bool replace = false, NavigationRoute? nextRoute}) async {
@@ -300,8 +302,9 @@ class Navigation {
     }
 
     if (_deviceManager.getConnectedDevice() == null) {
-      await navigateToDeviceScan();
+      await navigateToDeviceScan(nextRoute: NavigationRoute(pop: true));
       if (_deviceManager.getConnectedDevice() == null) {
+        _logger.log(Level.INFO, "Device not connected after scan screen, pop back");
         return;
       }
     }
