@@ -262,12 +262,16 @@ class Navigation {
     if (!await NextsenseBase.isBluetoothEnabled()) {
       // Ask the user to turn on Bluetooth.
       // Navigate to device scan screen.
-      await navigateTo(TurnOnBluetoothScreen.id, nextRoute: nextRoute);
+      await navigateTo(TurnOnBluetoothScreen.id);
       if (await NextsenseBase.isBluetoothEnabled()) {
+        _logger.log(Level.INFO, "Bluetooth was enabled, going to scan screen");
         navigateTo(DeviceScanScreen.id, replace: replace, nextRoute: nextRoute);
+      } else {
+        _logger.log(Level.INFO, "Bluetooth was not enabled, going back");
       }
     } else {
       // Navigate to device scan screen.
+      _logger.log(Level.INFO, "Bluetooth is enabled, going to scan screen");
       await navigateTo(DeviceScanScreen.id, replace: replace, nextRoute: nextRoute);
     }
   }
@@ -285,9 +289,12 @@ class Navigation {
       }
     }
 
-    if (!context.read<ConnectivityManager>().isConnectionSufficientForCloudSync()) {
+    ConnectivityManager connectivityManager = context.read<ConnectivityManager>();
+    if (!connectivityManager.isConnectionSufficientForCloudSync()) {
+      _logger.log(Level.INFO, "Connection not sufficient for protocol");
       await navigateTo(CheckInternetScreen.id);
-      if (!context.read<ConnectivityManager>().isConnectionSufficientForCloudSync()) {
+      if (!connectivityManager.isConnectionSufficientForCloudSync()) {
+        _logger.log(Level.INFO, "Connection still not sufficient for protocol, pop back");
         return;
       }
     }

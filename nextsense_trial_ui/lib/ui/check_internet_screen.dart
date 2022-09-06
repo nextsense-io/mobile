@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:provider/src/provider.dart';
 
 class CheckInternetScreen extends HookWidget {
@@ -12,6 +13,7 @@ class CheckInternetScreen extends HookWidget {
   static const String id = 'check_internet_screen';
 
   final _preferences = getIt<Preferences>();
+  final _navigation = getIt<Navigation>();
 
   CheckInternetScreen();
 
@@ -21,8 +23,7 @@ class CheckInternetScreen extends HookWidget {
     final cellularEnabled = useState<bool>(_preferences.getBool(
         PreferenceKey.allowDataTransmissionViaCellular));
     final bool isWifi = connectivityManager.isWifi;
-    final bool canProceed =
-        connectivityManager.isConnectionSufficientForCloudSync();
+    final bool canProceed =  connectivityManager.isConnectionSufficientForCloudSync();
     return Scaffold(
       appBar: AppBar(
         title: Text('Internet Connection'),
@@ -43,20 +44,17 @@ class CheckInternetScreen extends HookWidget {
                           color: Colors.white,
                           size: 60,
                         ),
-                        Text(
-                          isWifi ? "Wifi is connected."
-                              : "Wifi is not available!",
+                        Text(isWifi ? "Wifi is connected." : "Wifi is not available!",
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Colors.white, fontSize: 30),
                         ),
                         Container(
                           padding: EdgeInsets.all(30.0),
                           child: Text(
-                            "A good internet connection is needed to upload your "
-                            "NextSense device data to our cloud. Please enable "
-                            "your wifi connection or allow cellular upload. Note "
-                            "that you should do this only with unmetered plans "
-                            "as it could quickly fill your quota.",
+                            "A good internet connection is needed to upload your NextSense device "
+                            "data to our cloud. Please enable your wifi connection or allow "
+                            "cellular upload. Note that you should do this only with unmetered "
+                            "plans as it could quickly fill your quota.",
                             textAlign: TextAlign.center,
                             style: TextStyle(color: Colors.white, fontSize: 20),
                           ),
@@ -88,12 +86,11 @@ class CheckInternetScreen extends HookWidget {
                 ElevatedButton(
                   child: Container(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text("Continue",
-                      style: TextStyle(fontSize: 30.0),
+                    child: Text("Continue", style: TextStyle(fontSize: 30.0),
                     ),
                   ),
                   onPressed: canProceed ? () async {
-                    Navigator.of(context).pop();
+                    _navigation.pop();
                   } : null,
                 )
                 ],
