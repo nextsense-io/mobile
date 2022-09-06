@@ -21,9 +21,8 @@ class TurnOnBluetoothScreen extends HookWidget {
               children: <Widget>[
                 Padding(
                   padding: EdgeInsets.all(10.0),
-                  child: Text('Bluetooth is not enabled in your device, please '
-                      'turn it on to be able to connect to your NextSense '
-                      'device',
+                  child: Text('Bluetooth is not enabled in your device, please turn it on to be '
+                      'able to connect to your NextSense device',
                       style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 30,
