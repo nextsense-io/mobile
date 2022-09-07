@@ -139,16 +139,16 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return _surveyManager.getScheduledSurveyStats(scheduledSurvey);
   }
 
-  List<dynamic> getTodayTasks() {
-    List<Task> protocols = getCurrentDayScheduledProtocols();
-    List<Task> surveys = getCurrentDayScheduledSurveys();
+  List<dynamic> getTodayTasks(bool surveysOnly) {
     List<Task> allTasks = [];
-    allTasks.addAll(protocols);
-    allTasks.addAll(surveys);
+    if (!surveysOnly) {
+      allTasks.addAll(getCurrentDayScheduledProtocols());
+    }
+    allTasks.addAll(getCurrentDayScheduledSurveys());
     return allTasks;
   }
 
-  List<dynamic> getWeeklyTasks() {
+  List<dynamic> getWeeklyTasks(bool surveysOnly) {
     return getCurrentWeekScheduledSurveys();
   }
 

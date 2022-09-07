@@ -15,6 +15,7 @@ import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_protocol_dialog.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/dashboard/surveys_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:provider/provider.dart';
@@ -107,7 +108,7 @@ class DashboardHomeView extends StatelessWidget {
       menuCards.add(MenuCard(
           title: 'Surveys',
           image: SvgPicture.asset('assets/images/tasks.svg', semanticsLabel: 'Surveys', height: 75),
-          onTap: _dummy));
+          onTap: () => _navigation.navigateTo(SurveysScreen.id)));
     }
 
     List<Row> menuCardRows = [];
