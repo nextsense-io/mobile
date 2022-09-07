@@ -201,5 +201,4 @@ class _SurveyItem extends HookWidget {
     // Refresh tasks since survey state can be changed
     context.read<DashboardScreenViewModel>().notifyListeners();
   }
-
 }

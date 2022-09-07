@@ -19,7 +19,12 @@ import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:provider/src/provider.dart';
 
 class DashboardScheduleView extends StatelessWidget {
-  DashboardScheduleView({Key? key}) : super(key: key);
+  final String scheduleType;
+  final bool surveysOnly;
+  final bool showMenuBar;
+
+  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.surveysOnly = false,
+    this.showMenuBar = true}) : super(key: key);
 
   final Navigation _navigation = getIt<Navigation>();
 
@@ -123,7 +128,7 @@ class DashboardScheduleView extends StatelessWidget {
           message: 'Your study is initializing.\nPlease wait...', textVisible: loadingTextVisible);
     }
 
-    List<dynamic> todayTasks = viewModel.getTodayTasks();
+    List<dynamic> todayTasks = viewModel.getTodayTasks(surveysOnly);
     List<Widget> todayTasksWidgets;
     if (todayTasks.length == 0) {
       todayTasksWidgets = [
@@ -139,7 +144,7 @@ class DashboardScheduleView extends StatelessWidget {
                 SizedBox(
                   height: 20,
                 ),
-                MediumText(text: 'No tasks'),
+                MediumText(text: 'No ${scheduleType}'),
               ],
             ))
       ];
@@ -163,7 +168,7 @@ class DashboardScheduleView extends StatelessWidget {
       ];
     }
 
-    List<dynamic> weeklyTasks = viewModel.getWeeklyTasks();
+    List<dynamic> weeklyTasks = viewModel.getWeeklyTasks(surveysOnly);
     List<Widget> weeklyTasksWidgets = [];
     if (weeklyTasks.length != 0) {
       weeklyTasksWidgets = [
@@ -184,8 +189,8 @@ class DashboardScheduleView extends StatelessWidget {
     }
 
     List<Widget> contents = [
-      NextSenseAppBar(),
-      HeaderText(text: 'My Tasks'),
+      if (showMenuBar) NextSenseAppBar(),
+      HeaderText(text: 'My ${scheduleType}'),
       SizedBox(height: 15),
     ];
     contents.addAll(todayTasksWidgets);
