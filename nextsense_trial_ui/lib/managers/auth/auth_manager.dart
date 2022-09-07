@@ -63,10 +63,8 @@ class AuthManager {
     }
   }
 
-  Future<AuthenticationResult> signInNextSense(
-      String username, String password) async {
-    AuthenticationResult authResult =
-        await _nextSenseAuthManager!.handleSignIn(username, password);
+  Future<AuthenticationResult> signInNextSense(String username, String password) async {
+    AuthenticationResult authResult = await _nextSenseAuthManager!.handleSignIn(username, password);
     if (authResult != AuthenticationResult.success) {
       return authResult;
     }
@@ -161,11 +159,10 @@ class AuthManager {
     _user = null;
   }
 
-  // Make sure user data is loaded from firestore before we are doing any
-  // authorized operations.
+  // Make sure user data is loaded from Firestore before we are doing any authorized operations.
   //
-  // Returns true if user is successfully initialized, otherwise returns false
-  // and further actions must be taken
+  // Returns true if user is successfully initialized, otherwise returns false and further actions
+  // must be taken.
   Future<bool> ensureUserLoaded() async {
     _logger.log(Level.INFO, 'ensure user loaded');
     if (_user != null) {
@@ -175,7 +172,18 @@ class AuthManager {
 
     // Try to get user from username stored in firebase auth instance
     if (_firebaseAuth.currentUser != null) {
-      final username = _firebaseAuth.currentUser!.uid;
+      String username;
+      switch (_signedInAuthMethod) {
+        case AuthMethod.user_code:
+          username = _firebaseAuth.currentUser!.uid;
+          break;
+        case AuthMethod.google_auth:
+          username = _firebaseAuth.currentUser!.email!;
+          break;
+        default:
+          _logger.log(Level.WARNING, 'Unknown auth method.');
+          return false;
+      }
       _user = await loadUser(username);
       if (_user != null) {
         return true;
