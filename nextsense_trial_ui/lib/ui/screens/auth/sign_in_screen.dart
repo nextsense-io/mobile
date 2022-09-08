@@ -6,7 +6,8 @@ import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
-import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
+import 'package:nextsense_trial_ui/ui/components/header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
@@ -20,7 +21,6 @@ import 'package:provider/src/provider.dart';
 import 'package:stacked/stacked.dart';
 
 class SignInScreen extends HookWidget {
-
   static const String id = 'sign_in_screen';
 
   final _permissionsManager = getIt<PermissionsManager>();
@@ -32,22 +32,24 @@ class SignInScreen extends HookWidget {
         viewModelBuilder: () => SignInScreenViewModel(),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) => SessionPopScope(
-                child: Scaffold(
-              body: Container(
-                decoration: baseBackgroundDecoration,
-                child: _buildBody(context),
-              ),
-            )));
+            child: PageScaffold(
+                showBackButton: false,
+                showProfileButton: false,
+                child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                  Spacer(),
+                  HeaderText(text: 'Get started'),
+                  SizedBox(height: 20),
+                  _buildBody(context),
+                  Spacer()
+                ]))));
   }
 
-  Widget _buildNextSenseAuth(
-      BuildContext context, SignInScreenViewModel viewModel) {
+  Widget _buildNextSenseAuth(BuildContext context, SignInScreenViewModel viewModel) {
     return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       _UserPasswordSignInInputField(
           field: viewModel.username,
           labelText: "Enter your id",
-          helperText:
-              'Please contact NextSense support if you did not get an id',
+          helperText: 'Please contact NextSense support if you did not get an id',
           icon: Icon(Icons.account_circle)),
       _UserPasswordSignInInputField(
           field: viewModel.password,
@@ -58,16 +60,13 @@ class SignInScreen extends HookWidget {
       Padding(
           padding: EdgeInsets.all(10.0),
           child: ElevatedButton(
-            child: const Text('Continue'),
-            onPressed: viewModel.isBusy ? () => {} :
-                () => _signIn(context, AuthMethod.user_code)
-          )
-      )
+              child: const Text('Continue'),
+              onPressed:
+                  viewModel.isBusy ? () => {} : () => _signIn(context, AuthMethod.user_code)))
     ]);
   }
 
-  Widget _buildGoogleAuth(
-      BuildContext context, SignInScreenViewModel viewModel) {
+  Widget _buildGoogleAuth(BuildContext context, SignInScreenViewModel viewModel) {
     return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       SignInButton(
         Buttons.Google,
@@ -82,14 +81,11 @@ class SignInScreen extends HookWidget {
     final viewModel = context.watch<SignInScreenViewModel>();
 
     List<Widget> _signInWidgets = [
-      Padding(
-        padding: EdgeInsets.all(10.0),
-        child: Text(viewModel.appTitle,
-            style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 30,
-                fontFamily: 'Roboto')),
-      ),
+      // Padding(
+      //   padding: EdgeInsets.all(10.0),
+      //   child: Text(viewModel.appTitle,
+      //       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30, fontFamily: 'Roboto')),
+      // ),
     ];
 
     for (AuthMethod authMethod in viewModel.authMethods) {
@@ -109,8 +105,7 @@ class SignInScreen extends HookWidget {
           child: Text(
             viewModel.errorMsg,
             style: TextStyle(fontSize: 20, color: Color(0xFF5A0000)),
-          )
-      ),
+          )),
       Visibility(
         visible: viewModel.isBusy,
         child: CircularProgressIndicator(
@@ -120,20 +115,17 @@ class SignInScreen extends HookWidget {
     ]);
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-          children: _signInWidgets),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: _signInWidgets),
     );
   }
 
   Future _signIn(BuildContext context, AuthMethod authMethod) async {
     final viewModel = context.read<SignInScreenViewModel>();
-    AuthenticationResult authResult =
-        await viewModel.signIn(authMethod);
+    AuthenticationResult authResult = await viewModel.signIn(authMethod);
 
     if (authResult != AuthenticationResult.success) {
       var dialogTitle, dialogContent;
-      switch(authResult) {
+      switch (authResult) {
         case AuthenticationResult.invalid_username_or_password:
           dialogTitle = 'Invalid password';
           dialogContent = 'The password you entered is invalid';
@@ -150,10 +142,7 @@ class SignInScreen extends HookWidget {
       }
       await showDialog(
           context: context,
-          builder: (_) => SimpleAlertDialog(
-              title: dialogTitle,
-              content: dialogContent)
-      );
+          builder: (_) => SimpleAlertDialog(title: dialogTitle, content: dialogContent));
       return;
     }
 
@@ -164,11 +153,10 @@ class SignInScreen extends HookWidget {
 
     // If there are permissions that need to be granted, go through them one by one with an
     // explanation screen.
-    for (PermissionRequest permissionRequest in
-        await _permissionsManager.getPermissionsToRequest()) {
+    for (PermissionRequest permissionRequest
+        in await _permissionsManager.getPermissionsToRequest()) {
       if (permissionRequest.showRequest) {
-        await _navigation.navigateTo(RequestPermissionScreen.id,
-            arguments: permissionRequest);
+        await _navigation.navigateTo(RequestPermissionScreen.id, arguments: permissionRequest);
       } else {
         await permissionRequest.permission.request();
       }
@@ -183,8 +171,7 @@ class SignInScreen extends HookWidget {
           builder: (_) => SimpleAlertDialog(
               title: 'Error with your account',
               content: 'Please contact NextSense support and mention that there is an issue with '
-                  'your account study setup.')
-      );
+                  'your account study setup.'));
       return;
     }
 
@@ -217,14 +204,14 @@ class _UserPasswordSignInInputField extends StatelessWidget {
   final Icon? icon;
   final bool? obscureText;
 
-  const _UserPasswordSignInInputField({
-    Key? key,
-    required this.field,
-    required this.labelText,
-    this.helperText,
-    this.icon,
-    this.obscureText
-  }) : super(key: key);
+  const _UserPasswordSignInInputField(
+      {Key? key,
+      required this.field,
+      required this.labelText,
+      this.helperText,
+      this.icon,
+      this.obscureText})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {

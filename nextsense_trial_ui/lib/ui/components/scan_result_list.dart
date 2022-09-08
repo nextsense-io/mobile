@@ -3,13 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 
 /*
-A widget to show a device or a device id (if a name is not available) once
-search is completed.
+A widget to show a device or a device id (if a name is not available) once search is completed.
 */
 class ScanResult extends StatelessWidget {
-  const ScanResult(
-      {required Key key, required this.result, required this.onTap}) :
-        super(key: key);
+  const ScanResult({required Key key, required this.result, required this.onTap}) : super(key: key);
 
   final Map<String, dynamic> result;
   final VoidCallback onTap;
@@ -34,11 +31,9 @@ class ScanResult extends StatelessWidget {
 
   Widget _buildDeviceTitle(BuildContext context) {
     String deviceName = result[describeEnum(DeviceAttributesFields.name)];
-    String deviceMacAddress =
-        result[describeEnum(DeviceAttributesFields.macAddress)];
+    String deviceMacAddress = result[describeEnum(DeviceAttributesFields.macAddress)];
     if (deviceName.length > 0) {
-      return _deviceStyle(
-          context, deviceName + ' - ' + deviceMacAddress);
+      return _deviceStyle(context, deviceName + ' - ' + deviceMacAddress);
     } else {
       return _deviceStyle(context, deviceMacAddress);
     }

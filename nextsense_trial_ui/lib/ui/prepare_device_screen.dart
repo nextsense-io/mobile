@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/ui/components/background_decoration.dart';
+import 'package:nextsense_trial_ui/ui/components/header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
+import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 
 class PrepareDeviceScreen extends HookWidget {
 
@@ -12,35 +16,26 @@ class PrepareDeviceScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Prepare Device'),
-      ),
-      body: Container(
-        decoration: baseBackgroundDecoration,
-        child: Center(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Padding(
+    return PageScaffold(showBackButton: false, showProfileButton: false, child: Center(
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              HeaderText(text: 'Device Setup'),
+              Image(image: AssetImage('assets/images/xenon.png')),
+              Padding(
+                padding: EdgeInsets.all(20.0),
+                child: MediumText(text:
+                    'Turn the device on by sliding the power button from “OFF” to “ON” as shown.',
+                color: NextSenseColors.darkBlue)),
+              Padding(
                   padding: EdgeInsets.all(10.0),
-                  child: Text('Move the slider to the ON position on your device',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 30,
-                          fontFamily: 'Roboto')),
-                ),
-                Padding(
-                    padding: EdgeInsets.all(10.0),
-                    child: ElevatedButton(
-                      child: const Text('Continue'),
-                      onPressed: () async {
-                        _navigation.navigateToDeviceScan(replace: true);
-                      },
-                    )),
-              ]),
-        ),
+                  child: SimpleButton(
+                    text: MediumText(text: 'Continue', color: NextSenseColors.purple),
+                    onTap: () async {
+                      _navigation.navigateToDeviceScan(replace: true);
+                    },
+                  )),
+            ]),
       ),
     );
   }
