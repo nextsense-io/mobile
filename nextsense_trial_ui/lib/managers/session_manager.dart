@@ -93,14 +93,23 @@ class SessionManager {
     //             should be persisted in the table?
     String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
     try {
+      _logger.log(Level.INFO, "Recording with continuous impedance: "
+          "${_preferences.getBool(PreferenceKey.continuousImpedance)}");
+      ImpedanceMode impedanceMode = ImpedanceMode.OFF;
       if (_preferences.getBool(PreferenceKey.continuousImpedance)) {
-
+        impedanceMode = ImpedanceMode.ON_1299_AC;
+      }
+      bool configSet = await NextsenseBase.setImpedanceConfig(device.macAddress, impedanceMode,
+          /*channelNumber=*/null, /*frequencyDivider=*/null);
+      _logger.log(Level.INFO, "Impedance config set: ${configSet}");
+      if (!configSet) {
+        _logger.log(Level.SEVERE, "Failed to set impedance config. Cannot start streaming.");
+        return false;
       }
       _currentLocalSession = await NextsenseBase.startStreaming(
-          device.macAddress, /*uploadToCloud=*/true,
-          /*continuousImpedance=*/_preferences.getBool(PreferenceKey.continuousImpedance),
-          user.getValue(UserKey.bt_key), dataSessionCode,
+          device.macAddress, /*uploadToCloud=*/true, user.getValue(UserKey.bt_key), dataSessionCode,
           _studyManager.currentStudy?.getEarbudsConfig() ?? null);
+      _logger.log(Level.INFO, "Started streaming with local session: ${_currentLocalSession}");
       return true;
     } catch (exception) {
       _logger.log(Level.SEVERE, "Failed to start streaming. Message: ${exception}");

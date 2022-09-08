@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
@@ -149,6 +150,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     targetStartStreamingMode =
         (StartStreamingCommand.StartMode)parameters.getSerializable(STREAM_START_MODE_KEY);
     if (this.deviceMode == DeviceMode.STREAMING) {
+      Log.w(TAG, "Device already streaming, nothing to do.");
       return Futures.immediateFuture(true);
     }
     if (dataCharacteristic == null) {
@@ -198,9 +200,6 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
 
   @Override
   public ListenableFuture<Boolean> applyDeviceSettings(DeviceSettings newDeviceSettings) {
-    if (newDeviceSettings.equals(this.deviceSettings)) {
-      return Futures.immediateFuture(true);
-    }
     return executorService.submit(() -> {
       try {
         executeCommandNoResponse(new SetConfigCommand(newDeviceSettings.getEnabledChannels(),
@@ -240,11 +239,11 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     try {
       executeCommandNoResponse(new RequestAuxPacketCommand());
       return true;
-    } catch (ExecutionException e) {
-      Log.e(TAG, "Failed to set the time on the device: " + e.getMessage());
+    } catch (CancellationException | ExecutionException e) {
+      Log.e(TAG, "Failed to request the device state: " + e.getMessage());
       return false;
     } catch (InterruptedException e) {
-      Log.e(TAG, "Interrupted when trying to set the time on the device: " + e.getMessage());
+      Log.e(TAG, "Interrupted when trying to request the device state: " + e.getMessage());
       Thread.currentThread().interrupt();
       return false;
     }
@@ -264,7 +263,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   }
 
   private void executeCommandNoResponse(XenonFirmwareCommand command) throws
-      ExecutionException, InterruptedException {
+      ExecutionException, InterruptedException, CancellationException {
     blePeripheralCallbackProxy.writeCharacteristic(
         peripheral, dataCharacteristic, command.getCommand(), WriteType.WITHOUT_RESPONSE).get();
   }

@@ -66,8 +66,8 @@ public abstract class Device {
   public abstract boolean requestDeviceState();
 
   public abstract ListenableFuture<Boolean> startStreaming(
-      boolean uploadToCloud, boolean continuousImpedance, @Nullable String userBigTableKey,
-      @Nullable String dataSessionId, @Nullable String earbudsConfig);
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      @Nullable String earbudsConfig);
 
   public abstract ListenableFuture<Boolean> stopStreaming();
 
@@ -76,6 +76,10 @@ public abstract class Device {
           @Nullable Integer frequencyDivider);
 
   public abstract ListenableFuture<Boolean> stopImpedance();
+
+  public abstract ListenableFuture<Boolean> setImpedanceConfig(
+      DeviceSettings.ImpedanceMode impedanceMode, @Nullable Integer channelNumber,
+      @Nullable Integer frequencyDivider);
 
   public void addOnDeviceStateChangeListener(DeviceStateChangeListener listener) {
     deviceStateChangeListeners.add(listener);

@@ -106,8 +106,8 @@ public class BleDevice extends Device {
 
   @Override
   public ListenableFuture<Boolean> startStreaming(
-      boolean uploadToCloud, boolean continuousImpedance, @Nullable String userBigTableKey,
-      @Nullable String dataSessionId, @Nullable String earbudsConfig) {
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      @Nullable String earbudsConfig) {
     if (deviceState != DeviceState.READY) {
       return Futures.immediateFailedFuture(new IllegalStateException(
           "Device needs to be in READY state to change its mode."));
@@ -122,20 +122,9 @@ public class BleDevice extends Device {
       parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
           StartStreamingCommand.StartMode.NO_LOGGING);
     }
-    return executorService.submit(() -> {
-      boolean configSet = true;
-      if (continuousImpedance) {
-        configSet = setImpedanceConfig(DeviceSettings.ImpedanceMode.ON_1299_AC,
-            /*channelNumber=*/null, /*frequencyDivider=*/null).get();
-        Log.i(TAG, "Continuous impedance mode set: " + configSet);
-      }
-      boolean streaming = false;
-      if (configSet) {
-        streaming = nextSenseDevice.startStreaming(uploadToCloud, userBigTableKey, dataSessionId,
-                earbudsConfig, parametersBundle).get();
-      }
-      return streaming;
-    });
+    return executorService.submit(() ->
+        nextSenseDevice.startStreaming(uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig,
+            parametersBundle).get());
   }
 
   @Override
@@ -147,9 +136,16 @@ public class BleDevice extends Device {
     return nextSenseDevice.stopStreaming();
   }
 
-  private ListenableFuture<Boolean> setImpedanceConfig(
+  @Override
+  public ListenableFuture<Boolean> setImpedanceConfig(
       DeviceSettings.ImpedanceMode impedanceMode, @Nullable Integer channelNumber,
       @Nullable Integer frequencyDivider) {
+    // Check if nothing to do. For external current, channel number and frequency divider can change
+    // so re-apply in any case.
+    if (deviceSettings.getImpedanceMode() == impedanceMode &&
+        impedanceMode != DeviceSettings.ImpedanceMode.ON_EXTERNAL_CURRENT) {
+      return Futures.immediateFuture(true);
+    }
     if (savedDeviceSettings == null) {
       savedDeviceSettings = new DeviceSettings(deviceSettings);
     }
@@ -178,8 +174,8 @@ public class BleDevice extends Device {
       boolean settingsSet =
           setImpedanceConfig(impedanceMode, channelNumber, frequencyDivider).get();
       if (settingsSet) {
-        return startStreaming(/*uploadToCloud=*/false, /*continuousStreaming=*/false,
-            /*userBigTableKey=*/null, /*dataSessionId=*/null, /*earbudsConfig=*/null).get();
+        return startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null,
+            /*dataSessionId=*/null, /*earbudsConfig=*/null).get();
       } else {
         return false;
       }
@@ -295,7 +291,6 @@ public class BleDevice extends Device {
    */
   @Override
   public DeviceData getData() {
-    // return deviceData;
     return null;
   }
 

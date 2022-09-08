@@ -66,6 +66,7 @@ class NextsenseBase {
   static const String _stopStreamingCommand = 'stop_streaming';
   static const String _startImpedanceCommand = 'start_impedance';
   static const String _stopImpedanceCommand = 'stop_impedance';
+  static const String _setImpedanceConfigCommand = 'set_impedance_config';
   static const String _isBluetoothEnabledCommand = 'is_bluetooth_enabled';
   static const String _getChannelDataCommand = 'get_channel_data';
   static const String _getAccChannelDataCommand = 'get_acc_channel_data';
@@ -81,7 +82,6 @@ class NextsenseBase {
   static const String _emulatorCommand = 'emulator_command';
   static const String _macAddressArg = 'mac_address';
   static const String _uploadToCloudArg = 'upload_to_cloud';
-  static const String _continuousImpedance = 'continuous_impedance';
   static const String _userBigTableKeyArg = 'user_bigtable_key';
   static const String _dataSessionIdArg = 'data_session_id';
   static const String _earbudsConfigArg = 'earbuds_config';
@@ -187,12 +187,12 @@ class NextsenseBase {
     };
   }
 
-  static Future<int> startStreaming(String macAddress, bool uploadToCloud, bool continuousImpedance,
-      String userBigTableKey, String dataSessionId, String? earbudsConfig) async {
+  static Future<int> startStreaming(String macAddress, bool uploadToCloud, String userBigTableKey,
+      String dataSessionId, String? earbudsConfig) async {
     return await _channel.invokeMethod(_startStreamingCommand,
         {_macAddressArg: macAddress, _uploadToCloudArg: uploadToCloud,
-          _continuousImpedance: continuousImpedance, _userBigTableKeyArg: userBigTableKey,
-          _dataSessionIdArg: dataSessionId, _earbudsConfigArg: earbudsConfig});
+          _userBigTableKeyArg: userBigTableKey, _dataSessionIdArg: dataSessionId,
+          _earbudsConfigArg: earbudsConfig});
   }
 
   static Future stopStreaming(String macAddress) async {
@@ -200,9 +200,8 @@ class NextsenseBase {
         {_macAddressArg: macAddress});
   }
 
-  static Future<int> startImpedance(String macAddress,
-      ImpedanceMode impedanceMode, int? channelNumber,
-      int? frequencyDivider) async {
+  static Future<int> startImpedance(String macAddress, ImpedanceMode impedanceMode,
+      int? channelNumber, int? frequencyDivider) async {
     return await _channel.invokeMethod(_startImpedanceCommand,
         {_macAddressArg: macAddress,
           _impedanceModeArg: describeEnum(impedanceMode),
@@ -213,6 +212,15 @@ class NextsenseBase {
   static Future stopImpedance(String macAddress) async {
     await _channel.invokeMethod(_stopImpedanceCommand,
         {_macAddressArg: macAddress});
+  }
+
+  static Future setImpedanceConfig(String macAddress, ImpedanceMode impedanceMode,
+      int? channelNumber, int? frequencyDivider) async {
+    return await _channel.invokeMethod(_setImpedanceConfigCommand,
+        {_macAddressArg: macAddress,
+          _impedanceModeArg: describeEnum(impedanceMode),
+          _channelNumberArg: channelNumber,
+          _frequencyDividerArg: frequencyDivider});
   }
 
   static Future<List<Map<String, dynamic>>> getConnectedDevices() async {

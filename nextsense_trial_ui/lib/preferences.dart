@@ -16,7 +16,6 @@ enum PreferenceKey {
   displayPowerLineFreq,
   displayEegTimeWindowSeconds,
   displayAccTimeWindowSeconds,
-  showDayTabsForTasks
 }
 
 class Preferences {

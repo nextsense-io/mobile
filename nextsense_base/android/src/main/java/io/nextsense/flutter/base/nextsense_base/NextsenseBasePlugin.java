@@ -64,6 +64,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String STOP_STREAMING_COMMAND = "stop_streaming";
   public static final String START_IMPEDANCE_COMMAND = "start_impedance";
   public static final String STOP_IMPEDANCE_COMMAND = "stop_impedance";
+  public static final String SET_IMPEDANCE_CONFIG_COMMAND = "set_impedance_config";
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
   public static final String GET_DEVICE_SETTINGS_COMMAND = "get_device_settings";
   public static final String GET_CHANNEL_DATA_COMMAND = "get_channel_data";
@@ -236,12 +237,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case START_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         Boolean uploadToCloud = call.argument(UPLOAD_TO_CLOUD_ARGUMENT);
-        Boolean continuousImpedance = call.argument(CONTINUOUS_IMPEDANCE_ARGUMENT);
         String userBtKey = call.argument(USER_BT_KEY_ARGUMENT);
         String dataSessionId = call.argument(DATA_SESSION_ID_ARGUMENT);
         String earbudsConfig = call.argument(EARBUDS_CONFIG_ARGUMENT);
-        startStreaming(result, macAddress, uploadToCloud, continuousImpedance, userBtKey,
-            dataSessionId, earbudsConfig);
+        startStreaming(result, macAddress, uploadToCloud, userBtKey, dataSessionId, earbudsConfig);
         break;
       case STOP_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -257,6 +256,13 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case STOP_IMPEDANCE_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         stopImpedance(result, macAddress);
+        break;
+      case SET_IMPEDANCE_CONFIG_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        impedanceModeName = call.argument(IMPEDANCE_MODE_ARGUMENT);
+        channelNumber = call.argument(CHANNEL_NUMBER_ARGUMENT);
+        frequencyDivider = call.argument(FREQUENCY_DIVIDER_ARGUMENT);
+        setImpedanceConfig(result, macAddress, impedanceModeName, channelNumber, frequencyDivider);
         break;
       case GET_CONNECTED_DEVICES_COMMAND:
         getConnectedDevices(result);
@@ -554,8 +560,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void startStreaming(
-      Result result, String macAddress, Boolean uploadToCloud, Boolean continuousImpedance,
-      String userBigTableKey, String dataSessionId, String earbudsConfig) {
+      Result result, String macAddress, Boolean uploadToCloud, String userBigTableKey,
+      String dataSessionId, String earbudsConfig) {
     Device device = devices.get(macAddress);
     if (device == null) {
       returnError(result, START_STREAMING_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
@@ -566,7 +572,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       // Clear the memory cache from the previous recording data, if any.
       nextSenseService.getMemoryCache().clear();
       boolean started = device.startStreaming(
-          uploadToCloud, continuousImpedance, userBigTableKey, dataSessionId, earbudsConfig).get();
+          uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig).get();
       if (!started) {
         returnError(result, START_STREAMING_COMMAND, ERROR_STREAMING_START_FAILED,
             /*errorMessage=*/null, /*errorDetails=*/null);
@@ -649,6 +655,34 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     } else {
       returnError(result, START_IMPEDANCE_COMMAND, ERROR_SESSION_NOT_STARTED,
           /*errorMessage=*/null, /*errorDetails=*/null);
+    }
+  }
+
+  private void setImpedanceConfig(
+      Result result, String macAddress, String impedanceModeName, @Nullable Integer channelNumber,
+      @Nullable Integer frequencyDivider) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      returnError(result, SET_IMPEDANCE_CONFIG_COMMAND, ERROR_DEVICE_NOT_FOUND,
+          /*errorMessage=*/null, /*errorDetails=*/null);
+      return;
+    }
+    ImpedanceMode impedanceMode = ImpedanceMode.valueOf(impedanceModeName);
+    try {
+      boolean configured =
+          device.setImpedanceConfig(impedanceMode, channelNumber, frequencyDivider).get();
+      if (!configured) {
+        returnError(result, SET_IMPEDANCE_CONFIG_COMMAND, ERROR_STREAMING_START_FAILED,
+            /*errorMessage=*/null, /*errorDetails=*/null);
+      }
+      result.success(true);
+    } catch (ExecutionException e) {
+      returnError(result, SET_IMPEDANCE_CONFIG_COMMAND, ERROR_STREAMING_START_FAILED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      returnError(result, SET_IMPEDANCE_CONFIG_COMMAND, ERROR_STREAMING_START_FAILED,
+          /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
     }
   }
 
