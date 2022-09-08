@@ -28,9 +28,6 @@ class SettingsScreen extends HookWidget {
     final continuousImpedance = useState<bool>(_preferences.getBool(
         PreferenceKey.continuousImpedance));
 
-    final showDayTabsForTasks = useState<bool>(_preferences.getBool(
-        PreferenceKey.showDayTabsForTasks));
-
     return Scaffold(
       appBar: fromDashboard ? null : AppBar(
         title: Text('Settings'),

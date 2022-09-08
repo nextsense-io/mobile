@@ -1,15 +1,20 @@
 package io.nextsense.android.base.devices.xenon;
 
+import android.util.Log;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
 import io.nextsense.android.base.DeviceSettings.ImpedanceMode;
+import io.nextsense.android.base.utils.Util;
 
 /**
  * Changes the device configuration.
  */
 public class SetConfigCommand extends XenonFirmwareCommand {
+
+  private static final String TAG = SetConfigCommand.class.getSimpleName();
 
   // Registry values
   private static final byte REG_TRUE = (byte)0x01;
@@ -104,7 +109,7 @@ public class SetConfigCommand extends XenonFirmwareCommand {
   }
 
   byte[] getASD1299Registers(List<Integer> enabledChannels, ImpedanceMode impedanceMode) {
-    byte[] registers = DEFAULT_ADS_1299_REGISTERS;
+    byte[] registers = Arrays.copyOf(DEFAULT_ADS_1299_REGISTERS, DEFAULT_ADS_1299_REGISTERS.length);
     byte channelEnabledRegisterValue = REG_CHANNEL_ENABLED_REGISTER;
     if (impedanceMode == ImpedanceMode.ON_EXTERNAL_CURRENT) {
       registers[REG_MISC_1_OFFSET] = REG_MISC_1_INDEPENDENT_CHANNELS;
@@ -139,12 +144,20 @@ public class SetConfigCommand extends XenonFirmwareCommand {
     ByteBuffer buf = ByteBuffer.allocate(DEFAULT_ADS_1299_REGISTERS.length + 7);
     buf.put(getType().getCode());
     buf.put(getEnabledChannelsByte(enabledChannels));
-    buf.put(getASD1299Registers(enabledChannels, impedanceMode));
+    byte[] registers = getASD1299Registers(enabledChannels, impedanceMode);
+    buf.put(registers);
+    for (int i = 0; i < registers.length; ++i) {
+      Util.logd(TAG, "Register at " + i + " " + String.format("0x%08X", registers[i]));
+    }
     buf.put(impedanceMode.getCode());
+    Util.logd(TAG, "Impedance mode: " + impedanceMode.getCode());
     buf.put((byte)impedanceDivider);
     buf.put(DEFAULT_OPTOSYNC_OUTPUT);
     buf.put(DEFAULT_LOG_TO_SDCARD);
     buf.rewind();
+    for (int i = 0; i < buf.array().length; ++i) {
+      Util.logd(TAG, "config buffer at " + i + " " + String.format("0x%08X", buf.array()[i]));
+    }
     return buf.array();
   }
 }

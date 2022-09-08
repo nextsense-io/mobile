@@ -112,8 +112,8 @@ public class EmulatedDevice extends Device {
 
   @Override
   public ListenableFuture<Boolean> startStreaming(
-      boolean uploadToCloud, boolean continuousImpedance, @Nullable String userBigTableKey,
-      @Nullable String dataSessionId, @Nullable String earbudsConfig) {
+      boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
+      @Nullable String earbudsConfig) {
 
     Util.logd(TAG, "startStreaming");
 
@@ -163,6 +163,13 @@ public class EmulatedDevice extends Device {
 
   @Override
   public ListenableFuture<Boolean> stopImpedance() {
+    return Futures.immediateFuture(false);
+  }
+
+  @Override
+  public ListenableFuture<Boolean> setImpedanceConfig(
+      DeviceSettings.ImpedanceMode impedanceMode, @Nullable Integer channelNumber,
+      @Nullable Integer frequencyDivider) {
     return Futures.immediateFuture(false);
   }
 

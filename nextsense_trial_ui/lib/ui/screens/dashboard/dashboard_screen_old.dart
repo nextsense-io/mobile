@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
-import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
-import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/components/device_state_debug_menu.dart';
 import 'package:nextsense_trial_ui/ui/components/loading_error_widget.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
@@ -31,8 +29,6 @@ class DashboardOldScreen extends HookWidget {
 
   static const String id = 'dashboard_old_screen';
 
-  final _preferences = getIt<Preferences>();
-
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
@@ -42,12 +38,6 @@ class DashboardOldScreen extends HookWidget {
     bool showDayTabs() {
       if (currentTab.value == DashboardTab.schedule)
         return true;
-
-      if (currentTab.value == DashboardTab.tasks) {
-        return _preferences.getBool(
-            PreferenceKey.showDayTabsForTasks);
-      }
-
       return false;
     }
 
