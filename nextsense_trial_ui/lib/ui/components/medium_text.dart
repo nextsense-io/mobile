@@ -21,8 +21,7 @@ class MediumText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headerStyle =
-    TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: color);
+    final headerStyle = TextStyle(fontWeight: FontWeight.w500, fontSize: 16, color: color);
     return Container(
       margin: EdgeInsets.only(
         top: marginTop,

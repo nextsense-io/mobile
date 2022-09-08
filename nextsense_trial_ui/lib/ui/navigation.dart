@@ -18,7 +18,7 @@ import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
-import 'package:nextsense_trial_ui/ui/device_scan_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/device_scan/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/insufficient_space_screen.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
@@ -256,8 +256,12 @@ class Navigation {
     }
   }
 
+  bool canPop() {
+    return navigatorKey.currentState!.canPop();
+  }
+
   void pop() {
-    if (navigatorKey.currentState!.canPop()) {
+    if (canPop()) {
       return navigatorKey.currentState!.pop();
     }
   }
