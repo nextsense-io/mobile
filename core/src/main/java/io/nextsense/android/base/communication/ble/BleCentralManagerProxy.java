@@ -128,7 +128,7 @@ public class BleCentralManagerProxy {
   public BleCentralManagerProxy(Context context) {
     startCentralHandlerThread();
     centralManager = new BluetoothCentralManager(context, bluetoothCentralManagerCallback,
-        centralHandler, centralHandler);
+        centralHandler);
   }
 
   public void close() {
