@@ -85,7 +85,8 @@ dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.4.2'
     implementation 'androidx.test:core:1.4.0'
-    implementation 'com.github.nextsense-io:blessed-android:2.0.11-nextsense'
+    implementation 'com.github.weliem:blessed-android:2.3.0'
+    // implementation 'com.github.nextsense-io:blessed-android:2.0.11-nextsense'
     implementation platform('com.google.firebase:firebase-bom:30.3.0')
     compileOnly "com.google.firebase:firebase-analytics"
     compileOnly "com.google.firebase:firebase-firestore"
