@@ -27,9 +27,10 @@ class ConnectivityManager extends ChangeNotifier {
 
   bool get isNone => state == ConnectivityState.none;
 
+  StreamSubscription<ConnectivityResult>? connectivityStream;
+
   ConnectivityManager() {
-    Connectivity().onConnectivityChanged
-        .listen((ConnectivityResult result) {
+    connectivityStream = Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
       switch (result) {
         case ConnectivityResult.wifi:
           state = ConnectivityState.wifi;

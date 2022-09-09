@@ -541,7 +541,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     try {
       DeviceState deviceState = device.disconnect().get(3, TimeUnit.SECONDS);
       if (deviceState == DeviceState.DISCONNECTED) {
-        result.success(null);
+        result.success(true);
       } else {
         returnError(result, DISCONNECT_DEVICE_COMMAND, CONNECT_TO_DEVICE_ERROR_CONNECTION,
             /*errorMessage=*/"Failed to disconnect.", /*errorDetails=*/null);

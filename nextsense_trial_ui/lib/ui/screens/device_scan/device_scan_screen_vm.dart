@@ -74,16 +74,20 @@ class DeviceScanScreenViewModel extends ViewModel {
     notifyListeners();
     try {
       bool connected = await _deviceManager.connectDevice(device);
+      _logger.log(Level.INFO, "Connected: ${connected}");
       if (connected) {
         if (_navigation.canPop()) {
+          _logger.log(Level.INFO, "Popped route");
           _navigation.pop();
         }
         // TODO(eric): Check in study manager if need to show this.
         if (false) {
           _navigation.navigateTo(StudyIntroScreen.id, replace: true);
         } else {
+          _logger.log(Level.INFO, "Navigate to next route");
           bool navigated = await _navigation.navigateToNextRoute();
           if (!navigated) {
+            _logger.log(Level.INFO, "Navigate to dashboard");
             _navigation.navigateTo(DashboardScreen.id, replace: true);
           }
         }

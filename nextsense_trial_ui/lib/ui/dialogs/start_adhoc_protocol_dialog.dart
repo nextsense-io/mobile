@@ -22,8 +22,8 @@ class StartAdhocProtocolDialog extends HookWidget {
               child: SimpleButton(
                   text: MediumText(
                       text: adhocProtocol.protocol.nameForUser, color: NextSenseColors.darkBlue),
-                  onTap: () {
-                    _navigation.navigateWithCapabilityChecking(context,
+                  onTap: () async {
+                    await _navigation.navigateWithCapabilityChecking(context,
                         ProtocolScreenMapping.getProtocolScreenId(adhocProtocol.protocol.type),
                         arguments: adhocProtocol);
                     _navigation.pop();
