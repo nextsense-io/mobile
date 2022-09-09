@@ -196,7 +196,11 @@ class DeviceManager {
     _cancelStateListening?.call();
     _cancelInternalStateListening?.call();
     _notificationsManager.hideAlertNotification(connectionLostNotificationId);
-    await NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
+    try {
+      await NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
+    } on PlatformException {
+      _logger.log(Level.WARNING, "Failed to disconnect.");
+    }
     deviceState.value = DeviceState.disconnected;
     _connectedDevice = null;
   }

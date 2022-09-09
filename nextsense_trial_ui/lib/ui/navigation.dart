@@ -17,7 +17,7 @@ import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
-import 'package:nextsense_trial_ui/ui/check_internet_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/check_internet/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/device_scan/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/insufficient_space_screen.dart';
@@ -140,6 +140,7 @@ class Navigation {
 
   Future<dynamic> navigateTo(String routeName, {Object? arguments,
     bool replace = false, bool pop = false, bool popAll = false, NavigationRoute? nextRoute}) {
+    _logger.log(Level.INFO, "Next route: ${nextRoute}");
     _nextNavigationRoute = nextRoute;
     final currentState = navigatorKey.currentState!;
     if (replace) {
@@ -274,7 +275,7 @@ class Navigation {
       await navigateTo(TurnOnBluetoothScreen.id);
       if (await NextsenseBase.isBluetoothEnabled()) {
         _logger.log(Level.INFO, "Bluetooth was enabled, going to scan screen");
-        navigateTo(DeviceScanScreen.id, replace: replace, nextRoute: nextRoute);
+        await navigateTo(DeviceScanScreen.id, replace: replace, nextRoute: nextRoute);
       } else {
         _logger.log(Level.INFO, "Bluetooth was not enabled, going back");
       }
@@ -316,6 +317,7 @@ class Navigation {
       }
     }
 
+    _logger.log(Level.INFO, "Navigating to ${routeName}");
     await navigateTo(routeName, arguments: arguments, replace: replace, pop: pop);
   }
 
