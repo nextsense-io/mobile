@@ -100,15 +100,18 @@ class ProfileScreen extends HookWidget {
                 if (viewModel.deviceIsConnected)
                   _MainMenuItem(
                       label: 'Disconnect',
-                      onPressed: () {
-                        viewModel.disconnectDevice();
-                        _navigation.navigateToDeviceScan(nextRoute: NavigationRoute(pop: true));
+                      onPressed: () async {
+                        await viewModel.disconnectDevice();
+                        await _navigation.navigateToDeviceScan(
+                            nextRoute: NavigationRoute(pop: true));
                       })
                 else
                   _MainMenuItem(
                       label: 'Connect',
-                      onPressed: () {
-                        _navigation.navigateToDeviceScan(nextRoute: NavigationRoute(pop: true));
+                      onPressed: () async {
+                        await _navigation.navigateToDeviceScan(
+                            nextRoute: NavigationRoute(pop: true));
+                        viewModel.refresh();
                       }),
                 _MainMenuItem(
                     label: 'Logout',

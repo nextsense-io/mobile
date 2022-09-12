@@ -56,13 +56,18 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
     return result;
   }
 
-  void disconnectDevice() {
-    _deviceManager.disconnectDevice();
+  Future disconnectDevice() async {
+    await _deviceManager.manualDisconnect();
+    notifyListeners();
   }
 
   void logout() {
     _deviceManager.disconnectDevice();
     _authManager.signOut();
+  }
+
+  void refresh() {
+    notifyListeners();
   }
 
   @override

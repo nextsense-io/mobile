@@ -19,8 +19,11 @@ class DeviceScanScreen extends HookWidget {
   static const String id = 'main_screen';
 
   final Navigation _navigation = getIt<Navigation>();
+  final bool autoConnect;
 
   List<ScanResult> scanResultsWidgets = [];
+
+  DeviceScanScreen({this.autoConnect = false});
 
   Future<void> showConnectionError(BuildContext context) async {
     await showDialog(
@@ -125,7 +128,7 @@ class DeviceScanScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder<DeviceScanScreenViewModel>.reactive(
-        viewModelBuilder: () => DeviceScanScreenViewModel(),
+        viewModelBuilder: () => DeviceScanScreenViewModel(autoConnect: autoConnect),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, DeviceScanScreenViewModel viewModel, child) =>
           PageScaffold(

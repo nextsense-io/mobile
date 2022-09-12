@@ -189,6 +189,13 @@ class DeviceManager {
     return _connectedDevice;
   }
 
+  Future manualDisconnect() async {
+    await disconnectDevice();
+    await _authManager.user!
+      ..setLastPairedDeviceMacAddress(null)
+      ..save();
+  }
+
   Future disconnectDevice() async {
     if (getConnectedDevice() == null) {
       return;
