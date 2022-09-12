@@ -5,22 +5,19 @@ import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 
 /*
-Return customized logger to print desire format message in console while the app
-is running.
+Return customized logger to print desire format message in console while the app is running.
 */
 CustomLogPrinter getLogger(String className) {
   return CustomLogPrinter(className);
 }
 
 /*
-Save app logs to one application file so the user can upload these logs to
-backend storage in case of error. Once the user upload logs to the backend, the
-user can clear logs as well.
+Save app logs to one application file so the user can upload these logs to backend storage in case
+of error. Once the user upload logs to the backend, the user can clear logs as well.
 */
 class LogFile {
   static final LogFile _logFile = new LogFile._internal();
-  static final String _startLine =
-      '*************************************************\n';
+  static final String _startLine = '*************************************************\n';
 
   factory LogFile() {
     return _logFile;
@@ -37,7 +34,8 @@ class LogFile {
 
   Future<File> get _localFile async {
     final path = await _localPath;
-    return File('$path/app_log.txt');
+    DateTime now = DateTime.now();
+    return File('$path/app_log_${now.year}_${now.month}_${now.day}.txt');
   }
 
   Future<void> writeData(String appLog, FileMode mode) async {
@@ -66,23 +64,24 @@ class LogFile {
 }
 
 /*
-Implementation of customized logger class to change the desired format of log in
-console while the app is running.
+Implementation of customized logger class to change the desired format of log in console while the
+app is running.
 */
 class CustomLogPrinter {
-  static final DateFormat _dateFormatter =
-      new DateFormat('yyyy:MM:dd:HH:mm:ss');
+  static final DateFormat _dateFormatter = new DateFormat('yyyy:MM:dd:HH:mm:ss');
 
   final String className;
   final Logger _logger;
 
   CustomLogPrinter(this.className) : _logger = Logger(className) {}
 
-  void log(Level logLevel, dynamic message,
-      [dynamic error, StackTrace? stackTrace]) {
-    String log = '${_dateFormatter.format(new DateTime.now())} - $logLevel -'
-        ' $className - $message';
+  void log(Level logLevel, dynamic message, [dynamic error, StackTrace? stackTrace]) {
+    String log = '${_dateFormatter.format(new DateTime.now())} - $logLevel - $className - $message';
     _logger.log(logLevel, '$className - $message', error, stackTrace);
     LogFile().appendToAppLogs('$log');
+  }
+
+  String getLogFileContent() {
+    return LogFile().appLogs;
   }
 }
