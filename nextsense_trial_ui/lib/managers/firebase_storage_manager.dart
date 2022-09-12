@@ -8,12 +8,15 @@ import 'package:nextsense_trial_ui/managers/firebase_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class FirebaseStorageManager {
+  static const String _baseModeName = '/mobile';
   final FirebaseApp _firebaseApp = getIt<FirebaseManager>().getFirebaseApp();
   final CustomLogPrinter _logger = CustomLogPrinter('FirebaseStorageManager');
   late FirebaseStorage _storage;
+  late Reference _baseNode;
 
   FirebaseStorageManager() {
     _storage = FirebaseStorage.instanceFor(app: _firebaseApp);
+    _baseNode = _storage.ref(_baseModeName);
   }
 
   Future<bool> downloadFile(String gsUrl, File destinationFile) async {
@@ -27,5 +30,17 @@ class FirebaseStorageManager {
     }
     _logger.log(Level.INFO, 'Downloaded ${gsUrl} with success');
     return true;
+  }
+
+  Future<String?> uploadStringToFile(String nodePath, String content) async {
+    Reference storageRef = _baseNode.child(nodePath);
+    try {
+      await storageRef.putString(content, format: PutStringFormat.raw);
+      return storageRef.fullPath;
+    } on FirebaseException catch (e) {
+      _logger.log(Level.WARNING, 'Failed to upload string content to ${storageRef.fullPath}.'
+          ' Exception: ${e.message}');
+      return null;
+    }
   }
 }

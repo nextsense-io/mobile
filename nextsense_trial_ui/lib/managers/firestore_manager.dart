@@ -12,6 +12,7 @@ enum Table {
   data_sessions,
   enrolled_studies,
   events,
+  issues,
   organizations,
   questions,
   planned_assessments,
