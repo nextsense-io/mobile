@@ -15,6 +15,7 @@ import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 class DeviceScanScreenViewModel extends ViewModel {
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final Navigation _navigation = getIt<Navigation>();
+  final bool autoConnect;
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceScanScreen');
 
   Map<String, Map<String, dynamic>> scanResultsMap = new Map();
@@ -22,6 +23,8 @@ class DeviceScanScreenViewModel extends ViewModel {
   bool isConnecting = false;
   int _scanningCount = 0;
   CancelListening? _cancelScanning;
+
+  DeviceScanScreenViewModel({this.autoConnect = false});
 
   @override
   void init() {
@@ -58,7 +61,8 @@ class DeviceScanScreenViewModel extends ViewModel {
       isScanning = false;
 
       // Connect to device automatically
-      if (Config.autoConnectAfterScan) {
+      if (Config.autoConnectAfterScan || (_deviceManager.hadPairedDevice &&
+          _deviceManager.getLastPairedDevice()!.macAddress == macAddress)) {
         connectToDevice(deviceAttributes);
       }
       notifyListeners();

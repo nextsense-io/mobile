@@ -182,8 +182,6 @@ class Navigation {
     switch (settings.name) {
       case TurnOnBluetoothScreen.id: return MaterialPageRoute(
           builder: (context) => TurnOnBluetoothScreen());
-      case DeviceScanScreen.id: return MaterialPageRoute(
-          builder: (context) => DeviceScanScreen());
       case SetPasswordScreen.id: return MaterialPageRoute(
           builder: (context) => SetPasswordScreen());
       case SignInScreen.id: return MaterialPageRoute(
@@ -239,6 +237,9 @@ class Navigation {
         return MaterialPageRoute(
             builder: (context) => SideEffectScreen(
                 settings.arguments != null ? settings.arguments as SideEffect : null));
+      case DeviceScanScreen.id: return MaterialPageRoute(
+          builder: (context) => DeviceScanScreen(autoConnect:
+              settings.arguments != null ? settings.arguments as bool : false));
       case EntryAddedScreen.id:
         {
           assert(settings.arguments != null);
@@ -275,14 +276,16 @@ class Navigation {
       await navigateTo(TurnOnBluetoothScreen.id);
       if (await NextsenseBase.isBluetoothEnabled()) {
         _logger.log(Level.INFO, "Bluetooth was enabled, going to scan screen");
-        await navigateTo(DeviceScanScreen.id, replace: replace, nextRoute: nextRoute);
+        await navigateTo(DeviceScanScreen.id, arguments: true, replace: replace,
+            nextRoute: nextRoute);
       } else {
         _logger.log(Level.INFO, "Bluetooth was not enabled, going back");
       }
     } else {
       // Navigate to device scan screen.
       _logger.log(Level.INFO, "Bluetooth is enabled, going to scan screen");
-      await navigateTo(DeviceScanScreen.id, replace: replace, nextRoute: nextRoute);
+      await navigateTo(DeviceScanScreen.id, arguments: true, replace: replace,
+          nextRoute: nextRoute);
     }
   }
 
