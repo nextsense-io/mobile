@@ -11,18 +11,24 @@ enum EnrolledStudyKey {
   start_date,
   // Ending date of the currently enrolled study for this subject.
   end_date,
+  // If the study intro was shown.
+  intro_shown
 }
 
 class EnrolledStudy extends FirebaseEntity<EnrolledStudyKey> {
 
-  EnrolledStudy(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot());
+  EnrolledStudy(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
 
-  bool get initialized =>
-      getValue(EnrolledStudyKey.initialized) ?? false;
+  bool get initialized => getValue(EnrolledStudyKey.initialized) ?? false;
 
   void setInitialized(bool initialized) {
-    setValue(EnrolledStudyKey.initialized, true);
+    setValue(EnrolledStudyKey.initialized, initialized);
+  }
+
+  bool get intro_shown => getValue(EnrolledStudyKey.intro_shown) ?? false;
+
+  void setIntroShown(bool shown) {
+    setValue(EnrolledStudyKey.intro_shown, shown);
   }
 
   DateTime? getStartDate() {

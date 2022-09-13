@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
@@ -24,6 +25,7 @@ class SignInScreen extends HookWidget {
   static const String id = 'sign_in_screen';
 
   final _permissionsManager = getIt<PermissionsManager>();
+  final _studyManager = getIt<StudyManager>();
   final _navigation = getIt<Navigation>();
 
   @override
@@ -163,7 +165,6 @@ class SignInScreen extends HookWidget {
     }
 
     bool studyLoaded = await viewModel.loadCurrentStudy();
-
     if (!studyLoaded) {
       // Cannot proceed without study data.
       await showDialog(
@@ -175,12 +176,14 @@ class SignInScreen extends HookWidget {
       return;
     }
 
-    // _navigation.navigateTo(StudyIntroScreen.id, replace: true);
-    // return;
+    if (!viewModel.studyIntroShown) {
+      await _navigation.navigateTo(StudyIntroScreen.id);
+      await viewModel.markCurrentStudyShown();
+    }
 
     // Navigate to the device preparation screen by default, but in case we
     // already have paired device before, then navigate directly to dashboard
-    // Note: we have same logic in startup screen
+    // Note: same logic in startup screen
     // TODO(eric): Might want to add a 'Do not show this again'
     String screen = PrepareDeviceScreen.id;
     if (viewModel.hadPairedDevice) {
@@ -190,7 +193,8 @@ class SignInScreen extends HookWidget {
 
     _navigation.navigateWithConnectionChecking(screen, replace: true);
 
-    // If there is an initial intent, navigate to the screen that it asks for.
+    // If there is an initial intent, navigate to the screen that it asks for. If not, navigate to
+    // the device scan screen or the dashboard, depending if there is a connection yet.
     if (_navigation.hasInitialIntent()) {
       _navigation.navigateToInitialIntent();
     }

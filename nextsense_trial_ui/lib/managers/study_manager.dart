@@ -41,6 +41,7 @@ class StudyManager {
   DateTime? get currentStudyEndDate => _enrolledStudy?.getEndDate();
   String? get currentStudyId => _enrolledStudy?.id ?? null;
   Study? get currentStudy => _currentStudy;
+  EnrolledStudy? get currentEnrolledStudy => _enrolledStudy;
 
   // List of days that will appear for current study
   List<StudyDay>? _days;
@@ -357,6 +358,14 @@ class StudyManager {
       _logger.log(Level.INFO, "Mark current study as initialized");
     }
     _enrolledStudy!.setInitialized(initialized);
+    return await _enrolledStudy!.save();
+  }
+
+  Future<bool> markEnrolledStudyShown() async {
+    if (_enrolledStudy == null) {
+      return false;
+    }
+    _enrolledStudy!.setIntroShown(true);
     return await _enrolledStudy!.save();
   }
 
