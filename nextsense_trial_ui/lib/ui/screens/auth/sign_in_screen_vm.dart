@@ -5,12 +5,14 @@ import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 
 class SignInScreenViewModel extends ViewModel {
   final AuthManager _authManager = getIt<AuthManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final DataManager _dataManager = getIt<DataManager>();
+  final StudyManager _studyManager = getIt<StudyManager>();
   final Flavor _flavor = getIt<Flavor>();
 
   final username = ValueNotifier<String>("");
@@ -22,6 +24,8 @@ class SignInScreenViewModel extends ViewModel {
   List<AuthMethod> get authMethods => _flavor.authMethods;
   String get appTitle => _flavor.appTitle;
   bool get isTempPassword => _authManager.user!.isTempPassword();
+  bool get studyIntroShown => _studyManager.currentEnrolledStudy != null &&
+      _studyManager.currentEnrolledStudy!.intro_shown;
 
   @override
   void init() async {
@@ -80,5 +84,9 @@ class SignInScreenViewModel extends ViewModel {
     bool connected = await _deviceManager.connectToLastPairedDevice();
     setBusy(false);
     return connected;
+  }
+
+  Future<bool> markCurrentStudyShown() async {
+    return await _studyManager.markEnrolledStudyShown();
   }
 }

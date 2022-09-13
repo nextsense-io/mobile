@@ -8,7 +8,6 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
-import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 
@@ -84,16 +83,11 @@ class DeviceScanScreenViewModel extends ViewModel {
           _logger.log(Level.INFO, "Popped route");
           _navigation.pop();
         }
-        // TODO(eric): Check in study manager if need to show this.
-        if (false) {
-          _navigation.navigateTo(StudyIntroScreen.id, replace: true);
-        } else {
-          _logger.log(Level.INFO, "Navigate to next route");
-          bool navigated = await _navigation.navigateToNextRoute();
-          if (!navigated) {
-            _logger.log(Level.INFO, "Navigate to dashboard");
-            _navigation.navigateTo(DashboardScreen.id, replace: true);
-          }
+        _logger.log(Level.INFO, "Navigate to next route");
+        bool navigated = await _navigation.navigateToNextRoute();
+        if (!navigated) {
+          _logger.log(Level.INFO, "Navigate to dashboard");
+          _navigation.navigateTo(DashboardScreen.id, replace: true);
         }
       } else {
         startScan();
