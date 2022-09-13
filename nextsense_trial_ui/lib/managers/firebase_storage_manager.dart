@@ -8,7 +8,7 @@ import 'package:nextsense_trial_ui/managers/firebase_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 class FirebaseStorageManager {
-  static const String _baseModeName = '/mobile';
+  static const String _baseNodeName = '/mobile';
   final FirebaseApp _firebaseApp = getIt<FirebaseManager>().getFirebaseApp();
   final CustomLogPrinter _logger = CustomLogPrinter('FirebaseStorageManager');
   late FirebaseStorage _storage;
@@ -16,7 +16,7 @@ class FirebaseStorageManager {
 
   FirebaseStorageManager() {
     _storage = FirebaseStorage.instanceFor(app: _firebaseApp);
-    _baseNode = _storage.ref(_baseModeName);
+    _baseNode = _storage.ref(_baseNodeName);
   }
 
   Future<bool> downloadFile(String gsUrl, File destinationFile) async {
