@@ -115,6 +115,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
         // Cannot read device settings, so load the default setting and apply them when connecting.
         applyDeviceSettings(loadDeviceSettings().get());
         Log.i(TAG, "Applied device settings.");
+        // Enable notifications to get the device state change messages.
         if (!peripheral.isNotifying(dataCharacteristic)) {
           changeNotificationStateFuture = SettableFuture.create();
           peripheral.setNotify(dataCharacteristic, /*enable=*/true);

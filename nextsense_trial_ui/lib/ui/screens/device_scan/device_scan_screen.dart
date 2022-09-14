@@ -73,9 +73,11 @@ class DeviceScanScreen extends HookWidget {
 
   Widget buildBody(DeviceScanScreenViewModel viewModel, BuildContext context) {
     scanResultsWidgets = buildScanResultList(viewModel);
-    if (viewModel.hasError) {
-      showConnectionError(context);
-    }
+    Future.delayed(Duration.zero, () {
+      if (viewModel.hasError) {
+        showConnectionError(context);
+      }
+    });
     Widget scanningBody = Container(
       child: Column(
         children: <Widget>[

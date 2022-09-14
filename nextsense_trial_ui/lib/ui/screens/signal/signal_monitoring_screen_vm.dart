@@ -135,9 +135,7 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
       eegChannelList = _deviceSettings!.enabledChannels;
       selectedChannel = _preferences.getString(PreferenceKey.displaySelectedChannel) ??
           eegChannelList[0];
-      await NextsenseBase.startStreaming(
-          device!.macAddress, /*uploadToCloud=*/false, /*userBigTableKey=*/"", /*dataSessionId=*/"",
-          /*earbudsConfig=*/null);
+      await _deviceManager.startStreaming();
       _screenRefreshTimer = new Timer.periodic(_refreshInterval, _updateScreen);
     }
     setBusy(false);
@@ -149,7 +147,7 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   void dispose() async {
     _screenRefreshTimer?.cancel();
     if (device != null && _deviceManager.deviceIsReady) {
-      await NextsenseBase.stopStreaming(device!.macAddress);
+      await _deviceManager.stopStreaming();
     }
     super.dispose();
   }
