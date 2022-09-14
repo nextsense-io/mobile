@@ -20,13 +20,7 @@ class Device {
   Device(this.macAddress, this.name);
 }
 
-enum DeviceState {
-  connecting,
-  connected,
-  ready,
-  disconnecting,
-  disconnected
-}
+enum DeviceState { connecting, connected, ready, disconnecting, disconnected }
 
 DeviceState deviceStateFromString(String str) {
   // Device state coming from Java side in upper case
@@ -37,49 +31,50 @@ DeviceState deviceStateFromString(String str) {
 class DeviceManager {
   static final int connectionLostNotificationId = 2;
   static final String connectionLostTitle = 'Connection lost';
-  static final String connectionLostBody = 'The connection with your '
-      'NextSense device was lost. Please make sure it was not turned off by '
-      'accident and make sure your phone is not more than a few meters away. '
-      'It should reconnect automatically.';
-  // It takes a maximum of about 1 second to find the device if it is already
-  // powered up. 2 seconds gives enough safety and is not too long to wait if
-  // the device is not powered on or is too far.
+  static final String connectionLostBody = 'The connection with your NextSense device was lost. '
+      'Please make sure it was not turned off by accident and make sure your phone is not more '
+      'than a few meters away. It should reconnect automatically.';
+
+  // It takes a maximum of about 1 second to find the device if it is already powered up. 2 seconds
+  // gives enough safety and is not too long to wait if the device is not powered on or is too far.
   static final Duration _scanTimeout = Duration(seconds: 2);
 
   final _notificationsManager = getIt<NotificationsManager>();
   final _authManager = getIt<AuthManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceManager');
+  final _deviceInternalStateChangeController =
+      StreamController<DeviceInternalStateEvent>.broadcast();
+
+  ValueNotifier<DeviceState> deviceState = ValueNotifier(DeviceState.disconnected);
+  ValueNotifier<DeviceInternalState?> deviceInternalState = ValueNotifier(null);
 
   Device? _connectedDevice;
   CancelListening? _cancelStateListening;
   CancelListening? _cancelInternalStateListening;
-
-  ValueNotifier<DeviceState> deviceState =
-      ValueNotifier(DeviceState.disconnected);
-  ValueNotifier<DeviceInternalState?> deviceInternalState = ValueNotifier(null);
   Completer<bool> _deviceInternalStateAvailableCompleter = Completer<bool>();
   Completer<bool> _deviceReadyCompleter = Completer<bool>();
   Completer<bool> _scanFinishedCompleter = Completer<bool>();
+  Timer? _requestDeviceStateTimer;
   Device? _scannedDevice;
   Map<String, dynamic>? _deviceInternalStateValues;
-  final _deviceInternalStateChangeController =
-      StreamController<DeviceInternalStateEvent>.broadcast();
-  Stream<DeviceInternalStateEvent> get deviceInternalStateChangeStream
-      => _deviceInternalStateChangeController.stream;
+
+  Stream<DeviceInternalStateEvent> get deviceInternalStateChangeStream =>
+      _deviceInternalStateChangeController.stream;
 
   bool get deviceIsReady => deviceState.value == DeviceState.ready;
+
   bool get deviceInternalStateAvailable => deviceInternalState.value != null;
 
-  // Internal state shortcuts
+  // Internal state shortcuts.
   bool get isHdmiCablePresent => deviceInternalState.value?.hdmiCablePresent ?? false;
 
   bool get isUSdPresent => deviceInternalState.value?.uSdPresent ?? false;
 
-  // There is already paired device, which we could connect to
+  // There is already a paired device that can be connected to if found.
   bool get hadPairedDevice => getLastPairedDevice() != null;
 
-  Future<bool> connectDevice(
-      Device device, {Duration timeout = const Duration(seconds: 10)}) async {
+  Future<bool> connectDevice(Device device,
+      {Duration timeout = const Duration(seconds: 10)}) async {
     _listenToState(device.macAddress);
     _listenToInternalState();
     _connectedDevice = device;
@@ -98,6 +93,7 @@ class DeviceManager {
       return false;
     }
 
+    _requestStateChanges();
     _authManager.user!
       ..setLastPairedDeviceMacAddress(device.macAddress)
       ..save();
@@ -149,7 +145,9 @@ class DeviceManager {
     if (connected) {
       _logger.log(Level.INFO, "Connected to last paired device ${lastPairedDevice.macAddress}");
     } else {
-      _logger.log(Level.WARNING, "Failed connect to last paired device "
+      _logger.log(
+          Level.WARNING,
+          "Failed connect to last paired device "
           "${lastPairedDevice.macAddress}");
     }
     return connected;
@@ -200,6 +198,7 @@ class DeviceManager {
     if (getConnectedDevice() == null) {
       return;
     }
+    _requestDeviceStateTimer?.cancel();
     _cancelStateListening?.call();
     _cancelInternalStateListening?.call();
     _notificationsManager.hideAlertNotification(connectionLostNotificationId);
@@ -210,6 +209,29 @@ class DeviceManager {
     }
     deviceState.value = DeviceState.disconnected;
     _connectedDevice = null;
+  }
+
+  Future<int> startStreaming(
+      {bool? uploadToCloud,
+      String? bigTableKey,
+      String? dataSessionCode,
+      String? earbudsConfig}) async {
+    if (_connectedDevice == null) {
+      throw Exception('No connected device');
+    }
+    int localSession = await NextsenseBase.startStreaming(_connectedDevice!.macAddress,
+        uploadToCloud ?? false, bigTableKey, dataSessionCode, earbudsConfig);
+    _requestDeviceStateTimer?.cancel();
+    return localSession;
+  }
+
+  Future stopStreaming() async {
+    if (_connectedDevice == null) {
+      _logger.log(Level.WARNING, 'Tried to stop streaming without a connected device.');
+      return true;
+    }
+    await NextsenseBase.stopStreaming(_connectedDevice!.macAddress);
+    _requestStateChanges();
   }
 
   void _listenToState(String macAddress) {
@@ -233,10 +255,22 @@ class DeviceManager {
         }
       } else {
         if (deviceState == DeviceState.ready) {
-          _logger.log(Level.WARNING, "State changed to READY but not connected device.");
+          _logger.log(Level.WARNING, "State changed to READY but no connected device.");
         }
       }
     }, macAddress);
+  }
+
+  Future _requestStateChanges() async {
+    _requestDeviceStateTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (timer) {
+        if (_connectedDevice != null && deviceIsReady) {
+          _logger.log(Level.FINE, 'Requesting device state update.');
+          NextsenseBase.requestDeviceStateUpdate(_connectedDevice!.macAddress);
+        }
+      },
+    );
   }
 
   void _listenToInternalState() {
@@ -276,6 +310,7 @@ class DeviceManager {
           }
           return oldValue == newValue;
         }
+
         if (_deviceInternalStateValues!.containsKey(key) && !equal(oldValue, newValue)) {
           final event = DeviceInternalStateEvent.create(key, newValue);
           _deviceInternalStateChangeController.add(event);
@@ -288,6 +323,7 @@ class DeviceManager {
     // Disconnected without being requested by the user.
     showAlertNotification(connectionLostNotificationId, connectionLostTitle, connectionLostBody);
     deviceState.value = DeviceState.disconnected;
+    _requestDeviceStateTimer?.cancel();
   }
 
   void _onDeviceReady() {
@@ -295,6 +331,9 @@ class DeviceManager {
     deviceState.value = DeviceState.ready;
     if (!_deviceReadyCompleter.isCompleted) {
       _deviceReadyCompleter.complete(true);
+    } else {
+      _logger.log(Level.INFO, 'Reconnecting.');
+      _requestStateChanges();
     }
   }
 }

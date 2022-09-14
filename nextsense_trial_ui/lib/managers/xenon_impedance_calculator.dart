@@ -99,7 +99,7 @@ class XenonImpedanceCalculator {
       return false;
     }
     // TODO(eric): Do not close notifications when changing config.
-    await NextsenseBase.stopStreaming(macAddress);
+    await _deviceManager.stopStreaming();
     if (_localSessionId != null) {
       NextsenseBase.deleteLocalSession(_localSessionId!);
       _localSessionId = null;

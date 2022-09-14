@@ -23,6 +23,7 @@ class SessionManager {
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
+  final DeviceManager _deviceManager = getIt<DeviceManager>();
   final Preferences _preferences = getIt<Preferences>();
   final CustomLogPrinter _logger = CustomLogPrinter('SessionManager');
 
@@ -106,9 +107,9 @@ class SessionManager {
         _logger.log(Level.SEVERE, "Failed to set impedance config. Cannot start streaming.");
         return false;
       }
-      _currentLocalSession = await NextsenseBase.startStreaming(
-          device.macAddress, /*uploadToCloud=*/true, user.getValue(UserKey.bt_key), dataSessionCode,
-          _studyManager.currentStudy?.getEarbudsConfig() ?? null);
+      _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,
+          bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: dataSessionCode,
+          earbudsConfig: _studyManager.currentStudy?.getEarbudsConfig() ?? null);
       _logger.log(Level.INFO, "Started streaming with local session: ${_currentLocalSession}");
       return true;
     } catch (exception) {
@@ -126,7 +127,7 @@ class SessionManager {
       _logger.log(Level.WARNING, 'Tried to stop a session while none was running.');
       return;
     }
-    NextsenseBase.stopStreaming(deviceMacAddress);
+    _deviceManager.stopStreaming();
     DateTime stopTime = DateTime.now();
     _currentSession!.setValue(SessionKey.end_datetime, stopTime);
     await _currentSession!.save();

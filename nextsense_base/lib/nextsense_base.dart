@@ -187,8 +187,8 @@ class NextsenseBase {
     };
   }
 
-  static Future<int> startStreaming(String macAddress, bool uploadToCloud, String userBigTableKey,
-      String dataSessionId, String? earbudsConfig) async {
+  static Future<int> startStreaming(String macAddress, bool uploadToCloud, String? userBigTableKey,
+      String? dataSessionId, String? earbudsConfig) async {
     return await _channel.invokeMethod(_startStreamingCommand,
         {_macAddressArg: macAddress, _uploadToCloudArg: uploadToCloud,
           _userBigTableKeyArg: userBigTableKey, _dataSessionIdArg: dataSessionId,

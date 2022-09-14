@@ -17,21 +17,18 @@ abstract class DeviceStateViewModelInterface {
  * This model is base for all UI view-models that are going to deal
  * with device state or device internal state
  */
-abstract class DeviceStateViewModel
-    extends ViewModel implements DeviceStateViewModelInterface {
+abstract class DeviceStateViewModel extends ViewModel implements DeviceStateViewModelInterface {
 
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceStateViewModel');
   final DeviceManager _deviceManager = getIt<DeviceManager>();
 
   DeviceState get deviceState => _deviceManager.deviceState.value;
+  bool get isHdmiCablePresent => _deviceManager.isHdmiCablePresent;
+  bool get isUSdPresent => _deviceManager.isUSdPresent;
   bool get deviceIsConnected => deviceState == DeviceState.ready;
   bool get deviceCanRecord => deviceIsConnected && isHdmiCablePresent && isUSdPresent;
 
   StreamSubscription<DeviceInternalStateEvent>? _deviceInternalStateChangesSubscription;
-
-  // Internal state shortcuts
-  bool get isHdmiCablePresent => _deviceManager.isHdmiCablePresent;
-  bool get isUSdPresent => _deviceManager.isUSdPresent;
 
   @override
   void init() {

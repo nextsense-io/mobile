@@ -29,8 +29,7 @@ class ScheduledProtocolPart {
   ProtocolPart protocolPart;
   int relativeSeconds;
 
-  ScheduledProtocolPart({required ProtocolPart protocolPart,
-    required int relativeSeconds}) :
+  ScheduledProtocolPart({required ProtocolPart protocolPart, required int relativeSeconds}) :
         this.protocolPart = protocolPart,
         this.relativeSeconds = relativeSeconds;
 }
@@ -85,7 +84,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   @override
   void init() async {
     super.init();
-    await startSession();
+    if (deviceCanRecord) {
+      await startSession();
+    }
     if (runnableProtocol.type == RunnableProtocolType.scheduled ||
         _authManager.user!.userType == UserType.researcher) {
       for (Survey survey in runnableProtocol.postSurveys ?? []) {
@@ -110,13 +111,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   Future stopSession() async {
     _logger.log(Level.INFO, "stopSession");
-
     cancelTimer();
-
     sessionIsActive = false;
-
     _stopProtocol();
-
     notifyListeners();
   }
 
