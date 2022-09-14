@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:gson/gson.dart';
@@ -7,21 +9,35 @@ import 'package:nextsense_trial_ui/config.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
-import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 
+enum ScanningState {
+  NO_BLUETOOTH,
+  SCANNING_NO_RESULTS,
+  SCANNING_WITH_RESULTS,
+  FINISHED_SCAN,
+  NOT_FOUND_OR_ERROR,
+  CONNECTING,
+  CONNECTED
+}
+
 class DeviceScanScreenViewModel extends ViewModel {
+  static const Duration _scanTimeout = Duration(seconds: 30);
+
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final Navigation _navigation = getIt<Navigation>();
   final bool autoConnect;
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceScanScreen');
 
   Map<String, Map<String, dynamic>> scanResultsMap = new Map();
-  bool isScanning = false;
-  bool isConnecting = false;
+
+  // Starts scanning when opened.
+  ScanningState scanningState = ScanningState.SCANNING_NO_RESULTS;
   int _scanningCount = 0;
+  bool _deviceFound = false;
   CancelListening? _cancelScanning;
+  Timer? _stopScanningTimer;
 
   DeviceScanScreenViewModel({this.autoConnect = false});
 
@@ -35,6 +51,7 @@ class DeviceScanScreenViewModel extends ViewModel {
   @override
   void dispose() {
     _logger.log(Level.INFO, 'Disposing.');
+    _stopScanningTimer?.cancel();
     _cancelScanning?.call();
     super.dispose();
   }
@@ -48,20 +65,34 @@ class DeviceScanScreenViewModel extends ViewModel {
       await _deviceManager.disconnectDevice();
     }
     _logger.log(Level.INFO, 'Starting Bluetooth scan.');
-    isScanning = true;
+    scanningState = ScanningState.SCANNING_NO_RESULTS;
     notifyListeners();
+    _stopScanningTimer = Timer.periodic(
+      _scanTimeout,
+      (timer) {
+        _cancelScanning?.call();
+        if (scanResultsMap.isEmpty) {
+          _logger.log(Level.FINE, 'Scanning timeout.');
+          scanningState = ScanningState.NOT_FOUND_OR_ERROR;
+        } else {
+          scanningState = ScanningState.FINISHED_SCAN;
+        }
+        notifyListeners();
+      },
+    );
     _cancelScanning = NextsenseBase.startScanning((deviceAttributesJson) {
       Map<String, dynamic> deviceAttributes = gson.decode(deviceAttributesJson);
       String macAddress = deviceAttributes[describeEnum(DeviceAttributesFields.macAddress)];
       _logger.log(Level.INFO,
-        'Found a device: ' + deviceAttributes[describeEnum(DeviceAttributesFields.name)]);
+          'Found a device: ' + deviceAttributes[describeEnum(DeviceAttributesFields.name)]);
       scanResultsMap[macAddress] = deviceAttributes;
       // This flags let the device list start getting displayed.
-      isScanning = false;
+      scanningState = ScanningState.SCANNING_WITH_RESULTS;
 
       // Connect to device automatically
-      if (Config.autoConnectAfterScan || (_deviceManager.hadPairedDevice &&
-          _deviceManager.getLastPairedDevice()!.macAddress == macAddress)) {
+      if (Config.autoConnectAfterScan ||
+          (_deviceManager.hadPairedDevice &&
+              _deviceManager.getLastPairedDevice()!.macAddress == macAddress)) {
         connectToDevice(deviceAttributes);
       }
       notifyListeners();
@@ -69,36 +100,29 @@ class DeviceScanScreenViewModel extends ViewModel {
   }
 
   connectToDevice(Map<String, dynamic> result) async {
+    _stopScanningTimer?.cancel();
     Device device = new Device(result[describeEnum(DeviceAttributesFields.macAddress)],
         result[describeEnum(DeviceAttributesFields.name)]);
     _logger.log(Level.INFO, 'Connecting to device: ' + device.macAddress);
     _cancelScanning?.call();
-    isConnecting = true;
+    scanningState = ScanningState.CONNECTING;
     notifyListeners();
     try {
       bool connected = await _deviceManager.connectDevice(device);
-      _logger.log(Level.INFO, "Connected: ${connected}");
       if (connected) {
-        if (_navigation.canPop()) {
-          _logger.log(Level.INFO, "Popped route");
-          _navigation.pop();
-        }
-        _logger.log(Level.INFO, "Navigate to next route");
-        bool navigated = await _navigation.navigateToNextRoute();
-        if (!navigated) {
-          _logger.log(Level.INFO, "Navigate to dashboard");
-          _navigation.navigateTo(DashboardScreen.id, replace: true);
-        }
+        scanningState = ScanningState.CONNECTED;
+        _logger.log(Level.INFO, 'Connected to device: ' + device.macAddress);
       } else {
-        startScan();
         setError('Connection error');
       }
+      // TODO(eric): Check if needed for push notifications?
+      // _logger.log(Level.INFO, "Navigate to next route");
+      // bool navigated = await _navigation.navigateToNextRoute();
     } on PlatformException catch (e) {
-      startScan();
+      _logger.log(Level.INFO, "Failed to connect to device: ${e.message}");
+      scanningState = ScanningState.NOT_FOUND_OR_ERROR;
       setError(e.message);
     }
-    isConnecting = false;
     notifyListeners();
-    _logger.log(Level.INFO, 'Connected to device: ' + device.macAddress);
   }
 }
