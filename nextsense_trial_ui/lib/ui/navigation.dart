@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
@@ -44,7 +43,6 @@ import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen.da
 import 'package:nextsense_trial_ui/ui/screens/support/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
-import 'package:nextsense_trial_ui/ui/turn_on_bluetooth_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:provider/src/provider.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
@@ -180,8 +178,6 @@ class Navigation {
 
   Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case TurnOnBluetoothScreen.id: return MaterialPageRoute(
-          builder: (context) => TurnOnBluetoothScreen());
       case SetPasswordScreen.id: return MaterialPageRoute(
           builder: (context) => SetPasswordScreen());
       case SignInScreen.id: return MaterialPageRoute(
@@ -268,27 +264,6 @@ class Navigation {
     }
   }
 
-  Future navigateToDeviceScan({bool replace = false, NavigationRoute? nextRoute}) async {
-    // Check if Bluetooth is ON.
-    if (!await NextsenseBase.isBluetoothEnabled()) {
-      // Ask the user to turn on Bluetooth.
-      // Navigate to device scan screen.
-      await navigateTo(TurnOnBluetoothScreen.id);
-      if (await NextsenseBase.isBluetoothEnabled()) {
-        _logger.log(Level.INFO, "Bluetooth was enabled, going to scan screen");
-        await navigateTo(DeviceScanScreen.id, arguments: true, replace: replace,
-            nextRoute: nextRoute);
-      } else {
-        _logger.log(Level.INFO, "Bluetooth was not enabled, going back");
-      }
-    } else {
-      // Navigate to device scan screen.
-      _logger.log(Level.INFO, "Bluetooth is enabled, going to scan screen");
-      await navigateTo(DeviceScanScreen.id, arguments: true, replace: replace,
-          nextRoute: nextRoute);
-    }
-  }
-
   // Show connection check screen if needed before navigate to target route
   Future navigateWithCapabilityChecking(BuildContext context, String routeName, {Object? arguments,
     bool replace = false, bool pop = false}) async {
@@ -313,7 +288,7 @@ class Navigation {
     }
 
     if (_deviceManager.getConnectedDevice() == null) {
-      await navigateToDeviceScan(nextRoute: NavigationRoute(pop: true));
+      await navigateTo(DeviceScanScreen.id, nextRoute: NavigationRoute(pop: true));
       if (_deviceManager.getConnectedDevice() == null) {
         _logger.log(Level.INFO, "Device not connected after scan screen, pop back");
         return;
