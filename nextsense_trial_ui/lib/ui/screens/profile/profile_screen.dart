@@ -16,6 +16,7 @@ import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/device_scan/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
@@ -102,14 +103,14 @@ class ProfileScreen extends HookWidget {
                       label: 'Disconnect',
                       onPressed: () async {
                         await viewModel.disconnectDevice();
-                        await _navigation.navigateToDeviceScan(
+                        await _navigation.navigateTo(DeviceScanScreen.id,
                             nextRoute: NavigationRoute(pop: true));
                       })
                 else
                   _MainMenuItem(
                       label: 'Connect',
                       onPressed: () async {
-                        await _navigation.navigateToDeviceScan(
+                        await _navigation.navigateTo(DeviceScanScreen.id,
                             nextRoute: NavigationRoute(pop: true));
                         viewModel.refresh();
                       }),

@@ -45,7 +45,18 @@ class DeviceScanScreenViewModel extends ViewModel {
   void init() {
     _logger.log(Level.INFO, 'Initializing state.');
     super.init();
-    startScan();
+    startScanIfPossible();
+  }
+
+  Future<bool> startScanIfPossible() async {
+    if (!await NextsenseBase.isBluetoothEnabled()) {
+      scanningState = ScanningState.NO_BLUETOOTH;
+      notifyListeners();
+      return false;
+    } else {
+      startScan();
+      return true;
+    }
   }
 
   @override

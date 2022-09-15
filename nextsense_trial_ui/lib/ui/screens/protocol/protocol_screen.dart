@@ -9,6 +9,7 @@ import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/survey/protocol_survey.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/big_text.dart';
+import 'package:nextsense_trial_ui/ui/components/error_overlay.dart';
 import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
@@ -266,12 +267,7 @@ class ProtocolScreen extends HookWidget {
           'micro sd card is not reinserted before:';
     }
 
-    return Opacity(
-      opacity: 0.9,
-      child: Container(
-        height: 260,
-        width: double.infinity,
-        color: Colors.white,
+    return ErrorOverlay(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -293,8 +289,7 @@ class ProtocolScreen extends HookWidget {
             ]
           ],
         ),
-      ),
-    );
+      );
   }
 }
 

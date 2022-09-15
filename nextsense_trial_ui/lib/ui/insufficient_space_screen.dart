@@ -49,7 +49,7 @@ class InsufficientSpaceScreen extends HookWidget {
                   text: MediumText(text: 'Continue', color: NextSenseColors.darkBlue),
                   onTap: () async {
                     if (await _diskSpaceManager.isDiskSpaceSufficient(protocolMinDuration)) {
-                      _navigation.navigateToDeviceScan(replace: true);
+                      _navigation.pop();
                     } else {
                       showDialog(
                         context: context,
