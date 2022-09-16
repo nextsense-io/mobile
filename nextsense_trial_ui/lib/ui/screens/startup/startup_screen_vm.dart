@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -24,6 +25,13 @@ class StartupScreenViewModel extends ViewModel {
   void init() async {
     setBusy(true);
     super.init();
+    // Make sure an internet connection is active before starting. If don't have one, show the login
+    // which will display an error.
+    if (getIt<ConnectivityManager>().isNone) {
+      Future.delayed(Duration(seconds: 0)).then(
+              (value) => _navigation.navigateTo(SignInScreen.id, replace: true));
+      return;
+    }
     if (!_dataManager.userLoaded) {
       bool success = false;
       try {

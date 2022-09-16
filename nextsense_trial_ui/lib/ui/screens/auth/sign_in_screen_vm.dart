@@ -3,6 +3,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
@@ -13,11 +14,13 @@ class SignInScreenViewModel extends ViewModel {
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final DataManager _dataManager = getIt<DataManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
+  final ConnectivityManager _connectivityManager = getIt<ConnectivityManager>();
   final Flavor _flavor = getIt<Flavor>();
 
   final username = ValueNotifier<String>("");
   final password = ValueNotifier<String>("");
 
+  bool internetConnection = true;
   String errorMsg = '';
 
   bool get hadPairedDevice => _deviceManager.hadPairedDevice;
@@ -33,6 +36,17 @@ class SignInScreenViewModel extends ViewModel {
     if (envGet(EnvironmentKey.USERNAME).isNotEmpty) {
       loadCredentialsFromEnvironment();
     }
+    _checkInternetConnection();
+  }
+
+  void _checkInternetConnection() {
+    if (_connectivityManager.isNone) {
+      internetConnection = false;
+      errorMsg = "An internet connection is needed to login.";
+    } else {
+      internetConnection = true;
+      errorMsg = "";
+    }
   }
 
   void loadCredentialsFromEnvironment() {
@@ -42,7 +56,11 @@ class SignInScreenViewModel extends ViewModel {
 
   Future<AuthenticationResult> signIn(AuthMethod authMethod) async {
     errorMsg = '';
+    _checkInternetConnection();
     notifyListeners();
+    if (!internetConnection) {
+      return AuthenticationResult.connection_error;
+    }
     setBusy(true);
     AuthenticationResult authResult;
     switch (authMethod) {
