@@ -5,12 +5,15 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
-import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
+import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
@@ -25,7 +28,6 @@ class SignInScreen extends HookWidget {
   static const String id = 'sign_in_screen';
 
   final _permissionsManager = getIt<PermissionsManager>();
-  final _studyManager = getIt<StudyManager>();
   final _navigation = getIt<Navigation>();
 
   @override
@@ -61,10 +63,9 @@ class SignInScreen extends HookWidget {
           icon: Icon(Icons.lock)),
       Padding(
           padding: EdgeInsets.all(10.0),
-          child: ElevatedButton(
-              child: const Text('Continue'),
-              onPressed:
-                  viewModel.isBusy ? () => {} : () => _signIn(context, AuthMethod.user_code)))
+          child: SimpleButton(
+              text: MediumText(text: 'Continue', color: NextSenseColors.darkBlue),
+              onTap: viewModel.isBusy ? () => {} : () => _signIn(context, AuthMethod.user_code)))
     ]);
   }
 
@@ -82,13 +83,7 @@ class SignInScreen extends HookWidget {
   Widget _buildBody(BuildContext context) {
     final viewModel = context.watch<SignInScreenViewModel>();
 
-    List<Widget> _signInWidgets = [
-      // Padding(
-      //   padding: EdgeInsets.all(10.0),
-      //   child: Text(viewModel.appTitle,
-      //       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30, fontFamily: 'Roboto')),
-      // ),
-    ];
+    List<Widget> _signInWidgets = [];
 
     for (AuthMethod authMethod in viewModel.authMethods) {
       switch (authMethod) {
@@ -104,10 +99,11 @@ class SignInScreen extends HookWidget {
     _signInWidgets.addAll([
       Visibility(
           visible: viewModel.errorMsg.isNotEmpty,
-          child: Text(
-            viewModel.errorMsg,
-            style: TextStyle(fontSize: 20, color: Color(0xFF5A0000)),
-          )),
+          child: Center(child: Padding(padding: EdgeInsets.all(20), child: EmphasizedText(
+            text: viewModel.errorMsg,
+            color: NextSenseColors.red,
+            textAlign: TextAlign.center),
+          ))),
       Visibility(
         visible: viewModel.isBusy,
         child: CircularProgressIndicator(
@@ -117,8 +113,7 @@ class SignInScreen extends HookWidget {
     ]);
 
     return Center(
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: _signInWidgets),
-    );
+        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: _signInWidgets));
   }
 
   Future _signIn(BuildContext context, AuthMethod authMethod) async {
