@@ -6,8 +6,10 @@ import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
-import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
-import 'package:provider/src/provider.dart';
+import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:settings_ui/settings_ui.dart';
 
 class SettingsScreen extends HookWidget {
@@ -20,22 +22,20 @@ class SettingsScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
 
-    final fromDashboard = context.read<DashboardScreenViewModel?>() != null;
-
     final cellularEnabled = useState<bool>(_preferences.getBool(
         PreferenceKey.allowDataTransmissionViaCellular));
 
     final continuousImpedance = useState<bool>(_preferences.getBool(
         PreferenceKey.continuousImpedance));
 
-    return Scaffold(
-      appBar: fromDashboard ? null : AppBar(
-        title: Text('Settings'),
-      ),
-      body: SettingsList(
+    return PageScaffold(
+      showBackButton: true,
+      showProfileButton: false,
+      child: SettingsList(
+        lightTheme: const SettingsThemeData(settingsListBackground: Colors.transparent),
         sections: [
           SettingsSection(
-            title: Text('Common'),
+            title: LightHeaderText(text: 'Common', color: NextSenseColors.darkBlue),
             tiles: <SettingsTile>[
               SettingsTile.switchTile(
                 onToggle: (enabled) {
@@ -48,7 +48,8 @@ class SettingsScreen extends HookWidget {
                 },
                 initialValue: cellularEnabled.value,
                 leading: Icon(Icons.signal_cellular_alt),
-                title: Text('Allow cellular data for transmission'),
+                title: MediumText(text: 'Allow cellular data for transmission',
+                    color: NextSenseColors.darkBlue),
               )
               ]
           ),
