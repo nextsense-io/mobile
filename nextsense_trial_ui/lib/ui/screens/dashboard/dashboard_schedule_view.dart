@@ -6,8 +6,7 @@ import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
-import 'package:nextsense_trial_ui/ui/components/nextsense_app_bar.dart';
-import 'package:nextsense_trial_ui/ui/components/page_container.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/task_card.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -21,10 +20,9 @@ import 'package:provider/src/provider.dart';
 class DashboardScheduleView extends StatelessWidget {
   final String scheduleType;
   final bool surveysOnly;
-  final bool showMenuBar;
 
-  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.surveysOnly = false,
-    this.showMenuBar = true}) : super(key: key);
+  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.surveysOnly = false}) :
+        super(key: key);
 
   final Navigation _navigation = getIt<Navigation>();
 
@@ -189,14 +187,14 @@ class DashboardScheduleView extends StatelessWidget {
     }
 
     List<Widget> contents = [
-      if (showMenuBar) NextSenseAppBar(),
       HeaderText(text: 'My ${scheduleType}'),
       SizedBox(height: 15),
     ];
     contents.addAll(todayTasksWidgets);
     contents.addAll(weeklyTasksWidgets);
 
-    return PageContainer(
+    return PageScaffold(
+        showBackButton: _navigation.canPop(),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents));
   }
 }

@@ -2,7 +2,6 @@ import 'dart:ui';
 
 class NextSenseColors {
   static const Color transparent = Color(0x00000000);
-  static const Color translucent = Color(0x80FFFFFF);
   static const Color blue = Color(0xFF4D71F1);
   static const Color translucentDarkBlue = Color(0x4D2B2996);
   static const Color grey = Color(0xFF808080);

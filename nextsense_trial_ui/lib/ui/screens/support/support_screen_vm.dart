@@ -7,6 +7,7 @@ import 'package:nextsense_trial_ui/managers/firebase_storage_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SupportScreenViewModel extends ViewModel {
 
@@ -18,6 +19,15 @@ class SupportScreenViewModel extends ViewModel {
   String? issueDescription;
   bool attachLog = false;
   String? logLink;
+  String? version = '';
+
+  @override
+  void init() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    version = packageInfo.version;
+    setInitialised(true);
+    notifyListeners();
+  }
 
   Future<bool> submitIssue() async {
     setBusy(true);

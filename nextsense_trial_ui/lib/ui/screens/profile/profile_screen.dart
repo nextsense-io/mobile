@@ -6,10 +6,10 @@ import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
-import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:nextsense_trial_ui/ui/components/small_emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_protocol_dialog.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_survey_dialog.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
@@ -68,7 +68,10 @@ class ProfileScreen extends HookWidget {
                   _MainMenuItem(
                       label: 'Switch study',
                       details: viewModel.currentStudyName ?? 'No enrolled study',
-                      onPressed: () => _navigation.navigateTo(EnrolledStudiesScreen.id, pop: true)),
+                      onPressed: () async => {
+                        await _navigation.navigateTo(EnrolledStudiesScreen.id),
+                        viewModel.notifyListeners()
+                      }),
                 if (_flavor.userType == UserType.subject)
                   _MainMenuItem(
                       label: 'Password',
@@ -137,7 +140,7 @@ class ProfileScreen extends HookWidget {
                     }),
                 SizedBox(height: 10),
                 Row(children: [SizedBox(width: 20),
-                  EmphasizedText(text: 'Version ${viewModel.version ?? ''}')])
+                  SmallEmphasizedText(text: 'Version ${viewModel.version ?? ''}')])
               ],
             ),
           ]),

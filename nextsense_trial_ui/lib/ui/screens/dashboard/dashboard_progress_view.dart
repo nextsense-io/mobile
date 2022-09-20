@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
-import 'package:nextsense_trial_ui/ui/components/nextsense_app_bar.dart';
-import 'package:nextsense_trial_ui/ui/components/page_container.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 
 class DashboardProgressView extends StatelessWidget {
   const DashboardProgressView({Key? key}) : super(key: key);
@@ -9,12 +8,12 @@ class DashboardProgressView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     List<Widget> contents = [
-      NextSenseAppBar(),
       HeaderText(text: 'My Progress'),
       SizedBox(height: 15),
     ];
 
-    return PageContainer(
+    return PageScaffold(
+        showBackButton: false,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents));
   }
 }

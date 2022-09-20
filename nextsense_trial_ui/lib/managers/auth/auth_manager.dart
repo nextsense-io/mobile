@@ -129,7 +129,7 @@ class AuthManager {
     // TODO(alex): handle timezone change in broadcast receiver
     await user.updateTimezone();
 
-    user.save();
+    await user.save();
 
     _userCode = username;
 
