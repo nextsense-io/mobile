@@ -16,6 +16,7 @@ class EmphasizedButton extends StatelessWidget {
     return ClickableZone(
       onTap: enabled ? onTap : () => {},
         child: Opacity(opacity: enabled ? 1.0 : 0.5, child: RoundedBackground(
+            transparent: false,
             child: text,
             gradient: LinearGradient(
               begin: Alignment.centerLeft,

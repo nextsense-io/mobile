@@ -7,13 +7,15 @@ class RoundedBackground extends StatelessWidget {
   final double paddingPixels;
   final Border? border;
   final Gradient? gradient;
+  final bool transparent;
 
   RoundedBackground(
       {required this.child,
         this.elevation = 4,
         this.paddingPixels = 12.0,
         this.gradient,
-        this.border});
+        this.border,
+        this.transparent = true});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +29,7 @@ class RoundedBackground extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.all(paddingPixels),
         decoration: BoxDecoration(
-          color: Colors.transparent,
+          color: transparent ? Colors.transparent : Colors.white,
           border: border ?? Border.all(width: 0, color: Colors.black12),
           borderRadius: BorderRadius.all(Radius.circular(20)),
           gradient: gradient
