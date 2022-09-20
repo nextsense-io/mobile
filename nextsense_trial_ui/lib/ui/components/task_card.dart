@@ -103,11 +103,11 @@ class TaskCard extends StatelessWidget {
                     collapsed: Container(
                         height: 115,
                         child: Padding(
-                          padding: const EdgeInsets.only(top: 10, bottom: 10),
+                          padding: const EdgeInsets.only(top: 10, bottom: 10, right: 20),
                           child: RoundedBackground(child: row),
                         )),
                     expanded: Padding(
-                        padding: const EdgeInsets.only(top: 10, bottom: 10),
+                        padding: const EdgeInsets.only(top: 10, bottom: 10, right: 20),
                         child: RoundedBackground(
                             child: Column(children: [
                           Container(height: 71, child: row),

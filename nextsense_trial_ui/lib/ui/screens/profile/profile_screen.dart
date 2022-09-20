@@ -34,112 +34,121 @@ class ProfileScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scrollController = ScrollController();
     return ViewModelBuilder<ProfileScreenViewModel>.reactive(
       viewModelBuilder: () => ProfileScreenViewModel(),
       onModelReady: (viewModel) => viewModel.init(),
       builder: (context, ProfileScreenViewModel viewModel, child) => PageScaffold(
-        showProfileButton: false,
-        child: SingleChildScrollView(
-          physics: ScrollPhysics(),
-          child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-            Center(
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, size: 32, color: NextSenseColors.darkBlue),
-                ),
-                title: Text(
-                  viewModel.userId ?? 'Signed out',
-                  style: TextStyle(
-                      fontSize: 18, color: NextSenseColors.darkBlue, fontWeight: FontWeight.w500),
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            ListView(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              children: [
-                if (_flavor.userType == UserType.researcher)
-                  _MainMenuItem(
-                      label: 'Switch study',
-                      details: viewModel.currentStudyName ?? 'No enrolled study',
-                      onPressed: () async => {
-                        await _navigation.navigateTo(EnrolledStudiesScreen.id),
-                        viewModel.notifyListeners()
-                      }),
-                if (_flavor.userType == UserType.subject)
-                  _MainMenuItem(
-                      label: 'Password',
-                      details: 'Change Password',
-                      onPressed: () {
-                        _navigation.navigateTo(SetPasswordScreen.id,
-                            nextRoute: NavigationRoute(pop: true));
-                      }),
-                _MainMenuItem(
-                    label: 'Study intro',
-                    onPressed: () => _navigation.navigateTo(StudyIntroScreen.id)),
-                if (viewModel.isAdhocRecordingAllowed)
-                  _MainMenuItem(
-                      label: 'Start adhoc protocol', onPressed: () => _startAdhocProtocol(context)),
-                if (viewModel.isAdhocSurveysAllowed)
-                  _MainMenuItem(
-                      label: 'Start adhoc survey', onPressed: () => _startAdhocSurvey(context)),
-                if (_flavor.userType == UserType.researcher)
-                  _MainMenuItem(
-                      label: 'Check impedance',
-                      onPressed: () {
-                        _navigation.navigateTo(ImpedanceCalculationScreen.id);
-                      }),
-                if (_flavor.userType == UserType.researcher)
-                  _MainMenuItem(
-                      label: 'Check Signal',
-                      onPressed: () {
-                        _navigation.navigateTo(SignalMonitoringScreen.id);
-                      }),
-                if (viewModel.deviceIsConnected)
-                  _MainMenuItem(
-                      label: 'Disconnect',
-                      onPressed: () async {
-                        await viewModel.disconnectDevice();
-                        await _navigation.navigateTo(DeviceScanScreen.id,
-                            nextRoute: NavigationRoute(pop: true));
-                      })
-                else
-                  _MainMenuItem(
-                      label: 'Connect',
-                      onPressed: () async {
-                        await _navigation.navigateTo(DeviceScanScreen.id,
-                            nextRoute: NavigationRoute(pop: true));
-                        viewModel.refresh();
-                      }),
-                _MainMenuItem(
-                    label: 'Logout',
-                    onPressed: () {
-                      viewModel.logout();
-                      _navigation.signOut();
-                    }),
-                _MainMenuItem(
-                    label: 'Settings',
-                    onPressed: () {
-                      _navigation.navigateTo(SettingsScreen.id);
-                    }),
-                _MainMenuItem(
-                    label: 'Contact Support',
-                    onPressed: () {
-                      _navigation.navigateTo(SupportScreen.id);
-                    }),
-                SizedBox(height: 10),
-                Row(children: [SizedBox(width: 20),
-                  SmallEmphasizedText(text: 'Version ${viewModel.version ?? ''}')])
-              ],
-            ),
-          ]),
-        ),
-      ),
+          showProfileButton: false,
+          child: Scrollbar(
+              thumbVisibility: true,
+              controller: scrollController,
+              child: SingleChildScrollView(
+                child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
+                  Center(
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.white,
+                        child: Icon(Icons.person, size: 32, color: NextSenseColors.darkBlue),
+                      ),
+                      title: Text(
+                        viewModel.userId ?? 'Signed out',
+                        style: TextStyle(
+                            fontSize: 18,
+                            color: NextSenseColors.darkBlue,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  ListView(
+                    padding: EdgeInsets.zero,
+                    controller: scrollController,
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    children: [
+                      if (_flavor.userType == UserType.researcher)
+                        _MainMenuItem(
+                            label: 'Switch study',
+                            details: viewModel.currentStudyName ?? 'No enrolled study',
+                            onPressed: () async => {
+                                  await _navigation.navigateTo(EnrolledStudiesScreen.id),
+                                  viewModel.notifyListeners()
+                                }),
+                      if (_flavor.userType == UserType.subject)
+                        _MainMenuItem(
+                            label: 'Password',
+                            details: 'Change Password',
+                            onPressed: () {
+                              _navigation.navigateTo(SetPasswordScreen.id,
+                                  nextRoute: NavigationRoute(pop: true));
+                            }),
+                      _MainMenuItem(
+                          label: 'Study intro',
+                          onPressed: () => _navigation.navigateTo(StudyIntroScreen.id)),
+                      if (viewModel.isAdhocRecordingAllowed)
+                        _MainMenuItem(
+                            label: 'Start adhoc protocol',
+                            onPressed: () => _startAdhocProtocol(context)),
+                      if (viewModel.isAdhocSurveysAllowed)
+                        _MainMenuItem(
+                            label: 'Start adhoc survey',
+                            onPressed: () => _startAdhocSurvey(context)),
+                      if (_flavor.userType == UserType.researcher)
+                        _MainMenuItem(
+                            label: 'Check impedance',
+                            onPressed: () {
+                              _navigation.navigateTo(ImpedanceCalculationScreen.id);
+                            }),
+                      if (_flavor.userType == UserType.researcher)
+                        _MainMenuItem(
+                            label: 'Check Signal',
+                            onPressed: () {
+                              _navigation.navigateTo(SignalMonitoringScreen.id);
+                            }),
+                      if (viewModel.deviceIsConnected)
+                        _MainMenuItem(
+                            label: 'Disconnect',
+                            onPressed: () async {
+                              await viewModel.disconnectDevice();
+                              await _navigation.navigateTo(DeviceScanScreen.id,
+                                  nextRoute: NavigationRoute(pop: true));
+                            })
+                      else
+                        _MainMenuItem(
+                            label: 'Connect',
+                            onPressed: () async {
+                              await _navigation.navigateTo(DeviceScanScreen.id,
+                                  nextRoute: NavigationRoute(pop: true));
+                              viewModel.refresh();
+                            }),
+                      _MainMenuItem(
+                          label: 'Logout',
+                          onPressed: () {
+                            viewModel.logout();
+                            _navigation.signOut();
+                          }),
+                      _MainMenuItem(
+                          label: 'Settings',
+                          onPressed: () {
+                            _navigation.navigateTo(SettingsScreen.id);
+                          }),
+                      _MainMenuItem(
+                          label: 'Contact Support',
+                          onPressed: () {
+                            _navigation.navigateTo(SupportScreen.id);
+                          }),
+                      SizedBox(height: 10),
+                      Row(children: [
+                        SizedBox(width: 20),
+                        SmallEmphasizedText(text: 'Version ${viewModel.version ?? ''}')
+                      ])
+                    ],
+                  ),
+                ]),
+              ))),
     );
   }
 
@@ -160,9 +169,7 @@ class ProfileScreen extends HookWidget {
   }
 
   void _startAdhocProtocol(BuildContext context) async {
-    await showDialog(
-        context: context,
-        builder: (_) => StartAdhocProtocolDialog());
+    await showDialog(context: context, builder: (_) => StartAdhocProtocolDialog());
   }
 }
 
@@ -181,7 +188,7 @@ class _MainMenuItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(top: 10),
+      padding: EdgeInsets.only(top: 10, right: 20),
       child: ClickableZone(
         onTap: () => onPressed.call(),
         child: RoundedBackground(

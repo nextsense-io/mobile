@@ -63,7 +63,7 @@ class SeizureScreen extends HookWidget {
                           ),
                           textButtonTheme: TextButtonThemeData(
                             style: TextButton.styleFrom(
-                              primary: NextSenseColors.purple, // button text color
+                              foregroundColor: NextSenseColors.purple, // button text color
                             ),
                           ),
                         ),
@@ -93,7 +93,7 @@ class SeizureScreen extends HookWidget {
                           ),
                           textButtonTheme: TextButtonThemeData(
                             style: TextButton.styleFrom(
-                              primary: NextSenseColors.purple, // button text color
+                              foregroundColor: NextSenseColors.purple, // button text color
                             ),
                           ),
                         ),
@@ -193,9 +193,12 @@ class SeizureScreen extends HookWidget {
                                       content: 'Please try again and contact support if you get '
                                           'additional errors.'));
                             } else {
-                              _navigation.navigateTo(EntryAddedScreen.id, replace: true,
-                                  arguments: ['You have reported a seizure',
-                                    Image(image: AssetImage('assets/images/hand_pen_writing.png'))]);
+                              _navigation.navigateTo(EntryAddedScreen.id,
+                                  replace: true,
+                                  arguments: [
+                                    'You have reported a seizure',
+                                    Image(image: AssetImage('assets/images/hand_pen_writing.png'))
+                                  ]);
                             }
                           }),
                       dotsDecorator: const DotsDecorator(

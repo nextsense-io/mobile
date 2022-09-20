@@ -44,43 +44,46 @@ class SideEffectsScreen extends HookWidget {
   }
 
   Widget getListElement(SideEffect sideEffect) {
-    return Slidable(
-      child: TimedEntryCard(sideEffect, _getSideEffectEditFunction(sideEffect)),
-      // The end action pane is the one at the right or the bottom side.
-      endActionPane: ActionPane(
-        motion: ScrollMotion(),
-        children: [
-          CustomSlidableAction(
-              backgroundColor: Colors.transparent,
-              onPressed: (context) {
-                _editSideEffect(context, sideEffect);
-              },
-              autoClose: true,
-              child: RoundBackground(
-                  color: Colors.white,
-                  elevation: 3,
-                  width: 80,
-                  height: 80,
-                  onPressed: () => _getSideEffectEditFunction(sideEffect),
-                  child: Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Image(image: Svg('assets/images/pen.svg'), width: 25, height: 25)))),
-          CustomSlidableAction(
-              backgroundColor: Colors.transparent,
-              onPressed: (context) => _deleteSideEffect(context, sideEffect),
-              autoClose: true,
-              child: RoundBackground(
-                  color: Colors.white,
-                  elevation: 3,
-                  width: 80,
-                  height: 80,
-                  child: Padding(
-                      padding: EdgeInsets.all(12),
-                      child: Image(
-                          image: Svg('assets/images/thrash_can.svg'), width: 25, height: 25)))),
-        ],
-      ),
-    );
+    return Padding(
+        padding: EdgeInsets.only(right: 20),
+        child: Slidable(
+          child: TimedEntryCard(sideEffect, _getSideEffectEditFunction(sideEffect)),
+          // The end action pane is the one at the right or the bottom side.
+          endActionPane: ActionPane(
+            motion: ScrollMotion(),
+            children: [
+              CustomSlidableAction(
+                  backgroundColor: Colors.transparent,
+                  onPressed: (context) {
+                    _editSideEffect(context, sideEffect);
+                  },
+                  autoClose: true,
+                  child: RoundBackground(
+                      color: Colors.white,
+                      elevation: 3,
+                      width: 80,
+                      height: 80,
+                      onPressed: () => _getSideEffectEditFunction(sideEffect),
+                      child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child:
+                              Image(image: Svg('assets/images/pen.svg'), width: 25, height: 25)))),
+              CustomSlidableAction(
+                  backgroundColor: Colors.transparent,
+                  onPressed: (context) => _deleteSideEffect(context, sideEffect),
+                  autoClose: true,
+                  child: RoundBackground(
+                      color: Colors.white,
+                      elevation: 3,
+                      width: 80,
+                      height: 80,
+                      child: Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Image(
+                              image: Svg('assets/images/thrash_can.svg'), width: 25, height: 25)))),
+            ],
+          ),
+        ));
   }
 
   @override
@@ -101,16 +104,18 @@ class SideEffectsScreen extends HookWidget {
                   WaitWidget(message: 'Loading side effects...')
                 else
                   Expanded(
-                      child: ListView.builder(
-                    scrollDirection: Axis.vertical,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: viewModel.getSideEffects()!.length,
-                    shrinkWrap: true,
-                    itemBuilder: (BuildContext context, int index) {
-                      SideEffect sideEffect = viewModel.getSideEffects()![index];
-                      return getListElement(sideEffect);
-                    },
-                  ))
+                      child: Scrollbar(
+                          thumbVisibility: true,
+                          child: ListView.builder(
+                            scrollDirection: Axis.vertical,
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            itemCount: viewModel.getSideEffects()!.length,
+                            shrinkWrap: true,
+                            itemBuilder: (BuildContext context, int index) {
+                              SideEffect sideEffect = viewModel.getSideEffects()![index];
+                              return getListElement(sideEffect);
+                            },
+                          )))
               ],
             )));
   }
