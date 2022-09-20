@@ -1,17 +1,19 @@
 /* A widget to display header text. */
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 
-class HeaderText extends StatelessWidget {
+class SmallEmphasizedText extends StatelessWidget {
   final String text;
   final Color color;
+  final TextAlign textAlign;
   final double marginTop;
   final double marginRight;
   final double marginLeft;
   final double marginBottom;
-  HeaderText(
+  SmallEmphasizedText(
       {required this.text,
         this.color = NextSenseColors.darkBlue,
+        this.textAlign = TextAlign.start,
         this.marginTop = 0,
         this.marginRight = 0,
         this.marginBottom = 0,
@@ -19,8 +21,8 @@ class HeaderText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headerStyle =
-        TextStyle(fontWeight: FontWeight.w500, fontSize: 20, color: color);
+    final headerStyle = TextStyle(fontSize: 14, color: color, fontWeight: FontWeight.w400,
+        fontStyle: FontStyle.italic);
     return Container(
       margin: EdgeInsets.only(
         top: marginTop,
@@ -28,7 +30,7 @@ class HeaderText extends StatelessWidget {
         left: marginLeft,
         bottom: marginBottom,
       ),
-      child: Text(text, style: headerStyle, textAlign: TextAlign.center),
+      child: Text(text, style: headerStyle, textAlign: textAlign),
     );
   }
 }

@@ -26,7 +26,7 @@ class ThickContentText extends StatelessWidget {
         left: marginLeft,
         bottom: marginBottom,
       ),
-      child: Text(text, style: headerStyle),
+      child: Text(text, style: headerStyle, textAlign: TextAlign.center),
     );
   }
 }

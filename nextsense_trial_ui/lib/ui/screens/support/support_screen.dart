@@ -13,9 +13,12 @@ import 'package:stacked/stacked.dart';
 class SupportScreen extends HookWidget {
   static const String id = 'support_screen';
 
-  Widget buildBody(viewModel, context) {
+  Widget buildBody(SupportScreenViewModel viewModel, BuildContext context) {
     return Column(children: [
       HeaderText(text: 'Support'),
+      SizedBox(height: 20),
+      MediumText(
+          text: 'Application version: ${viewModel.version ?? ''}', color: NextSenseColors.darkBlue),
       SizedBox(height: 20),
       if (viewModel.isBusy)
         WaitWidget(message: 'Submitting your issue...')
@@ -25,8 +28,15 @@ class SupportScreen extends HookWidget {
             minLines: 5,
             maxLines: null,
             decoration: InputDecoration(
+              label: MediumText(text: 'Describe your issue'),
+              filled: true,
+              fillColor: Colors.white,
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: NextSenseColors.purple,
+                ),
+              ),
               border: OutlineInputBorder(),
-              label: MediumText(text: 'Describe your issue')
             ),
             onChanged: (text) {
               viewModel.issueDescription = text;
@@ -43,6 +53,7 @@ class SupportScreen extends HookWidget {
             },
           ),
         ],),
+        SizedBox(height: 10),
         SimpleButton(
             text: MediumText(text: 'Submit Issue', color: NextSenseColors.darkBlue),
             onTap: () async => {

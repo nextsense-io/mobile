@@ -112,8 +112,7 @@ class _StudySelectionItem extends StatelessWidget {
   final Widget label;
   final Function onPressed;
 
-  const _StudySelectionItem({
-    Key? key,
+  const _StudySelectionItem({Key? key,
     required this.label,
     required this.onPressed,
   }) : super(key: key);

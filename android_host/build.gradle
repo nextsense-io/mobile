@@ -12,7 +12,7 @@ android {
         minSdkVersion 24
         targetSdkVersion 32
         versionCode 1
-        versionName "0.2.2"
+        versionName "0.2.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -48,7 +48,7 @@ dependencies {
     implementation project(path: ':core')
     implementation project(path: ':flutter')
     implementation project(path: ':service')
-    implementation 'androidx.appcompat:appcompat:1.5.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'com.google.code.gson:gson:2.9.0'

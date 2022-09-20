@@ -122,7 +122,7 @@ class StudyManager {
       return false;
     }
     _currentStudy = Study(studyEntity);
-    _createStudyDays();
+    await _createStudyDays();
     await _initAppRootDir();
     await _cacheStudyImages();
     return true;
@@ -132,7 +132,7 @@ class StudyManager {
   Future _createStudyDays() async {
     final int studyDays = currentStudy?.getDurationDays() ?? 0;
     DateTime studyDayStartDate = currentStudyStartDate!;
-    _days = List<StudyDay>.generate(studyDays, (i) {
+    _days = await List<StudyDay>.generate(studyDays, (i) {
       DateTime dayDate = studyDayStartDate.add(Duration(days: i));
       final dayNumber = i + 1;
       final studyDay = StudyDay(dayDate, dayNumber);

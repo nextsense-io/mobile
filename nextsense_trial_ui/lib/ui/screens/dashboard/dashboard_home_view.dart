@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -7,8 +8,7 @@ import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
 import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
-import 'package:nextsense_trial_ui/ui/components/nextsense_app_bar.dart';
-import 'package:nextsense_trial_ui/ui/components/page_container.dart';
+import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/components/thick_content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
@@ -20,6 +20,36 @@ import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:provider/provider.dart';
 
+class LifecycleEventHandler extends WidgetsBindingObserver {
+  final AsyncCallback? resumeCallBack;
+  final AsyncCallback? suspendingCallBack;
+
+  LifecycleEventHandler({
+    this.resumeCallBack,
+    this.suspendingCallBack,
+  });
+
+  @override
+  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        print('home view resumed');
+        if (resumeCallBack != null) {
+          await resumeCallBack!();
+        }
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+      case AppLifecycleState.detached:
+        if (suspendingCallBack != null) {
+          await suspendingCallBack!();
+        }
+        break;
+    }
+  }
+}
+
+
 class DashboardHomeView extends StatelessWidget {
   final Navigation _navigation = getIt<Navigation>();
   final Flavor _flavor = getIt<Flavor>();
@@ -29,6 +59,14 @@ class DashboardHomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dashboardViewModel = context.watch<DashboardScreenViewModel>();
+
+    WidgetsBinding.instance.addObserver(
+        LifecycleEventHandler(resumeCallBack: () async => {
+          print('resuming home view'),
+          dashboardViewModel.loadData(),
+          dashboardViewModel.notifyListeners()
+        })
+    );
 
     if (dashboardViewModel.isBusy) {
       var loadingTextVisible =
@@ -49,26 +87,23 @@ class DashboardHomeView extends StatelessWidget {
       studyStatusHeader = 'Ongoing\nstudy';
       studyStatusContent = '';
     } else {
-      studyStatusHeader = (dashboardViewModel.today?.dayNumber.toString() ?? '0') +
-          '/' +
-          dashboardViewModel.studyLengthDays;
+      studyStatusHeader = '${dashboardViewModel.today?.dayNumber.toString() ?? '0'}'
+          '/${dashboardViewModel.studyLengthDays}';
       studyStatusContent = 'days in study';
     }
 
-    final daysInStudy = Column(children: [
+    final daysInStudy = Column(mainAxisAlignment: MainAxisAlignment.start, children: [
       HeaderText(text: studyStatusHeader),
       ThickContentText(text: studyStatusContent),
     ]);
-    final completedSurveys = Column(children: [
+    final completedSurveys = Column(mainAxisAlignment: MainAxisAlignment.start, children: [
       HeaderText(text: dashboardViewModel.completedSurveys),
       ThickContentText(text: 'completed surveys'),
     ]);
-    final studySummaryRow = Row(children: [
-      Spacer(),
-      daysInStudy,
-      Spacer(),
-      completedSurveys,
-      Spacer(),
+    final studySummaryRow = Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Expanded(child: daysInStudy),
+      SizedBox(height: 20, width: 20),
+      Expanded(child: completedSurveys),
     ]);
 
     List<Widget> menuCards = [];
@@ -132,25 +167,23 @@ class DashboardHomeView extends StatelessWidget {
       }
     }
 
-    final elements = Column(
+    final elements = SingleChildScrollView(child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        NextSenseAppBar(),
         HeaderText(text: dashboardViewModel.studyName, marginLeft: 10),
         SizedBox(height: 10),
         RoundedBackground(child: ContentText(text: dashboardViewModel.studyDescription)),
-        Spacer(),
+        SizedBox(height: 30),
         studySummaryRow,
-        Spacer(),
-        Expanded(flex: 20, child: SingleChildScrollView(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: menuCardRows))),
-        Spacer(),
+        SizedBox(height: 30),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, children: menuCardRows),
       ],
-    );
-    return PageContainer(child: elements);
+    ));
+    return PageScaffold(viewModel: dashboardViewModel, showBackButton: false, child: elements);
   }
 
-  // TODO(eric): Use real targets when available.
+  // remove when all cards targets are implemented.
   void _dummy() {}
 }
 
