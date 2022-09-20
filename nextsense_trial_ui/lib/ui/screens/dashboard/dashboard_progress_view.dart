@@ -14,6 +14,7 @@ class DashboardProgressView extends StatelessWidget {
 
     return PageScaffold(
         showBackButton: false,
+        padBottom: false,
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents));
   }
 }

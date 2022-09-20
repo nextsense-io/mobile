@@ -8,6 +8,7 @@ class PageScaffold extends StatelessWidget {
 
   final Widget child;
   final ViewModel? viewModel;
+  final bool padBottom;
   final bool showBackground;
   final bool showBackButton;
   final bool showProfileButton;
@@ -19,7 +20,7 @@ class PageScaffold extends StatelessWidget {
   PageScaffold({required this.child, this.viewModel, this.showBackground = true,
     this.showBackButton = true, this.showProfileButton = true, this.floatingActionButton,
     this.showCancelButton = false, this.backgroundColor = Colors.transparent,
-    this.backButtonCallback});
+    this.padBottom = true, this.backButtonCallback});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +38,7 @@ class PageScaffold extends StatelessWidget {
               viewModel: viewModel, showBackButton: showBackButton,
               showProfileButton: showProfileButton, backButtonCallback: backButtonCallback,
               showCancelButton: showCancelButton),
-          body: PageContainer(child: child),
+          body: PageContainer(child: child, padBottom: padBottom,),
           floatingActionButton: floatingActionButton,
       ),
     ]);

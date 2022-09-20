@@ -18,7 +18,6 @@ import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/device_scan/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_screen.dart';
-import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/profile/profile_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
@@ -122,11 +121,6 @@ class ProfileScreen extends HookWidget {
                     onPressed: () {
                       viewModel.logout();
                       _navigation.signOut();
-                    }),
-                _MainMenuItem(
-                    label: 'Help',
-                    onPressed: () {
-                      _navigation.navigateTo(HelpScreen.id);
                     }),
                 _MainMenuItem(
                     label: 'Settings',

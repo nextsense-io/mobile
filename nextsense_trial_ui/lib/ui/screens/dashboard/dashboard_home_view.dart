@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -20,36 +19,6 @@ import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:provider/provider.dart';
 
-class LifecycleEventHandler extends WidgetsBindingObserver {
-  final AsyncCallback? resumeCallBack;
-  final AsyncCallback? suspendingCallBack;
-
-  LifecycleEventHandler({
-    this.resumeCallBack,
-    this.suspendingCallBack,
-  });
-
-  @override
-  Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    switch (state) {
-      case AppLifecycleState.resumed:
-        print('home view resumed');
-        if (resumeCallBack != null) {
-          await resumeCallBack!();
-        }
-        break;
-      case AppLifecycleState.inactive:
-      case AppLifecycleState.paused:
-      case AppLifecycleState.detached:
-        if (suspendingCallBack != null) {
-          await suspendingCallBack!();
-        }
-        break;
-    }
-  }
-}
-
-
 class DashboardHomeView extends StatelessWidget {
   final Navigation _navigation = getIt<Navigation>();
   final Flavor _flavor = getIt<Flavor>();
@@ -59,14 +28,6 @@ class DashboardHomeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dashboardViewModel = context.watch<DashboardScreenViewModel>();
-
-    WidgetsBinding.instance.addObserver(
-        LifecycleEventHandler(resumeCallBack: () async => {
-          print('resuming home view'),
-          dashboardViewModel.loadData(),
-          dashboardViewModel.notifyListeners()
-        })
-    );
 
     if (dashboardViewModel.isBusy) {
       var loadingTextVisible =
@@ -167,7 +128,7 @@ class DashboardHomeView extends StatelessWidget {
       }
     }
 
-    final elements = SingleChildScrollView(child: Column(
+    final elements = Scrollbar(thumbVisibility: true, child: SingleChildScrollView(child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -179,8 +140,9 @@ class DashboardHomeView extends StatelessWidget {
         SizedBox(height: 30),
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: menuCardRows),
       ],
-    ));
-    return PageScaffold(viewModel: dashboardViewModel, showBackButton: false, child: elements);
+    )));
+    return PageScaffold(
+        viewModel: dashboardViewModel, showBackButton: false, padBottom: false, child: elements);
   }
 
   // remove when all cards targets are implemented.

@@ -5,7 +5,6 @@ import 'package:nextsense_trial_ui/ui/components/loading_error_widget.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_home_view.dart';
-import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_progress_view.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_schedule_view.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:persistent_bottom_nav_bar_v2/persistent-tab-view.dart';
@@ -102,12 +101,13 @@ class DashboardScreen extends HookWidget {
           activeColorPrimary: activeColorPrimary,
           inactiveColorPrimary: inactiveColorPrimary
       ),
-      PersistentBottomNavBarItem(
-          icon: Icon(Icons.access_time_outlined),
-          title: ("Progress"),
-          activeColorPrimary: activeColorPrimary,
-          inactiveColorPrimary: inactiveColorPrimary
-      ),
+      // TODO(eric): Enable once the screen is implemented.
+      // PersistentBottomNavBarItem(
+      //     icon: Icon(Icons.access_time_outlined),
+      //     title: ("Progress"),
+      //     activeColorPrimary: activeColorPrimary,
+      //     inactiveColorPrimary: inactiveColorPrimary
+      // ),
     ];
   }
 
@@ -115,7 +115,8 @@ class DashboardScreen extends HookWidget {
     return [
       DashboardHomeView(),
       DashboardScheduleView(),
-      DashboardProgressView()
+      // TODO(eric): Enable once the screen is implemented.
+      // DashboardProgressView()
     ].map((element) => BackgroundContainer(child: element)).toList();
   }
 }
