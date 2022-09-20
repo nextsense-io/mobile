@@ -195,6 +195,7 @@ class DashboardScheduleView extends StatelessWidget {
 
     return PageScaffold(
         showBackButton: _navigation.canPop(),
+        padBottom: _navigation.canPop(),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents));
   }
 }
