@@ -54,7 +54,7 @@ class ProfileScreen extends HookWidget {
                       title: Text(
                         viewModel.userId ?? 'Signed out',
                         style: TextStyle(
-                            fontSize: 18,
+                            fontSize: 14,
                             color: NextSenseColors.darkBlue,
                             fontWeight: FontWeight.w500),
                       ),
