@@ -73,11 +73,8 @@ class DashboardHomeView extends StatelessWidget {
           title: 'Protocols',
           image:
               SvgPicture.asset('assets/images/tasks.svg', semanticsLabel: 'Protocols', height: 75),
-          onTap: () async => {
-                await showDialog(
-                    context: context,
-                    builder: (_) => StartAdhocProtocolDialog())
-              }));
+          onTap: () async =>
+              {await showDialog(context: context, builder: (_) => StartAdhocProtocolDialog())}));
     }
     if (dashboardViewModel.study.seizureTrackingEnabled) {
       menuCards.add(MenuCard(
@@ -114,33 +111,40 @@ class DashboardHomeView extends StatelessWidget {
       }
       if (menuCards.length > i + 1) {
         menuCardRows.add(Row(children: [
-          Expanded(child: menuCards[i]),
+          Expanded(child: Padding(padding: EdgeInsets.only(right: 20), child: menuCards[i])),
           SizedBox(height: 20, width: 20),
-          Expanded(child: menuCards[i + 1]),
+          Expanded(child: Padding(padding: EdgeInsets.only(right: 20), child: menuCards[i + 1])),
         ]));
         ++i;
       } else {
         menuCardRows.add(Row(children: [
-          Expanded(child: menuCards[i]),
+          Expanded(child: Padding(padding: EdgeInsets.only(right: 20), child: menuCards[i])),
           SizedBox(height: 20, width: 20),
           Spacer(),
         ]));
       }
     }
 
-    final elements = Scrollbar(thumbVisibility: true, child: SingleChildScrollView(child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        HeaderText(text: dashboardViewModel.studyName, marginLeft: 10),
-        SizedBox(height: 10),
-        RoundedBackground(child: ContentText(text: dashboardViewModel.studyDescription)),
-        SizedBox(height: 30),
-        studySummaryRow,
-        SizedBox(height: 30),
-        Column(crossAxisAlignment: CrossAxisAlignment.start, children: menuCardRows),
-      ],
-    )));
+    final elements = Scrollbar(
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+            child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            HeaderText(text: dashboardViewModel.studyName, marginLeft: 10),
+            SizedBox(height: 10),
+            Padding(
+                padding: EdgeInsets.only(right: 20),
+                child: RoundedBackground(
+                    child: ContentText(text: dashboardViewModel.studyDescription))),
+            SizedBox(height: 30),
+            studySummaryRow,
+            SizedBox(height: 30),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: menuCardRows),
+            SizedBox(height: 10),
+          ],
+        )));
     return PageScaffold(
         viewModel: dashboardViewModel, showBackButton: false, padBottom: false, child: elements);
   }

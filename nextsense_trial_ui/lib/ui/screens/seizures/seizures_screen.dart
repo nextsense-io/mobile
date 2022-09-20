@@ -44,7 +44,9 @@ class SeizuresScreen extends HookWidget {
   }
 
   Widget getListElement(Seizure seizure) {
-    return Slidable(
+    return Padding(
+        padding: EdgeInsets.only(right: 20),
+        child: Slidable(
       child: TimedEntryCard(seizure, _getSeizureEditFunction(seizure)),
       // The end action pane is the one at the right or the bottom side.
       endActionPane: ActionPane(
@@ -80,7 +82,7 @@ class SeizuresScreen extends HookWidget {
                           image: Svg('assets/images/thrash_can.svg'), width: 25, height: 25)))),
         ],
       ),
-    );
+    ));
   }
 
   @override
@@ -101,7 +103,7 @@ class SeizuresScreen extends HookWidget {
                   WaitWidget(message: 'Loading seizures...')
                 else
                   Expanded(
-                      child: ListView.builder(
+                      child: Scrollbar(thumbVisibility: true, child: ListView.builder(
                     scrollDirection: Axis.vertical,
                     physics: const AlwaysScrollableScrollPhysics(),
                     itemCount: viewModel.getSeizures()!.length,
@@ -110,7 +112,7 @@ class SeizuresScreen extends HookWidget {
                       Seizure seizure = viewModel.getSeizures()![index];
                       return getListElement(seizure);
                     },
-                  ))
+                  )))
               ],
             )));
   }

@@ -21,8 +21,8 @@ class DashboardScheduleView extends StatelessWidget {
   final String scheduleType;
   final bool surveysOnly;
 
-  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.surveysOnly = false}) :
-        super(key: key);
+  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.surveysOnly = false})
+      : super(key: key);
 
   final Navigation _navigation = getIt<Navigation>();
 
@@ -126,6 +126,9 @@ class DashboardScheduleView extends StatelessWidget {
           message: 'Your study is initializing.\nPlease wait...', textVisible: loadingTextVisible);
     }
 
+    final todayScrollController = ScrollController();
+    final weeklyScrollController = ScrollController();
+
     List<dynamic> todayTasks = viewModel.getTodayTasks(surveysOnly);
     List<Widget> todayTasksWidgets;
     if (todayTasks.length == 0) {
@@ -150,11 +153,12 @@ class DashboardScheduleView extends StatelessWidget {
       todayTasksWidgets = [
         MediumText(text: 'Today', color: NextSenseColors.darkBlue),
         Expanded(
-            child: SingleChildScrollView(
-          physics: ScrollPhysics(),
+            child: Scrollbar(
+          thumbVisibility: true,
+          controller: todayScrollController,
           child: ListView.builder(
             scrollDirection: Axis.vertical,
-            physics: const NeverScrollableScrollPhysics(),
+            controller: todayScrollController,
             itemCount: todayTasks.length,
             shrinkWrap: true,
             itemBuilder: (BuildContext context, int index) {
@@ -171,11 +175,12 @@ class DashboardScheduleView extends StatelessWidget {
     if (weeklyTasks.length != 0) {
       weeklyTasksWidgets = [
         MediumText(text: 'Weekly', color: NextSenseColors.darkBlue),
-        SingleChildScrollView(
-            physics: ScrollPhysics(),
+        Scrollbar(
+            thumbVisibility: true,
+            controller: weeklyScrollController,
             child: ListView.builder(
               scrollDirection: Axis.vertical,
-              physics: const NeverScrollableScrollPhysics(),
+              controller: weeklyScrollController,
               itemCount: weeklyTasks.length,
               shrinkWrap: true,
               itemBuilder: (BuildContext context, int index) {
