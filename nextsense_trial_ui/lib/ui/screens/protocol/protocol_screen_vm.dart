@@ -135,6 +135,11 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     return _scheduledProtocolParts;
   }
 
+  List<ProtocolPart> getRemainingProtocolParts() {
+    return runnableProtocol.protocol.protocolBlock.sublist(
+        (protocolIndex % runnableProtocol.protocol.protocolBlock.length).toInt());
+  }
+
   void startTimer() {
     final int protocolMinTimeSeconds = protocol.minDuration.inSeconds;
     final int protocolMaxTimeSeconds = protocol.maxDuration.inSeconds;

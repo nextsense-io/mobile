@@ -20,7 +20,7 @@ class ProtocolPartScrollView extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = context.watch<EyesMovementProtocolScreenViewModel>();
     viewModel.protocolPartChangeStream.stream.listen(scrollTo);
-    List<ProtocolPart> protocolParts = viewModel.runnableProtocol.protocol.protocolBlock;
+    List<ProtocolPart> protocolParts = viewModel.getRemainingProtocolParts();
 
     return ScrollablePositionedList.builder(
       initialScrollIndex: 0,
@@ -30,18 +30,35 @@ class ProtocolPartScrollView extends StatelessWidget {
       itemBuilder: (context, index) => ProtocolStepCard(
           image: viewModel.getImageForProtocolPart(protocolParts[index].state),
           text: viewModel.getTextForProtocolPart(protocolParts[index].state),
-          currentStep: index == viewModel.protocolIndex % protocolParts.length),
+          currentStep: index == 0),
     );
   }
 
+  // Widget build(BuildContext context) {
+  //   final viewModel = context.watch<EyesMovementProtocolScreenViewModel>();
+  //   viewModel.protocolPartChangeStream.stream.listen(scrollTo);
+  //   List<ProtocolPart> protocolParts = viewModel.runnableProtocol.protocol.protocolBlock;
+  //
+  //   return ScrollablePositionedList.builder(
+  //     initialScrollIndex: 0,
+  //     itemCount: protocolParts.length,
+  //     itemScrollController: itemScrollController,
+  //     shrinkWrap: true,
+  //     itemBuilder: (context, index) => ProtocolStepCard(
+  //         image: viewModel.getImageForProtocolPart(protocolParts[index].state),
+  //         text: viewModel.getTextForProtocolPart(protocolParts[index].state),
+  //         currentStep: index == viewModel.protocolIndex % protocolParts.length),
+  //   );
+  // }
+
   void scrollTo(int index) {
-    if (itemScrollController.isAttached) {
-      itemScrollController.scrollTo(
-          index: index,
-          duration: Duration(milliseconds: 400),
-          curve: Curves.ease
-      );
-    }
+    // if (itemScrollController.isAttached) {
+    //   itemScrollController.scrollTo(
+    //       index: index,
+    //       duration: Duration(milliseconds: 400),
+    //       curve: Curves.ease
+    //   );
+    // }
   }
 }
 
