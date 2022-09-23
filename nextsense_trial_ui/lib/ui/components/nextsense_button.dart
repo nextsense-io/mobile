@@ -30,7 +30,7 @@ class NextsenseButton extends StatelessWidget {
           child: _child(),
           style: ButtonStyle(
               padding:
-                  MaterialStateProperty.all<EdgeInsets>(EdgeInsets.all(20)),
+                  MaterialStateProperty.all<EdgeInsets>(EdgeInsets.all(10)),
               foregroundColor: MaterialStateProperty.all<Color>(textColor),
               backgroundColor:
                   MaterialStateProperty.all<Color>(backgroundColor),
