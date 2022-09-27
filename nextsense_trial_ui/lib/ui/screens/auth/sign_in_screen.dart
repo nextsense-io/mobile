@@ -48,6 +48,28 @@ class SignInScreen extends HookWidget {
                 ]))));
   }
 
+  Widget _buildEmailPasswordAuth(BuildContext context, SignInScreenViewModel viewModel) {
+    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      _UserPasswordSignInInputField(
+          field: viewModel.username,
+          labelText: "Enter your email",
+          // helperText: 'Please contact NextSense support if you did not get an id',
+          icon: Icon(Icons.account_circle)),
+      _UserPasswordSignInInputField(
+          field: viewModel.password,
+          obscureText: true,
+          labelText: "Enter your password",
+          // helperText: 'Contact NextSense to reset your password',
+          icon: Icon(Icons.lock)),
+      Padding(
+          padding: EdgeInsets.all(10.0),
+          child: SimpleButton(
+              text: MediumText(text: 'Continue', color: NextSenseColors.darkBlue),
+              onTap: viewModel.isBusy ? () => {} :
+                  () => _signIn(context, AuthMethod.email_password)))
+    ]);
+  }
+
   Widget _buildNextSenseAuth(BuildContext context, SignInScreenViewModel viewModel) {
     return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       _UserPasswordSignInInputField(
@@ -87,6 +109,9 @@ class SignInScreen extends HookWidget {
 
     for (AuthMethod authMethod in viewModel.authMethods) {
       switch (authMethod) {
+        case AuthMethod.email_password:
+          _signInWidgets.add(_buildEmailPasswordAuth(context, viewModel));
+          break;
         case AuthMethod.user_code:
           _signInWidgets.add(_buildNextSenseAuth(context, viewModel));
           break;

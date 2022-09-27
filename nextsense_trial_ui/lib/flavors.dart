@@ -2,6 +2,7 @@ import 'package:nextsense_trial_ui/domain/user.dart';
 
 // Possible authentication methods.
 enum AuthMethod {
+  email_password,
   user_code,
   google_auth
 }
