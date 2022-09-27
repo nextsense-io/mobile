@@ -4,6 +4,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
+import 'package:nextsense_trial_ui/managers/auth/email_auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/google_auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/nextsense_auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
@@ -33,6 +34,7 @@ class AuthManager {
 
   NextSenseAuthManager? _nextSenseAuthManager;
   GoogleAuthManager? _googleAuthManager;
+  EmailAuthManager? _emailAuthManager;
   String? _userCode;
   User? _user;
   AuthMethod? _signedInAuthMethod;
@@ -51,6 +53,10 @@ class AuthManager {
   AuthManager() {
     for (AuthMethod authMethod in _flavor.authMethods) {
       switch (authMethod) {
+        case AuthMethod.email_password:
+          _emailAuthManager = EmailAuthManager();
+          _signedInAuthMethod = AuthMethod.email_password;
+          break;
         case AuthMethod.user_code:
           _nextSenseAuthManager = NextSenseAuthManager();
           _signedInAuthMethod = AuthMethod.user_code;
@@ -61,6 +67,15 @@ class AuthManager {
           break;
       }
     }
+  }
+
+  Future<AuthenticationResult> signInEmailPassword(String username, String password) async {
+    AuthenticationResult authResult = await _emailAuthManager!.handleSignIn(username, password);
+    if (authResult != AuthenticationResult.success) {
+      return authResult;
+    }
+    authResult = await _signIn(username);
+    return authResult;
   }
 
   Future<AuthenticationResult> signInNextSense(String username, String password) async {
@@ -81,8 +96,32 @@ class AuthManager {
     return await _signIn(_googleAuthManager!.email);
   }
 
+  Future<AuthenticationResult> signUpEmailPassword(String email, String password) async {
+    AuthenticationResult result = await _signIn(email);
+    if (result == AuthenticationResult.success) {
+      result = await _emailAuthManager!.handleSignUp(email, password);
+    }
+    return result;
+  }
+
+  Future<AuthenticationResult> reAuthenticate(String password) async {
+    switch (_signedInAuthMethod) {
+      case AuthMethod.email_password:
+        return await _emailAuthManager!.reAuthenticate(password);
+      default:
+        return AuthenticationResult.error;
+    }
+  }
+
   Future<bool> changePassword(String newPassword) async {
+    switch (_signedInAuthMethod) {
+      case AuthMethod.email_password:
+        return await _emailAuthManager!.changePassword(newPassword);
+      case AuthMethod.user_code:
     return await _nextSenseAuthManager!.changePassword(userCode!, newPassword);
+      default:
+        return false;
+    }
   }
 
   Future<AuthenticationResult> _signIn(String username) async {

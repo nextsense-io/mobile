@@ -64,6 +64,10 @@ class SignInScreenViewModel extends ViewModel {
     setBusy(true);
     AuthenticationResult authResult;
     switch (authMethod) {
+      case AuthMethod.email_password:
+        authResult = await _authManager.signInEmailPassword(
+            username.value, password.value);
+        break;
       case AuthMethod.user_code:
         authResult = await _authManager.signInNextSense(
             username.value, password.value);

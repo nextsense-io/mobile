@@ -17,9 +17,6 @@ class SetPasswordScreen extends HookWidget {
 
   final _navigation = getIt<Navigation>();
 
-  String _password = "";
-  String _passwordConfirmation = "";
-
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder<SetPasswordScreenViewModel>.reactive(
@@ -29,7 +26,7 @@ class SetPasswordScreen extends HookWidget {
           return SessionPopScope(
             child: SafeArea(
                 child: PageScaffold(
-                    showBackButton: false,
+                    showBackButton: _navigation.canPop(),
                     showProfileButton: false,
                     child: _buildBody(context, viewModel)
                 )
@@ -38,15 +35,21 @@ class SetPasswordScreen extends HookWidget {
         });
   }
 
-  Future _showDialog(BuildContext context, String title, String message, bool popNavigator,
+  Future _showDialog(BuildContext context, String title, String message, bool? popNavigator,
       Function? onPressed) async {
     showDialog(
         context: context,
         builder: (_) => SimpleAlertDialog(
-          title: title, content: message, popNavigator: popNavigator, onPressed: onPressed));
+          title: title, content: message, popNavigator: popNavigator != null ? popNavigator : false,
+            onPressed: onPressed));
   }
 
   Widget _buildBody(BuildContext context, SetPasswordScreenViewModel viewModel) {
+    if (viewModel.hasError) {
+      Future.delayed(Duration.zero, () {
+        _showDialog(context, 'Error', viewModel.modelError, false, () => {viewModel.clearErrors()});
+      });
+    }
     return Container(
         child: Center(
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
@@ -73,7 +76,7 @@ class SetPasswordScreen extends HookWidget {
                   ),
                 ),
                 onChanged: (password) {
-                  _password = password;
+                  viewModel.password = password;
                 },
               ),
             ),
@@ -96,7 +99,7 @@ class SetPasswordScreen extends HookWidget {
                   ),
                 ),
                 onChanged: (passwordConfirmation) {
-                  _passwordConfirmation = passwordConfirmation;
+                  viewModel.passwordConfirmation = passwordConfirmation;
                 },
               ),
             ),
@@ -104,7 +107,7 @@ class SetPasswordScreen extends HookWidget {
                 padding: EdgeInsets.all(10.0),
                 child: SimpleButton(
                   text: MediumText(text: 'Submit', color: NextSenseColors.darkBlue),
-                  onTap: viewModel.isBusy ? () => {} :
+                  onTap: viewModel.isBusy ? () => {print('busy cannot submit')} :
                       () => _onSubmitButtonPressed(context, viewModel),
                 )),
             Visibility(
@@ -119,36 +122,13 @@ class SetPasswordScreen extends HookWidget {
 
   Future<void> _onSubmitButtonPressed(BuildContext context,
       SetPasswordScreenViewModel viewModel) async {
-    final String password = _password;
-    if (password.isEmpty) {
-      return;
-    }
-    if (password.length < viewModel.minimumPasswordLength) {
-      _showDialog(
-          context,
-          'Error',
-          'Password should be at least ${viewModel.minimumPasswordLength} characters long',
-          false, null);
-      return;
-    }
-    if (password.compareTo(_passwordConfirmation) != 0) {
-      _showDialog(context, 'Error', 'Passwords do not match.', false, null);
-      return;
-    }
     try {
-      bool passwordChanged = await viewModel.changePassword(password);
+      bool passwordChanged = await viewModel.changePassword();
       if (passwordChanged) {
-        await _showDialog(context, 'Password changed', '',
-            false, () => _navigation.navigateToNextRoute());
-        return;
+        await _showDialog(context, 'Password changed', '', false,
+                () => _navigation.navigateToNextRoute());
       } else {
-        _showDialog(
-            context,
-            'Error',
-            'Could not set password, make sure you have an active internet connection and try '
-                'again.',
-            false, null);
-        return;
+        await _showDialog(context, 'Error', 'Invalid password', false, null);
       }
     } catch (e) {
       _showDialog(
