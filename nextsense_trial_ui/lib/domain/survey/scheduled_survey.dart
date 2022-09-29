@@ -64,6 +64,10 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
     setValue(ScheduledSurveyKey.period, period.name);
   }
 
+  Map<String, dynamic> getData() {
+    return getValue(ScheduledSurveyKey.data) ?? Map();
+  }
+
   // Save submitted survey data.
   void setData(Map<String, dynamic> data) {
     setValue(ScheduledSurveyKey.data, data);

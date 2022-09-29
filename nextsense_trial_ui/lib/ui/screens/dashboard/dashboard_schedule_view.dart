@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
@@ -94,7 +95,7 @@ class DashboardScheduleView extends StatelessWidget {
 
     bool completed = await _navigation.navigateTo(SurveyScreen.id, arguments: scheduledSurvey);
 
-    if (completed) {
+    if (completed && scheduledSurvey.state == SurveyState.completed) {
       showDialog(
         context: context,
         builder: (_) =>

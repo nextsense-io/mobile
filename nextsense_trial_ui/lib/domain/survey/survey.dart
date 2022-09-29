@@ -46,6 +46,7 @@ enum SurveyQuestionSpecialChoices {
 
 enum SurveyState {
   not_started,
+  partially_completed,
   skipped,
   completed,
   unknown

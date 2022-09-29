@@ -1,6 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/survey/condition.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
@@ -17,11 +18,25 @@ class SurveyScreenViewModel extends ViewModel {
 
   SurveyScreenViewModel(this.runnableSurvey);
 
-  Future<bool> submit(Map<String, dynamic> formData) async {
+  @override
+  void init() {
+    loadQuestionsIfNeeded();
+  }
+
+  void loadQuestionsIfNeeded() {
+    if (runnableSurvey is ScheduledSurvey) {
+      ScheduledSurvey scheduledSurvey = runnableSurvey as ScheduledSurvey;
+      if (scheduledSurvey.state == SurveyState.partially_completed) {
+        formValues = Map.from(scheduledSurvey.getData());
+      }
+    }
+  }
+
+  Future<bool> submit(Map<String, dynamic> formData, bool completed) async {
     _logger.log(Level.INFO, "Submitting survey form.");
     setBusy(true);
     bool updated = await runnableSurvey.update(
-        state: SurveyState.completed,
+        state: completed ? SurveyState.completed : SurveyState.partially_completed,
         data: formData
     );
     setBusy(false);

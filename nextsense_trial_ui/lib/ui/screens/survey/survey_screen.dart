@@ -29,10 +29,41 @@ class SurveyScreen extends HookWidget {
 
   SurveyScreen(this.runnableSurvey);
 
+  Future _saveForm(BuildContext context, SurveyScreenViewModel viewModel,
+      GlobalKey<FormBuilderState> formKey, bool submitting) async {
+    if (formKey.currentState != null) {
+      _logger.log(Level.INFO, "Saving form");
+      formKey.currentState?.save();
+      bool valid = formKey.currentState!.validate();
+      if (valid || !submitting) {
+        _logger.log(Level.INFO, "Submitting form");
+        bool submitted = await viewModel.submit(valid ? formKey.currentState!.value :
+            formKey.currentState!.instantValue, valid);
+        if (submitted) {
+          Navigator.pop(context, true);
+        } else {
+          showDialog(
+              context: context,
+              builder: (_) => SimpleAlertDialog(
+                  title: 'Error saving the form',
+                  content: 'Please make sure you have a good internet connection and try again. '
+                      'Please contact support if you need more help.'));
+        }
+      } else if (submitting) {
+        _logger.log(Level.INFO, "Validation failed");
+        showDialog(
+            context: context,
+            builder: (_) =>
+                SimpleAlertDialog(
+                    title: 'Form error', content: 'Please fill missing or incorrect fields'));
+      }
+    }
+  }
+
   bool canProgress(SurveyScreenViewModel viewModel) {
     SurveyQuestion currentQuestion = viewModel.getVisibleQuestions()[viewModel.currentPageNumber];
     if (!currentQuestion.optional) {
-      _logger.log(Level.INFO, viewModel.formValues);
+      _logger.log(Level.INFO, "viewModel formValues: ${viewModel.formValues}");
       if (_formKey.currentState?.instantValue[currentQuestion.id] != null) {
         return true;
       } else {
@@ -40,6 +71,61 @@ class SurveyScreen extends HookWidget {
       }
     }
     return true;
+  }
+
+  Widget _buildBody(BuildContext context, SurveyScreenViewModel viewModel) {
+    for (String questionKey in viewModel.formValues?.keys ?? []) {
+      _formKey.currentState?.setInternalFieldValue(questionKey, viewModel.formValues?[questionKey],
+          isSetState: false);
+    }
+    return PageScaffold(
+        backgroundColor: NextSenseColors.lightGrey,
+        showBackground: false,
+        showProfileButton: false,
+        backButtonCallback:
+            viewModel.isBusy ? () => {} : () => _onBackButtonPressed(context, viewModel),
+        child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          if (viewModel.isBusy)
+            WaitWidget(message: 'Saving...')
+          else
+            Expanded(
+                child: WhiteThemeOverride(FormBuilder(
+                    key: _formKey,
+                    initialValue:
+                    viewModel.formValues != null ? viewModel.formValues! : {},
+                    child: IntroductionScreen(
+                        globalBackgroundColor: Colors.transparent,
+                        pages: _getPageViewModels(context, viewModel, _formKey),
+                        initialPage: viewModel.currentPageNumber,
+                        showSkipButton: false,
+                        showNextButton: true,
+                        showBackButton: true,
+                        showDoneButton: true,
+                        isProgress: false,
+                        onDone: () => {},
+                        onSkip: () => _onBackButtonPressed(context, viewModel),
+                        canProgress: () => canProgress(viewModel),
+                        onChange: (pageNum) => {
+                          _logger.log(Level.INFO, "page ${pageNum}"),
+                          viewModel.currentPageNumber = pageNum,
+                          viewModel.notifyListeners(),
+                        },
+                        back: const Icon(Icons.arrow_back, color: NextSenseColors.purple),
+                        skip: MediumText(text: 'Skip', color: NextSenseColors.purple),
+                        next:
+                        const Icon(Icons.arrow_forward, color: NextSenseColors.purple),
+                        done: _submitButton(context, _formKey),
+                        dotsDecorator: const DotsDecorator(
+                          color: NextSenseColors.translucentPurple,
+                          activeColor: NextSenseColors.purple,
+                        ),
+                        globalFooter: LinearProgressIndicator(
+                          value: viewModel.currentPageNumber /
+                              (viewModel.survey.getQuestions().length - 1),
+                          color: NextSenseColors.purple,
+                        )
+                    )))),
+        ]));
   }
 
   @override
@@ -52,55 +138,14 @@ class SurveyScreen extends HookWidget {
           return WillPopScope(
             onWillPop: () => _onBackButtonPressed(context, viewModel),
             child: SafeArea(
-              child: PageScaffold(
-                  backgroundColor: NextSenseColors.lightGrey,
-                  showBackground: false,
-                  showProfileButton: false,
-                  backButtonCallback:
-                      viewModel.isBusy ? () => {} : () => Navigator.pop(context, false),
-                  child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                    if (viewModel.isBusy)
-                      WaitWidget(message: 'Submitting...')
-                    else
-                      Expanded(
-                          child: WhiteThemeOverride(FormBuilder(
-                              key: _formKey,
-                              initialValue:
-                                  viewModel.formValues != null ? viewModel.formValues! : {},
-                              child: IntroductionScreen(
-                                globalBackgroundColor: Colors.transparent,
-                                pages: _getPageViewModels(context, viewModel, _formKey),
-                                initialPage: viewModel.currentPageNumber,
-                                showSkipButton: false,
-                                showNextButton: true,
-                                showBackButton: true,
-                                showDoneButton: true,
-                                onDone: () => {},
-                                onSkip: () => Navigator.pop(context, false),
-                                canProgress: () => canProgress(viewModel),
-                                onChange: (pageNum) => {
-                                  _logger.log(Level.INFO, "page ${pageNum}"),
-                                  viewModel.currentPageNumber = pageNum,
-                                  viewModel.notifyListeners(),
-                                },
-                                back: const Icon(Icons.arrow_back, color: NextSenseColors.purple),
-                                skip: MediumText(text: 'Skip', color: NextSenseColors.purple),
-                                next:
-                                    const Icon(Icons.arrow_forward, color: NextSenseColors.purple),
-                                done: _submitButton(context, _formKey),
-                                dotsDecorator: const DotsDecorator(
-                                  color: NextSenseColors.translucentPurple,
-                                  activeColor: NextSenseColors.purple,
-                                ),
-                              )))),
-                  ])),
+              child: _buildBody(context, viewModel)
             ),
           );
         });
   }
 
   Future<bool> _onBackButtonPressed(BuildContext context, SurveyScreenViewModel viewModel) async {
-    Navigator.pop(context, false);
+    await _saveForm(context, viewModel, _formKey, /*submitting=*/false);
     return true;
   }
 
@@ -152,39 +197,17 @@ class SurveyScreen extends HookWidget {
                 ])
             ]));
   }
-}
 
-Widget _submitButton(BuildContext context, GlobalKey<FormBuilderState> formKey) {
-  final viewModel = context.read<SurveyScreenViewModel>();
-  final CustomLogPrinter _logger = CustomLogPrinter('SubmitButton');
+  Widget _submitButton(BuildContext context, GlobalKey<FormBuilderState> formKey) {
+    final viewModel = context.read<SurveyScreenViewModel>();
 
-  return NextsenseButton.primary(
-    "Done",
-    onPressed: () async {
-      if (formKey.currentState != null) {
-        formKey.currentState?.save();
-        if (formKey.currentState!.validate()) {
-          bool submitted = await viewModel.submit(formKey.currentState!.value);
-          if (submitted) {
-            Navigator.pop(context, true);
-          } else {
-            showDialog(
-                context: context,
-                builder: (_) => SimpleAlertDialog(
-                    title: 'Error submitting the form',
-                    content: 'Please try again and contact support if you get additional '
-                        'errors.'));
-          }
-        } else {
-          _logger.log(Level.INFO, "Validation failed");
-          showDialog(
-              context: context,
-              builder: (_) => SimpleAlertDialog(
-                  title: 'Form error', content: 'Please fill missing or incorrect fields'));
-        }
-      }
-    },
-  );
+    return NextsenseButton.primary(
+      "Done",
+      onPressed: () async {
+        _saveForm(context, viewModel, _formKey, /*submitting=*/true);
+      },
+    );
+  }
 }
 
 class _SurveyQuestionWidget extends StatelessWidget {
@@ -199,7 +222,6 @@ class _SurveyQuestionWidget extends StatelessWidget {
   void reloadAfterChange(SurveyScreenViewModel viewModel) {
     viewModel.formValues = formKey.currentState != null ?
         Map.from(formKey.currentState!.instantValue) : null;
-    // viewModel.formValues = formKey.currentState?.instantValue ?? null;
     _logger.log(Level.INFO, "formValues onChanged: ${viewModel.formValues}");
     viewModel.notifyListeners();
   }
@@ -229,6 +251,7 @@ class _SurveyQuestionWidget extends StatelessWidget {
           options: _generateChoices(),
           validator: FormBuilderValidators.compose(_getValidators()),
           decoration: InputDecoration(border: InputBorder.none),
+          onChanged: (dynamic) => reloadAfterChange(viewModel),
         );
         break;
       case SurveyQuestionType.number:
@@ -238,18 +261,18 @@ class _SurveyQuestionWidget extends StatelessWidget {
             border: OutlineInputBorder(), hintText: question.hint ?? "",
           ),
           validator: FormBuilderValidators.compose(_getValidators()),
-          onChanged: (value) {},
           keyboardType: TextInputType.number,
+          onChanged: (dynamic) => reloadAfterChange(viewModel),
         );
         break;
       case SurveyQuestionType.text:
         formBuilderField = FormBuilderTextField(
           name: question.id,
           decoration: InputDecoration(border: OutlineInputBorder(), hintText: question.hint ?? ""),
-          onChanged: (value) {},
           validator: FormBuilderValidators.compose(_getValidators()),
           keyboardType: TextInputType.text,
           maxLines: 10,
+          onChanged: (dynamic) => reloadAfterChange(viewModel),
         );
         break;
       case SurveyQuestionType.choices:
@@ -278,6 +301,7 @@ class _SurveyQuestionWidget extends StatelessWidget {
           },
           decoration: InputDecoration(labelText: 'Click to select time'),
           initialTime: TimeOfDay(hour: 12, minute: 0),
+          onChanged: (dynamic) => reloadAfterChange(viewModel),
         );
         break;
       default:
