@@ -39,11 +39,13 @@ enum UserKey {
 enum UserType {
   // Unknown user type as a fallback.
   unknown,
-  // Participant in a clinical study. One code per participant per study to
-  // maintain anonymity. So will only have one enrolled study.
+  // Anonymous participant in a clinical study. One code per participant per study to maintain
+  // anonymity. So will only have one enrolled study.
+  anonymous_subject,
+  // Participant in a clinical study with an email as login id.
   subject,
-  // Researcher using the device run tests. Can have multiple active enrolled
-  // studies at the same time.
+  // Researcher using the device run tests. Can have multiple active enrolled studies at the same
+  // time. More control options with the device.
   researcher
 }
 

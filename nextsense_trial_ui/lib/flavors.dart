@@ -15,12 +15,23 @@ abstract class Flavor {
   List<AuthMethod> get authMethods;
 }
 
-class SubjectFlavor extends Flavor {
+class AnonymousSubjectFlavor extends Flavor {
   @override
   String get appTitle => "NextSense Trial";
 
   @override
   List<AuthMethod> get authMethods => [AuthMethod.user_code];
+
+  @override
+  UserType get userType => UserType.anonymous_subject;
+}
+
+class SubjectFlavor extends Flavor {
+  @override
+  String get appTitle => "NextSense Trial";
+
+  @override
+  List<AuthMethod> get authMethods => [AuthMethod.email_password];
 
   @override
   UserType get userType => UserType.subject;
@@ -40,6 +51,8 @@ class FlavorFactory {
   static Flavor createFlavor(String? flavor) {
     UserType userType = User.getUserTypeFromString(flavor);
     switch (userType) {
+      case UserType.anonymous_subject:
+        return AnonymousSubjectFlavor();
       case UserType.researcher:
         return ResearcherFlavor();
       case UserType.subject:
