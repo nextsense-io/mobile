@@ -66,11 +66,11 @@ Future<intent.Intent?> _getInitialIntent() async {
 }
 
 void main() async {
+  await WidgetsFlutterBinding.ensureInitialized();
+  await _initFirebase();
   runZonedGuarded<Future<void>>(() async {
-    WidgetsFlutterBinding.ensureInitialized();
     _initLogging();
     await initEnvironment();
-    await _initFirebase();
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
     await _initPreferences();
     await _initFlavor();
