@@ -299,7 +299,8 @@ class _SurveyQuestionWidget extends StatelessWidget {
             }
             return null;
           },
-          decoration: InputDecoration(labelText: 'Click to select time'),
+          decoration: InputDecoration(labelText: 'Click to select time',
+              fillColor: NextSenseColors.purple, focusColor: NextSenseColors.purple),
           initialTime: TimeOfDay(hour: 12, minute: 0),
           onChanged: (dynamic) => reloadAfterChange(viewModel),
         );
