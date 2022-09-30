@@ -13,6 +13,7 @@ import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:nextsense_trial_ui/ui/components/themed_date_picker.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
@@ -48,29 +49,9 @@ class SideEffectScreen extends HookWidget {
           bodyWidget: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
             ClickableZone(
                 onTap: () async {
-                  viewModel.changeSideEffectDate(await showDatePicker(
+                  viewModel.changeSideEffectDate(await showThemedDateTimePicker(
                     context: context,
-                    firstDate: DateTime(2022),
-                    lastDate: DateTime.now(),
-                    initialDate: viewModel.getSideEffectDate(),
-                    builder: (context, child) {
-                      return Theme(
-                        data: Theme.of(context).copyWith(
-                          colorScheme: ColorScheme.light(
-                            primary: NextSenseColors.lightGrey, // header background color
-                            onPrimary: NextSenseColors.purple, // header text color
-                            onSurface: NextSenseColors.purple, // body text color
-                          ),
-                          textButtonTheme: TextButtonThemeData(
-                            style: TextButton.styleFrom(
-                              primary: NextSenseColors.purple, // button text color
-                            ),
-                          ),
-                        ),
-                        child: child!,
-                      );
-                    },
-                  ));
+                    initialDate: viewModel.getSideEffectDate()));
                 },
                 child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.calendar_today_outlined, size: 20, color: NextSenseColors.purple),
@@ -94,7 +75,7 @@ class SideEffectScreen extends HookWidget {
                           ),
                           textButtonTheme: TextButtonThemeData(
                             style: TextButton.styleFrom(
-                              primary: NextSenseColors.purple, // button text color
+                              foregroundColor: NextSenseColors.purple, // button text color
                             ),
                           ),
                         ),
