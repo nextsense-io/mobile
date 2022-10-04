@@ -81,10 +81,10 @@ class StartupScreenViewModel extends ViewModel {
     // screen.
     String screen = PrepareDeviceScreen.id;
     if (_deviceManager.hadPairedDevice) {
-      bool connected = await _deviceManager.connectToLastPairedDevice();
       RunnableProtocol? runnableProtocol = await _authManager.user!.getRunningProtocol();
-      if (connected && runnableProtocol != null) {
-        if (await _deviceManager.isConnectedDeviceStreaming()) {
+      if (runnableProtocol != null) {
+        bool connected = await _deviceManager.connectToLastPairedDevice();
+        if (connected && await _deviceManager.isConnectedDeviceStreaming()) {
           _logger.log(Level.INFO, 'Protocol still running, navigating back to protocol screen.');
           // Protocol still running, go to that screen.
           setBusy(false);
@@ -96,8 +96,9 @@ class StartupScreenViewModel extends ViewModel {
         } else {
           // Device was shutdown since the app was closed, update the running protocol then go to
           // dashboard/initial intent as usual.
-          // TODO(eric): Mark as unknown?
-          runnableProtocol.update(state: ProtocolState.completed);
+          _logger.log(Level.INFO,
+              'Protocol was running but device no longer connected, mark it as canceled.');
+          runnableProtocol.update(state: ProtocolState.cancelled);
           _authManager.user!.setRunningProtocol(null);
           _authManager.user!.save();
         }

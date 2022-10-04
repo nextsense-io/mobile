@@ -141,13 +141,6 @@ class SessionManager {
     return null;
   }
 
-  // Future autoCloseRunningSession() async {
-  //   if (_deviceManager.getConnectedDevice() == null ||
-  //       !(await _deviceManager.isConnectedDeviceStreaming())) {
-  //
-  //   }
-  // }
-
   Future stopSession(String deviceMacAddress) async {
     if (_currentSession == null || _currentDataSession == null) {
       _logger.log(Level.WARNING, 'Tried to stop a session while none was running.');
