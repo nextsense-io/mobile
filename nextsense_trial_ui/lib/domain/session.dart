@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
 /**
@@ -38,6 +39,10 @@ enum SessionKey {
 
 class Session extends FirebaseEntity<SessionKey> {
 
-  Session(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot());
+  Session(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
+
+  DateTime? getStartDateTime() {
+    final Timestamp? startDateTime = getValue(SessionKey.start_datetime);
+    return startDateTime != null ? startDateTime.toDate() : null;
+  }
 }

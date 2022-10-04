@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
@@ -18,20 +19,21 @@ class AdhocProtocol implements RunnableProtocol {
   final String _studyId;
 
   late Protocol protocol;
-
   ProtocolState state = ProtocolState.not_started;
-
-  AdhocProtocolRecord? record;
+  AdhocProtocolRecord? _record;
 
   RunnableProtocolType get type => RunnableProtocolType.adhoc;
-
-  String? get lastSessionId => record?.getSession() ?? null;
-
+  String? get lastSessionId => _record?.getSession() ?? null;
   List<Survey>? get postSurveys => getPostProtocolSurveys();
 
-  AdhocProtocol(ProtocolType protocolType, String studyId) :
-        _studyId = studyId {
+  AdhocProtocol(ProtocolType protocolType, String studyId) : _studyId = studyId {
     protocol = Protocol(protocolType);
+  }
+
+  AdhocProtocol.fromRecord(AdhocProtocolRecord record, String studyId) : _studyId = studyId {
+    _record = record;
+    protocol = Protocol(record.getProtocolType());
+    state = record.getState();
   }
 
   @override
@@ -46,12 +48,12 @@ class AdhocProtocol implements RunnableProtocol {
       return false;
     }
 
-    if (record != null) {
+    if (_record != null) {
       // Adhoc protocol record already exists, update its values
-      record!
+      _record!
         ..setState(state)
         ..setSession(sessionId);
-      return await record!.save();
+      return await _record!.save();
     } else {
       // Create new record
       DateTime now = DateTime.now();
@@ -68,11 +70,12 @@ class AdhocProtocol implements RunnableProtocol {
       if (firebaseEntity == null) {
         return false;
       }
-      record = AdhocProtocolRecord(firebaseEntity);
-      record!..setTimestamp(now)
+      _record = AdhocProtocolRecord(firebaseEntity);
+      _record!..setTimestamp(now)
+        ..setState(state)
         ..setSession(sessionId)
         ..setProtocol(protocol.name);
-      return await record!.save();
+      return await _record!.save();
     }
   }
 
@@ -88,6 +91,9 @@ class AdhocProtocol implements RunnableProtocol {
     }
     return surveys;
   }
+
+  @override
+  DocumentReference? get reference => _record?.reference;
 }
 
 enum AdhocProtocolRecordKey {
@@ -102,8 +108,17 @@ class AdhocProtocolRecord extends FirebaseEntity<AdhocProtocolRecordKey> {
   AdhocProtocolRecord(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
 
+  DateTime? getTimestamp() {
+    final timestampString = getValue(AdhocProtocolRecordKey.timestamp);
+    return timestampString != null ? (timestampString as Timestamp).toDate() : null;
+  }
+
   void setTimestamp(DateTime timestamp) {
     setValue(AdhocProtocolRecordKey.timestamp, timestamp.toIso8601String());
+  }
+
+  ProtocolState getState() {
+    return protocolStateFromString(getValue(AdhocProtocolRecordKey.status));
   }
 
   // Set state of protocol in firebase
@@ -117,6 +132,10 @@ class AdhocProtocolRecord extends FirebaseEntity<AdhocProtocolRecordKey> {
 
   String? getSession() {
     return getValue(AdhocProtocolRecordKey.session);
+  }
+
+  ProtocolType getProtocolType() {
+    return protocolTypeFromString(getValue(AdhocProtocolRecordKey.protocol));
   }
 
   void setProtocol(String protocolName) {

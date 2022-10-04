@@ -62,8 +62,10 @@ class NextsenseBase {
   static const String _getConnectedDevicesCommand = 'get_connected_devices';
   static const String _connectDeviceCommand = 'connect_device';
   static const String _disconnectDeviceCommand = 'disconnect_device';
+  static const String _getDeviceStateCommand = 'get_device_state';
   static const String _startStreamingCommand = 'start_streaming';
   static const String _stopStreamingCommand = 'stop_streaming';
+  static const String _isDeviceStreamingCommand = 'is_device_streaming';
   static const String _startImpedanceCommand = 'start_impedance';
   static const String _stopImpedanceCommand = 'stop_impedance';
   static const String _setImpedanceConfigCommand = 'set_impedance_config';
@@ -168,6 +170,11 @@ class NextsenseBase {
     };
   }
 
+  static Future<String> getDeviceState(String macAddress) async {
+    return await _channel.invokeMethod(_getDeviceStateCommand,
+        {_macAddressArg: macAddress});
+  }
+
   static CancelListening listenToDeviceState(Listener listener,
       String deviceMacAddress) {
     var subscription = _deviceStateStream.receiveBroadcastStream(
@@ -196,8 +203,11 @@ class NextsenseBase {
   }
 
   static Future stopStreaming(String macAddress) async {
-    await _channel.invokeMethod(_stopStreamingCommand,
-        {_macAddressArg: macAddress});
+    await _channel.invokeMethod(_stopStreamingCommand, {_macAddressArg: macAddress});
+  }
+
+  static Future<bool> isDeviceStreaming(String macAddress) async {
+    return await _channel.invokeMethod(_isDeviceStreamingCommand, {_macAddressArg: macAddress});
   }
 
   static Future<int> startImpedance(String macAddress, ImpedanceMode impedanceMode,

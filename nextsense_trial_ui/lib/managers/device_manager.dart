@@ -79,11 +79,16 @@ class DeviceManager {
     _listenToInternalState();
     _connectedDevice = device;
     await NextsenseBase.connectDevice(device.macAddress);
-    bool deviceReady = await waitDeviceReady(timeout);
-    if (!deviceReady) {
-      _logger.log(Level.WARNING, 'Timeout waiting for ready state');
-      await disconnectDevice();
-      return false;
+    // Check device state in case it is already READY (service was already running with a connected
+    // device).
+    deviceState.value = await _getDeviceState(device.macAddress);
+    if (deviceState.value != DeviceState.ready) {
+      bool deviceReady = await waitDeviceReady(timeout);
+      if (!deviceReady) {
+        _logger.log(Level.WARNING, 'Timeout waiting for ready state');
+        await disconnectDevice();
+        return false;
+      }
     }
     NextsenseBase.requestDeviceStateUpdate(device.macAddress);
     bool stateAvailable = await waitInternalStateAvailable(timeout);
@@ -109,6 +114,11 @@ class DeviceManager {
     }
     // TODO(alex): get device name for constructor?
     return Device(macAddress, "");
+  }
+
+  Future<DeviceState> _getDeviceState(String macAddress) async {
+    String deviceStateString = await NextsenseBase.getDeviceState(macAddress);
+    return deviceStateFromString(deviceStateString);
   }
 
   // Try connect to last paired device, returns true on success
@@ -185,6 +195,13 @@ class DeviceManager {
 
   Device? getConnectedDevice() {
     return _connectedDevice;
+  }
+
+  Future<bool> isConnectedDeviceStreaming() async {
+    if (_connectedDevice != null) {
+      return NextsenseBase.isDeviceStreaming(_connectedDevice!.macAddress);
+    }
+    return false;
   }
 
   Future manualDisconnect() async {

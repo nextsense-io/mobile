@@ -142,7 +142,8 @@ class ProtocolScreen extends HookWidget {
               // if (isError) SizedBox(height: 10),
               Stack(
                   children: [
-                    Center(child: CountDownTimer(duration: protocol.maxDuration, reverse: false)),
+                    Center(child: CountDownTimer(duration: protocol.maxDuration, reverse: false,
+                        secondsElapsed: viewModel.secondsElapsed)),
                     if (!viewModel.deviceCanRecord)
                       deviceInactiveOverlay(context, viewModel),
                   ]),
@@ -296,14 +297,16 @@ class ProtocolScreen extends HookWidget {
 class CountDownTimer extends StatelessWidget {
   final Duration duration;
   final bool reverse;
+  final int? secondsElapsed;
 
-  CountDownTimer({required this.duration, required this.reverse});
+  CountDownTimer({required this.duration, required this.reverse, this.secondsElapsed});
 
   @override
   Widget build(BuildContext context) {
     ProtocolScreenViewModel viewModel = context.watch<ProtocolScreenViewModel>();
     return Padding(padding: EdgeInsets.only(top: 5), child: CircularCountDownTimer(
       duration: duration.inSeconds,
+      initialDuration: secondsElapsed ?? 0,
       controller: viewModel.countDownController,
       width: MediaQuery.of(context).size.width / 2.5,
       height: MediaQuery.of(context).size.width / 2.5,

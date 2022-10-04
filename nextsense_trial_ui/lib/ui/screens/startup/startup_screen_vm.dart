@@ -1,5 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
@@ -8,6 +10,7 @@ import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_mapping.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 
@@ -78,7 +81,27 @@ class StartupScreenViewModel extends ViewModel {
     // screen.
     String screen = PrepareDeviceScreen.id;
     if (_deviceManager.hadPairedDevice) {
-      await _deviceManager.connectToLastPairedDevice();
+      bool connected = await _deviceManager.connectToLastPairedDevice();
+      RunnableProtocol? runnableProtocol = await _authManager.user!.getRunningProtocol();
+      if (connected && runnableProtocol != null) {
+        if (await _deviceManager.isConnectedDeviceStreaming()) {
+          _logger.log(Level.INFO, 'Protocol still running, navigating back to protocol screen.');
+          // Protocol still running, go to that screen.
+          setBusy(false);
+          _navigation.navigateTo(DashboardScreen.id, replace: true);
+          _navigation.navigateTo(
+              ProtocolScreenMapping.getProtocolScreenId(runnableProtocol.protocol.type),
+              arguments: runnableProtocol);
+          return;
+        } else {
+          // Device was shutdown since the app was closed, update the running protocol then go to
+          // dashboard/initial intent as usual.
+          // TODO(eric): Mark as unknown?
+          runnableProtocol.update(state: ProtocolState.completed);
+          _authManager.user!.setRunningProtocol(null);
+          _authManager.user!.save();
+        }
+      }
       screen = DashboardScreen.id;
     }
 

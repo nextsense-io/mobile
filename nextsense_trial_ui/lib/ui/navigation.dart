@@ -95,7 +95,7 @@ class Navigation {
       String scheduledProtocolId = intent.extra![TargetType.protocol.name];
       _logger.log(Level.INFO, "Scheduled protocol id: ${scheduledProtocolId}");
       ScheduledProtocol? scheduledProtocol =
-      await _studyManager.queryScheduledProtocol(scheduledProtocolId);
+          await _studyManager.queryScheduledProtocol(scheduledProtocolId);
       if (scheduledProtocol != null) {
         navigateWithCapabilityChecking(navigatorKey.currentState!.context, ProtocolScreen.id,
             replace: replace, arguments: scheduledProtocol);
