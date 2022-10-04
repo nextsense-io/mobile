@@ -1,5 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 
 /**
  * Each entry corresponds to a field name in the database instance.
@@ -27,7 +31,9 @@ enum UserKey {
   // Current user's timezone
   timezone,
   // User name
-  username
+  username,
+  // Currently recording protocol
+  running_protocol
 }
 
 enum UserType {
@@ -47,6 +53,10 @@ class User extends FirebaseEntity<UserKey> {
 
   User(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
+
+  String? getCurrentStudy() {
+    return getValue(UserKey.current_study);
+  }
 
   String? getLastPairedDeviceMacAddress() {
     final value = getValue(UserKey.last_paired_device);
@@ -68,6 +78,24 @@ class User extends FirebaseEntity<UserKey> {
   bool isTempPassword() {
     bool? isTempPassword = getValue(UserKey.is_temp_password);
     return isTempPassword != null ? isTempPassword : false;
+  }
+
+  Future<dynamic?> getRunningProtocol() async {
+    dynamic? runningProtocolRef = getValue(UserKey.running_protocol);
+    if (runningProtocolRef == null) {
+      return null;
+    }
+    if (runningProtocolRef.parent.path.toString().endsWith(Table.adhoc_protocols.name())) {
+      DocumentReference ref = runningProtocolRef as DocumentReference;
+      return AdhocProtocol.fromRecord(
+          AdhocProtocolRecord(FirebaseEntity(await ref.get())), getCurrentStudy()!);
+    } else {
+      return ScheduledProtocol(runningProtocolRef, runningProtocolRef['protocol']);
+    }
+  }
+
+  void setRunningProtocol(DocumentReference? runnableProtocol) {
+    setValue(UserKey.running_protocol, runnableProtocol);
   }
 
   static UserType getUserTypeFromString(String? userTypeStr) {

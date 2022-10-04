@@ -85,7 +85,17 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   void init() async {
     super.init();
     if (deviceCanRecord) {
-      await startSession();
+      if (runnableProtocol.state == ProtocolState.not_started) {
+        await startSession();
+      } else {
+        // Already in progress, show the progress.
+        Duration elapsedTime = DateTime.now().difference(
+            _sessionManager.getCurrentSession()?.getStartDateTime() != null ?
+            _sessionManager.getCurrentSession()!.getStartDateTime()! : DateTime.now());
+        _logger.log(Level.INFO, 'Session already in progress for ${elapsedTime.inSeconds} seconds');
+        sessionIsActive = true;
+        startTimer(elapsedTime: elapsedTime);
+      }
     }
     if (runnableProtocol.type == RunnableProtocolType.scheduled ||
         _authManager.user!.userType == UserType.researcher) {
@@ -140,16 +150,19 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         (protocolIndex % runnableProtocol.protocol.protocolBlock.length).toInt());
   }
 
-  void startTimer() {
+  void startTimer({Duration? elapsedTime}) {
     final int protocolMinTimeSeconds = protocol.minDuration.inSeconds;
     final int protocolMaxTimeSeconds = protocol.maxDuration.inSeconds;
     if (timer?.isActive ?? false) timer?.cancel();
-    secondsElapsed = 0;
-    if (_scheduledProtocolParts.isNotEmpty &&
-        _scheduledProtocolParts[_currentProtocolPart]
-        .protocolPart.marker != null) {
-      startEvent(_scheduledProtocolParts[_currentProtocolPart]
-          .protocolPart.marker!, sequentialEvent: true);
+    if (elapsedTime == null) {
+      secondsElapsed = 0;
+      if (_scheduledProtocolParts.isNotEmpty &&
+          _scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
+        startEvent(_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker!,
+            sequentialEvent: true);
+      }
+    } else {
+      secondsElapsed = elapsedTime.inSeconds;
     }
     onTimerStart();
     timer = Timer.periodic(
@@ -162,6 +175,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           minDurationPassed = true;
         }
         if (secondsElapsed >= protocolMaxTimeSeconds) {
+          _logger.log(Level.INFO,
+              'Protocol finished. ${secondsElapsed} out of ${protocolMaxTimeSeconds}');
           maxDurationPassed = true;
           timer?.cancel();
           onTimerFinished();
@@ -342,6 +357,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         setError("Failed to start streaming. Please try again and contact support if you need "
             "additional help.");
       }
+      _authManager.user!.setRunningProtocol(runnableProtocol.reference);
+      _authManager.user!.save();
     } else {
       _logger.log(
           Level.WARNING, 'Cannot start ${protocol.name} protocol, device not connected.');
@@ -362,6 +379,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         state: protocolCompleted
             ? ProtocolState.completed
             : ProtocolState.cancelled);
+    _authManager.user!.setValue(UserKey.running_protocol, null);
   }
 
   // Executed when protocol is successfully completed i.e. minimum duration is

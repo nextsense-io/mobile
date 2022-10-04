@@ -41,6 +41,7 @@ import io.flutter.plugin.common.StandardMethodCodec;
 import io.nextsense.android.Config;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceManager;
+import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.DeviceSettings.ImpedanceMode;
 import io.nextsense.android.base.DeviceState;
@@ -62,10 +63,12 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String DISCONNECT_DEVICE_COMMAND = "disconnect_device";
   public static final String START_STREAMING_COMMAND = "start_streaming";
   public static final String STOP_STREAMING_COMMAND = "stop_streaming";
+  public static final String IS_DEVICE_STREAMING_COMMAND = "is_device_streaming";
   public static final String START_IMPEDANCE_COMMAND = "start_impedance";
   public static final String STOP_IMPEDANCE_COMMAND = "stop_impedance";
   public static final String SET_IMPEDANCE_CONFIG_COMMAND = "set_impedance_config";
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
+  public static final String GET_DEVICE_STATE_COMMAND = "get_device_state";
   public static final String GET_DEVICE_SETTINGS_COMMAND = "get_device_settings";
   public static final String GET_CHANNEL_DATA_COMMAND = "get_channel_data";
   public static final String GET_ACC_CHANNEL_DATA_COMMAND = "get_acc_channel_data";
@@ -78,9 +81,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String SET_UPLOADER_MINIMUM_CONNECTIVITY_COMMAND =
       "set_uploader_minimum_connectivity";
   public static final String GET_FREE_DISK_SPACE_COMMAND = "get_free_disk_space";
-  public static final String GET_TIMEZONE_ID = "get_timezone_id";
+  public static final String GET_TIMEZONE_ID_COMMAND = "get_timezone_id";
   public static final String EMULATOR_COMMAND = "emulator_command";
-  public static final String IS_BLUETOOTH_ENABLED = "is_bluetooth_enabled";
+  public static final String IS_BLUETOOTH_ENABLED_ARGUMENT = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
   public static final String FROM_DATABASE_ARGUMENT = "from_database";
   public static final String UPLOAD_TO_CLOUD_ARGUMENT = "upload_to_cloud";
@@ -228,7 +231,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         Log.d(TAG, "disconnected from device: " + macAddress + " with result " +
             result);
         break;
-      case IS_BLUETOOTH_ENABLED:
+      case IS_BLUETOOTH_ENABLED_ARGUMENT:
         if (!Config.USE_EMULATED_BLE)
           result.success(BluetoothAdapter.getDefaultAdapter().isEnabled());
         else
@@ -253,6 +256,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         Integer frequencyDivider = call.argument(FREQUENCY_DIVIDER_ARGUMENT);
         startImpedance(result, macAddress, impedanceModeName, channelNumber, frequencyDivider);
         break;
+      case IS_DEVICE_STREAMING_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        isDeviceStreaming(result, macAddress);
+        break;
       case STOP_IMPEDANCE_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         stopImpedance(result, macAddress);
@@ -266,6 +273,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case GET_CONNECTED_DEVICES_COMMAND:
         getConnectedDevices(result);
+        break;
+      case GET_DEVICE_STATE_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        getDeviceState(result, macAddress);
         break;
       case GET_DEVICE_SETTINGS_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -315,7 +326,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case GET_FREE_DISK_SPACE_COMMAND:
         getFreeDiskSpace(result);
         break;
-      case GET_TIMEZONE_ID:
+      case GET_TIMEZONE_ID_COMMAND:
         getTimezoneId(result);
         break;
       case EMULATOR_COMMAND:
@@ -408,6 +419,16 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       }
     }
     result.success(connectedDevicesJson);
+  }
+
+  private void getDeviceState(Result result, String macAddress) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      returnError(result, GET_DEVICE_STATE_COMMAND, ERROR_DEVICE_NOT_FOUND,
+          /*errorMessage=*/null, /*errorDetails=*/null);
+      return;
+    }
+    result.success(device.getState().name());
   }
 
   private void startScanning(EventChannel.EventSink eventSink) {
@@ -621,6 +642,16 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       returnError(result, STOP_STREAMING_COMMAND, ERROR_STREAMING_STOP_FAILED,
           /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
     }
+  }
+
+  private void isDeviceStreaming(Result result, String macAddress) {
+    Device device = devices.get(macAddress);
+    if (device == null) {
+      returnError(result, START_IMPEDANCE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    result.success(device.getMode() == DeviceMode.STREAMING);
   }
 
   private void startImpedance(

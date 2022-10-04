@@ -4,6 +4,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/data_session.dart';
 import 'package:nextsense_trial_ui/domain/device_settings.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
@@ -122,6 +123,31 @@ class SessionManager {
     return _currentSession;
   }
 
+  // Check in the user record if there is a running session, then load it.
+  Future<Session?> loadCurrentSession() async {
+    User? user = _authManager.user;
+    if (user == null) {
+      return null;
+    }
+    RunnableProtocol? runningProtocol = await user.getRunningProtocol();
+    if (runningProtocol != null) {
+      FirebaseEntity? sessionEntity =
+          await _firestoreManager.queryEntity([Table.sessions], [runningProtocol.lastSessionId!]);
+      if (sessionEntity != null) {
+        _currentSession = Session(sessionEntity);
+        return _currentSession;
+      }
+    }
+    return null;
+  }
+
+  // Future autoCloseRunningSession() async {
+  //   if (_deviceManager.getConnectedDevice() == null ||
+  //       !(await _deviceManager.isConnectedDeviceStreaming())) {
+  //
+  //   }
+  // }
+
   Future stopSession(String deviceMacAddress) async {
     if (_currentSession == null || _currentDataSession == null) {
       _logger.log(Level.WARNING, 'Tried to stop a session while none was running.');
@@ -136,6 +162,14 @@ class SessionManager {
     _currentDataSession!.setValue(DataSessionKey.end_datetime, stopTime);
     await _currentDataSession!.save();
     _currentDataSession = null;
+    User? user = _authManager.user;
+    if (user == null) {
+      _logger.log(Level.WARNING, 'Could not get the user when stopping a session, the session '
+          'might be marked as still running.');
+      return;
+    }
+    user.setValue(UserKey.running_protocol, null);
+    await user.save();
   }
 
   Future<bool> addProtocolData(Map protocolData) async {

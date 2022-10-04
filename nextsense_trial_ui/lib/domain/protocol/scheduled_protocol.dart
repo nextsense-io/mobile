@@ -31,7 +31,6 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
 
   // Start time - hours & minutes only
   late DateTime startTime;
-
   // Time constraints for protocol
   // Those are absolute DateTime values
   late DateTime allowedStartBefore;

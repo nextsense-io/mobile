@@ -46,8 +46,8 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<DeviceManager>(DeviceManager());
   getIt.registerSingleton<StudyManager>(StudyManager());
   getIt.registerSingleton<SurveyManager>(SurveyManager());
-  getIt.registerSingleton<DataManager>(DataManager());
   getIt.registerSingleton<SessionManager>(SessionManager());
+  getIt.registerSingleton<DataManager>(DataManager());
   getIt.registerSingleton<SeizuresManager>(SeizuresManager());
   getIt.registerSingleton<SideEffectsManager>(SideEffectsManager());
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
