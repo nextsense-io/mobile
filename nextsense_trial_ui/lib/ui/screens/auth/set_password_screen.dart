@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
+import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -52,11 +53,15 @@ class SetPasswordScreen extends HookWidget {
     }
     return Container(
         child: Center(
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+          child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
             Padding(
               padding: EdgeInsets.all(10.0),
-              child: HeaderText(text: 'Change Password'),
+              child: HeaderText(text: 'Replace Password'),
             ),
+            RoundedBackground(child: Column(children: [
             Padding(
               padding: EdgeInsets.all(10.0),
               child: TextFormField(
@@ -65,11 +70,8 @@ class SetPasswordScreen extends HookWidget {
                 maxLength: 20,
                 obscureText: true,
                 decoration: InputDecoration(
-                  icon: Icon(Icons.password),
-                  labelText: 'Enter your password',
-                  labelStyle: TextStyle(
-                    color: NextSenseColors.purple,
-                  ),
+                  // icon: Icon(Icons.password),
+                  label: MediumText(text: 'New Password', color: NextSenseColors.darkBlue),
                   helperText: 'Minimum ${viewModel.minimumPasswordLength} characters.',
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFF6200EE)),
@@ -88,11 +90,8 @@ class SetPasswordScreen extends HookWidget {
                 maxLength: 20,
                 obscureText: true,
                 decoration: InputDecoration(
-                  icon: Icon(Icons.password),
-                  labelText: 'Confirm your password',
-                  labelStyle: TextStyle(
-                    color: NextSenseColors.purple,
-                  ),
+                  // icon: Icon(Icons.password),
+                  label: MediumText(text: 'Confirm your password', color: NextSenseColors.darkBlue),
                   helperText: '',
                   enabledBorder: UnderlineInputBorder(
                     borderSide: BorderSide(color: Color(0xFF6200EE)),
@@ -103,13 +102,14 @@ class SetPasswordScreen extends HookWidget {
                 },
               ),
             ),
-            Padding(
-                padding: EdgeInsets.all(10.0),
-                child: SimpleButton(
-                  text: MediumText(text: 'Submit', color: NextSenseColors.darkBlue),
+            ])),
+            SizedBox(height: 20),
+            SimpleButton(
+                  text: MediumText(text: 'Replace Password', color: NextSenseColors.purple,
+                    textAlign: TextAlign.center,),
                   onTap: viewModel.isBusy ? () => {print('busy cannot submit')} :
                       () => _onSubmitButtonPressed(context, viewModel),
-                )),
+                ),
             Visibility(
               visible: viewModel.isBusy,
               child: CircularProgressIndicator(
