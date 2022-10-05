@@ -10,6 +10,7 @@ import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
+import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -49,24 +50,29 @@ class SignInScreen extends HookWidget {
   }
 
   Widget _buildEmailPasswordAuth(BuildContext context, SignInScreenViewModel viewModel) {
-    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+      RoundedBackground(child: Column(children: [
       _UserPasswordSignInInputField(
           field: viewModel.username,
-          labelText: "Enter your email",
+          labelText: 'Email',),
           // helperText: 'Please contact NextSense support if you did not get an id',
-          icon: Icon(Icons.account_circle)),
+          // icon: Icon(Icons.account_circle)),
       _UserPasswordSignInInputField(
           field: viewModel.password,
           obscureText: true,
-          labelText: "Enter your password",
+          labelText: 'Password',
           // helperText: 'Contact NextSense to reset your password',
-          icon: Icon(Icons.lock)),
-      Padding(
-          padding: EdgeInsets.all(10.0),
-          child: SimpleButton(
-              text: MediumText(text: 'Continue', color: NextSenseColors.darkBlue),
+          // icon: Icon(Icons.lock)),
+      )])),
+      SizedBox(height: 20),
+      SimpleButton(
+              text: MediumText(text: 'Login', color: NextSenseColors.darkBlue,
+                textAlign: TextAlign.center,),
               onTap: viewModel.isBusy ? () => {} :
-                  () => _signIn(context, AuthMethod.email_password)))
+                  () => _signIn(context, AuthMethod.email_password))
     ]);
   }
 
@@ -74,13 +80,13 @@ class SignInScreen extends HookWidget {
     return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       _UserPasswordSignInInputField(
           field: viewModel.username,
-          labelText: "Enter your id",
+          labelText: 'Enter your id',
           helperText: 'Please contact NextSense support if you did not get an id',
           icon: Icon(Icons.account_circle)),
       _UserPasswordSignInInputField(
           field: viewModel.password,
           obscureText: true,
-          labelText: "Enter your password",
+          labelText: 'Enter your password',
           helperText: 'Contact NextSense to reset your password',
           icon: Icon(Icons.lock)),
       Padding(
@@ -129,6 +135,7 @@ class SignInScreen extends HookWidget {
             color: NextSenseColors.red,
             textAlign: TextAlign.center),
           ))),
+      SizedBox(height: 20),
       Visibility(
         visible: viewModel.isBusy,
         child: CircularProgressIndicator(
@@ -249,10 +256,7 @@ class _UserPasswordSignInInputField extends StatelessWidget {
           //enabled: !_askForPassword,
           decoration: InputDecoration(
             icon: icon,
-            labelText: labelText,
-            labelStyle: TextStyle(
-              color: Color(0xFF6200EE),
-            ),
+            label: HeaderText(text: labelText, color: NextSenseColors.darkBlue),
             helperText: helperText,
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF6200EE)),
