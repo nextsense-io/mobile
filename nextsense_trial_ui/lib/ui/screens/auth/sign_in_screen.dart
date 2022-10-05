@@ -69,7 +69,7 @@ class SignInScreen extends HookWidget {
       )])),
       SizedBox(height: 20),
       SimpleButton(
-              text: MediumText(text: 'Login', color: NextSenseColors.darkBlue,
+              text: MediumText(text: 'Login', color: NextSenseColors.purple,
                 textAlign: TextAlign.center,),
               onTap: viewModel.isBusy ? () => {} :
                   () => _signIn(context, AuthMethod.email_password))
