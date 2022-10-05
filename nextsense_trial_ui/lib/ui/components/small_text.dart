@@ -1,8 +1,8 @@
-/* A widget to display small emphasized text. */
+/* A widget to display small text. */
 import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 
-class SmallEmphasizedText extends StatelessWidget {
+class SmallText extends StatelessWidget {
   final String text;
   final Color color;
   final TextAlign textAlign;
@@ -10,7 +10,7 @@ class SmallEmphasizedText extends StatelessWidget {
   final double marginRight;
   final double marginLeft;
   final double marginBottom;
-  SmallEmphasizedText(
+  SmallText(
       {required this.text,
         this.color = NextSenseColors.darkBlue,
         this.textAlign = TextAlign.start,
@@ -21,8 +21,7 @@ class SmallEmphasizedText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headerStyle = TextStyle(fontSize: 14, color: color, fontWeight: FontWeight.w400,
-        fontStyle: FontStyle.italic);
+    final headerStyle = TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w400);
     return Container(
       margin: EdgeInsets.only(
         top: marginTop,

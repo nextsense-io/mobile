@@ -29,9 +29,7 @@ class SetPasswordScreen extends HookWidget {
                 child: PageScaffold(
                     showBackButton: _navigation.canPop(),
                     showProfileButton: false,
-                    child: _buildBody(context, viewModel)
-                )
-            ),
+                    child: _buildBody(context, viewModel))),
           );
         });
   }
@@ -41,7 +39,9 @@ class SetPasswordScreen extends HookWidget {
     showDialog(
         context: context,
         builder: (_) => SimpleAlertDialog(
-          title: title, content: message, popNavigator: popNavigator != null ? popNavigator : false,
+            title: title,
+            content: message,
+            popNavigator: popNavigator != null ? popNavigator : false,
             onPressed: onPressed));
   }
 
@@ -53,63 +53,69 @@ class SetPasswordScreen extends HookWidget {
     }
     return Container(
         child: Center(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
+      child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
             Padding(
               padding: EdgeInsets.all(10.0),
               child: HeaderText(text: 'Replace Password'),
             ),
-            RoundedBackground(child: Column(children: [
-            Padding(
-              padding: EdgeInsets.all(10.0),
-              child: TextFormField(
-                cursorColor: TextSelectionTheme.of(context).cursorColor,
-                initialValue: '',
-                maxLength: 20,
-                obscureText: true,
-                decoration: InputDecoration(
-                  // icon: Icon(Icons.password),
-                  label: MediumText(text: 'New Password', color: NextSenseColors.darkBlue),
-                  helperText: 'Minimum ${viewModel.minimumPasswordLength} characters.',
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF6200EE)),
+            RoundedBackground(
+                child: Column(children: [
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: TextFormField(
+                  cursorColor: TextSelectionTheme.of(context).cursorColor,
+                  initialValue: '',
+                  maxLength: 20,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    // icon: Icon(Icons.password),
+                    label: MediumText(text: 'New Password', color: NextSenseColors.darkBlue),
+                    helperText: 'Minimum ${viewModel.minimumPasswordLength} characters.',
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF6200EE)),
+                    ),
                   ),
+                  onChanged: (password) {
+                    viewModel.password = password;
+                  },
                 ),
-                onChanged: (password) {
-                  viewModel.password = password;
-                },
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(10.0),
-              child: TextFormField(
-                cursorColor: TextSelectionTheme.of(context).cursorColor,
-                initialValue: '',
-                maxLength: 20,
-                obscureText: true,
-                decoration: InputDecoration(
-                  // icon: Icon(Icons.password),
-                  label: MediumText(text: 'Confirm your password', color: NextSenseColors.darkBlue),
-                  helperText: '',
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF6200EE)),
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: TextFormField(
+                  cursorColor: TextSelectionTheme.of(context).cursorColor,
+                  initialValue: '',
+                  maxLength: 20,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    // icon: Icon(Icons.password),
+                    label:
+                        MediumText(text: 'Confirm your password', color: NextSenseColors.darkBlue),
+                    helperText: '',
+                    enabledBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF6200EE)),
+                    ),
                   ),
+                  onChanged: (passwordConfirmation) {
+                    viewModel.passwordConfirmation = passwordConfirmation;
+                  },
                 ),
-                onChanged: (passwordConfirmation) {
-                  viewModel.passwordConfirmation = passwordConfirmation;
-                },
               ),
-            ),
             ])),
             SizedBox(height: 20),
             SimpleButton(
-                  text: MediumText(text: 'Replace Password', color: NextSenseColors.purple,
-                    textAlign: TextAlign.center,),
-                  onTap: viewModel.isBusy ? () => {print('busy cannot submit')} :
-                      () => _onSubmitButtonPressed(context, viewModel),
-                ),
+              text: MediumText(
+                text: 'Replace Password',
+                color: NextSenseColors.purple,
+                textAlign: TextAlign.center,
+              ),
+              onTap: viewModel.isBusy
+                  ? () => {print('busy cannot submit')}
+                  : () => _onSubmitButtonPressed(context, viewModel),
+            ),
             Visibility(
               visible: viewModel.isBusy,
               child: CircularProgressIndicator(
@@ -117,16 +123,16 @@ class SetPasswordScreen extends HookWidget {
               ),
             ),
           ]),
-        ));
+    ));
   }
 
-  Future<void> _onSubmitButtonPressed(BuildContext context,
-      SetPasswordScreenViewModel viewModel) async {
+  Future<void> _onSubmitButtonPressed(
+      BuildContext context, SetPasswordScreenViewModel viewModel) async {
     try {
       bool passwordChanged = await viewModel.changePassword();
       if (passwordChanged) {
-        await _showDialog(context, 'Password changed', '', false,
-                () => _navigation.navigateToNextRoute());
+        await _showDialog(
+            context, 'Password changed', '', false, () => _navigation.navigateToNextRoute());
       } else {
         await _showDialog(context, 'Error', 'Invalid password', false, null);
       }
@@ -135,7 +141,8 @@ class SetPasswordScreen extends HookWidget {
           context,
           'Error',
           'Could not set password, make sure you have an active internet connection and try again.',
-          false, null);
+          false,
+          null);
       return;
     }
   }
