@@ -13,6 +13,7 @@ import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:nextsense_trial_ui/ui/components/small_text.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
@@ -45,7 +46,10 @@ class SignInScreen extends HookWidget {
                   HeaderText(text: 'Get started'),
                   SizedBox(height: 20),
                   _buildBody(context),
-                  Spacer()
+                  Spacer(),
+                  SmallText(
+                      text: 'By creating a new account, you are agreeing to our Terms of '
+                          'Service and Privacy Policy.'),
                 ]))));
   }
 
@@ -54,47 +58,58 @@ class SignInScreen extends HookWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-      RoundedBackground(child: Column(children: [
-      _UserPasswordSignInInputField(
-          field: viewModel.username,
-          labelText: 'Email',),
-          // helperText: 'Please contact NextSense support if you did not get an id',
-          // icon: Icon(Icons.account_circle)),
-      _UserPasswordSignInInputField(
-          field: viewModel.password,
-          obscureText: true,
-          labelText: 'Password',
-          // helperText: 'Contact NextSense to reset your password',
-          // icon: Icon(Icons.lock)),
-      )])),
-      SizedBox(height: 20),
-      SimpleButton(
-              text: MediumText(text: 'Login', color: NextSenseColors.purple,
-                textAlign: TextAlign.center,),
-              onTap: viewModel.isBusy ? () => {} :
-                  () => _signIn(context, AuthMethod.email_password))
-    ]);
+          RoundedBackground(
+              child: Column(children: [
+            _UserPasswordSignInInputField(
+              field: viewModel.username,
+              labelText: 'Email',
+            ),
+            // helperText: 'Please contact NextSense support if you did not get an id',
+            // icon: Icon(Icons.account_circle)),
+            _UserPasswordSignInInputField(
+              field: viewModel.password,
+              obscureText: true,
+              labelText: 'Password',
+              // helperText: 'Contact NextSense to reset your password',
+              // icon: Icon(Icons.lock)),
+            )
+          ])),
+          SizedBox(height: 20),
+          SimpleButton(
+              text: MediumText(
+                text: 'Login',
+                color: NextSenseColors.purple,
+                textAlign: TextAlign.center,
+              ),
+              onTap:
+                  viewModel.isBusy ? () => {} : () => _signIn(context, AuthMethod.email_password))
+        ]);
   }
 
   Widget _buildNextSenseAuth(BuildContext context, SignInScreenViewModel viewModel) {
-    return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      _UserPasswordSignInInputField(
-          field: viewModel.username,
-          labelText: 'Enter your id',
-          helperText: 'Please contact NextSense support if you did not get an id',
-          icon: Icon(Icons.account_circle)),
-      _UserPasswordSignInInputField(
-          field: viewModel.password,
-          obscureText: true,
-          labelText: 'Enter your password',
-          helperText: 'Contact NextSense to reset your password',
-          icon: Icon(Icons.lock)),
-      Padding(
-          padding: EdgeInsets.all(10.0),
-          child: SimpleButton(
-              text: MediumText(text: 'Continue', color: NextSenseColors.darkBlue),
-              onTap: viewModel.isBusy ? () => {} : () => _signIn(context, AuthMethod.user_code)))
-    ]);
+    return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          RoundedBackground(
+              child: Column(children: [
+            _UserPasswordSignInInputField(
+                field: viewModel.username,
+                labelText: 'Id',
+                helperText: 'Please contact NextSense support if you did not get an id'),
+            // icon: Icon(Icons.account_circle)),
+            _UserPasswordSignInInputField(
+                field: viewModel.password,
+                obscureText: true,
+                labelText: 'Password',
+                helperText: 'Contact NextSense to reset your password'),
+            // icon: Icon(Icons.lock)),
+          ])),
+          SizedBox(height: 20),
+          SimpleButton(
+              text: MediumText(text: 'Login', color: NextSenseColors.darkBlue),
+              onTap: viewModel.isBusy ? () => {} : () => _signIn(context, AuthMethod.user_code))
+        ]);
   }
 
   Widget _buildGoogleAuth(BuildContext context, SignInScreenViewModel viewModel) {
@@ -130,10 +145,11 @@ class SignInScreen extends HookWidget {
     _signInWidgets.addAll([
       Visibility(
           visible: viewModel.errorMsg.isNotEmpty,
-          child: Center(child: Padding(padding: EdgeInsets.all(20), child: EmphasizedText(
-            text: viewModel.errorMsg,
-            color: NextSenseColors.red,
-            textAlign: TextAlign.center),
+          child: Center(
+              child: Padding(
+            padding: EdgeInsets.all(20),
+            child: EmphasizedText(
+                text: viewModel.errorMsg, color: NextSenseColors.red, textAlign: TextAlign.center),
           ))),
       SizedBox(height: 20),
       Visibility(
@@ -161,8 +177,7 @@ class SignInScreen extends HookWidget {
           break;
         case AuthenticationResult.connection_error:
           dialogTitle = 'Connection error';
-          dialogContent = 'An internet connection is needed to validate your '
-              'password.';
+          dialogContent = 'An internet connection is needed to validate your password.';
           break;
         default:
           dialogTitle = 'Error';
@@ -232,7 +247,6 @@ class _UserPasswordSignInInputField extends StatelessWidget {
   final ValueNotifier field;
   final String labelText;
   final String? helperText;
-  final Icon? icon;
   final bool? obscureText;
 
   const _UserPasswordSignInInputField(
@@ -240,7 +254,6 @@ class _UserPasswordSignInInputField extends StatelessWidget {
       required this.field,
       required this.labelText,
       this.helperText,
-      this.icon,
       this.obscureText})
       : super(key: key);
 
@@ -255,7 +268,6 @@ class _UserPasswordSignInInputField extends StatelessWidget {
           obscureText: obscureText ?? false,
           //enabled: !_askForPassword,
           decoration: InputDecoration(
-            icon: icon,
             label: HeaderText(text: labelText, color: NextSenseColors.darkBlue),
             helperText: helperText,
             enabledBorder: UnderlineInputBorder(
