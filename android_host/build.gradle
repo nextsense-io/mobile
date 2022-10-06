@@ -17,7 +17,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    flavorDimensions "target_user_type"
+    flavorDimensions "target_user_type", "env"
     productFlavors {
         subject {
             dimension "target_user_type"
@@ -25,6 +25,34 @@ android {
 
         researcher {
             dimension "target_user_type"
+        }
+
+        dev {
+            dimension "env"
+            applicationIdSuffix ".dev"
+        }
+
+        prod {
+            dimension "env"
+            applicationIdSuffix ".prod"
+        }
+    }
+
+    sourceSets {
+        researcherDev {
+            setRoot 'src/researcher/dev'
+        }
+
+        researcherProd {
+            setRoot 'src/researcher/prod'
+        }
+
+        subjectDev {
+            setRoot 'src/subject/dev'
+        }
+
+        subjectProd {
+            setRoot 'src/subject/prod'
         }
     }
 
