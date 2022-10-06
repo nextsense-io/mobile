@@ -3,11 +3,13 @@
     package="io.nextsense.android.service">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application android:label="NextSense">
 
         <service
             android:name=".ForegroundService"
+            android:foregroundServiceType="location"
             android:enabled="true"
             android:exported="false" />
     </application>

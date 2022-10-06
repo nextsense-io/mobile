@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     if (getIntent().getExtras() != null) {
       Log.i(TAG, "Start intent received extras: " + getIntent().getExtras().toString());
       Log.i(TAG, "Start intent received json: " +
-              getIntent().getExtras().get(EXTRA_NOTIFICATION_JSON));
+              getIntent().getExtras().getString(EXTRA_NOTIFICATION_JSON));
       initialIntent = getIntent();
     }
 
@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity {
       String jsonData = androidIntent.getExtras().getString(EXTRA_NOTIFICATION_JSON);
       if (jsonData != null) {
         Log.i(TAG, "New intent received json: " +
-            androidIntent.getExtras().get(EXTRA_NOTIFICATION_JSON));
+            androidIntent.getExtras().getString(EXTRA_NOTIFICATION_JSON));
         Map notificationData = gson.fromJson(jsonData, Map.class);
         Map<String, String> payloadMap = (Map<String, String>)
                 ((Map) notificationData.get(JSON_KEY_CONTENT)).get(JSON_KEY_PAYLOAD);
