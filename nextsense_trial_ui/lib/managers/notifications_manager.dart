@@ -45,6 +45,47 @@ enum TargetType {
   survey
 }
 
+class NotificationController {
+
+  static final CustomLogPrinter _logger = CustomLogPrinter('NotificationsManager');
+
+  /// Use this method to detect when a new notification or a schedule is created
+  @pragma("vm:entry-point")
+  static Future <void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
+    // Your code goes here
+  }
+
+  /// Use this method to detect every time that a new notification is displayed
+  @pragma("vm:entry-point")
+  static Future <void> onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {
+    // Your code goes here
+  }
+
+  /// Use this method to detect if the user dismissed a notification
+  @pragma("vm:entry-point")
+  static Future <void> onDismissActionReceivedMethod(ReceivedAction receivedAction) async {
+    // Your code goes here
+  }
+
+  /// Use this method to detect when the user taps on a notification or action button
+  @pragma("vm:entry-point")
+  static Future <void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+    // Your code goes here
+
+    _logger.log(Level.INFO, "User clicked on a notification.");
+    _logger.log(Level.INFO, "User clicked on a notification going to "
+        "${receivedAction.payload?[TargetType.protocol.name] ?? "dashboard."}");
+    // Navigator.of(context).pushNamed(
+    //     '/NotificationPage',
+    //     arguments: {
+    //       // your page params. I recommend you to pass the
+    //       // entire *receivedNotification* object
+    //       id: receivedNotification.id
+    //     }
+    // );
+  }
+}
+
 class NotificationsManager {
   // TODO(alex): discuss notification types that can be replaced and fix
   // _notificationMessageId depends on notification entity type
@@ -72,19 +113,20 @@ class NotificationsManager {
         // Channel groups are only visual and are not required
         channelGroups: [
           NotificationChannelGroup(
-              channelGroupkey: 'basic_channel_group',
+              channelGroupKey: 'basic_channel_group',
               channelGroupName: 'Basic group')
         ],
         debug: true
     );
-    AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
-      if (!isAllowed) {
-        // This is just a basic example. For real apps, you must show some
-        // friendly dialog box before call the request method.
-        // This is very important to not harm the user experience
-        AwesomeNotifications().requestPermissionToSendNotifications();
-      }
-    });
+    // TODO(eric): Do in permission manager.
+    // AwesomeNotifications().isNotificationAllowed().then((isAllowed) {
+    //   if (!isAllowed) {
+    //     // This is just a basic example. For real apps, you must show some
+    //     // friendly dialog box before call the request method.
+    //     // This is very important to not harm the user experience
+    //     AwesomeNotifications().requestPermissionToSendNotifications();
+    //   }
+    // });
 
     // This provided handler must be a top-level function and cannot be anonymous otherwise an
     // [ArgumentError] will be thrown.
@@ -95,19 +137,6 @@ class NotificationsManager {
     messaging.getToken().then((token)=> _onFcmTokenUpdated(token!));
     messaging.onTokenRefresh.listen(_onFcmTokenUpdated);
 
-    AwesomeNotifications().actionStream.listen((ReceivedNotification notification) {
-      _logger.log(Level.INFO, "User clicked on a notification.");
-      _logger.log(Level.INFO, "User clicked on a notification going to "
-          "${notification.payload?[TargetType.protocol.name] ?? "dashboard."}");
-      // Navigator.of(context).pushNamed(
-      //     '/NotificationPage',
-      //     arguments: {
-      //       // your page params. I recommend you to pass the
-      //       // entire *receivedNotification* object
-      //       id: receivedNotification.id
-      //     }
-      // );
-    });
     _logger.log(Level.INFO, 'initialized');
   }
 

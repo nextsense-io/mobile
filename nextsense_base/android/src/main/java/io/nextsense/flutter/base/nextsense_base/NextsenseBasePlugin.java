@@ -214,9 +214,11 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case CONNECT_TO_SERVICE_COMMAND:
         connectToService();
+        result.success(null);
         break;
       case STOP_SERVICE_COMMAND:
         stopService();
+        result.success(null);
         break;
       case CONNECT_DEVICE_COMMAND:
         String macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -382,6 +384,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void connectToService() {
+    if (nextSenseServiceBound) {
+      return;
+    }
     if (applicationContext != null) {
       try {
         Class<?> uiClass = Class.forName(
