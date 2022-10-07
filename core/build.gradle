@@ -5,11 +5,11 @@ apply plugin: 'maven-publish'
 apply plugin: 'org.sonarqube'
 
 android {
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 24
-        targetSdkVersion 32
+        targetSdkVersion 33
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -81,23 +81,25 @@ sonarqube {
 }
 
 dependencies {
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.0'
+    // Getting an error when upgrading to 2.x.
+    // Failed to transform FakeDependency.jar to match attributes {artifactType=_internal-d8-desugar-methods, org.gradle.libraryelements=jar, org.gradle.usage=java-runtime}. Execution failed for D8BackportedMethodsGenerator
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
     implementation 'androidx.test:core:1.4.0'
     implementation 'com.github.weliem:blessed-android:2.3.0'
     // implementation 'com.github.nextsense-io:blessed-android:2.0.11-nextsense'
-    implementation platform('com.google.firebase:firebase-bom:30.3.0')
+    implementation platform('com.google.firebase:firebase-bom:30.5.0')
     compileOnly "com.google.firebase:firebase-analytics"
     compileOnly "com.google.firebase:firebase-firestore"
     implementation "com.google.firebase:firebase-functions"
-    implementation "com.google.code.gson:gson:2.9.0"
-    implementation 'com.google.guava:guava:30.1.1-jre'
-    implementation 'com.google.protobuf:protobuf-javalite:3.19.2'
+    implementation 'com.google.code.gson:gson:2.9.1'
+    implementation 'com.google.guava:guava:31.1-jre'
+    implementation 'com.google.protobuf:protobuf-javalite:3.21.1'
     implementation 'com.google.protobuf:protoc:3.13.0'
     implementation 'org.greenrobot:eventbus:3.3.1'
     testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.robolectric:robolectric:4.6.1'
+    testImplementation 'org.robolectric:robolectric:4.9'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
