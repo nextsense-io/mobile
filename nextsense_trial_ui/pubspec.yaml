@@ -15,11 +15,12 @@ dependencies:
     path: ../nextsense_base
   app_settings: ^4.1.5
   audioplayers: ^1.0.1
-  awesome_notifications: ^0.6.21
+  awesome_notifications: ^0.7.1
   charts_flutter: ^0.12.0
   circular_countdown_timer: ^0.2.1
   cloud_firestore: ^3.1.17
   connectivity_plus: ^2.2.1
+  device_info_plus: ^5.0.1
   dropdown_button2: ^1.5.2
   expandable: ^5.0.1
   firebase_auth: ^3.10.0
@@ -52,7 +53,7 @@ dependencies:
   logging: ^1.0.2
   package_info_plus: ^1.4.2
   path_provider: ^2.0.8
-  permission_handler: ^9.2.0
+  permission_handler: ^10.1.0
   persistent_bottom_nav_bar_v2: ^4.2.3
   provider: ^6.0.1
   receive_intent: ^0.2.1

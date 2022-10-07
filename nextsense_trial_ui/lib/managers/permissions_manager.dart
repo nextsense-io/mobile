@@ -1,3 +1,4 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class PermissionRequest {
@@ -6,9 +7,10 @@ class PermissionRequest {
   String requestText;
   String? deniedText;
   bool showRequest;
+  int minApiVersion;
 
   PermissionRequest({required this.permission, required this.required,
-    required this.requestText, this.showRequest = true, this.deniedText});
+    required this.requestText, this.showRequest = true, this.deniedText, this.minApiVersion = 1});
 }
 
 class PermissionsManager {
@@ -33,6 +35,11 @@ class PermissionsManager {
             'the popup after pressing continue.',
         deniedText: 'Please try again and allow the location permission. It is '
             'not possible to connect to your NextSense device without it.'),
+    PermissionRequest(permission: Permission.notification, required: true,
+        requestText: 'Notifications are needed to show the status of the device and of the '
+            'recording.',
+        deniedText: 'Please try again and allow the notification permission. It is '
+            'not possible to manage your NextSense device without it.', minApiVersion: 33),
     PermissionRequest(permission: Permission.ignoreBatteryOptimizations,
         required: false,
         requestText: 'Battery optimizations need to be disabled to ensure that '
@@ -55,8 +62,13 @@ class PermissionsManager {
   }
 
   Future<List<PermissionRequest>> getPermissionsToRequest() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
     List<PermissionRequest> permissionRequests = [];
     for (PermissionRequest permissionRequest in _permissionsNeeded) {
+      if (androidInfo.version.sdkInt! < permissionRequest.minApiVersion) {
+        continue;
+      }
       if (await permissionRequest.permission.isDenied) {
         permissionRequests.add(permissionRequest);
       }
