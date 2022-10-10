@@ -65,6 +65,8 @@ class DashboardScheduleView extends StatelessWidget {
       return;
     }
 
+    // Remove task popup.
+    _navigation.pop();
     _navigation.navigateWithCapabilityChecking(context, ProtocolScreen.id,
         arguments: scheduledProtocol);
 
@@ -93,6 +95,8 @@ class DashboardScheduleView extends StatelessWidget {
       return;
     }
 
+    // Remove task popup.
+    _navigation.pop();
     bool completed = await _navigation.navigateTo(SurveyScreen.id, arguments: scheduledSurvey);
 
     if (completed && scheduledSurvey.state == SurveyState.completed) {
