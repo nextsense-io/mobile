@@ -22,7 +22,6 @@ dependencies:
   connectivity_plus: ^2.2.1
   device_info_plus: ^5.0.1
   dropdown_button2: ^1.5.2
-  expandable: ^5.0.1
   firebase_auth: ^3.10.0
   firebase_core: ^1.23.0
   firebase_crashlytics: ^2.8.11

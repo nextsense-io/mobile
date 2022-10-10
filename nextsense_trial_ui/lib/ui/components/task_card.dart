@@ -1,8 +1,9 @@
-import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
+import 'package:nextsense_trial_ui/ui/components/cancel_button.dart';
 import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
+import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_button.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
@@ -30,34 +31,63 @@ class TaskCard extends StatelessWidget {
         this.completed = task.completed,
         this.onTap = onTap;
 
-  @override
-  Widget build(BuildContext context) {
-    String whenText;
-    bool showClock = false;
-    if (windowEndTime == null) {
-      whenText = windowStartTime.hmma;
-      showClock = true;
-    } else if (windowStartTime.hmm == '0:00' && windowEndTime!.hmm == '23:59') {
-      whenText = '';
-    } else {
-      whenText = 'Between\n${windowStartTime.hmm}-${windowEndTime!.hmma}';
-    }
+  Future _showExpandedTaskDialog(BuildContext context,
+      {required bool showClock, required String whenText}) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return SimpleDialog(
+          children: [
+            Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                    padding: EdgeInsets.only(left: 20, right: 20),
+                    child: CancelButton(onPressed: () => Navigator.of(context).pop()))),
+            Padding(
+                padding: EdgeInsets.all(20),
+                child: SingleChildScrollView(
+                    child: Column(children: [
+                  Container(
+                      height: 71,
+                      child: _buildTaskHeadline(
+                          showIcon: false, showClock: showClock, whenText: whenText)),
+                  SizedBox(height: 15),
+                  ContentText(text: intro, color: NextSenseColors.darkBlue),
+                  SizedBox(height: 15),
+                  if (!completed)
+                    EmphasizedButton(
+                        text: MediumText(text: 'Start', color: Colors.white),
+                        enabled: true,
+                        onTap: onTap)
+                ]))),
+          ],
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20.0))),
+        );
+      },
+    );
+  }
 
-    final row = Row(
+  Widget _buildTaskHeadline(
+      {required bool showIcon, required bool showClock, required String whenText}) {
+    Widget icon = completed
+        ? Expanded(
+            child: SvgPicture.asset('assets/images/circle_checked.svg',
+                semanticsLabel: 'completed', height: 20))
+        : Expanded(
+            child: SvgPicture.asset('assets/images/circle.svg',
+                semanticsLabel: 'completed', height: 20));
+    return Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Column(children: [
-            completed
-                ? Expanded(
-                    child: SvgPicture.asset('assets/images/circle_checked.svg',
-                        semanticsLabel: 'completed', height: 20))
-                : Expanded(
-                    child: SvgPicture.asset('assets/images/circle.svg',
-                        semanticsLabel: 'completed', height: 20)),
-            Expanded(child: SizedBox(height: 1)),
-          ]),
-          SizedBox(width: 10),
+          showIcon
+              ? Column(children: [
+                  icon,
+                  Expanded(child: SizedBox(height: 1)),
+                ])
+              : SizedBox(height: 1),
+          showIcon ? SizedBox(width: 10) : SizedBox(height: 1),
           Expanded(
               child: Column(children: [
             Expanded(
@@ -90,33 +120,30 @@ class TaskCard extends StatelessWidget {
                 ])
           ])),
         ]);
+  }
 
-    return ExpandableNotifier(
-        child: ExpandableTheme(
-            data: ExpandableThemeData(
-                hasIcon: false,
-                tapBodyToExpand: true,
-                tapBodyToCollapse: true,
-                animationDuration: const Duration(milliseconds: 500)),
-            child: ScrollOnExpand(
-                child: ExpandablePanel(
-                    collapsed: Container(
-                        height: 115,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 10, bottom: 10, right: 20),
-                          child: RoundedBackground(child: row),
-                        )),
-                    expanded: Padding(
-                        padding: const EdgeInsets.only(top: 10, bottom: 10, right: 20),
-                        child: RoundedBackground(
-                            child: Column(children: [
-                          Container(height: 71, child: row),
-                          SizedBox(height: 15),
-                          ContentText(text: intro, color: NextSenseColors.darkBlue),
-                          SizedBox(height: 15),
-                          if (!completed) EmphasizedButton(
-                              text: MediumText(text: 'Start', color: Colors.white), enabled: true,
-                              onTap: onTap)
-                        ])))))));
+  @override
+  Widget build(BuildContext context) {
+    String whenText;
+    bool showClock = false;
+    if (windowEndTime == null) {
+      whenText = windowStartTime.hmma;
+      showClock = true;
+    } else if (windowStartTime.hmm == '0:00' && windowEndTime!.hmm == '23:59') {
+      whenText = '';
+    } else {
+      whenText = 'Between\n${windowStartTime.hmm}-${windowEndTime!.hmma}';
+    }
+
+    return ClickableZone(
+        onTap: () => _showExpandedTaskDialog(context, showClock: showClock, whenText: whenText),
+        child: Container(
+            height: 115,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 10, right: 20),
+              child: RoundedBackground(
+                  child:
+                      _buildTaskHeadline(showIcon: true, showClock: showClock, whenText: whenText)),
+            )));
   }
 }

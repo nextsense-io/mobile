@@ -242,7 +242,7 @@ class SurveyManager {
 
       final scheduledSurvey = ScheduledSurvey(entity, survey, studyDay);
       _logger.log(Level.INFO, 'loaded scheduled survey: ' + scheduledSurvey.id + ' on day ' +
-          scheduledSurvey.day.dayNumber.toString());
+          scheduledSurvey.day.dayNumber.toString() + '. State: ' + scheduledSurvey.state.name);
       result.add(scheduledSurvey);
     }
     return result;
