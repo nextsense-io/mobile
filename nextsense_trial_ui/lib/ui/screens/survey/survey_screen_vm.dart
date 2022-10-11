@@ -32,11 +32,22 @@ class SurveyScreenViewModel extends ViewModel {
     }
   }
 
-  Future<bool> submit(Map<String, dynamic> formData, bool completed) async {
+  Future<bool> submit({required Map<String, dynamic> formData, required bool completed}) async {
     _logger.log(Level.INFO, "Submitting survey form.");
     setBusy(true);
+    // Seems like the form validation is not working correctly, at least make sure every mandatory
+    // entry got a value.
+    bool valid = true;
+    if (formData.length != getVisibleQuestions().length) {
+      valid = false;
+    }
+    for (SurveyQuestion question in getVisibleQuestions()) {
+      if (!question.optional && formData[question.id] == null) {
+        valid = false;
+      }
+    }
     bool updated = await runnableSurvey.update(
-        state: completed ? SurveyState.completed : SurveyState.partially_completed,
+        state: completed && valid ? SurveyState.completed : SurveyState.partially_completed,
         data: formData
     );
     setBusy(false);
