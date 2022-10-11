@@ -16,7 +16,6 @@ import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/ui_utils.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:provider/src/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -36,9 +35,9 @@ class SurveyScreen extends HookWidget {
       formKey.currentState?.save();
       bool valid = formKey.currentState!.validate();
       if (valid || !submitting) {
-        _logger.log(Level.INFO, "Submitting form");
-        bool submitted = await viewModel.submit(valid ? formKey.currentState!.value :
-            formKey.currentState!.instantValue, valid);
+        _logger.log(Level.INFO, "Submitting the form. valid: ${valid}");
+        bool submitted = await viewModel.submit(formData: valid ? formKey.currentState!.value :
+            formKey.currentState!.instantValue, completed: valid);
         if (submitted) {
           Navigator.pop(context, true);
         } else {
@@ -63,7 +62,6 @@ class SurveyScreen extends HookWidget {
   bool canProgress(SurveyScreenViewModel viewModel) {
     SurveyQuestion currentQuestion = viewModel.getVisibleQuestions()[viewModel.currentPageNumber];
     if (!currentQuestion.optional) {
-      _logger.log(Level.INFO, "viewModel formValues: ${viewModel.formValues}");
       if (_formKey.currentState?.instantValue[currentQuestion.id] != null) {
         return true;
       } else {
@@ -102,7 +100,7 @@ class SurveyScreen extends HookWidget {
                         showBackButton: true,
                         showDoneButton: true,
                         isProgress: false,
-                        onDone: () => {},
+                        onDone: () => {_saveForm(context, viewModel, _formKey, /*submitting=*/true)},
                         onSkip: () => _onBackButtonPressed(context, viewModel),
                         canProgress: () => canProgress(viewModel),
                         onChange: (pageNum) => {
@@ -222,7 +220,6 @@ class _SurveyQuestionWidget extends StatelessWidget {
   void reloadAfterChange(SurveyScreenViewModel viewModel) {
     viewModel.formValues = formKey.currentState != null ?
         Map.from(formKey.currentState!.instantValue) : null;
-    _logger.log(Level.INFO, "formValues onChanged: ${viewModel.formValues}");
     viewModel.notifyListeners();
   }
 
@@ -293,12 +290,6 @@ class _SurveyQuestionWidget extends StatelessWidget {
         formBuilderField = FormBuilderDateTimePicker(
           name: question.id,
           inputType: InputType.time,
-          valueTransformer: (time) {
-            if (time != null) {
-              return time.hhmm;
-            }
-            return null;
-          },
           decoration: InputDecoration(labelText: 'Click to select time',
               fillColor: NextSenseColors.purple, focusColor: NextSenseColors.purple),
           initialTime: TimeOfDay(hour: 12, minute: 0),
