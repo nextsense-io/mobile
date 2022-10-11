@@ -60,6 +60,8 @@ class StudyManager {
       return null;
     }
     DateTime now = DateTime.now();
+    StudyDay? today = _days!.firstWhereOrNull((StudyDay day) => now.isSameDay(day.date));
+    _logger.log(Level.INFO, 'Study day: ${today?.dayNumber ?? 'Null'}');
     return _days!.firstWhereOrNull((StudyDay day) => now.isSameDay(day.date));
   }
 

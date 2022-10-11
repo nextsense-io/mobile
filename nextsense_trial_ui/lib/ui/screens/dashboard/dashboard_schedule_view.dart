@@ -134,6 +134,12 @@ class DashboardScheduleView extends StatelessWidget {
     final todayScrollController = ScrollController();
     final weeklyScrollController = ScrollController();
 
+    String noTasksText = 'No ${scheduleType}';
+    if (!viewModel.studyStarted) {
+      noTasksText = 'Study not started yet';
+    } else if (viewModel.studyFinished) {
+      noTasksText = 'Study finished';
+    }
     List<dynamic> todayTasks = viewModel.getTodayTasks(surveysOnly);
     List<Widget> todayTasksWidgets;
     if (todayTasks.length == 0) {
@@ -150,7 +156,7 @@ class DashboardScheduleView extends StatelessWidget {
                 SizedBox(
                   height: 20,
                 ),
-                MediumText(text: 'No ${scheduleType}'),
+                MediumText(text: noTasksText),
               ],
             ))
       ];
