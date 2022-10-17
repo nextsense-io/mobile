@@ -1,26 +1,22 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
 
 /*
 A widget to show a device or a device id (if a name is not available) once search is completed.
 */
 class ScanResult extends StatelessWidget {
-  const ScanResult({required Key key, required this.result, required this.onTap}) : super(key: key);
+  const ScanResult({required Key key, required this.result, required this.onTap,
+    this.showMacAddress = false}) : super(key: key);
 
   final Map<String, dynamic> result;
   final VoidCallback onTap;
+  final bool showMacAddress;
 
-  Widget _deviceStyle(BuildContext context, String name) {
-    return Container(
-      padding: EdgeInsets.only(left: 40.0, top: 20, right: 20, bottom: 20),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Color.fromRGBO(151, 151, 151, 0.3),
-          ),
-        ),
-      ),
+  Widget _deviceButton(BuildContext context, String name) {
+    return RoundedBackground(
       child: Text(
         name,
         style: Theme.of(context).textTheme.bodyText2,
@@ -33,15 +29,17 @@ class ScanResult extends StatelessWidget {
     String deviceName = result[describeEnum(DeviceAttributesFields.name)];
     String deviceMacAddress = result[describeEnum(DeviceAttributesFields.macAddress)];
     if (deviceName.length > 0) {
-      return _deviceStyle(context, deviceName + ' - ' + deviceMacAddress);
+      String buttonText = showMacAddress ? deviceName + ' - ' + deviceMacAddress : deviceName;
+      return _deviceButton(context, buttonText);
     } else {
-      return _deviceStyle(context, deviceMacAddress);
+      // If no name, need to show the MAC address even if not ideal.
+      return _deviceButton(context, deviceMacAddress);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return ClickableZone(
       onTap: onTap,
       child: _buildDeviceTitle(context),
     );
