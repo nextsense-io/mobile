@@ -40,10 +40,11 @@ class DeviceScanScreen extends HookWidget {
   }
 
   List<ScanResult> buildScanResultList(DeviceScanScreenViewModel viewModel) {
+    bool showMacAddress = viewModel.scanResultsMap.length > 1 ? true : false;
     return viewModel.scanResultsMap.values
         .map((result) => ScanResult(
             key: Key(result[describeEnum(DeviceAttributesFields.macAddress)]),
-            result: result,
+            result: result, showMacAddress: showMacAddress,
             onTap: () => {viewModel.connectToDevice(result)}))
         .toList();
   }
