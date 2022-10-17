@@ -1,6 +1,8 @@
 rootProject.name = "nextsense_mobile"
 include ':core'
 include ':service'
+include ':nextsense_base'
+include ':nextsense_trial_ui'
 include ':android_host'
 setBinding(new Binding([gradle: this]))
 evaluate(new File(
