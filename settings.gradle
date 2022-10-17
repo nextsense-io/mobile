@@ -1,4 +1,4 @@
-rootProject.name = "nextsense_mobile"
+rootProject.name = 'nextsense_mobile'
 include ':core'
 include ':service'
 include ':nextsense_base'
