@@ -33,6 +33,7 @@ android {
 
     buildToolsVersion '30.0.3'
     compileSdkVersion 33
+    namespace 'io.nextsense.android.service'
 }
 
 dependencies {

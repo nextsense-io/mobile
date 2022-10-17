@@ -45,6 +45,7 @@ android {
     }
 
     buildToolsVersion '30.0.3'
+    namespace 'io.nextsense.android.base'
 }
 
 protobuf {
