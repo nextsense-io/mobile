@@ -189,13 +189,19 @@ public class ForegroundService extends Service {
     if (centralManagerProxy != null) {
       centralManagerProxy.close();
     }
-    cacheSink.stopListening();
+    if (cacheSink != null) {
+      cacheSink.stopListening();
+    }
     memoryCache = null;
-    databaseSink.stopListening();
+    if (databaseSink != null) {
+      databaseSink.stopListening();
+    }
     if (uploader != null) {
       uploader.stop();
     }
-    objectBoxDatabase.stop();
+    if (objectBoxDatabase != null) {
+      objectBoxDatabase.stop();
+    }
     initialized = false;
     Log.i(TAG, "destroy finished.");
   }
