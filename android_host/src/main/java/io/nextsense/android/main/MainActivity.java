@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     SURVEY
   }
 
+  private final FirebaseAuth firebaseAuth = FirebaseAuth.getInstance();
   private final GsonBuilder gsonBuilder = new GsonBuilder();
   private final Gson gson = gsonBuilder.create();
 
@@ -183,6 +185,13 @@ public class MainActivity extends AppCompatActivity {
   private Intent getFlutterIntent(@Nullable Intent androidIntent) {
     Intent flutterIntent = FlutterActivity.withCachedEngine(
             NextSenseApplication.FLUTTER_ENGINE_NAME).build(this);
+    // Confirm the link is a sign-in with email link.
+    if (androidIntent != null && androidIntent.getData() != null &&
+        firebaseAuth.isSignInWithEmailLink(androidIntent.getData().toString())) {
+      // Retrieve this from wherever you stored it
+      Log.d(TAG, "Application started with an email auth link.");
+      flutterIntent.setData(androidIntent.getData());
+    }
     if (androidIntent != null && androidIntent.getExtras() != null) {
       Log.i(TAG, "New intent received extras: " + androidIntent.getExtras().toString());
       String jsonData = androidIntent.getExtras().getString(EXTRA_NOTIFICATION_JSON);

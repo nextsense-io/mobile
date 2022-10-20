@@ -44,7 +44,8 @@ import 'package:nextsense_trial_ui/ui/screens/support/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:provider/src/provider.dart';
+import 'package:provider/provider.dart';
+
 import 'package:receive_intent/receive_intent.dart' as intent;
 
 class NavigationRoute {
@@ -73,14 +74,14 @@ class Navigation {
   Future<void> _initReceiveIntent() async {
     _intentSubscription = intent.ReceiveIntent.receivedIntentStream.listen(
         (intent.Intent? intent) async {
-      _logger.log(Level.INFO, "Intent: ${intent}");
+      _logger.log(Level.INFO, "Intent: $intent");
       if (intent == null) {
         _logger.log(Level.SEVERE, "Intent received with no intent.");
         return;
       }
       await _navigateToIntent(intent);
     }, onError: (err) {
-      _logger.log(Level.INFO, "Error on intent: ${err}");
+      _logger.log(Level.INFO, "Error on intent: $err");
     });
     // No need to call dispose() on the subscription as it runs until the app is stopped.
   }
@@ -93,26 +94,26 @@ class Navigation {
     }
     if (intent.extra!.containsKey(TargetType.protocol.name)) {
       String scheduledProtocolId = intent.extra![TargetType.protocol.name];
-      _logger.log(Level.INFO, "Scheduled protocol id: ${scheduledProtocolId}");
+      _logger.log(Level.INFO, "Scheduled protocol id: $scheduledProtocolId");
       ScheduledProtocol? scheduledProtocol =
           await _studyManager.queryScheduledProtocol(scheduledProtocolId);
       if (scheduledProtocol != null) {
         navigateWithCapabilityChecking(navigatorKey.currentState!.context, ProtocolScreen.id,
             replace: replace, arguments: scheduledProtocol);
       } else {
-        _logger.log(Level.SEVERE, "Scheduled protocol ${scheduledProtocolId} does not exists");
+        _logger.log(Level.SEVERE, "Scheduled protocol $scheduledProtocolId does not exists");
       }
       return true;
     }
     if (intent.extra!.containsKey(TargetType.survey.name)) {
       String scheduledSurveyId = intent.extra![TargetType.survey.name];
-      _logger.log(Level.INFO, "Scheduled survey id: ${scheduledSurveyId}");
+      _logger.log(Level.INFO, "Scheduled survey id: $scheduledSurveyId");
       ScheduledSurvey? scheduledSurvey =
           await _surveyManager.queryScheduledSurvey(scheduledSurveyId);
       if (scheduledSurvey != null) {
         await navigateTo(SurveyScreen.id, replace: replace, arguments: scheduledSurvey);
       } else {
-        _logger.log(Level.SEVERE, "Scheduled survey ${scheduledSurveyId} does not exists");
+        _logger.log(Level.SEVERE, "Scheduled survey $scheduledSurveyId does not exists");
       }
       return true;
     }
@@ -138,7 +139,7 @@ class Navigation {
 
   Future<dynamic> navigateTo(String routeName, {Object? arguments,
     bool replace = false, bool pop = false, bool popAll = false, NavigationRoute? nextRoute}) {
-    _logger.log(Level.INFO, "Next route: ${nextRoute}");
+    _logger.log(Level.INFO, "Next route: $nextRoute");
     _nextNavigationRoute = nextRoute;
     final currentState = navigatorKey.currentState!;
     if (replace) {
@@ -252,6 +253,7 @@ class Navigation {
             settings.arguments as Duration
           ));
     }
+    return null;
   }
 
   bool canPop() {
@@ -295,7 +297,7 @@ class Navigation {
       }
     }
 
-    _logger.log(Level.INFO, "Navigating to ${routeName}");
+    _logger.log(Level.INFO, "Navigating to $routeName");
     await navigateTo(routeName, arguments: arguments, replace: replace, pop: pop);
   }
 

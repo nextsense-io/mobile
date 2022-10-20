@@ -5,11 +5,9 @@ import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 
-/**
- * Each entry corresponds to a field name in the database instance.
- * If any fields are added here, they need to be added to the User class in
- * https://github.com/nextsense-io/mobile_backend/lib/models/user.py
- */
+/// Each entry corresponds to a field name in the database instance.
+/// If any fields are added here, they need to be added to the User class in
+/// https://github.com/nextsense-io/mobile_backend/lib/models/user.py
 enum UserKey {
   // MAC address of the last paired device.
   last_paired_device,
@@ -33,7 +31,9 @@ enum UserKey {
   // User name
   username,
   // Currently recording protocol
-  running_protocol
+  running_protocol,
+  // UID used when authenticating
+  auth_uid
 }
 
 enum UserType {
@@ -79,7 +79,11 @@ class User extends FirebaseEntity<UserKey> {
 
   bool isTempPassword() {
     bool? isTempPassword = getValue(UserKey.is_temp_password);
-    return isTempPassword != null ? isTempPassword : false;
+    return isTempPassword != null ? isTempPassword : true;
+  }
+
+  void setTempPassword(bool tempPassword) {
+    setValue(UserKey.is_temp_password, tempPassword);
   }
 
   Future<dynamic?> getRunningProtocol() async {

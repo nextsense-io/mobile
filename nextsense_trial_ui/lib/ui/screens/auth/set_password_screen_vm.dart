@@ -19,7 +19,7 @@ class SetPasswordScreenViewModel extends ViewModel {
       return false;
     }
     if (password.length < minimumPasswordLength) {
-      setError('Password should be at least ${minimumPasswordLength} characters long');
+      setError('Password should be at least $minimumPasswordLength characters long');
       notifyListeners();
       return false;
     }
@@ -38,7 +38,7 @@ class SetPasswordScreenViewModel extends ViewModel {
       notifyListeners();
       return false;
     }
-    _logger.log(Level.INFO, 'Password change result: ${passwordChanged}');
+    _logger.log(Level.INFO, 'Password change result: $passwordChanged');
     setBusy(false);
     notifyListeners();
     return passwordChanged;

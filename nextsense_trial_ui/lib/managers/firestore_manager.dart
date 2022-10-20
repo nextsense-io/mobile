@@ -89,6 +89,7 @@ class FirestoreManager {
           snapshot = await reference.get();
           success = true;
         } catch (exception) {
+          attemptNumber++;
           _logger.log(Level.WARNING, "Failed to query. Message: ${exception.toString()}");
         }
       }
@@ -121,6 +122,7 @@ class FirestoreManager {
         snapshot = await reference.get();
         success = true;
       } catch (exception) {
+        attemptNumber++;
         _logger.log(Level.WARNING, "Failed to query. Message: ${exception.toString()}");
       }
     }
@@ -140,7 +142,7 @@ class FirestoreManager {
    * entityKeys: List of entity keys for each table in the `tables` parameter.
    */
   DocumentReference getReference(List<Table> tables, List<String> entityKeys) {
-    DocumentReference? reference = null;
+    DocumentReference? reference;
     for (int i = 0; i < tables.length; ++i) {
       if (i == 0) {
         reference = _firestore.collection(tables[i].name()).doc(entityKeys[i]);
@@ -215,6 +217,7 @@ class FirestoreManager {
           snapshot = await collectionReference!.get();
           success = true;
         } catch (exception) {
+          attemptNumber++;
           _logger.log(Level.WARNING, "Failed to query. Message: ${exception.toString()}");
         }
       }

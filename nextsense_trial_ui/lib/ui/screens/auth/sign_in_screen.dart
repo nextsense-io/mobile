@@ -63,6 +63,7 @@ class SignInScreen extends HookWidget {
             _UserPasswordSignInInputField(
               field: viewModel.username,
               labelText: 'Email',
+              maxLength: 40
             ),
             // helperText: 'Please contact NextSense support if you did not get an id',
             // icon: Icon(Icons.account_circle)),
@@ -248,13 +249,15 @@ class _UserPasswordSignInInputField extends StatelessWidget {
   final String labelText;
   final String? helperText;
   final bool? obscureText;
+  final int? maxLength;
 
   const _UserPasswordSignInInputField(
       {Key? key,
       required this.field,
       required this.labelText,
       this.helperText,
-      this.obscureText})
+      this.obscureText,
+      this.maxLength = 20})
       : super(key: key);
 
   @override
@@ -264,7 +267,7 @@ class _UserPasswordSignInInputField extends StatelessWidget {
         child: TextFormField(
           cursorColor: TextSelectionTheme.of(context).cursorColor,
           initialValue: field.value,
-          maxLength: 20,
+          maxLength: maxLength,
           obscureText: obscureText ?? false,
           //enabled: !_askForPassword,
           decoration: InputDecoration(
