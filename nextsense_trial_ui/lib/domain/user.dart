@@ -79,7 +79,7 @@ class User extends FirebaseEntity<UserKey> {
 
   bool isTempPassword() {
     bool? isTempPassword = getValue(UserKey.is_temp_password);
-    return isTempPassword != null ? isTempPassword : true;
+    return isTempPassword != null ? isTempPassword : false;
   }
 
   void setTempPassword(bool tempPassword) {
