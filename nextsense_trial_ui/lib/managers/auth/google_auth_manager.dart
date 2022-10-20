@@ -12,6 +12,7 @@ class GoogleAuthManager {
   final GoogleSignIn _googleSignIn;
   late FirebaseAuth _firebaseAuth;
   final _logger = CustomLogPrinter('GoogleAuthManager');
+  String? _authUid;
 
   GoogleSignInAccount? _googleSignInAccount;
 
@@ -23,10 +24,10 @@ class GoogleAuthManager {
   }
 
   String get email => _googleSignInAccount?.email ?? "";
+  String get authUid => _authUid ?? "";
 
   Future<AuthenticationResult> handleSignIn() async {
-      final GoogleSignInAccount? googleSignInAccount =
-          await _googleSignIn.signIn();
+      final GoogleSignInAccount? googleSignInAccount = await _googleSignIn.signIn();
       if (googleSignInAccount == null) {
         _logger.log(Level.WARNING, 'Could not authenticate with Google.');
         return AuthenticationResult.error;
@@ -47,6 +48,7 @@ class GoogleAuthManager {
         if (userCredential.user == null || userCredential.user!.isAnonymous) {
           return AuthenticationResult.error;
         }
+        _authUid = userCredential.user!.uid;
       } on FirebaseAuthException catch (e) {
         _logger.log(Level.SEVERE, e);
         return AuthenticationResult.error;

@@ -59,7 +59,7 @@ class SetPasswordScreen extends HookWidget {
           children: <Widget>[
             Padding(
               padding: EdgeInsets.all(10.0),
-              child: HeaderText(text: 'Replace Password'),
+              child: HeaderText(text: 'Set Password'),
             ),
             RoundedBackground(
                 child: Column(children: [

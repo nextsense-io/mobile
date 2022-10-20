@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen_vm.dart';
+import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:stacked/stacked.dart';
 
 class StartupScreen extends StatefulWidget {
   static const String id = 'startup_screen';
 
+  final intent.Intent? initialIntent;
+
+  StartupScreen({this.initialIntent});
+
   @override
-  _StartupScreenState createState() => _StartupScreenState();
+  _StartupScreenState createState() => _StartupScreenState(initialIntent: initialIntent);
 }
 
 class _StartupScreenState extends State<StartupScreen> {
 
+  final intent.Intent? initialIntent;
+
+  _StartupScreenState({this.initialIntent});
+
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder<StartupScreenViewModel>.reactive(
-        viewModelBuilder: () => StartupScreenViewModel(),
+        viewModelBuilder: () => StartupScreenViewModel(initialIntent: initialIntent),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) {
           return WillPopScope(

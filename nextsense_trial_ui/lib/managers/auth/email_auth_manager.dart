@@ -15,13 +15,16 @@ class EmailAuthManager {
   final _logger = CustomLogPrinter('EmailAuthManager');
 
   GoogleSignInAccount? _googleSignInAccount;
+  String? _authUid;
 
   EmailAuthManager() {
     _firebaseAuth = FirebaseAuth.instanceFor(app: _firebaseApp);
   }
 
   String get email => _googleSignInAccount?.email ?? "";
+  String get authUid => _authUid ?? "";
 
+  // Currently unused. Delete once feature is complete.
   Future<AuthenticationResult> handleSignUp(String email, String password) async {
     try {
       await _firebaseAuth.createUserWithEmailAndPassword(
@@ -37,13 +40,31 @@ class EmailAuthManager {
 
   Future<AuthenticationResult> handleSignIn(String email, String password) async {
     try {
+      _logger.log(Level.WARNING, 'login with email and password: $email - $password');
       UserCredential userCredential =
           await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
       if (userCredential.user!.isAnonymous) {
         return AuthenticationResult.error;
       }
+      _authUid = userCredential.user!.uid;
     } on FirebaseAuthException catch (e) {
       _logger.log(Level.WARNING, 'Could not authenticate with Email in Firebase. ${e.message}');
+      return AuthenticationResult.error;
+    }
+    return AuthenticationResult.success;
+  }
+
+  Future<AuthenticationResult> signInWithLink(String email, String emailLink) async {
+    try {
+      final userCredential = await FirebaseAuth.instance
+          .signInWithEmailLink(email: email, emailLink: emailLink);
+      if (userCredential.user!.isAnonymous) {
+        return AuthenticationResult.error;
+      }
+      _authUid = userCredential.user!.uid;
+      _logger.log(Level.INFO, 'Successfully signed in with email link.');
+    } catch (error) {
+      _logger.log(Level.WARNING, 'Failed to sign in with email link. Error: ${error.toString()}');
       return AuthenticationResult.error;
     }
     return AuthenticationResult.success;

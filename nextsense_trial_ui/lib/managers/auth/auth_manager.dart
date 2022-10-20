@@ -23,6 +23,7 @@ enum AuthenticationResult {
 
 class AuthManager {
   static const minimumPasswordLength = 8;
+  static const _emailLinkParam = 'email';
 
   final _logger = CustomLogPrinter('AuthManager');
   final _preferences = getIt<Preferences>();
@@ -69,21 +70,12 @@ class AuthManager {
     }
   }
 
-  Future<AuthenticationResult> signInEmailPassword(String username, String password) async {
-    AuthenticationResult authResult = await _emailAuthManager!.handleSignIn(username, password);
-    if (authResult != AuthenticationResult.success) {
-      return authResult;
-    }
-    authResult = await _signIn(username);
-    return authResult;
-  }
-
   Future<AuthenticationResult> signInNextSense(String username, String password) async {
     AuthenticationResult authResult = await _nextSenseAuthManager!.handleSignIn(username, password);
     if (authResult != AuthenticationResult.success) {
       return authResult;
     }
-    authResult = await _signIn(username);
+    authResult = await _signIn(username: username, authUid: username);
     return authResult;
   }
 
@@ -93,11 +85,37 @@ class AuthManager {
       return authResult;
     }
     _logger.log(Level.INFO, 'Authenticated with Google with success');
-    return await _signIn(_googleAuthManager!.email);
+    return await _signIn(username: _googleAuthManager!.email, authUid: _googleAuthManager!.authUid);
   }
 
+  Future<AuthenticationResult> signInEmailLink(String emailLink) async {
+    Uri uri = Uri.parse(emailLink);
+    String? email = uri.queryParameters[_emailLinkParam];
+    if (email == null) {
+      _logger.log(Level.WARNING,
+          "Received an email link with no $_emailLinkParam parameter, cannot process it.");
+      return AuthenticationResult.error;
+    }
+    AuthenticationResult authResult = await _emailAuthManager!.signInWithLink(email, emailLink);
+    if (authResult != AuthenticationResult.success) {
+      return authResult;
+    }
+    authResult = await _signIn(username: email, authUid: _emailAuthManager!.authUid);
+    return authResult;
+  }
+
+  Future<AuthenticationResult> signInEmailPassword(String username, String password) async {
+    AuthenticationResult authResult = await _emailAuthManager!.handleSignIn(username, password);
+    if (authResult != AuthenticationResult.success) {
+      return authResult;
+    }
+    authResult = await _signIn(username: username, authUid: _emailAuthManager!.authUid);
+    return authResult;
+  }
+
+  // Might not need this?
   Future<AuthenticationResult> signUpEmailPassword(String email, String password) async {
-    AuthenticationResult result = await _signIn(email);
+    AuthenticationResult result = await _signIn(username: email, authUid: "");
     if (result == AuthenticationResult.success) {
       result = await _emailAuthManager!.handleSignUp(email, password);
     }
@@ -116,7 +134,13 @@ class AuthManager {
   Future<bool> changePassword(String newPassword) async {
     switch (_signedInAuthMethod) {
       case AuthMethod.email_password:
-        return await _emailAuthManager!.changePassword(newPassword);
+        bool passwordChanged = await _emailAuthManager!.changePassword(newPassword);
+        if (passwordChanged) {
+          _user!.setTempPassword(false);
+          bool saved = await _user!.save();
+          return saved;
+        }
+        return false;
       case AuthMethod.user_code:
     return await _nextSenseAuthManager!.changePassword(userCode!, newPassword);
       default:
@@ -124,10 +148,9 @@ class AuthManager {
     }
   }
 
-  Future<AuthenticationResult> _signIn(String username) async {
+  Future<AuthenticationResult> _signIn({required String username, String? authUid}) async {
     _logger.log(Level.INFO, 'Starting NextSense user check for $username');
-
-    _user = await loadUser(username);
+    _user = await loadUser(username: username, authUid: authUid);
 
     if (_user == null) {
       await signOut();
@@ -145,7 +168,7 @@ class AuthManager {
   }
 
   // Load user from Firestore and update some data
-  Future<User?> loadUser(String username) async {
+  Future<User?> loadUser({required String username, String? authUid}) async {
     final User? user = await fetchUserFromFirestore(username);
 
     if (user == null) {
@@ -158,6 +181,15 @@ class AuthManager {
       user.setValue(UserKey.bt_key, _uuid.v4());
     }
 
+    // Persist UID on first login.
+    if (user.getValue(UserKey.auth_uid) == null) {
+      if (authUid == null) {
+        _logger.log(Level.SEVERE, 'No auth UID, cannot login.');
+        return null;
+      }
+      user.setValue(UserKey.auth_uid, authUid);
+    }
+
     // Persist fcm token
     String? fcmToken = _preferences.getString(PreferenceKey.fcmToken);
     if (fcmToken != null) {
@@ -167,9 +199,7 @@ class AuthManager {
     // Save timezone
     // TODO(alex): handle timezone change in broadcast receiver
     await user.updateTimezone();
-
     await user.save();
-
     _userCode = username;
 
     return user;
@@ -212,18 +242,25 @@ class AuthManager {
     // Try to get user from username stored in firebase auth instance
     if (_firebaseAuth.currentUser != null) {
       String username;
+      String authUid = "";
       switch (_signedInAuthMethod) {
         case AuthMethod.user_code:
           username = _firebaseAuth.currentUser!.uid;
+          authUid = username;
           break;
         case AuthMethod.google_auth:
           username = _firebaseAuth.currentUser!.email!;
+          authUid = _googleAuthManager!.authUid;
+          break;
+        case AuthMethod.email_password:
+          username = _firebaseAuth.currentUser!.email!;
+          authUid = _emailAuthManager!.authUid;
           break;
         default:
           _logger.log(Level.WARNING, 'Unknown auth method.');
           return false;
       }
-      _user = await loadUser(username);
+      _user = await loadUser(username: username, authUid: authUid);
       if (_user != null) {
         return true;
       }

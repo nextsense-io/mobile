@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
@@ -8,13 +9,17 @@ import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_mapping.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:receive_intent/receive_intent.dart' as intent;
 
 class StartupScreenViewModel extends ViewModel {
+
+  final intent.Intent? initialIntent;
 
   final CustomLogPrinter _logger = CustomLogPrinter('StartupScreenViewModel');
   final DataManager _dataManager = getIt<DataManager>();
@@ -22,7 +27,7 @@ class StartupScreenViewModel extends ViewModel {
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final Navigation _navigation = getIt<Navigation>();
 
-  StartupScreenViewModel();
+  StartupScreenViewModel({this.initialIntent});
 
   @override
   void init() async {
@@ -35,6 +40,19 @@ class StartupScreenViewModel extends ViewModel {
               (value) => _navigation.navigateTo(SignInScreen.id, replace: true));
       return;
     }
+
+    if (initialIntent != null && initialIntent!.data != null &&
+        FirebaseAuth.instance.isSignInWithEmailLink(initialIntent!.data!)) {
+      AuthenticationResult result = await _authManager.signInEmailLink(initialIntent!.data!);
+      if (result == AuthenticationResult.success && _authManager.isTempPassword) {
+        setBusy(false);
+        // If the user got a temp password, make him change it.
+        _logger.log(Level.INFO, 'Temporary password. Navigating to password change screen.');
+        _navigation.navigateTo(SetPasswordScreen.id, replace: true);
+        return;
+      }
+    }
+
     if (!_dataManager.userLoaded) {
       bool success = false;
       try {

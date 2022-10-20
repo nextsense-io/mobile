@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -51,11 +52,11 @@ Future<intent.Intent?> _getInitialIntent() async {
   // Platform messages may fail, so we use a try/catch PlatformException.
   try {
     final receivedIntent = await intent.ReceiveIntent.getInitialIntent();
-    getLogger("Main").log(Level.INFO, "Initial Intent: ${receivedIntent}");
+    getLogger("Main").log(Level.INFO, "Initial Intent: $receivedIntent");
     // Validate receivedIntent and warn the user, if it is not correct,
     // but keep in mind it could be `null` or "empty"(`receivedIntent.isNull`).
-    if (receivedIntent == null || receivedIntent.extra == null) {
-      getLogger("Main").log(Level.INFO, "Initial intent does not have extras, ignoring.");
+    if (receivedIntent == null || receivedIntent.extra == null || receivedIntent.data == null) {
+      getLogger("Main").log(Level.INFO, "Initial intent does not have data or extras, ignoring.");
       return null;
     }
     return receivedIntent;
@@ -76,9 +77,10 @@ void main() async {
     await _initFlavor();
     await initDependencies();
     await getIt<NotificationsManager>().init();
-    await getIt<Navigation>().init(await _getInitialIntent());
+    intent.Intent? initialIntent = await _getInitialIntent();
+    await getIt<Navigation>().init(initialIntent);
     NextsenseBase.startService();
-    runApp(NextSenseTrialApp());
+    runApp(NextSenseTrialApp(initialIntent: initialIntent));
   }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));
 }
 
@@ -87,9 +89,14 @@ class NextSenseTrialApp extends StatelessWidget {
   final Navigation _navigation = getIt<Navigation>();
   final Flavor _flavor = getIt<Flavor>();
   final AuthManager _authManager = getIt<AuthManager>();
+  final intent.Intent? initialIntent;
+
+  NextSenseTrialApp({this.initialIntent});
 
   @override
   Widget build(BuildContext context) {
+    bool intentGotEmailLink = initialIntent != null && initialIntent!.data != null &&
+        FirebaseAuth.instance.isSignInWithEmailLink(initialIntent!.data!);
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: getIt<ConnectivityManager>())
@@ -105,7 +112,8 @@ class NextSenseTrialApp extends StatelessWidget {
           fontFamily: 'DMMono',
           scaffoldBackgroundColor: Colors.white
         ),
-        home: _authManager.isAuthenticated ? StartupScreen() : SignInScreen(),
+        home: _authManager.isAuthenticated || intentGotEmailLink ?
+            StartupScreen(initialIntent: initialIntent) : SignInScreen(),
         navigatorKey: _navigation.navigatorKey,
         onGenerateRoute: _navigation.onGenerateRoute,
       ),
