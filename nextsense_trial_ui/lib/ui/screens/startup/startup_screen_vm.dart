@@ -7,14 +7,19 @@ import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
+import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_mapping.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 
 class StartupScreenViewModel extends ViewModel {
@@ -25,7 +30,12 @@ class StartupScreenViewModel extends ViewModel {
   final DataManager _dataManager = getIt<DataManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
+  final StudyManager _studyManager = getIt<StudyManager>();
+  final _permissionsManager = getIt<PermissionsManager>();
   final Navigation _navigation = getIt<Navigation>();
+
+  bool get studyIntroShown => _studyManager.currentEnrolledStudy != null &&
+      _studyManager.currentEnrolledStudy!.intro_shown;
 
   StartupScreenViewModel({this.initialIntent});
 
@@ -44,11 +54,12 @@ class StartupScreenViewModel extends ViewModel {
     if (initialIntent != null && initialIntent!.data != null &&
         FirebaseAuth.instance.isSignInWithEmailLink(initialIntent!.data!)) {
       AuthenticationResult result = await _authManager.signInEmailLink(initialIntent!.data!);
-      if (result == AuthenticationResult.success && _authManager.isTempPassword) {
+      if (result != AuthenticationResult.success) {
         setBusy(false);
-        // If the user got a temp password, make him change it.
-        _logger.log(Level.INFO, 'Temporary password. Navigating to password change screen.');
-        _navigation.navigateTo(SetPasswordScreen.id, replace: true);
+        // Could not authenticate with the email link, fallback to signin page.
+        _logger.log(Level.SEVERE, 'Failed to authenticate with email link. Fallback to sign in');
+        logout(errorMessage: 'Link is expired or was used already, please login using your '
+            'password or request a new link.');
         return;
       }
     }
@@ -74,8 +85,7 @@ class StartupScreenViewModel extends ViewModel {
       setBusy(false);
       // If the user got a temp password, make him sign in again and then change it.
       _logger.log(Level.INFO, 'Temporary password. Navigating to password change screen.');
-      _navigation.navigateTo(SignInScreen.id, replace: true);
-      return;
+      await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true));
     }
 
     if (!_dataManager.userStudyDataLoaded) {
@@ -92,6 +102,22 @@ class StartupScreenViewModel extends ViewModel {
         logout();
         return;
       }
+    }
+
+    // If there are permissions that need to be granted, go through them one by one with an
+    // explanation screen.
+    for (PermissionRequest permissionRequest in
+        await _permissionsManager.getPermissionsToRequest()) {
+      if (permissionRequest.showRequest) {
+        await _navigation.navigateTo(RequestPermissionScreen.id, arguments: permissionRequest);
+      } else {
+        await permissionRequest.permission.request();
+      }
+    }
+
+    if (!studyIntroShown) {
+      await _navigation.navigateTo(StudyIntroScreen.id);
+      await markCurrentStudyShown();
     }
 
     // Navigate to the device preparation screen by default, but in case we already have paired
@@ -137,8 +163,12 @@ class StartupScreenViewModel extends ViewModel {
     setBusy(false);
   }
 
-  void logout() {
+  Future<bool> markCurrentStudyShown() async {
+    return await _studyManager.markEnrolledStudyShown();
+  }
+
+  void logout({String? errorMessage}) {
     _authManager.signOut();
-    _navigation.signOut();
+    _navigation.signOut(errorMessage: errorMessage);
   }
 }

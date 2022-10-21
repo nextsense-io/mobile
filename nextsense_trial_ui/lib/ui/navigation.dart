@@ -40,6 +40,7 @@ import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effect_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/support/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
@@ -149,7 +150,8 @@ class Navigation {
       return currentState.popAndPushNamed(routeName, arguments: arguments);
     }
     if (popAll) {
-      return currentState.pushNamedAndRemoveUntil(routeName, (Route<dynamic> route) => false);
+      return currentState.pushNamedAndRemoveUntil(
+          routeName, arguments: arguments, (Route<dynamic> route) => false);
     }
     return currentState.pushNamed(routeName, arguments: arguments);
   }
@@ -179,10 +181,10 @@ class Navigation {
 
   Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case StartupScreen.id: return MaterialPageRoute(
+          builder: (context) => StartupScreen());
       case SetPasswordScreen.id: return MaterialPageRoute(
           builder: (context) => SetPasswordScreen());
-      case SignInScreen.id: return MaterialPageRoute(
-          builder: (context) => SignInScreen());
       case ImpedanceCalculationScreen.id: return MaterialPageRoute(
           builder: (context) => ImpedanceCalculationScreen());
       case DashboardScreen.id: return MaterialPageRoute(
@@ -215,6 +217,8 @@ class Navigation {
           builder: (context) => SurveysScreen());
 
       // Routes with arguments
+      case SignInScreen.id: return MaterialPageRoute(
+          builder: (context) => SignInScreen(initialErrorMessage: settings.arguments as String?));
       case ProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
             ProtocolScreen(settings.arguments as RunnableProtocol));
@@ -312,7 +316,7 @@ class Navigation {
     await navigateTo(routeName, arguments: arguments, replace: replace, pop: pop);
   }
 
-  void signOut() {
-    navigateTo(SignInScreen.id, popAll: true);
+  void signOut({String? errorMessage}) {
+    navigateTo(SignInScreen.id, popAll: true, arguments: errorMessage);
   }
 }
