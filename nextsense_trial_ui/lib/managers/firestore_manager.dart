@@ -252,6 +252,7 @@ class FirestoreManager {
             .set(entity.getValues());
         success = true;
       } catch (exception) {
+        attemptNumber++;
         _logger.log(Level.WARNING, "Failed to persist ${entity.reference}. Message: "
             "${exception.toString()}");
       }
@@ -267,6 +268,7 @@ class FirestoreManager {
         await entity.getDocumentSnapshot().reference.delete();
         success = true;
       } catch (exception) {
+        attemptNumber++;
         _logger.log(Level.WARNING, "Failed to delete ${entity.reference}. Message: "
             "${exception.toString()}");
       }
