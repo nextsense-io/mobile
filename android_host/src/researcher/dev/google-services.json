@@ -129,6 +129,22 @@
           }
         },
         {
+          "client_id": "894094054051-jd0lgalpbi3jg8d6epc9pagn0tbqghg3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.dev",
+            "certificate_hash": "b45570bb7772b7b6712333bc27b28a9e5aba065b"
+          }
+        },
+        {
+          "client_id": "894094054051-l78h29m2d68tlk77fa4d0n1f5n0jioi3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.dev",
+            "certificate_hash": "e5aa4e260baf75d5a9907bfec7626ad447f373b0"
+          }
+        },
+        {
           "client_id": "894094054051-r7f0ok5c9406msc2d4hvil4r3bv6ni44.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -142,6 +158,14 @@
           "android_info": {
             "package_name": "io.nextsense.android.main.research.dev",
             "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
+        {
+          "client_id": "894094054051-tque31750pa19kfc1nh7ogf8uevmf9s4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.dev",
+            "certificate_hash": "396fcf39f66fe653150904858f74ebf9337d4f43"
           }
         },
         {
@@ -182,6 +206,14 @@
           }
         },
         {
+          "client_id": "894094054051-92uia08eq1f0kbl0b2i4ivbe5f670ev3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.dev",
+            "certificate_hash": "396fcf39f66fe653150904858f74ebf9337d4f43"
+          }
+        },
+        {
           "client_id": "894094054051-943jdu29t5kdtjdve64fm7h8jf7edcee.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -195,6 +227,14 @@
           "android_info": {
             "package_name": "io.nextsense.android.main.study.dev",
             "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
+        {
+          "client_id": "894094054051-man83v0ls3ap1ep53lb65ivul375a1ld.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.dev",
+            "certificate_hash": "b45570bb7772b7b6712333bc27b28a9e5aba065b"
           }
         },
         {
