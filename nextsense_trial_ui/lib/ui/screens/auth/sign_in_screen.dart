@@ -32,10 +32,14 @@ class SignInScreen extends HookWidget {
   final _permissionsManager = getIt<PermissionsManager>();
   final _navigation = getIt<Navigation>();
 
+  String? initialErrorMessage;
+
+  SignInScreen({this.initialErrorMessage});
+
   @override
   Widget build(BuildContext context) {
     return ViewModelBuilder<SignInScreenViewModel>.reactive(
-        viewModelBuilder: () => SignInScreenViewModel(),
+        viewModelBuilder: () => SignInScreenViewModel(initialErrorMessage: initialErrorMessage),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) => SessionPopScope(
             child: PageScaffold(
@@ -196,17 +200,6 @@ class SignInScreen extends HookWidget {
       await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true));
     }
 
-    // If there are permissions that need to be granted, go through them one by one with an
-    // explanation screen.
-    for (PermissionRequest permissionRequest
-        in await _permissionsManager.getPermissionsToRequest()) {
-      if (permissionRequest.showRequest) {
-        await _navigation.navigateTo(RequestPermissionScreen.id, arguments: permissionRequest);
-      } else {
-        await permissionRequest.permission.request();
-      }
-    }
-
     bool studyLoaded = await viewModel.loadCurrentStudy();
     if (!studyLoaded) {
       // Cannot proceed without study data.
@@ -217,6 +210,17 @@ class SignInScreen extends HookWidget {
               content: 'Please contact NextSense support and mention that there is an issue with '
                   'your account study setup.'));
       return;
+    }
+
+    // If there are permissions that need to be granted, go through them one by one with an
+    // explanation screen.
+    for (PermissionRequest permissionRequest
+        in await _permissionsManager.getPermissionsToRequest()) {
+      if (permissionRequest.showRequest) {
+        await _navigation.navigateTo(RequestPermissionScreen.id, arguments: permissionRequest);
+      } else {
+        await permissionRequest.permission.request();
+      }
     }
 
     if (!viewModel.studyIntroShown) {

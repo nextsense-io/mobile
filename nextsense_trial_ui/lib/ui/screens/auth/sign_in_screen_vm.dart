@@ -21,7 +21,7 @@ class SignInScreenViewModel extends ViewModel {
   final password = ValueNotifier<String>("");
 
   bool internetConnection = true;
-  String errorMsg = '';
+  String errorMsg = "";
 
   bool get hadPairedDevice => _deviceManager.hadPairedDevice;
   List<AuthMethod> get authMethods => _flavor.authMethods;
@@ -29,6 +29,11 @@ class SignInScreenViewModel extends ViewModel {
   bool get isTempPassword => _authManager.user!.isTempPassword();
   bool get studyIntroShown => _studyManager.currentEnrolledStudy != null &&
       _studyManager.currentEnrolledStudy!.intro_shown;
+  String? initialErrorMessage;
+
+  SignInScreenViewModel({this.initialErrorMessage}) {
+    errorMsg = initialErrorMessage ?? "";
+  }
 
   @override
   void init() async {
@@ -45,7 +50,6 @@ class SignInScreenViewModel extends ViewModel {
       errorMsg = "An internet connection is needed to login.";
     } else {
       internetConnection = true;
-      errorMsg = "";
     }
   }
 
