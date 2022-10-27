@@ -18,6 +18,7 @@ import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_mapping.dart';
+import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -127,7 +128,8 @@ class StartupScreenViewModel extends ViewModel {
       if (_authManager.isAuthenticated && justAuthenticated) {
         // If the user got a temp password, make him sign in again and then change it.
         _logger.log(Level.INFO, 'Temporary password. Navigating to password change screen.');
-        await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true));
+        await _navigation.navigateTo(SetPasswordScreen.id, replace: true,
+            nextRoute: NavigationRoute(routeName: StartupScreen.id, replace: true));
       } else {
         _logger.log(Level.INFO, 'Temporary password with no sign-in link.');
         _navigation.navigateTo(RequestPasswordResetScreen.id, replace: true);
