@@ -20,6 +20,11 @@ class ApiResponse {
   });
 }
 
+enum SignInEmailType {
+  signUp,
+  resetPassword
+}
+
 class NextsenseApi {
   static final Duration _timeout = Duration(seconds: 10);
   static final int _maxRetries = 3;
@@ -30,12 +35,13 @@ class NextsenseApi {
 
   Uri get _endpointAuth => Uri.parse('$_baseUrl/auth');
   Uri get _endpointChangePassword => Uri.parse('$_baseUrl/change_password');
+  Uri get _endpointSendSignInEmail => Uri.parse('$_baseUrl/send_signin_email');
 
-  NextsenseApi() {}
+  NextsenseApi();
 
   Future<ApiResponse> _callApi({required Map<String, dynamic> data, required Uri endpoint,
-      required String errorMsg}) async {
-    Response? response = null;
+      required String defaultErrorMsg}) async {
+    Response? response;
     int attemptNumber = 0;
     while (response == null && attemptNumber < _maxRetries) {
       try {
@@ -44,6 +50,7 @@ class NextsenseApi {
           'Accept': 'application/json',
         }, body: jsonEncode(data)).timeout(_timeout);
       } catch (e) {
+        attemptNumber++;
         _logger.log(Level.WARNING, e);
       }
     }
@@ -61,7 +68,7 @@ class NextsenseApi {
       return ApiResponse(data: responseJson);
     } else {
       Map<String, dynamic> responseJson = {};
-      String errorMsg = '';
+      String errorMsg = defaultErrorMsg;
       try {
         responseJson = json.decode(response.body) as Map<String, dynamic>;
         errorMsg = responseJson['error'];
@@ -82,7 +89,7 @@ class NextsenseApi {
       'username': username,
       'password': password
     };
-    return _callApi(endpoint: _endpointAuth, data: data, errorMsg: "Authentication request failed");
+    return _callApi(endpoint: _endpointAuth, data: data, defaultErrorMsg: "Authentication request failed");
   }
 
   // Changes the user password.
@@ -93,6 +100,18 @@ class NextsenseApi {
       'new_password': new_password
     };
     return _callApi(endpoint: _endpointChangePassword, data: data,
-        errorMsg: "Password change request failed");
+        defaultErrorMsg: "Password change request failed");
+  }
+
+  // Changes the user password.
+  Future<ApiResponse> sendSignInEmail(
+      {required String email, required SignInEmailType emailType}) async {
+    var data = {
+      'email': email,
+      'email_type': emailType.name.toLowerCase()
+    };
+    _logger.log(Level.INFO, data);
+    return _callApi(endpoint: _endpointSendSignInEmail, data: data,
+        defaultErrorMsg: "Password change request failed");
   }
 }

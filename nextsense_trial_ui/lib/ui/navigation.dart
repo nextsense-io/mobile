@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
@@ -9,6 +11,7 @@ import 'package:nextsense_trial_ui/domain/seizure.dart';
 import 'package:nextsense_trial_ui/domain/side_effect.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
@@ -16,6 +19,8 @@ import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/re_authenticate_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/request_password_reset_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/check_internet/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/device_scan/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
@@ -59,9 +64,26 @@ class NavigationRoute {
   NavigationRoute({this.routeName, this.arguments, this.replace, this.pop, this.popAll});
 }
 
+// Possible URLs that can be used to open the application.
+// This should match mobile_backend/auth/auth.py UrlTarget enum.
+enum UrlTarget {
+  signup,
+  reset_password,
+  unknown;
+
+  factory UrlTarget.create(String url) {
+    return values.firstWhere((urlTarget) => url.contains(urlTarget.name), orElse: () => unknown);
+  }
+}
+
 class Navigation {
 
+  static const _emailLinkParam = 'email';
+  static const String _linkExpiredMessage =
+      'Link is expired or was used already. A new one was sent to your email.';
+
   final GlobalKey<NavigatorState> navigatorKey = new GlobalKey<NavigatorState>();
+  final AuthManager _authManager = getIt<AuthManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final DiskSpaceManager _diskSpaceManager = getIt<DiskSpaceManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
@@ -71,6 +93,7 @@ class Navigation {
   NavigationRoute? _nextNavigationRoute;
   StreamSubscription? _intentSubscription;
   intent.Intent? _initialIntent;
+  String? currentScreenId;
 
   Future<void> _initReceiveIntent() async {
     _intentSubscription = intent.ReceiveIntent.receivedIntentStream.listen(
@@ -89,34 +112,101 @@ class Navigation {
 
   // Navigate to the target defined in the intent extras.
   Future<bool> _navigateToIntent(intent.Intent intent, {bool replace = false}) async {
-    if (intent.extra == null) {
-      _logger.log(Level.INFO, "No extra, probably not a notification that will navigate.");
+    if (intent.extra == null || intent.data == null) {
+      _logger.log(Level.INFO, "No data or extra in the intent so no navigation is expected.");
       return false;
     }
-    if (intent.extra!.containsKey(TargetType.protocol.name)) {
-      String scheduledProtocolId = intent.extra![TargetType.protocol.name];
-      _logger.log(Level.INFO, "Scheduled protocol id: $scheduledProtocolId");
-      ScheduledProtocol? scheduledProtocol =
-          await _studyManager.queryScheduledProtocol(scheduledProtocolId);
-      if (scheduledProtocol != null) {
-        navigateWithCapabilityChecking(navigatorKey.currentState!.context, ProtocolScreen.id,
-            replace: replace, arguments: scheduledProtocol);
-      } else {
-        _logger.log(Level.SEVERE, "Scheduled protocol $scheduledProtocolId does not exists");
+
+    if (intent.data != null &&
+        FirebaseAuth.instance.isSignInWithEmailLink(intent.data!)) {
+      Uri uri = Uri.parse(intent.data!);
+      _logger.log(Level.INFO, 'Url target: $uri');
+      _logger.log(Level.INFO, "emailLink query params: ${uri.queryParameters.values}");
+      String? email = uri.queryParameters[_emailLinkParam];
+      if (email == null) {
+        _logger.log(Level.WARNING,
+            "Received an email link with no $_emailLinkParam parameter, cannot process it.");
+        return false;
       }
-      return true;
+
+      UrlTarget urlTarget = UrlTarget.create(uri.toString());
+      if (urlTarget == UrlTarget.unknown) {
+        _logger.log(Level.WARNING, 'Unknown url target: $uri');
+        return false;
+      }
+
+      bool alreadyLoggedIn = _authManager.isAuthenticated;
+      AuthenticationResult result =
+          await _authManager.signInEmailLink(intent.data!, email);
+      if (result == AuthenticationResult.success) {
+        switch (urlTarget) {
+          case UrlTarget.signup:
+            // fallthrough
+          case UrlTarget.reset_password:
+            navigateTo(SetPasswordScreen.id, replace: !alreadyLoggedIn,
+                nextRoute: NavigationRoute(routeName: StartupScreen.id, popAll: true));
+            break;
+          default:
+        }
+        return true;
+      } else {
+        if (result == AuthenticationResult.expired_link) {
+          // Send a new email in case it did not work from expiration.
+          switch (urlTarget) {
+            case UrlTarget.signup:
+              await _authManager.requestSignUpEmail(email);
+              break;
+            case UrlTarget.reset_password:
+              await _authManager.requestPasswordResetEmail(email);
+              break;
+            default:
+          }
+        }
+        if (alreadyLoggedIn) {
+          Fluttertoast.showToast(
+              msg: _linkExpiredMessage,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.CENTER,
+              fontSize: 16.0
+          );
+          return true;
+        } else {
+          _authManager.signOut();
+          signOut(errorMessage: _linkExpiredMessage);
+        }
+        navigateTo(SetPasswordScreen.id, replace: !alreadyLoggedIn);
+        // Could not authenticate with the email link, fallback to signin page.
+        _logger.log(Level.WARNING, 'Failed to authenticate with email link.');
+        return true;
+      }
     }
-    if (intent.extra!.containsKey(TargetType.survey.name)) {
-      String scheduledSurveyId = intent.extra![TargetType.survey.name];
-      _logger.log(Level.INFO, "Scheduled survey id: $scheduledSurveyId");
-      ScheduledSurvey? scheduledSurvey =
-          await _surveyManager.queryScheduledSurvey(scheduledSurveyId);
-      if (scheduledSurvey != null) {
-        await navigateTo(SurveyScreen.id, replace: replace, arguments: scheduledSurvey);
-      } else {
-        _logger.log(Level.SEVERE, "Scheduled survey $scheduledSurveyId does not exists");
+
+    if (intent.extra != null) {
+      if (intent.extra!.containsKey(TargetType.protocol.name)) {
+        String scheduledProtocolId = intent.extra![TargetType.protocol.name];
+        _logger.log(Level.INFO, "Scheduled protocol id: $scheduledProtocolId");
+        ScheduledProtocol? scheduledProtocol =
+            await _studyManager.queryScheduledProtocol(scheduledProtocolId);
+        if (scheduledProtocol != null) {
+          navigateWithCapabilityChecking(navigatorKey.currentState!.context, ProtocolScreen.id,
+              replace: replace, arguments: scheduledProtocol);
+        } else {
+          _logger.log(Level.SEVERE, "Scheduled protocol $scheduledProtocolId does not exists");
+        }
+        return true;
       }
-      return true;
+      if (intent.extra!.containsKey(TargetType.survey.name)) {
+        String scheduledSurveyId = intent.extra![TargetType.survey.name];
+        _logger.log(Level.INFO, "Scheduled survey id: $scheduledSurveyId");
+        ScheduledSurvey? scheduledSurvey =
+        await _surveyManager.queryScheduledSurvey(scheduledSurveyId);
+        if (scheduledSurvey != null) {
+          await navigateTo(SurveyScreen.id, replace: replace, arguments: scheduledSurvey);
+        } else {
+          _logger.log(Level.SEVERE, "Scheduled survey $scheduledSurveyId does not exists");
+        }
+        return true;
+      }
     }
     _logger.log(Level.WARNING, "Intent received with no valid target.");
     return false;
@@ -143,13 +233,14 @@ class Navigation {
     _logger.log(Level.INFO, "Next route: $nextRoute");
     _nextNavigationRoute = nextRoute;
     final currentState = navigatorKey.currentState!;
+    currentScreenId = routeName;
     if (replace) {
       return currentState.pushReplacementNamed(routeName, arguments: arguments);
     }
-    if (pop) {
+    if (pop && currentState.canPop()) {
       return currentState.popAndPushNamed(routeName, arguments: arguments);
     }
-    if (popAll) {
+    if (popAll && currentState.canPop()) {
       return currentState.pushNamedAndRemoveUntil(
           routeName, arguments: arguments, (Route<dynamic> route) => false);
     }
@@ -215,6 +306,10 @@ class Navigation {
           builder: (context) => SignalMonitoringScreen());
       case SurveysScreen.id: return MaterialPageRoute(
           builder: (context) => SurveysScreen());
+      case RequestPasswordResetScreen.id: return MaterialPageRoute(
+          builder: (context) => RequestPasswordResetScreen());
+      case ReAuthenticateScreen.id: return MaterialPageRoute(
+          builder: (context) => ReAuthenticateScreen());
 
       // Routes with arguments
       case SignInScreen.id: return MaterialPageRoute(
@@ -316,7 +411,7 @@ class Navigation {
     await navigateTo(routeName, arguments: arguments, replace: replace, pop: pop);
   }
 
-  void signOut({String? errorMessage}) {
-    navigateTo(SignInScreen.id, popAll: true, arguments: errorMessage);
+  Future signOut({String? errorMessage}) async {
+    await navigateTo(SignInScreen.id, popAll: true, arguments: errorMessage);
   }
 }

@@ -8,8 +8,9 @@ class SimpleButton extends StatelessWidget {
   final Widget text;
   final Border? border;
   final Function onTap;
+  final bool? fullWidth;
 
-  SimpleButton({required this.text, required this.onTap, this.border});
+  SimpleButton({required this.text, required this.onTap, this.border, this.fullWidth});
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +19,7 @@ class SimpleButton extends StatelessWidget {
         child: RoundedBackground(
             border: border,
             child: text,
+            fullWidth: fullWidth ?? false,
         ));
   }
 }

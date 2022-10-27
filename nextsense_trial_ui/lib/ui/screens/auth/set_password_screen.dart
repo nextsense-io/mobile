@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/auth/email_auth_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
@@ -10,6 +12,7 @@ import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/re_authenticate_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen_vm.dart';
 import 'package:stacked/stacked.dart';
 
@@ -53,97 +56,106 @@ class SetPasswordScreen extends HookWidget {
     }
     return Container(
         child: Center(
-      child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Padding(
-              padding: EdgeInsets.all(10.0),
-              child: HeaderText(text: 'Set Password'),
-            ),
-            RoundedBackground(
-                child: Column(children: [
+            child: Column(mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
               Padding(
                 padding: EdgeInsets.all(10.0),
-                child: TextFormField(
-                  cursorColor: TextSelectionTheme.of(context).cursorColor,
-                  initialValue: '',
-                  maxLength: 20,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    // icon: Icon(Icons.password),
-                    label: MediumText(text: 'New Password', color: NextSenseColors.darkBlue),
-                    helperText: 'Minimum ${viewModel.minimumPasswordLength} characters.',
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF6200EE)),
+                child: HeaderText(text: 'Set Password'),
+              ),
+              RoundedBackground(
+                  child: Column(children: [
+                Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: TextFormField(
+                    cursorColor: TextSelectionTheme.of(context).cursorColor,
+                    initialValue: '',
+                    maxLength: 20,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      // icon: Icon(Icons.password),
+                      label: MediumText(text: 'New Password', color: NextSenseColors.darkBlue),
+                      helperText: 'Minimum ${viewModel.minimumPasswordLength} characters.',
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6200EE)),
+                      ),
                     ),
+                    onChanged: (password) {
+                      viewModel.password = password;
+                    },
                   ),
-                  onChanged: (password) {
-                    viewModel.password = password;
-                  },
                 ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(10.0),
-                child: TextFormField(
-                  cursorColor: TextSelectionTheme.of(context).cursorColor,
-                  initialValue: '',
-                  maxLength: 20,
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    // icon: Icon(Icons.password),
-                    label:
-                        MediumText(text: 'Confirm your password', color: NextSenseColors.darkBlue),
-                    helperText: '',
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide: BorderSide(color: Color(0xFF6200EE)),
+                Padding(
+                  padding: EdgeInsets.all(10.0),
+                  child: TextFormField(
+                    cursorColor: TextSelectionTheme.of(context).cursorColor,
+                    initialValue: '',
+                    maxLength: EmailAuthManager.maxPasswordLength,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      // icon: Icon(Icons.password),
+                      label: MediumText(
+                          text: 'Confirm your password', color: NextSenseColors.darkBlue),
+                      helperText: '',
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6200EE)),
+                      ),
                     ),
+                    onChanged: (passwordConfirmation) {
+                      viewModel.passwordConfirmation = passwordConfirmation;
+                    },
                   ),
-                  onChanged: (passwordConfirmation) {
-                    viewModel.passwordConfirmation = passwordConfirmation;
-                  },
                 ),
+              ])),
+              SizedBox(height: 20),
+              SimpleButton(
+                text: MediumText(
+                  text: 'Replace Password',
+                  color: NextSenseColors.purple,
+                  textAlign: TextAlign.center,
+                ),
+                onTap: viewModel.isBusy
+                    ? () => {print('busy cannot submit')}
+                    : () => _onSubmitButtonPressed(context, viewModel),
               ),
-            ])),
-            SizedBox(height: 20),
-            SimpleButton(
-              text: MediumText(
-                text: 'Replace Password',
-                color: NextSenseColors.purple,
-                textAlign: TextAlign.center,
-              ),
-              onTap: viewModel.isBusy
-                  ? () => {print('busy cannot submit')}
-                  : () => _onSubmitButtonPressed(context, viewModel),
-            ),
-            Visibility(
-              visible: viewModel.isBusy,
-              child: CircularProgressIndicator(
-                color: Colors.white,
-              ),
-            ),
-          ]),
-    ));
+            ]),
+        SizedBox(height: 20),
+        Visibility(
+          visible: viewModel.isBusy,
+          child: CircularProgressIndicator(
+            color: Colors.white,
+          ),
+        ),
+      ],
+    )));
   }
 
   Future<void> _onSubmitButtonPressed(
       BuildContext context, SetPasswordScreenViewModel viewModel) async {
-    try {
-      bool passwordChanged = await viewModel.changePassword();
-      if (passwordChanged) {
+    PasswordChangeResult result = await viewModel.changePassword();
+    switch (result) {
+      case PasswordChangeResult.success:
         await _showDialog(
             context, 'Password changed', '', false, () => _navigation.navigateToNextRoute());
-      } else {
+        break;
+      case PasswordChangeResult.invalid_password:
         await _showDialog(context, 'Error', 'Invalid password', false, null);
-      }
-    } catch (e) {
-      _showDialog(
-          context,
-          'Error',
-          'Could not set password, make sure you have an active internet connection and try again.',
-          false,
-          null);
-      return;
+        break;
+      case PasswordChangeResult.need_reauthentication:
+        await _showDialog(
+            context,
+            'Verify your password',
+            'You need to authenticate again before you can change your password',
+            false,
+            () => _navigation.navigateTo(ReAuthenticateScreen.id));
+        break;
+      case PasswordChangeResult.error:
+      case PasswordChangeResult.connection_error:
+        // Error is displayed in the UI already.
+        break;
     }
   }
 }

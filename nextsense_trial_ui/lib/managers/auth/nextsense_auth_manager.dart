@@ -38,13 +38,14 @@ class NextSenseAuthManager {
     return AuthenticationResult.success;
   }
 
-  Future<bool> changePassword(String username, String newPassword) async {
+  Future<PasswordChangeResult> changePassword(
+      {required String username, required String newPassword}) async {
     ApiResponse resp = await _nextsenseApi.changePassword(
         await _firebaseAuth.currentUser!.getIdToken(), username, newPassword);
     if (resp.isError) {
-      return false;
+      return PasswordChangeResult.error;
     }
-    return true;
+    return PasswordChangeResult.success;
   }
 
   Future<void> handleSignOut() async {

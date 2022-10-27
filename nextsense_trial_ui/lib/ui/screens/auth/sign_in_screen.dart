@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/auth/email_auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
@@ -11,13 +13,16 @@ import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:nextsense_trial_ui/ui/components/scrollable_column.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/components/small_text.dart';
+import 'package:nextsense_trial_ui/ui/components/underlined_text_button.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/request_password_reset_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
@@ -45,50 +50,55 @@ class SignInScreen extends HookWidget {
             child: PageScaffold(
                 showBackButton: false,
                 showProfileButton: false,
-                child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                  Spacer(),
-                  HeaderText(text: 'Get started'),
-                  SizedBox(height: 20),
-                  _buildBody(context),
-                  Spacer(),
-                  SmallText(
-                      text: 'By creating a new account, you are agreeing to our Terms of '
-                          'Service and Privacy Policy.'),
-                ]))));
+                child: ScrollableColumn(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [Spacer(), HeaderText(text: 'Get started'), SizedBox(height: 20)] +
+                        _buildBody(context) +
+                        [
+                          Spacer(),
+                          SmallText(text:
+                              'By creating a new account, you are agreeing to our Terms of Service '
+                              'and Privacy Policy.'),
+                        ]))));
   }
 
-  Widget _buildEmailPasswordAuth(BuildContext context, SignInScreenViewModel viewModel) {
-    return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          RoundedBackground(
-              child: Column(children: [
-            _UserPasswordSignInInputField(
-              field: viewModel.username,
-              labelText: 'Email',
-              maxLength: 40
-            ),
-            // helperText: 'Please contact NextSense support if you did not get an id',
-            // icon: Icon(Icons.account_circle)),
-            _UserPasswordSignInInputField(
-              field: viewModel.password,
-              obscureText: true,
-              labelText: 'Password',
-              // helperText: 'Contact NextSense to reset your password',
-              // icon: Icon(Icons.lock)),
-            )
-          ])),
-          SizedBox(height: 20),
-          SimpleButton(
-              text: MediumText(
-                text: 'Login',
-                color: NextSenseColors.purple,
-                textAlign: TextAlign.center,
-              ),
-              onTap:
-                  viewModel.isBusy ? () => {} : () => _signIn(context, AuthMethod.email_password))
-        ]);
+  List<Widget> _buildEmailPasswordAuth(BuildContext context, SignInScreenViewModel viewModel) {
+    return [
+      RoundedBackground(
+          child: Column(children: [
+        _UserPasswordSignInInputField(
+            field: viewModel.username,
+            labelText: 'Email',
+            maxLength: EmailAuthManager.maxEmailLength),
+        // helperText: 'Please contact NextSense support if you did not get an id',
+        // icon: Icon(Icons.account_circle)),
+        _UserPasswordSignInInputField(
+          field: viewModel.password,
+          obscureText: true,
+          labelText: 'Password',
+          maxLength: EmailAuthManager.maxPasswordLength,
+          // helperText: 'Contact NextSense to reset your password',
+          // icon: Icon(Icons.lock)),
+        )
+      ])),
+      SizedBox(height: 20),
+      SimpleButton(
+          fullWidth: true,
+          text: MediumText(
+            text: 'Login',
+            color: NextSenseColors.purple,
+            textAlign: TextAlign.center,
+          ),
+          onTap: viewModel.isBusy ? () => {} : () => _signIn(context, AuthMethod.email_password)),
+      SizedBox(height: 20),
+      Align(
+          alignment: Alignment.center,
+          child: UnderlinedTextButton(
+              text: 'Forgot your password?',
+              onTap: () async => await _navigation.navigateTo(RequestPasswordResetScreen.id)))
+    ];
   }
 
   Widget _buildNextSenseAuth(BuildContext context, SignInScreenViewModel viewModel) {
@@ -128,7 +138,7 @@ class SignInScreen extends HookWidget {
     ]);
   }
 
-  Widget _buildBody(BuildContext context) {
+  List<Widget> _buildBody(BuildContext context) {
     final viewModel = context.watch<SignInScreenViewModel>();
 
     List<Widget> _signInWidgets = [];
@@ -136,7 +146,7 @@ class SignInScreen extends HookWidget {
     for (AuthMethod authMethod in viewModel.authMethods) {
       switch (authMethod) {
         case AuthMethod.email_password:
-          _signInWidgets.add(_buildEmailPasswordAuth(context, viewModel));
+          _signInWidgets.addAll(_buildEmailPasswordAuth(context, viewModel));
           break;
         case AuthMethod.user_code:
           _signInWidgets.add(_buildNextSenseAuth(context, viewModel));
@@ -165,8 +175,10 @@ class SignInScreen extends HookWidget {
       ),
     ]);
 
-    return Center(
-        child: Column(mainAxisAlignment: MainAxisAlignment.center, children: _signInWidgets));
+    return _signInWidgets;
+
+    // return Center(
+    //     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: _signInWidgets));
   }
 
   Future _signIn(BuildContext context, AuthMethod authMethod) async {
@@ -177,8 +189,8 @@ class SignInScreen extends HookWidget {
       var dialogTitle, dialogContent;
       switch (authResult) {
         case AuthenticationResult.invalid_username_or_password:
-          dialogTitle = 'Invalid password';
-          dialogContent = 'The password you entered is invalid';
+          dialogTitle = 'Invalid email or password';
+          dialogContent = 'The email is incorrect or you entered a wrong password';
           break;
         case AuthenticationResult.connection_error:
           dialogTitle = 'Connection error';
@@ -261,7 +273,7 @@ class _UserPasswordSignInInputField extends StatelessWidget {
       required this.labelText,
       this.helperText,
       this.obscureText,
-      this.maxLength = 20})
+      this.maxLength = EmailAuthManager.maxPasswordLength})
       : super(key: key);
 
   @override

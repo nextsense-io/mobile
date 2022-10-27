@@ -14,33 +14,33 @@ class SetPasswordScreenViewModel extends ViewModel {
 
   int get minimumPasswordLength => AuthManager.minimumPasswordLength;
 
-  Future<bool> changePassword() async {
+  Future<PasswordChangeResult> changePassword() async {
     if (password.isEmpty) {
-      return false;
+      return PasswordChangeResult.invalid_password;
     }
     if (password.length < minimumPasswordLength) {
       setError('Password should be at least $minimumPasswordLength characters long');
       notifyListeners();
-      return false;
+      return PasswordChangeResult.error;
     }
     if (password.compareTo(passwordConfirmation) != 0) {
       setError('Passwords do not match.');
       notifyListeners();
-      return false;
+      return PasswordChangeResult.error;
     }
     setBusy(true);
     notifyListeners();
-    bool passwordChanged = false;
+    PasswordChangeResult? result;
     try {
-      passwordChanged = await authManager.changePassword(password);
+      result = await authManager.changePassword(password);
     } catch (e) {
       setBusy(false);
       notifyListeners();
-      return false;
+      return PasswordChangeResult.error;
     }
-    _logger.log(Level.INFO, 'Password change result: $passwordChanged');
+    _logger.log(Level.INFO, 'Password change result: $result');
     setBusy(false);
     notifyListeners();
-    return passwordChanged;
+    return result;
   }
 }

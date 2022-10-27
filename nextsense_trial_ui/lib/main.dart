@@ -67,7 +67,7 @@ Future<intent.Intent?> _getInitialIntent() async {
 }
 
 void main() async {
-  await WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
   await _initFirebase();
   runZonedGuarded<Future<void>>(() async {
     _initLogging();
@@ -78,9 +78,11 @@ void main() async {
     await initDependencies();
     await getIt<NotificationsManager>().init();
     intent.Intent? initialIntent = await _getInitialIntent();
-    await getIt<Navigation>().init(initialIntent);
+    bool intentGotEmailLink = initialIntent != null && initialIntent.data != null &&
+        FirebaseAuth.instance.isSignInWithEmailLink(initialIntent.data!);
+    await getIt<Navigation>().init(intentGotEmailLink ? null : initialIntent);
     NextsenseBase.startService();
-    runApp(NextSenseTrialApp(initialIntent: initialIntent));
+    runApp(NextSenseTrialApp(initialIntent: intentGotEmailLink ? initialIntent : null));
   }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));
 }
 
@@ -95,8 +97,6 @@ class NextSenseTrialApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool intentGotEmailLink = initialIntent != null && initialIntent!.data != null &&
-        FirebaseAuth.instance.isSignInWithEmailLink(initialIntent!.data!);
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: getIt<ConnectivityManager>())
@@ -112,7 +112,7 @@ class NextSenseTrialApp extends StatelessWidget {
           fontFamily: 'DMMono',
           scaffoldBackgroundColor: Colors.white
         ),
-        home: _authManager.isAuthenticated || intentGotEmailLink ?
+        home: _authManager.isAuthenticated || initialIntent != null ?
             StartupScreen(initialIntent: initialIntent) : SignInScreen(),
         navigatorKey: _navigation.navigatorKey,
         onGenerateRoute: _navigation.onGenerateRoute,
