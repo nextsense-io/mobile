@@ -82,6 +82,7 @@ void main() async {
         FirebaseAuth.instance.isSignInWithEmailLink(initialIntent.data!);
     await getIt<Navigation>().init(intentGotEmailLink ? null : initialIntent);
     NextsenseBase.startService();
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     runApp(NextSenseTrialApp(initialIntent: intentGotEmailLink ? initialIntent : null));
   }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));
 }
