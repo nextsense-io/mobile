@@ -14,16 +14,25 @@ import 'package:uuid/uuid.dart';
 
 enum AuthenticationResult {
   success,
-  invalid_user_setup, // Invalid user configuration in Firestore
+  invalid_user_setup,  // Invalid user configuration in Firestore
   invalid_username_or_password,
-  user_fetch_failed, // Failed to load user entity
+  need_reauthentication,
+  user_fetch_failed,  // Failed to load user entity
+  connection_error,
+  expired_link,  // When using a sign-in link
+  error  // Some other errors
+}
+
+enum PasswordChangeResult {
+  success,
+  invalid_password,
+  need_reauthentication,
   connection_error,
   error // Some other errors
 }
 
 class AuthManager {
   static const minimumPasswordLength = 8;
-  static const _emailLinkParam = 'email';
 
   final _logger = CustomLogPrinter('AuthManager');
   final _preferences = getIt<Preferences>();
@@ -88,14 +97,8 @@ class AuthManager {
     return await _signIn(username: _googleAuthManager!.email, authUid: _googleAuthManager!.authUid);
   }
 
-  Future<AuthenticationResult> signInEmailLink(String emailLink) async {
-    Uri uri = Uri.parse(emailLink);
-    String? email = uri.queryParameters[_emailLinkParam];
-    if (email == null) {
-      _logger.log(Level.WARNING,
-          "Received an email link with no $_emailLinkParam parameter, cannot process it.");
-      return AuthenticationResult.error;
-    }
+  Future<AuthenticationResult> signInEmailLink(String emailLink, String email) async {
+    _logger.log(Level.WARNING, "emailLink: $emailLink");
     AuthenticationResult authResult = await _emailAuthManager!.signInWithLink(email, emailLink);
     if (authResult != AuthenticationResult.success) {
       return authResult;
@@ -131,19 +134,45 @@ class AuthManager {
     }
   }
 
-  Future<bool> changePassword(String newPassword) async {
+  Future<PasswordChangeResult> changePassword(String newPassword) async {
     switch (_signedInAuthMethod) {
       case AuthMethod.email_password:
-        bool passwordChanged = await _emailAuthManager!.changePassword(newPassword);
-        if (passwordChanged) {
+        PasswordChangeResult result = await _emailAuthManager!.changePassword(newPassword);
+        if (result == PasswordChangeResult.success) {
           _user!.setTempPassword(false);
-          bool saved = await _user!.save();
-          return saved;
+          await _user!.save();
+          return result;
         }
-        return false;
+        return result;
       case AuthMethod.user_code:
-    return await _nextSenseAuthManager!.changePassword(userCode!, newPassword);
+    return await _nextSenseAuthManager!.changePassword(
+        username: userCode!, newPassword: newPassword);
       default:
+        return PasswordChangeResult.error;
+    }
+  }
+
+  Future<bool> requestPasswordResetEmail(String email) async {
+    switch (_signedInAuthMethod) {
+      case AuthMethod.email_password:
+        return await _emailAuthManager!.sendResetPasswordEmail(email);
+      default:
+        _logger.log(Level.WARNING,
+            'Cannot send a password reset email for $_signedInAuthMethod users.');
+        return false;
+    }
+  }
+
+  Future<bool> requestSignUpEmail(String email) async {
+    switch (_signedInAuthMethod) {
+      case AuthMethod.email_password:
+        User? user = await loadUser(username: email);
+        user?.setTempPassword(true);
+        user?.save();
+        return await _emailAuthManager!.sendSignUpLinkEmail(email);
+      default:
+        _logger.log(Level.WARNING,
+            'Cannot send a signup email for $_signedInAuthMethod users.');
         return false;
     }
   }

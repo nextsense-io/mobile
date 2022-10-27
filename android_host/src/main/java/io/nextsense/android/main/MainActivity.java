@@ -33,8 +33,7 @@ public class MainActivity extends AppCompatActivity {
   private static final boolean AUTOSTART_FLUTTER = true;
   // This value cannot be changed so that the flutter plugin refers to the same preference file. See
   // https://github.com/flutter/plugins/blob/main/packages/shared_preferences/shared_preferences_android/android/src/main/java/io/flutter/plugins/sharedpreferences/MethodCallHandlerImpl.java
-  private static final String SHARED_PREF_FILE_KEY =
-          "FlutterSharedPreferences";
+  private static final String SHARED_PREF_FILE_KEY = "FlutterSharedPreferences";
   // Needs to add "flutter." as a prefix to the key that is retrieved on the flutter side. This is
   // silently added to keys that are saved by the flutter plugin. See
   // https://github.com/flutter/plugins/blob/main/packages/shared_preferences/shared_preferences/lib/shared_preferences.dart
@@ -113,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
   protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
     Log.i(TAG, "New intent received: " + intent.toString());
+    boolean validTarget = false;
     if (intent.getExtras() != null) {
       Log.i(TAG, "New intent received extras: " + intent.getExtras().toString());
       String jsonData = intent.getExtras().getString(EXTRA_NOTIFICATION_JSON);
@@ -126,18 +126,20 @@ public class MainActivity extends AppCompatActivity {
         if (payloadMap == null) {
           return;
         }
-        boolean validTarget = false;
         for (NavigationTarget target : NavigationTarget.values()) {
           if (payloadMap.containsKey(target.name().toLowerCase())) {
             validTarget = true;
           }
         }
-        if (validTarget) {
-          // There is an notification JSON, so start Flutter so it can navigate to the screen in the
-          // payload.
-          startFlutter(intent);
-        }
       }
+    }
+    if (intent.getData() != null) {
+      validTarget = true;
+    }
+    if (validTarget) {
+      // There is an notification JSON, so start Flutter so it can navigate to the screen in the
+      // payload.
+      startFlutter(intent);
     }
   }
 

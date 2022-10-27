@@ -7,6 +7,7 @@ class RoundedBackground extends StatelessWidget {
   final double paddingPixels;
   final Border? border;
   final Gradient? gradient;
+  final bool fullWidth;
   final bool transparent;
 
   RoundedBackground(
@@ -15,6 +16,7 @@ class RoundedBackground extends StatelessWidget {
         this.paddingPixels = 12.0,
         this.gradient,
         this.border,
+        this.fullWidth = false,
         this.transparent = true});
 
   @override
@@ -27,6 +29,9 @@ class RoundedBackground extends StatelessWidget {
       surfaceTintColor: Colors.white.withOpacity(0.7),
       color: Colors.white.withOpacity(0.7),
       child: Container(
+        constraints: BoxConstraints(
+          minWidth: fullWidth ? MediaQuery.of(context).size.width : 0,
+        ),
         padding: EdgeInsets.all(paddingPixels),
         decoration: BoxDecoration(
           color: transparent ? Colors.transparent : Colors.white,

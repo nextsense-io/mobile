@@ -12,6 +12,7 @@ import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/request_password_reset_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
@@ -23,6 +24,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 
 class StartupScreenViewModel extends ViewModel {
+
+  static const _emailLinkParam = 'email';
 
   final intent.Intent? initialIntent;
 
@@ -43,6 +46,7 @@ class StartupScreenViewModel extends ViewModel {
   void init() async {
     setBusy(true);
     super.init();
+
     // Make sure an internet connection is active before starting. If don't have one, show the login
     // which will display an error.
     if (getIt<ConnectivityManager>().isNone) {
@@ -51,15 +55,52 @@ class StartupScreenViewModel extends ViewModel {
       return;
     }
 
+    // If the authentication was not recent, then setting the password will fail which leads to a
+    // bad user experience on first login. Instead send them an email right away and tell them to
+    // use it.
+    bool justAuthenticated = false;
+    // If there is a sign-in link in the intent, process it accordingly.
     if (initialIntent != null && initialIntent!.data != null &&
         FirebaseAuth.instance.isSignInWithEmailLink(initialIntent!.data!)) {
-      AuthenticationResult result = await _authManager.signInEmailLink(initialIntent!.data!);
-      if (result != AuthenticationResult.success) {
-        setBusy(false);
-        // Could not authenticate with the email link, fallback to signin page.
-        _logger.log(Level.SEVERE, 'Failed to authenticate with email link. Fallback to sign in');
-        logout(errorMessage: 'Link is expired or was used already, please login using your '
-            'password or request a new link.');
+      Uri uri = Uri.parse(initialIntent!.data!);
+      _logger.log(Level.INFO, 'Url target: $uri');
+      _logger.log(Level.INFO, "emailLink query params: ${uri.queryParameters.values}");
+      String? email = uri.queryParameters[_emailLinkParam];
+      if (email == null) {
+        _logger.log(Level.WARNING,
+            "Received an email link with no $_emailLinkParam parameter, cannot process it.");
+        await logout(errorMessage:
+            'Invalid link, please try to login manually or contact NextSense support');
+        return;
+      }
+
+      UrlTarget urlTarget = UrlTarget.create(uri.toString());
+      if (urlTarget != UrlTarget.unknown) {
+        AuthenticationResult result =
+            await _authManager.signInEmailLink(initialIntent!.data!, email);
+        if (result != AuthenticationResult.success) {
+          // Send a new email in case it did not work from expiration.
+          switch (urlTarget) {
+            case UrlTarget.signup:
+              await _authManager.requestSignUpEmail(email);
+              break;
+            case UrlTarget.reset_password:
+              await _authManager.requestPasswordResetEmail(email);
+              break;
+            default:
+          }
+          setBusy(false);
+          // Could not authenticate with the email link, fallback to signin page.
+          _logger.log(Level.SEVERE, 'Failed to authenticate with email link. Fallback to sign in');
+          await logout(errorMessage: 'Link is expired or was used already. A new email was sent to your '
+              'address.');
+          return;
+        }
+        justAuthenticated = true;
+      } else {
+        _logger.log(Level.WARNING, 'Unknown url target: ${uri.path}');
+        await logout(errorMessage:
+            'Invalid link, please login using your password or contact NextSense support.');
         return;
       }
     }
@@ -75,7 +116,7 @@ class StartupScreenViewModel extends ViewModel {
       if (!success) {
         setBusy(false);
         _logger.log(Level.SEVERE, 'Failed to load user. Fallback to sign in');
-        logout();
+        await logout();
         return;
       }
     }
@@ -83,9 +124,15 @@ class StartupScreenViewModel extends ViewModel {
     _logger.log(Level.INFO, 'Checking if temporary password.');
     if (_authManager.isTempPassword) {
       setBusy(false);
-      // If the user got a temp password, make him sign in again and then change it.
-      _logger.log(Level.INFO, 'Temporary password. Navigating to password change screen.');
-      await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true));
+      if (_authManager.isAuthenticated && justAuthenticated) {
+        // If the user got a temp password, make him sign in again and then change it.
+        _logger.log(Level.INFO, 'Temporary password. Navigating to password change screen.');
+        await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true));
+      } else {
+        _logger.log(Level.INFO, 'Temporary password with no sign-in link.');
+        _navigation.navigateTo(RequestPasswordResetScreen.id, replace: true);
+        return;
+      }
     }
 
     if (!_dataManager.userStudyDataLoaded) {
@@ -99,7 +146,7 @@ class StartupScreenViewModel extends ViewModel {
       if (!success) {
         setBusy(false);
         _logger.log(Level.SEVERE, 'Failed to load user. Fallback to sign in');
-        logout();
+        await logout();
         return;
       }
     }
@@ -167,8 +214,8 @@ class StartupScreenViewModel extends ViewModel {
     return await _studyManager.markEnrolledStudyShown();
   }
 
-  void logout({String? errorMessage}) {
-    _authManager.signOut();
-    _navigation.signOut(errorMessage: errorMessage);
+  Future logout({String? errorMessage}) async {
+    await _authManager.signOut();
+    await _navigation.navigateTo(SignInScreen.id, replace: true, arguments: errorMessage);
   }
 }

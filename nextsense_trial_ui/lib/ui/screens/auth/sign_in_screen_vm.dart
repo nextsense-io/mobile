@@ -66,6 +66,7 @@ class SignInScreenViewModel extends ViewModel {
       return AuthenticationResult.connection_error;
     }
     setBusy(true);
+    notifyListeners();
     AuthenticationResult authResult;
     switch (authMethod) {
       case AuthMethod.email_password:
