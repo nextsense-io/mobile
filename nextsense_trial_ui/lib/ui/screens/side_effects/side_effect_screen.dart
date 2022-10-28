@@ -27,9 +27,9 @@ class SideEffectScreen extends HookWidget {
   static const String id = 'side_effect_screen';
 
   final Navigation _navigation = getIt<Navigation>();
-  final SideEffect? side_effect;
+  final SideEffect? sideEffect;
 
-  SideEffectScreen(this.side_effect);
+  SideEffectScreen(this.sideEffect);
 
   List<FormBuilderFieldOption> _getSideEffectTypeOptions() {
     return SideEffectType.values
@@ -133,7 +133,7 @@ class SideEffectScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<SideEffectScreenViewModel>.reactive(
         viewModelBuilder: () => SideEffectScreenViewModel(),
-        onModelReady: (viewModel) => viewModel.initWithSideEffect(side_effect),
+        onModelReady: (viewModel) => viewModel.initWithSideEffect(sideEffect),
         createNewModelOnInsert: true,
         builder: (context, SideEffectScreenViewModel viewModel, child) => WillPopScope(
             child: PageScaffold(

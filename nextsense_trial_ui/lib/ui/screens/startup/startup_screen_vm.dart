@@ -1,8 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/managers/auth/email_auth_link.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
@@ -61,49 +61,36 @@ class StartupScreenViewModel extends ViewModel {
     // use it.
     bool justAuthenticated = false;
     // If there is a sign-in link in the intent, process it accordingly.
-    if (initialIntent != null && initialIntent!.data != null &&
-        FirebaseAuth.instance.isSignInWithEmailLink(initialIntent!.data!)) {
-      Uri uri = Uri.parse(initialIntent!.data!);
-      _logger.log(Level.INFO, 'Url target: $uri');
-      _logger.log(Level.INFO, "emailLink query params: ${uri.queryParameters.values}");
-      String? email = uri.queryParameters[_emailLinkParam];
-      if (email == null) {
-        _logger.log(Level.WARNING,
-            "Received an email link with no $_emailLinkParam parameter, cannot process it.");
+    if (initialIntent != null && initialIntent!.data != null) {
+      EmailAuthLink emailAuthLink = EmailAuthLink(initialIntent!.data!);
+      if (!emailAuthLink.isValid) {
+        _logger.log(Level.WARNING, 'Invalid email auth link: ${emailAuthLink.authLink}');
         await logout(errorMessage:
             'Invalid link, please try to login manually or contact NextSense support');
         return;
       }
 
-      UrlTarget urlTarget = UrlTarget.create(uri.toString());
-      if (urlTarget != UrlTarget.unknown) {
-        AuthenticationResult result =
-            await _authManager.signInEmailLink(initialIntent!.data!, email);
-        if (result != AuthenticationResult.success) {
-          // Send a new email in case it did not work from expiration.
-          switch (urlTarget) {
-            case UrlTarget.signup:
-              await _authManager.requestSignUpEmail(email);
-              break;
-            case UrlTarget.reset_password:
-              await _authManager.requestPasswordResetEmail(email);
-              break;
-            default:
-          }
-          setBusy(false);
-          // Could not authenticate with the email link, fallback to signin page.
-          _logger.log(Level.SEVERE, 'Failed to authenticate with email link. Fallback to sign in');
-          await logout(errorMessage: 'Link is expired or was used already. A new email was sent to your '
-              'address.');
-          return;
+      AuthenticationResult result =
+          await _authManager.signInEmailLink(emailAuthLink.authLink, emailAuthLink.email);
+      if (result != AuthenticationResult.success) {
+        // Send a new email in case it did not work from expiration.
+        switch (emailAuthLink.urlTarget) {
+          case UrlTarget.signup:
+            await _authManager.requestSignUpEmail(emailAuthLink.email);
+            break;
+          case UrlTarget.reset_password:
+            await _authManager.requestPasswordResetEmail(emailAuthLink.email);
+            break;
+          default:
         }
-        justAuthenticated = true;
-      } else {
-        _logger.log(Level.WARNING, 'Unknown url target: ${uri.path}');
-        await logout(errorMessage:
-            'Invalid link, please login using your password or contact NextSense support.');
+        setBusy(false);
+        // Could not authenticate with the email link, fallback to signin page.
+        _logger.log(Level.SEVERE, 'Failed to authenticate with email link. Fallback to sign in');
+        await logout(errorMessage: 'Link is expired or was used already. A new email was sent to your '
+            'address.');
         return;
       }
+      justAuthenticated = true;
     }
 
     if (!_dataManager.userLoaded) {

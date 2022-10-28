@@ -12,6 +12,7 @@ import 'package:nextsense_trial_ui/domain/side_effect.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/auth/email_auth_link.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
@@ -78,7 +79,6 @@ enum UrlTarget {
 
 class Navigation {
 
-  static const _emailLinkParam = 'email';
   static const String _linkExpiredMessage =
       'Link is expired or was used already. A new one was sent to your email.';
 
@@ -117,29 +117,18 @@ class Navigation {
       return false;
     }
 
-    if (intent.data != null &&
-        FirebaseAuth.instance.isSignInWithEmailLink(intent.data!)) {
-      Uri uri = Uri.parse(intent.data!);
-      _logger.log(Level.INFO, 'Url target: $uri');
-      _logger.log(Level.INFO, "emailLink query params: ${uri.queryParameters.values}");
-      String? email = uri.queryParameters[_emailLinkParam];
-      if (email == null) {
-        _logger.log(Level.WARNING,
-            "Received an email link with no $_emailLinkParam parameter, cannot process it.");
-        return false;
-      }
-
-      UrlTarget urlTarget = UrlTarget.create(uri.toString());
-      if (urlTarget == UrlTarget.unknown) {
-        _logger.log(Level.WARNING, 'Unknown url target: $uri');
+    if (intent.data != null) {
+      EmailAuthLink emailAuthLink = EmailAuthLink(intent.data!);
+      if (!emailAuthLink.isValid) {
+        _logger.log(Level.WARNING, 'Invalid email auth link: ${emailAuthLink.authLink}');
         return false;
       }
 
       bool alreadyLoggedIn = _authManager.isAuthenticated;
       AuthenticationResult result =
-          await _authManager.signInEmailLink(intent.data!, email);
+          await _authManager.signInEmailLink(emailAuthLink.authLink, emailAuthLink.email);
       if (result == AuthenticationResult.success) {
-        switch (urlTarget) {
+        switch (emailAuthLink.urlTarget) {
           case UrlTarget.signup:
             // fallthrough
           case UrlTarget.reset_password:
@@ -152,12 +141,12 @@ class Navigation {
       } else {
         if (result == AuthenticationResult.expired_link) {
           // Send a new email in case it did not work from expiration.
-          switch (urlTarget) {
+          switch (emailAuthLink.urlTarget) {
             case UrlTarget.signup:
-              await _authManager.requestSignUpEmail(email);
+              await _authManager.requestSignUpEmail(emailAuthLink.email);
               break;
             case UrlTarget.reset_password:
-              await _authManager.requestPasswordResetEmail(email);
+              await _authManager.requestPasswordResetEmail(emailAuthLink.email);
               break;
             default:
           }

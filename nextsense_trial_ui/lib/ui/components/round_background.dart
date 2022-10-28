@@ -20,7 +20,7 @@ class RoundBackground extends StatelessWidget {
     return Container(width: width, height: height, child: Card( // with Card
       child: child,
       elevation: 3.0,
-      shape: const CircleBorder(),
+      shape: CircleBorder(),
       margin: padding,
       clipBehavior: Clip.antiAlias,
     ));
