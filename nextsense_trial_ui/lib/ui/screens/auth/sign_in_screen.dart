@@ -209,7 +209,8 @@ class SignInScreen extends HookWidget {
 
     // If the user had a temporary password, first ask to change it before proceeding.
     if (viewModel.isTempPassword) {
-      await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true));
+      await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true),
+          arguments: true);
     }
 
     bool studyLoaded = await viewModel.loadCurrentStudy();

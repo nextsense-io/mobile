@@ -115,7 +115,7 @@ class StartupScreenViewModel extends ViewModel {
       if (_authManager.isAuthenticated && justAuthenticated) {
         // If the user got a temp password, make him sign in again and then change it.
         _logger.log(Level.INFO, 'Temporary password. Navigating to password change screen.');
-        await _navigation.navigateTo(SetPasswordScreen.id, replace: true,
+        await _navigation.navigateTo(SetPasswordScreen.id, replace: true, arguments: true,
             nextRoute: NavigationRoute(routeName: StartupScreen.id, replace: true));
       } else {
         _logger.log(Level.INFO, 'Temporary password with no sign-in link.');

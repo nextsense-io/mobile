@@ -19,7 +19,10 @@ import 'package:stacked/stacked.dart';
 class SetPasswordScreen extends HookWidget {
   static const String id = 'set_password_screen';
 
+  final bool isSignup;
   final _navigation = getIt<Navigation>();
+
+  SetPasswordScreen({this.isSignup = false});
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +67,7 @@ class SetPasswordScreen extends HookWidget {
             children: <Widget>[
               Padding(
                 padding: EdgeInsets.all(10.0),
-                child: HeaderText(text: 'Set Password'),
+                child: HeaderText(text: isSignup ? 'Set your password' : 'Replace Password'),
               ),
               RoundedBackground(
                   child: Column(children: [
@@ -77,7 +80,8 @@ class SetPasswordScreen extends HookWidget {
                     obscureText: true,
                     decoration: InputDecoration(
                       // icon: Icon(Icons.password),
-                      label: MediumText(text: 'New Password', color: NextSenseColors.darkBlue),
+                      label: MediumText(text: isSignup ? 'Password' : 'New Password',
+                          color: NextSenseColors.darkBlue),
                       helperText: 'Minimum ${viewModel.minimumPasswordLength} characters.',
                       enabledBorder: UnderlineInputBorder(
                         borderSide: BorderSide(color: Color(0xFF6200EE)),
@@ -113,7 +117,7 @@ class SetPasswordScreen extends HookWidget {
               SizedBox(height: 20),
               SimpleButton(
                 text: MediumText(
-                  text: 'Replace Password',
+                  text: isSignup ? 'Set Password' : 'Replace Password',
                   color: NextSenseColors.purple,
                   textAlign: TextAlign.center,
                 ),
@@ -139,7 +143,8 @@ class SetPasswordScreen extends HookWidget {
     switch (result) {
       case PasswordChangeResult.success:
         await _showDialog(
-            context, 'Password changed', '', false, () => _navigation.navigateToNextRoute());
+            context, isSignup ? 'Password set' : 'Password changed', '', false,
+                () => _navigation.navigateToNextRoute());
         break;
       case PasswordChangeResult.invalid_password:
         await _showDialog(context, 'Error', 'Invalid password', false, null);

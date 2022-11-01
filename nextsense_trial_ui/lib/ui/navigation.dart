@@ -132,7 +132,7 @@ class Navigation {
           case UrlTarget.signup:
             // fallthrough
           case UrlTarget.reset_password:
-            navigateTo(SetPasswordScreen.id, replace: !alreadyLoggedIn,
+            navigateTo(SetPasswordScreen.id, replace: !alreadyLoggedIn, arguments: false,
                 nextRoute: NavigationRoute(routeName: StartupScreen.id, popAll: true));
             break;
           default:
@@ -163,7 +163,7 @@ class Navigation {
           _authManager.signOut();
           signOut(errorMessage: _linkExpiredMessage);
         }
-        navigateTo(SetPasswordScreen.id, replace: !alreadyLoggedIn);
+        // navigateTo(SetPasswordScreen.id, replace: !alreadyLoggedIn);
         // Could not authenticate with the email link, fallback to signin page.
         _logger.log(Level.WARNING, 'Failed to authenticate with email link.');
         return true;
@@ -263,8 +263,6 @@ class Navigation {
     switch (settings.name) {
       case StartupScreen.id: return MaterialPageRoute(
           builder: (context) => StartupScreen());
-      case SetPasswordScreen.id: return MaterialPageRoute(
-          builder: (context) => SetPasswordScreen());
       case ImpedanceCalculationScreen.id: return MaterialPageRoute(
           builder: (context) => ImpedanceCalculationScreen());
       case DashboardScreen.id: return MaterialPageRoute(
@@ -303,6 +301,8 @@ class Navigation {
       // Routes with arguments
       case SignInScreen.id: return MaterialPageRoute(
           builder: (context) => SignInScreen(initialErrorMessage: settings.arguments as String?));
+      case SetPasswordScreen.id: return MaterialPageRoute(
+          builder: (context) => SetPasswordScreen(isSignup: settings.arguments as bool));
       case ProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
             ProtocolScreen(settings.arguments as RunnableProtocol));
