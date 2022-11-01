@@ -83,7 +83,7 @@ class ProfileScreen extends HookWidget {
                             details: 'Change Password',
                             onPressed: () {
                               _navigation.navigateTo(SetPasswordScreen.id,
-                                  nextRoute: NavigationRoute(pop: true));
+                                  nextRoute: NavigationRoute(pop: true), arguments: false);
                             }),
                       _MainMenuItem(
                           label: 'Study intro',
