@@ -57,7 +57,6 @@ class EmailAuthManager {
       return AuthenticationResult.invalid_username_or_password;
     }
     try {
-      _logger.log(Level.WARNING, 'login with email and password: $email - $password');
       UserCredential userCredential =
           await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
       if (userCredential.user!.isAnonymous) {
@@ -148,7 +147,7 @@ class EmailAuthManager {
       }
       return AuthenticationResult.error;
     } on Exception catch (e) {
-      _logger.log(Level.WARNING, 'Error when trying to re-authenticate with Firebase. ${e}');
+      _logger.log(Level.WARNING, 'Error when trying to re-authenticate with Firebase. $e');
       return AuthenticationResult.error;
     }
     return AuthenticationResult.success;

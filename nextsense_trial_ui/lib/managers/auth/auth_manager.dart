@@ -98,7 +98,6 @@ class AuthManager {
   }
 
   Future<AuthenticationResult> signInEmailLink(String emailLink, String email) async {
-    _logger.log(Level.WARNING, "emailLink: $emailLink");
     AuthenticationResult authResult = await _emailAuthManager!.signInWithLink(email, emailLink);
     if (authResult != AuthenticationResult.success) {
       return authResult;
@@ -178,7 +177,7 @@ class AuthManager {
   }
 
   Future<AuthenticationResult> _signIn({required String username, String? authUid}) async {
-    _logger.log(Level.INFO, 'Starting NextSense user check for $username');
+    _logger.log(Level.INFO, 'Starting NextSense user check.');
     _user = await loadUser(username: username, authUid: authUid);
 
     if (_user == null) {
