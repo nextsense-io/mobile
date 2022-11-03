@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:logging/logging.dart';
@@ -244,9 +243,7 @@ class Navigation {
     if (_nextNavigationRoute!.routeName == null) {
       _logger.log(Level.INFO, 'no route name');
       if (_nextNavigationRoute!.pop == true) {
-        _logger.log(Level.INFO, 'before pop');
         pop();
-        _logger.log(Level.INFO, 'after pop');
         return Future.value(true);
       }
       return Future.value(false);

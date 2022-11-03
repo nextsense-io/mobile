@@ -48,12 +48,12 @@ class PermissionsManager {
             'screen after pressing continue.'),
   ];
 
-  PermissionsManager() {}
+  PermissionsManager();
 
   Future<bool> allPermissionsGranted() async {
     bool granted = true;
     for (PermissionRequest permissionRequest in _permissionsNeeded) {
-      if (await permissionRequest.permission.isDenied) {
+      if (!(await permissionRequest.permission.isGranted)) {
         granted = false;
         break;
       }
@@ -69,7 +69,7 @@ class PermissionsManager {
       if (androidInfo.version.sdkInt! < permissionRequest.minApiVersion) {
         continue;
       }
-      if (await permissionRequest.permission.isDenied) {
+      if (!(await permissionRequest.permission.isGranted)) {
         permissionRequests.add(permissionRequest);
       }
     }
