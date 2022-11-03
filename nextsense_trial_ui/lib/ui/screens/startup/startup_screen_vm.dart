@@ -26,8 +26,6 @@ import 'package:receive_intent/receive_intent.dart' as intent;
 
 class StartupScreenViewModel extends ViewModel {
 
-  static const _emailLinkParam = 'email';
-
   final intent.Intent? initialIntent;
 
   final CustomLogPrinter _logger = CustomLogPrinter('StartupScreenViewModel');
@@ -120,8 +118,8 @@ class StartupScreenViewModel extends ViewModel {
       } else {
         _logger.log(Level.INFO, 'Temporary password with no sign-in link.');
         _navigation.navigateTo(RequestPasswordResetScreen.id, replace: true);
-        return;
       }
+      return;
     }
 
     if (!_dataManager.userStudyDataLoaded) {
