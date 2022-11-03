@@ -72,8 +72,8 @@ class SignInScreen extends HookWidget {
             field: viewModel.username,
             labelText: 'Email',
             maxLength: EmailAuthManager.maxEmailLength),
-        // helperText: 'Please contact NextSense support if you did not get an id',
-        // icon: Icon(Icons.account_circle)),
+            // helperText: 'Please contact NextSense support if you did not get an id',
+            // icon: Icon(Icons.account_circle)),
         _UserPasswordSignInInputField(
           field: viewModel.password,
           obscureText: true,

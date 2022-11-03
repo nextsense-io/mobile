@@ -210,7 +210,7 @@ class AuthManager {
     }
 
     // Persist UID on first login.
-    if (user.getValue(UserKey.auth_uid) == null) {
+    if (user.getValue(UserKey.auth_uid) == null || user.getValue(UserKey.auth_uid) == '') {
       if (authUid == null) {
         _logger.log(Level.SEVERE, 'No auth UID, cannot login.');
         return null;
