@@ -368,6 +368,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     if (!requested) {
       returnError(result, REQUEST_DEVICE_INTERNAL_STATE_COMMAND, ERROR_COMMAND_FAILED,
           /*errorMessage=*/null, /*errorDetails=*/null);
+      return;
     }
     result.success(null);
   }
@@ -674,14 +675,17 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       if (!started) {
         returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
             /*errorMessage=*/null, /*errorDetails=*/null);
+        return;
       }
     } catch (ExecutionException e) {
       returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
           /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+      return;
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
           /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
+      return;
     }
     Optional<LocalSession> localSession =
         nextSenseService.getLocalSessionManager().getActiveLocalSession();
