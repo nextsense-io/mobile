@@ -88,17 +88,18 @@ public class ReconnectionManager {
       return;
     }
     if (centralManagerProxy.getCentralManager().getConnectedPeripherals().isEmpty()) {
-      deviceScanner.findDevices(new DeviceScanner.DeviceScanListener() {
+      deviceScanner.findPeripherals(new DeviceScanner.PeripheralScanListener() {
         @Override
-        public void onNewDevice(BluetoothPeripheral peripheral) {
+        public void onNewPeripheral(BluetoothPeripheral peripheral) {
           if (peripheral.getName().equals(btPeripheral.getName())) {
             Log.i(TAG, "Device found, trying to reconnect.");
+            deviceScanner.stopFinding();
             centralManagerProxy.getCentralManager().connectPeripheral(btPeripheral, callback);
           }
         }
 
         @Override
-        public void onScanError(DeviceScanner.DeviceScanListener.ScanError scanError) {
+        public void onScanError(ScanError scanError) {
           Log.w(TAG, "Scan error: " + scanError.toString());
         }
       });

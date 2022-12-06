@@ -18,6 +18,9 @@ import java.util.Set;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
+import io.nextsense.android.base.communication.ble.BluetoothStateManager;
+import io.nextsense.android.base.communication.ble.ReconnectionManager;
+import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.utils.Util;
 
@@ -30,9 +33,12 @@ public class BleDeviceScanner implements DeviceScanner {
 
   private final NextSenseDeviceManager deviceManager;
   private final BleCentralManagerProxy centralManagerProxy;
+  private final BluetoothStateManager bluetoothStateManager;
   private final List<Device> devices = new ArrayList<>();
+  private boolean scanningForPeripherals = false;
   private Set<String> foundPeripheralAddresses = new HashSet<>();
   private DeviceScanner.DeviceScanListener deviceScanListener;
+  private DeviceScanner.PeripheralScanListener peripheralScanListener;
 
   private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback =
       new BluetoothCentralManagerCallback() {
@@ -46,6 +52,25 @@ public class BleDeviceScanner implements DeviceScanner {
           }
           foundPeripheralAddresses.add(peripheral.getAddress());
           logd(TAG, "Found valid device: " + scanResult.getDevice().getName());
+
+
+          NextSenseDevice nextSenseDevice = deviceManager.getDeviceForName(peripheral.getName());
+          if (nextSenseDevice == null) {
+            return;
+          }
+
+          if (scanningForPeripherals) {
+            peripheralScanListener.onNewPeripheral(peripheral);
+            return;
+          }
+
+          ReconnectionManager reconnectionManager = ReconnectionManager.create(
+              centralManagerProxy, bluetoothStateManager, BleDeviceScanner.this,
+              BleDevice.RECONNECTION_ATTEMPTS_INTERVAL);
+          Device device = Device.create(
+              centralManagerProxy, bluetoothStateManager, nextSenseDevice, peripheral,
+              reconnectionManager);
+          devices.add(device);
           deviceScanListener.onNewDevice(peripheral);
         }
       }
@@ -86,9 +111,11 @@ public class BleDeviceScanner implements DeviceScanner {
   };
 
   public BleDeviceScanner(NextSenseDeviceManager deviceManager,
-                          BleCentralManagerProxy centralManagerProxy) {
+                          BleCentralManagerProxy centralManagerProxy,
+                          BluetoothStateManager bluetoothStateManager) {
     this.deviceManager = deviceManager;
     this.centralManagerProxy = centralManagerProxy;
+    this.bluetoothStateManager = bluetoothStateManager;
     centralManagerProxy.addGlobalListener(bluetoothCentralManagerCallback);
     Util.logd(TAG, "Initialized DeviceScanner");
   }
@@ -103,9 +130,23 @@ public class BleDeviceScanner implements DeviceScanner {
    */
   @Override
   public void findDevices(DeviceScanner.DeviceScanListener deviceScanListener) {
+    scanningForPeripherals = false;
     this.deviceScanListener = deviceScanListener;
     this.devices.clear();
     Util.logd(TAG, "Finding Bluetooth devices...");
+    centralManagerProxy.getCentralManager().stopScan();
+    centralManagerProxy.getCentralManager()
+        .scanForPeripheralsWithNames(deviceManager.getValidPrefixes().toArray(new String[0]));
+  }
+
+  /**
+   * Returns the list of valid peripherals that are detected.
+   */
+  @Override
+  public void findPeripherals(DeviceScanner.PeripheralScanListener peripheralScanListener) {
+    scanningForPeripherals = true;
+    this.peripheralScanListener = peripheralScanListener;
+    Util.logd(TAG, "Finding Bluetooth peripherals...");
     centralManagerProxy.getCentralManager().stopScan();
     centralManagerProxy.getCentralManager()
         .scanForPeripheralsWithNames(deviceManager.getValidPrefixes().toArray(new String[0]));
@@ -119,7 +160,7 @@ public class BleDeviceScanner implements DeviceScanner {
    * Stops finding devices if it was currently running.
    */
   @Override
-  public void stopFindingDevices() {
+  public void stopFinding() {
     centralManagerProxy.getCentralManager().stopScan();
     foundPeripheralAddresses = new HashSet<>();
   }
