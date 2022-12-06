@@ -194,7 +194,7 @@ public class ForegroundService extends Service {
     Log.i(TAG, "destroy started.");
     // sampleRateCalculator.stopListening();
     if (deviceScanner != null) {
-      deviceScanner.stopFindingDevices();
+      deviceScanner.stopFinding();
       deviceScanner.close();
     }
     if (deviceManager != null) {

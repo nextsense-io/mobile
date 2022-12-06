@@ -215,6 +215,7 @@ class DeviceManager {
 
   Future disconnectDevice() async {
     if (getConnectedDevice() == null) {
+      _logger.log(Level.FINE, "Trying to disconnect but no connected device");
       return;
     }
     _requestDeviceStateTimer?.cancel();
@@ -340,6 +341,7 @@ class DeviceManager {
 
   void _onDeviceDisconnected() {
     // Disconnected without being requested by the user.
+    _logger.log(Level.INFO, "Device disconnected without being requested by the user.");
     showAlertNotification(connectionLostNotificationId, connectionLostTitle, connectionLostBody);
     deviceState.value = DeviceState.disconnected;
     _requestDeviceStateTimer?.cancel();

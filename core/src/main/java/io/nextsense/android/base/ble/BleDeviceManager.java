@@ -101,42 +101,42 @@ public class BleDeviceManager implements DeviceManager {
 
   @Override
   public void stopFindingDevices(DeviceManager.DeviceScanListener deviceScanListener) {
-    deviceScanner.stopFindingDevices();
+    deviceScanner.stopFinding();
     deviceScanListeners.remove(deviceScanListener);
   }
 
   private final DeviceScanner.DeviceScanListener mainDeviceScanListener =
       new DeviceScanner.DeviceScanListener() {
-    @Override
-    public void onNewDevice(BluetoothPeripheral peripheral) {
-      Util.logd(TAG, "new device " + peripheral.getAddress() + ", present? " +
-          devices.containsKey(peripheral.getAddress()));
-      if (!devices.containsKey(peripheral.getAddress())) {
+        @Override
+        public void onNewDevice(BluetoothPeripheral peripheral) {
+          Util.logd(TAG, "new device " + peripheral.getAddress() + ", present? " +
+              devices.containsKey(peripheral.getAddress()));
+          if (!devices.containsKey(peripheral.getAddress())) {
 
-        NextSenseDevice nextSenseDevice =
-            nextSenseDeviceManager.getDeviceForName(peripheral.getName());
-        if (nextSenseDevice == null) {
-          return;
+            NextSenseDevice nextSenseDevice =
+                nextSenseDeviceManager.getDeviceForName(peripheral.getName());
+            if (nextSenseDevice == null) {
+              return;
+            }
+            ReconnectionManager reconnectionManager = ReconnectionManager.create(
+                centralManagerProxy, bluetoothStateManager, deviceScanner,
+                BleDevice.RECONNECTION_ATTEMPTS_INTERVAL);
+            Device device = Device.create(
+                centralManagerProxy, bluetoothStateManager, nextSenseDevice, peripheral, reconnectionManager);
+
+
+            devices.putIfAbsent(device.getAddress(), device);
+          }
+          for (DeviceManager.DeviceScanListener deviceScanListener : deviceScanListeners) {
+            deviceScanListener.onNewDevice(devices.get(peripheral.getAddress()));
+          }
         }
-        ReconnectionManager reconnectionManager = ReconnectionManager.create(
-            centralManagerProxy, bluetoothStateManager, deviceScanner,
-            BleDevice.RECONNECTION_ATTEMPTS_INTERVAL);
-        Device device = Device.create(
-            centralManagerProxy, bluetoothStateManager, nextSenseDevice, peripheral, reconnectionManager);
 
-
-        devices.putIfAbsent(device.getAddress(), device);
-      }
-      for (DeviceManager.DeviceScanListener deviceScanListener : deviceScanListeners) {
-        deviceScanListener.onNewDevice(devices.get(peripheral.getAddress()));
-      }
-    }
-
-    @Override
-    public void onScanError(ScanError scanError) {
-      for (DeviceManager.DeviceScanListener deviceScanListener : deviceScanListeners) {
-        deviceScanListener.onScanError(scanError);
-      }
-    }
-  };
+        @Override
+        public void onScanError(ScanError scanError) {
+          for (DeviceManager.DeviceScanListener deviceScanListener : deviceScanListeners) {
+            deviceScanListener.onScanError(scanError);
+          }
+        }
+      };
 }
