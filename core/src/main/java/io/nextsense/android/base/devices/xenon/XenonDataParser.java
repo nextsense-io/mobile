@@ -87,13 +87,23 @@ public class XenonDataParser {
     }
     Samples samples = Samples.create();
     boolean canParsePacket = true;
+    Instant previousTimestamp = null;
     while (canParsePacket && valuesBuffer.remaining() >= packetSize) {
       Optional<Sample> sampleOptional =
           parseDataPacket(valuesBuffer, activeChannels, receptionTimestamp);
-      sampleOptional.ifPresent(sample -> {
+      if (sampleOptional.isPresent()) {
+        Sample sample = sampleOptional.get();
+        if (previousTimestamp != null &&
+            previousTimestamp.isAfter(sample.getEegSample().getAbsoluteSamplingTimestamp())) {
+          Log.w(TAG, "Received a sample that is before a previous sample, skipping sample. " +
+              "Previous timestamp: " + previousTimestamp + ", current timestamp: " +
+              sample.getEegSample().getAbsoluteSamplingTimestamp());
+          break;
+        }
         samples.addEegSample(sample.getEegSample());
         samples.addAcceleration(sample.getAcceleration());
-      });
+        previousTimestamp = sample.getEegSample().getAbsoluteSamplingTimestamp();
+      }
       canParsePacket = sampleOptional.isPresent();
     }
     EventBus.getDefault().post(samples);

@@ -6,10 +6,10 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.nextsense.android.base.data.DeviceInternalState;
+import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Samples;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
@@ -24,6 +24,7 @@ public class DatabaseSink {
   private final ObjectBoxDatabase boxDatabase;
   private final LocalSessionManager localSessionManager;
   private final AtomicInteger eegRecordsCounter = new AtomicInteger(0);
+  private Samples previousSamples = null;
 
   private DatabaseSink(ObjectBoxDatabase boxDatabase, LocalSessionManager localSessionManager) {
     this.boxDatabase = boxDatabase;
@@ -59,18 +60,40 @@ public class DatabaseSink {
 
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
   public void onSamples(Samples samples) {
-    localSessionManager.getActiveLocalSession().ifPresent((currentLocalSession) -> {
+    localSessionManager.getActiveLocalSession().ifPresent(currentLocalSession -> {
       if (currentLocalSession.isUploadNeeded()) {
-        Instant saveStartTime = Instant.now();
+        // Verify that the timestamps are moving forward in time.
+        EegSample lastEegSample = null;
+        if (previousSamples != null) {
+          lastEegSample =
+              previousSamples.getEegSamples().get(previousSamples.getEegSamples().size() - 1);
+          if (samples.getEegSamples().get(0).localSession.getTargetId() !=
+              lastEegSample.localSession.getTargetId()) {
+            lastEegSample = null;
+          }
+        }
+        int packetIndex = 0;
+        for (EegSample eegSample : samples.getEegSamples()) {
+          if (lastEegSample != null && eegSample.getAbsoluteSamplingTimestamp().isBefore(
+                lastEegSample.getAbsoluteSamplingTimestamp())) {
+            Log.w(TAG,
+                "Received a sample that is before a previous sample, skipping packet. " +
+                    "Previous timestamp: " + lastEegSample.getAbsoluteSamplingTimestamp() +
+                    ", new timestamp: " + eegSample.getAbsoluteSamplingTimestamp() +
+                    ", packet index: " + packetIndex);
+            return;
+          }
+          lastEegSample = eegSample;
+          packetIndex++;
+        }
+
+        // Save the samples in the local database.
         boxDatabase.runInTx(() -> {
           boxDatabase.putEegSamples(samples.getEegSamples());
           boxDatabase.putAccelerations(samples.getAccelerations());
         });
         eegRecordsCounter.getAndAdd(samples.getEegSamples().size());
-        long saveTime = Instant.now().toEpochMilli() - saveStartTime.toEpochMilli();
-        if (saveTime > 20) {
-          Log.d(TAG, "It took " + saveTime + " to write xenon data.");
-        }
+        previousSamples = samples;
       }
     });
   }
