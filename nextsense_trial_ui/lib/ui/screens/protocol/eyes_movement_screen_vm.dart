@@ -23,7 +23,7 @@ class EyesMovementProtocolScreenViewModel extends ProtocolScreenViewModel {
     EyesMovementState.REST: Svg('assets/images/plant.svg'),
     EyesMovementState.BLACK_SCREEN: Svg('assets/images/plant.svg'),
     EyesMovementState.BLINK: Svg('assets/images/blinking.svg'),
-    EyesMovementState.MOVE_RIGHT_LEFT: Svg('assets/images/blinking.svg'),
+    EyesMovementState.MOVE_RIGHT_LEFT: Svg('assets/images/left_right.svg'),
     EyesMovementState.MOVE_LEFT_RIGHT: Svg('assets/images/left_right.svg'),
     EyesMovementState.MOVE_UP_DOWN: Svg('assets/images/up_down.svg'),
     EyesMovementState.MOVE_DOWN_UP: Svg('assets/images/up_down.svg'),

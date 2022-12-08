@@ -2,11 +2,12 @@
 import 'package:flutter/foundation.dart';
 
 enum ProtocolType {
-  variable_daytime,  // Daytime recording of variable length.
-  sleep,  // Nighttime sleep recording.
-  eoec,  // Eyes-Open, Eyes-Closed recording.
+  variable_daytime,  // Daytime recording of variable length
+  sleep,  // Nighttime sleep recording
+  eoec,  // Eyes-Open, Eyes-Closed recording
   eyes_movement, // Eyes movement recording
   nap,  // Nap recording.
+  bio_calibration,  // Bio Calibration recording
   unknown
 }
 
@@ -50,6 +51,9 @@ abstract class Protocol {
         break;
       case ProtocolType.eyes_movement:
         protocol = EyesMovementProtocol();
+        break;
+      case ProtocolType.bio_calibration:
+        protocol = BioCalibrationProtocol();
         break;
       default:
         throw("Class for protocol type ${type} isn't defined");
@@ -307,6 +311,74 @@ class EyesMovementProtocol extends BaseProtocol {
 
   @override
   String get intro => 'Eyes Movement protocol intro';
+
+  @override
+  List<ProtocolPart> get protocolBlock => _protocolBlock;
+}
+
+enum BioCalibrationState {
+  UNKNOWN,
+  NOT_RUNNING,
+  REST,  // Rest period.
+  BLACK_SCREEN,  // Show black screen between activities.
+  BLINK,  // Blink eyes.
+  MOVE_HORIZONTAL,  // Moves eyes back and forth horizontally.
+  MOVE_VERTICAL,  // Moves eyes back and forth vertically.
+  JAW_CLENCH  // Clench the jaws.
+}
+
+class BioCalibrationProtocol extends BaseProtocol {
+
+  static final ProtocolPart _rest = ProtocolPart(
+      state: BioCalibrationState.REST.name,
+      duration: Duration(seconds: 15),
+      marker: "REST");
+  static final ProtocolPart _blink = ProtocolPart(
+      state: BioCalibrationState.BLINK.name,
+      duration: Duration(seconds: 15),
+      marker: "BLINKS");
+  static final ProtocolPart _horizontal = ProtocolPart(
+      state: BioCalibrationState.MOVE_HORIZONTAL.name,
+      duration: Duration(seconds: 15),
+      marker: "HEOG");
+  static final ProtocolPart _vertical = ProtocolPart(
+      state: BioCalibrationState.MOVE_VERTICAL.name,
+      duration: Duration(seconds: 15),
+      marker: "VEOG");
+  static final ProtocolPart _jawClench = ProtocolPart(
+      state: BioCalibrationState.JAW_CLENCH.name,
+      duration: Duration(seconds: 15),
+      marker: "CLENCH");
+  static final List<ProtocolPart> _protocolBlock = [_rest, _blink, _rest,
+    _horizontal, _rest, _vertical, _rest, _jawClench];
+
+  @override
+  ProtocolType get type => ProtocolType.bio_calibration;
+
+  @override
+  String get nameForUser => "Bio Calibration";
+
+  @override
+  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 4);
+
+  @override
+  Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 4);
+
+  @override
+  Duration get disconnectTimeoutDuration => Duration(seconds: 20);
+
+  @override
+  String get description => 'Bio Calibration';
+
+  @override
+  String get intro => 'Before the recording\n' +
+      'If you’re not already wearing them, put on the earbuds.\n'
+      'Earbuds needs to be worn for at least 10 minutes before starting the recording to allow '
+      'electrodes to settle.\n\n'
+      'During the recording\n'
+      ' - Do not move\n'
+      ' - Relax\n'
+      ' - Follow the instructions on the screen\n';
 
   @override
   List<ProtocolPart> get protocolBlock => _protocolBlock;
