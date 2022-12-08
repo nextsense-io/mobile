@@ -36,6 +36,7 @@ import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_
 import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/bio_calibration_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
@@ -312,6 +313,9 @@ class Navigation {
       case EyesMovementProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
             EyesMovementProtocolScreen(settings.arguments as RunnableProtocol));
+      case BioCalibrationProtocolScreen.id:
+        return MaterialPageRoute(builder: (context) =>
+            BioCalibrationProtocolScreen(settings.arguments as RunnableProtocol));
       case SurveyScreen.id:
         return MaterialPageRoute(builder: (context) =>
             SurveyScreen(settings.arguments as RunnableSurvey));
