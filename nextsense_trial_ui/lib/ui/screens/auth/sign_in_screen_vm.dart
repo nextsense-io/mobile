@@ -59,6 +59,7 @@ class SignInScreenViewModel extends ViewModel {
   }
 
   Future<AuthenticationResult> signIn(AuthMethod authMethod) async {
+    notifyListeners();
     errorMsg = '';
     _checkInternetConnection();
     notifyListeners();
@@ -81,7 +82,6 @@ class SignInScreenViewModel extends ViewModel {
         authResult = await _authManager.signInGoogle();
         break;
     }
-    setBusy(false);
     if (authResult != AuthenticationResult.success) {
       switch(authResult) {
         case AuthenticationResult.invalid_username_or_password:
@@ -94,6 +94,7 @@ class SignInScreenViewModel extends ViewModel {
           errorMsg = 'Unknown error occurred';
           break;
       }
+      setBusy(false);
       notifyListeners();
     }
     return authResult;

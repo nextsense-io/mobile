@@ -38,6 +38,7 @@ class SignInScreen extends HookWidget {
   final _navigation = getIt<Navigation>();
 
   String? initialErrorMessage;
+  bool authenticating = false;
 
   SignInScreen({this.initialErrorMessage});
 
@@ -84,20 +85,23 @@ class SignInScreen extends HookWidget {
         )
       ])),
       SizedBox(height: 20),
-      SimpleButton(
-          fullWidth: true,
-          text: MediumText(
-            text: 'Login',
-            color: NextSenseColors.purple,
-            textAlign: TextAlign.center,
-          ),
-          onTap: viewModel.isBusy ? () => {} : () => _signIn(context, AuthMethod.email_password)),
+      AbsorbPointer(absorbing: authenticating, child:
+        SimpleButton(
+            fullWidth: true,
+            text: MediumText(
+              text: 'Login',
+              color: NextSenseColors.purple,
+              textAlign: TextAlign.center,
+            ),
+            onTap: authenticating ? () => {} :
+                () => _signIn(context, AuthMethod.email_password))
+      ),
       SizedBox(height: 20),
       Align(
           alignment: Alignment.center,
-          child: UnderlinedTextButton(
+          child: AbsorbPointer(absorbing: authenticating, child: UnderlinedTextButton(
               text: 'Forgot your password?',
-              onTap: () async => await _navigation.navigateTo(RequestPasswordResetScreen.id)))
+              onTap: () async => await _navigation.navigateTo(RequestPasswordResetScreen.id))))
     ];
   }
 
@@ -121,19 +125,26 @@ class SignInScreen extends HookWidget {
             // icon: Icon(Icons.lock)),
           ])),
           SizedBox(height: 20),
-          SimpleButton(
-              text: MediumText(text: 'Login', color: NextSenseColors.darkBlue),
-              onTap: viewModel.isBusy ? () => {} : () => _signIn(context, AuthMethod.user_code))
+          AbsorbPointer(absorbing: authenticating, child:
+            SimpleButton(
+                text: MediumText(text: 'Login', color: NextSenseColors.darkBlue),
+                onTap: authenticating ? () => {} :
+                    () => _signIn(context, AuthMethod.user_code))
+          )
         ]);
   }
 
   Widget _buildGoogleAuth(BuildContext context, SignInScreenViewModel viewModel) {
     return Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      SignInButton(
-        Buttons.Google,
-        onPressed: () {
-          _signIn(context, AuthMethod.google_auth);
-        },
+      AbsorbPointer(absorbing: authenticating,
+        child: SignInButton(
+          Buttons.Google,
+          onPressed: () {
+            if (!authenticating) {
+              _signIn(context, AuthMethod.google_auth);
+            }
+          },
+        ),
       )
     ]);
   }
@@ -183,9 +194,11 @@ class SignInScreen extends HookWidget {
 
   Future _signIn(BuildContext context, AuthMethod authMethod) async {
     final viewModel = context.read<SignInScreenViewModel>();
+    authenticating = true;
     AuthenticationResult authResult = await viewModel.signIn(authMethod);
 
     if (authResult != AuthenticationResult.success) {
+      authenticating = false;
       var dialogTitle, dialogContent;
       switch (authResult) {
         case AuthenticationResult.invalid_username_or_password:
@@ -215,6 +228,7 @@ class SignInScreen extends HookWidget {
 
     bool studyLoaded = await viewModel.loadCurrentStudy();
     if (!studyLoaded) {
+      authenticating = false;
       // Cannot proceed without study data.
       await showDialog(
           context: context,
@@ -258,6 +272,7 @@ class SignInScreen extends HookWidget {
     if (_navigation.hasInitialIntent()) {
       _navigation.navigateToInitialIntent();
     }
+    authenticating = false;
   }
 }
 
