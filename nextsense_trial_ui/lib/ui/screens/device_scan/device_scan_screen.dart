@@ -16,7 +16,6 @@ import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/scan_result_list.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
-import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/device_scan/device_scan_screen_vm.dart';
 import 'package:stacked/stacked.dart';
 
@@ -69,10 +68,9 @@ class DeviceScanScreen extends HookWidget {
             Center(child: SvgPicture.asset('assets/images/scanning.svg', height: 250)),
             Center(child: Image(image: AssetImage('assets/images/earbuds.png'), width: 180)),
           ]),
-          if (!_navigation.canPop())
-            UnderlinedTextButton(
-                text: 'Not now',
-                onTap: () => _navigation.navigateTo(DashboardScreen.id, replace: true)),
+          UnderlinedTextButton(
+              text: 'Not now',
+              onTap: () => _navigation.navigateToNextRoute()),
         ]);
       case ScanningState.CONNECTING:
       // Fallthrough, an overlay will appear on top of the results.
