@@ -84,6 +84,8 @@ class SignInScreenViewModel extends ViewModel {
     }
     if (authResult != AuthenticationResult.success) {
       switch(authResult) {
+        case AuthenticationResult.user_fetch_failed:
+        case AuthenticationResult.invalid_user_setup:
         case AuthenticationResult.invalid_username_or_password:
           errorMsg = 'Invalid username or password';
           break;

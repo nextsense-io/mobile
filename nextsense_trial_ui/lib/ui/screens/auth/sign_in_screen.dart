@@ -201,6 +201,8 @@ class SignInScreen extends HookWidget {
       authenticating = false;
       var dialogTitle, dialogContent;
       switch (authResult) {
+        case AuthenticationResult.user_fetch_failed:
+        case AuthenticationResult.invalid_user_setup:
         case AuthenticationResult.invalid_username_or_password:
           dialogTitle = 'Invalid email or password';
           dialogContent = 'The email is incorrect or you entered a wrong password';
