@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
@@ -33,6 +35,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
   static const int _impedanceSampleSize = 1024;
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
+  final StudyManager _studyManager = getIt<StudyManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('ImpedanceCalculationScreen');
   ImpedanceRunState _impedanceRunState = ImpedanceRunState.STOPPED;
   bool _calculatingImpedance = false;
@@ -77,16 +80,15 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
       return;
     }
     _calculatingImpedance = true;
-    _impedanceCalculator
-        ?.calculateAllChannelsImpedance(ImpedanceMode.ON_1299_AC)
-        .then((impedanceData) {
-      // TODO(Eric): Should map these in an earbud configuration.
+    EarbudsConfig earbudsConfig = EarbudsConfigs.getConfig(
+        _studyManager.currentStudy!.getEarbudsConfig());
+    _impedanceCalculator?.calculate1299AcImpedance(earbudsConfig).then((impedanceData) {
       String resultsText = '';
-      resultsText += 'Left Canal: ' + _spaceInt(impedanceData[7]!.round()) + '\n\n';
-      resultsText += 'Right Canal: ' + _spaceInt(impedanceData[8]!.round()) + '\n\n';
-      resultsText += 'Left Helix: ' + _spaceInt(impedanceData[1]!.round()) + '\n\n';
+      for (MapEntry<EarLocation, double> mapEntry in impedanceData.entries) {
+        resultsText +=
+            '${mapEntry.key.getDisplayName()}: ' + _spaceInt(mapEntry.value.round()) + '\n\n';
+      }
       _logger.log(Level.INFO, resultsText);
-      _logger.log(Level.INFO, 'updating impedance result');
       if (mounted) {
         setState(() {
           _impedanceResult = resultsText;

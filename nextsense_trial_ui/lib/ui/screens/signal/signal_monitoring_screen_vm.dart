@@ -247,7 +247,7 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   DataType get dataType => _dataType;
 
   set dataType(DataType? value) {
-    print("data type: ${value}");
+    print("data type: $value");
     if (value == null) {
       return;
     }

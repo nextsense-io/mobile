@@ -24,7 +24,7 @@ enum StudyKey {
   description,
   // Duration in days for a single subject.
   duration_days,
-  //NextSense device earbuds configuration that is used in this study.
+  // NextSense device earbuds configuration that is used in this study.
   earbuds_config,
   // Array of screens to show when enrolling a new patient in the study or whenever they want to see
   // it again.
