@@ -6,6 +6,7 @@ import 'package:gson/values.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/domain/device_settings.dart';
+import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:scidart/numdart.dart';
@@ -49,7 +50,7 @@ class XenonImpedanceCalculator {
   ImpedanceMode? _impedanceMode;
 
   XenonImpedanceCalculator({required this.samplesSize, required this.deviceSettingsValues})
-      : _logger = getLogger("XenonImpedanceScreen") {
+      : _logger = getLogger("XenonImpedanceCalculator") {
     DeviceSettings deviceSettings = DeviceSettings(deviceSettingsValues);
     double samplingFrequency = deviceSettings.eegSamplingRate!;
     _impedanceDivider = (samplingFrequency / defaultTargetFrequency).round();
@@ -130,14 +131,18 @@ class XenonImpedanceCalculator {
   }
 
   // Calculate the impedance in Ohms from a single channel electrode values.
-  Future<double> _calculateImpedance(List<int> channelNumbers, double impedanceFrequency,
+  Future<double> _calculateImpedance(ImpedanceConfig impedanceConfig, double impedanceFrequency,
       double eegFrequency, double impedanceConstant) async {
     String? macAddress = _deviceManager.getConnectedDevice()?.macAddress;
     if (macAddress == null || _localSessionId == null) {
       return -1;
     }
-    _logger.log(Level.INFO, "Starting imp calc for channel ${channelNumbers}");
+    _logger.log(Level.INFO, "Starting impedance calculation for $impedanceConfig.");
     Map<int, List<double>> eegArrays = new HashMap();
+    List<int> channelNumbers = [impedanceConfig.firstChannel];
+    if (impedanceConfig.secondChannel != null) {
+      channelNumbers.add(impedanceConfig.secondChannel!);
+    }
     for (int channelNumber in channelNumbers) {
       List<double> eegArray = [];
       try {
@@ -188,41 +193,33 @@ class XenonImpedanceCalculator {
     Complex frequencyBin = eegArrayComplex[impedanceBinIndex] /
         Complex(real: eegArrayComplex.length.toDouble() / 2, imaginary: 0);
     double magnitude = sqrt(pow(frequencyBin.real, 2) + pow(frequencyBin.imaginary, 2));
-    _logger.log(Level.INFO, "Finished imp calc for channel ${channelNumbers}");
+    _logger.log(Level.INFO, "Finished imp calc for channel $channelNumbers");
     return magnitude * impedanceConstant;
   }
 
-  Future<Map<int, double>> calculateAllChannelsImpedance(ImpedanceMode impedanceMode) async {
+  Future<Map<int, double>> calculateExternalChannelsImpedance(EarbudsConfig earbudsConfig) async {
     HashMap<int, double> impedanceData = new HashMap();
-    switch (impedanceMode) {
-      case ImpedanceMode.ON_EXTERNAL_CURRENT:
-        await startExternalCurrentImpedance(_eegChannelList!.first.toSimple());
-        for (Integer channel in _eegChannelList!) {
-          if (channel.toSimple() != _eegChannelList!.first.toSimple()) {
-            await changeImpedanceConfig(channel.toSimple());
-          }
-          await Future.delayed(_channelCycleTime, () {});
-          impedanceData[channel.toSimple()] = await _calculateImpedance([channel.toSimple()],
-              _impedanceFrequency!, _streamingFrequency!, _externalCurrentImpedanceConstant);
-        }
-        break;
-      case ImpedanceMode.ON_1299_DC:
-        await startADS1299DcImpedance();
-        await Future.delayed(_channelCycleTime, () {});
-        // TODO(eric): Check the leadsOffPositive bits in the
-        //             `DeviceInternalState`. Not working on this for now as the
-        //             adapter wiring make this method hard to use.
-        break;
-      case ImpedanceMode.ON_1299_AC:
-        impedanceData[1] = await _calculateImpedance(_locationMappings['Left Helix']!,
+    await startExternalCurrentImpedance(_eegChannelList!.first.toSimple());
+    for (Integer channel in _eegChannelList!) {
+      if (channel.toSimple() != _eegChannelList!.first.toSimple()) {
+        await changeImpedanceConfig(channel.toSimple());
+      }
+      await Future.delayed(_channelCycleTime, () {});
+      impedanceData[channel.toSimple()] =
+          await _calculateImpedance(ImpedanceConfig.create(
+              firstChannel: channel.toSimple()), _impedanceFrequency!,
+          _streamingFrequency!, _externalCurrentImpedanceConstant);
+    }
+    return impedanceData;
+  }
+
+  Future<Map<EarLocation, double>> calculate1299AcImpedance(EarbudsConfig earbudsConfig) async {
+    HashMap<EarLocation, double> impedanceData = new HashMap();
+    for (EarLocation earLocation in earbudsConfig.earLocations.values) {
+      if (earLocation.impedanceConfig != null) {
+        impedanceData[earLocation] = await _calculateImpedance(earLocation.impedanceConfig!,
             _ads1299AcImpedanceFrequency, _streamingFrequency!, _ads1299AcImpedanceConstant);
-        impedanceData[7] = await _calculateImpedance(_locationMappings['Left Canal']!,
-            _ads1299AcImpedanceFrequency, _streamingFrequency!, _ads1299AcImpedanceConstant);
-        impedanceData[8] = await _calculateImpedance(_locationMappings['Right Canal']!,
-            _ads1299AcImpedanceFrequency, _streamingFrequency!, _ads1299AcImpedanceConstant);
-        break;
-      default:
-        throw new UnimplementedError('Impedance mode ${_impedanceMode} is not supported');
+      }
     }
     return impedanceData;
   }
