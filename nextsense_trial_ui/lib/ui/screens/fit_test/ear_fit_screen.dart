@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
+import 'package:nextsense_trial_ui/ui/components/error_overlay.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
@@ -11,8 +14,58 @@ import 'package:nextsense_trial_ui/ui/screens/fit_test/ear_fit_screen_vm.dart';
 import 'package:stacked/stacked.dart';
 
 class EarFitScreen extends HookWidget {
-
   static const String id = 'ear_fit_screen';
+
+  Widget deviceInactiveOverlay(BuildContext context, EarFitScreenViewModel viewModel) {
+    String explanationText = 'Device is not connected.';
+    String remediationText = 'Please reconnect the device to continue the ear fit test.';
+    if (!viewModel.isHdmiCablePresent) {
+      explanationText = 'The earbuds cable is disconnected.';
+      remediationText = 'Please reconnect the earbuds to the device to continue the ear fit test.';
+    } else if (!viewModel.isUSdPresent) {
+      explanationText = 'The micro sd card is not inserted in the device.';
+      remediationText = 'Please re-insert the sdcard in the device to continue the ear fit test.';
+    }
+
+    return ErrorOverlay(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.power_off,
+            color: NextSenseColors.purple,
+            size: 60,
+          ),
+          LightHeaderText(
+            text: explanationText,
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 30),
+          LightHeaderText(text: remediationText, textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 10)
+        ],
+      ),
+    );
+  }
+
+  Widget _getTipStatus(EarFitScreenViewModel viewModel, EarLocationName earLocation) {
+    int stage = viewModel.testStage;
+    double width = 24;
+    switch (viewModel.earFitResults[earLocation]) {
+      case EarLocationResultState.POOR_FIT:
+        return SvgPicture.asset('assets/images/tip_status_red_stage$stage.svg',
+            semanticsLabel: 'tip status', width: width);
+      case EarLocationResultState.GOOD_FIT:
+        return SvgPicture.asset('assets/images/tip_status_green_stage$stage.svg',
+            semanticsLabel: 'tip status', width: width);
+      case EarLocationResultState.NO_RESULT:
+      // Fallthrough.
+      default:
+        return SvgPicture.asset('assets/images/tip_status_blue_stage$stage.svg',
+            semanticsLabel: 'tip status', width: width);
+    }
+  }
 
   Widget buildBody(EarFitScreenViewModel viewModel, BuildContext context) {
     String bodyText = '';
@@ -48,6 +101,11 @@ class EarFitScreen extends HookWidget {
         bodyText = 'Place the earbuds in your ears so they’re comfortable and secure. '
             'Then press GO.';
         break;
+      case EarFitRunState.STARTING:
+        bodyText = 'Please wait while checking the signal quality.';
+        buttonText = 'Starting...';
+        break;
+      case EarFitRunState.STOPPING:
       case EarFitRunState.RUNNING:
         buttonText = 'Stop';
         switch (viewModel.earFitResultState) {
@@ -104,30 +162,60 @@ class EarFitScreen extends HookWidget {
         Spacer(),
         HeaderText(text: 'Ear Tip Fit Test'),
         SizedBox(height: 40),
-        Container(height: 100, child: MediumText(marginLeft: 20, marginRight: 20, text: bodyText,
-            color: NextSenseColors.darkBlue)),
+        Container(
+            height: 100,
+            child: MediumText(
+                marginLeft: 20, marginRight: 20, text: bodyText, color: NextSenseColors.darkBlue)),
         SizedBox(height: 20),
-        Center(child: Image(image: AssetImage('assets/images/earbuds.png'), width: 267)),
+        Stack(children: [
+          Center(child: Image(image: AssetImage('assets/images/earbuds.png'), width: 267)),
+          Column(children: [
+            SizedBox(height: 6),
+            Row(children: [
+              Spacer(),
+              _getTipStatus(viewModel, EarLocationName.LEFT_HELIX),
+              SizedBox(width: 90),
+              _getTipStatus(viewModel, EarLocationName.RIGHT_HELIX),
+              Spacer()
+            ]),
+          ]),
+          Column(children: [
+            SizedBox(
+              height: 60,
+            ),
+            Row(children: [
+              Spacer(),
+              _getTipStatus(viewModel, EarLocationName.LEFT_CANAL),
+              SizedBox(width: 40),
+              _getTipStatus(viewModel, EarLocationName.RIGHT_CANAL),
+              Spacer(),
+            ]),
+          ]),
+          if (!viewModel.deviceCanRecord)
+            deviceInactiveOverlay(context, viewModel)
+        ]),
         SizedBox(height: 20),
         Row(children: [
           Spacer(),
-          SvgPicture.asset(leftResultAsset,
-              semanticsLabel: 'left result', width: 40),
+          SvgPicture.asset(leftResultAsset, semanticsLabel: 'left result', width: 40),
           SizedBox(width: 100),
-          SvgPicture.asset(rightResultAsset,
-              semanticsLabel: 'right result', width: 40),
+          SvgPicture.asset(rightResultAsset, semanticsLabel: 'right result', width: 40),
           Spacer(),
         ]),
         Spacer(),
-        SimpleButton(text: Container(width: 120, margin: EdgeInsets.zero, child:
-            Align(alignment: Alignment.center, child:
-            MediumText(text: buttonText, color: NextSenseColors.darkBlue))),
-            onTap: () => viewModel.buttonPress()),
+        AbsorbPointer(absorbing: viewModel.earFitRunState == EarFitRunState.STARTING ||
+            viewModel.earFitRunState == EarFitRunState.STOPPING, child:
+          SimpleButton(
+              text: Container(
+                  width: 120,
+                  margin: EdgeInsets.zero,
+                  child: Align(
+                      alignment: Alignment.center,
+                      child: MediumText(text: buttonText, color: NextSenseColors.darkBlue))),
+              onTap: () => viewModel.buttonPress())),
         SizedBox(height: 20),
         if (viewModel.earFitResultState != EarFitResultState.GOOD_FIT)
-          UnderlinedTextButton(text: 'Not now', onTap: () => {
-            viewModel.stopAndExit()
-          }),
+          UnderlinedTextButton(text: 'Not now', onTap: () => {viewModel.stopAndExit()}),
         Spacer(),
       ],
     );
