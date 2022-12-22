@@ -9,12 +9,14 @@ import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 import 'package:wakelock/wakelock.dart';
 
 enum EarFitRunState {
   NOT_STARTED,
+  STARTING,
   RUNNING,
+  STOPPING,
   FINISHED
 }
 
@@ -32,7 +34,7 @@ enum EarLocationResultState {
   GOOD_FIT
 }
 
-class EarFitScreenViewModel extends ViewModel {
+class EarFitScreenViewModel extends DeviceStateViewModel {
 
   static const int _impedanceSampleSize = 1024;
   // TODO(eric): This needs to be defined, and might be a combination of a high threshold (electrode
@@ -40,6 +42,7 @@ class EarFitScreenViewModel extends ViewModel {
   static const int _maxImpedanceThreshold = 8000000;
   static const int _minImpedanceThreshold = 10000;
   static const Duration _refreshInterval = Duration(milliseconds: 1000);
+  static const List<int> _testStages = [1, 2];
 
   final CustomLogPrinter _logger = CustomLogPrinter('EarFitScreenViewModel');
   final DeviceManager _deviceManager = getIt<DeviceManager>();
@@ -54,9 +57,15 @@ class EarFitScreenViewModel extends ViewModel {
   Map<EarLocationName, EarLocationResultState> _earFitResults = {};
   bool _calculatingImpedance = false;
   Timer? _screenRefreshTimer;
+  int _testStage = _testStages.last;
+  Iterator<int> _testStageIterator = _testStages.iterator;
+  bool _deviceConnected = true;
 
   EarFitRunState get earFitRunState => _earFitRunState;
   EarFitResultState get earFitResultState => _earFitResultState;
+  Map<EarLocationName, EarLocationResultState> get earFitResults => _earFitResults;
+  int get testStage => _testStage;
+  bool get deviceConnected => _deviceConnected;
 
   @override
   void init() async {
@@ -78,7 +87,7 @@ class EarFitScreenViewModel extends ViewModel {
 
   @override
   void dispose() {
-    Wakelock.disable();
+    _stopEarFitTest();
     super.dispose();
   }
 
@@ -101,6 +110,11 @@ class EarFitScreenViewModel extends ViewModel {
          } else {
            _startEarFitTest();
          }
+        break;
+      case EarFitRunState.STARTING:
+        // fallthrough
+      case EarFitRunState.STOPPING:
+        // Nothing to do, wait for the state to finish.
         break;
     }
   }
@@ -125,19 +139,21 @@ class EarFitScreenViewModel extends ViewModel {
     _earFitResultState = EarFitResultState.NO_RESULTS;
   }
 
-  void _startEarFitTest() {
-    _earFitRunState = EarFitRunState.RUNNING;
+  Future _startEarFitTest() async {
+    _earFitRunState = EarFitRunState.STARTING;
     _initEarFitResults();
     notifyListeners();
-    _impedanceCalculator!.startADS1299AcImpedance();
+    await _impedanceCalculator!.startADS1299AcImpedance();
     _screenRefreshTimer = new Timer.periodic(_refreshInterval, _runEarFitTest);
   }
 
   Future _stopEarFitTest() async {
+    _earFitRunState = EarFitRunState.STOPPING;
+    notifyListeners();
     _screenRefreshTimer?.cancel();
     await _impedanceCalculator?.stopCalculatingImpedance();
-    _earFitRunState = EarFitRunState.FINISHED;
     _calculatingImpedance = false;
+    _earFitRunState = EarFitRunState.FINISHED;
     notifyListeners();
     Wakelock.disable();
   }
@@ -150,7 +166,7 @@ class EarFitScreenViewModel extends ViewModel {
     _calculatingImpedance = true;
     Map<EarLocation, double> results =
         await _impedanceCalculator!.calculate1299AcImpedance(_earbudsConfig!);
-    if (_earFitRunState != EarFitRunState.RUNNING) {
+    if (_earFitRunState != EarFitRunState.STARTING && _earFitRunState != EarFitRunState.RUNNING) {
       _calculatingImpedance = false;
       return;
     }
@@ -210,7 +226,33 @@ class EarFitScreenViewModel extends ViewModel {
       _earFitResultState = EarFitResultState.POOR_QUALITY_RIGHT;
     }
 
+    if (_earFitRunState == EarFitRunState.STARTING &&
+        _earFitResultState != EarFitResultState.NO_RESULTS) {
+      _earFitRunState = EarFitRunState.RUNNING;
+    }
+
+    if (_earFitResultState == EarFitResultState.GOOD_FIT) {
+      _testStage = _testStages.last;
+    } else {
+      if (!_testStageIterator.moveNext()) {
+        _testStageIterator = _testStages.iterator;
+        _testStageIterator.moveNext();
+      }
+      _testStage = _testStageIterator.current;
+    }
     notifyListeners();
     _calculatingImpedance = false;
+  }
+
+  @override
+  void onDeviceDisconnected() {
+    _deviceConnected = false;
+    _stopEarFitTest();
+  }
+
+  @override
+  void onDeviceReconnected() {
+    _deviceConnected = true;
+    notifyListeners();
   }
 }

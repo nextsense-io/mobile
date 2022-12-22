@@ -97,19 +97,19 @@ class ProfileScreen extends HookWidget {
                         _MainMenuItem(
                             label: 'Start adhoc survey',
                             onPressed: () => _startAdhocSurvey(context)),
-                      if (_flavor.userType == UserType.researcher)
+                      if (_flavor.userType == UserType.researcher && viewModel.deviceIsConnected)
                         _MainMenuItem(
                             label: 'Check impedance',
                             onPressed: () {
                               _navigation.navigateTo(ImpedanceCalculationScreen.id);
                             }),
-                      if (_flavor.userType == UserType.researcher)
+                      if (_flavor.userType == UserType.researcher && viewModel.deviceIsConnected)
                         _MainMenuItem(
                             label: 'Test ear fit',
                             onPressed: () {
                               _navigation.navigateTo(EarFitScreen.id);
                             }),
-                      if (_flavor.userType == UserType.researcher)
+                      if (_flavor.userType == UserType.researcher && viewModel.deviceIsConnected)
                         _MainMenuItem(
                             label: 'Check Signal',
                             onPressed: () {
