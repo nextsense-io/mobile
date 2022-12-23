@@ -5,6 +5,7 @@ import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/impedance_series.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -41,6 +42,8 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
   //             reasonably in place) and the dynamic impedance stabilizing within a percentage.
   static const int _maxImpedanceThreshold = 8000000;
   static const int _minImpedanceThreshold = 10000;
+  static const int _maxVariationPercent = 20;
+  static const Duration _variationCheckDuration = Duration(seconds: 5);
   static const Duration _refreshInterval = Duration(milliseconds: 1000);
   static const List<int> _testStages = [1, 2];
 
@@ -60,6 +63,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
   int _testStage = _testStages.last;
   Iterator<int> _testStageIterator = _testStages.iterator;
   bool _deviceConnected = true;
+  ImpedanceSeries _impedanceSeries = ImpedanceSeries();
 
   EarFitRunState get earFitRunState => _earFitRunState;
   EarFitResultState get earFitResultState => _earFitResultState;
@@ -137,6 +141,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
       _earFitResults[earLocation.name] = EarLocationResultState.NO_RESULT;
     }
     _earFitResultState = EarFitResultState.NO_RESULTS;
+    _impedanceSeries.resetImpedanceData();
   }
 
   Future _startEarFitTest() async {
@@ -164,18 +169,29 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
       return;
     }
     _calculatingImpedance = true;
-    Map<EarLocation, double> results =
-        await _impedanceCalculator!.calculate1299AcImpedance(_earbudsConfig!);
+    ImpedanceData impedanceData = ImpedanceData(
+        impedances: await _impedanceCalculator!.calculate1299AcImpedance(_earbudsConfig!),
+        timestamp: DateTime.now());
     if (_earFitRunState != EarFitRunState.STARTING && _earFitRunState != EarFitRunState.RUNNING) {
       _calculatingImpedance = false;
       return;
     }
+    _impedanceSeries.addImpedanceData(impedanceData);
     EarLocationResultState leftResult = EarLocationResultState.NO_RESULT;
     EarLocationResultState rightResult = EarLocationResultState.NO_RESULT;
-    for (MapEntry<EarLocation, double> result in results.entries) {
+    for (MapEntry<EarLocation, double> result in impedanceData.impedances.entries) {
       if (result.value < 0) {
         _earFitResults[result.key.name] = EarLocationResultState.NO_RESULT;
       } else {
+        int variation = _impedanceSeries.getVariationAcrossTime(
+            earLocation: result.key, time: _variationCheckDuration);
+        if (variation < 0 || variation > _maxVariationPercent) {
+          _earFitResults[result.key.name] = EarLocationResultState.POOR_FIT;
+          _logger.log(Level.FINE, "Variation of ${_impedanceSeries.getVariationAcrossTime(
+              earLocation: result.key, time: _variationCheckDuration)} is negative or above the "
+              "threshold: $variation");
+          continue;
+        }
         if (result.value > _minImpedanceThreshold && result.value < _maxImpedanceThreshold) {
           _earFitResults[result.key.name] = EarLocationResultState.GOOD_FIT;
         } else {
