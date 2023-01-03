@@ -190,9 +190,8 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
           _logger.log(Level.FINE, "Variation of ${_impedanceSeries.getVariationAcrossTime(
               earLocation: result.key, time: _variationCheckDuration)} is negative or above the "
               "threshold: $variation");
-          continue;
-        }
-        if (result.value > _minImpedanceThreshold && result.value < _maxImpedanceThreshold) {
+        } else if (result.value >= _minImpedanceThreshold &&
+            result.value <= _maxImpedanceThreshold) {
           _earFitResults[result.key.name] = EarLocationResultState.GOOD_FIT;
         } else {
           _earFitResults[result.key.name] = EarLocationResultState.POOR_FIT;
@@ -200,10 +199,10 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
       }
     }
 
-    // If there is impedance data results being calculated, set the RIGHT_HELIX to GOOD_FIT as good
-    // as it is dependant on the rest of the electrodes.
+    // If there is impedance data results being calculated, set the RIGHT_HELIX to the RIGHT_CANAL
+    // result as good as it is dependant on the rest of the electrodes.
     if (_earFitResults[EarLocationName.RIGHT_CANAL] != EarLocationResultState.NO_RESULT) {
-      _earFitResults[EarLocationName.RIGHT_HELIX] = EarLocationResultState.GOOD_FIT;
+      _earFitResults[EarLocationName.RIGHT_HELIX] = _earFitResults[EarLocationName.RIGHT_CANAL]!;
     }
 
     if (_earFitResults[EarLocationName.LEFT_CANAL] == EarLocationResultState.NO_RESULT ||

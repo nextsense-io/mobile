@@ -28,15 +28,21 @@ class ImpedanceSeries {
     _impedanceDataList.clear();
   }
 
-  int getVariationAcrossTime({required EarLocation earLocation, required Duration time,
-      DateTime? endTime}) {
+  /*
+  Returns the variation across a time duration of an EarLocation. Can optionally specify an endTime
+  to not start from the latest data point.
+  the variation is returned as a percentage calculated from the biggest to the lowest. So 100 to 200
+  range would be 50%. If there is not enough data points to calculate or they are filled with
+  zeroes, it will return -1.
+   */
+  int getVariationAcrossTime(
+      {required EarLocation earLocation, required Duration time, DateTime? endTime}) {
     if (_impedanceDataList.isEmpty) {
       return -1;
     }
     DateTime startTime = endTime != null ? endTime.subtract(time) : DateTime.now().subtract(time);
     int startIndex = Algorithms.lowerBound(
-        _impedanceDataList, new ImpedanceData(impedances: {},
-        timestamp: startTime));
+        _impedanceDataList, new ImpedanceData(impedances: {}, timestamp: startTime));
     if (startIndex == 0) {
       // First element, wait until there is more data than the time period before a calculation can
       // be done.
