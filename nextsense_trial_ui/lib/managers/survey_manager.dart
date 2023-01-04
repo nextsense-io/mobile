@@ -20,7 +20,7 @@ class SurveyManager {
   final AuthManager _authManager = getIt<AuthManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
 
-  List<Survey>? _surveys;
+  Map<String, Survey> _surveys = {};
   List<ScheduledSurvey> scheduledSurveys = [];
 
   // Group by planned survey id for stats
@@ -53,7 +53,25 @@ class SurveyManager {
   }
 
   Survey? getSurveyById(String surveyId) {
-    return _surveys?.firstWhereOrNull((survey) => survey.id == surveyId);
+    return _surveys[surveyId];
+  }
+
+  // Load planned surveys from study adhoc list.
+  Future<bool> loadAdhocSurveys() async {
+    for (String surveyId in _studyManager.currentStudy!.getAllowedSurveys()) {
+      if (!_surveys.containsKey(surveyId)) {
+        Survey? survey = await _loadSurvey(surveyId);
+        if (survey == null) {
+          return false;
+        }
+        bool loaded = await survey.loadQuestions(
+            fromCache: _studyManager.studyInitialized ?? false);
+        if (loaded == false) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   // Load planned surveys from study and convert them to scheduled surveys that persist in the user
@@ -65,9 +83,6 @@ class SurveyManager {
       throw("study not initialized. cannot load surveys");
     }
 
-    // If study is initialized take surveys from cache
-    _surveys = await _loadSurveys(fromCache: studyInitialized);
-
     scheduledSurveys.clear();
     _scheduledSurveysByPlannedSurveyId.clear();
 
@@ -77,6 +92,11 @@ class SurveyManager {
       List<ScheduledSurvey>? scheduledSurveysFromCache = await _loadScheduledSurveysFromCache();
       if (scheduledSurveysFromCache != null) {
         scheduledSurveys = scheduledSurveysFromCache;
+        for (ScheduledSurvey scheduledSurvey in scheduledSurveysFromCache) {
+          if (!_surveys.containsKey(scheduledSurvey.survey.id)) {
+            await _loadSurvey(scheduledSurvey.survey.id);
+          }
+        }
       } else {
         return false;
       }
@@ -86,6 +106,11 @@ class SurveyManager {
       List<PlannedSurvey>? plannedSurveys = await _studyManager.loadPlannedSurveys();
       if (plannedSurveys == null) {
         return false;
+      }
+      for (PlannedSurvey plannedSurvey in plannedSurveys) {
+        if (!_surveys.containsKey(plannedSurvey.surveyId)) {
+           await _loadSurvey(plannedSurvey.surveyId, fromCache: studyInitialized);
+        }
       }
 
       // Speed up queries by making parallel requests
@@ -130,6 +155,8 @@ class SurveyManager {
 
       await Future.wait(futures);
 
+      await _loadSurveysQuestions(fromCache: studyInitialized);
+
       // Make sure cache is up to date, need to query whole collection
       // Without this query undesired items can appear in cache
       await _queryScheduledSurveys();
@@ -159,11 +186,7 @@ class SurveyManager {
       if (plannedSurveyEntity != null) {
         PlannedSurvey plannedSurvey = PlannedSurvey(plannedSurveyEntity,
             _studyManager.currentStudyStartDate!, _studyManager.currentStudyEndDate!);
-        if (_surveys == null) {
-          _surveys = await _loadSurveys(fromCache: true);
-        }
-        Survey? survey = _surveys?.firstWhere(
-                (element) => element.id == plannedSurvey.surveyId) ?? null;
+        Survey? survey = getSurveyById(plannedSurvey.surveyId);
         if (survey == null) {
           return null;
         }
@@ -175,24 +198,26 @@ class SurveyManager {
     return null;
   }
 
-  Future<List<Survey>?> _loadSurveys({bool fromCache = false}) async {
-    List<FirebaseEntity>? entities = await _firestoreManager.queryEntities(
-        [Table.surveys], [], fromCacheWithKey: fromCache ? Table.surveys.name() : null,
+  Future<Survey?> _loadSurvey(String surveyId, {bool fromCache = false}) async {
+    FirebaseEntity? entity = await _firestoreManager.queryEntity(
+      [Table.surveys], [surveyId], fromCacheWithKey: fromCache ? Table.surveys.name() : null,
     );
-    if (entities == null) {
-      return null;
+    if (entity == null) {
+      throw Exception('$surveyId not found in the survey table.');
     }
+    Survey survey = Survey(entity);
+    _surveys[surveyId] = survey;
+    return survey;
+  }
 
-    List<Survey> results = [];
+  Future _loadSurveysQuestions({bool fromCache = false}) async {
     // Speed up queries by making parallel requests.
     List<Future<bool>> futures = [];
-    for (FirebaseEntity entity in entities) {
-      final survey = Survey(entity);
+    for (Survey survey in _surveys.values) {
       Future<bool> futureResult = survey.loadQuestions(fromCache: fromCache).then((loadResult) {
         if (!loadResult) {
           return false;
         }
-        results.add(survey);
         return true;
       });
       futures.add(futureResult);
@@ -205,11 +230,6 @@ class SurveyManager {
         return null;
       }
     }
-
-    // Make consistent order
-    results.sortBy((survey) => survey.id);
-
-    return results;
   }
 
   Future<List<ScheduledSurvey>?> _loadScheduledSurveysFromCache() async {

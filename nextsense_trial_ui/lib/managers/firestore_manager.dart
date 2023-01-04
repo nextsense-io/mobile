@@ -155,7 +155,7 @@ class FirestoreManager {
 
   Future<FirebaseEntity> addAutoIdReference(List<Table> tables, List<String> entityKeys) async {
     assert(tables.length == entityKeys.length + 1);
-    DocumentReference? reference = null;
+    DocumentReference? reference;
     for (int i = 0; i < tables.length; ++i) {
       if (i == 0) {
         if (entityKeys.isEmpty) {
@@ -180,8 +180,8 @@ class FirestoreManager {
   Future<List<FirebaseEntity>?> queryEntities(
       List<Table> tables, List<String> entityKeys, {String? fromCacheWithKey}) async {
     assert(tables.length == entityKeys.length + 1);
-    DocumentReference? pathReference = null;
-    CollectionReference? collectionReference = null;
+    DocumentReference? pathReference;
+    CollectionReference? collectionReference;
     for (int i = 0; i < tables.length; ++i) {
       if (i == 0) {
         if (entityKeys.isEmpty) {
