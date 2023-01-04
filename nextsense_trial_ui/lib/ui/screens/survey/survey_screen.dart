@@ -167,7 +167,7 @@ class SurveyScreen extends HookWidget {
               text: TextSpan(
                 children: [
                   TextSpan(
-                      text: question.text,
+                      text: question.text.replaceAll('\\n', '\n'),
                       style: TextStyle(
                           fontSize: 18,
                           color: NextSenseColors.darkBlue,
@@ -390,7 +390,7 @@ class WideChoiceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     int width = MediaQuery.of(context).size.width.round();
     return Container(width: width - 100, child: Align(alignment: Alignment.center,
-        child: ContentText(text: text, color: NextSenseColors.darkBlue, marginBottom: 12,
-            marginTop: 12)));
+        child: ContentText(text: text, color: NextSenseColors.darkBlue, marginBottom: 4,
+            marginTop: 4)));
   }
 }

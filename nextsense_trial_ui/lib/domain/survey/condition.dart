@@ -8,13 +8,18 @@ enum ConditionField {
 
 // Defines a parsable condition in text format.
 // Format for one condition is key, operator, value.
-// The only supported operators are '==' and '!='. More can be added later as needed.
+// TSupported operators are '==', '!=', '>', '>=', '<' and '<='. More can be added later as needed.
 // The value can be a string, number or boolean value.
 // Example: "kss_1==true" and "kss_2!=not_much" are valid.
 class Condition {
   static const String operatorEqual = "==";
   static const String operatorNotEqual = "!=";
-  static const List<String> validOperators = [operatorEqual, operatorNotEqual];
+  static const String operatorGreater = ">";
+  static const String operatorGreaterOrEqual = ">=";
+  static const String operatorLesser = "<";
+  static const String operatorLesserOrEqual = "<=";
+  static const List<String> validOperators = [operatorEqual, operatorNotEqual, operatorGreater,
+    operatorGreaterOrEqual, operatorLesser, operatorLesserOrEqual];
 
   final String key;
   final String operator;
@@ -30,12 +35,12 @@ class Condition {
     }
     String operator = conditionFields[ConditionField.op.name];
     if (!validOperators.contains(operator)) {
-      throw FormatException("Unknown operator: ${operator}.");
+      throw FormatException("Unknown operator: $operator.");
     }
     dynamic value = conditionFields[ConditionField.value.name];
     if (value !is String && value !is bool && value !is int) {
       throw FormatException(
-          "Value type not supported: ${value}. Needs to be a String, a book or an int.");
+          "Value type not supported: $value. Needs to be a String, a book or an int.");
     }
     return Condition(conditionFields[ConditionField.key.name], operator, value);
   }
@@ -46,14 +51,22 @@ class Condition {
         return value == other;
       case operatorNotEqual:
         return value != other;
+      case operatorGreater:
+        return int.parse(other) > int.parse(value);
+      case operatorGreaterOrEqual:
+        return int.parse(other) >= int.parse(value);
+      case operatorLesser:
+        return int.parse(other) < int.parse(value);
+      case operatorLesserOrEqual:
+        return int.parse(other) <= int.parse(value);
       default:
-        throw FormatException("Invalid operator: ${operator}");
+        throw FormatException("Invalid operator: $operator");
     }
   }
 
   @override
   String toString() {
-    return "${key}${operator}${value}";
+    return "$key$operator$value";
   }
 }
 

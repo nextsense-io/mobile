@@ -39,6 +39,8 @@ class DataManager {
     if (!loaded) return false;
     loaded = await _surveyManager.loadScheduledSurveys();
     if (!loaded) return false;
+    loaded = await _surveyManager.loadAdhocSurveys();
+    if (!loaded) return false;
     loaded = await _studyManager.loadScheduledProtocols();
     if (!loaded) return false;
     await _sessionManager.loadCurrentSession();
