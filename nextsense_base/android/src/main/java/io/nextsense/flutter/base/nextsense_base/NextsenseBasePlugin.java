@@ -120,7 +120,6 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   // Handler for the UI thread which is needed for running flutter JNI methods.
   private final Handler uiThreadHandler = new Handler(Looper.getMainLooper());
   private final Gson gson;
-  private final Map<String, Device> devices = Maps.newConcurrentMap();
   private final Map<String, Device.DeviceStateChangeListener> deviceStateListeners =
       Maps.newConcurrentMap();
   /// The MethodChannel that will the communication between Flutter and native Android
@@ -135,7 +134,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private Intent foregroundServiceIntent;
   private ForegroundService nextSenseService;
   private boolean nextSenseServiceBound = false;
-  private DeviceScanner.DeviceScanListener deviceScanListener;
+  private DeviceManager.DeviceScanListener deviceScanListener;
   private AndroidScheduler deviceInternalStateSubscriptionScheduler;
   private DataSubscription deviceInternalStateSubscription;
 
@@ -358,13 +357,13 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void requestDeviceInternalStateUpdate(Result result, String macAddress) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, REQUEST_DEVICE_INTERNAL_STATE_COMMAND, ERROR_DEVICE_NOT_FOUND,
           /*errorMessage=*/null, /*errorDetails=*/null);
       return;
     }
-    boolean requested = device.requestDeviceState();
+    boolean requested = device.get().requestDeviceState();
     if (!requested) {
       returnError(result, REQUEST_DEVICE_INTERNAL_STATE_COMMAND, ERROR_COMMAND_FAILED,
           /*errorMessage=*/null, /*errorDetails=*/null);
@@ -428,29 +427,28 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void getDeviceState(Result result, String macAddress) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, GET_DEVICE_STATE_COMMAND, ERROR_DEVICE_NOT_FOUND,
           /*errorMessage=*/null, /*errorDetails=*/null);
       return;
     }
-    result.success(device.getState().name());
+    result.success(device.get().getState().name());
   }
 
   private void startScanning(EventChannel.EventSink eventSink) {
     if (nextSenseServiceBound) {
-      deviceScanListener = new DeviceScanner.DeviceScanListener() {
+      deviceScanListener = new DeviceManager.DeviceScanListener() {
         @Override
         public void onNewDevice(Device device) {
           Log.i(TAG, "Found a device in Android scan: " + device.getName());
-          devices.put(device.getAddress(), device);
           DeviceAttributes deviceAttributes =
               new DeviceAttributes(device.getAddress(), device.getName());
           uiThreadHandler.post(() -> eventSink.success(gson.toJson(deviceAttributes)));
         }
 
         @Override
-        public void onScanError(ScanError scanError) {
+        public void onScanError(DeviceScanner.DeviceScanListener.ScanError scanError) {
           Log.e(TAG, "Error while scanning in Android: " + scanError.name());
           uiThreadHandler.post(() ->
               eventSink.error(scanError.name(), scanError.name(), scanError.name()));
@@ -473,8 +471,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   private void startListeningToDeviceState(EventChannel.EventSink eventSink, String macAddress) {
     if (nextSenseServiceBound) {
-      Device device = devices.get(macAddress);
-      if (device == null) {
+      Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+      if (!device.isPresent()) {
         uiThreadHandler.post(() ->
             eventSink.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
                 /*errorDetails=*/null));
@@ -482,7 +480,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       }
       deviceStateListeners.put(macAddress, newDeviceState ->
           uiThreadHandler.post(() -> eventSink.success(newDeviceState.name())));
-      device.addOnDeviceStateChangeListener(deviceStateListeners.get(macAddress));
+      device.get().addOnDeviceStateChangeListener(deviceStateListeners.get(macAddress));
     } else {
       Log.w(TAG, "Service not connected, cannot start monitoring device state.");
     }
@@ -490,15 +488,15 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   public void stopListeningToDeviceState(String macAddress) {
     if (nextSenseServiceBound) {
-      Device device = devices.get(macAddress);
-      if (device == null) {
+      Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+      if (!device.isPresent()) {
         Log.w(TAG, "Cannot find the device " + macAddress +
             " when trying to stop listening to its state.");
         return;
       }
       Device.DeviceStateChangeListener deviceStateListener = deviceStateListeners.get(macAddress);
       if (deviceStateListener != null) {
-        device.removeOnDeviceStateChangeListener(deviceStateListener);
+        device.get().removeOnDeviceStateChangeListener(deviceStateListener);
         Log.i(TAG, "Stopped listening to Android device state for " + macAddress);
       }
     } else {
@@ -534,14 +532,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void connectDevice(Result result, String macAddress) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, CONNECT_DEVICE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
     try {
-      DeviceState deviceState = device.connect(/*autoReconnect=*/true).get();
+      DeviceState deviceState = device.get().connect(/*autoReconnect=*/true).get();
       if (deviceState == DeviceState.READY) {
         result.success(null);
       } else {
@@ -559,14 +557,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void disconnectDevice(Result result, String macAddress) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, DISCONNECT_DEVICE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
     try {
-      DeviceState deviceState = device.disconnect().get(3, TimeUnit.SECONDS);
+      DeviceState deviceState = device.get().disconnect().get(3, TimeUnit.SECONDS);
       if (deviceState == DeviceState.DISCONNECTED) {
         result.success(true);
       } else {
@@ -589,8 +587,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private void startStreaming(
       Result result, String macAddress, Boolean uploadToCloud, String userBigTableKey,
       String dataSessionId, String earbudsConfig) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, START_STREAMING_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
@@ -598,7 +596,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     try {
       // Clear the memory cache from the previous recording data, if any.
       nextSenseService.getMemoryCache().clear();
-      boolean started = device.startStreaming(
+      boolean started = device.get().startStreaming(
           uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig).get();
       if (!started) {
         returnError(result, START_STREAMING_COMMAND, ERROR_STREAMING_START_FAILED,
@@ -626,14 +624,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void stopStreaming(Result result, String macAddress) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, STOP_STREAMING_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
     try {
-      boolean stopped = device.stopStreaming().get();
+      boolean stopped = device.get().stopStreaming().get();
       if (stopped) {
         result.success(null);
       } else {
@@ -651,27 +649,28 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void isDeviceStreaming(Result result, String macAddress) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, START_IMPEDANCE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
-    result.success(device.getMode() == DeviceMode.STREAMING);
+    result.success(device.get().getMode() == DeviceMode.STREAMING);
   }
 
   private void startImpedance(
       Result result, String macAddress, String impedanceModeName, @Nullable Integer channelNumber,
       @Nullable Integer frequencyDivider) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, START_IMPEDANCE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
     ImpedanceMode impedanceMode = ImpedanceMode.valueOf(impedanceModeName);
     try {
-      boolean started = device.startImpedance(impedanceMode, channelNumber, frequencyDivider).get();
+      boolean started = device.get().startImpedance(
+          impedanceMode, channelNumber, frequencyDivider).get();
       if (!started) {
         returnError(result, START_IMPEDANCE_COMMAND, ERROR_STREAMING_START_FAILED,
             /*errorMessage=*/null, /*errorDetails=*/null);
@@ -701,8 +700,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private void setImpedanceConfig(
       Result result, String macAddress, String impedanceModeName, @Nullable Integer channelNumber,
       @Nullable Integer frequencyDivider) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, SET_IMPEDANCE_CONFIG_COMMAND, ERROR_DEVICE_NOT_FOUND,
           /*errorMessage=*/null, /*errorDetails=*/null);
       return;
@@ -710,7 +709,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     ImpedanceMode impedanceMode = ImpedanceMode.valueOf(impedanceModeName);
     try {
       boolean configured =
-          device.setImpedanceConfig(impedanceMode, channelNumber, frequencyDivider).get();
+          device.get().setImpedanceConfig(impedanceMode, channelNumber, frequencyDivider).get();
       if (!configured) {
         returnError(result, SET_IMPEDANCE_CONFIG_COMMAND, ERROR_STREAMING_START_FAILED,
             /*errorMessage=*/null, /*errorDetails=*/null);
@@ -727,14 +726,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void stopImpedance(Result result, String macAddress) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, STOP_IMPEDANCE_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
     }
     try {
-      boolean stopped = device.stopImpedance().get();
+      boolean stopped = device.get().stopImpedance().get();
       if (stopped) {
         result.success(null);
       } else {
@@ -752,20 +751,20 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   private void getDeviceSettings(Result result, String macAddress) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, GET_DEVICE_SETTINGS_COMMAND, ERROR_DEVICE_NOT_FOUND,
           /*errorMessage=*/null, /*errorDetails=*/null);
       return;
     }
-    result.success(gson.toJson(device.getSettings()));
+    result.success(gson.toJson(device.get().getSettings()));
   }
 
   private void getChannelData(
       Result result, String macAddress, Integer localSessionId, String channelName,
       Integer durationMillis, Boolean fromDatabase) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, GET_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
@@ -775,7 +774,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
               localSessionId, channelName, Duration.ofMillis(durationMillis)));
     } else {
       int numberOfSamples = (int) Math.round(Math.ceil(
-          (float) durationMillis / Math.round(1000f / device.getSettings().getEegStreamingRate())));
+          (float) durationMillis / Math.round(1000f /
+              device.get().getSettings().getEegStreamingRate())));
       result.success(nextSenseService.getMemoryCache().getLastEegChannelData(
               channelName, numberOfSamples));
     }
@@ -784,8 +784,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private void getAccChannelData(
       Result result, String macAddress, Integer localSessionId, String channelName,
       Integer durationMillis, Boolean fromDatabase) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, GET_ACC_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
           /*errorDetails=*/null);
       return;
@@ -795,28 +795,30 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
           localSessionId, channelName, Duration.ofMillis(durationMillis)));
     } else {
       int numberOfSamples = (int) Math.round(Math.ceil(
-          (float) durationMillis / Math.round(1000f / device.getSettings().getImuStreamingRate())));
+          (float) durationMillis / Math.round(1000f /
+              device.get().getSettings().getImuStreamingRate())));
       result.success(nextSenseService.getMemoryCache().getLastAccChannelData(
           channelName, numberOfSamples));
     }
   }
 
   private void getTimestampsData(Result result, String macAddress, int durationMillis) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, GET_TIMESTAMPS_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND,
           /*errorMessage=*/null, /*errorDetails=*/null);
       return;
     }
     int numberOfSamples = (int) Math.round(Math.ceil(
-        (float) durationMillis / Math.round(1000f / device.getSettings().getEegStreamingRate())));
+        (float) durationMillis / Math.round(1000f /
+            device.get().getSettings().getEegStreamingRate())));
     result.success(nextSenseService.getMemoryCache().getLastTimestamps(numberOfSamples));
   }
 
   private void getDeviceInternalStateData(
       Result result, String macAddress, @Nullable Integer localSessionId, int durationMillis) {
-    Device device = devices.get(macAddress);
-    if (device == null) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
       returnError(result, GET_DEVICE_INTERNAL_STATE_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND,
           /*errorMessage=*/null, /*errorDetails=*/null);
       return;

@@ -313,8 +313,8 @@ public class TestActivity extends AppCompatActivity {
     }
   };
 
-  private final DeviceScanner.DeviceScanListener deviceScanListener =
-      new DeviceScanner.DeviceScanListener() {
+  private final DeviceManager.DeviceScanListener deviceScanListener =
+      new DeviceManager.DeviceScanListener() {
         @Override
         public void onNewDevice(Device device) {
           if (lastDevice != null) {
@@ -325,7 +325,7 @@ public class TestActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onScanError(ScanError scanError) {
+        public void onScanError(DeviceScanner.DeviceScanListener.ScanError scanError) {
           Log.w(TAG, scanError.toString());
         }
       };

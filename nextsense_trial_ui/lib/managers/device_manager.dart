@@ -147,18 +147,23 @@ class DeviceManager {
 
     // Connect to device automatically if found
     if (_scannedDevice != null) {
-      _scannedDevice = null;
       try {
-        connected = await connectDevice(lastPairedDevice);
-      } on PlatformException {}
+        connected = await connectDevice(_scannedDevice!);
+      } on PlatformException catch (e) {
+        _logger.log(
+            Level.WARNING,
+            "Failed to reconnect to last paired device: ${e.message}");
+      } finally {
+        _scannedDevice = null;
+      }
     }
     if (connected) {
-      _logger.log(Level.INFO, "Connected to last paired device ${lastPairedDevice.macAddress}");
+      _logger.log(Level.INFO, "Connected to last paired device ${_scannedDevice!.macAddress}");
     } else {
       _logger.log(
           Level.WARNING,
           "Failed connect to last paired device "
-          "${lastPairedDevice.macAddress}");
+          "${_scannedDevice!.macAddress}");
     }
     return connected;
   }
@@ -206,9 +211,7 @@ class DeviceManager {
 
   Future manualDisconnect() async {
     await disconnectDevice();
-    await _authManager.user!
-      ..setLastPairedDeviceMacAddress(null)
-      ..save();
+    await _authManager.user!..setLastPairedDeviceMacAddress(null)..save();
   }
 
   Future disconnectDevice() async {
@@ -263,7 +266,7 @@ class DeviceManager {
             }
             break;
           case DeviceState.ready:
-            if (deviceState != DeviceState.ready) {
+            if (deviceState.value != DeviceState.ready) {
               _onDeviceReady();
             }
             break;
@@ -271,7 +274,7 @@ class DeviceManager {
             break;
         }
       } else {
-        if (deviceState == DeviceState.ready) {
+        if (deviceState.value == DeviceState.ready) {
           _logger.log(Level.WARNING, "State changed to READY but no connected device.");
         }
       }

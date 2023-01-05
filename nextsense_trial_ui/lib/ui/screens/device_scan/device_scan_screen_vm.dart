@@ -8,7 +8,6 @@ import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/config.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 
@@ -26,7 +25,6 @@ class DeviceScanScreenViewModel extends ViewModel {
   static const Duration _scanTimeout = Duration(seconds: 30);
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
-  final Navigation _navigation = getIt<Navigation>();
   final bool autoConnect;
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceScanScreen');
 

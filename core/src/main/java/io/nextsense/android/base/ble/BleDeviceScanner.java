@@ -18,9 +18,6 @@ import java.util.Set;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
-import io.nextsense.android.base.communication.ble.BluetoothStateManager;
-import io.nextsense.android.base.communication.ble.ReconnectionManager;
-import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.utils.Util;
 
@@ -33,7 +30,6 @@ public class BleDeviceScanner implements DeviceScanner {
 
   private final NextSenseDeviceManager deviceManager;
   private final BleCentralManagerProxy centralManagerProxy;
-  private final BluetoothStateManager bluetoothStateManager;
   private final List<Device> devices = new ArrayList<>();
   private Set<String> foundPeripheralAddresses = new HashSet<>();
   private DeviceScanner.DeviceScanListener deviceScanListener;
@@ -50,18 +46,7 @@ public class BleDeviceScanner implements DeviceScanner {
           }
           foundPeripheralAddresses.add(peripheral.getAddress());
           logd(TAG, "Found valid device: " + scanResult.getDevice().getName());
-
-          NextSenseDevice nextSenseDevice = deviceManager.getDeviceForName(peripheral.getName());
-          if (nextSenseDevice == null) {
-            return;
-          }
-          ReconnectionManager reconnectionManager = ReconnectionManager.create(
-              centralManagerProxy, bluetoothStateManager, BleDeviceScanner.this,
-              BleDevice.RECONNECTION_ATTEMPTS_INTERVAL);
-          Device device = Device.create(
-              centralManagerProxy, bluetoothStateManager, nextSenseDevice, peripheral, reconnectionManager);
-          devices.add(device);
-          deviceScanListener.onNewDevice(device);
+          deviceScanListener.onNewDevice(peripheral);
         }
       }
     }
@@ -101,11 +86,9 @@ public class BleDeviceScanner implements DeviceScanner {
   };
 
   public BleDeviceScanner(NextSenseDeviceManager deviceManager,
-                          BleCentralManagerProxy centralManagerProxy,
-                          BluetoothStateManager bluetoothStateManager) {
+                          BleCentralManagerProxy centralManagerProxy) {
     this.deviceManager = deviceManager;
     this.centralManagerProxy = centralManagerProxy;
-    this.bluetoothStateManager = bluetoothStateManager;
     centralManagerProxy.addGlobalListener(bluetoothCentralManagerCallback);
     Util.logd(TAG, "Initialized DeviceScanner");
   }

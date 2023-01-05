@@ -1,9 +1,10 @@
 package io.nextsense.android.base;
 
+import com.welie.blessed.BluetoothPeripheral;
+
 import io.nextsense.android.Config;
 import io.nextsense.android.base.ble.BleDeviceScanner;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
-import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.emulated.EmulatedDeviceScanner;
 
@@ -31,10 +32,10 @@ public interface DeviceScanner {
         }
 
         /**
-         * Called when a new {@link Device} is found.
-         * @param device found
+         * Called when a new {@link BluetoothPeripheral} is found.
+         * @param peripheral found
          */
-        void onNewDevice(Device device);
+        void onNewDevice(BluetoothPeripheral peripheral);
 
         /**
          * Called if there is an error while scanning.
@@ -44,12 +45,11 @@ public interface DeviceScanner {
     }
 
     static DeviceScanner create(NextSenseDeviceManager deviceManager,
-                                BleCentralManagerProxy centralManagerProxy,
-                                BluetoothStateManager bluetoothStateManager) {
+                                BleCentralManagerProxy centralManagerProxy) {
         if (Config.USE_EMULATED_BLE)
             return new EmulatedDeviceScanner();
 
-        return new BleDeviceScanner(deviceManager, centralManagerProxy, bluetoothStateManager);
+        return new BleDeviceScanner(deviceManager, centralManagerProxy);
     }
 
     void close();
