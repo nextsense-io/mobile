@@ -59,6 +59,7 @@ public class ForegroundService extends Service {
   // Binder given to clients.
   private final IBinder binder = new LocalBinder();
 
+  private NextSenseDeviceManager nextSenseDeviceManager;
   private BluetoothStateManager bluetoothStateManager;
   private BleCentralManagerProxy centralManagerProxy;
   private DeviceScanner deviceScanner;
@@ -155,9 +156,11 @@ public class ForegroundService extends Service {
     bluetoothStateManager = BluetoothStateManager.create(getApplicationContext());
     centralManagerProxy = (!Config.USE_EMULATED_BLE) ?
             new BleCentralManagerProxy(getApplicationContext()) : null;
-    deviceScanner = DeviceScanner.create(NextSenseDeviceManager.create(localSessionManager),
-        centralManagerProxy, bluetoothStateManager);
-    deviceManager = DeviceManager.create(deviceScanner, localSessionManager);
+    nextSenseDeviceManager = NextSenseDeviceManager.create(localSessionManager);
+    deviceScanner = DeviceScanner.create(nextSenseDeviceManager, centralManagerProxy);
+    deviceManager = DeviceManager.create(
+        deviceScanner, localSessionManager, centralManagerProxy, bluetoothStateManager,
+        nextSenseDeviceManager);
     databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
     databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);
@@ -181,6 +184,7 @@ public class ForegroundService extends Service {
     Log.i(TAG, "destroy started.");
     // sampleRateCalculator.stopListening();
     if (deviceScanner != null) {
+      deviceScanner.stopFindingDevices();
       deviceScanner.close();
     }
     if (deviceManager != null) {

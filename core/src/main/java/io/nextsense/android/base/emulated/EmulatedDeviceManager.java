@@ -3,16 +3,14 @@ package io.nextsense.android.base.emulated;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.data.LocalSessionManager;
-import io.nextsense.android.base.emulated.EmulatedDevice;
 
 public class EmulatedDeviceManager implements DeviceManager {
 
@@ -23,14 +21,11 @@ public class EmulatedDeviceManager implements DeviceManager {
 
     private static final String TAG = EmulatedDeviceManager.class.getSimpleName();
 
-    private final DeviceScanner deviceScanner;
-    private final Set<DeviceScanner.DeviceScanListener> deviceScanListeners = new HashSet<>();
     private final List<Device> devices = new ArrayList<>();
     private final LocalSessionManager localSessionManager;
     private EmulatedDevice emulatedDevice;
 
     public EmulatedDeviceManager(DeviceScanner deviceScanner, LocalSessionManager localSessionManager) {
-        this.deviceScanner = deviceScanner;
         this.localSessionManager = localSessionManager;
     }
 
@@ -40,7 +35,7 @@ public class EmulatedDeviceManager implements DeviceManager {
     }
 
     @Override
-    public void findDevices(DeviceScanner.DeviceScanListener deviceScanListener) {
+    public void findDevices(DeviceManager.DeviceScanListener deviceScanListener) {
         Log.w(TAG, "EmulatedDeviceManager::findDevices");
         emulatedDevice = (EmulatedDevice) Device.create(null, null, null, null, null);
         // Have to pass localSessionManager to emulated device
@@ -55,7 +50,12 @@ public class EmulatedDeviceManager implements DeviceManager {
     }
 
     @Override
-    public void stopFindingDevices(DeviceScanner.DeviceScanListener deviceScanListener) {
+    public Optional<Device> getDevice(String macAddress) {
+        return Optional.ofNullable(devices.get(0));
+    }
+
+    @Override
+    public void stopFindingDevices(DeviceManager.DeviceScanListener deviceScanListener) {
         // Nothing to do here when emulated
     }
 

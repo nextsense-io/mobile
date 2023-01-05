@@ -226,6 +226,7 @@ public class BleDevice extends Device {
    */
   @Override
   public ListenableFuture<DeviceState> disconnect() {
+    Util.logd(TAG, "disconnect start");
     if (reconnectionManager.isReconnecting()) {
       reconnectionManager.stopReconnecting();
     }
@@ -361,7 +362,7 @@ public class BleDevice extends Device {
     @Override
     public void onDisconnectedPeripheral(@NonNull BluetoothPeripheral peripheral,
                                          @NonNull HciStatus status) {
-      Util.logd(TAG, "Device " + peripheral.getName() + " disconnected.");
+      Util.logd(TAG, "Device " + peripheral.getName() + " disconnected");
       if (disconnectionStatus != DisconnectionStatus.BY_REQUEST) {
         Util.logd(TAG, "Hard disconnect, try to reconnect.");
         disconnectionStatus = DisconnectionStatus.HARD;

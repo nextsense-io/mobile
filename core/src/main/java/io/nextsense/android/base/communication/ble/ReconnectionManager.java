@@ -12,7 +12,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.utils.Util;
 
@@ -91,15 +90,15 @@ public class ReconnectionManager {
     if (centralManagerProxy.getCentralManager().getConnectedPeripherals().isEmpty()) {
       deviceScanner.findDevices(new DeviceScanner.DeviceScanListener() {
         @Override
-        public void onNewDevice(Device device) {
-          if (device.getName().equals(btPeripheral.getName())) {
+        public void onNewDevice(BluetoothPeripheral peripheral) {
+          if (peripheral.getName().equals(btPeripheral.getName())) {
             Log.i(TAG, "Device found, trying to reconnect.");
             centralManagerProxy.getCentralManager().connectPeripheral(btPeripheral, callback);
           }
         }
 
         @Override
-        public void onScanError(ScanError scanError) {
+        public void onScanError(DeviceScanner.DeviceScanListener.ScanError scanError) {
           Log.w(TAG, "Scan error: " + scanError.toString());
         }
       });
