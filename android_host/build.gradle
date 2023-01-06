@@ -11,8 +11,8 @@ android {
         applicationId "io.nextsense.android.main"
         minSdkVersion 24
         targetSdkVersion 33
-        versionCode 12
-        versionName "0.3.10"
+        versionCode 13
+        versionName "0.3.11"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
