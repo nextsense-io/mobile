@@ -159,9 +159,9 @@ class StartupScreenViewModel extends ViewModel {
     // screen.
     String screen = PrepareDeviceScreen.id;
     if (_deviceManager.hadPairedDevice) {
+      bool connected = await _deviceManager.connectToLastPairedDevice();
       RunnableProtocol? runnableProtocol = await _authManager.user!.getRunningProtocol();
       if (runnableProtocol != null) {
-        bool connected = await _deviceManager.connectToLastPairedDevice();
         if (connected && await _deviceManager.isConnectedDeviceStreaming()) {
           _logger.log(Level.INFO, 'Protocol still running, navigating back to protocol screen.');
           // Protocol still running, go to that screen.
