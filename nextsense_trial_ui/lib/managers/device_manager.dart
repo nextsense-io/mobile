@@ -153,18 +153,17 @@ class DeviceManager {
         _logger.log(
             Level.WARNING,
             "Failed to reconnect to last paired device: ${e.message}");
-      } finally {
-        _scannedDevice = null;
       }
     }
     if (connected) {
-      _logger.log(Level.INFO, "Connected to last paired device ${_scannedDevice!.macAddress}");
+      _logger.log(Level.INFO, "Connected to last paired device ${lastPairedDevice.macAddress}");
     } else {
       _logger.log(
           Level.WARNING,
           "Failed connect to last paired device "
-          "${_scannedDevice!.macAddress}");
+          "${lastPairedDevice.macAddress}");
     }
+    _scannedDevice = null;
     return connected;
   }
 
