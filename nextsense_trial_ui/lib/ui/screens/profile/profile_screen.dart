@@ -122,6 +122,7 @@ class ProfileScreen extends HookWidget {
                               await viewModel.disconnectDevice();
                               await _navigation.navigateTo(DeviceScanScreen.id,
                                   nextRoute: NavigationRoute(pop: true));
+                              viewModel.refresh();
                             })
                       else
                         _MainMenuItem(
