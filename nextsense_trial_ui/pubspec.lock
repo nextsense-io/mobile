@@ -591,12 +591,10 @@ packages:
   iirjdart:
     dependency: "direct main"
     description:
-      path: "."
-      ref: master
-      resolved-ref: "0532f14066896914af907acc5f892de2378e9fc7"
-      url: "https://github.com/Supercaly/iirjdart"
-    source: git
-    version: "0.0.1"
+      name: iirjdart
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.1.0"
   image:
     dependency: transitive
     description:

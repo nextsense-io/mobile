@@ -335,22 +335,22 @@ class BioCalibrationProtocol extends BaseProtocol {
       marker: "REST");
   static final ProtocolPart _blink = ProtocolPart(
       state: BioCalibrationState.BLINK.name,
-      duration: Duration(seconds: 15),
+      duration: Duration(seconds: 10),
       marker: "BLINKS");
   static final ProtocolPart _horizontal = ProtocolPart(
       state: BioCalibrationState.MOVE_HORIZONTAL.name,
-      duration: Duration(seconds: 15),
+      duration: Duration(seconds: 10),
       marker: "HEOG");
   static final ProtocolPart _vertical = ProtocolPart(
       state: BioCalibrationState.MOVE_VERTICAL.name,
-      duration: Duration(seconds: 15),
+      duration: Duration(seconds: 10),
       marker: "VEOG");
   static final ProtocolPart _jawClench = ProtocolPart(
       state: BioCalibrationState.JAW_CLENCH.name,
       duration: Duration(seconds: 15),
       marker: "CLENCH");
-  static final List<ProtocolPart> _protocolBlock = [_rest, _blink, _rest,
-    _horizontal, _rest, _vertical, _rest, _jawClench];
+  static final List<ProtocolPart> _protocolBlock =
+      [_rest, _blink, _horizontal, _vertical, _jawClench];
 
   @override
   ProtocolType get type => ProtocolType.bio_calibration;
@@ -359,10 +359,10 @@ class BioCalibrationProtocol extends BaseProtocol {
   String get nameForUser => "Bio Calibration";
 
   @override
-  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 4);
+  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 2);
 
   @override
-  Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 4);
+  Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 2);
 
   @override
   Duration get disconnectTimeoutDuration => Duration(seconds: 20);
