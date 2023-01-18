@@ -1,16 +1,16 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.objectboxVersion = '3.2.1'
+    ext.objectboxVersion = '3.5.0'
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.1'
+        classpath 'com.android.tools.build:gradle:7.4.0'
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.17'
         classpath 'com.google.gms:google-services:4.3.14'
         classpath "io.objectbox:objectbox-gradle-plugin:$objectboxVersion"
-        classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:2.7.1'
+        classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.3'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.2'
 
         // NOTE: Do not place your application dependencies here; they belong
