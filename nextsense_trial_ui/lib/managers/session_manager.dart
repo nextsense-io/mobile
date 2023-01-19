@@ -55,12 +55,14 @@ class SessionManager {
     }
     _currentSession = Session(sessionEntity);
     DateTime startTime = DateTime.now();
+
     _currentSession!..setValue(SessionKey.start_datetime, startTime)
                     ..setValue(SessionKey.user_id, userCode)
                     ..setValue(SessionKey.device_id, device.name)
                     ..setValue(SessionKey.device_mac_address, device.macAddress)
                     ..setValue(SessionKey.study_id, studyId)
-                    ..setValue(SessionKey.protocol, protocolName);
+                    ..setValue(SessionKey.protocol, protocolName)
+                    ..setValue(SessionKey.timezone, user.getCurrentTimezone().name);
     bool success = await _currentSession!.save();
     if (!success) {
       return false;

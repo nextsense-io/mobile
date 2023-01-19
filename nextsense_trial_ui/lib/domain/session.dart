@@ -34,7 +34,9 @@ enum SessionKey {
   protocol,
   // Map of protocol specific information that was recorded from the user that is not parts of
   // of the standard events.
-  protocol_data
+  protocol_data,
+  // Local timezone when the session was recorded.
+  timezone
 }
 
 class Session extends FirebaseEntity<SessionKey> {

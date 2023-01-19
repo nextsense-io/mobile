@@ -1,9 +1,9 @@
 rootProject.name = 'nextsense_mobile'
-include ':core'
-include ':service'
-include ':nextsense_base'
-include ':nextsense_trial_ui'
-include ':android_host'
+include ':core'  // Android native core library
+include ':service'  // Android native service library
+include ':nextsense_base'  // Flutter plugin for Android native components
+include ':nextsense_trial_ui'  // Flutter module with main UI
+include ':android_host'  // Android application, entry point for the service and the flutter module
 setBinding(new Binding([gradle: this]))
 evaluate(new File(
         settingsDir.absoluteFile,
