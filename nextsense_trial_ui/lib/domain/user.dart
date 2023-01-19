@@ -4,6 +4,7 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 /// Each entry corresponds to a field name in the database instance.
 /// If any fields are added here, they need to be added to the User class in
@@ -75,6 +76,10 @@ class User extends FirebaseEntity<UserKey> {
 
   Future updateTimezone() async {
     setValue(UserKey.timezone, await NextsenseBase.getTimezoneId());
+  }
+
+  tz.Location getCurrentTimezone() {
+    return tz.getLocation(getValue(UserKey.timezone));
   }
 
   bool isTempPassword() {

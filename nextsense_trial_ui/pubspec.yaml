@@ -59,6 +59,7 @@ dependencies:
   shared_preferences: ^2.0.13
   shimmer: ^2.0.0
   stacked: ^2.3.8
+  timezone: ^0.9.1
   uuid: ^3.0.5
   wakelock: ^0.6.1+2
 

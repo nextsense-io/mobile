@@ -20,6 +20,7 @@ import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 import 'utils/android_logger.dart';
 
@@ -73,6 +74,7 @@ void main() async {
     _initLogging();
     await initEnvironment();
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+    tz.initializeTimeZones();
     await _initPreferences();
     await _initFlavor();
     await initDependencies();
