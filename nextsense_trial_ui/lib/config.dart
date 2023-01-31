@@ -1,5 +1,6 @@
 import 'dart:core';
 
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 
 class Config {
@@ -8,5 +9,5 @@ class Config {
 
   static bool get useEmulatedBle => envGetBool(EnvironmentKey.USE_EMULATED_BLE, false);
 
-  static String get nextsenseApiUrl => envGet(EnvironmentKey.NEXTSENSE_API_URL);
+  static String get nextsenseApiUrl => getIt.get<Environment>().nextsenseApiUrl;
 }
