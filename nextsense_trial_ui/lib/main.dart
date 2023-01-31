@@ -42,6 +42,8 @@ Future _initFlavor() async {
   getLogger("Main").log(Level.INFO, "Flavor: $flavorName");
   Flavor flavor = FlavorFactory.createFlavor(flavorName);
   initFlavor(flavor);
+  Environment environment = EnvironmentFactory.createEnvironment(flavorName);
+  initEnvironment(environment);
 }
 
 Future _initFirebase() async {
@@ -72,7 +74,7 @@ void main() async {
   await _initFirebase();
   runZonedGuarded<Future<void>>(() async {
     _initLogging();
-    await initEnvironment();
+    await initEnvironmentFile();
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
     tz.initializeTimeZones();
     await _initPreferences();

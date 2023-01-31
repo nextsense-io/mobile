@@ -1,16 +1,17 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-final environmentFileName = "env";
+const environmentFileName = "env";
+const productionEnvName = "Prod";
+const developmentEnvName = "Dev";
 
 enum EnvironmentKey {
   USERNAME,
   PASSWORD,
   USE_EMULATED_BLE,
-  AUTO_CONNECT_AFTER_SCAN,
-  NEXTSENSE_API_URL
+  AUTO_CONNECT_AFTER_SCAN
 }
 
-Future initEnvironment() async {
+Future initEnvironmentFile() async {
   try {
     await dotenv.load(fileName: environmentFileName);
   } catch (e) {
@@ -28,5 +29,37 @@ bool envGetBool(EnvironmentKey key, bool fallback) {
       .toLowerCase() == "true";
 }
 
+abstract class Environment {
+  String get name;
+  String get nextsenseApiUrl;
+}
 
+class DevelopmentEnvironment extends Environment {
+  @override
+  String get name => "Development";
 
+  @override
+  String get nextsenseApiUrl => "https://mobile-backend-4hye4mnf2q-uc.a.run.app";
+}
+
+class ProductionEnvironment extends Environment {
+  @override
+  String get name => "Production";
+
+  @override
+  String get nextsenseApiUrl => "";
+}
+
+class EnvironmentFactory {
+  static Environment createEnvironment(String? flavor) {
+    if (flavor == null) {
+      return ProductionEnvironment();
+    }
+    if (flavor.contains(productionEnvName)) {
+      return ProductionEnvironment();
+    } else if (flavor.contains(developmentEnvName)) {
+      return DevelopmentEnvironment();
+    }
+    throw("Unknown environment: $flavor");
+  }
+}

@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/audio_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
@@ -28,6 +29,10 @@ void initPreferences() {
 
 void initFlavor(Flavor flavor) {
   getIt.registerSingleton<Flavor>(flavor);
+}
+
+void initEnvironment(Environment environment) {
+  getIt.registerSingleton<Environment>(environment);
 }
 
 void initFirebase() {
