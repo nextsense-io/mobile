@@ -110,7 +110,7 @@ class NextsenseApi {
       'email': email,
       'email_type': emailType.name.toLowerCase()
     };
-    _logger.log(Level.INFO, data);
+    _logger.log(Level.INFO, "Calling API to send signin email: " + data.toString());
     return _callApi(endpoint: _endpointSendSignInEmail, data: data,
         defaultErrorMsg: "Password change request failed");
   }

@@ -7,35 +7,6 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:863545530166:android:eb42c7eab7355e41f30597",
-        "android_client_info": {
-          "package_name": "io.nextsense.android.main.research.prod"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "863545530166-2ap7tl7cpntv0dhs95lqug5rn7tavgcj.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyARZ9Wv-RVgZIfyd5sq-x5oHbZwLfH_ViQ"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "863545530166-2ap7tl7cpntv0dhs95lqug5rn7tavgcj.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
         "mobilesdk_app_id": "1:863545530166:android:dffebc2108b291a7f30597",
         "android_client_info": {
           "package_name": "io.nextsense.android.main.study.prod"

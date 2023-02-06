@@ -8,10 +8,22 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data
-                    android:host="nextsensemobile.page.link"
+                    android:host="nextsense-prod.firebaseapp.com"
                     android:scheme="http"/>
                 <data
-                    android:host="nextsensemobile.page.link"
+                    android:host="nextsense-prod.firebaseapp.com"
+                    android:scheme="https"/>
+                <data
+                    android:host="mobile.nextsense.io"
+                    android:scheme="http"/>
+                <data
+                    android:host="mobile.nextsense.io"
+                    android:scheme="https"/>
+                <data
+                    android:host="nextsense.io"
+                    android:scheme="http"/>
+                <data
+                    android:host="nextsense.io"
                     android:scheme="https"/>
             </intent-filter>
         </activity>

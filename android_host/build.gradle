@@ -11,14 +11,19 @@ android {
         applicationId "io.nextsense.android.main"
         minSdkVersion 24
         targetSdkVersion 33
-        versionCode 15
-        versionName "0.3.13"
+        versionCode 17
+        versionName "0.3.15"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            // Filter for architectures supported by Flutter.
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+        }
     }
 
     flavorDimensions "target_user_type", "env"
     productFlavors {
         subject {
+            getIsDefault().set(true)
             dimension "target_user_type"
             applicationIdSuffix ".study"
         }
@@ -34,6 +39,7 @@ android {
         }
 
         prod {
+            getIsDefault().set(true)
             dimension "env"
             applicationIdSuffix ".prod"
         }
@@ -60,7 +66,8 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
         }
     }
 

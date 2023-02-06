@@ -47,7 +47,7 @@ class ProductionEnvironment extends Environment {
   String get name => "Production";
 
   @override
-  String get nextsenseApiUrl => "";
+  String get nextsenseApiUrl => "https://mobile-backend-sldjekva7q-uc.a.run.app";
 }
 
 class EnvironmentFactory {
