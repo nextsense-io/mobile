@@ -19,6 +19,7 @@ import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/enter_email_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/re_authenticate_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/request_password_reset_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/check_internet/check_internet_screen.dart';
@@ -119,7 +120,11 @@ class Navigation {
     }
 
     if (intent.data != null) {
-      EmailAuthLink emailAuthLink = EmailAuthLink(intent.data!);
+      if (_authManager.email == null) {
+        await Future.delayed(Duration(seconds: 0));
+        await navigateTo(EnterEmailScreen.id);
+      }
+      EmailAuthLink emailAuthLink = EmailAuthLink(intent.data!, _authManager.email);
       if (!emailAuthLink.isValid) {
         _logger.log(Level.WARNING, 'Invalid email auth link: ${emailAuthLink.authLink}');
         return false;
@@ -127,7 +132,7 @@ class Navigation {
 
       bool alreadyLoggedIn = _authManager.isAuthenticated;
       AuthenticationResult result =
-          await _authManager.signInEmailLink(emailAuthLink.authLink, emailAuthLink.email);
+          await _authManager.signInEmailLink(emailAuthLink.authLink, emailAuthLink.email!);
       if (result == AuthenticationResult.success) {
         switch (emailAuthLink.urlTarget) {
           case UrlTarget.signup:
@@ -144,10 +149,10 @@ class Navigation {
           // Send a new email in case it did not work from expiration.
           switch (emailAuthLink.urlTarget) {
             case UrlTarget.signup:
-              await _authManager.requestSignUpEmail(emailAuthLink.email);
+              await _authManager.requestSignUpEmail(emailAuthLink.email!);
               break;
             case UrlTarget.reset_password:
-              await _authManager.requestPasswordResetEmail(emailAuthLink.email);
+              await _authManager.requestPasswordResetEmail(emailAuthLink.email!);
               break;
             default:
           }
@@ -298,6 +303,8 @@ class Navigation {
           builder: (context) => ReAuthenticateScreen());
       case EarFitScreen.id: return MaterialPageRoute(
           builder: (context) => EarFitScreen());
+      case EnterEmailScreen.id: return MaterialPageRoute(
+          builder: (context) => EnterEmailScreen());
 
       // Routes with arguments
       case SignInScreen.id: return MaterialPageRoute(

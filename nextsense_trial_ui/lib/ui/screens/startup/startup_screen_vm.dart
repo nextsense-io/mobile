@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
@@ -12,6 +13,7 @@ import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
 import 'package:nextsense_trial_ui/ui/request_permission_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/enter_email_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/request_password_reset_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
@@ -60,7 +62,14 @@ class StartupScreenViewModel extends ViewModel {
     bool justAuthenticated = false;
     // If there is a sign-in link in the intent, process it accordingly.
     if (initialIntent != null && initialIntent!.data != null) {
-      EmailAuthLink emailAuthLink = EmailAuthLink(initialIntent!.data!);
+      String? email;
+      if (_authManager.email == null &&
+          (initialIntent!.extra == null || initialIntent!.extra!["email"] == null)) {
+        await Future.delayed(Duration(seconds: 0));
+        await _navigation.navigateTo(EnterEmailScreen.id);
+        email = _authManager.email;
+      }
+      EmailAuthLink emailAuthLink = EmailAuthLink(initialIntent!.data!, email);
       if (!emailAuthLink.isValid) {
         _logger.log(Level.WARNING, 'Invalid email auth link: ${emailAuthLink.authLink}');
         await logout(errorMessage:
@@ -69,15 +78,15 @@ class StartupScreenViewModel extends ViewModel {
       }
 
       AuthenticationResult result =
-          await _authManager.signInEmailLink(emailAuthLink.authLink, emailAuthLink.email);
+          await _authManager.signInEmailLink(emailAuthLink.authLink, emailAuthLink.email!);
       if (result != AuthenticationResult.success) {
         // Send a new email in case it did not work from expiration.
         switch (emailAuthLink.urlTarget) {
           case UrlTarget.signup:
-            await _authManager.requestSignUpEmail(emailAuthLink.email);
+            await _authManager.requestSignUpEmail(emailAuthLink.email!);
             break;
           case UrlTarget.reset_password:
-            await _authManager.requestPasswordResetEmail(emailAuthLink.email);
+            await _authManager.requestPasswordResetEmail(emailAuthLink.email!);
             break;
           default:
         }

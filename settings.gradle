@@ -1,6 +1,7 @@
 rootProject.name = 'nextsense_mobile'
 include ':core'  // Android native core library
 include ':service'  // Android native service library
+include ':flutter'  // Include the flutter library
 include ':nextsense_base'  // Flutter plugin for Android native components
 include ':nextsense_trial_ui'  // Flutter module with main UI
 include ':android_host'  // Android application, entry point for the service and the flutter module
@@ -9,3 +10,4 @@ evaluate(new File(
         settingsDir.absoluteFile,
         'nextsense_trial_ui/.android/include_flutter.groovy'
 ))
+

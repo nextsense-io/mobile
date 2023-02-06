@@ -1,3 +1,4 @@
+import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -45,6 +46,7 @@ class AuthManager {
   NextSenseAuthManager? _nextSenseAuthManager;
   GoogleAuthManager? _googleAuthManager;
   EmailAuthManager? _emailAuthManager;
+  String? _email;
   String? _userCode;
   User? _user;
   AuthMethod? _signedInAuthMethod;
@@ -59,6 +61,7 @@ class AuthManager {
 
   User? get user => _user;
   String? get userCode => _userCode;
+  String? get email => _email;
 
   AuthManager() {
     for (AuthMethod authMethod in _flavor.authMethods) {
@@ -77,6 +80,10 @@ class AuthManager {
           break;
       }
     }
+  }
+
+  setEmail(String email) {
+    _email = email;
   }
 
   Future<AuthenticationResult> signInNextSense(String username, String password) async {
@@ -154,6 +161,11 @@ class AuthManager {
   Future<bool> requestPasswordResetEmail(String email) async {
     switch (_signedInAuthMethod) {
       case AuthMethod.email_password:
+        if (!EmailValidator.validate(email)) {
+          _logger.log(Level.WARNING, "Invalid email: " + email);
+          return false;
+        }
+        _email = email;
         return await _emailAuthManager!.sendResetPasswordEmail(email);
       default:
         _logger.log(Level.WARNING,
@@ -254,6 +266,7 @@ class AuthManager {
     }
     _userCode = null;
     _user = null;
+    _email = null;
   }
 
   // Make sure user data is loaded from Firestore before we are doing any authorized operations.

@@ -17,6 +17,7 @@ class EmailAuthManager {
   static const String _wrongPasswordFirebaseError = 'wrong-password';
   static const String _userNotFoundFirebaseError = 'user-not-found';
   static const String _expiredActionCodeFirebaseError = 'expired-action-code';
+  static const String _invalidActionCodeFirebaseError = 'invalid-action-code';
 
   final FirebaseApp _firebaseApp = getIt<FirebaseManager>().getFirebaseApp();
   final _nextsenseApi = getIt<NextsenseApi>();
@@ -74,9 +75,6 @@ class EmailAuthManager {
   }
 
   Future<bool> sendSignUpLinkEmail(String email) async {
-    if (!EmailValidator.validate(email)) {
-      return false;
-    }
     ApiResponse resp = await _nextsenseApi.sendSignInEmail(
         email: email, emailType: SignInEmailType.signUp);
     return !resp.isError;
@@ -106,7 +104,7 @@ class EmailAuthManager {
     } on FirebaseException catch (e) {
       _logger.log(Level.WARNING,
           'Failed to sign in with email link. Error: ${e.message}');
-      if (e.code == _expiredActionCodeFirebaseError) {
+      if (e.code == _expiredActionCodeFirebaseError || e.code == _invalidActionCodeFirebaseError) {
         return AuthenticationResult.expired_link;
       }
       return AuthenticationResult.error;

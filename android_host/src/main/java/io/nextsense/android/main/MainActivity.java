@@ -190,7 +190,6 @@ public class MainActivity extends AppCompatActivity {
     // Confirm the link is a sign-in with email link.
     if (androidIntent != null && androidIntent.getData() != null &&
         firebaseAuth.isSignInWithEmailLink(androidIntent.getData().toString())) {
-      // Retrieve this from wherever you stored it
       Log.d(TAG, "Application started with an email auth link.");
       flutterIntent.setData(androidIntent.getData());
     }
