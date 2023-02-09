@@ -241,7 +241,7 @@ class FirestoreManager {
     return entities;
   }
 
-  Future<bool> persistEntity(FirebaseEntity entity) async {
+  Future<bool> persistEntity<T extends Enum>(FirebaseEntity<T> entity) async {
     int attemptNumber = 0;
     bool success = false;
     while (!success && attemptNumber < _retriesAttemptsNumber) {
@@ -311,7 +311,7 @@ class FirestoreBatchWriter {
         return batch.commit();
       }));
     } catch (exception) {
-      _logger.log(Level.WARNING, "Failed to write batch. Message: ${exception}");
+      _logger.log(Level.WARNING, "Failed to write batch. Message: $exception");
       success = false;
     }
     return success;

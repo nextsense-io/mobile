@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
@@ -31,7 +32,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
 
   RunnableSurveyType get type => RunnableSurveyType.scheduled;
   SurveyState get state => surveyStateFromString(getValue(ScheduledSurveyKey.status));
-  SurveyPeriod get period => surveyPeriodFromString(getValue(ScheduledSurveyKey.period));
+  Period get period => Period.fromString(getValue(ScheduledSurveyKey.period));
   String get plannedSurveyId => getValue(ScheduledSurveyKey.planned_survey).id;
   bool get isCompleted => state == SurveyState.completed;
   bool get isSkipped => state == SurveyState.skipped;
@@ -60,7 +61,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
     setValue(ScheduledSurveyKey.status, state.name);
   }
 
-  void setPeriod(SurveyPeriod period) {
+  void setPeriod(Period period) {
     setValue(ScheduledSurveyKey.period, period.name);
   }
 

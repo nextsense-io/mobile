@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
-import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
@@ -92,7 +92,8 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   List<ScheduledProtocol> getScheduledProtocolsByDay(StudyDay day) {
     List<ScheduledProtocol> result = [];
     for (var scheduledProtocol in scheduledProtocols) {
-      if (scheduledProtocol.day == day) {
+      if (scheduledProtocol.getStudyDay(
+          _studyManager.currentEnrolledStudy!.getStartDate()!) == day.dayNumber) {
         result.add(scheduledProtocol);
       }
     }
@@ -108,17 +109,17 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   List<ScheduledSurvey> getCurrentDayScheduledSurveys() {
     if (selectedDay == null) return [];
     List<ScheduledSurvey> surveys =
-        _getScheduledSurveysByDay(selectedDay!, period: SurveyPeriod.daily);
-    surveys.addAll(_getScheduledSurveysByDay(selectedDay!, period: SurveyPeriod.specific_day));
+        _getScheduledSurveysByDay(selectedDay!, period: Period.daily);
+    surveys.addAll(_getScheduledSurveysByDay(selectedDay!, period: Period.specific_day));
     return surveys;
   }
 
   List<ScheduledSurvey> getCurrentWeekScheduledSurveys() {
     if (selectedDay == null) return [];
-    return _getScheduledSurveysByDay(selectedDay!, period: SurveyPeriod.weekly);
+    return _getScheduledSurveysByDay(selectedDay!, period: Period.weekly);
   }
 
-  List<ScheduledSurvey> _getScheduledSurveysByDay(StudyDay day, {SurveyPeriod? period}) {
+  List<ScheduledSurvey> _getScheduledSurveysByDay(StudyDay day, {Period? period}) {
     List<ScheduledSurvey> result = [];
     for (var scheduledSurvey in scheduledSurveys) {
       if (scheduledSurvey.day == day && (period == null || period == scheduledSurvey.period)) {

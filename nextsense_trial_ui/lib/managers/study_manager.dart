@@ -53,8 +53,8 @@ class StudyManager {
   // Can be null if enrolled study isn't loaded at the moment
   bool? get studyInitialized => _enrolledStudy?.initialized;
 
-  // References today's study day
-  // Has to be dynamic because next day can start while app is on
+  // References today's study day.
+  // Has to be dynamic because next day can start while app is on.
   StudyDay? get today {
     if (_days == null) {
       return null;
@@ -65,31 +65,31 @@ class StudyManager {
     return _days!.firstWhereOrNull((StudyDay day) => now.isSameDay(day.date));
   }
 
-  // Get the enrolled studies from the database. This data could change at
-  // anytime so always get it from the database and not from a cache.
-  Future<List<EnrolledStudy>?> getEnrolledStudies(String user_id) async {
+  // Get the enrolled studies from the database. This data could change at anytime so always get it
+  // from the database and not from a cache.
+  Future<List<EnrolledStudy>?> getEnrolledStudies(String userId) async {
     List<FirebaseEntity>? enrolledStudiesEntities;
     enrolledStudiesEntities = await _firestoreManager.queryEntities(
-        [Table.users, Table.enrolled_studies], [user_id]);
+        [Table.users, Table.enrolled_studies], [userId]);
     if (enrolledStudiesEntities == null) {
       return null;
     }
     if (enrolledStudiesEntities.isEmpty) {
-      _logger.log(Level.SEVERE, 'No enrolled studies for ${user_id}');
+      _logger.log(Level.SEVERE, 'No enrolled studies for $userId');
       return [];
     }
     return enrolledStudiesEntities.map((entity) => EnrolledStudy(entity)).toList();
   }
 
   // Loads EnrolledStudy entity which holds state of current study
-  Future<bool> _loadEnrolledStudy(String user_id, String study_id) async {
+  Future<bool> _loadEnrolledStudy(String userId, String studyId) async {
     FirebaseEntity? enrolledStudyEntity = await _firestoreManager.queryEntity(
-        [Table.users, Table.enrolled_studies], [user_id, study_id]);
+        [Table.users, Table.enrolled_studies], [userId, studyId]);
     if (enrolledStudyEntity == null) {
       return false;
     }
     if (!enrolledStudyEntity.getDocumentSnapshot().exists) {
-      _logger.log(Level.SEVERE, 'Enrolled Study ${study_id} does not exist');
+      _logger.log(Level.SEVERE, 'Enrolled Study $studyId does not exist');
       return false;
     }
     _enrolledStudy = EnrolledStudy(enrolledStudyEntity);
@@ -109,7 +109,7 @@ class StudyManager {
     // We start with loading enrolled study, which holds the current study state.
     bool enrolledStudyLoaded = await _loadEnrolledStudy(user.id, studyId);
     if (!enrolledStudyLoaded) {
-      _logger.log(Level.SEVERE, 'Error when trying to load the enrolled study ${studyId}');
+      _logger.log(Level.SEVERE, 'Error when trying to load the enrolled study $studyId');
       return false;
     }
 
@@ -134,7 +134,7 @@ class StudyManager {
   Future _createStudyDays() async {
     final int studyDays = currentStudy?.getDurationDays() ?? 0;
     DateTime studyDayStartDate = currentStudyStartDate!;
-    _days = await List<StudyDay>.generate(studyDays, (i) {
+    _days = List<StudyDay>.generate(studyDays, (i) {
       DateTime dayDate = studyDayStartDate.add(Duration(days: i));
       final dayNumber = i + 1;
       final studyDay = StudyDay(dayDate, dayNumber);
@@ -168,7 +168,7 @@ class StudyManager {
     }
 
     if (studyInitialized!) {
-      // If study already initialized, return scheduled protocols from cache
+      // If study already initialized, return scheduled protocols from cache.
       _logger.log(Level.INFO, 'Loading scheduled protocols from cache');
       List<ScheduledProtocol>? protocols = await _loadScheduledProtocolsFromCache();
       if (protocols == null) {
@@ -194,23 +194,29 @@ class StudyManager {
           continue;
         }
         final String time = assessment.startTimeStr.replaceAll(":", "_");
-        final String dayNumberStr = assessment.dayNumber.toString().padLeft(3, '0');
 
-        String scheduledProtocolKey = "${assessment.id}_day_${dayNumberStr}_time_${time}";
+        for (StudyDay studyDay in assessment.days) {
+          final String dayNumberStr = studyDay.dayNumber.toString().padLeft(3, '0');
 
-        DocumentReference ref = _firestoreManager.getReference(
-            [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
-            [_authManager.userCode!, currentStudy!.id, scheduledProtocolKey]);
+          String scheduledProtocolKey = "${assessment.id}_day_${dayNumberStr}_time_$time";
 
-        Map<String, dynamic> fields = {};
+          DocumentReference ref = _firestoreManager.getReference(
+              [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
+              [_authManager.userCode!, currentStudy!.id, scheduledProtocolKey]);
 
-        fields[ScheduledProtocolKey.protocol.name] = assessment.reference;
-        fields[ScheduledProtocolKey.sessions.name] = [];
-        fields[ScheduledProtocolKey.status.name] = ProtocolState.not_started.name;
-        fields[ScheduledProtocolKey.start_date.name] = assessment.startDateAsString;
-        fields[ScheduledProtocolKey.start_datetime.name] = assessment.startDateTimeAsString;
+          Map<String, dynamic> fields = {};
 
-        batchWriter.add(ref, fields);
+          fields[ScheduledProtocolKey.protocol.name] = assessment.reference;
+          fields[ScheduledProtocolKey.sessions.name] = [];
+          fields[ScheduledProtocolKey.status.name] = ProtocolState.not_started.name;
+          fields[ScheduledProtocolKey.start_date.name] = studyDay.dateAsString;
+          DateTime startDateTime = studyDay.date.add(
+              Duration(hours: assessment.startTime.hour,
+                  minutes: assessment.startTime.minute));
+          fields[ScheduledProtocolKey.start_datetime.name] = startDateTime.toString();
+
+          batchWriter.add(ref, fields);
+        }
       }
 
       _logger.log(Level.INFO, "Committing ${batchWriter.numberOfBatches} batches");
@@ -279,8 +285,9 @@ class StudyManager {
       FirebaseEntity? plannedAssessmentEntity = await _firestoreManager.queryEntity(
           [Table.studies, Table.planned_assessments], [_currentStudy!.id, assessmentId]);
       if (plannedAssessmentEntity != null) {
-        return ScheduledProtocol(scheduledProtocolEntity,
-            PlannedAssessment(plannedAssessmentEntity, _enrolledStudy!.getStartDate()!));
+        return ScheduledProtocol(scheduledProtocolEntity, PlannedAssessment(
+            plannedAssessmentEntity, _enrolledStudy!.getStartDate()!,
+            _enrolledStudy!.getEndDate()!));
       }
     }
     return null;
@@ -307,7 +314,8 @@ class StudyManager {
       return null;
     }
     return entities.map((firebaseEntity) =>
-            PlannedAssessment(firebaseEntity, currentStudyStartDate!)).toList();
+            PlannedAssessment(firebaseEntity, currentStudyStartDate!, currentStudyEndDate!))
+            .toList();
   }
 
   Future<List<PlannedSurvey>?> loadPlannedSurveys() async {
@@ -338,7 +346,8 @@ class StudyManager {
         _enrolledStudy!.getEndDate() == null) {
       return Duration(days: 0);
     }
-    return _enrolledStudy!.getEndDate()!.difference(_enrolledStudy!.getStartDate()!);
+    return _enrolledStudy!.getEndDate()!.dateNoTime.difference(
+        _enrolledStudy!.getStartDate()!.dateNoTime);
   }
 
   bool isStudyStarted() {
@@ -378,10 +387,10 @@ class StudyManager {
   }
 
   Directory _getStudyDir() {
-    return Directory("${_appDocumentsRoot!.absolute.path}/${_studiesDir}/${_currentStudy!.id}");
+    return Directory("${_appDocumentsRoot!.absolute.path}/$_studiesDir/${_currentStudy!.id}");
   }
 
   Directory _getIntroDir() {
-    return Directory("${_getStudyDir().absolute.path}/${_introDir}");
+    return Directory("${_getStudyDir().absolute.path}/$_introDir");
   }
 }

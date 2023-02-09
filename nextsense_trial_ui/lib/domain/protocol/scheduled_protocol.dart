@@ -9,15 +9,13 @@ import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
-/**
- * Each entry corresponds to a field name in the database instance.
- */
+/// Each entry corresponds to a field name in the database instance.
 enum ScheduledProtocolKey {
-  protocol,
-  sessions,
-  status,
-  start_date,  // Used to query by date
-  start_datetime  // Used to get the exact datetime
+  protocol,  // Protocol key
+  sessions,  // List of session objets
+  status,  // State, see ProtocolState in protocol.dart
+  start_date,  // Used to query by date, string format
+  start_datetime  // Used to get the exact datetime, string format
 }
 
 class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements Task,
@@ -26,13 +24,12 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledProtocol');
 
   late Protocol protocol;
-  late StudyDay day;
   late List<Survey> postRecordingSurveys;
+  late DateTime startDate;
 
-  // Start time - hours & minutes only
+  // Start time - hours & minutes only.
   late DateTime startTime;
-  // Time constraints for protocol
-  // Those are absolute DateTime values
+  // Time constraints for the protocol.
   late DateTime allowedStartBefore;
   late DateTime allowedStartAfter;
 
@@ -49,26 +46,38 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
     return sessions;
   }
 
+  factory ScheduledProtocol.fromStudyDay(
+      FirebaseEntity firebaseEntity, PlannedAssessment plannedAssessment, StudyDay studyDay) {
+    // Needed for later push notifications processing at backend.
+    firebaseEntity.setValue(ScheduledProtocolKey.start_date, studyDay.dateAsString);
+    DateTime startDateTime = studyDay.date.add(
+        Duration(hours: plannedAssessment.startTime.hour,
+            minutes: plannedAssessment.startTime.minute));
+    firebaseEntity.setValue(ScheduledProtocolKey.start_datetime, startDateTime.toString());
+    return ScheduledProtocol(firebaseEntity, plannedAssessment);
+  }
+
   ScheduledProtocol(FirebaseEntity firebaseEntity, PlannedAssessment plannedAssessment) :
-      super(firebaseEntity.getDocumentSnapshot()) {
+        super(firebaseEntity.getDocumentSnapshot()) {
     protocol = plannedAssessment.protocol!;
-    day = plannedAssessment.day;
     startTime = plannedAssessment.startTime;
-    final startDateTime = plannedAssessment.startDateTime;
-    allowedStartAfter = startDateTime
+    allowedStartAfter = DateTime.parse(firebaseEntity.getValue(ScheduledProtocolKey.start_datetime))
         .subtract(Duration(minutes: plannedAssessment.allowedEarlyStartTimeMinutes));
-    allowedStartBefore = startDateTime
+    allowedStartBefore = DateTime.parse(
+        firebaseEntity.getValue(ScheduledProtocolKey.start_datetime))
         .add(Duration(minutes: plannedAssessment.allowedLateStartTimeMinutes));
     postRecordingSurveys = plannedAssessment.postSurveys;
-
-    // Needed for later push notifications processing at backend
-    setValue(ScheduledProtocolKey.start_date, plannedAssessment.startDateAsString);
-    setValue(ScheduledProtocolKey.start_datetime, plannedAssessment.startDateTimeAsString);
+    startDate = DateTime.parse(getValue(ScheduledProtocolKey.start_date));
   }
 
   // Set state of protocol in firebase
   void setState(ProtocolState state) {
     setValue(ScheduledProtocolKey.status, state.name);
+  }
+
+  int getStudyDay(DateTime studyStartDateTime) {
+    Duration difference = startDate.difference(studyStartDateTime.dateNoTime);
+    return difference.inDays + 1;
   }
 
   // Store session in array of sessions
@@ -81,7 +90,6 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
     } else {
       currentSessionList = <String>[sessionId];
     }
-
     setValue(ScheduledProtocolKey.sessions, currentSessionList);
   }
 

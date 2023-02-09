@@ -29,11 +29,13 @@ android {
         }
 
         researcher {
+//            getIsDefault().set(true)
             dimension "target_user_type"
             applicationIdSuffix ".research"
         }
 
         dev {
+//            getIsDefault().set(true)
             dimension "env"
             applicationIdSuffix ".dev"
         }
