@@ -1,9 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
-/**
- * Each entry corresponds to a field name in the database instance.
- */
+/// Each entry corresponds to a field name in the database instance.
 enum EnrolledStudyKey {
   // Study is initialized on device and we can use cached entities
   initialized,
@@ -25,7 +23,7 @@ class EnrolledStudy extends FirebaseEntity<EnrolledStudyKey> {
     setValue(EnrolledStudyKey.initialized, initialized);
   }
 
-  bool get intro_shown => getValue(EnrolledStudyKey.intro_shown) ?? false;
+  bool get introShown => getValue(EnrolledStudyKey.intro_shown) ?? false;
 
   void setIntroShown(bool shown) {
     setValue(EnrolledStudyKey.intro_shown, shown);

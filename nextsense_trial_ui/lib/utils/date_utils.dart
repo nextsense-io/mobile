@@ -8,7 +8,7 @@ extension TimeUtils on TimeOfDay {
   }
 
   String get hmma {
-    return '${hmm}${period.name}';
+    return '$hmm${period.name}';
   }
 }
 
@@ -84,7 +84,14 @@ extension DateUtils on DateTime {
     return DateTime(
       this.year,
       this.month,
-      this.day + 1,
+      this.day,
+      23,
+      59,
+      59
     );
+  }
+
+  DateTime get dateNoTime {
+    return DateTime(this.year, this.month, this.day);
   }
 }

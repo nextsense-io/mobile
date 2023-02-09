@@ -38,9 +38,10 @@ enum SurveyYesNoChoices {
 
 //TODO(alex): move this to database at some point
 enum SurveyQuestionSpecialChoices {
-  phq9, // Patient Health Questionnaire (PHQ-9)
-  gad7, // General Anxiety Disorder (GAD-7)
-  sqs, // Sleep Quality Scale
+  phq9,  // Patient Health Questionnaire (PHQ-9)
+  gad7,  // General Anxiety Disorder (GAD-7)
+  sqs,  // Sleep Quality Scale
+  panas_sf,  // Positive and Negative Affect Schedule
   unknown
 }
 
@@ -49,13 +50,6 @@ enum SurveyState {
   partially_completed,
   skipped,
   completed,
-  unknown
-}
-
-enum SurveyPeriod {
-  specific_day,
-  daily,
-  weekly,
   unknown
 }
 
@@ -149,6 +143,14 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
           SurveyQuestionChoice("2", "Often"),
           SurveyQuestionChoice("3", "Almost always"),
         ];
+      case SurveyQuestionSpecialChoices.panas_sf:
+        return [
+          SurveyQuestionChoice("1", "Very slightly or not at all"),
+          SurveyQuestionChoice("2", "A little"),
+          SurveyQuestionChoice("3", "Moderately"),
+          SurveyQuestionChoice("4", "Quite a bit"),
+          SurveyQuestionChoice("5", "Extremely"),
+        ];
       case SurveyQuestionSpecialChoices.unknown:
         _logger.log(
             Level.WARNING, 'Unknown set of special choices "$specialChoices"');
@@ -202,9 +204,4 @@ SurveyQuestionSpecialChoices surveyQuestionSpecialChoicesFromString(String choic
 SurveyState surveyStateFromString(String surveyStateStr) {
   return SurveyState.values.firstWhere((element) => element.name == surveyStateStr,
       orElse: () => SurveyState.unknown);
-}
-
-SurveyPeriod surveyPeriodFromString(String surveyPeriodStr) {
-  return SurveyPeriod.values.firstWhere((element) => element.name == surveyPeriodStr,
-      orElse: () => SurveyPeriod.unknown);
 }

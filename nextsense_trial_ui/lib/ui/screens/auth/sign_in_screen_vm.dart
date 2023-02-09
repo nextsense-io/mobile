@@ -28,7 +28,7 @@ class SignInScreenViewModel extends ViewModel {
   String get appTitle => _flavor.appTitle;
   bool get isTempPassword => _authManager.user!.isTempPassword();
   bool get studyIntroShown => _studyManager.currentEnrolledStudy != null &&
-      _studyManager.currentEnrolledStudy!.intro_shown;
+      _studyManager.currentEnrolledStudy!.introShown;
   String? initialErrorMessage;
 
   SignInScreenViewModel({this.initialErrorMessage}) {

@@ -83,7 +83,7 @@ class DashboardHomeView extends StatelessWidget {
               SvgPicture.asset('assets/images/brain.svg', semanticsLabel: 'Seizures', height: 75),
           onTap: () => _navigation.navigateTo(SeizuresScreen.id)));
     }
-    if (dashboardViewModel.study.seizureTrackingEnabled) {
+    if (dashboardViewModel.study.medicationTrackingEnabled) {
       menuCards.add(MenuCard(
           title: 'Medications',
           image:

@@ -31,12 +31,13 @@ class SupportScreenViewModel extends ViewModel {
 
   Future<bool> submitIssue() async {
     setBusy(true);
+    notifyListeners();
     _logger.log(Level.INFO, 'Issue submitted by the user.');
     FirebaseEntity issueEntity = await _firestoreManager.addAutoIdReference(
         [Table.users, Table.issues], [_authManager.userCode!]);
     Issue issue = Issue(issueEntity);
     DateTime now = DateTime.now();
-    String? logLink = null;
+    String? logLink;
     if (attachLog) {
       logLink = await _firebaseStorageManager.uploadStringToFile(
           '/users/${_authManager.userCode}/issues/${issueEntity.id}.txt',
@@ -53,6 +54,7 @@ class SupportScreenViewModel extends ViewModel {
       ..setValue(IssueKey.updated_at, now);
     bool success = await issue.save();
     setBusy(false);
+    notifyListeners();
     return success;
   }
 }

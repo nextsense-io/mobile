@@ -7,6 +7,7 @@ import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/email_auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
@@ -35,6 +36,7 @@ class SignInScreen extends HookWidget {
   static const String id = 'sign_in_screen';
 
   final _permissionsManager = getIt<PermissionsManager>();
+  final _studyManager = getIt<StudyManager>();
   final _navigation = getIt<Navigation>();
 
   String? initialErrorMessage;
@@ -253,7 +255,9 @@ class SignInScreen extends HookWidget {
     }
 
     if (!viewModel.studyIntroShown) {
-      await _navigation.navigateTo(StudyIntroScreen.id);
+      if (_studyManager.introPageContents.isNotEmpty) {
+        await _navigation.navigateTo(StudyIntroScreen.id);
+      }
       await viewModel.markCurrentStudyShown();
     }
 

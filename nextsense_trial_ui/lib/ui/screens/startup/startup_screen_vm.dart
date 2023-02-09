@@ -39,7 +39,7 @@ class StartupScreenViewModel extends ViewModel {
   final Navigation _navigation = getIt<Navigation>();
 
   bool get studyIntroShown => _studyManager.currentEnrolledStudy != null &&
-      _studyManager.currentEnrolledStudy!.intro_shown;
+      _studyManager.currentEnrolledStudy!.introShown;
 
   StartupScreenViewModel({this.initialIntent});
 
@@ -159,7 +159,9 @@ class StartupScreenViewModel extends ViewModel {
     }
 
     if (!studyIntroShown) {
-      await _navigation.navigateTo(StudyIntroScreen.id);
+      if (_studyManager.introPageContents.isNotEmpty) {
+        await _navigation.navigateTo(StudyIntroScreen.id);
+      }
       await markCurrentStudyShown();
     }
 

@@ -4,6 +4,7 @@ import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
+import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
@@ -31,6 +32,7 @@ class ProfileScreen extends HookWidget {
   static const String id = 'profile_screen';
 
   final Navigation _navigation = getIt<Navigation>();
+  final StudyManager _studyManager = getIt<StudyManager>();
   final Flavor _flavor = getIt<Flavor>();
 
   @override
@@ -86,9 +88,10 @@ class ProfileScreen extends HookWidget {
                               _navigation.navigateTo(SetPasswordScreen.id,
                                   nextRoute: NavigationRoute(pop: true), arguments: false);
                             }),
-                      _MainMenuItem(
-                          label: 'Study intro',
-                          onPressed: () => _navigation.navigateTo(StudyIntroScreen.id)),
+                      if (_studyManager.introPageContents.isNotEmpty)
+                        _MainMenuItem(
+                            label: 'Study intro',
+                            onPressed: () => _navigation.navigateTo(StudyIntroScreen.id)),
                       if (viewModel.isAdhocRecordingAllowed)
                         _MainMenuItem(
                             label: 'Start adhoc protocol',

@@ -1,39 +1,38 @@
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
-import 'package:nextsense_trial_ui/domain/survey/survey.dart';
-import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
 enum PlannedSurveyKey {
-  day,
-  survey,
-  days_to_complete,
-  period
+  day,  // Specific day where the survey should be taken. If periodic, first day offset.
+  end_day,  // Last day where the assessment will be scheduled when it is periodic.
+  survey,  // Key to the survey table.
+  days_to_complete,  // How many days of grace period for longer periods (weekly, monthly).
+  period  // Period of the survey defined in assessment Period enum.
 }
 
 class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
 
   // Days on which survey will appear.
-  List<StudyDay> days = [];
+  late List<StudyDay> days = _plannedActivity.days;
+  late int daysToComplete;
+  late int? _specificDayNumber;
+  late int? _lastDayNumber;
+  late PlannedActivity _plannedActivity;
 
   String get surveyId => getValue(PlannedSurveyKey.survey);
-
-  SurveyPeriod get period => surveyPeriodFromString(getValue(PlannedSurveyKey.period));
-
-  late int daysToComplete;
-  int? specificDayNumber;
+  Period get period => Period.fromString(getValue(PlannedSurveyKey.period));
 
   PlannedSurvey(FirebaseEntity firebaseEntity, DateTime studyStartDate, DateTime studyEndDate) :
         super(firebaseEntity.getDocumentSnapshot()) {
 
+    _specificDayNumber = getValue(PlannedSurveyKey.day);
+    _lastDayNumber = getValue(PlannedSurveyKey.end_day);
     // We have following possible values for period field
     // 1. 'specific_day' - survey will take place certain day within study
     // 2. 'daily' - survey will take place each day of study
     // 3. 'weekly' - survey will take place on 8th day, 15th, etc.
-    if (period == SurveyPeriod.specific_day) {
-      specificDayNumber = getValue(PlannedSurveyKey.day);
-    }
-
-    _initSurveyDays(studyStartDate, studyEndDate);
+    _plannedActivity = PlannedActivity(period, _specificDayNumber, _lastDayNumber, studyStartDate,
+        studyEndDate);
     _initSurveyStartGracePeriod();
   }
 
@@ -45,41 +44,12 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
       // Default values for grace period
       daysToComplete = 1;
       switch (period) {
-        case SurveyPeriod.weekly:
+        case Period.weekly:
           daysToComplete = 7;
           break;
         default:
           break;
       }
-    }
-  }
-
-  // Create list of study days according to period of survey
-  void _initSurveyDays(DateTime studyStartDate, DateTime studyEndDate) {
-    if (period == SurveyPeriod.specific_day) {
-      // For certain day number we just add single day
-      days.add(StudyDay(
-          studyStartDate.add(Duration(days: specificDayNumber! - 1)),
-          specificDayNumber!));
-      return;
-    }
-
-    DateTime currentDate = studyStartDate;
-    // This date represents closest 00:00 after study end date
-    // TODO(alex): check if already midnight
-    // Default values for 'daily' period
-    int dayIncrement = 1;
-    int dayNumber = 1;
-    if (period == SurveyPeriod.weekly) {
-      // Weekly surveys start on day 8, 15 etc.
-      dayIncrement = 7;
-      dayNumber = 8;
-      currentDate = currentDate.add(Duration(days: dayIncrement));
-    }
-    while (currentDate.isBefore(studyEndDate.closestFutureMidnight)) {
-      days.add(StudyDay(currentDate, dayNumber));
-      currentDate = currentDate.add(Duration(days: dayIncrement));
-      dayNumber += dayIncrement;
     }
   }
 }
