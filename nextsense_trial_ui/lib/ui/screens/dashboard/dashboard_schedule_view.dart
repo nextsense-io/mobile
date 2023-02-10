@@ -134,7 +134,7 @@ class DashboardScheduleView extends StatelessWidget {
     final todayScrollController = ScrollController();
     final weeklyScrollController = ScrollController();
 
-    String noTasksText = 'No ${scheduleType}';
+    String noTasksText = 'No $scheduleType';
     if (!viewModel.studyStarted) {
       noTasksText = 'Study not started yet';
     } else if (viewModel.studyFinished) {
@@ -203,7 +203,7 @@ class DashboardScheduleView extends StatelessWidget {
     }
 
     List<Widget> contents = [
-      HeaderText(text: 'My ${scheduleType}'),
+      HeaderText(text: 'My $scheduleType'),
       SizedBox(height: 15),
     ];
     contents.addAll(todayTasksWidgets);

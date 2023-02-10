@@ -15,9 +15,9 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
   // Days on which survey will appear.
   late List<StudyDay> days = _plannedActivity.days;
   late int daysToComplete;
-  late int? _specificDayNumber;
-  late int? _lastDayNumber;
   late PlannedActivity _plannedActivity;
+  int? _specificDayNumber;
+  int? _lastDayNumber;
 
   String get surveyId => getValue(PlannedSurveyKey.survey);
   Period get period => Period.fromString(getValue(PlannedSurveyKey.period));

@@ -114,7 +114,7 @@ class Navigation {
 
   // Navigate to the target defined in the intent extras.
   Future<bool> _navigateToIntent(intent.Intent intent, {bool replace = false}) async {
-    if (intent.extra == null || intent.data == null) {
+    if (intent.extra == null && intent.data == null) {
       _logger.log(Level.INFO, "No data or extra in the intent so no navigation is expected.");
       return false;
     }
