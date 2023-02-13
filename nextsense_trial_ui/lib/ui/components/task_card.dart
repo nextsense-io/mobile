@@ -110,7 +110,8 @@ class TaskCard extends StatelessWidget {
                         textAlign: TextAlign.right,
                       ))
                 ])),
-            Row(
+            if (duration!.inMinutes > 0)
+                Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [

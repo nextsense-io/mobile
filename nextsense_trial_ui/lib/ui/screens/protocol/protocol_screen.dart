@@ -251,10 +251,14 @@ class ProtocolScreen extends HookWidget {
   }
 
   Widget deviceInactiveOverlay(BuildContext context, ProtocolScreenViewModel viewModel) {
-    final int minutes = viewModel.disconnectTimeoutSecondsLeft ~/ 60;
+    final int hours = viewModel.disconnectTimeoutSecondsLeft ~/ 3600;
+    final int minutes = (viewModel.disconnectTimeoutSecondsLeft % 3600) ~/ 60;
     final int seconds = viewModel.disconnectTimeoutSecondsLeft % 60;
-    String timerValue =
-        "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
+    String timerValue = "";
+    if (hours > 0) {
+      timerValue += "${hours.toString().padLeft(2, "0")}:";
+    }
+    timerValue += "${minutes.toString().padLeft(2, "0")}:${seconds.toString().padLeft(2, "0")}";
     String explanationText = 'Device is not connected.';
     String remediationText = 'The protocol will be marked as cancelled if the '
         'connection is not brought back online before:';
