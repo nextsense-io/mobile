@@ -39,6 +39,8 @@ enum StudyKey {
   seizure_tracking,
   // If side effects tracking is enabled for this study.
   side_effects_tracking,
+  // Show signal visualization and analytics screens.
+  show_signal_screens,
   // If sleep tracking is enabled for this study.
   sleep_tracking,
   // Link to an image that can be shown in the intro page to this study.
@@ -89,6 +91,10 @@ class Study extends FirebaseEntity<StudyKey> {
 
   String getEarbudsConfig() {
     return getValue(StudyKey.earbuds_config) as String;
+  }
+
+  bool showSignalScreens() {
+    return getValue(StudyKey.show_signal_screens) == true;
   }
 
   List<ProtocolType> getAllowedProtocols() {
