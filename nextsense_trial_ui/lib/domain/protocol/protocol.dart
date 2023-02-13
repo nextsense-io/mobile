@@ -110,17 +110,14 @@ abstract class BaseProtocol implements Protocol {
 
   BaseProtocol();
 
-  @override
   void setStartTime(DateTime startTime) {
     this._startTime = startTime;
   }
 
-  @override
   void setMinDuration(Duration duration) {
     _minDurationOverride = duration;
   }
 
-  @override
   void setMaxDuration(Duration duration) {
     _maxDurationOverride = duration;
   }
@@ -146,6 +143,9 @@ class VariableDaytimeProtocol extends BaseProtocol {
   @override
   String get intro => 'Records for a variable amount of time at daytime.'
       ' You can stop the recording at any time.';
+
+  @override
+  Duration get disconnectTimeoutDuration => Duration(hours: 24);
 }
 
 class SleepProtocol extends BaseProtocol {

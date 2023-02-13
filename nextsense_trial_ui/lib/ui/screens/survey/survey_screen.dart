@@ -76,6 +76,7 @@ class SurveyScreen extends HookWidget {
       _formKey.currentState?.setInternalFieldValue(questionKey, viewModel.formValues?[questionKey],
           isSetState: false);
     }
+    bool showQuestionsProgress = viewModel.survey.getQuestions().length > 1;
     return PageScaffold(
         backgroundColor: NextSenseColors.lightGrey,
         showBackground: false,
@@ -117,11 +118,11 @@ class SurveyScreen extends HookWidget {
                           color: NextSenseColors.translucentPurple,
                           activeColor: NextSenseColors.purple,
                         ),
-                        globalFooter: LinearProgressIndicator(
+                        globalFooter: showQuestionsProgress ? LinearProgressIndicator(
                           value: viewModel.currentPageNumber /
                               (viewModel.survey.getQuestions().length - 1),
                           color: NextSenseColors.purple,
-                        )
+                        ) : null
                     )))),
         ]));
   }
