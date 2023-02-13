@@ -249,8 +249,11 @@ class SurveyManager {
       final dayNumber = entity.getValue(ScheduledSurveyKey.day_number);
       Survey? survey = getSurveyById(surveyId);
       if (survey == null) {
-        _logger.log(Level.SEVERE, 'Survey with id "$surveyId" not found');
-        continue;
+        survey = await _loadSurvey(surveyId);
+        if (survey == null) {
+          _logger.log(Level.SEVERE, 'Survey with id "$surveyId" not found');
+          continue;
+        }
       }
 
       StudyDay? studyDay = _studyManager.getStudyDayByNumber(dayNumber);
