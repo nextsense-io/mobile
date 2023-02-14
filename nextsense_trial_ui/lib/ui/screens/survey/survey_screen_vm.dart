@@ -11,7 +11,7 @@ class SurveyScreenViewModel extends ViewModel {
   final CustomLogPrinter _logger = CustomLogPrinter('SurveyScreenViewModel');
   final RunnableSurvey runnableSurvey;
 
-  Map<String, dynamic>? formValues = null;
+  Map<String, dynamic>? formValues;
   int currentPageNumber = 0;
 
   Survey get survey => runnableSurvey.survey;

@@ -105,7 +105,7 @@ class SurveyScreen extends HookWidget {
                         onSkip: () => _onBackButtonPressed(context, viewModel),
                         canProgress: () => canProgress(viewModel),
                         onChange: (pageNum) => {
-                          _logger.log(Level.INFO, "page ${pageNum}"),
+                          _logger.log(Level.INFO, "page $pageNum"),
                           viewModel.currentPageNumber = pageNum,
                           viewModel.notifyListeners(),
                         },

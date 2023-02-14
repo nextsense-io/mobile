@@ -194,9 +194,9 @@ class Navigation {
         String scheduledSurveyId = intent.extra![TargetType.survey.name];
         _logger.log(Level.INFO, "Scheduled survey id: $scheduledSurveyId");
         ScheduledSurvey? scheduledSurvey =
-        await _surveyManager.queryScheduledSurvey(scheduledSurveyId);
+            await _surveyManager.queryScheduledSurvey(scheduledSurveyId);
         if (scheduledSurvey != null) {
-          await navigateTo(SurveyScreen.id, replace: replace, arguments: scheduledSurvey);
+          navigateTo(SurveyScreen.id, replace: replace, arguments: scheduledSurvey);
         } else {
           _logger.log(Level.SEVERE, "Scheduled survey $scheduledSurveyId does not exists");
         }
