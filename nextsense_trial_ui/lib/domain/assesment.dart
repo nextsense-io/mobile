@@ -41,7 +41,7 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
   late PlannedActivity _plannedActivity;
 
   // defaults to specific day for legacy assessments where it was not set.
-  Period get _period => Period.fromString(getValue(PlannedAssessmentKey.period));
+  Period get _period => Period.fromString(getValue(PlannedAssessmentKey.period) ?? "");
   int? get _dayNumber => getValue(PlannedAssessmentKey.day);
   int? get _lastDayNumber => getValue(PlannedAssessmentKey.end_day);
   List<StudyDay> get days => _plannedActivity.days;

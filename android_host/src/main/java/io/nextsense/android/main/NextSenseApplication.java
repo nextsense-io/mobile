@@ -3,6 +3,8 @@ package io.nextsense.android.main;
 import android.app.Application;
 import android.util.Log;
 
+import com.google.firebase.FirebaseApp;
+
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
 import io.flutter.embedding.engine.dart.DartExecutor;
@@ -19,6 +21,7 @@ public class NextSenseApplication extends Application {
   @Override
   public void onCreate() {
     super.onCreate();
+    FirebaseApp.initializeApp(getApplicationContext());
     initFlutterEngineCache();
   }
 

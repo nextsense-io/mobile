@@ -58,8 +58,8 @@ Future<intent.Intent?> _getInitialIntent() async {
     getLogger("Main").log(Level.INFO, "Initial Intent: $receivedIntent");
     // Validate receivedIntent and warn the user, if it is not correct,
     // but keep in mind it could be `null` or "empty"(`receivedIntent.isNull`).
-    if (receivedIntent == null || receivedIntent.extra == null ||
-        receivedIntent.data == null) {
+    if (receivedIntent == null || (receivedIntent.extra == null &&
+        receivedIntent.data == null)) {
       getLogger("Main").log(Level.INFO, "Initial intent does not have data or extras, ignoring.");
       return null;
     }

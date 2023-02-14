@@ -154,13 +154,13 @@ class SurveyManager {
       }
 
       await Future.wait(futures);
-
-      await _loadSurveysQuestions(fromCache: studyInitialized);
-
-      // Make sure cache is up to date, need to query whole collection
-      // Without this query undesired items can appear in cache
-      await _queryScheduledSurveys();
     }
+
+    await _loadSurveysQuestions(fromCache: studyInitialized);
+
+    // Make sure cache is up to date, need to query whole collection
+    // Without this query undesired items can appear in cache
+    await _queryScheduledSurveys();
 
     // Make consistent order
     scheduledSurveys.sortBy((scheduledSurvey) => scheduledSurvey.plannedSurveyId);
