@@ -35,7 +35,7 @@ class SurveyScreen extends HookWidget {
       formKey.currentState?.save();
       bool valid = formKey.currentState!.validate();
       if (valid || !submitting) {
-        _logger.log(Level.INFO, "Submitting the form. valid: ${valid}");
+        _logger.log(Level.INFO, "Submitting the form. valid: $valid");
         bool submitted = await viewModel.submit(formData: valid ? formKey.currentState!.value :
             formKey.currentState!.instantValue, completed: valid);
         if (submitted) {
