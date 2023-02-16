@@ -57,6 +57,7 @@ class NextsenseBase {
   static const EventChannel _deviceInternalStateStream = const EventChannel(
       'io.nextsense.flutter.base.nextsense_base/device_internal_state_channel');
   static const String _connectToServiceCommand = 'connect_to_service';
+  static const String _changeNotificationContentCommand = 'change_notification_content';
   static const String _setFlutterActivityActiveCommand =
       'set_flutter_activity_active';
   static const String _getConnectedDevicesCommand = 'get_connected_devices';
@@ -94,6 +95,8 @@ class NextsenseBase {
   static const String _frequencyDividerArg = 'frequency_divider';
   static const String _minConnectionTypeArg = 'min_connection_type';
   static const String _fromDatabaseArg = 'from_database';
+  static const String _notificationTitleArg = 'notification_title';
+  static const String _notificationTextArg = 'notification_text';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
@@ -114,6 +117,11 @@ class NextsenseBase {
 
   static Future startService() async {
     return _channel.invokeMethod(_connectToServiceCommand);
+  }
+
+  static Future changeNotificationContent(String title, String text) async {
+    await _channel.invokeMethod(_changeNotificationContentCommand,
+        {_notificationTitleArg: title, _notificationTextArg: text});
   }
 
   static Future connectDevice(String macAddress) async {

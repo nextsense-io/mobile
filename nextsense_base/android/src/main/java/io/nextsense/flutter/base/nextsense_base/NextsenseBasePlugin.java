@@ -57,6 +57,7 @@ import io.objectbox.reactive.DataSubscription;
 public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String CONNECT_TO_SERVICE_COMMAND = "connect_to_service";
   public static final String STOP_SERVICE_COMMAND = "stop_service";
+  public static final String CHANGE_NOTIFICATION_CONTENT = "change_notification_content";
   public static final String SET_FLUTTER_ACTIVITY_ACTIVE_COMMAND = "set_flutter_activity_active";
   public static final String IS_FLUTTER_ACTIVITY_ACTIVE_COMMAND = "is_flutter_activity_active";
   public static final String CONNECT_DEVICE_COMMAND = "connect_device";
@@ -97,6 +98,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String IMPEDANCE_MODE_ARGUMENT = "impedance_mode";
   public static final String FREQUENCY_DIVIDER_ARGUMENT = "frequency_divider";
   public static final String MIN_CONNECTION_TYPE_ARGUMENT = "min_connection_type";
+  public static final String NOTIFICATION_TITLE_ARGUMENT = "notification_title";
+  public static final String NOTIFICATION_TEXT_ARGUMENT = "notification_text";
   public static final String ERROR_SERVICE_NOT_AVAILABLE = "service_not_available";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
   public static final String ERROR_SESSION_NOT_STARTED = "session_not_started";
@@ -217,6 +220,12 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case STOP_SERVICE_COMMAND:
         stopService();
+        result.success(null);
+        break;
+      case CHANGE_NOTIFICATION_CONTENT:
+        String title = call.argument(NOTIFICATION_TITLE_ARGUMENT);
+        String text = call.argument(NOTIFICATION_TEXT_ARGUMENT);
+        changeServiceNotificationContent(title, text);
         result.success(null);
         break;
       case CONNECT_DEVICE_COMMAND:
@@ -411,6 +420,12 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       applicationContext.stopService(foregroundServiceIntent);
     } else {
       Log.d(TAG, "context still null");
+    }
+  }
+
+  private void changeServiceNotificationContent(String title, String text) {
+    if (nextSenseServiceBound) {
+      nextSenseService.changeNotificationContent(title, text);
     }
   }
 

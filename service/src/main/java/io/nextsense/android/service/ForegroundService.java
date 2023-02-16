@@ -6,6 +6,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
@@ -59,6 +60,7 @@ public class ForegroundService extends Service {
   // Binder given to clients.
   private final IBinder binder = new LocalBinder();
 
+  private NotificationManager notificationManager;
   private NextSenseDeviceManager nextSenseDeviceManager;
   private BluetoothStateManager bluetoothStateManager;
   private BleCentralManagerProxy centralManagerProxy;
@@ -76,6 +78,8 @@ public class ForegroundService extends Service {
   // Starts true so the activity is launched on first start.
   private boolean flutterActivityActive = true;
 
+  private NotificationCompat.Builder notificationBuilder;
+
   @Override
   @SuppressWarnings("unchecked")
   public int onStartCommand(Intent intent, int flags, int startId) {
@@ -84,6 +88,7 @@ public class ForegroundService extends Service {
       Log.i(TAG, "Already initialized, keep running.");
       return START_REDELIVER_INTENT;
     }
+    notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     createNotificationChannel();
     if (intent == null || intent.getExtras() == null) {
       return START_REDELIVER_INTENT;
@@ -93,13 +98,12 @@ public class ForegroundService extends Service {
     Intent notificationIntent = new Intent(this, uiClass);
     PendingIntent pendingIntent = PendingIntent.getActivity(this,
         UI_INTENT_REQUEST_CODE, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
-    Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+    notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
         .setContentTitle(getString(R.string.app_name))
         .setContentText(getString(R.string.notif_content))
         .setSmallIcon(R.drawable.ic_launcher)
-        .setContentIntent(pendingIntent)
-        .build();
-    startForeground(NOTIFICATION_ID, notification);
+        .setContentIntent(pendingIntent);
+    startForeground(NOTIFICATION_ID, notificationBuilder.build());
     initialize();
     Util.logd(TAG, "Service initialized.");
     return START_REDELIVER_INTENT;
@@ -147,6 +151,12 @@ public class ForegroundService extends Service {
 
   public void setFlutterActivityActive(boolean active) {
     flutterActivityActive = active;
+  }
+
+  public void changeNotificationContent(String title, String text) {
+    notificationBuilder.setContentTitle(title);
+    notificationBuilder.setContentText(text);
+    notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
   }
 
   private void initialize() {

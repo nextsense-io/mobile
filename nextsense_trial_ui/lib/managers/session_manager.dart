@@ -13,6 +13,7 @@ import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 enum Modality {
   eeeg,
@@ -33,6 +34,16 @@ class SessionManager {
   DataSession? _currentDataSession;
   String? get currentSessionId => _currentSession?.id;
   int? _currentLocalSession;
+  String? _appName;
+
+  SessionManager() {
+    _init();
+  }
+
+  void _init() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    _appName = packageInfo.appName;
+  }
 
   Future<bool> startSession(Device device, String studyId, String protocolName) async {
     String? userCode = _authManager.userCode;
@@ -105,7 +116,7 @@ class SessionManager {
       }
       bool configSet = await NextsenseBase.setImpedanceConfig(device.macAddress, impedanceMode,
           /*channelNumber=*/null, /*frequencyDivider=*/null);
-      _logger.log(Level.INFO, "Impedance config set: ${configSet}");
+      _logger.log(Level.INFO, "Impedance config set: $configSet");
       if (!configSet) {
         _logger.log(Level.SEVERE, "Failed to set impedance config. Cannot start streaming.");
         return false;
@@ -113,10 +124,12 @@ class SessionManager {
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,
           bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: dataSessionCode,
           earbudsConfig: _studyManager.currentStudy?.getEarbudsConfig() ?? null);
-      _logger.log(Level.INFO, "Started streaming with local session: ${_currentLocalSession}");
+      _logger.log(Level.INFO, "Started streaming with local session: $_currentLocalSession");
+      await NextsenseBase.changeNotificationContent("NextSense recording in progress",
+          "Press to access the application");
       return true;
     } catch (exception) {
-      _logger.log(Level.SEVERE, "Failed to start streaming. Message: ${exception}");
+      _logger.log(Level.SEVERE, "Failed to start streaming. Message: $exception");
     }
     return false;
   }
@@ -165,6 +178,7 @@ class SessionManager {
     }
     user.setValue(UserKey.running_protocol, null);
     await user.save();
+    await NextsenseBase.changeNotificationContent(_appName!, "Press to access the application");
   }
 
   Future<bool> addProtocolData(Map protocolData) async {
