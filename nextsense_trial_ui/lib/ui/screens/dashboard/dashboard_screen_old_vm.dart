@@ -142,9 +142,9 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
   List<ScheduledProtocol> getScheduledProtocolsByDay(StudyDay day) {
     List<ScheduledProtocol> result = [];
     for (var scheduledProtocol in scheduledProtocols) {
-      if (scheduledProtocol.day == day) {
-        result.add(scheduledProtocol);
-      }
+      // if (scheduledProtocol.day == day) {
+      //   result.add(scheduledProtocol);
+      // }
     }
     result.sort((p1, p2) => p1.startTime.compareTo(p2.startTime));
     return result;
