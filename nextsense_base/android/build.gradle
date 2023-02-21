@@ -17,11 +17,6 @@ rootProject.allprojects {
     repositories {
         google()
         jcenter()
-        maven {
-            url "https://jitpack.io"
-            // Follow the instructions at https://jitpack.io/private#auth to setup your token.
-            credentials { username authToken }
-        }
     }
 }
 

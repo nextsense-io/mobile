@@ -47,22 +47,3 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
-
-project.afterEvaluate {
-    publishing {
-        publications {
-            release(MavenPublication) {
-                from components.release
-                groupId = 'com.github.nextsense-io.android_base_library.service'
-                artifactId = 'service'
-                version = '0.1.0'
-            }
-            debug(MavenPublication) {
-                from components.debug
-                groupId = 'com.github.nextsense-io.android_base_library.service'
-                artifactId = 'service-debug'
-                version = '0.1.0'
-            }
-        }
-    }
-}

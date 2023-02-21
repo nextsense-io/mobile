@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -35,6 +37,7 @@ class SessionManager {
   String? get currentSessionId => _currentSession?.id;
   int? _currentLocalSession;
   String? _appName;
+  String? _appVersion;
 
   SessionManager() {
     _init();
@@ -43,6 +46,7 @@ class SessionManager {
   void _init() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     _appName = packageInfo.appName;
+    _appVersion = packageInfo.version;
   }
 
   Future<bool> startSession(Device device, String studyId, String protocolName) async {
@@ -72,6 +76,7 @@ class SessionManager {
                     ..setValue(SessionKey.device_id, device.name)
                     ..setValue(SessionKey.device_mac_address, device.macAddress)
                     ..setValue(SessionKey.study_id, studyId)
+                    ..setValue(SessionKey.mobile_app_version, _appVersion)
                     ..setValue(SessionKey.protocol, protocolName)
                     ..setValue(SessionKey.timezone, user.getCurrentTimezone().name);
     bool success = await _currentSession!.save();
