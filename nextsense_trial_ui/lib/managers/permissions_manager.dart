@@ -30,11 +30,10 @@ class PermissionsManager {
             'permission. It is not possible to connect to your NextSense '
             'device without it.'),
     PermissionRequest(permission: Permission.locationWhenInUse, required: true,
-        requestText: 'Location permission is needed to connect to your '
-            'NextSense device with Bluetooth, please accept the permission in '
-            'the popup after pressing continue.',
+        requestText: 'Location permission is needed to pair your NextSense device with the app. '
+            'Please accept the permission to enable location after you press "Continue".',
         deniedText: 'Please try again and allow the location permission. It is '
-            'not possible to connect to your NextSense device without it.'),
+            'not possible to pair to your NextSense device without it.'),
     PermissionRequest(permission: Permission.notification, required: true,
         requestText: 'Notifications are needed to show the status of the device and of the '
             'recording.',
@@ -42,10 +41,9 @@ class PermissionsManager {
             'not possible to manage your NextSense device without it.', minApiVersion: 33),
     PermissionRequest(permission: Permission.ignoreBatteryOptimizations,
         required: false,
-        requestText: 'Battery optimizations need to be disabled to ensure that '
-            'the data communication with the device is stable when the phone '
-            'is not in use. Please slide the permission to ON in the next '
-            'screen after pressing continue.'),
+        requestText: 'Battery Optimization needs to be disabled to allow for EEG data collection '
+            'and communication with the device. Please slide the permission icon to "ON" in the '
+            'next screen after you press: "Continue".'),
   ];
 
   PermissionsManager();
