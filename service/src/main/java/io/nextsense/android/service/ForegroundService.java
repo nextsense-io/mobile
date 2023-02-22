@@ -1,7 +1,6 @@
 package io.nextsense.android.service;
 
 import android.app.Activity;
-import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -101,7 +100,7 @@ public class ForegroundService extends Service {
     notificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
         .setContentTitle(getString(R.string.app_name))
         .setContentText(getString(R.string.notif_content))
-        .setSmallIcon(R.drawable.ic_launcher)
+        .setSmallIcon(R.drawable.ic_stat_nextsense_n_icon)
         .setContentIntent(pendingIntent);
     startForeground(NOTIFICATION_ID, notificationBuilder.build());
     initialize();
