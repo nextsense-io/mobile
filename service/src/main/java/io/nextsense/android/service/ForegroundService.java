@@ -167,7 +167,8 @@ public class ForegroundService extends Service {
     centralManagerProxy = (!Config.USE_EMULATED_BLE) ?
             new BleCentralManagerProxy(getApplicationContext()) : null;
     nextSenseDeviceManager = NextSenseDeviceManager.create(localSessionManager);
-    deviceScanner = DeviceScanner.create(nextSenseDeviceManager, centralManagerProxy);
+    deviceScanner = DeviceScanner.create(
+        nextSenseDeviceManager, centralManagerProxy, bluetoothStateManager);
     deviceManager = DeviceManager.create(
         deviceScanner, localSessionManager, centralManagerProxy, bluetoothStateManager,
         nextSenseDeviceManager);
