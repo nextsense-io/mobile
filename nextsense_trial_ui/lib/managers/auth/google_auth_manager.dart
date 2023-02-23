@@ -28,7 +28,13 @@ class GoogleAuthManager {
 
   Future<AuthenticationResult> handleSignIn() async {
     _logger.log(Level.INFO, 'Starting Google sign-in.');
-    final GoogleSignInAccount? googleSignInAccount = await _googleSignIn.signIn();
+    GoogleSignInAccount? googleSignInAccount;
+    try {
+      googleSignInAccount = await _googleSignIn.signIn();
+    } on FirebaseAuthException catch (e) {
+      _logger.log(Level.SEVERE, "Error when trying to sign in: $e");
+      return AuthenticationResult.error;
+    }
     if (googleSignInAccount == null) {
       _logger.log(Level.WARNING, 'Could not authenticate with Google.');
       return AuthenticationResult.error;
