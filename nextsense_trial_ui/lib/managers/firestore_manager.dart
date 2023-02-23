@@ -178,7 +178,8 @@ class FirestoreManager {
    * Query multiple entities.
    */
   Future<List<FirebaseEntity>?> queryEntities(
-      List<Table> tables, List<String> entityKeys, {String? fromCacheWithKey}) async {
+      List<Table> tables, List<String> entityKeys,
+      {String? fromCacheWithKey, String? orderBy}) async {
     assert(tables.length == entityKeys.length + 1);
     DocumentReference? pathReference;
     CollectionReference? collectionReference;
@@ -214,7 +215,11 @@ class FirestoreManager {
       bool success = false;
       while (!success && attemptNumber < _retriesAttemptsNumber) {
         try {
-          snapshot = await collectionReference!.get();
+          if (orderBy != null) {
+            snapshot = await collectionReference!.orderBy(orderBy).get();
+          } else {
+            snapshot = await collectionReference!.get();
+          }
           success = true;
         } catch (exception) {
           attemptNumber++;
