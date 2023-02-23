@@ -23,6 +23,7 @@ dependencies:
   device_info_plus: ^5.0.1
   dropdown_button2: ^1.5.2
   email_validator: ^2.1.16
+  file: ^6.1.4
   firebase_auth: ^4.2.5
   firebase_core: ^2.4.1
   firebase_crashlytics: ^3.0.10
@@ -144,8 +145,8 @@ flutter:
   # identifiers, which may be completely independent or the same as these.
   module:
     androidX: true
-    androidPackage: io.nextsense.mobile.trial.nextsense_trial_ui
-    iosBundleIdentifier: io.nextsense.mobile.trial.nextsenseTrialUi
+    androidPackage: io.nextsense.android.main.nextsense_trial_ui
+    iosBundleIdentifier: io.nextsense.android.main.nextsenseTrialUi
 
 # Run "./scripts/update_splash.sh" after update any fields here
 flutter_native_splash:

@@ -6,6 +6,7 @@ plugins {
 android {
     compileSdkVersion 33
     buildToolsVersion "30.0.3"
+    namespace "io.nextsense.android.main"
 
     defaultConfig {
         applicationId "io.nextsense.android.main"
@@ -75,7 +76,7 @@ android {
 
     compileOptions {
         // Flag to enable support for the new language APIs.
-        // coreLibraryDesugaringEnabled true
+        coreLibraryDesugaringEnabled true
         // Sets Java compatibility to Java 11.
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
@@ -84,6 +85,7 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.2'
     implementation project(path: ':core')
     implementation project(path: ':flutter')
     implementation project(path: ':service')

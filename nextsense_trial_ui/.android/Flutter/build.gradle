@@ -26,7 +26,7 @@ if (flutterVersionName == null) {
 apply plugin: 'com.android.library'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
-group 'io.nextsense.mobile.trial.nextsense_trial_ui'
+group 'io.nextsense.android.main.nextsense_trial_ui'
 version '1.0'
 
 android {
