@@ -19,6 +19,7 @@ enum SurveyQuestionKey {
   text,  // Question prompt at the top
   type,  // type of question, see `SurveyQuestionType`
   optional,  // If the question is optional
+  position  // Index of the question in the survey
 }
 
 enum SurveyQuestionType {
@@ -103,7 +104,7 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
           min = int.parse(minMaxStr[0]);
           max = int.parse(minMaxStr[1]);
         } catch (e) {
-          _logger.log(Level.WARNING, 'Failed to parse choices: ${choicesValue}');
+          _logger.log(Level.WARNING, 'Failed to parse choices: $choicesValue');
           return;
         }
         for (int choice = min; choice <= max; choice++) {
@@ -175,7 +176,8 @@ class Survey extends FirebaseEntity<SurveyKey> {
   Future<bool> loadQuestions({bool fromCache = false}) async {
     List<FirebaseEntity>? entities = await _firestoreManager.queryEntities(
         [Table.surveys, Table.questions], [this.id],
-        fromCacheWithKey: fromCache ? "survey_${this.id}_questions" : null
+        fromCacheWithKey: fromCache ? "survey_${this.id}_questions" : null,
+        orderBy: SurveyQuestionKey.position.name
     );
 
     if (entities == null) {
