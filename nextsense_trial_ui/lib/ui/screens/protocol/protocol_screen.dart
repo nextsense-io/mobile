@@ -61,7 +61,8 @@ class SessionControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     ProtocolScreenViewModel viewModel = context.watch<ProtocolScreenViewModel>();
     return SimpleButton(
-      text: Center(child: MediumText(text: text, color: NextSenseColors.purple)),
+      text: Center(child: MediumText(text: text, color: NextSenseColors.purple, marginLeft: 40,
+        marginRight: 40)),
       border: Border.all(width: 2, color: NextSenseColors.purple),
       onTap: () async {
         if (viewModel.sessionIsActive) {
@@ -149,9 +150,9 @@ class ProtocolScreen extends HookWidget {
                   ]),
               Spacer(),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SessionControlButton(stopSession, text: 'Log recording'),
+                  SessionControlButton(stopSession, text: 'Stop'),
                 ],
               )
             ]));
