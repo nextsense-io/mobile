@@ -76,14 +76,12 @@ class SignInScreen extends HookWidget {
             labelText: 'Email',
             maxLength: EmailAuthManager.maxEmailLength),
             // helperText: 'Please contact NextSense support if you did not get an id',
-            // icon: Icon(Icons.account_circle)),
         _UserPasswordSignInInputField(
           field: viewModel.password,
           obscureText: true,
           labelText: 'Password',
           maxLength: EmailAuthManager.maxPasswordLength,
           // helperText: 'Contact NextSense to reset your password',
-          // icon: Icon(Icons.lock)),
         )
       ])),
       SizedBox(height: 20),
@@ -118,13 +116,11 @@ class SignInScreen extends HookWidget {
                 field: viewModel.username,
                 labelText: 'Id',
                 helperText: 'Please contact NextSense support if you did not get an id'),
-            // icon: Icon(Icons.account_circle)),
             _UserPasswordSignInInputField(
                 field: viewModel.password,
                 obscureText: true,
                 labelText: 'Password',
                 helperText: 'Contact NextSense to reset your password'),
-            // icon: Icon(Icons.lock)),
           ])),
           SizedBox(height: 20),
           AbsorbPointer(absorbing: authenticating, child:
@@ -188,10 +184,19 @@ class SignInScreen extends HookWidget {
       ),
     ]);
 
-    return _signInWidgets;
+    // Show an error popup if needed.
+    if (viewModel.errorMsg.isNotEmpty && viewModel.popupErrorMsg) {
+      viewModel.popupErrorMsg = false;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+            context: context,
+            builder: (_) => SimpleAlertDialog(
+                title: 'Error',
+                content: viewModel.errorMsg));
+      });
+    }
 
-    // return Center(
-    //     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: _signInWidgets));
+    return _signInWidgets;
   }
 
   Future _signIn(BuildContext context, AuthMethod authMethod) async {

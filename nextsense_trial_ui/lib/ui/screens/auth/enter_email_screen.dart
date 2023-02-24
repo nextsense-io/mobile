@@ -78,13 +78,6 @@ class EnterEmailScreen extends HookWidget {
     viewModel.setEmailInAuthManager();
     await Future.delayed(Duration(seconds: 0));
     _navigation.pop();
-    // bool success = await viewModel.sendPasswordResetEmail();
-    // if (success) {
-    //   showDialog(
-    //       context: context,
-    //       builder: (_) => SimpleAlertDialog(
-    //           title: 'Email sent', content: "", onPressed: () => _navigation.pop()));
-    // }
   }
 
   @override

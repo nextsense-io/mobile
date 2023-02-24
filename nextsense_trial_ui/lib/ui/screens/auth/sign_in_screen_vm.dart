@@ -22,6 +22,7 @@ class SignInScreenViewModel extends ViewModel {
 
   bool internetConnection = true;
   String errorMsg = "";
+  bool popupErrorMsg = false;
 
   bool get hadPairedDevice => _deviceManager.hadPairedDevice;
   List<AuthMethod> get authMethods => _flavor.authMethods;
@@ -33,6 +34,7 @@ class SignInScreenViewModel extends ViewModel {
 
   SignInScreenViewModel({this.initialErrorMessage}) {
     errorMsg = initialErrorMessage ?? "";
+    popupErrorMsg = initialErrorMessage != null;
   }
 
   @override

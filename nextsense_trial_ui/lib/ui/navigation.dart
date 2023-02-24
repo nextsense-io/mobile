@@ -22,6 +22,7 @@ import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/enter_email_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/re_authenticate_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/request_password_reset_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/auth/wait_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/check_internet/check_internet_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/device_scan/device_scan_screen.dart';
 import 'package:nextsense_trial_ui/ui/impedance_calculation_screen.dart';
@@ -130,10 +131,12 @@ class Navigation {
         return false;
       }
 
+      navigateTo(WaitScreen.id);
       bool alreadyLoggedIn = _authManager.isAuthenticated;
       AuthenticationResult result =
           await _authManager.signInEmailLink(emailAuthLink.authLink, emailAuthLink.email!);
       if (result == AuthenticationResult.success) {
+        pop();
         switch (emailAuthLink.urlTarget) {
           case UrlTarget.signup:
             // fallthrough
@@ -164,9 +167,11 @@ class Navigation {
               gravity: ToastGravity.CENTER,
               fontSize: 16.0
           );
+          pop();
           return true;
         } else {
           _authManager.signOut();
+          pop();
           signOut(errorMessage: _linkExpiredMessage);
         }
         // navigateTo(SetPasswordScreen.id, replace: !alreadyLoggedIn);
@@ -305,6 +310,8 @@ class Navigation {
           builder: (context) => EarFitScreen());
       case EnterEmailScreen.id: return MaterialPageRoute(
           builder: (context) => EnterEmailScreen());
+      case WaitScreen.id: return MaterialPageRoute(
+          builder: (context) => WaitScreen());
 
       // Routes with arguments
       case SignInScreen.id: return MaterialPageRoute(
