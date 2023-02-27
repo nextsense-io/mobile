@@ -691,7 +691,7 @@ public class Uploader {
               syncToken.notifyAll();
             }
           }
-        } else {
+        } else if (waitForDataTimer != null) {
           Log.i(TAG, "Empty session, no need to keep checking.");
           waitForDataTimer.purge();
           waitForDataTimer.cancel();
