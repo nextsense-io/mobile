@@ -31,7 +31,7 @@ class PermissionsManager {
             'device without it.'),
     PermissionRequest(permission: Permission.locationWhenInUse, required: true,
         requestText: 'Location permission is needed to pair your NextSense device with the app. '
-            'Please accept the permission to enable location after you press "Continue".',
+            'Please accept the permission to enable location use after you press "Continue".',
         deniedText: 'Please try again and allow the location permission. It is '
             'not possible to pair to your NextSense device without it.'),
     PermissionRequest(permission: Permission.notification, required: true,
@@ -42,8 +42,8 @@ class PermissionsManager {
     PermissionRequest(permission: Permission.ignoreBatteryOptimizations,
         required: false,
         requestText: 'Battery Optimization needs to be disabled to allow for EEG data collection '
-            'and communication with the device. Please slide the permission icon to "ON" in the '
-            'next screen after you press: "Continue".'),
+            'and communication with the device. Please "Allow" permission for the NextSense app to '
+            'run in the background after you press "Continue."'),
   ];
 
   PermissionsManager();
