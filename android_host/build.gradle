@@ -4,6 +4,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        release {
+            storeFile file(RELEASE_STORE_FILE)
+            keyAlias RELEASE_KEY_ALIAS
+            storePassword RELEASE_STORE_PASSWORD
+            keyPassword RELEASE_KEY_PASSWORD
+        }
+    }
     compileSdkVersion 33
     buildToolsVersion "30.0.3"
     namespace "io.nextsense.android.main"
@@ -12,13 +20,14 @@ android {
         applicationId "io.nextsense.android.main"
         minSdkVersion 24
         targetSdkVersion 33
-        versionCode 20
-        versionName "0.3.18"
+        versionCode 21
+        versionName "0.3.19"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             // Filter for architectures supported by Flutter.
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
         }
+        signingConfig signingConfigs.release
     }
 
     flavorDimensions "target_user_type", "env"
@@ -71,6 +80,7 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                     'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 
@@ -96,7 +106,8 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.9.1'
     // Import the BoM for the Firebase platform
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
-    // Declare the dependencies for the Crashlytics and Analytics libraries
+    implementation 'com.google.firebase:firebase-appcheck-debug'
+    implementation 'com.google.firebase:firebase-appcheck-playintegrity'
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-crashlytics'
     implementation 'com.google.firebase:firebase-analytics'

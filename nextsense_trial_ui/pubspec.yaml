@@ -24,6 +24,7 @@ dependencies:
   dropdown_button2: ^1.5.2
   email_validator: ^2.1.16
   file: ^6.1.4
+  firebase_app_check: ^0.1.1+12
   firebase_auth: ^4.2.5
   firebase_core: ^2.4.1
   firebase_crashlytics: ^3.0.10
