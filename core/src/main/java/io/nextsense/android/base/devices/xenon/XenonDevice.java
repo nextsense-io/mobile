@@ -265,6 +265,10 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
 
   private void executeCommandNoResponse(XenonFirmwareCommand command) throws
       ExecutionException, InterruptedException, CancellationException {
+    if (peripheral == null || dataCharacteristic == null) {
+      Log.w(TAG, "No peripheral to execute command on.");
+      return;
+    }
     blePeripheralCallbackProxy.writeCharacteristic(
         peripheral, dataCharacteristic, command.getCommand(), WriteType.WITHOUT_RESPONSE).get();
   }

@@ -4,6 +4,9 @@ import android.app.Application;
 import android.util.Log;
 
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.appcheck.FirebaseAppCheck;
+import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory;
+import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
 
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
@@ -21,8 +24,20 @@ public class NextSenseApplication extends Application {
   @Override
   public void onCreate() {
     super.onCreate();
-    FirebaseApp.initializeApp(getApplicationContext());
+    initFirebase();
     initFlutterEngineCache();
+  }
+
+  private void initFirebase() {
+    FirebaseApp.initializeApp(getApplicationContext());
+    FirebaseAppCheck firebaseAppCheck = FirebaseAppCheck.getInstance();
+    if (BuildConfig.DEBUG) {
+      firebaseAppCheck.installAppCheckProviderFactory(
+          DebugAppCheckProviderFactory.getInstance());
+    } else {
+      firebaseAppCheck.installAppCheckProviderFactory(
+          PlayIntegrityAppCheckProviderFactory.getInstance());
+    }
   }
 
   public void initFlutterEngineCache() {
