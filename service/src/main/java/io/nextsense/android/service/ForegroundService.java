@@ -12,15 +12,11 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.GetTokenResult;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -200,30 +196,21 @@ public class ForegroundService extends Service {
     cloudFunctions = CloudFunctions.create();
 
     firebaseAuth = FirebaseAuth.getInstance();
-    firebaseAuth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
-      @Override
-      public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-        FirebaseUser user = firebaseAuth.getCurrentUser();
-        if (user != null) {
-          // User is signed in
-          user.getIdToken(true)
-              .addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
-                @Override
-                public void onSuccess(GetTokenResult getTokenResult) {
-                  // Token refresh succeeded
-                  // Get new ID token
-                  String idToken = getTokenResult.getToken();
-                  Log.i(TAG, "Refreshed Token: " + idToken);
-                }
-              })
-              .addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                  // Token refresh failed
-                  Log.w(TAG, "Failed ot refresh token.");
-                }
-              });
-        }
+    firebaseAuth.addAuthStateListener(firebaseAuth -> {
+      FirebaseUser user = firebaseAuth.getCurrentUser();
+      if (user != null) {
+        // User is signed in
+        user.getIdToken(true)
+            .addOnSuccessListener(getTokenResult -> {
+              // Token refresh succeeded
+              // Get new ID token
+              String idToken = getTokenResult.getToken();
+              Log.i(TAG, "Refreshed Token: " + idToken);
+            })
+            .addOnFailureListener(e -> {
+              // Token refresh failed
+              Log.w(TAG, "Failed ot refresh token.");
+            });
       }
     });
 
