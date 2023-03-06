@@ -5,6 +5,7 @@ plugins {
 
 android {
     signingConfigs {
+        // Need to add these values to your local gradle.properties file.
         release {
             storeFile file(RELEASE_STORE_FILE)
             keyAlias RELEASE_KEY_ALIAS
