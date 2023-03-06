@@ -34,8 +34,6 @@ public class CloudFunctions {
 
     private final FirebaseFunctions functionsInstance = FirebaseFunctions.getInstance();
 
-    // TODO(eric): Authenticate the request:
-    // https://cloud.google.com/functions/docs/securing/authenticating#functions-bearer-token-example-java
     public static CloudFunctions create() {
         return new CloudFunctions();
     }

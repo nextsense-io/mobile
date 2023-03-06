@@ -25,8 +25,7 @@ class NextSenseAuthManager {
       return AuthenticationResult.error;
     }
 
-    // Authenticate in Firebase using the token that was obtained
-    // from the backend
+    // Authenticate in Firebase using the token that was obtained from the backend.
     String token = resp.data['token'];
     try {
       await _firebaseAuth.signInWithCustomToken(token);

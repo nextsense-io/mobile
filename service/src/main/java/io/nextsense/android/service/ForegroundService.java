@@ -12,8 +12,15 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -24,6 +31,7 @@ import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.SampleRateCalculator;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
+import io.nextsense.android.base.communication.firebase.CloudFunctions;
 import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Uploader;
@@ -60,6 +68,7 @@ public class ForegroundService extends Service {
   private final IBinder binder = new LocalBinder();
 
   private NotificationManager notificationManager;
+  private FirebaseAuth firebaseAuth;
   private NextSenseDeviceManager nextSenseDeviceManager;
   private BluetoothStateManager bluetoothStateManager;
   private BleCentralManagerProxy centralManagerProxy;
@@ -71,6 +80,7 @@ public class ForegroundService extends Service {
   private CacheSink cacheSink;
   private LocalSessionManager localSessionManager;
   private Connectivity connectivity;
+  private CloudFunctions cloudFunctions;
   private Uploader uploader;
   private SampleRateCalculator sampleRateCalculator;
   private boolean initialized = false;
@@ -187,6 +197,36 @@ public class ForegroundService extends Service {
     uploader = Uploader.create(objectBoxDatabase, databaseSink, connectivity, /*uploadChunk=*/1250,
         /*minRecordsToKeep=*/5000, /*minDurationToKeep=*/Duration.ofMillis((5000 / 250) * 1000L));
     uploader.start();
+    cloudFunctions = CloudFunctions.create();
+
+    firebaseAuth = FirebaseAuth.getInstance();
+    firebaseAuth.addAuthStateListener(new FirebaseAuth.AuthStateListener() {
+      @Override
+      public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user != null) {
+          // User is signed in
+          user.getIdToken(true)
+              .addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
+                @Override
+                public void onSuccess(GetTokenResult getTokenResult) {
+                  // Token refresh succeeded
+                  // Get new ID token
+                  String idToken = getTokenResult.getToken();
+                  Log.i(TAG, "Refreshed Token: " + idToken);
+                }
+              })
+              .addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                  // Token refresh failed
+                  Log.w(TAG, "Failed ot refresh token.");
+                }
+              });
+        }
+      }
+    });
+
     initialized = true;
   }
 
