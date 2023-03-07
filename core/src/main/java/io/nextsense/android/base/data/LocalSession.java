@@ -41,6 +41,9 @@ public class LocalSession extends BaseRecord {
   @Convert(converter = StatusConverter.class, dbType = Integer.class)
   private Status status;
   private boolean uploadNeeded;
+
+  // If some data was received from the device for this session.
+  private boolean receivedData;
   private int eegSamplesUploaded;
   private long eegSamplesDeleted;
   private float eegSampleRate;
@@ -56,8 +59,8 @@ public class LocalSession extends BaseRecord {
 
   private LocalSession(@Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
                        @Nullable String earbudsConfig, Status status, boolean uploadNeeded,
-                       int eegSamplesUploaded, long eegSamplesDeleted, float eegSampleRate,
-                       int accelerationsUploaded, long accelerationsDeleted,
+                       boolean receivedData, int eegSamplesUploaded, long eegSamplesDeleted,
+                       float eegSampleRate, int accelerationsUploaded, long accelerationsDeleted,
                        float accelerationSampleRate, int deviceInternalStateUploaded,
                        Instant startTime) {
     super();
@@ -66,6 +69,7 @@ public class LocalSession extends BaseRecord {
     this.earbudsConfig = earbudsConfig;
     this.status = status;
     this.uploadNeeded = uploadNeeded;
+    this.receivedData = receivedData;
     this.eegSamplesUploaded = eegSamplesUploaded;
     this.eegSamplesDeleted = eegSamplesDeleted;
     this.eegSampleRate = eegSampleRate;
@@ -78,10 +82,10 @@ public class LocalSession extends BaseRecord {
 
   public static LocalSession create(
       @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
-      @Nullable String earbudsConfig, boolean uploadNeeded, float eegSampleRate,
-      float accelerationSampleRate, Instant startTime) {
+      @Nullable String earbudsConfig, boolean uploadNeeded, boolean receivedData,
+      float eegSampleRate, float accelerationSampleRate, Instant startTime) {
     return new LocalSession(cloudDataSessionId, userBigTableKey, earbudsConfig, Status.RECORDING,
-        uploadNeeded, /*recordsUploaded=*/0, /*eegSamplesDeleted=*/0, eegSampleRate,
+        uploadNeeded, receivedData, /*recordsUploaded=*/0, /*eegSamplesDeleted=*/0, eegSampleRate,
         /*accelerationsUploaded=*/0, /*accelerationSamplesDeleted=*/0, accelerationSampleRate,
         /*deviceInternalStateUploaded=*/0, startTime);
   }
@@ -89,16 +93,17 @@ public class LocalSession extends BaseRecord {
   // Need to be public for ObjectBox performance.
   public LocalSession(
       int id, @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
-      @Nullable String earbudsConfig, Status status, boolean uploadNeeded, int eegSamplesUploaded,
-      long eegSamplesDeleted, float eegSampleRate, int accelerationsUploaded,
-      long accelerationsDeleted, float accelerationSampleRate, int deviceInternalStateUploaded,
-      Instant startTime, @Nullable Instant endTime) {
+      @Nullable String earbudsConfig, Status status, boolean uploadNeeded, boolean receivedData,
+      int eegSamplesUploaded, long eegSamplesDeleted, float eegSampleRate,
+      int accelerationsUploaded, long accelerationsDeleted, float accelerationSampleRate,
+      int deviceInternalStateUploaded, Instant startTime, @Nullable Instant endTime) {
     super(id);
     this.userBigTableKey = userBigTableKey;
     this.cloudDataSessionId = cloudDataSessionId;
     this.earbudsConfig = earbudsConfig;
     this.status = status;
     this.uploadNeeded = uploadNeeded;
+    this.receivedData = receivedData;
     this.eegSamplesUploaded = eegSamplesUploaded;
     this.eegSamplesDeleted = eegSamplesDeleted;
     this.eegSampleRate = eegSampleRate;
@@ -165,6 +170,14 @@ public class LocalSession extends BaseRecord {
 
   public void setUploadNeeded(boolean uploadNeeded) {
     this.uploadNeeded = uploadNeeded;
+  }
+
+  public boolean isReceivedData() {
+    return receivedData;
+  }
+
+  public void setReceivedData(boolean receivedData) {
+    this.receivedData = receivedData;
   }
 
   public int getAccelerationsUploaded() {

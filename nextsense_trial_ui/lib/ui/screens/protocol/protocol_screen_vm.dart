@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:logging/logging.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/event.dart';
@@ -21,7 +22,7 @@ import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
-enum ProtocolCancelReason { none, deviceDisconnectedTimeout }
+enum ProtocolCancelReason { none, deviceDisconnectedTimeout, dataReceivedTimeout }
 
 // Protocol part scheduled in time in the protocol. The schedule can be repeated
 // many times until the protocol time is complete.
@@ -35,6 +36,8 @@ class ScheduledProtocolPart {
 }
 
 class ProtocolScreenViewModel extends DeviceStateViewModel {
+  static const Duration _dataReceivedTimeout = const Duration(seconds: 15);
+
   final StudyManager _studyManager = getIt<StudyManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
@@ -62,6 +65,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   int _currentProtocolPart = 0;
   int currentRepetition = 0;
   Duration _repetitionTime = Duration(seconds: 0);
+  bool dataReceived = false;
+  Timer? _dataReceivedTimer;
+  CancelListening? _currentSessionDataReceivedListener;
 
   // This indicates that the minimum duration of the protocol is passed and can mark is as
   // completed.
@@ -87,6 +93,22 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     if (deviceCanRecord) {
       if (runnableProtocol.state == ProtocolState.not_started) {
         await startSession();
+        _dataReceivedTimer = Timer(
+          _dataReceivedTimeout, () {
+            _logger.log(Level.WARNING,
+                'Did not receive data before the timeout of $_dataReceivedTimeout');
+            protocolCancelReason = ProtocolCancelReason.dataReceivedTimeout;
+            stopSession();
+            notifyListeners();
+          },
+        );
+        NextsenseBase.listenToCurrentSessionDataReceived((msg) {
+          _dataReceivedTimer?.cancel();
+          dataReceived = true;
+          startTimer();
+          notifyListeners();
+          _logger.log(Level.INFO, 'Started to receive data from the device.');
+        });
       } else {
         // Already in progress, show the progress.
         Duration elapsedTime = DateTime.now().difference(
@@ -115,15 +137,16 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _currentProtocolPart = 0;
     currentRepetition = 0;
     protocolCancelReason = ProtocolCancelReason.none;
-    startTimer();
     await _startProtocol();
   }
 
   Future stopSession() async {
     _logger.log(Level.INFO, "stopSession");
+    _dataReceivedTimer?.cancel();
     cancelTimer();
     sessionIsActive = false;
     _stopProtocol();
+    _currentSessionDataReceivedListener?.call();
     notifyListeners();
   }
 

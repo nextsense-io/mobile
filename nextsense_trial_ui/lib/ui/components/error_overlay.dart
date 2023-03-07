@@ -13,6 +13,6 @@ class ErrorOverlay extends StatelessWidget {
   Widget build(BuildContext context) {
     return RoundedBackground(child: Opacity(
         opacity: 0.9,
-        child: Container(height: 260, width: double.infinity, color: Colors.transparent, child: child)));
+        child: Container(height: 280, width: double.infinity, color: Colors.transparent, child: child)));
   }
 }

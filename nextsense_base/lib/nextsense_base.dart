@@ -56,6 +56,8 @@ class NextsenseBase {
       'io.nextsense.flutter.base.nextsense_base/device_state_channel');
   static const EventChannel _deviceInternalStateStream = const EventChannel(
       'io.nextsense.flutter.base.nextsense_base/device_internal_state_channel');
+  static const EventChannel _currentSessionDataReceivedStream = const EventChannel(
+      'io.nextsense.flutter.base.nextsense_base/current_session_data_received_channel');
   static const String _connectToServiceCommand = 'connect_to_service';
   static const String _changeNotificationContentCommand = 'change_notification_content';
   static const String _setFlutterActivityActiveCommand =
@@ -197,6 +199,14 @@ class NextsenseBase {
     var subscription = _deviceInternalStateStream.receiveBroadcastStream(
         [_nextDeviceInternalStateListenerId++]
     ).listen(listener, cancelOnError: true);
+    return () {
+      subscription.cancel();
+    };
+  }
+
+  static CancelListening listenToCurrentSessionDataReceived(Listener listener) {
+    var subscription = _currentSessionDataReceivedStream.receiveBroadcastStream().listen(
+        listener, cancelOnError: true);
     return () {
       subscription.cancel();
     };
