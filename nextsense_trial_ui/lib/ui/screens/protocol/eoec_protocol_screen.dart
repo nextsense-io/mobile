@@ -73,11 +73,11 @@ class EOECProtocolScreen extends ProtocolScreen {
     // type without looking at ancestry.
     return ViewModelBuilder<EOECProtocolScreenViewModel>.reactive(
         viewModelBuilder: () => EOECProtocolScreenViewModel(runnableProtocol),
-        onModelReady: (viewModel) => viewModel.init(),
+        onModelReady: (protocolViewModel) => protocolViewModel.init(),
         builder: (context, viewModel, child) =>
             ViewModelBuilder<ProtocolScreenViewModel>.reactive(
                 viewModelBuilder: () => viewModel,
-                onModelReady: (viewModel) => viewModel.init(),
+                onModelReady: (viewModel) => {},
                 builder: (context, viewModel, child) => WillPopScope(
                       onWillPop: () => onBackButtonPressed(context, viewModel),
                       child: body(context, viewModel),
