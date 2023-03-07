@@ -61,6 +61,9 @@ public class DatabaseSink {
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
   public void onSamples(Samples samples) {
     localSessionManager.getActiveLocalSession().ifPresent(currentLocalSession -> {
+      if (!currentLocalSession.isReceivedData()) {
+        localSessionManager.notifyFirstDataReceived();
+      }
       if (currentLocalSession.isUploadNeeded()) {
         // Verify that the timestamps are moving forward in time.
         EegSample lastEegSample = null;

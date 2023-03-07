@@ -14,11 +14,11 @@ import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -86,7 +86,6 @@ class ProtocolScreen extends HookWidget {
 
   final RunnableProtocol runnableProtocol;
   final Navigation _navigation = getIt<Navigation>();
-  final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreen');
 
   Protocol get protocol => runnableProtocol.protocol;
 
@@ -103,13 +102,52 @@ class ProtocolScreen extends HookWidget {
         ));
   }
 
+  String getRecordingCancelledMessage(ProtocolScreenViewModel viewModel) {
+    switch (viewModel.protocolCancelReason) {
+      case ProtocolCancelReason.deviceDisconnectedTimeout:
+        return ' Recording stopped because the device was unavailable for too long.';
+      case ProtocolCancelReason.dataReceivedTimeout:
+        return ' Recording stopped because the device failed to start recording.\n\n'
+            'Please make sure that the device is fully charged, power it off and on again and '
+            'try again. If it still did not work, please contact support.';
+      case ProtocolCancelReason.none:
+        return '';
+    }
+  }
+
+  Widget waitingToStartBody(BuildContext context, ProtocolScreenViewModel viewModel) {
+    var statusMsg = '';
+
+    return PageScaffold(
+        backgroundColor: NextSenseColors.lightGrey,
+        showBackground: false,
+        showProfileButton: false,
+        showBackButton: false,
+        showCancelButton: false,
+        backButtonCallback: () async => {
+          // Don't allow back at this time as it can put the Xenon device in a bad state to
+          // start/stop too fast.
+        },
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              SizedBox(height: 20),
+              LightHeaderText(text: viewModel.protocol.nameForUser + statusMsg,
+                  textAlign: TextAlign.center),
+              Spacer(),
+              WaitWidget(message: "Please wait while the device gets ready to record"),
+              Spacer()
+            ]));
+  }
+
   Widget runningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
     // The basic body will show a timer while running.
     bool isError = !viewModel.protocolCompleted &&
         viewModel.protocolCancelReason != ProtocolCancelReason.none;
-    var statusMsg = ' Recording';
+    String statusMsg = ' Recording';
     if (isError) {
-      statusMsg = ' EEG Recording stopped because the device was unavailable for too long';
+      statusMsg = getRecordingCancelledMessage(viewModel);
     }
 
     return PageScaffold(
@@ -161,7 +199,7 @@ class ProtocolScreen extends HookWidget {
   Widget notRunningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
     var statusMsg = '';
     if (viewModel.isError) {
-      statusMsg = ' Recording Canceled because the device was unavailable for too long';
+      statusMsg = getRecordingCancelledMessage(viewModel);
     } else if (viewModel.protocolCompleted) {
       statusMsg = ' Recording Completed';
     } else {
@@ -218,18 +256,31 @@ class ProtocolScreen extends HookWidget {
   }
 
   Widget body(BuildContext context, ProtocolScreenViewModel viewModel) {
+    Widget body;
+    if (viewModel.sessionIsActive) {
+      if (viewModel.dataReceived) {
+        body = runningStateBody(context, viewModel);
+      } else {
+        body = waitingToStartBody(context, viewModel);
+      }
+    } else {
+      body = notRunningStateBody(context, viewModel);
+    }
     return SafeArea(
-      child: Scaffold(
-          body: viewModel.sessionIsActive ?
-              runningStateBody(context, viewModel) :
-              notRunningStateBody(context, viewModel)),
+      child: Scaffold(body: body),
     );
   }
 
   Future<bool> onBackButtonPressed(
       BuildContext context, ProtocolScreenViewModel viewModel) async {
     if (viewModel.sessionIsActive) {
-      return await stopSession(context, viewModel);
+      if (viewModel.dataReceived) {
+        return await stopSession(context, viewModel);
+      } else {
+        // Don't want to allow back if we are waiting for the device to start recording. It would
+        // not stop and keep sending packets to the phone.
+        return false;
+      }
     }
     return true;
   }

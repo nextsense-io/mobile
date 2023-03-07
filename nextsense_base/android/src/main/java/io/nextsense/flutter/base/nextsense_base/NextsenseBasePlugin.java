@@ -48,6 +48,7 @@ import io.nextsense.android.base.DeviceState;
 import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.LocalSession;
+import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.emulated.EmulatedDeviceManager;
 import io.nextsense.android.service.ForegroundService;
 import io.objectbox.android.AndroidScheduler;
@@ -117,14 +118,15 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       "io.nextsense.flutter.base.nextsense_base/device_state_channel";
   private static final String DEVICE_INTERNAL_STATE_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/device_internal_state_channel";
-  private static final String DEVICE_DATA_CHANNEL_NAME =
-      "io.nextsense.flutter.base.nextsense_base/device_data_channel";
+  private static final String CURRENT_SESSION_DATA_RECEIVED_CHANNEL_NAME =
+      "io.nextsense.flutter.base.nextsense_base/current_session_data_received_channel";
 
   // Handler for the UI thread which is needed for running flutter JNI methods.
   private final Handler uiThreadHandler = new Handler(Looper.getMainLooper());
   private final Gson gson;
   private final Map<String, Device.DeviceStateChangeListener> deviceStateListeners =
       Maps.newConcurrentMap();
+  private LocalSessionManager.OnFirstDataReceivedListener onCurrentSessionDataReceivedListener;
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
   /// This local reference serves to register the plugin with the Flutter Engine and unregister it
@@ -133,6 +135,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private EventChannel deviceScanChannel;
   private EventChannel deviceStateChannel;
   private EventChannel deviceInternalStateChannel;
+  private EventChannel currentSessionDataReceivedChannel;
   private Context applicationContext;
   private Intent foregroundServiceIntent;
   private ForegroundService nextSenseService;
@@ -203,6 +206,22 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       @Override
       public void onCancel(Object arguments) {
         stopListeningToInternalDeviceState();
+      }
+    });
+    currentSessionDataReceivedChannel =
+        new EventChannel(flutterPluginBinding.getBinaryMessenger(),
+            CURRENT_SESSION_DATA_RECEIVED_CHANNEL_NAME);
+    currentSessionDataReceivedChannel.setStreamHandler(new EventChannel.StreamHandler() {
+      @Override
+      @SuppressWarnings("unchecked")
+      public void onListen(Object arguments, EventChannel.EventSink eventSink) {
+        Log.i(TAG, "Starting to listen to current session data received state...");
+        starListeningToCurrentSessionDataReceived(eventSink);
+      }
+      @Override
+      @SuppressWarnings("unchecked")
+      public void onCancel(Object arguments) {
+        stopListeningToCurrentSessionDataReceived();
       }
     });
     Log.i(TAG, "Attached to engine.");
@@ -543,6 +562,26 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     if (deviceInternalStateSubscription != null) {
       deviceInternalStateSubscription.cancel();
       deviceInternalStateSubscription = null;
+    }
+  }
+
+  private void starListeningToCurrentSessionDataReceived(EventChannel.EventSink eventSink) {
+    if (nextSenseServiceBound) {
+      LocalSessionManager localSessionManager = nextSenseService.getLocalSessionManager();
+      onCurrentSessionDataReceivedListener =
+          () -> uiThreadHandler.post(() -> eventSink.success(null));
+      localSessionManager.addOnFirstDataReceivedListener(onCurrentSessionDataReceivedListener);
+    } else {
+      Log.w(TAG, "Service not connected, cannot start monitoring device state.");
+    }
+  }
+
+  public void stopListeningToCurrentSessionDataReceived() {
+    if (nextSenseServiceBound) {
+      LocalSessionManager localSessionManager = nextSenseService.getLocalSessionManager();
+      localSessionManager.removeOnFirstDataReceivedListener(onCurrentSessionDataReceivedListener);
+    } else {
+      Log.w(TAG, "Service not connected, cannot start monitoring device state.");
     }
   }
 

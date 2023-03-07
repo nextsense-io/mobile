@@ -157,7 +157,7 @@
     },
     {
       "id": "4:7829109381478237227",
-      "lastPropertyId": "17:8889022787978996324",
+      "lastPropertyId": "18:3755527821508309483",
       "name": "LocalSession",
       "properties": [
         {
@@ -235,6 +235,11 @@
           "id": "17:8889022787978996324",
           "name": "endTime",
           "type": 6
+        },
+        {
+          "id": "18:3755527821508309483",
+          "name": "receivedData",
+          "type": 1
         }
       ],
       "relations": []
