@@ -132,7 +132,7 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
         ];
       case SurveyQuestionSpecialChoices.gad7:
         return [
-          SurveyQuestionChoice("0", "Not at all sure"),
+          SurveyQuestionChoice("0", "Not at all"),
           SurveyQuestionChoice("1", "Several days"),
           SurveyQuestionChoice("2", "Over half the days"),
           SurveyQuestionChoice("3", "Nearly every day"),
