@@ -145,17 +145,26 @@ class SessionManager {
 
   // Check in the user record if there is a running session, then load it.
   Future<Session?> loadCurrentSession() async {
+    _logger.log(Level.INFO, 'Checking if need to load a current session.');
     User? user = _authManager.user;
     if (user == null) {
       return null;
     }
-    RunnableProtocol? runningProtocol = await user.getRunningProtocol();
+    RunnableProtocol? runningProtocol = await user.getRunningProtocol(
+        _studyManager.currentStudyStartDate, _studyManager.currentStudyEndDate);
     if (runningProtocol != null) {
+      _logger.log(Level.INFO, 'Running sessions, load ${runningProtocol.lastSessionId}');
       FirebaseEntity? sessionEntity =
           await _firestoreManager.queryEntity([Table.sessions], [runningProtocol.lastSessionId!]);
       if (sessionEntity != null) {
-        _currentSession = Session(sessionEntity);
-        return _currentSession;
+        FirebaseEntity? dataSessionEntity = await _firestoreManager.queryEntity(
+            [Table.sessions, Table.data_sessions],
+            [sessionEntity.id, Modality.eeeg.name]);
+        if (dataSessionEntity != null) {
+          _currentSession = Session(sessionEntity);
+          _currentDataSession = DataSession(dataSessionEntity);
+          return _currentSession;
+        }
       }
     }
     return null;

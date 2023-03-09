@@ -91,7 +91,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   void init() async {
     super.init();
     if (deviceCanRecord) {
-      if (runnableProtocol.state == ProtocolState.not_started) {
+      if (runnableProtocol.state == ProtocolState.not_started ||
+          runnableProtocol.state == ProtocolState.cancelled) {
         await startSession();
         _dataReceivedTimer = Timer(
           _dataReceivedTimeout, () {
@@ -116,6 +117,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
             _sessionManager.getCurrentSession()!.getStartDateTime()! : DateTime.now());
         _logger.log(Level.INFO, 'Session already in progress for ${elapsedTime.inSeconds} seconds');
         sessionIsActive = true;
+        dataReceived = true;
         startTimer(elapsedTime: elapsedTime);
       }
     }

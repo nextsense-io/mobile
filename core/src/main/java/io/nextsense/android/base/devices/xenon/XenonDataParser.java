@@ -58,6 +58,7 @@ public class XenonDataParser {
   private static final int INTERNAL_ERROR_FLAG_INDEX = 0;
 
   private final LocalSessionManager localSessionManager;
+  boolean printedDataPackerWarning = false;
 
   private XenonDataParser(LocalSessionManager localSessionManager) {
     this.localSessionManager = localSessionManager;
@@ -123,7 +124,10 @@ public class XenonDataParser {
                                Instant receptionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
-      Log.w(TAG, "Received data packet without an active session, cannot record it.");
+      if (!printedDataPackerWarning) {
+        Log.w(TAG, "Received data packet without an active session, cannot record it.");
+        printedDataPackerWarning = true;
+      }
       return Optional.empty();
     }
     LocalSession localSession = localSessionOptional.get();

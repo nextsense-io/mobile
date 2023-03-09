@@ -107,6 +107,10 @@ class PlannedAssessment extends FirebaseEntity<PlannedAssessmentKey> {
     }
     // Value comes in HH:MM:SS format
     List<String> hms = value.split(":");
+    if (hms.length != 3) {
+      _logger.log(Level.WARNING, "Invalid duration override $value");
+      return null;
+    }
     return Duration(
         hours: int.parse(hms[0]),
         minutes: int.parse(hms[1]),

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+import 'package:nextsense_trial_ui/domain/assesment.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
@@ -91,17 +92,26 @@ class User extends FirebaseEntity<UserKey> {
     setValue(UserKey.is_temp_password, tempPassword);
   }
 
-  Future<dynamic?> getRunningProtocol() async {
-    dynamic? runningProtocolRef = getValue(UserKey.running_protocol);
+  Future<dynamic> getRunningProtocol(DateTime? studyStartDate, DateTime? studyEndDate) async {
+    dynamic runningProtocolRef = getValue(UserKey.running_protocol);
     if (runningProtocolRef == null) {
       return null;
     }
+    DocumentReference ref = runningProtocolRef as DocumentReference;
     if (runningProtocolRef.parent.path.toString().endsWith(Table.adhoc_protocols.name())) {
-      DocumentReference ref = runningProtocolRef as DocumentReference;
       return AdhocProtocol.fromRecord(
           AdhocProtocolRecord(FirebaseEntity(await ref.get())), getCurrentStudy()!);
     } else {
-      return ScheduledProtocol(runningProtocolRef, runningProtocolRef['protocol']);
+      if (studyStartDate == null || studyEndDate == null) {
+        throw Exception("Study start and end dates are required for scheduled protocols");
+      }
+      FirebaseEntity scheduledProtocolEntity = FirebaseEntity(await ref.get());
+      FirebaseEntity plannedAssessmentEntity = FirebaseEntity(
+          await (scheduledProtocolEntity.getValue(ScheduledProtocolKey.protocol)
+          as DocumentReference).get());
+      PlannedAssessment plannedAssessment =
+          PlannedAssessment(plannedAssessmentEntity, studyStartDate, studyEndDate);
+      return ScheduledProtocol(scheduledProtocolEntity, plannedAssessment);
     }
   }
 
