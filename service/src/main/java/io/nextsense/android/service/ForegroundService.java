@@ -252,7 +252,7 @@ public class ForegroundService extends Service {
       NotificationChannel serviceChannel = new NotificationChannel(
           CHANNEL_ID,
           CHANNEL_NAME,
-          NotificationManager.IMPORTANCE_DEFAULT
+          NotificationManager.IMPORTANCE_LOW
       );
       NotificationManager manager = getSystemService(NotificationManager.class);
       manager.createNotificationChannel(serviceChannel);
