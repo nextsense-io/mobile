@@ -39,7 +39,6 @@ import io.nextsense.android.base.db.DatabaseSink;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.utils.Util;
 import io.objectbox.android.AndroidScheduler;
-import io.objectbox.query.Query;
 import io.objectbox.reactive.DataSubscription;
 
 /**
@@ -681,15 +680,13 @@ public class Uploader {
         // is the case then the upload from the device is considered finished.
         List<EegSample> eegSamples =
                 objectBoxDatabase.getLastEegSamples(localSessionId, /*count=*/1);
-        if (!eegSamples.isEmpty()) {
-          if (Instant.now().isAfter(
-                  eegSamples.get(0).getReceptionTimestamp().plus(Duration.ofSeconds(1)))) {
-            Util.logd(TAG, "Session " + localSessionId + " finished, waking Uploader.");
-            databaseSink.resetEegRecordsCounter();
-            recordsToUpload.set(true);
-            synchronized (syncToken) {
-              syncToken.notifyAll();
-            }
+        if (!eegSamples.isEmpty() && Instant.now().isAfter(
+            eegSamples.get(0).getReceptionTimestamp().plus(Duration.ofSeconds(1)))) {
+          Util.logd(TAG, "Session " + localSessionId + " finished, waking Uploader.");
+          databaseSink.resetEegRecordsCounter();
+          recordsToUpload.set(true);
+          synchronized (syncToken) {
+            syncToken.notifyAll();
           }
         } else if (waitForDataTimer != null) {
           Log.i(TAG, "Empty session, no need to keep checking.");

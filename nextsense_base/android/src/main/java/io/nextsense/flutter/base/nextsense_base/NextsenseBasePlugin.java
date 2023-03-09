@@ -228,6 +228,23 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   }
 
   @Override
+  public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+    Log.i(TAG, "Detaching from engine.");
+    if (deviceInternalStateSubscription != null) {
+      deviceInternalStateSubscription.cancel();
+      deviceInternalStateSubscription = null;
+    }
+    methodChannel.setMethodCallHandler(null);
+    deviceScanChannel.setStreamHandler(null);
+    deviceStateChannel.setStreamHandler(null);
+    deviceInternalStateChannel.setStreamHandler(null);
+    currentSessionDataReceivedChannel.setStreamHandler(null);
+
+    applicationContext = null;
+    Log.i(TAG, "Detached from engine.");
+  }
+
+  @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
     switch (call.method) {
       case "getPlatformVersion":
@@ -400,17 +417,6 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     result.success(null);
   }
 
-  @Override
-  public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-    if (deviceInternalStateSubscription != null) {
-      deviceInternalStateSubscription.cancel();
-    }
-    methodChannel.setMethodCallHandler(null);
-    deviceScanChannel.setStreamHandler(null);
-    applicationContext = null;
-    Log.i(TAG, "Detached from engine.");
-  }
-
   private void connectToService() {
     if (nextSenseServiceBound) {
       return;
@@ -540,13 +546,16 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   private void startListeningToInternalDeviceState(EventChannel.EventSink eventSink) {
     if (nextSenseServiceBound) {
+      if (deviceInternalStateSubscription != null) {
+        deviceInternalStateSubscription.cancel();
+      }
       deviceInternalStateSubscription =
           nextSenseService.getObjectBoxDatabase().subscribe(
               DeviceInternalState.class, deviceInternalStateClass -> {
                 List<DeviceInternalState> deviceInternalStates =
                     nextSenseService.getObjectBoxDatabase()
                         .getLastDeviceInternalStates(/*count=*/1);
-                if (!deviceInternalStates.isEmpty()) {
+                if (deviceInternalStates != null && !deviceInternalStates.isEmpty()) {
                   DeviceInternalState deviceInternalState = nextSenseService.getObjectBoxDatabase()
                       .getLastDeviceInternalStates(/*count=*/1).get(0);
                   eventSink.success(gson.toJson(deviceInternalState));

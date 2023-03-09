@@ -161,7 +161,6 @@ public class MainActivity extends AppCompatActivity {
 
   @Override
   public void onDestroy() {
-    super.onDestroy();
     // The flutter engine would survive the application.
     FlutterEngine flutterEngine =
             FlutterEngineCache.getInstance().get(NextSenseApplication.FLUTTER_ENGINE_NAME);
@@ -169,8 +168,11 @@ public class MainActivity extends AppCompatActivity {
       Log.i(TAG, "Detaching flutter engine.");
       flutterEngine.getPlatformViewsController().detachFromView();
       flutterEngine.getLifecycleChannel().appIsDetached();
+      // Calling flutterEngine.destroy() here cause a JNI error. But it does let NextSenseBase
+      // plugin to call onDetach.
       FlutterEngineCache.getInstance().remove(NextSenseApplication.FLUTTER_ENGINE_NAME);
     }
+    super.onDestroy();
   }
 
   private void stopService() {
