@@ -39,13 +39,8 @@ class DashboardScheduleView extends StatelessWidget {
       return;
     }
 
-    if (scheduledProtocol.isSkipped || scheduledProtocol.isCancelled) {
-      var msg = 'Cannot start protocol cause its already ';
-      if (scheduledProtocol.isSkipped) {
-        msg += 'skipped';
-      } else {
-        msg += 'cancelled';
-      }
+    if (scheduledProtocol.isSkipped) {
+      var msg = 'Too late to start the protocol. Please try to start the next one in the schedule.';
       showDialog(
         context: context,
         builder: (_) => SimpleAlertDialog(title: 'Warning', content: msg),
