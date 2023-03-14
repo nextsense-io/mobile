@@ -39,12 +39,16 @@ public class BleDeviceScanner implements DeviceScanner {
   private Set<String> foundPeripheralAddresses = new HashSet<>();
   private DeviceScanner.DeviceScanListener deviceScanListener;
   private DeviceScanner.PeripheralScanListener peripheralScanListener;
+  private boolean scanning = false;
 
   private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback =
       new BluetoothCentralManagerCallback() {
     @Override
     public void onDiscoveredPeripheral(@NonNull BluetoothPeripheral peripheral,
                                        @NonNull ScanResult scanResult) {
+      if (!scanning || scanResult.getDevice() == null || scanResult.getDevice().getName() == null) {
+        return;
+      }
       for (String prefix : deviceManager.getValidPrefixes()) {
         if (scanResult.getDevice().getName().startsWith(prefix)) {
           if (foundPeripheralAddresses.contains(peripheral.getAddress())) {
@@ -52,7 +56,6 @@ public class BleDeviceScanner implements DeviceScanner {
           }
           foundPeripheralAddresses.add(peripheral.getAddress());
           logd(TAG, "Found valid device: " + scanResult.getDevice().getName());
-
 
           NextSenseDevice nextSenseDevice = deviceManager.getDeviceForName(peripheral.getName());
           if (nextSenseDevice == null) {
@@ -83,13 +86,13 @@ public class BleDeviceScanner implements DeviceScanner {
      */
     @Override
     public void onScanFailed(@NonNull ScanFailure scanFailure) {
-      DeviceScanListener.ScanError deviceScanError = DeviceScanListener.ScanError.UNDEFINED;
+      ScanError deviceScanError = ScanError.UNDEFINED;
       switch (scanFailure) {
         case ALREADY_STARTED:
           // It should return a result once finished, let it continue.
           return;
         case APPLICATION_REGISTRATION_FAILED:
-          deviceScanError = DeviceScanListener.ScanError.PERMISSION_ERROR;
+          deviceScanError = ScanError.PERMISSION_ERROR;
           break;
         case SCANNING_TOO_FREQUENTLY:
           // fallthrough.
@@ -99,11 +102,11 @@ public class BleDeviceScanner implements DeviceScanner {
           // fallthrough.
         case INTERNAL_ERROR:
           // Error in the Bluetooth stack, restart it and retry.
-          deviceScanError = DeviceScanListener.ScanError.INTERNAL_BT_ERROR;
+          deviceScanError = ScanError.INTERNAL_BT_ERROR;
           break;
         case FEATURE_UNSUPPORTED:
           // Cannot recover, show an error to the user and let him know to ask for support.
-          deviceScanError = DeviceScanListener.ScanError.FATAL_ERROR;
+          deviceScanError = ScanError.FATAL_ERROR;
           break;
       }
       deviceScanListener.onScanError(deviceScanError);
@@ -137,6 +140,7 @@ public class BleDeviceScanner implements DeviceScanner {
     centralManagerProxy.getCentralManager().stopScan();
     centralManagerProxy.getCentralManager()
         .scanForPeripheralsWithNames(deviceManager.getValidPrefixes().toArray(new String[0]));
+    scanning = true;
   }
 
   /**
@@ -150,6 +154,7 @@ public class BleDeviceScanner implements DeviceScanner {
     centralManagerProxy.getCentralManager().stopScan();
     centralManagerProxy.getCentralManager()
         .scanForPeripheralsWithNames(deviceManager.getValidPrefixes().toArray(new String[0]));
+    scanning = true;
   }
 
   public List<Device> getDiscoveredDevices() {
@@ -161,6 +166,7 @@ public class BleDeviceScanner implements DeviceScanner {
    */
   @Override
   public void stopFinding() {
+    scanning = false;
     centralManagerProxy.getCentralManager().stopScan();
     foundPeripheralAddresses = new HashSet<>();
   }

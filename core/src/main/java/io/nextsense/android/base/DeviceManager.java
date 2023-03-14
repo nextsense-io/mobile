@@ -31,7 +31,7 @@ public interface DeviceManager {
      * Called if there is an error while scanning.
      * @param scanError the cause of the error
      */
-    void onScanError(DeviceScanner.DeviceScanListener.ScanError scanError);
+    void onScanError(DeviceScanner.ScanError scanError);
   }
 
   void close();
