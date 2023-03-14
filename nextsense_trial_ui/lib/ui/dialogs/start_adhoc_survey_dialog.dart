@@ -24,10 +24,10 @@ class StartAdhocSurveyDialog extends HookWidget {
         Padding(padding: EdgeInsets.all(15), child: SimpleButton(
           text: MediumText(text: survey.name, color: NextSenseColors.darkBlue),
           onTap: () async {
-            bool completed = await _navigation.navigateTo(
+            bool? completed = await _navigation.navigateTo(
                 SurveyScreen.id, arguments:
                 AdhocSurvey(survey, profileViewModel.studyId));
-            Navigator.pop(context, completed);
+            Navigator.pop(context, completed ?? false);
           }),
         )).toList();
 

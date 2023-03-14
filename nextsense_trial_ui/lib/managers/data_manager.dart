@@ -37,10 +37,13 @@ class DataManager {
     _logger.log(Level.INFO, 'Starting to load user study data.');
     bool loaded = await _studyManager.loadCurrentStudy();
     if (!loaded) return false;
+    _logger.log(Level.INFO, 'Starting loadScheduledSurveys.');
     loaded = await _surveyManager.loadScheduledSurveys();
     if (!loaded) return false;
+    _logger.log(Level.INFO, 'Starting loadAdhocSurveys.');
     loaded = await _surveyManager.loadAdhocSurveys();
     if (!loaded) return false;
+    _logger.log(Level.INFO, 'Starting loadScheduledProtocols.');
     loaded = await _studyManager.loadScheduledProtocols();
     if (!loaded) return false;
     await _sessionManager.loadCurrentSession();

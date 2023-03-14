@@ -56,7 +56,8 @@ class SurveyScreenViewModel extends ViewModel {
 
   List<SurveyQuestion> getVisibleQuestions() {
     List<SurveyQuestion> visibleQuestions = [];
-    for (SurveyQuestion question in survey.getQuestions()) {
+    _logger.log(Level.INFO, "Showing survey: ${survey.id}");
+    for (SurveyQuestion question in survey.getQuestions() ?? []) {
       bool questionVisible = true;
       if (question.conditions.isNotEmpty) {
         if (formValues == null) {
@@ -64,8 +65,8 @@ class SurveyScreenViewModel extends ViewModel {
         } else {
           for (Condition condition in question.conditions) {
             dynamic questionValue = formValues![condition.key];
-            // _logger.log(Level.FINE,
-            //     "${question.id} showing if ${condition.toString()}: value: ${questionValue}");
+            _logger.log(Level.FINE,
+                "${question.id} showing if ${condition.toString()}: value: ${questionValue}");
             if (!condition.isTrue(questionValue)) {
               questionVisible = false;
               break;

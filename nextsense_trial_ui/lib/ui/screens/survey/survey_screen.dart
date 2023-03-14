@@ -72,11 +72,22 @@ class SurveyScreen extends HookWidget {
   }
 
   Widget _buildBody(BuildContext context, SurveyScreenViewModel viewModel) {
+    if (viewModel.survey.getQuestions() == null || viewModel.survey.getQuestions()!.isEmpty) {
+      return PageScaffold(
+          backgroundColor: NextSenseColors.lightGrey,
+          showBackground: false,
+          showProfileButton: false,
+          child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            MediumText(text: 'No questions in the survey, please contact support.',
+                color: NextSenseColors.purple)
+          ]));
+    }
+
     for (String questionKey in viewModel.formValues?.keys ?? []) {
       _formKey.currentState?.setInternalFieldValue(questionKey, viewModel.formValues?[questionKey],
           isSetState: false);
     }
-    bool showQuestionsProgress = viewModel.survey.getQuestions().length > 1;
+    bool showQuestionsProgress = viewModel.survey.getQuestions()!.length > 1;
     return PageScaffold(
         backgroundColor: NextSenseColors.lightGrey,
         showBackground: false,
@@ -120,7 +131,7 @@ class SurveyScreen extends HookWidget {
                         ),
                         globalFooter: showQuestionsProgress ? LinearProgressIndicator(
                           value: viewModel.currentPageNumber /
-                              (viewModel.survey.getQuestions().length - 1),
+                              (viewModel.survey.getQuestions()!.length - 1),
                           color: NextSenseColors.purple,
                         ) : null
                     )))),
