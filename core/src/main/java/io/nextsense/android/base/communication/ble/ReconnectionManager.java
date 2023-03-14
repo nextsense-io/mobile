@@ -100,7 +100,7 @@ public class ReconnectionManager {
         }
 
         @Override
-        public void onScanError(ScanError scanError) {
+        public void onScanError(DeviceScanner.ScanError scanError) {
           Log.w(TAG, "Scan error: " + scanError.toString());
         }
       });

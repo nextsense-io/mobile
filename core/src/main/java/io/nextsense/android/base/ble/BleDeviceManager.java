@@ -36,6 +36,7 @@ public class BleDeviceManager implements DeviceManager {
   private final NextSenseDeviceManager nextSenseDeviceManager;
   private final Set<DeviceManager.DeviceScanListener> deviceScanListeners = new HashSet<>();
   private final Map<String, Device> devices = Maps.newConcurrentMap();
+  private boolean scanning = false;
 
   public BleDeviceManager(DeviceScanner deviceScanner,
                           BleCentralManagerProxy centralManagerProxy,
@@ -78,7 +79,8 @@ public class BleDeviceManager implements DeviceManager {
     }
     // Add the listener then launch a new scan.
     deviceScanListeners.add(deviceScanListener);
-    deviceScanner.findDevices(mainDeviceScanListener);
+    scanning = true;
+    deviceScanner.findPeripherals(mainDeviceScanListener);
   }
 
   @Override
@@ -101,18 +103,18 @@ public class BleDeviceManager implements DeviceManager {
 
   @Override
   public void stopFindingDevices(DeviceManager.DeviceScanListener deviceScanListener) {
+    scanning = false;
     deviceScanner.stopFinding();
     deviceScanListeners.remove(deviceScanListener);
   }
 
-  private final DeviceScanner.DeviceScanListener mainDeviceScanListener =
-      new DeviceScanner.DeviceScanListener() {
+  private final DeviceScanner.PeripheralScanListener mainDeviceScanListener =
+      new DeviceScanner.PeripheralScanListener() {
         @Override
-        public void onNewDevice(BluetoothPeripheral peripheral) {
+        public void onNewPeripheral(BluetoothPeripheral peripheral) {
           Util.logd(TAG, "new device " + peripheral.getAddress() + ", present? " +
               devices.containsKey(peripheral.getAddress()));
           if (!devices.containsKey(peripheral.getAddress())) {
-
             NextSenseDevice nextSenseDevice =
                 nextSenseDeviceManager.getDeviceForName(peripheral.getName());
             if (nextSenseDevice == null) {
@@ -121,19 +123,22 @@ public class BleDeviceManager implements DeviceManager {
             ReconnectionManager reconnectionManager = ReconnectionManager.create(
                 centralManagerProxy, bluetoothStateManager, deviceScanner,
                 BleDevice.RECONNECTION_ATTEMPTS_INTERVAL);
-            Device device = Device.create(
-                centralManagerProxy, bluetoothStateManager, nextSenseDevice, peripheral, reconnectionManager);
+            Device device = Device.create(centralManagerProxy, bluetoothStateManager,
+                nextSenseDevice, peripheral, reconnectionManager);
 
-
-            devices.putIfAbsent(device.getAddress(), device);
+            if (scanning) {
+              devices.putIfAbsent(device.getAddress(), device);
+            }
           }
-          for (DeviceManager.DeviceScanListener deviceScanListener : deviceScanListeners) {
-            deviceScanListener.onNewDevice(devices.get(peripheral.getAddress()));
+          if (scanning) {
+            for (DeviceManager.DeviceScanListener deviceScanListener : deviceScanListeners) {
+              deviceScanListener.onNewDevice(devices.get(peripheral.getAddress()));
+            }
           }
         }
 
         @Override
-        public void onScanError(ScanError scanError) {
+        public void onScanError(DeviceScanner.ScanError scanError) {
           for (DeviceManager.DeviceScanListener deviceScanListener : deviceScanListeners) {
             deviceScanListener.onScanError(scanError);
           }

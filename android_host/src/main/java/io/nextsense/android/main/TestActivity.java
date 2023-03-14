@@ -325,7 +325,7 @@ public class TestActivity extends AppCompatActivity {
         }
 
         @Override
-        public void onScanError(DeviceScanner.DeviceScanListener.ScanError scanError) {
+        public void onScanError(DeviceScanner.ScanError scanError) {
           Log.w(TAG, scanError.toString());
         }
       };

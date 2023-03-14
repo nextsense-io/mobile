@@ -14,23 +14,23 @@ import io.nextsense.android.base.emulated.EmulatedDeviceScanner;
  */
 public interface DeviceScanner {
 
+    enum ScanError {
+        // Placeholder if reason is not assigned yet.
+        UNDEFINED,
+        // Bluetooth is not enabled, scan can't be completed.
+        BT_DISABLED,
+        // Internal error in the Android Bluetooth stack. Should try to restart it.
+        INTERNAL_BT_ERROR,
+        // Permission not granted. Ask the user again.
+        PERMISSION_ERROR,
+        // Cannot scan due to a config issue, should report the issue for further debugging.
+        FATAL_ERROR
+    }
+
     /**
      * Callbacks for scanning devices.
      */
     interface DeviceScanListener {
-
-        enum ScanError {
-            // Placeholder if reason is not assigned yet.
-            UNDEFINED,
-            // Bluetooth is not enabled, scan can't be completed.
-            BT_DISABLED,
-            // Internal error in the Android Bluetooth stack. Should try to restart it.
-            INTERNAL_BT_ERROR,
-            // Permission not granted. Ask the user again.
-            PERMISSION_ERROR,
-            // Cannot scan due to a config issue, should report the issue for further debugging.
-            FATAL_ERROR
-        }
 
         /**
          * Called when a new {@link BluetoothPeripheral} is found.
@@ -49,19 +49,6 @@ public interface DeviceScanner {
      * Callbacks for scanning peripherals.
      */
     interface PeripheralScanListener {
-
-        enum ScanError {
-            // Placeholder if reason is not assigned yet.
-            UNDEFINED,
-            // Bluetooth is not enabled, scan can't be completed.
-            BT_DISABLED,
-            // Internal error in the Android Bluetooth stack. Should try to restart it.
-            INTERNAL_BT_ERROR,
-            // Permission not granted. Ask the user again.
-            PERMISSION_ERROR,
-            // Cannot scan due to a config issue, should report the issue for further debugging.
-            FATAL_ERROR
-        }
 
         /**
          * Called when a new {@link BluetoothPeripheral} is found.

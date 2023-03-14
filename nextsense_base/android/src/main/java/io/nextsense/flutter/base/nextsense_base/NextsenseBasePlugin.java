@@ -239,7 +239,6 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     deviceStateChannel.setStreamHandler(null);
     deviceInternalStateChannel.setStreamHandler(null);
     currentSessionDataReceivedChannel.setStreamHandler(null);
-
     applicationContext = null;
     Log.i(TAG, "Detached from engine.");
   }
@@ -488,7 +487,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         }
 
         @Override
-        public void onScanError(DeviceScanner.DeviceScanListener.ScanError scanError) {
+        public void onScanError(DeviceScanner.ScanError scanError) {
           Log.e(TAG, "Error while scanning in Android: " + scanError.name());
           uiThreadHandler.post(() ->
               eventSink.error(scanError.name(), scanError.name(), scanError.name()));
