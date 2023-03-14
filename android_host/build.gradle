@@ -22,13 +22,12 @@ android {
         minSdkVersion 24
         targetSdkVersion 33
         versionCode 21
-        versionName "0.3.19"
+        versionName "0.3.20"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             // Filter for architectures supported by Flutter.
             abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
         }
-        signingConfig signingConfigs.release
     }
 
     flavorDimensions "target_user_type", "env"
@@ -78,10 +77,19 @@ android {
 
     buildTypes {
         release {
+            debuggable false
             minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
                     'proguard-rules.pro'
             signingConfig signingConfigs.release
+        }
+        debug {
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'),
+                    'proguard-rules.pro'
         }
     }
 
@@ -92,7 +100,6 @@ android {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
-    namespace 'io.nextsense.android.main'
 }
 
 dependencies {
