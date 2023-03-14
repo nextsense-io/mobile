@@ -71,10 +71,10 @@ public class ReconnectionManager {
   }
 
   public void stopReconnecting() {
-    deviceScanner.stopFinding();
     reconnecting.set(false);
     reconnectionsFuture.cancel(true);
     reconnectionExecutor.shutdown();
+    deviceScanner.stopFinding();
     Util.logd(TAG, "Stopped trying to reconnect.");
   }
 
