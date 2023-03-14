@@ -68,15 +68,10 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
   Conditions? _conditions;
 
   SurveyQuestionType get type => surveyQuestionTypeFromString(typeString);
-
   String get typeString => getValue(SurveyQuestionKey.type);
-
   String get text => getValue(SurveyQuestionKey.text);
-
   String? get hint => getValue(SurveyQuestionKey.hint);
-
   List<Condition> get conditions => _conditions?.getConditions() ?? [];
-
   // Optional question can be skipped
   bool get optional => getValue(SurveyQuestionKey.optional) ?? false;
 
@@ -164,8 +159,9 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
 class Survey extends FirebaseEntity<SurveyKey> {
 
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final CustomLogPrinter _logger = CustomLogPrinter('Survey');
 
-  List<SurveyQuestion> _questions = [];
+  List<SurveyQuestion>? _questions;
 
   String get name => getValue(SurveyKey.name) ?? "";
   String get introText => getValue(SurveyKey.intro_text) ?? "";
@@ -174,6 +170,7 @@ class Survey extends FirebaseEntity<SurveyKey> {
   Survey(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
 
   Future<bool> loadQuestions({bool fromCache = false}) async {
+    _logger.log(Level.INFO, 'Loading questions for survey ${this.id} fromCache = $fromCache');
     List<FirebaseEntity>? entities = await _firestoreManager.queryEntities(
         [Table.surveys, Table.questions], [this.id],
         fromCacheWithKey: fromCache ? "survey_${this.id}_questions" : null,
@@ -184,10 +181,11 @@ class Survey extends FirebaseEntity<SurveyKey> {
       return false;
     }
     _questions = entities.map((firebaseEntity) => SurveyQuestion(firebaseEntity)).toList();
+    _logger.log(Level.INFO, "Loaded ${_questions!.length} questions.");
     return true;
   }
 
-  List<SurveyQuestion> getQuestions() {
+  List<SurveyQuestion>? getQuestions() {
     return _questions;
   }
 }

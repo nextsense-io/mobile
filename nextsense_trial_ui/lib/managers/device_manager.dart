@@ -214,6 +214,7 @@ class DeviceManager {
   }
 
   Future disconnectDevice() async {
+    _notificationsManager.hideAlertNotification(connectionLostNotificationId);
     if (getConnectedDevice() == null) {
       _logger.log(Level.FINE, "Trying to disconnect but no connected device");
       return;
@@ -221,7 +222,6 @@ class DeviceManager {
     _requestDeviceStateTimer?.cancel();
     _cancelStateListening?.call();
     _cancelInternalStateListening?.call();
-    _notificationsManager.hideAlertNotification(connectionLostNotificationId);
     try {
       await NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
     } on PlatformException {

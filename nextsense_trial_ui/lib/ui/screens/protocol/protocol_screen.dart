@@ -22,7 +22,7 @@ import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
-Future<bool> _confirmStopSessionDialog(BuildContext context,
+Future<bool?> _confirmStopSessionDialog(BuildContext context,
     ProtocolScreenViewModel viewModel) async {
   String confirmStopText = 'Protocol is not finished yet.\n'
       'Are you sure you want to stop?';
@@ -295,11 +295,11 @@ class ProtocolScreen extends HookWidget {
   }
 
   Future<bool> stopSession(BuildContext context, ProtocolScreenViewModel viewModel) async {
-    bool confirm = await _confirmStopSessionDialog(context, viewModel);
-    if (confirm) {
+    bool? confirm = await _confirmStopSessionDialog(context, viewModel);
+    if (confirm != null && confirm) {
       await viewModel.stopSession();
     }
-    return confirm;
+    return confirm ?? false;
   }
 
   Widget deviceInactiveOverlay(BuildContext context, ProtocolScreenViewModel viewModel) {
