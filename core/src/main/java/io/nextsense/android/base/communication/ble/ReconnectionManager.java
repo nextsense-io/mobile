@@ -71,6 +71,7 @@ public class ReconnectionManager {
   }
 
   public void stopReconnecting() {
+    deviceScanner.stopFinding();
     reconnecting.set(false);
     reconnectionsFuture.cancel(true);
     reconnectionExecutor.shutdown();
