@@ -103,7 +103,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
             notifyListeners();
           },
         );
-        NextsenseBase.listenToCurrentSessionDataReceived((msg) {
+        _currentSessionDataReceivedListener = NextsenseBase.listenToCurrentSessionDataReceived(
+                (msg) {
           _dataReceivedTimer?.cancel();
           dataReceived = true;
           startTimer();
@@ -395,6 +396,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _timerPaused = false;
     try {
       if (_deviceManager.deviceIsReady) {
+        _logger.log(Level.INFO, 'Stopping session.');
         await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
       }
     } catch (e) {
