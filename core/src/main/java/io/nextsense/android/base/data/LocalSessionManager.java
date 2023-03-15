@@ -99,6 +99,9 @@ public class LocalSessionManager {
 
   public synchronized void addOnFirstDataReceivedListener(OnFirstDataReceivedListener listener) {
     onFirstDataReceivedListeners.add(listener);
+    if (activeLocalSession != null && activeLocalSession.isReceivedData()) {
+      listener.onFirstDataReceived();
+    }
   }
 
   public synchronized void removeOnFirstDataReceivedListener(OnFirstDataReceivedListener listener) {
