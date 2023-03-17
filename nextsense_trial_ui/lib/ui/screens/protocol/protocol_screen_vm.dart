@@ -291,8 +291,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       return false;
     }
     Event event = Event(firebaseEntity);
-    event..setValue(EventKey.start_time, eventStart.toIso8601String())
-        ..setValue(EventKey.end_time, endTime.toIso8601String())
+    event..setValue(EventKey.start_time, eventStart)
+        ..setValue(EventKey.end_time, endTime)
         ..setValue(EventKey.marker, currentMarker);
     return await event.save();
   }
