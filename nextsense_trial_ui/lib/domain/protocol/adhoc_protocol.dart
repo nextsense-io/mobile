@@ -43,16 +43,17 @@ class AdhocProtocol implements RunnableProtocol {
 
     this.state = state;
 
-    if (sessionId == null) {
-      // Don't persist adhoc protocol without session id
+    if (_record == null && sessionId == null) {
+      // Don't persist adhoc protocol without a session id.
       return false;
     }
 
     if (_record != null) {
       // Adhoc protocol record already exists, update its values
-      _record!
-        ..setState(state)
-        ..setSession(sessionId);
+      _record!.setState(state);
+      if (sessionId != null) {
+        _record!.setSession(sessionId);
+      }
       return await _record!.save();
     } else {
       // Create new record
@@ -73,7 +74,7 @@ class AdhocProtocol implements RunnableProtocol {
       _record = AdhocProtocolRecord(firebaseEntity);
       _record!..setTimestamp(now)
         ..setState(state)
-        ..setSession(sessionId)
+        ..setSession(sessionId!)
         ..setProtocol(protocol.name);
       return await _record!.save();
     }

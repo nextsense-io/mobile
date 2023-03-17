@@ -402,17 +402,14 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     } catch (e) {
       _logger.log(Level.WARNING, "Failed to stop streaming");
     }
-    runnableProtocol.update(
-        state: protocolCompleted
-            ? ProtocolState.completed
-            : ProtocolState.cancelled);
-    _authManager.user!.setValue(UserKey.running_protocol, null);
-  }
-
-  // Executed when protocol is successfully completed i.e. minimum duration is
-  // passed
-  void onProtocolCompleted() {
-    _logger.log(Level.INFO, 'Protocol ${protocol.name} completed');
-    runnableProtocol.update(state: ProtocolState.completed);
+    try {
+      await runnableProtocol.update(
+          state: protocolCompleted
+              ? ProtocolState.completed
+              : ProtocolState.cancelled);
+      _authManager.user!.setValue(UserKey.running_protocol, null);
+    } catch (e) {
+      _logger.log(Level.WARNING, "Failed to update protocol state when stopping the session: $e");
+    }
   }
 }
