@@ -408,10 +408,14 @@ public class Uploader {
       // not reach a discrete uploadChunkSize.
       Optional<LocalSession> activeSessionOptional = objectBoxDatabase.getActiveSession();
       if (activeSessionOptional.isPresent()) {
+        Util.logd(TAG, "active session present, waiting for finished session");
         activeSessionSubscription = subscribeToFinishedSession(activeSessionOptional.get().id);
       } else {
         if (!localSessions.isEmpty() &&
-            localSessions.get(localSessions.size() - 1).isUploadNeeded()) {
+            localSessions.get(localSessions.size() - 1).isUploadNeeded() &&
+            localSessions.get(localSessions.size() - 1).getStatus() ==
+                LocalSession.Status.FINISHED) {
+          Util.logd(TAG, "no active session present, waiting for data upload finished timer");
           scheduleDataUploadFinishedTimer(localSessions.get(localSessions.size() - 1).id);
         }
       }
@@ -666,6 +670,7 @@ public class Uploader {
             Util.logd(TAG, "No finished session, not waking up.");
             return;
           }
+          Util.logd(TAG, "finished session, scheduling data upload finished timer.");
           scheduleDataUploadFinishedTimer(localSessionId);
         });
   }
@@ -682,22 +687,17 @@ public class Uploader {
                 objectBoxDatabase.getLastEegSamples(localSessionId, /*count=*/1);
         if (!eegSamples.isEmpty() && Instant.now().isAfter(
             eegSamples.get(0).getReceptionTimestamp().plus(Duration.ofSeconds(1)))) {
-          Util.logd(TAG, "Session " + localSessionId + " finished, waking Uploader.");
-          databaseSink.resetEegRecordsCounter();
-          recordsToUpload.set(true);
-          synchronized (syncToken) {
-            syncToken.notifyAll();
-          }
-        } else if (waitForDataTimer != null) {
-          Log.i(TAG, "Empty session, no need to keep checking.");
-          waitForDataTimer.purge();
-          waitForDataTimer.cancel();
-          waitForDataTimer = null;
+            Util.logd(TAG, "Session " + localSessionId + " finished, waking Uploader.");
+            databaseSink.resetEegRecordsCounter();
+            recordsToUpload.set(true);
+            synchronized (syncToken) {
+              syncToken.notifyAll();
+            }
         }
       }
     };
-    waitForDataTimer.scheduleAtFixedRate(checkTransmissionFinishedTask, /*delay=*/0,
-            Duration.ofSeconds(1).toMillis());
+    waitForDataTimer.scheduleAtFixedRate(checkTransmissionFinishedTask,
+        /*delay=*/Duration.ofSeconds(1).toMillis(), Duration.ofSeconds(1).toMillis());
   }
 
   private void onConnectivityStateChanged() {
