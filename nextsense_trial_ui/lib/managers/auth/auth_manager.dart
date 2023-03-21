@@ -177,7 +177,7 @@ class AuthManager {
   Future<bool> requestSignUpEmail(String email) async {
     switch (_signedInAuthMethod) {
       case AuthMethod.email_password:
-        User? user = await loadUser(username: email);
+        User? user = await _loadUser(username: email);
         user?.setTempPassword(true);
         user?.save();
         return await _emailAuthManager!.sendSignUpLinkEmail(email);
@@ -188,91 +188,9 @@ class AuthManager {
     }
   }
 
-  Future<AuthenticationResult> _signIn({required String username, String? authUid}) async {
-    _logger.log(Level.INFO, 'Starting NextSense user check.');
-    _user = await loadUser(username: username, authUid: authUid);
-
-    if (_user == null) {
-      await signOut();
-      return AuthenticationResult.user_fetch_failed;
-    }
-
-    // Check user type match current flavor of app
-    // 'researcher' user can only use 'researcher' flavored app
-    // 'subject' user can only use 'subject' flavored app
-    if (_user!.userType != _flavor.userType) {
-      await signOut();
-      return AuthenticationResult.invalid_user_setup;
-    }
-    return AuthenticationResult.success;
-  }
-
-  // Load user from Firestore and update some data
-  Future<User?> loadUser({required String username, String? authUid}) async {
-    final User? user = await fetchUserFromFirestore(username);
-
-    if (user == null) {
-      _logger.log(Level.WARNING, 'Failed to fetch user from Firestore');
-      return null;
-    }
-
-    // Persist bt_key
-    if (user.getValue(UserKey.bt_key) == null) {
-      user.setValue(UserKey.bt_key, _uuid.v4());
-    }
-
-    // Persist UID on first login.
-    if (user.getValue(UserKey.auth_uid) == null || user.getValue(UserKey.auth_uid) == '') {
-      if (authUid == null) {
-        _logger.log(Level.SEVERE, 'No auth UID, cannot login.');
-        return null;
-      }
-      user.setValue(UserKey.auth_uid, authUid);
-    }
-
-    // Persist fcm token
-    String? fcmToken = _preferences.getString(PreferenceKey.fcmToken);
-    if (fcmToken != null) {
-      user.setFcmToken(fcmToken);
-    }
-
-    // Save timezone
-    // TODO(alex): handle timezone change in broadcast receiver
-    await user.updateTimezone();
-    await user.save();
-    _userCode = username;
-
-    return user;
-  }
-
-  Future<User?> fetchUserFromFirestore(String code) async {
-    FirebaseEntity? userEntity = await _firestoreManager.queryEntity([Table.users], [code]);
-    if (userEntity == null || !userEntity.getDocumentSnapshot().exists) {
-      return null;
-    }
-    return User(userEntity);
-  }
-
-  Future<void> signOut() async {
-    switch (_signedInAuthMethod) {
-      case AuthMethod.user_code:
-        await _nextSenseAuthManager!.handleSignOut();
-        break;
-      case AuthMethod.google_auth:
-        await _googleAuthManager!.handleSignOut();
-        break;
-      default:
-        // Nothing to do.
-    }
-    _userCode = null;
-    _user = null;
-    _email = null;
-  }
-
-  // Make sure user data is loaded from Firestore before we are doing any authorized operations.
+  // Make sure the user data is loaded from Firestore before doing any authorized operations.
   //
-  // Returns true if user is successfully initialized, otherwise returns false and further actions
-  // must be taken.
+  // Returns true if the user is successfully initialized, otherwise returns false.
   Future<bool> ensureUserLoaded() async {
     _logger.log(Level.INFO, 'ensure user loaded');
     if (_user != null) {
@@ -301,13 +219,97 @@ class AuthManager {
           _logger.log(Level.WARNING, 'Unknown auth method.');
           return false;
       }
-      _user = await loadUser(username: username, authUid: authUid);
+      _user = await _loadUser(username: username);
       if (_user != null) {
+        _userCode = username;
+        await _updateUserDetails(user: _user!, authUid: authUid);
         return true;
       }
     }
-
     _logger.log(Level.WARNING, 'Failed to initialize user');
     return false;
+  }
+
+  Future<void> signOut() async {
+    switch (_signedInAuthMethod) {
+      case AuthMethod.user_code:
+        await _nextSenseAuthManager!.handleSignOut();
+        break;
+      case AuthMethod.google_auth:
+        await _googleAuthManager!.handleSignOut();
+        break;
+      case AuthMethod.email_password:
+        await _emailAuthManager!.handleSignOut();
+        break;
+      default:
+      // Nothing to do.
+    }
+    _userCode = null;
+    _user = null;
+    _email = null;
+  }
+
+  Future<AuthenticationResult> _signIn({required String username, required String authUid}) async {
+    _logger.log(Level.INFO, 'Starting NextSense user check.');
+    _user = await _loadUser(username: username);
+
+    if (_user == null) {
+      await signOut();
+      return AuthenticationResult.user_fetch_failed;
+    }
+
+    // Check user type match current flavor of app
+    // 'researcher' user can only use 'researcher' flavored app
+    // 'subject' user can only use 'subject' flavored app
+    if (_user!.userType != _flavor.userType) {
+      await signOut();
+      return AuthenticationResult.invalid_user_setup;
+    }
+    _updateUserDetails(user: _user!, authUid: authUid);
+    _userCode = username;
+    return AuthenticationResult.success;
+  }
+
+  Future _updateUserDetails({required User user, required String authUid}) async {
+    // Persist bt_key
+    if (user.getValue(UserKey.bt_key) == null) {
+      user.setValue(UserKey.bt_key, _uuid.v4());
+    }
+
+    // Persist UID on first login.
+    if (user.getValue(UserKey.auth_uid) == null || user.getValue(UserKey.auth_uid) == '') {
+      user.setValue(UserKey.auth_uid, authUid);
+    }
+
+    // Persist fcm token
+    String? fcmToken = _preferences.getString(PreferenceKey.fcmToken);
+    if (fcmToken != null) {
+      user.setFcmToken(fcmToken);
+    }
+
+    // Save timezone
+    // TODO(alex): handle timezone change in broadcast receiver
+    await user.updateTimezone();
+    user.setLastLogin(DateTime.now());
+    await user.save();
+  }
+
+  // Load user from Firestore and update some data
+  Future<User?> _loadUser({required String username}) async {
+    final User? user = await _fetchUserFromFirestore(username);
+
+    if (user == null) {
+      _logger.log(Level.WARNING, 'Failed to fetch user from Firestore.');
+      return null;
+    }
+    return user;
+  }
+
+  Future<User?> _fetchUserFromFirestore(String code) async {
+    FirebaseEntity? userEntity = await _firestoreManager.queryEntity([Table.users], [code]);
+    if (userEntity == null || !userEntity.getDocumentSnapshot().exists) {
+      return null;
+    }
+    return User(userEntity);
   }
 }

@@ -11,31 +11,33 @@ import 'package:timezone/timezone.dart' as tz;
 /// If any fields are added here, they need to be added to the User class in
 /// https://github.com/nextsense-io/mobile_backend/lib/models/user.py
 enum UserKey {
+  // UID used when authenticating
+  auth_uid,
+  // BigTable key. Generated as a UUID.
+  bt_key,
+  // Currently selected study. Opens by default if there are more than one for
+  // this user, which is possible for some user types.
+  current_study,
+  // FCM Token for push notifications
+  fcm_token,
+  // If the password is temporary (first login or reset by our support).
+  is_temp_password,
+  // Last login datetime. null if never logged on.
+  last_login,
   // MAC address of the last paired device.
   last_paired_device,
   // String containing the salt and hashed password.
   password,
-  // If the password is temporary (first login or reset by our support).
-  is_temp_password,
-  // Currently selected study. Opens by default if there are more than one for
-  // this user, which is possible for some user types.
-  current_study,
-  // User type.
-  type,
-  // BigTable key. Generated as a UUID.
-  bt_key,
-  // How many sessions were recorded by this user.
-  session_number,
-  // FCM Token for push notifications
-  fcm_token,
-  // Current user's timezone
-  timezone,
-  // User name
-  username,
   // Currently recording protocol
   running_protocol,
-  // UID used when authenticating
-  auth_uid
+  // How many sessions were recorded by this user.
+  session_number,
+  // Current user's timezone
+  timezone,
+  // User type.
+  type,
+  // User name
+  username,
 }
 
 enum UserType {
@@ -73,6 +75,15 @@ class User extends FirebaseEntity<UserKey> {
 
   void setFcmToken(String fcmToken) {
     setValue(UserKey.fcm_token, fcmToken);
+  }
+
+  DateTime? getLastLogin() {
+    final Timestamp? lastLoginDateTime = getValue(UserKey.last_login);
+    return lastLoginDateTime != null ? lastLoginDateTime.toDate() : null;
+  }
+
+  void setLastLogin(DateTime dateTime) {
+    setValue(UserKey.last_login, dateTime);
   }
 
   Future updateTimezone() async {
