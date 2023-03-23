@@ -2,6 +2,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 
+enum BaseEntityKey {
+  // User id of the user who created this record.
+  created_by,
+  // Datetime when this record was created.
+  created_at,
+  // User id of the user who last updated this record.
+  updated_by,
+  // Datetime when this record was last updated.
+  updated_at,
+}
+
 class FirebaseEntity<T extends Enum> {
 
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
@@ -13,6 +24,10 @@ class FirebaseEntity<T extends Enum> {
 
   // Id of entity.
   String get id => _documentSnapshot.id;
+  DateTime get createdAt => (_values[BaseEntityKey.created_at] as Timestamp).toDate();
+  String get createdBy => _values[BaseEntityKey.created_by];
+  DateTime get updatedAt => (_values[BaseEntityKey.updated_at] as Timestamp).toDate();
+  String get updatedBy => _values[BaseEntityKey.updated_by];
 
   DocumentReference get reference => _documentSnapshot.reference;
 
@@ -46,6 +61,17 @@ class FirebaseEntity<T extends Enum> {
 
   // Save entity to Firestore.
   Future<bool> save() async {
+    final now = Timestamp.now();
+    String? userId = _firestoreManager.getUserId();
+    if (userId == null || userId.isEmpty) {
+      return false;
+    }
+    if (!getDocumentSnapshot().exists) {
+      getValues()[BaseEntityKey.created_at.name] = now;
+      getValues()[BaseEntityKey.created_by.name] = userId;
+    }
+    getValues()[BaseEntityKey.updated_at.name] = now;
+    getValues()[BaseEntityKey.updated_by.name] = userId;
     return await _firestoreManager.persistEntity(this);
   }
 }

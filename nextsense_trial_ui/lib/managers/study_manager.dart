@@ -51,7 +51,7 @@ class StudyManager {
   List<ScheduledProtocol> scheduledProtocols = [];
 
   // Can be null if enrolled study isn't loaded at the moment
-  bool? get studyInitialized => _enrolledStudy?.initialized;
+  bool? get studyInitialized => _enrolledStudy?.isScheduled;
 
   // References today's study day.
   // Has to be dynamic because next day can start while app is on.
@@ -101,7 +101,7 @@ class StudyManager {
     // Load the study data.
     final user = _authManager.user!;
 
-    final studyId = user.getValue(UserKey.current_study);
+    final studyId = user.getValue(UserKey.current_study_id);
     if (studyId == null) {
       throw("'current_study' is not set for user");
     }
@@ -368,7 +368,7 @@ class StudyManager {
     if (initialized) {
       _logger.log(Level.INFO, "Mark current study as initialized");
     }
-    _enrolledStudy!.setInitialized(initialized);
+    _enrolledStudy!.setIsScheduled(initialized);
     return await _enrolledStudy!.save();
   }
 
@@ -376,7 +376,7 @@ class StudyManager {
     if (_enrolledStudy == null) {
       return false;
     }
-    _enrolledStudy!.setIntroShown(true);
+    _enrolledStudy!.setShowIntro(false);
     return await _enrolledStudy!.save();
   }
 

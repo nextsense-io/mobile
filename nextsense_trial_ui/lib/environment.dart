@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 const environmentFileName = "env";
 const productionEnvName = "Prod";
 const developmentEnvName = "Dev";
+const scratchEnvName = "Scratch";
 
 enum EnvironmentKey {
   USERNAME,
@@ -34,6 +35,14 @@ abstract class Environment {
   String get nextsenseApiUrl;
 }
 
+class ScratchEnvironment extends Environment {
+  @override
+  String get name => "Scratch";
+
+  @override
+  String get nextsenseApiUrl => "https://mobile-backend-4hye4mnf2q-uc.a.run.app";
+}
+
 class DevelopmentEnvironment extends Environment {
   @override
   String get name => "Development";
@@ -59,6 +68,8 @@ class EnvironmentFactory {
       return ProductionEnvironment();
     } else if (flavor.contains(developmentEnvName)) {
       return DevelopmentEnvironment();
+    } else if (flavor.contains(scratchEnvName)) {
+      return ScratchEnvironment();
     }
     throw("Unknown environment: $flavor");
   }

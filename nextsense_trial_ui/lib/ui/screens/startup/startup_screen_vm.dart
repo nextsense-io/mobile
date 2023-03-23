@@ -38,8 +38,8 @@ class StartupScreenViewModel extends ViewModel {
   final _permissionsManager = getIt<PermissionsManager>();
   final Navigation _navigation = getIt<Navigation>();
 
-  bool get studyIntroShown => _studyManager.currentEnrolledStudy != null &&
-      _studyManager.currentEnrolledStudy!.introShown;
+  bool get showStudyIntro => _studyManager.currentEnrolledStudy != null &&
+      _studyManager.currentEnrolledStudy!.showIntro;
 
   StartupScreenViewModel({this.initialIntent});
 
@@ -158,7 +158,7 @@ class StartupScreenViewModel extends ViewModel {
       }
     }
 
-    if (!studyIntroShown) {
+    if (showStudyIntro) {
       if (_studyManager.introPageContents.isNotEmpty) {
         await _navigation.navigateTo(StudyIntroScreen.id);
       }

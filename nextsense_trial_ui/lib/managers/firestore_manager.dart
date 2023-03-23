@@ -28,6 +28,16 @@ enum Table {
   users,
 }
 
+// Database versions in use by the app. Each version has a root collection name in Firestore.
+// A value of null means that that version is at the database root for legacy purposes.
+enum DbVersion {
+  v2('v2');
+
+  final String? documentName;
+
+  const DbVersion(this.documentName);
+}
+
 extension ParseToString on Table {
   String name() {
     return this.toString().split('.').last;
@@ -36,26 +46,35 @@ extension ParseToString on Table {
 
 class FirestoreManager {
   static const int _retriesAttemptsNumber = 3;
+  static const String _dbRootCollectionName = 'online';
+  static const DbVersion _dbVersion = DbVersion.v2;
 
   final _firebaseApp = getIt<FirebaseManager>().getFirebaseApp();
   final _preferences = getIt<Preferences>();
-  late FirebaseFirestore _firestore;
   final CustomLogPrinter _logger = CustomLogPrinter('FirestoreManager');
-
-  Map<Table, CollectionReference> _references = Map();
+  late FirebaseFirestore _firestore;
+  late DocumentReference _rootRef;
+  String? userId;
 
   FirestoreManager() {
     _firestore = FirebaseFirestore.instanceFor(app: _firebaseApp);
     _firestore.settings = const Settings(
       persistenceEnabled: true
     );
-    for (Table table in Table.values) {
-      _references[table] = _firestore.collection(table.name());
-    }
+    _rootRef = _firestore.collection(_dbRootCollectionName).doc(_dbVersion.documentName);
   }
 
   FirestoreBatchWriter getFirebaseBatchWriter() {
     return FirestoreBatchWriter(_firestore);
+  }
+
+  // Sets the user id so that when entities are updated the user id is set in 'updated_by'.
+  setUserId(String userId) {
+    userId = userId;
+  }
+
+  String? getUserId() {
+    return userId;
   }
 
   /*
@@ -148,7 +167,7 @@ class FirestoreManager {
     DocumentReference? reference;
     for (int i = 0; i < tables.length; ++i) {
       if (i == 0) {
-        reference = _firestore.collection(tables[i].name()).doc(entityKeys[i]);
+        reference = _rootRef.collection(tables[i].name()).doc(entityKeys[i]);
       } else {
         reference = reference!.collection(tables[i].name()).doc(entityKeys[i]);
       }
@@ -162,9 +181,9 @@ class FirestoreManager {
     for (int i = 0; i < tables.length; ++i) {
       if (i == 0) {
         if (entityKeys.isEmpty) {
-          reference = await _firestore.collection(tables[i].name()).add({});
+          reference = await _rootRef.collection(tables[i].name()).add({});
         } else {
-          reference = _firestore.collection(tables[i].name()).doc(entityKeys[i]);
+          reference = _rootRef.collection(tables[i].name()).doc(entityKeys[i]);
         }
       } else {
         if (i >= entityKeys.length) {
@@ -202,9 +221,9 @@ class FirestoreManager {
     for (int i = 0; i < tables.length; ++i) {
       if (i == 0) {
         if (entityKeys.isEmpty) {
-          collectionReference = _firestore.collection(tables[i].name());
+          collectionReference = _rootRef.collection(tables[i].name());
         } else {
-          pathReference = _firestore.collection(tables[i].name()).doc(entityKeys[i]);
+          pathReference = _rootRef.collection(tables[i].name()).doc(entityKeys[i]);
         }
       } else {
         if (i >= entityKeys.length) {

@@ -67,7 +67,7 @@ class DataManager {
   }
 
   Future<bool> switchCurrentStudy(EnrolledStudy enrolledStudy) async {
-      _authManager.user!.setValue(UserKey.current_study, enrolledStudy.id);
+      _authManager.user!.setValue(UserKey.current_study_id, enrolledStudy.id);
       bool success = await _firestoreManager.persistEntity(_authManager.user!);
       if (!success) {
         return false;

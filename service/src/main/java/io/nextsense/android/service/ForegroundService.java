@@ -208,12 +208,12 @@ public class ForegroundService extends Service {
               // Token refresh succeeded
               // Get new ID token
               String idToken = getTokenResult.getToken();
-              RotatingFileLogger.get().logi(TAG, "Refreshed Token: " + idToken);
+              RotatingFileLogger.get().logi(TAG, "Refreshed Firebase auth token.");
             })
-            .addOnFailureListener(e -> {
+            .addOnFailureListener(e ->
               // Token refresh failed
-              RotatingFileLogger.get().logw(TAG, "Failed ot refresh token.");
-            });
+              RotatingFileLogger.get().logw(TAG, "Failed to refresh Firebase auth token: " + e.getMessage())
+            );
       }
     });
 

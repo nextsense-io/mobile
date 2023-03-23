@@ -259,7 +259,7 @@ class SignInScreen extends HookWidget {
       }
     }
 
-    if (!viewModel.studyIntroShown) {
+    if (viewModel.showStudyIntro) {
       if (_studyManager.introPageContents.isNotEmpty) {
         await _navigation.navigateTo(StudyIntroScreen.id);
       }
