@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "147440904150",
+    "project_id": "nextsense-scratch",
+    "storage_bucket": "nextsense-scratch.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:147440904150:android:f8e2324162c2d24d6ca677",
+        "android_client_info": {
+          "package_name": "io.nextsense.android.main.research.scratch"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "147440904150-jlqjdic4ljpd0q7p4gr5f1cia46pojqa.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.scratch",
+            "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
+        {
+          "client_id": "147440904150-m683cf9hqe41jojgp9pp136pccgtnonr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDkUdKpVPQ8hfL-pKgPcLTEoMnS5-9fcIs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "147440904150-m683cf9hqe41jojgp9pp136pccgtnonr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
