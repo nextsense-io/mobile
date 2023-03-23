@@ -177,7 +177,7 @@ class AuthManager {
   Future<bool> requestSignUpEmail(String email) async {
     switch (_signedInAuthMethod) {
       case AuthMethod.email_password:
-        User? user = await _loadUser(username: email);
+        User? user = await _loadUser(userId: email);
         user?.setTempPassword(true);
         user?.save();
         return await _emailAuthManager!.sendSignUpLinkEmail(email);
@@ -219,10 +219,10 @@ class AuthManager {
           _logger.log(Level.WARNING, 'Unknown auth method.');
           return false;
       }
-      _user = await _loadUser(username: username);
+      _user = await _loadUser(userId: authUid);
       if (_user != null) {
         _userCode = username;
-        await _updateUserDetails(user: _user!, authUid: authUid);
+        await _updateUserDetails(user: _user!);
         return true;
       }
     }
@@ -251,7 +251,7 @@ class AuthManager {
 
   Future<AuthenticationResult> _signIn({required String username, required String authUid}) async {
     _logger.log(Level.INFO, 'Starting NextSense user check.');
-    _user = await _loadUser(username: username);
+    _user = await _loadUser(userId: authUid);
 
     if (_user == null) {
       await signOut();
@@ -265,20 +265,15 @@ class AuthManager {
       await signOut();
       return AuthenticationResult.invalid_user_setup;
     }
-    _updateUserDetails(user: _user!, authUid: authUid);
+    _updateUserDetails(user: _user!);
     _userCode = username;
     return AuthenticationResult.success;
   }
 
-  Future _updateUserDetails({required User user, required String authUid}) async {
+  Future _updateUserDetails({required User user}) async {
     // Persist bt_key
     if (user.getValue(UserKey.bt_key) == null) {
       user.setValue(UserKey.bt_key, _uuid.v4());
-    }
-
-    // Persist UID on first login.
-    if (user.getValue(UserKey.auth_uid) == null || user.getValue(UserKey.auth_uid) == '') {
-      user.setValue(UserKey.auth_uid, authUid);
     }
 
     // Persist fcm token
@@ -295,8 +290,8 @@ class AuthManager {
   }
 
   // Load user from Firestore and update some data
-  Future<User?> _loadUser({required String username}) async {
-    final User? user = await _fetchUserFromFirestore(username);
+  Future<User?> _loadUser({required String userId}) async {
+    final User? user = await _fetchUserFromFirestore(userId);
 
     if (user == null) {
       _logger.log(Level.WARNING, 'Failed to fetch user from Firestore.');
@@ -305,8 +300,8 @@ class AuthManager {
     return user;
   }
 
-  Future<User?> _fetchUserFromFirestore(String code) async {
-    FirebaseEntity? userEntity = await _firestoreManager.queryEntity([Table.users], [code]);
+  Future<User?> _fetchUserFromFirestore(String userId) async {
+    FirebaseEntity? userEntity = await _firestoreManager.queryEntity([Table.users], [userId]);
     if (userEntity == null || !userEntity.getDocumentSnapshot().exists) {
       return null;
     }
