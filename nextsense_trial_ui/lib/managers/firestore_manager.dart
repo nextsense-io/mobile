@@ -15,7 +15,7 @@ enum Table {
   issues,
   organizations,
   questions,
-  planned_assessments,
+  planned_sessions,
   planned_surveys,
   protocol_surveys,
   scheduled_protocols,
@@ -25,6 +25,7 @@ enum Table {
   side_effects,
   studies,
   surveys,
+  survey_results,
   users,
 }
 
@@ -273,8 +274,8 @@ class FirestoreManager {
     }
 
     if (fromCacheWithKey != null && snapshot.size > 0) {
-      // Mark collection as cached, means further 'fromCacheWithKey' requests
-      // will get collection from cache
+      // Mark collection as cached so further 'fromCacheWithKey' requests will get the collection
+      // from the cache.
       _preferences.markAsCached(fromCacheWithKey);
     }
 

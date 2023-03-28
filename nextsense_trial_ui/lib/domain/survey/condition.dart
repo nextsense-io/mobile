@@ -1,7 +1,7 @@
 import 'dart:core';
 
 enum ConditionField {
-  key,
+  question_id,
   op,
   value
 }
@@ -21,11 +21,11 @@ class Condition {
   static const List<String> validOperators = [operatorEqual, operatorNotEqual, operatorGreater,
     operatorGreaterOrEqual, operatorLesser, operatorLesserOrEqual];
 
-  final String key;
+  final String questionId;
   final String operator;
   final dynamic value;
 
-  Condition(this.key, this.operator, this.value);
+  Condition(this.questionId, this.operator, this.value);
 
   static Condition fromMap(Map<String, dynamic> conditionFields) {
     for (ConditionField conditionField in ConditionField.values) {
@@ -42,7 +42,7 @@ class Condition {
       throw FormatException(
           "Value type not supported: $value. Needs to be a String, a book or an int.");
     }
-    return Condition(conditionFields[ConditionField.key.name], operator, value);
+    return Condition(conditionFields[ConditionField.question_id.name], operator, value);
   }
 
   bool isTrue(dynamic other) {
@@ -66,7 +66,7 @@ class Condition {
 
   @override
   String toString() {
-    return "$key$operator$value";
+    return "$questionId$operator$value";
   }
 }
 

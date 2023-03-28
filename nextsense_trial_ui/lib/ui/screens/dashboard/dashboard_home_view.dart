@@ -97,7 +97,7 @@ class DashboardHomeView extends StatelessWidget {
               semanticsLabel: 'Side Effects', height: 75),
           onTap: () => _navigation.navigateTo(SideEffectsScreen.id)));
     }
-    if (dashboardViewModel.study.surveysEnabled) {
+    if (dashboardViewModel.scheduledSurveys.isNotEmpty) {
       menuCards.add(MenuCard(
           title: 'Surveys',
           image: SvgPicture.asset('assets/images/tasks.svg', semanticsLabel: 'Surveys', height: 75),

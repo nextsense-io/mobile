@@ -19,6 +19,7 @@ class FirebaseEntity<T extends Enum> {
 
   // Snapshot from Firebase to be able to persist or listen to value changes.
   final DocumentSnapshot _documentSnapshot;
+  final bool _addMonitoringFields;
   // Current user values. Valid keys are in the UserKey enum.
   final Map<String, dynamic> _values;
 
@@ -31,9 +32,10 @@ class FirebaseEntity<T extends Enum> {
 
   DocumentReference get reference => _documentSnapshot.reference;
 
-  FirebaseEntity(DocumentSnapshot documentSnapshot) :
-      this._documentSnapshot = documentSnapshot,
-      this._values = documentSnapshot.exists ?
+  FirebaseEntity(DocumentSnapshot documentSnapshot, {bool addMonitoringFields = true}) :
+      _documentSnapshot = documentSnapshot,
+      _addMonitoringFields = addMonitoringFields,
+      _values = documentSnapshot.exists ?
           documentSnapshot.data() as Map<String, dynamic> :
           new Map<String, dynamic>() {}
 
@@ -66,12 +68,14 @@ class FirebaseEntity<T extends Enum> {
     if (userId == null || userId.isEmpty) {
       return false;
     }
-    if (!getDocumentSnapshot().exists) {
-      getValues()[BaseEntityKey.created_at.name] = now;
-      getValues()[BaseEntityKey.created_by.name] = userId;
+    if (_addMonitoringFields) {
+      if (!getDocumentSnapshot().exists) {
+        getValues()[BaseEntityKey.created_at.name] = now;
+        getValues()[BaseEntityKey.created_by.name] = userId;
+      }
+      getValues()[BaseEntityKey.updated_at.name] = now;
+      getValues()[BaseEntityKey.updated_by.name] = userId;
     }
-    getValues()[BaseEntityKey.updated_at.name] = now;
-    getValues()[BaseEntityKey.updated_by.name] = userId;
     return await _firestoreManager.persistEntity(this);
   }
 }

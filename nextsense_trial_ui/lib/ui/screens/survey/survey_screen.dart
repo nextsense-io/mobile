@@ -96,7 +96,10 @@ class SurveyScreen extends HookWidget {
             viewModel.isBusy ? () => {} : () => _onBackButtonPressed(context, viewModel),
         child: Column(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           if (viewModel.isBusy)
-            WaitWidget(message: 'Saving...')
+            if (viewModel.initialised)
+              WaitWidget(message: 'Saving...')
+            else
+              WaitWidget(message: 'Loading...')
           else
             Expanded(
                 child: WhiteThemeOverride(FormBuilder(

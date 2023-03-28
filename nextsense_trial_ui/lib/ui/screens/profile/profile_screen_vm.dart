@@ -2,6 +2,8 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/survey/adhoc_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
@@ -35,25 +37,31 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
   }
 
   List<AdhocProtocol> getAdhocProtocols() {
-    List<ProtocolType> allowedProtocols = _studyManager.currentStudy!.getAllowedProtocols();
+    List<ProtocolType> allowedProtocols = _studyManager.allowedAdhocProtocols;
 
     return allowedProtocols.map((protocolType) => AdhocProtocol(
         protocolType, _studyManager.currentStudyId!)).toList();
   }
 
-  List<Survey> getAdhocSurveys() {
-    List<String> adhocSurveyIds = _studyManager.currentStudy!.getAllowedSurveys();
+  Map<PlannedSurvey, Survey> getAdhocSurveys() {
+    // get planned and survey to view.
+    List<PlannedSurvey> adhocPlannedSurveys = _surveyManager.allowedAdhocSurveys;
 
-    List<Survey> result = [];
-    for (var surveyId in adhocSurveyIds) {
-      Survey? survey = _surveyManager.getSurveyById(surveyId);
+    Map<PlannedSurvey, Survey> result = {};
+    for (var plannedSurvey in adhocPlannedSurveys) {
+      Survey? survey = _surveyManager.getSurveyById(plannedSurvey.surveyId);
       if (survey == null) {
-        _logger.log(Level.WARNING, 'Survey with id "$surveyId" not found');
+        _logger.log(Level.WARNING, 'Survey with id "${plannedSurvey.surveyId}" not found');
         continue;
       }
-      result.add(survey);
+      result[plannedSurvey] = survey;
     }
     return result;
+  }
+
+  AdhocSurvey getRunnableSurvey(PlannedSurvey plannedSurvey) {
+    return AdhocSurvey(plannedSurvey.id, _surveyManager.getSurveyById(plannedSurvey.surveyId)!,
+        studyId);
   }
 
   Future disconnectDevice() async {

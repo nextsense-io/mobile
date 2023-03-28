@@ -9,7 +9,7 @@ class StartAdhocProtocolDialogViewModel extends ViewModel {
   final StudyManager _studyManager = getIt<StudyManager>();
 
   List<AdhocProtocol> getAdhocProtocols() {
-    List<ProtocolType> allowedProtocols = _studyManager.currentStudy!.getAllowedProtocols();
+    List<ProtocolType> allowedProtocols = _studyManager.allowedAdhocProtocols;
 
     return allowedProtocols.map((protocolType) => AdhocProtocol(
         protocolType, _studyManager.currentStudyId!)).toList();

@@ -17,7 +17,7 @@ enum ScheduledSurveyKey {
   day_number,
   days_to_complete,
   period,
-  data
+  result_id  // Survey result id.
 }
 
 class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task, RunnableSurvey {
@@ -30,10 +30,13 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
   // Time before this survey should be completed, or it will be marked as skipped.
   late DateTime shouldBeCompletedBefore;
 
-  RunnableSurveyType get type => RunnableSurveyType.scheduled;
-  SurveyState get state => surveyStateFromString(getValue(ScheduledSurveyKey.status));
+  ScheduleType get scheduleType => ScheduleType.scheduled;
+  SurveyState get state => SurveyState.fromString(getValue(ScheduledSurveyKey.status) ??
+      SurveyState.not_started);
   Period get period => Period.fromString(getValue(ScheduledSurveyKey.period));
   String get plannedSurveyId => getValue(ScheduledSurveyKey.planned_survey).id;
+  String? get scheduledSurveyId => id;
+  String? get resultId => getValue(ScheduledSurveyKey.result_id);
   bool get isCompleted => state == SurveyState.completed;
   bool get isSkipped => state == SurveyState.skipped;
   bool get notStarted => state == SurveyState.not_started;
@@ -44,11 +47,13 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
     int? _daysToComplete = getValue(ScheduledSurveyKey.days_to_complete);
     // Initialize from planned survey.
     if (plannedSurvey != null) {
+      plannedSurvey = plannedSurvey;
       setPlannedSurvey(plannedSurvey.reference);
       _daysToComplete = plannedSurvey.daysToComplete;
       setValue(ScheduledSurveyKey.days_to_complete, _daysToComplete);
       setValue(ScheduledSurveyKey.survey, survey.id);
     }
+
 
     // Day date is at 00:00, so we need to set completion time next midnight.
     shouldBeCompletedBefore = day.date.add(Duration(days: _daysToComplete!));
@@ -63,15 +68,6 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
 
   void setPeriod(Period period) {
     setValue(ScheduledSurveyKey.period, period.name);
-  }
-
-  Map<String, dynamic> getData() {
-    return getValue(ScheduledSurveyKey.data) ?? Map();
-  }
-
-  // Save submitted survey data.
-  void setData(Map<String, dynamic> data) {
-    setValue(ScheduledSurveyKey.data, data);
   }
 
   void setPlannedSurvey(DocumentReference plannedSurveyRef) {
@@ -89,8 +85,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
 
   // Update fields and save to Firestore by default.
   @override
-  Future<bool> update({required SurveyState state, Map<String, dynamic>? data,
-      bool persist = true}) async {
+  Future<bool> update({required SurveyState state, required String resultId}) async {
     if (this.state == SurveyState.completed) {
       _logger.log(Level.INFO, 'Survey ${survey.name} already completed.'
           'Cannot change its state.');
@@ -104,13 +99,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
         'Survey state changing from ${this.state} to $state');
     setState(state);
 
-    if (data != null) {
-      setData(data);
-    }
-    if (persist) {
-      return await save();
-    }
-    return true;
+    return await save();
   }
 
   // Task implementation.

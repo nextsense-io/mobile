@@ -1,5 +1,6 @@
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
@@ -9,24 +10,18 @@ class AdhocSurvey implements RunnableSurvey {
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
 
+  late String plannedSurveyId;
+  late String? scheduledSurveyId;
   late Survey survey;
   late String studyId;
 
-  RunnableSurveyType get type => RunnableSurveyType.adhoc;
+  ScheduleType get scheduleType => ScheduleType.adhoc;
+  String? get resultId => getVa;
 
-  AdhocSurvey(this.survey, this.studyId);
+  AdhocSurvey(this.plannedSurveyId, this.survey, this.studyId);
 
   @override
-  Future<bool> update({required SurveyState state, Map<String, dynamic>? data,
-      bool persist = true}) async {
-    // Create new record only when we submit some data.
-    if (data != null) {
-      return await save(data);
-    }
-    return true;
-  }
-
-  Future<bool> save(Map<String, dynamic> data) async {
+  Future<bool> update({required SurveyState state, required String resultId}) async {
     DateTime now = DateTime.now();
     String adhocProtocolKey = "${survey.id}_at_${now.millisecondsSinceEpoch}";
     FirebaseEntity? surveyRecordEntity = await _firestoreManager.queryEntity([
@@ -34,41 +29,34 @@ class AdhocSurvey implements RunnableSurvey {
       Table.enrolled_studies,
       Table.adhoc_surveys
     ], [
-      _authManager.userCode!,
+      _authManager.username!,
       studyId,
       adhocProtocolKey
     ]);
     if (surveyRecordEntity == null) {
       return false;
     }
-    final record = AdhocSurveyRecord(surveyRecordEntity);
-    record.setSurvey(survey.id);
-    record.setTimestamp(now);
-    record.setData(data);
-    return await record.save();
+    final adhocSurvey = AdhocSurveyRecord(surveyRecordEntity);
+    adhocSurvey.setPlannedSurveyId(survey.id);
+    adhocSurvey.setResultId(resultId);
+    return await adhocSurvey.save();
   }
 }
 
 enum AdhocSurveyRecordKey {
-  survey,
-  timestamp,
-  data
+  planned_survey_id,
+  result_id  // Survey record id
 }
 
 class AdhocSurveyRecord extends FirebaseEntity<AdhocSurveyRecordKey> {
 
-  AdhocSurveyRecord(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot());
+  AdhocSurveyRecord(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
 
-  void setTimestamp(DateTime timestamp) {
-    setValue(AdhocSurveyRecordKey.timestamp, timestamp.toIso8601String());
+  void setPlannedSurveyId(String plannedSurveyId) {
+    setValue(AdhocSurveyRecordKey.planned_survey_id, plannedSurveyId);
   }
 
-  void setSurvey(String surveyId) {
-    setValue(AdhocSurveyRecordKey.survey, surveyId);
-  }
-
-  void setData(Map<String, dynamic> data) {
-    setValue(AdhocSurveyRecordKey.data, data);
+  void setResultId(String resultId) {
+    setValue(AdhocSurveyRecordKey.result_id, resultId);
   }
 }

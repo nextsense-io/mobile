@@ -10,9 +10,9 @@ import 'package:nextsense_trial_ui/domain/event.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
-import 'package:nextsense_trial_ui/domain/survey/protocol_survey.dart';
-import 'package:nextsense_trial_ui/domain/survey/survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
@@ -70,17 +70,19 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   bool maxDurationPassed = false;
   Timer? timer;
   Timer? disconnectTimeoutTimer;
-  List<ProtocolSurvey> postRecordingSurveys = [];
-  bool _timerPaused = false;
+  RunnableSurvey? postRecordingSurvey;
+  ScheduledProtocol? postRecordingProtocol;
   ProtocolCancelReason protocolCancelReason = ProtocolCancelReason.none;
   bool protocolCompletedHandlerExecuted = false;
+  int currentRepetition = 0;
+  bool dataReceived = false;
+
+  bool _timerPaused = false;
   DateTime? _currentEventStart;
   DateTime? _lastEventEnd;
   String? _currentEventMarker;
   int _currentProtocolPart = 0;
-  int currentRepetition = 0;
   Duration _repetitionTime = Duration(seconds: 0);
-  bool dataReceived = false;
   Timer? _dataReceivedTimer;
   CancelListening? _currentSessionDataReceivedListener;
   Duration? _currentVariableDuration;
@@ -147,12 +149,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     } else {
       protocolCancelReason = ProtocolCancelReason.deviceNotConnected;
       setError("Device not connected.");
-    }
-    if (runnableProtocol.type == RunnableProtocolType.scheduled ||
-        _authManager.user!.userType == UserType.researcher) {
-      for (Survey survey in runnableProtocol.postSurveys ?? []) {
-        postRecordingSurveys.add(ProtocolSurvey(survey, _sessionManager.currentSessionId!));
-      }
     }
   }
 

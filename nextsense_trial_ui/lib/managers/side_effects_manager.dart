@@ -14,7 +14,7 @@ class SideEffectsManager {
       required List<String> sideEffectTypes,
       required String userNotes}) async {
     FirebaseEntity sideEffectEntity = await _firestoreManager
-        .addAutoIdReference([Table.users, Table.side_effects], [_authManager.userCode!]);
+        .addAutoIdReference([Table.users, Table.side_effects], [_authManager.username!]);
     return await _saveSideEffectEntity(
         sideEffectEntity: sideEffectEntity,
         startTime: startTime,
@@ -29,7 +29,7 @@ class SideEffectsManager {
       required List<String> sideEffectTypes,
       required String userNotes}) async {
     FirebaseEntity? sideEffectEntity = await _firestoreManager
-        .queryEntity([Table.users, Table.side_effects], [_authManager.userCode!, sideEffectId]);
+        .queryEntity([Table.users, Table.side_effects], [_authManager.username!, sideEffectId]);
     if (sideEffectEntity == null) {
       return false;
     }
@@ -65,7 +65,7 @@ class SideEffectsManager {
 
   Future<List<SideEffect>> getSideEffects() async {
     List<FirebaseEntity>? sideEffectEntities = await _firestoreManager
-        .queryEntities([Table.users, Table.side_effects], [_authManager.userCode!]);
+        .queryEntities([Table.users, Table.side_effects], [_authManager.username!]);
     if (sideEffectEntities == null) {
       return [];
     }

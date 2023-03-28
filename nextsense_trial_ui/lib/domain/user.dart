@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/domain/assesment.dart';
+import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
@@ -124,8 +124,8 @@ class User extends FirebaseEntity<UserKey> {
       FirebaseEntity plannedAssessmentEntity = FirebaseEntity(
           await (scheduledProtocolEntity.getValue(ScheduledProtocolKey.protocol)
           as DocumentReference).get());
-      PlannedAssessment plannedAssessment =
-          PlannedAssessment(plannedAssessmentEntity, studyStartDate, studyEndDate);
+      PlannedSession plannedAssessment =
+          PlannedSession(plannedAssessmentEntity, studyStartDate, studyEndDate);
       return ScheduledProtocol(scheduledProtocolEntity, plannedAssessment);
     }
   }

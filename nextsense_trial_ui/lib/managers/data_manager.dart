@@ -38,7 +38,7 @@ class DataManager {
     bool loaded = await _studyManager.loadCurrentStudy();
     if (!loaded) return false;
     _logger.log(Level.INFO, 'Starting loadScheduledSurveys.');
-    loaded = await _surveyManager.loadScheduledSurveys();
+    loaded = await _surveyManager.loadPlannedSurveys();
     if (!loaded) return false;
     _logger.log(Level.INFO, 'Starting loadAdhocSurveys.');
     loaded = await _surveyManager.loadAdhocSurveys();
@@ -48,7 +48,7 @@ class DataManager {
     if (!loaded) return false;
     await _sessionManager.loadCurrentSession();
     // Mark study initialized so we can load things from cache
-    bool initialized = await _studyManager.setStudyInitialized(true);
+    bool initialized = await _studyManager.setStudyScheduled(true);
     if (!initialized) {
       return false;
     }

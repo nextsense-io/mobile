@@ -33,7 +33,7 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
 
   List<StudyDay> get _days => _studyManager.days;
 
-  bool? get studyInitialized => _studyManager.studyInitialized;
+  bool? get studyInitialized => _studyManager.studyScheduled;
 
   String get studyId => _studyManager.currentStudyId!;
 
@@ -112,7 +112,7 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
     for (final scheduledSurvey in scheduledSurveys) {
       if (scheduledSurvey.isLate()) {
         // This can run again so not a big problem if fails once, no need to check.
-        scheduledSurvey.update(state: SurveyState.skipped);
+        // scheduledSurvey.update(state: SurveyState.skipped);
       }
     }
 
@@ -179,26 +179,26 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
   }
 
   List<AdhocProtocol> getAdhocProtocols() {
-    List<ProtocolType> allowedProtocols = _studyManager.currentStudy!.getAllowedProtocols();
+    List<ProtocolType> allowedProtocols = _studyManager.allowedAdhocProtocols;
 
     return allowedProtocols.map((protocolType) => AdhocProtocol(
         protocolType, _studyManager.currentStudyId!)).toList();
   }
 
-  List<Survey> getAdhocSurveys() {
-    List<String> adhocSurveyIds = _studyManager.currentStudy!.getAllowedSurveys();
-
-    List<Survey> result = [];
-    for (var surveyId in adhocSurveyIds) {
-      Survey? survey = _surveyManager.getSurveyById(surveyId);
-      if (survey == null) {
-        _logger.log(Level.WARNING, 'Survey with id "$surveyId" not found');
-        continue;
-      }
-      result.add(survey);
-    }
-    return result;
-  }
+  // List<Survey> getAdhocSurveys() {
+  //   List<String> adhocSurveyIds = _surveyManager.allowedAdhocSurveys;
+  //
+  //   List<Survey> result = [];
+  //   for (var surveyId in adhocSurveyIds) {
+  //     Survey? survey = _surveyManager.getSurveyById(surveyId);
+  //     if (survey == null) {
+  //       _logger.log(Level.WARNING, 'Survey with id "$surveyId" not found');
+  //       continue;
+  //     }
+  //     result.add(survey);
+  //   }
+  //   return result;
+  // }
 
   @override
   void onDeviceDisconnected() {

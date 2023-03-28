@@ -48,8 +48,8 @@ class SessionManager {
   }
 
   Future<bool> startSession(Device device, String studyId, String protocolName) async {
-    String? userCode = _authManager.userCode;
-    if (userCode == null) {
+    String? username = _authManager.username;
+    if (username == null) {
       return false;
     }
     User? user = _authManager.user;
@@ -62,7 +62,7 @@ class SessionManager {
     }
     int? sessionNumber = user.getValue(UserKey.session_number);
     int nextSessionNumber = sessionNumber == null ? _firstSessionNumber : sessionNumber + 1;
-    String sessionCode = userCode + '_sess_' + nextSessionNumber.toString();
+    String sessionCode = username + '_sess_' + nextSessionNumber.toString();
 
     // Add the session.
     FirebaseEntity sessionEntity = await _firestoreManager.addEntity(
@@ -71,7 +71,7 @@ class SessionManager {
     DateTime startTime = DateTime.now();
 
     _currentSession!..setValue(SessionKey.start_datetime, startTime)
-                    ..setValue(SessionKey.user_id, userCode)
+                    ..setValue(SessionKey.user_id, username)
                     ..setValue(SessionKey.device_id, device.name)
                     ..setValue(SessionKey.device_mac_address, device.macAddress)
                     ..setValue(SessionKey.study_id, studyId)

@@ -27,7 +27,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   final AuthManager _authManager = getIt<AuthManager>();
   final studyDayChangeStream = StreamController<int>.broadcast();
 
-  bool? get studyInitialized => _studyManager.studyInitialized;
+  bool? get studyInitialized => _studyManager.studyScheduled;
   // Returns current day of study
   StudyDay? get today => _studyManager.today;
   List<ScheduledProtocol> get scheduledProtocols => _studyManager.scheduledProtocols;

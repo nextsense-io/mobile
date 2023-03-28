@@ -1,6 +1,16 @@
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
+enum ScheduleType {
+  scheduled,  // Session is scheduled at specific time/frequency.
+  adhoc,  // Session can be started at any time.
+  conditional; // Session is started based on some condition.
+
+  factory ScheduleType.fromString(String scheduleTypeStr) {
+    return ScheduleType.values.firstWhere((element) => element.name == scheduleTypeStr);
+  }
+}
+
 enum Period {
   specific_day,
   daily,

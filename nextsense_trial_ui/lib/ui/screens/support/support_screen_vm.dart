@@ -34,7 +34,7 @@ class SupportScreenViewModel extends ViewModel {
     notifyListeners();
     _logger.log(Level.INFO, 'Issue submitted by the user.');
     FirebaseEntity issueEntity = await _firestoreManager.addAutoIdReference(
-        [Table.users, Table.issues], [_authManager.userCode!]);
+        [Table.users, Table.issues], [_authManager.username!]);
     Issue issue = Issue(issueEntity);
     issue
       ..setValue(IssueKey.description, issueDescription)
@@ -43,10 +43,10 @@ class SupportScreenViewModel extends ViewModel {
     String? logLinkNative;
     if (attachLog) {
       logLinkFlutter = await _firebaseStorageManager.uploadStringToFile(
-          '/users/${_authManager.userCode}/issues/${issueEntity.id}_flutter.txt',
+          '/users/${_authManager.username}/issues/${issueEntity.id}_flutter.txt',
           await _logger.getLogFileContent());
       logLinkNative = await _firebaseStorageManager.uploadStringToFile(
-          '/users/${_authManager.userCode}/issues/${issueEntity.id}_native.txt',
+          '/users/${_authManager.username}/issues/${issueEntity.id}_native.txt',
           await NextsenseBase.getNativeLogs());
       if (logLinkFlutter == null || logLinkNative == null) {
         return false;

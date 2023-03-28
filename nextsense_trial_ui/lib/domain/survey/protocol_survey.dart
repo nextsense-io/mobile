@@ -1,5 +1,6 @@
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/survey/adhoc_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
@@ -11,7 +12,7 @@ class ProtocolSurvey implements RunnableSurvey {
   late Survey survey;
   late String sessionId;
 
-  RunnableSurveyType get type => RunnableSurveyType.protocol;
+  ScheduleType get scheduleType => ScheduleType.conditional;
 
   ProtocolSurvey(this.survey, this.sessionId);
 

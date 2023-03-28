@@ -11,7 +11,7 @@ class SeizuresManager {
   Future<bool> addSeizure({required DateTime startTime, DateTime? endTime,
     required List<String> triggers, required String userNotes}) async {
     FirebaseEntity seizureEntity = await _firestoreManager.addAutoIdReference(
-        [Table.users, Table.seizures], [_authManager.userCode!]);
+        [Table.users, Table.seizures], [_authManager.username!]);
     return await _saveSeizureEntity(seizureEntity: seizureEntity, startTime: startTime,
         triggers: triggers, userNotes: userNotes);
   }
@@ -19,7 +19,7 @@ class SeizuresManager {
   Future<bool> updateSeizure({required seizureId, required DateTime startTime, DateTime? endTime,
     required List<String> triggers, required String userNotes}) async {
     FirebaseEntity? seizureEntity = await _firestoreManager.queryEntity(
-        [Table.users, Table.seizures], [_authManager.userCode!, seizureId]);
+        [Table.users, Table.seizures], [_authManager.username!, seizureId]);
     if (seizureEntity == null) {
       return false;
     }
@@ -49,7 +49,7 @@ class SeizuresManager {
 
   Future<List<Seizure>> getSeizures() async {
     List<FirebaseEntity>? seizureEntities = await _firestoreManager.queryEntities(
-        [Table.users, Table.seizures], [_authManager.userCode!]);
+        [Table.users, Table.seizures], [_authManager.username!]);
     if (seizureEntities == null) {
       return [];
     }

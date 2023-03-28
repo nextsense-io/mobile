@@ -5,6 +5,7 @@ enum PreferenceKey {
   allowDataTransmissionViaCellular,
   authToken,
   continuousImpedance,
+  studyDataCached,
   fcmToken,
   flavor,
   displayDataType,

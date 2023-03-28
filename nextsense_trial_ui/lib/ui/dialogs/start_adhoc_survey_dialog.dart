@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/survey/adhoc_survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
@@ -20,16 +21,17 @@ class StartAdhocSurveyDialog extends HookWidget {
   Widget build(BuildContext context) {
     final profileViewModel = context.read<ProfileScreenViewModel>();
 
-    List<Widget> options = profileViewModel.getAdhocSurveys().map((survey) =>
-        Padding(padding: EdgeInsets.all(15), child: SimpleButton(
+    List<Widget> options = [];
+    profileViewModel.getAdhocSurveys().forEach((plannedSurvey, survey) =>
+        options.add(Padding(padding: EdgeInsets.all(15), child: SimpleButton(
           text: MediumText(text: survey.name, color: NextSenseColors.darkBlue),
           onTap: () async {
             bool? completed = await _navigation.navigateTo(
                 SurveyScreen.id, arguments:
-                AdhocSurvey(survey, profileViewModel.studyId));
+                AdhocSurvey(plannedSurvey.id, survey, profileViewModel.studyId));
             Navigator.pop(context, completed ?? false);
           }),
-        )).toList();
+        )));
 
     return SimpleDialog(
       title: HeaderText(text: 'Select survey to start'),

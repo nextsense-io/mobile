@@ -47,7 +47,7 @@ class AuthManager {
   GoogleAuthManager? _googleAuthManager;
   EmailAuthManager? _emailAuthManager;
   String? _email;
-  String? _userCode;
+  String? _username;
   User? _user;
   AuthMethod? _signedInAuthMethod;
 
@@ -60,7 +60,7 @@ class AuthManager {
   bool get isTempPassword => _user?.isTempPassword() ?? false;
 
   User? get user => _user;
-  String? get userCode => _userCode;
+  String? get username => _username;
   String? get email => _email;
 
   AuthManager() {
@@ -152,7 +152,7 @@ class AuthManager {
         return result;
       case AuthMethod.user_code:
     return await _nextSenseAuthManager!.changePassword(
-        username: userCode!, newPassword: newPassword);
+        username: username!, newPassword: newPassword);
       default:
         return PasswordChangeResult.error;
     }
@@ -221,7 +221,7 @@ class AuthManager {
       }
       _user = await _loadUser(userId: authUid);
       if (_user != null) {
-        _userCode = username;
+        _username = username;
         await _updateUserDetails(user: _user!);
         return true;
       }
@@ -244,7 +244,7 @@ class AuthManager {
       default:
       // Nothing to do.
     }
-    _userCode = null;
+    _username = null;
     _user = null;
     _email = null;
   }
@@ -266,7 +266,7 @@ class AuthManager {
       return AuthenticationResult.invalid_user_setup;
     }
     _updateUserDetails(user: _user!);
-    _userCode = username;
+    _username = username;
     return AuthenticationResult.success;
   }
 

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
@@ -22,7 +23,7 @@ class AdhocProtocol implements RunnableProtocol {
   ProtocolState state = ProtocolState.not_started;
   AdhocProtocolRecord? _record;
 
-  RunnableProtocolType get type => RunnableProtocolType.adhoc;
+  ScheduleType get scheduleType => ScheduleType.adhoc;
   String? get lastSessionId => _record?.getSession() ?? null;
   List<Survey>? get postSurveys => getPostProtocolSurveys();
 
@@ -64,7 +65,7 @@ class AdhocProtocol implements RunnableProtocol {
         Table.enrolled_studies,
         Table.adhoc_protocols
       ], [
-        _authManager.userCode!,
+        _authManager.username!,
         _studyId,
         adhocProtocolKey
       ]);
