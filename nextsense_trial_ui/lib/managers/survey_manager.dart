@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
+import 'package:nextsense_trial_ui/domain/survey/adhoc_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
@@ -218,6 +219,18 @@ class SurveyManager {
       }
     }
     return null;
+  }
+
+  // Creates an Adhoc survey record in the database and return a reference to it.
+  Future<AdhocSurvey> createAdhocSurvey(PlannedSurvey plannedSurvey) async {
+    if (plannedSurvey.scheduleType != ScheduleType.adhoc) {
+      throw Exception('Planned survey is not an adhoc survey');
+    }
+    FirebaseEntity adhocSurveyEntity = await _firestoreManager.addAutoIdReference([
+      Table.users, Table.enrolled_studies, Table.adhoc_surveys], [
+      _authManager.username!, _currentStudyId]);
+    return AdhocSurvey(adhocSurveyEntity, plannedSurvey.id,
+        getSurveyById(plannedSurvey.surveyId)!, _currentStudyId);
   }
 
   Future<SurveyResult> startSurvey(RunnableSurvey runnableSurvey) async {

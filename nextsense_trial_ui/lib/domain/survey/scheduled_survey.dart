@@ -98,6 +98,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
     _logger.log(Level.WARNING,
         'Survey state changing from ${this.state} to $state');
     setState(state);
+    setValue(ScheduledSurveyKey.result_id, resultId);
 
     return await save();
   }

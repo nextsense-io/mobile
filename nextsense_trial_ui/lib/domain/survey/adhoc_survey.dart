@@ -1,62 +1,37 @@
-import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
-import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 
-class AdhocSurvey implements RunnableSurvey {
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
-  final AuthManager _authManager = getIt<AuthManager>();
-
-  late String plannedSurveyId;
-  late String? scheduledSurveyId;
-  late Survey survey;
-  late String studyId;
-
-  ScheduleType get scheduleType => ScheduleType.adhoc;
-  String? get resultId => getVa;
-
-  AdhocSurvey(this.plannedSurveyId, this.survey, this.studyId);
-
-  @override
-  Future<bool> update({required SurveyState state, required String resultId}) async {
-    DateTime now = DateTime.now();
-    String adhocProtocolKey = "${survey.id}_at_${now.millisecondsSinceEpoch}";
-    FirebaseEntity? surveyRecordEntity = await _firestoreManager.queryEntity([
-      Table.users,
-      Table.enrolled_studies,
-      Table.adhoc_surveys
-    ], [
-      _authManager.username!,
-      studyId,
-      adhocProtocolKey
-    ]);
-    if (surveyRecordEntity == null) {
-      return false;
-    }
-    final adhocSurvey = AdhocSurveyRecord(surveyRecordEntity);
-    adhocSurvey.setPlannedSurveyId(survey.id);
-    adhocSurvey.setResultId(resultId);
-    return await adhocSurvey.save();
-  }
-}
-
-enum AdhocSurveyRecordKey {
+enum AdhocSurveyKey {
   planned_survey_id,
   result_id  // Survey record id
 }
 
-class AdhocSurveyRecord extends FirebaseEntity<AdhocSurveyRecordKey> {
+class AdhocSurvey extends FirebaseEntity<AdhocSurveyKey> implements RunnableSurvey {
+  late String plannedSurveyId;
+  late Survey survey;
+  late String studyId;
 
-  AdhocSurveyRecord(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
+  ScheduleType get scheduleType => ScheduleType.adhoc;
+  String? get resultId => getValue(AdhocSurveyKey.result_id);
+  String? get scheduledSurveyId => null;
+
+  AdhocSurvey(FirebaseEntity firebaseEntity, this.plannedSurveyId, this.survey, this.studyId)
+      : super(firebaseEntity.getDocumentSnapshot());
 
   void setPlannedSurveyId(String plannedSurveyId) {
-    setValue(AdhocSurveyRecordKey.planned_survey_id, plannedSurveyId);
+    setValue(AdhocSurveyKey.planned_survey_id, plannedSurveyId);
   }
 
   void setResultId(String resultId) {
-    setValue(AdhocSurveyRecordKey.result_id, resultId);
+    setValue(AdhocSurveyKey.result_id, resultId);
+  }
+
+  @override
+  Future<bool> update({required SurveyState state, required String resultId}) async {
+    setPlannedSurveyId(survey.id);
+    setResultId(resultId);
+    return await save();
   }
 }
