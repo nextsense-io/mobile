@@ -13,7 +13,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /***
  * Listens to the Android Bluetooth state and notify listeners of state changes.
@@ -77,7 +77,7 @@ public class BluetoothStateManager {
     } else if (state == BluetoothAdapter.STATE_OFF) {
       adapterState.set(AdapterState.OFF);
     }
-    Util.logd(TAG, "Bluetooth adapter state is " + adapterState.get().name());
+    RotatingFileLogger.get().logd(TAG, "Bluetooth adapter state is " + adapterState.get().name());
     notifyListeners();
   }
 

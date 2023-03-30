@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.data.LocalSessionManager;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
 import io.nextsense.android.base.devices.BaseNextSenseDevice;
@@ -213,7 +213,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
         SetTimeResponse setTimeResponse =
             (SetTimeResponse) executeCommand(new SetTimeCommand(Instant.now()));
         if (setTimeResponse.getTimeSet()) {
-          Util.logd(TAG, "Time set with success");
+          RotatingFileLogger.get().logd(TAG, "Time set with success");
         }
         return setTimeResponse;
       }
@@ -243,7 +243,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
       if (!deviceModeFuture.isDone() && isDataCharacteristic(characteristic)) {
         if (status == GattStatus.SUCCESS) {
-          Util.logd(TAG, "Notification updated with success to " +
+          RotatingFileLogger.get().logd(TAG, "Notification updated with success to " +
               peripheral.isNotifying(characteristic));
           if (peripheral.isNotifying(characteristic)) {
             writeCharacteristic(writeDataCharacteristic,
@@ -275,7 +275,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     public void onCharacteristicWrite(
         @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-      Util.logv(TAG, "Characteristic write completed with status " + status + " with value: " +
+      RotatingFileLogger.get().logv(TAG, "Characteristic write completed with status " + status + " with value: " +
           Arrays.toString(value));
       // Check mode change result.
       if (characteristic == writeDataCharacteristic &&
@@ -297,7 +297,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
             deviceMode = targetMode;
             deviceModeFuture.set(true);
           }
-          Util.logd(TAG, "Wrote command to writeData characteristic with success.");
+          RotatingFileLogger.get().logd(TAG, "Wrote command to writeData characteristic with success.");
         } else {
           deviceModeFuture.setException(
               new BluetoothException("Failed to change the mode to " + targetMode.name() +

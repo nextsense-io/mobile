@@ -2,8 +2,6 @@ package io.nextsense.android.base.devices.h1;
 
 import static java.lang.Math.pow;
 
-import android.util.Log;
-
 import com.google.common.collect.ImmutableList;
 
 import org.greenrobot.eventbus.EventBus;
@@ -20,6 +18,7 @@ import java.util.Optional;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
@@ -79,7 +78,7 @@ public class H1DataParser {
     int samplingTimestamp = valuesBuffer.getInt();
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
-      Log.w(TAG, "Received data without an active session, cannot record it.");
+      RotatingFileLogger.get().logw(TAG, "Received data without an active session, cannot record it.");
       return;
     }
     LocalSession localSession = localSessionOptional.get();
@@ -109,30 +108,30 @@ public class H1DataParser {
       FirmwareMessageParsingException {
     switch (H1MessageType.getByCode(values[DATA_TRANS_RX_TYPE_INDEX])) {
       case FIRMWARE_VERSION:
-        Util.logd(TAG, "firmware version $values");
+        RotatingFileLogger.get().logd(TAG, "firmware version $values");
         return FirmwareVersionResponse.parseFromBytes(values);
       case BATTERY_INFO:
-        Util.logd(TAG, "battery information $values");
+        RotatingFileLogger.get().logd(TAG, "battery information $values");
         return BatteryInfoResponse.parseFromBytes(values);
       case BATTERY_STATUS:
-        Util.logd(TAG, "battery charging status $values");
+        RotatingFileLogger.get().logd(TAG, "battery charging status $values");
         if (values.length == 2) {
           int chargingStatus = values[1];
           switch (chargingStatus) {
             case 1:
-              Util.logd(TAG, "charging status : Charging");
+              RotatingFileLogger.get().logd(TAG, "charging status : Charging");
               break;
             case 2:
-              Util.logd(TAG, "charging status : Charging Done");
+              RotatingFileLogger.get().logd(TAG, "charging status : Charging Done");
               break;
             case 3:
-              Util.logd(TAG, "charging status : Not Charging (Draining)");
+              RotatingFileLogger.get().logd(TAG, "charging status : Not Charging (Draining)");
               break;
             case 4:
-              Util.logd(TAG, "charging status : Battery Low");
+              RotatingFileLogger.get().logd(TAG, "charging status : Battery Low");
               break;
             default:
-              Log.w(TAG, "Unknown battery status: " + chargingStatus + '.');
+              RotatingFileLogger.get().logw(TAG, "Unknown battery status: " + chargingStatus + '.');
           }
         } else {
           throw new FirmwareMessageParsingException(
@@ -141,12 +140,12 @@ public class H1DataParser {
         // TODO(eric): Create custom message.
         return new H1FirmwareResponse(H1MessageType.BATTERY_STATUS);
       case TIME_SYNCED:
-        Util.logd(TAG, "time synced value $values");
+        RotatingFileLogger.get().logd(TAG, "time synced value $values");
         if (values.length == 2) {
           if (values[1] == 1) {
-            Util.logd(TAG, "time synced");
+            RotatingFileLogger.get().logd(TAG, "time synced");
           } else {
-            Util.logd(TAG, "time not synced");
+            RotatingFileLogger.get().logd(TAG, "time not synced");
           }
         } else {
           throw new FirmwareMessageParsingException(
@@ -155,12 +154,12 @@ public class H1DataParser {
         // TODO(eric): Create custom message.
         return new H1FirmwareResponse(H1MessageType.TIME_SYNCED);
       case SET_TIME:
-        Util.logd(TAG, "time set");
+        RotatingFileLogger.get().logd(TAG, "time set");
         return SetTimeResponse.parseFromBytes(values);
       case GET_TIME:
-        Util.logd(TAG, "get time value $values");
+        RotatingFileLogger.get().logd(TAG, "get time value $values");
         if (values.length == 7) {
-          Util.logd(TAG, "got time sync value");
+          RotatingFileLogger.get().logd(TAG, "got time sync value");
         } else {
           throw new FirmwareMessageParsingException(
               "Expected 7 bytes for GET_TIME response, but got " + values.length + ".");

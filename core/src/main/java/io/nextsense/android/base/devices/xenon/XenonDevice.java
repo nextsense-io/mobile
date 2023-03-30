@@ -2,7 +2,6 @@ package io.nextsense.android.base.devices.xenon;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,7 +32,7 @@ import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.BaseNextSenseDevice;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
 import io.nextsense.android.base.devices.NextSenseDevice;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Second generation prototype device that was built internally at NextSense.
@@ -106,7 +105,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     if (reconnecting) {
       // If reconnecting, we do not want to reset the time and apply settings as there might be a
       // recording in progress and this is not supported.
-      Log.i(TAG, "Reconnecting, no need to re-apply device settings.");
+      RotatingFileLogger.get().logi(TAG, "Reconnecting, no need to re-apply device settings.");
       return Futures.immediateFuture(true);
     }
     return executorService.submit(() -> {
@@ -114,7 +113,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
         executeCommandNoResponse(new SetTimeCommand(Instant.now()));
         // Cannot read device settings, so load the default setting and apply them when connecting.
         applyDeviceSettings(loadDeviceSettings().get());
-        Log.i(TAG, "Applied device settings.");
+        RotatingFileLogger.get().logi(TAG, "Applied device settings.");
         // Enable notifications to get the device state change messages.
         if (!peripheral.isNotifying(dataCharacteristic)) {
           changeNotificationStateFuture = SettableFuture.create();
@@ -122,10 +121,10 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           return changeNotificationStateFuture.get();
         }
       } catch (ExecutionException e) {
-        Log.e(TAG, "Failed to set the time on the device: " + e.getMessage());
+        RotatingFileLogger.get().loge(TAG, "Failed to set the time on the device: " + e.getMessage());
         return false;
       } catch (InterruptedException e) {
-        Log.e(TAG, "Interrupted when trying to set the time on the device: " + e.getMessage());
+        RotatingFileLogger.get().loge(TAG, "Interrupted when trying to set the time on the device: " + e.getMessage());
         Thread.currentThread().interrupt();
         return false;
       }
@@ -151,7 +150,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     targetStartStreamingMode =
         (StartStreamingCommand.StartMode)parameters.getSerializable(STREAM_START_MODE_KEY);
     if (this.deviceMode == DeviceMode.STREAMING) {
-      Log.w(TAG, "Device already streaming, nothing to do.");
+      RotatingFileLogger.get().logw(TAG, "Device already streaming, nothing to do.");
       return Futures.immediateFuture(true);
     }
     if (dataCharacteristic == null) {
@@ -208,10 +207,10 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
         this.deviceSettings = newDeviceSettings;
         return true;
       } catch (ExecutionException e) {
-        Log.e(TAG, "Failed to apply settings on the device: " + e.getMessage());
+        RotatingFileLogger.get().loge(TAG, "Failed to apply settings on the device: " + e.getMessage());
         return false;
       } catch (InterruptedException e) {
-        Log.e(TAG, "Interrupted when trying to apply settings on the device: " +
+        RotatingFileLogger.get().loge(TAG, "Interrupted when trying to apply settings on the device: " +
             e.getMessage());
         Thread.currentThread().interrupt();
         return false;
@@ -241,10 +240,10 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       executeCommandNoResponse(new RequestAuxPacketCommand());
       return true;
     } catch (CancellationException | ExecutionException e) {
-      Log.e(TAG, "Failed to request the device state: " + e.getMessage());
+      RotatingFileLogger.get().loge(TAG, "Failed to request the device state: " + e.getMessage());
       return false;
     } catch (InterruptedException e) {
-      Log.e(TAG, "Interrupted when trying to request the device state: " + e.getMessage());
+      RotatingFileLogger.get().loge(TAG, "Interrupted when trying to request the device state: " + e.getMessage());
       Thread.currentThread().interrupt();
       return false;
     }
@@ -266,7 +265,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private void executeCommandNoResponse(XenonFirmwareCommand command) throws
       ExecutionException, InterruptedException, CancellationException {
     if (peripheral == null || dataCharacteristic == null) {
-      Log.w(TAG, "No peripheral to execute command on.");
+      RotatingFileLogger.get().logw(TAG, "No peripheral to execute command on.");
       return;
     }
     blePeripheralCallbackProxy.writeCharacteristic(
@@ -287,7 +286,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       if (changeStreamingStateFuture != null && !changeStreamingStateFuture.isDone() &&
           isDataCharacteristic(characteristic)) {
         if (status == GattStatus.SUCCESS) {
-          Util.logd(TAG, "Notification updated with success to " +
+          RotatingFileLogger.get().logd(TAG, "Notification updated with success to " +
               peripheral.isNotifying(characteristic));
           if (peripheral.isNotifying(characteristic)) {
             runStartStreamingCommand();
@@ -304,7 +303,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       if (changeNotificationStateFuture != null && !changeNotificationStateFuture.isDone() &&
           isDataCharacteristic(characteristic)) {
         if (status == GattStatus.SUCCESS) {
-          Util.logd(TAG, "Notification updated with success to " +
+          RotatingFileLogger.get().logd(TAG, "Notification updated with success to " +
               peripheral.isNotifying(characteristic));
           changeNotificationStateFuture.set(true);
         } else {
@@ -329,7 +328,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     public void onCharacteristicWrite(
         @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-      Util.logv(TAG, "Characteristic write completed with status " + status + " with value: " +
+      RotatingFileLogger.get().logv(TAG, "Characteristic write completed with status " + status + " with value: " +
           Arrays.toString(value));
       // Check mode change result.
       if (characteristic == dataCharacteristic &&
@@ -350,7 +349,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           if (changeStreamingStateFuture != null) {
             changeStreamingStateFuture.set(true);
           }
-          Util.logd(TAG, "Wrote command to writeData characteristic with success.");
+          RotatingFileLogger.get().logd(TAG, "Wrote command to writeData characteristic with success.");
         } else {
           if (changeStreamingStateFuture != null) {
             changeStreamingStateFuture.setException(

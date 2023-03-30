@@ -10,7 +10,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.StatFs;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -50,6 +49,7 @@ import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.emulated.EmulatedDeviceManager;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.service.ForegroundService;
 import io.objectbox.android.AndroidScheduler;
 import io.objectbox.reactive.DataSubscription;
@@ -84,6 +84,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       "set_uploader_minimum_connectivity";
   public static final String GET_FREE_DISK_SPACE_COMMAND = "get_free_disk_space";
   public static final String GET_TIMEZONE_ID_COMMAND = "get_timezone_id";
+
+  public static final String GET_NATIVE_LOGS_COMMAND = "get_native_logs";
   public static final String EMULATOR_COMMAND = "emulator_command";
   public static final String IS_BLUETOOTH_ENABLED_ARGUMENT = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
@@ -152,20 +154,20 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-    Log.i(TAG, "Attaching to engine.");
+    RotatingFileLogger.get().logi(TAG, "Attaching to engine.");
     BinaryMessenger messenger = flutterPluginBinding.getBinaryMessenger();
     BinaryMessenger.TaskQueue taskQueue = messenger.makeBackgroundTaskQueue();
     methodChannel =
         new MethodChannel(messenger, METHOD_CHANNEL_NAME, StandardMethodCodec.INSTANCE, taskQueue);
     methodChannel.setMethodCallHandler(this);
-    Log.i(TAG, "Getting context.");
+    RotatingFileLogger.get().logi(TAG, "Getting context.");
     applicationContext = flutterPluginBinding.getApplicationContext();
     deviceScanChannel =
         new EventChannel(flutterPluginBinding.getBinaryMessenger(), DEVICE_SCAN_CHANNEL_NAME);
     deviceScanChannel.setStreamHandler(new EventChannel.StreamHandler() {
       @Override
       public void onListen(Object listener, EventChannel.EventSink eventSink) {
-        Log.i(TAG, "Starting Android Bluetooth scan...");
+        RotatingFileLogger.get().logi(TAG, "Starting Android Bluetooth scan...");
         startScanning(eventSink);
       }
       @Override
@@ -179,7 +181,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       @Override
       @SuppressWarnings("unchecked")
       public void onListen(Object arguments, EventChannel.EventSink eventSink) {
-        Log.i(TAG, "Starting to listen to Android device state...");
+        RotatingFileLogger.get().logi(TAG, "Starting to listen to Android device state...");
         List<Object> argumentList = (ArrayList<Object>) arguments;
         startListeningToDeviceState(eventSink, (String) argumentList.get(1));
       }
@@ -200,7 +202,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     deviceInternalStateChannel.setStreamHandler(new EventChannel.StreamHandler() {
       @Override
       public void onListen(Object arguments, EventChannel.EventSink eventSink) {
-        Log.i(TAG, "Starting to listen to internal device state...");
+        RotatingFileLogger.get().logi(TAG, "Starting to listen to internal device state...");
         startListeningToInternalDeviceState(eventSink);
       }
       @Override
@@ -215,7 +217,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       @Override
       @SuppressWarnings("unchecked")
       public void onListen(Object arguments, EventChannel.EventSink eventSink) {
-        Log.i(TAG, "Starting to listen to current session data received state...");
+        RotatingFileLogger.get().logi(TAG, "Starting to listen to current session data received state...");
         starListeningToCurrentSessionDataReceived(eventSink);
       }
       @Override
@@ -224,12 +226,12 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         stopListeningToCurrentSessionDataReceived();
       }
     });
-    Log.i(TAG, "Attached to engine.");
+    RotatingFileLogger.get().logi(TAG, "Attached to engine.");
   }
 
   @Override
   public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-    Log.i(TAG, "Detaching from engine.");
+    RotatingFileLogger.get().logi(TAG, "Detaching from engine.");
     if (deviceInternalStateSubscription != null) {
       deviceInternalStateSubscription.cancel();
       deviceInternalStateSubscription = null;
@@ -240,7 +242,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     deviceInternalStateChannel.setStreamHandler(null);
     currentSessionDataReceivedChannel.setStreamHandler(null);
     applicationContext = null;
-    Log.i(TAG, "Detached from engine.");
+    RotatingFileLogger.get().logi(TAG, "Detached from engine.");
   }
 
   @Override
@@ -265,15 +267,15 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case CONNECT_DEVICE_COMMAND:
         String macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
-        Log.d(TAG, "connecting to device: " + macAddress);
+        RotatingFileLogger.get().logd(TAG, "connecting to device: " + macAddress);
         connectDevice(result, macAddress);
-        Log.d(TAG, "connected to device: " + macAddress + " with result " + result);
+        RotatingFileLogger.get().logd(TAG, "connected to device: " + macAddress + " with result " + result);
         break;
       case DISCONNECT_DEVICE_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
-        Log.d(TAG, "disconnecting from device: " + macAddress);
+        RotatingFileLogger.get().logd(TAG, "disconnecting from device: " + macAddress);
         disconnectDevice(result, macAddress);
-        Log.d(TAG, "disconnected from device: " + macAddress + " with result " +
+        RotatingFileLogger.get().logd(TAG, "disconnected from device: " + macAddress + " with result " +
             result);
         break;
       case IS_BLUETOOTH_ENABLED_ARGUMENT:
@@ -374,6 +376,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case GET_TIMEZONE_ID_COMMAND:
         getTimezoneId(result);
         break;
+      case GET_NATIVE_LOGS_COMMAND:
+        getNativeLogs(result);
+        break;
       case EMULATOR_COMMAND:
         String command = call.argument("command");
         Map<String, Object> params = call.argument("params");
@@ -386,7 +391,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         if (nextSenseServiceBound) {
           nextSenseService.setFlutterActivityActive((boolean)call.arguments);
         } else {
-          Log.d(TAG, "flutter_start: service not connected.");
+          RotatingFileLogger.get().logd(TAG, "flutter_start: service not connected.");
         }
         break;
       case IS_FLUTTER_ACTIVITY_ACTIVE_COMMAND:
@@ -424,18 +429,18 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       try {
         Class<?> uiClass = Class.forName(
             "io.flutter.embedding.android.FlutterActivity");
-        Log.i(TAG, "Creating intent.");
+        RotatingFileLogger.get().logi(TAG, "Creating intent.");
         foregroundServiceIntent = new Intent(applicationContext, ForegroundService.class);
         foregroundServiceIntent.putExtra("ui_class", uiClass);
         applicationContext.startService(foregroundServiceIntent);
         applicationContext.bindService(foregroundServiceIntent, nextSenseConnection,
             Context.BIND_IMPORTANT);
       } catch (ClassNotFoundException e) {
-        Log.e(TAG, "Could not find class: " +
+        RotatingFileLogger.get().loge(TAG, "Could not find class: " +
             "io.flutter.embedding.android.FlutterActivity");
       }
     } else {
-      Log.d(TAG, "context still null");
+      RotatingFileLogger.get().logd(TAG, "context still null");
     }
   }
 
@@ -443,7 +448,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     if (applicationContext != null) {
       applicationContext.stopService(foregroundServiceIntent);
     } else {
-      Log.d(TAG, "context still null");
+      RotatingFileLogger.get().logd(TAG, "context still null");
     }
   }
 
@@ -480,7 +485,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       deviceScanListener = new DeviceManager.DeviceScanListener() {
         @Override
         public void onNewDevice(Device device) {
-          Log.i(TAG, "Found a device in Android scan: " + device.getName());
+          RotatingFileLogger.get().logi(TAG, "Found a device in Android scan: " + device.getName());
           DeviceAttributes deviceAttributes =
               new DeviceAttributes(device.getAddress(), device.getName());
           uiThreadHandler.post(() -> eventSink.success(gson.toJson(deviceAttributes)));
@@ -488,14 +493,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
         @Override
         public void onScanError(DeviceScanner.ScanError scanError) {
-          Log.e(TAG, "Error while scanning in Android: " + scanError.name());
+          RotatingFileLogger.get().loge(TAG, "Error while scanning in Android: " + scanError.name());
           uiThreadHandler.post(() ->
               eventSink.error(scanError.name(), scanError.name(), scanError.name()));
         }
       };
       nextSenseService.getDeviceManager().findDevices(deviceScanListener);
     } else {
-      Log.w(TAG, "Service not connected, cannot start Bluetooth scan.");
+      RotatingFileLogger.get().logw(TAG, "Service not connected, cannot start Bluetooth scan.");
     }
   }
 
@@ -504,7 +509,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       nextSenseService.getDeviceManager().stopFindingDevices(deviceScanListener);
       deviceScanListener = null;
     } else {
-      Log.d(TAG, "Service not connected.");
+      RotatingFileLogger.get().logd(TAG, "Service not connected.");
     }
   }
 
@@ -521,7 +526,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
           uiThreadHandler.post(() -> eventSink.success(newDeviceState.name())));
       device.get().addOnDeviceStateChangeListener(deviceStateListeners.get(macAddress));
     } else {
-      Log.w(TAG, "Service not connected, cannot start monitoring device state.");
+      RotatingFileLogger.get().logw(TAG, "Service not connected, cannot start monitoring device state.");
     }
   }
 
@@ -529,17 +534,17 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     if (nextSenseServiceBound) {
       Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
       if (!device.isPresent()) {
-        Log.w(TAG, "Cannot find the device " + macAddress +
+        RotatingFileLogger.get().logw(TAG, "Cannot find the device " + macAddress +
             " when trying to stop listening to its state.");
         return;
       }
       Device.DeviceStateChangeListener deviceStateListener = deviceStateListeners.get(macAddress);
       if (deviceStateListener != null) {
         device.get().removeOnDeviceStateChangeListener(deviceStateListener);
-        Log.i(TAG, "Stopped listening to Android device state for " + macAddress);
+        RotatingFileLogger.get().logi(TAG, "Stopped listening to Android device state for " + macAddress);
       }
     } else {
-      Log.w(TAG, "Service not connected, cannot start monitoring device state.");
+      RotatingFileLogger.get().logw(TAG, "Service not connected, cannot start monitoring device state.");
     }
   }
 
@@ -562,7 +567,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
               },
               deviceInternalStateSubscriptionScheduler);
     } else {
-      Log.w(TAG, "Service not connected, cannot start monitoring internal device state.");
+      RotatingFileLogger.get().logw(TAG, "Service not connected, cannot start monitoring internal device state.");
     }
   }
 
@@ -580,7 +585,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
           () -> uiThreadHandler.post(() -> eventSink.success(null));
       localSessionManager.addOnFirstDataReceivedListener(onCurrentSessionDataReceivedListener);
     } else {
-      Log.w(TAG, "Service not connected, cannot start monitoring device state.");
+      RotatingFileLogger.get().logw(TAG, "Service not connected, cannot start monitoring device state.");
     }
   }
 
@@ -589,7 +594,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       LocalSessionManager localSessionManager = nextSenseService.getLocalSessionManager();
       localSessionManager.removeOnFirstDataReceivedListener(onCurrentSessionDataReceivedListener);
     } else {
-      Log.w(TAG, "Service not connected, cannot start monitoring device state.");
+      RotatingFileLogger.get().logw(TAG, "Service not connected, cannot start monitoring device state.");
     }
   }
 
@@ -751,7 +756,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     Optional<LocalSession> localSession =
         nextSenseService.getLocalSessionManager().getActiveLocalSession();
     if (localSession.isPresent()) {
-      Log.i(TAG, "start impedance returning local session " + localSession.get().id);
+      RotatingFileLogger.get().logi(TAG, "start impedance returning local session " + localSession.get().id);
       result.success(localSession.get().id);
     } else {
       returnError(result, START_IMPEDANCE_COMMAND, ERROR_SESSION_NOT_STARTED,
@@ -918,6 +923,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     result.success(timeZone);
   }
 
+  private void getNativeLogs(Result result) {
+    result.success(RotatingFileLogger.get().getAtLeast24HoursLogs());
+  }
+
   private void returnError(
       Result result, String method, String errorCode, @Nullable String errorMessage,
       @Nullable String errorDetails) {
@@ -928,7 +937,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     if (errorDetails != null) {
       errorLog += ", details: " + errorDetails;
     }
-    Log.e(TAG, errorLog);
+    RotatingFileLogger.get().loge(TAG, errorLog);
     result.error(errorCode, errorMessage, errorDetails);
   }
 

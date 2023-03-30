@@ -3,7 +3,6 @@ package io.nextsense.android.base.ble;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -39,7 +38,7 @@ import io.nextsense.android.base.communication.ble.ReconnectionManager;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.xenon.StartStreamingCommand;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Main device interface that is shared for any device. Device specific functions are encapsulated
@@ -153,7 +152,7 @@ public class BleDevice extends Device {
     newDeviceSettings.setImpedanceMode(impedanceMode);
     if (impedanceMode == DeviceSettings.ImpedanceMode.ON_EXTERNAL_CURRENT) {
       if (channelNumber == null || frequencyDivider == null) {
-        Log.e(TAG, "Need to provide a channel number and impedance frequency for External Current" +
+        RotatingFileLogger.get().loge(TAG, "Need to provide a channel number and impedance frequency for External Current" +
             " Impedance Mode.");
         return Futures.immediateFuture(false);
       }
@@ -204,7 +203,7 @@ public class BleDevice extends Device {
    */
   @Override
   public ListenableFuture<DeviceState> connect(boolean autoReconnect) {
-    Util.logd(TAG, "connect start");
+    RotatingFileLogger.get().logd(TAG, "connect start");
     if (deviceState != DeviceState.DISCONNECTED) {
       return Futures.immediateFuture(deviceState);
     }
@@ -216,7 +215,7 @@ public class BleDevice extends Device {
     deviceConnectionFuture = SettableFuture.create();
     centralManagerProxy.getCentralManager().connectPeripheral(
         btPeripheral, callbackProxy.getMainCallback());
-    Util.logd(TAG, "connect returning future");
+    RotatingFileLogger.get().logd(TAG, "connect returning future");
     return deviceConnectionFuture;
   }
 
@@ -226,7 +225,7 @@ public class BleDevice extends Device {
    */
   @Override
   public ListenableFuture<DeviceState> disconnect() {
-    Util.logd(TAG, "disconnect start");
+    RotatingFileLogger.get().logd(TAG, "disconnect start");
     if (reconnectionManager.isReconnecting()) {
       reconnectionManager.stopReconnecting();
     }
@@ -310,7 +309,7 @@ public class BleDevice extends Device {
         }
         disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
       } catch (ExecutionException e) {
-        Log.e(TAG, "Failed to connect device: " + e.getMessage());
+        RotatingFileLogger.get().loge(TAG, "Failed to connect device: " + e.getMessage());
         deviceConnectionFuture.setException(e);
       } catch (InterruptedException e) {
         deviceConnectionFuture.setException(e);
@@ -323,7 +322,7 @@ public class BleDevice extends Device {
       new BluetoothCentralManagerCallback() {
     @Override
     public void onConnectedPeripheral(@NonNull BluetoothPeripheral peripheral) {
-      Log.d(TAG, "Connected with device " + peripheral.getName());
+      RotatingFileLogger.get().logd(TAG, "Connected with device " + peripheral.getName());
       deviceState = DeviceState.CONNECTED;
       notifyDeviceStateChangeListeners(DeviceState.CONNECTED);
       if (reconnectionManager.isReconnecting()) {
@@ -334,7 +333,7 @@ public class BleDevice extends Device {
     @Override
     public void onConnectionFailed(@NonNull BluetoothPeripheral peripheral,
                                    @NonNull HciStatus status) {
-      Log.w(TAG, "Connection with device " + peripheral.getName() + " failed. HCI status: " +
+      RotatingFileLogger.get().logw(TAG, "Connection with device " + peripheral.getName() + " failed. HCI status: " +
           status);
       if (deviceConnectionFuture != null) {
         deviceConnectionFuture.set(deviceState);
@@ -347,14 +346,14 @@ public class BleDevice extends Device {
 
     @Override
     public void onConnectingPeripheral(@NonNull BluetoothPeripheral peripheral) {
-      Util.logd(TAG, "Device " + peripheral.getName() + " connecting.");
+      RotatingFileLogger.get().logd(TAG, "Device " + peripheral.getName() + " connecting.");
       deviceState = DeviceState.CONNECTING;
       notifyDeviceStateChangeListeners(DeviceState.CONNECTING);
     }
 
     @Override
     public void onDisconnectingPeripheral(@NonNull BluetoothPeripheral peripheral) {
-      Util.logd(TAG, "Device " + peripheral.getName() + " disconnecting.");
+      RotatingFileLogger.get().logd(TAG, "Device " + peripheral.getName() + " disconnecting.");
       deviceState = DeviceState.DISCONNECTING;
       notifyDeviceStateChangeListeners(DeviceState.DISCONNECTING);
     }
@@ -362,17 +361,17 @@ public class BleDevice extends Device {
     @Override
     public void onDisconnectedPeripheral(@NonNull BluetoothPeripheral peripheral,
                                          @NonNull HciStatus status) {
-      Util.logd(TAG, "Device " + peripheral.getName() + " disconnected");
+      RotatingFileLogger.get().logd(TAG, "Device " + peripheral.getName() + " disconnected");
       if (disconnectionStatus != DisconnectionStatus.BY_REQUEST) {
-        Util.logd(TAG, "Hard disconnect, try to reconnect.");
+        RotatingFileLogger.get().logd(TAG, "Hard disconnect, try to reconnect.");
         disconnectionStatus = DisconnectionStatus.HARD;
         if (autoReconnect) {
           reconnectionManager.startReconnecting(peripheral, callbackProxy.getMainCallback());
         } else {
-          Util.logd(TAG, "autoReconnect is OFF, no need to try to reconnect.");
+          RotatingFileLogger.get().logd(TAG, "autoReconnect is OFF, no need to try to reconnect.");
         }
       } else {
-        Util.logd(TAG, "Disconnection was by request, no need to try to reconnect.");
+        RotatingFileLogger.get().logd(TAG, "Disconnection was by request, no need to try to reconnect.");
       }
       deviceState = DeviceState.DISCONNECTED;
       if (deviceDisconnectionFuture != null) {
@@ -385,7 +384,7 @@ public class BleDevice extends Device {
   private final BluetoothPeripheralCallback peripheralCallback = new BluetoothPeripheralCallback() {
     @Override
     public void onServicesDiscovered(@NonNull BluetoothPeripheral peripheral) {
-      Util.logd(TAG, "Services discovered.");
+      RotatingFileLogger.get().logd(TAG, "Services discovered.");
       if (nextSenseDevice.getTargetMTU() != 23 && btPeripheral.getCurrentMtu() <= 23) {
         btPeripheral.requestMtu(nextSenseDevice.getTargetMTU());
       } else {
@@ -441,7 +440,7 @@ public class BleDevice extends Device {
     public void onMtuChanged(@NonNull BluetoothPeripheral peripheral, int mtu,
                              @NonNull GattStatus status) {
       super.onMtuChanged(peripheral, mtu, status);
-      Util.logd(TAG, "MTU changed to " + mtu);
+      RotatingFileLogger.get().logd(TAG, "MTU changed to " + mtu);
       // Run the device specific connection and mark as ready.
       readyDevice(peripheral);
     }
@@ -450,14 +449,14 @@ public class BleDevice extends Device {
     public void onPhyUpdate(@NonNull BluetoothPeripheral peripheral, @NonNull PhyType txPhy,
                             @NonNull PhyType rxPhy, @NonNull GattStatus status) {
       super.onPhyUpdate(peripheral, txPhy, rxPhy, status);
-      Util.logd(TAG, "PHY changed to tx: " + txPhy.name() + ", rx: " + rxPhy.name());
+      RotatingFileLogger.get().logd(TAG, "PHY changed to tx: " + txPhy.name() + ", rx: " + rxPhy.name());
     }
 
     @Override
     public void onConnectionUpdated(@NonNull BluetoothPeripheral peripheral, int interval,
                                     int latency, int timeout, @NonNull GattStatus status) {
       super.onConnectionUpdated(peripheral, interval, latency, timeout, status);
-      Util.logd(TAG, "Connection updated to interval: " + interval + ", latency: " + latency +
+      RotatingFileLogger.get().logd(TAG, "Connection updated to interval: " + interval + ", latency: " + latency +
           ", timeout: " + timeout + ", gatt status: " + status);
     }
   };

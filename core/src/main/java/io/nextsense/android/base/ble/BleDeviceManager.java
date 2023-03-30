@@ -1,7 +1,5 @@
 package io.nextsense.android.base.ble;
 
-import android.util.Log;
-
 import com.google.common.collect.Maps;
 import com.welie.blessed.BluetoothPeripheral;
 
@@ -24,7 +22,7 @@ import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 public class BleDeviceManager implements DeviceManager {
 
@@ -54,14 +52,14 @@ public class BleDeviceManager implements DeviceManager {
       try {
         connectedDevice.disconnect().get(10, TimeUnit.SECONDS);
       } catch (ExecutionException e) {
-        Log.w(TAG, "Exception while disconnecting from device " + connectedDevice.getName() +
+        RotatingFileLogger.get().logw(TAG, "Exception while disconnecting from device " + connectedDevice.getName() +
             " with address " + connectedDevice.getAddress() + ": " + e.getMessage());
       } catch (InterruptedException e) {
-        Log.w(TAG, "Interrupted while disconnecting from device " + connectedDevice.getName() +
+        RotatingFileLogger.get().logw(TAG, "Interrupted while disconnecting from device " + connectedDevice.getName() +
             " with address " + connectedDevice.getAddress());
         Thread.currentThread().interrupt();
       } catch (TimeoutException e) {
-        Log.w(TAG, "Timeout while disconnecting from device " + connectedDevice.getName() +
+        RotatingFileLogger.get().logw(TAG, "Timeout while disconnecting from device " + connectedDevice.getName() +
             " with address " + connectedDevice.getAddress());
       }
     }
@@ -112,7 +110,7 @@ public class BleDeviceManager implements DeviceManager {
       new DeviceScanner.PeripheralScanListener() {
         @Override
         public void onNewPeripheral(BluetoothPeripheral peripheral) {
-          Util.logd(TAG, "new device " + peripheral.getAddress() + ", present? " +
+          RotatingFileLogger.get().logd(TAG, "new device " + peripheral.getAddress() + ", present? " +
               devices.containsKey(peripheral.getAddress()));
           if (!devices.containsKey(peripheral.getAddress())) {
             NextSenseDevice nextSenseDevice =

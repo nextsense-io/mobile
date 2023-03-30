@@ -15,9 +15,6 @@ import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceSettings;
 import io.nextsense.android.base.data.LocalSessionManager;
 
-/**
- * Created by Eric Bouchard on 12/9/2020.
- */
 public abstract class BaseNextSenseDevice implements NextSenseDevice {
 
   protected LocalSessionManager localSessionManager;

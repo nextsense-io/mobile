@@ -1,7 +1,5 @@
 package io.nextsense.android.base.emulated;
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +9,7 @@ import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 public class EmulatedDeviceManager implements DeviceManager {
 
@@ -36,7 +35,7 @@ public class EmulatedDeviceManager implements DeviceManager {
 
     @Override
     public void findDevices(DeviceManager.DeviceScanListener deviceScanListener) {
-        Log.w(TAG, "EmulatedDeviceManager::findDevices");
+        RotatingFileLogger.get().logw(TAG, "EmulatedDeviceManager::findDevices");
         emulatedDevice = (EmulatedDevice) Device.create(null, null, null, null, null);
         // Have to pass localSessionManager to emulated device
         emulatedDevice.setLocalSessionManager(localSessionManager);
@@ -60,7 +59,7 @@ public class EmulatedDeviceManager implements DeviceManager {
     }
 
     public void sendEmulatorCommand(String command, Map<String, Object> params) {
-        Log.w(TAG, "sendEmulatorCommand " + command + " " + params);
+        RotatingFileLogger.get().logw(TAG, "sendEmulatorCommand " + command + " " + params);
         switch (command) {
             case EMULATOR_COMMAND_DISCONNECT:
                 emulatedDevice.emulateDisconnect();

@@ -1,7 +1,5 @@
 package io.nextsense.android.base.db;
 
-import android.util.Log;
-
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -13,6 +11,7 @@ import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Samples;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Listens for incoming data and saves it in the ObjectBox database.
@@ -38,16 +37,16 @@ public class DatabaseSink {
 
   public void startListening() {
     if (EventBus.getDefault().isRegistered(this)) {
-      Log.w(TAG, "Already registered to EventBus!");
+      RotatingFileLogger.get().logw(TAG, "Already registered to EventBus!");
       return;
     }
     EventBus.getDefault().register(this);
-    Log.i(TAG, "Started listening to EventBus.");
+    RotatingFileLogger.get().logi(TAG, "Started listening to EventBus.");
   }
 
   public void stopListening() {
     EventBus.getDefault().unregister(this);
-    Log.i(TAG, "Stopped listening to EventBus.");
+    RotatingFileLogger.get().logi(TAG, "Stopped listening to EventBus.");
   }
 
   public int getEegRecordsCounter() {
@@ -79,7 +78,7 @@ public class DatabaseSink {
         for (EegSample eegSample : samples.getEegSamples()) {
           if (lastEegSample != null && eegSample.getAbsoluteSamplingTimestamp().isBefore(
                 lastEegSample.getAbsoluteSamplingTimestamp())) {
-            Log.w(TAG,
+            RotatingFileLogger.get().logw(TAG,
                 "Received a sample that is before a previous sample, skipping packet. " +
                     "Previous timestamp: " + lastEegSample.getAbsoluteSamplingTimestamp() +
                     ", new timestamp: " + eegSample.getAbsoluteSamplingTimestamp() +

@@ -5,7 +5,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.ArraySet;
-import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.welie.blessed.BluetoothCentralManager;
@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Proxies access to the BluetoothCentralManager object so that multiple objects can listens to
@@ -58,7 +58,7 @@ public class BleCentralManagerProxy {
 
         @Override
         public void onConnectedPeripheral(@NonNull BluetoothPeripheral peripheral) {
-          Log.d(TAG, "Connected with device " + peripheral.getName());
+          RotatingFileLogger.get().logd(TAG, "Connected with device " + peripheral.getName());
           for (BluetoothCentralManagerCallback callback : globalCallbacks) {
             callback.onConnectedPeripheral(peripheral);
           }
@@ -72,7 +72,7 @@ public class BleCentralManagerProxy {
         @Override
         public void onConnectionFailed(@NonNull BluetoothPeripheral peripheral,
                                        @NonNull HciStatus status) {
-          Log.w(TAG, "Connection with device " + peripheral.getName() + " failed. HCI status: " +
+          RotatingFileLogger.get().logw(TAG, "Connection with device " + peripheral.getName() + " failed. HCI status: " +
               status.toString());
           for (BluetoothCentralManagerCallback callback : globalCallbacks) {
             callback.onConnectionFailed(peripheral, status);
@@ -86,7 +86,7 @@ public class BleCentralManagerProxy {
 
         @Override
         public void onConnectingPeripheral(@NonNull BluetoothPeripheral peripheral) {
-          Util.logd(TAG, "Device " + peripheral.getName() + " connecting.");
+          RotatingFileLogger.get().logd(TAG, "Device " + peripheral.getName() + " connecting.");
           for (BluetoothCentralManagerCallback callback : globalCallbacks) {
             callback.onConnectingPeripheral(peripheral);
           }
@@ -99,7 +99,7 @@ public class BleCentralManagerProxy {
 
         @Override
         public void onDisconnectingPeripheral(@NonNull BluetoothPeripheral peripheral) {
-          Util.logd(TAG, "Device " + peripheral.getName() + " disconnecting.");
+          RotatingFileLogger.get().logd(TAG, "Device " + peripheral.getName() + " disconnecting.");
           for (BluetoothCentralManagerCallback callback : globalCallbacks) {
             callback.onDisconnectingPeripheral(peripheral);
           }
@@ -113,7 +113,7 @@ public class BleCentralManagerProxy {
         @Override
         public void onDisconnectedPeripheral(@NonNull BluetoothPeripheral peripheral,
                                              @NonNull HciStatus status) {
-          Util.logd(TAG, "Device " + peripheral.getName() + " disconnected.");
+          RotatingFileLogger.get().logd(TAG, "Device " + peripheral.getName() + " disconnected.");
           for (BluetoothCentralManagerCallback callback : globalCallbacks) {
             callback.onDisconnectedPeripheral(peripheral, status);
           }

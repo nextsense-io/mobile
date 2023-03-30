@@ -1,13 +1,11 @@
 package io.nextsense.android.base.devices.xenon;
 
-import android.util.Log;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
 import io.nextsense.android.base.DeviceSettings.ImpedanceMode;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Changes the device configuration.
@@ -147,16 +145,16 @@ public class SetConfigCommand extends XenonFirmwareCommand {
     byte[] registers = getASD1299Registers(enabledChannels, impedanceMode);
     buf.put(registers);
     for (int i = 0; i < registers.length; ++i) {
-      Util.logd(TAG, "Register at " + i + " " + String.format("0x%08X", registers[i]));
+      RotatingFileLogger.get().logd(TAG, "Register at " + i + " " + String.format("0x%08X", registers[i]));
     }
     buf.put(impedanceMode.getCode());
-    Util.logd(TAG, "Impedance mode: " + impedanceMode.getCode());
+    RotatingFileLogger.get().logd(TAG, "Impedance mode: " + impedanceMode.getCode());
     buf.put((byte)impedanceDivider);
     buf.put(DEFAULT_OPTOSYNC_OUTPUT);
     buf.put(DEFAULT_LOG_TO_SDCARD);
     buf.rewind();
     for (int i = 0; i < buf.array().length; ++i) {
-      Util.logd(TAG, "config buffer at " + i + " " + String.format("0x%08X", buf.array()[i]));
+      RotatingFileLogger.get().logd(TAG, "config buffer at " + i + " " + String.format("0x%08X", buf.array()[i]));
     }
     return buf.array();
   }

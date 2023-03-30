@@ -2,7 +2,6 @@ package io.nextsense.android.base.data;
 
 import android.os.Environment;
 import android.os.HandlerThread;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -37,7 +36,7 @@ import io.nextsense.android.base.communication.firebase.CloudFunctions;
 import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.db.DatabaseSink;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.objectbox.android.AndroidScheduler;
 import io.objectbox.reactive.DataSubscription;
 
@@ -101,33 +100,33 @@ public class Uploader {
 
   public void start() {
     if (started) {
-      Log.w(TAG, "Already started, no-op.");
+      RotatingFileLogger.get().logw(TAG, "Already started, no-op.");
       return;
     }
     connectivity.addStateListener(connectivityStateListener);
     started = true;
-    Log.i(TAG, "Started.");
+    RotatingFileLogger.get().logi(TAG, "Started.");
   }
 
   public void stop() {
     connectivity.removeStateListener(connectivityStateListener);
     stopRunning();
     started = false;
-    Log.i(TAG, "Stopped.");
+    RotatingFileLogger.get().logi(TAG, "Stopped.");
   }
 
   public void setMinimumConnectivityState(Connectivity.State connectivityState) {
     minimumConnectivityState = connectivityState;
-    Log.i(TAG, "Minimum connectivity set to " + minimumConnectivityState.name());
+    RotatingFileLogger.get().logi(TAG, "Minimum connectivity set to " + minimumConnectivityState.name());
     onConnectivityStateChanged();
   }
 
   private void startRunning() {
     if (running.get()) {
-      Log.w(TAG, "Already running, no-op.");
+      RotatingFileLogger.get().logw(TAG, "Already running, no-op.");
       return;
     }
-    Log.i(TAG, "Starting to run.");
+    RotatingFileLogger.get().logi(TAG, "Starting to run.");
     cleanActiveSessions();
     databaseSink.resetEegRecordsCounter();
     subscriptionsHandlerThread = new HandlerThread("UploaderSubscriptionsHandlerThread");
@@ -136,15 +135,15 @@ public class Uploader {
     running.set(true);
     executor = Executors.newSingleThreadExecutor();
     uploadTask = executor.submit(this::uploadData);
-    Log.i(TAG, "Started running.");
+    RotatingFileLogger.get().logi(TAG, "Started running.");
   }
 
   private void stopRunning() {
     if (!running.get()) {
-      Log.w(TAG, "Already stopped, no-op.");
+      RotatingFileLogger.get().logw(TAG, "Already stopped, no-op.");
       return;
     }
-    Log.i(TAG, "Stopping to run.");
+    RotatingFileLogger.get().logi(TAG, "Stopping to run.");
     running.set(false);
     if (eegSampleSubscription != null) {
       eegSampleSubscription.cancel();
@@ -168,7 +167,7 @@ public class Uploader {
       try {
         uploadTask.get();
       } catch (ExecutionException e) {
-        Log.e(TAG, "Error when stopping. " + e.getMessage() + " " +
+        RotatingFileLogger.get().loge(TAG, "Error when stopping. " + e.getMessage() + " " +
                 Arrays.toString(e.getStackTrace()));
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
@@ -177,7 +176,7 @@ public class Uploader {
     if (executor != null) {
       executor.shutdown();
     }
-    Log.i(TAG, "Stopped running.");
+    RotatingFileLogger.get().logi(TAG, "Stopped running.");
   }
 
   // TODO(eric): Should query this by sampling timestamp instead of number of records to send
@@ -202,13 +201,13 @@ public class Uploader {
                 objectBoxDatabase.getLastEegSamples(localSession.id, /*count=*/1);
         if (!eegSamples.isEmpty() && Instant.now().isAfter(
                   eegSamples.get(0).getReceptionTimestamp().plus(Duration.ofSeconds(1)))) {
-          Util.logv(TAG, "Session finished, adding samples to upload.");
+          RotatingFileLogger.get().logv(TAG, "Session finished, adding samples to upload.");
           eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(localSession.id,
                   relativeEegStartOffset,
                   sessionEegSamplesCount - localSession.getEegSamplesUploaded()));
           if (eegSamplesToUpload.isEmpty()) {
             // Nothing to upload, marking it as UPLOADED.
-            Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
+            RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + " upload is completed.");
             localSession.setStatus(LocalSession.Status.UPLOADED);
             completeSession(localSession);
             // This could be deleted at a later time in case the data needs to be analyzed or
@@ -283,21 +282,21 @@ public class Uploader {
   private void uploadData() {
     while (running.get()) {
       List<LocalSession> localSessions = objectBoxDatabase.getLocalSessions();
-      Util.logd(TAG, "There are " + localSessions.size() + " local sessions in the DB.");
+      RotatingFileLogger.get().logd(TAG, "There are " + localSessions.size() + " local sessions in the DB.");
       for (LocalSession localSession : localSessions) {
         if (!localSession.isUploadNeeded() ||
             (localSession.getStatus() != LocalSession.Status.RECORDING &&
             localSession.getStatus() != LocalSession.Status.FINISHED)) {
           continue;
         }
-        Util.logd(TAG, "Session " + localSession.id + " has " +
+        RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + " has " +
             localSession.getEegSamplesUploaded() + " uploaded.");
         Map<String, List<BaseRecord>> samplesToUpload = getSamplesToUpload(localSession);
 
         while (dataToUpload(samplesToUpload) && running.get()) {
           boolean uploaded = false;
           List<BaseRecord> eegSamplesToUpload = samplesToUpload.get(EEG_SAMPLES);
-          Util.logv(TAG, "Session " + localSession.id + " has " + eegSamplesToUpload.size() +
+          RotatingFileLogger.get().logv(TAG, "Session " + localSession.id + " has " + eegSamplesToUpload.size() +
                   " eeg records to upload.");
           for (int eegSamplesIndex = 0; eegSamplesIndex < eegSamplesToUpload.size();
               eegSamplesIndex += uploadChunkSize) {
@@ -341,7 +340,7 @@ public class Uploader {
               localSession.setDeviceInternalStateUploaded(
                       localSession.getDeviceInternalStateUploaded() +
                               deviceInternalStateToUploadSize);
-              Util.logv(TAG, "Uploaded " + localSession.getEegSamplesUploaded() +
+              RotatingFileLogger.get().logv(TAG, "Uploaded " + localSession.getEegSamplesUploaded() +
                   " eeg samples from session " + localSession.id);
               // Need to check the status from the DB as it could get updated to finished in another
               // thread.
@@ -359,7 +358,7 @@ public class Uploader {
                 // localSession.getAccelerationsUploaded() ==
                 //         objectBoxDatabase.getAccelerationCount(localSession.id) +
                 //                 localSession.getAccelerationsDeleted()
-                Util.logd(TAG, "Session " + localSession.id + " upload is completed.");
+                RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + " upload is completed.");
                 localSession.setStatus(LocalSession.Status.UPLOADED);
                 completeSession(localSession);
               }
@@ -372,7 +371,7 @@ public class Uploader {
                 localSession.setStatus(refreshedLocalSession.getStatus());
                 long eegRecordsDeleted = deleteEegOldRecords(localSession);
                 long accelerationRecordsDeleted = deleteAccelerationOldRecords(localSession);
-                Util.logd(TAG, "Deleted " + eegRecordsDeleted + " eeg records.");
+                RotatingFileLogger.get().logd(TAG, "Deleted " + eegRecordsDeleted + " eeg records.");
                 if (eegRecordsDeleted > 0 || accelerationRecordsDeleted > 0) {
                   localSession.setEegSamplesDeleted(
                       localSession.getEegSamplesDeleted() + eegRecordsDeleted);
@@ -391,12 +390,12 @@ public class Uploader {
         }
       }
       recordsToUpload.set(false);
-      Util.logd(TAG, "All upload done, waiting for new samples.");
+      RotatingFileLogger.get().logd(TAG, "All upload done, waiting for new samples.");
       // Wait until there are new samples to upload.
       eegSampleSubscription =
           objectBoxDatabase.subscribe(EegSample.class, eegSample -> {
             if (databaseSink.getEegRecordsCounter() > uploadChunkSize) {
-              Util.logd(TAG, "waking up: " + databaseSink.getEegRecordsCounter());
+              RotatingFileLogger.get().logd(TAG, "waking up: " + databaseSink.getEegRecordsCounter());
               databaseSink.resetEegRecordsCounter();
               recordsToUpload.set(true);
               synchronized (syncToken) {
@@ -408,14 +407,14 @@ public class Uploader {
       // not reach a discrete uploadChunkSize.
       Optional<LocalSession> activeSessionOptional = objectBoxDatabase.getActiveSession();
       if (activeSessionOptional.isPresent()) {
-        Util.logd(TAG, "active session present, waiting for finished session");
+        RotatingFileLogger.get().logd(TAG, "active session present, waiting for finished session");
         activeSessionSubscription = subscribeToFinishedSession(activeSessionOptional.get().id);
       } else {
         if (!localSessions.isEmpty() &&
             localSessions.get(localSessions.size() - 1).isUploadNeeded() &&
             localSessions.get(localSessions.size() - 1).getStatus() ==
                 LocalSession.Status.FINISHED) {
-          Util.logd(TAG, "no active session present, waiting for data upload finished timer");
+          RotatingFileLogger.get().logd(TAG, "no active session present, waiting for data upload finished timer");
           scheduleDataUploadFinishedTimer(localSessions.get(localSessions.size() - 1).id);
         }
       }
@@ -423,9 +422,9 @@ public class Uploader {
       synchronized (syncToken) {
         while (running.get() && !recordsToUpload.get()) {
           try {
-            Util.logd(TAG, "Starting to wait");
+            RotatingFileLogger.get().logd(TAG, "Starting to wait");
             syncToken.wait();
-            Util.logd(TAG, "Wait finished");
+            RotatingFileLogger.get().logd(TAG, "Wait finished");
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           }
@@ -440,7 +439,7 @@ public class Uploader {
         waitForDataTimer.cancel();
         waitForDataTimer = null;
       }
-      Util.logd(TAG, "New records to upload, wait finished.");
+      RotatingFileLogger.get().logd(TAG, "New records to upload, wait finished.");
     }
   }
 
@@ -451,9 +450,9 @@ public class Uploader {
               Environment.getExternalStorageDirectory().getPath() + "/test_proto.txt");
       dataSamplesProto.writeTo(output);
     } catch (FileNotFoundException e) {
-      Log.w(TAG, "file not found: " + e.getMessage());
+      RotatingFileLogger.get().logw(TAG, "file not found: " + e.getMessage());
     } catch (IOException e) {
-      Log.w(TAG, "failed to write proto: " + e.getMessage());
+      RotatingFileLogger.get().logw(TAG, "failed to write proto: " + e.getMessage());
     }
   }
 
@@ -462,7 +461,7 @@ public class Uploader {
 
   private long deleteEegOldRecords(LocalSession localSession) {
     if (objectBoxDatabase.getEegSamplesCount(localSession.id) > minRecordsToKeep) {
-      Util.logd(TAG, "Got " + objectBoxDatabase.getEegSamplesCount(localSession.id) +
+      RotatingFileLogger.get().logd(TAG, "Got " + objectBoxDatabase.getEegSamplesCount(localSession.id) +
           " eeg records in db, need to delete " +
           (objectBoxDatabase.getEegSamplesCount(localSession.id) - minRecordsToKeep));
       Instant lastSampleTime = objectBoxDatabase.getEegSamples(
@@ -470,7 +469,7 @@ public class Uploader {
               localSession.getEegSamplesDeleted() - 1L, /*count=*/1)
           .get(0).getAbsoluteSamplingTimestamp();
       Instant cutOffDate = lastSampleTime.minus(minDurationToKeep);
-      Util.logd(TAG, "EEG Cutoff time: " + formatter.format(cutOffDate));
+      RotatingFileLogger.get().logd(TAG, "EEG Cutoff time: " + formatter.format(cutOffDate));
       return objectBoxDatabase.deleteFirstEegSamplesData(localSession.id,
           cutOffDate.toEpochMilli());
     }
@@ -479,7 +478,7 @@ public class Uploader {
 
   private long deleteAccelerationOldRecords(LocalSession localSession) {
     if (objectBoxDatabase.getAccelerationCount(localSession.id) > minRecordsToKeep) {
-      Util.logd(TAG, "Got " + objectBoxDatabase.getAccelerationCount(localSession.id) +
+      RotatingFileLogger.get().logd(TAG, "Got " + objectBoxDatabase.getAccelerationCount(localSession.id) +
           " acceleration records in db, need to delete " +
           (objectBoxDatabase.getAccelerationCount(localSession.id) - minRecordsToKeep));
       Instant lastSampleTime = objectBoxDatabase.getAccelerations(
@@ -487,7 +486,7 @@ public class Uploader {
               localSession.getAccelerationsDeleted() - 1L, /*count=*/1)
           .get(0).getAbsoluteSamplingTimestamp();
       Instant cutOffDate = lastSampleTime.minus(minDurationToKeep);
-      Util.logd(TAG, "Acceleration cutoff time: " + formatter.format(cutOffDate));
+      RotatingFileLogger.get().logd(TAG, "Acceleration cutoff time: " + formatter.format(cutOffDate));
       return objectBoxDatabase.deleteFirstAccelerationsData(localSession.id,
           cutOffDate.toEpochMilli());
     }
@@ -529,8 +528,8 @@ public class Uploader {
     if (accelerationsToUpload == null) {
       accelerationsToUpload = new ArrayList<>();
     }
-    Util.logv(TAG, "Uploading " + eegSamplesToUpload.size() + " eeg samples.");
-    Util.logv(TAG, "Uploading " + accelerationsToUpload.size() + " acc samples.");
+    RotatingFileLogger.get().logv(TAG, "Uploading " + eegSamplesToUpload.size() + " eeg samples.");
+    RotatingFileLogger.get().logv(TAG, "Uploading " + accelerationsToUpload.size() + " acc samples.");
     DataSamplesProto.EegDataSamples.Builder dataSamplesProtoBuilder =
         DataSamplesProto.EegDataSamples.newBuilder();
     dataSamplesProtoBuilder.setModality(DataSamplesProto.EegDataSamples.Modality.EAR_EEG);
@@ -610,13 +609,13 @@ public class Uploader {
 
   private boolean uploadDataSamplesProto(DataSamplesProto.DataSamples dataSamplesProto) {
     // Create the arguments to the callable function.
-    Log.i(TAG, "Starting upload with callable function.");
+    RotatingFileLogger.get().logi(TAG, "Starting upload with callable function.");
     ByteArrayOutputStream byteArrayOutputStream =
             new ByteArrayOutputStream(dataSamplesProto.getSerializedSize());
     try {
       dataSamplesProto.writeTo(byteArrayOutputStream);
     } catch (IOException e) {
-      Log.e(TAG, "Error serializing proto: " + e.getMessage());
+      RotatingFileLogger.get().loge(TAG, "Error serializing proto: " + e.getMessage());
       return false;
     }
     return firebaseFunctions.uploadDataSamples(byteArrayOutputStream);
@@ -638,14 +637,14 @@ public class Uploader {
   }
 
   public boolean completeSession(LocalSession localSession) {
-    Log.i(TAG, "Starting complete session with callable function.");
+    RotatingFileLogger.get().logi(TAG, "Starting complete session with callable function.");
     SessionProto.Session sessionProto = serializeSessionToProto(localSession);
     ByteArrayOutputStream byteArrayOutputStream =
             new ByteArrayOutputStream(sessionProto.getSerializedSize());
     try {
       sessionProto.writeTo(byteArrayOutputStream);
     } catch (IOException e) {
-      Log.e(TAG, "Error serializing proto: " + e.getMessage());
+      RotatingFileLogger.get().loge(TAG, "Error serializing proto: " + e.getMessage());
       return false;
     }
     boolean completed = firebaseFunctions.completeSession(byteArrayOutputStream);
@@ -667,10 +666,10 @@ public class Uploader {
           LocalSession finishedSession =
                   objectBoxDatabase.getFinishedLocalSession(localSessionId).findFirst();
           if (finishedSession == null) {
-            Util.logd(TAG, "No finished session, not waking up.");
+            RotatingFileLogger.get().logd(TAG, "No finished session, not waking up.");
             return;
           }
-          Util.logd(TAG, "finished session, scheduling data upload finished timer.");
+          RotatingFileLogger.get().logd(TAG, "finished session, scheduling data upload finished timer.");
           scheduleDataUploadFinishedTimer(localSessionId);
         });
   }
@@ -680,14 +679,14 @@ public class Uploader {
     TimerTask checkTransmissionFinishedTask = new TimerTask() {
       @Override
       public void run() {
-        Log.i(TAG, "checking is upload finish to send remaining data.");
+        RotatingFileLogger.get().logi(TAG, "checking is upload finish to send remaining data.");
         // Check if the most recent record of that finished session is over a second old. If that
         // is the case then the upload from the device is considered finished.
         List<EegSample> eegSamples =
                 objectBoxDatabase.getLastEegSamples(localSessionId, /*count=*/1);
         if (!eegSamples.isEmpty() && Instant.now().isAfter(
             eegSamples.get(0).getReceptionTimestamp().plus(Duration.ofSeconds(1)))) {
-            Util.logd(TAG, "Session " + localSessionId + " finished, waking Uploader.");
+            RotatingFileLogger.get().logd(TAG, "Session " + localSessionId + " finished, waking Uploader.");
             databaseSink.resetEegRecordsCounter();
             recordsToUpload.set(true);
             synchronized (syncToken) {

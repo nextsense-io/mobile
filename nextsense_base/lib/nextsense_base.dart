@@ -84,6 +84,7 @@ class NextsenseBase {
       'set_uploader_minimum_connectivity';
   static const String _getFreeDiskSpaceCommand = 'get_free_disk_space';
   static const String _getTimezoneIdCommand = 'get_timezone_id';
+  static const String _getNativeLogsCommand = 'get_native_logs';
   static const String _emulatorCommand = 'emulator_command';
   static const String _macAddressArg = 'mac_address';
   static const String _uploadToCloudArg = 'upload_to_cloud';
@@ -287,6 +288,10 @@ class NextsenseBase {
 
   static Future<String> getTimezoneId() async {
     return await _channel.invokeMethod(_getTimezoneIdCommand);
+  }
+
+  static Future<String> getNativeLogs() async {
+    return await _channel.invokeMethod(_getNativeLogsCommand);
   }
 
   static Future<bool> sendEmulatorCommand(EmulatorCommand command,

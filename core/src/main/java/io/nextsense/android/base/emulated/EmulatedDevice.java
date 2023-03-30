@@ -1,7 +1,5 @@
 package io.nextsense.android.base.emulated;
 
-import android.util.Log;
-
 import androidx.annotation.Nullable;
 
 import com.google.common.util.concurrent.Futures;
@@ -35,7 +33,7 @@ import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Sample;
 import io.nextsense.android.base.devices.xenon.SampleFlags;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 public class EmulatedDevice extends Device {
 
@@ -76,7 +74,7 @@ public class EmulatedDevice extends Device {
   }
 
   public boolean requestDeviceState() {
-    Util.logd(TAG, "requestDeviceState");
+    RotatingFileLogger.get().logd(TAG, "requestDeviceState");
     if (deviceInternalState == null) {
       initDeviceInternalState();
     }
@@ -88,7 +86,7 @@ public class EmulatedDevice extends Device {
   private void postEmulatedSamples() {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
-      Log.w(TAG, "Received data packet without an active session, cannot record it.");
+      RotatingFileLogger.get().logw(TAG, "Received data packet without an active session, cannot record it.");
       return;
     }
     LocalSession localSession = localSessionOptional.get();
@@ -115,7 +113,7 @@ public class EmulatedDevice extends Device {
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
       @Nullable String earbudsConfig) {
 
-    Util.logd(TAG, "startStreaming");
+    RotatingFileLogger.get().logd(TAG, "startStreaming");
 
     if (localSessionManager != null) {
       localSessionManager.startLocalSession(userBigTableKey, dataSessionId, earbudsConfig,
@@ -138,7 +136,7 @@ public class EmulatedDevice extends Device {
 
   @Override
   public ListenableFuture<Boolean> stopStreaming() {
-    Util.logd(TAG, "stopStreaming");
+    RotatingFileLogger.get().logd(TAG, "stopStreaming");
     if (sendSamplesTimer != null) {
       sendSamplesTimer.purge();
       sendSamplesTimer.cancel();
@@ -175,7 +173,7 @@ public class EmulatedDevice extends Device {
 
   @Override
   public ListenableFuture<DeviceState> connect(boolean autoReconnect) {
-    Util.logd(TAG, "connect");
+    RotatingFileLogger.get().logd(TAG, "connect");
     return executorService.submit(() -> {
       currentState = DeviceState.CONNECTING;
       notifyDeviceStateChangeListeners(DeviceState.CONNECTING);
@@ -192,7 +190,7 @@ public class EmulatedDevice extends Device {
 
   @Override
   public ListenableFuture<DeviceState> disconnect() {
-    Util.logd(TAG, "disconnect");
+    RotatingFileLogger.get().logd(TAG, "disconnect");
     return executorService.submit(() -> {
       currentState = DeviceState.DISCONNECTING;
       notifyDeviceStateChangeListeners(DeviceState.DISCONNECTING);
@@ -238,20 +236,20 @@ public class EmulatedDevice extends Device {
   }
 
   public void emulateDisconnect() {
-    Util.logd(TAG, "emulateDisconnect");
+    RotatingFileLogger.get().logd(TAG, "emulateDisconnect");
     currentState = DeviceState.DISCONNECTED;
     notifyDeviceStateChangeListeners(DeviceState.DISCONNECTED);
   }
 
   public void emulateConnect() {
-    Util.logd(TAG, "emulateConnect");
+    RotatingFileLogger.get().logd(TAG, "emulateConnect");
     currentState = DeviceState.READY;
     notifyDeviceStateChangeListeners(DeviceState.READY);
   }
 
   @SuppressWarnings("ConstantConditions")
   public void emulateInternalStateChange(Map<String, Object> params) {
-    Util.logd(TAG, "emulateInternalStateChange");
+    RotatingFileLogger.get().logd(TAG, "emulateInternalStateChange");
     if (deviceInternalState == null) {
       initDeviceInternalState();
     }

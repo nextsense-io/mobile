@@ -12,7 +12,6 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +27,7 @@ import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.DeviceState;
 import io.nextsense.android.base.SampleRateCalculator;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.service.ForegroundService;
 
 /**
@@ -183,7 +183,7 @@ public class TestActivity extends AppCompatActivity {
     // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
     getApplicationContext().startService(foregroundServiceIntent);
 
-    Log.d(TAG, "started");
+    RotatingFileLogger.get().logd(TAG, "started");
   }
 
   @Override
@@ -192,7 +192,7 @@ public class TestActivity extends AppCompatActivity {
     if (!nextSenseServiceBound) {
       bindService(foregroundServiceIntent, nextSenseConnection, Context.BIND_IMPORTANT);
     } else {
-      Log.i(TAG, "service bound. Flutter active: " +
+      RotatingFileLogger.get().logi(TAG, "service bound. Flutter active: " +
           nextSenseService.isFlutterActivityActive());
       if (AUTOSTART_FLUTTER) {
         if (nextSenseService.isFlutterActivityActive()) {
@@ -238,7 +238,7 @@ public class TestActivity extends AppCompatActivity {
     // The flutter engine would survive the application.
     FlutterEngine flutterEngine = FlutterEngineCache.getInstance().get(NextSenseApplication.FLUTTER_ENGINE_NAME);
     if (flutterEngine != null) {
-      Log.i(TAG, "Detaching flutter engine.");
+      RotatingFileLogger.get().logi(TAG, "Detaching flutter engine.");
       flutterEngine.getPlatformViewsController().detachFromView();
       flutterEngine.getLifecycleChannel().appIsDetached();
       FlutterEngineCache.getInstance().remove(NextSenseApplication.FLUTTER_ENGINE_NAME);
@@ -294,7 +294,7 @@ public class TestActivity extends AppCompatActivity {
       deviceManager = nextSenseService.getDeviceManager();
       nextSenseService.getSampleRateCalculator().addRateUpdateListener(rateUpdateListener);
       nextSenseServiceBound = true;
-      Log.i(TAG, "service bound. Flutter active: " +
+      RotatingFileLogger.get().logi(TAG, "service bound. Flutter active: " +
           nextSenseService.isFlutterActivityActive());
       if (AUTOSTART_FLUTTER) {
         if (nextSenseService.isFlutterActivityActive()) {
@@ -326,7 +326,7 @@ public class TestActivity extends AppCompatActivity {
 
         @Override
         public void onScanError(DeviceScanner.ScanError scanError) {
-          Log.w(TAG, scanError.toString());
+          RotatingFileLogger.get().logw(TAG, scanError.toString());
         }
       };
 

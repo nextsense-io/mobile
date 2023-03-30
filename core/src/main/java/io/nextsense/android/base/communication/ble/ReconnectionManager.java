@@ -1,7 +1,5 @@
 package io.nextsense.android.base.communication.ble;
 
-import android.util.Log;
-
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
 
@@ -13,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.nextsense.android.base.DeviceScanner;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Manages the reconnection trigger and attempts.
@@ -55,10 +53,10 @@ public class ReconnectionManager {
   public void startReconnecting(BluetoothPeripheral btPeripheral,
                                 BluetoothPeripheralCallback callback) {
     if (bluetoothStateManager.getAdapterState().equals(BluetoothStateManager.AdapterState.OFF)) {
-      Log.i(TAG, "Bluetooth is OFF, don't try to auto reconnect.");
+      RotatingFileLogger.get().logi(TAG, "Bluetooth is OFF, don't try to auto reconnect.");
       return;
     }
-    Util.logd(TAG, "Starting trying to reconnect.");
+    RotatingFileLogger.get().logd(TAG, "Starting trying to reconnect.");
     this.btPeripheral = btPeripheral;
     this.callback = callback;
     reconnectionExecutor = Executors.newSingleThreadScheduledExecutor();
@@ -75,7 +73,7 @@ public class ReconnectionManager {
     reconnectionsFuture.cancel(true);
     reconnectionExecutor.shutdown();
     deviceScanner.stopFinding();
-    Util.logd(TAG, "Stopped trying to reconnect.");
+    RotatingFileLogger.get().logd(TAG, "Stopped trying to reconnect.");
   }
 
   public boolean isReconnecting() {
@@ -83,9 +81,9 @@ public class ReconnectionManager {
   }
 
   private void reconnect() {
-    Util.logd(TAG, "Starting reconnection attempt.");
+    RotatingFileLogger.get().logd(TAG, "Starting reconnection attempt.");
     if (bluetoothStateManager.getAdapterState().equals(BluetoothStateManager.AdapterState.OFF)) {
-      Log.i(TAG, "Trying to reconnect but Bluetooth is OFF.");
+      RotatingFileLogger.get().logi(TAG, "Trying to reconnect but Bluetooth is OFF.");
       return;
     }
     if (centralManagerProxy.getCentralManager().getConnectedPeripherals().isEmpty()) {
@@ -93,7 +91,7 @@ public class ReconnectionManager {
         @Override
         public void onNewPeripheral(BluetoothPeripheral peripheral) {
           if (peripheral.getName().equals(btPeripheral.getName())) {
-            Log.i(TAG, "Device found, trying to reconnect.");
+            RotatingFileLogger.get().logi(TAG, "Device found, trying to reconnect.");
             deviceScanner.stopFinding();
             centralManagerProxy.getCentralManager().connectPeripheral(btPeripheral, callback);
           }
@@ -101,11 +99,11 @@ public class ReconnectionManager {
 
         @Override
         public void onScanError(DeviceScanner.ScanError scanError) {
-          Log.w(TAG, "Scan error: " + scanError.toString());
+          RotatingFileLogger.get().logw(TAG, "Scan error: " + scanError.toString());
         }
       });
     } else {
-      Log.w(TAG, "Trying to reconnect when there is already a connected device.");
+      RotatingFileLogger.get().logw(TAG, "Trying to reconnect when there is already a connected device.");
       stopReconnecting();
     }
   }
