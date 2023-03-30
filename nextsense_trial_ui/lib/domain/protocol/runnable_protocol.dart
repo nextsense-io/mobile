@@ -12,6 +12,8 @@ abstract class RunnableProtocol {
   ProtocolState get state;
   String? get lastSessionId;
   DocumentReference? get reference;
+  String? get plannedSessionId;
+  String? get scheduledSessionId;
 
   Future<bool> update({required ProtocolState state, String? sessionId, bool persist = true});
 }

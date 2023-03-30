@@ -7,7 +7,6 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
-import 'package:nextsense_trial_ui/domain/survey/protocol_survey.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/big_text.dart';
 import 'package:nextsense_trial_ui/ui/components/error_overlay.dart';
@@ -216,8 +215,16 @@ class ProtocolScreen extends HookWidget {
       statusMsg = ' Recording Cancelled';
     }
 
-    String finishButtonText = !viewModel.isError && viewModel.postRecordingSurveys.isNotEmpty
-        ? 'Fill Survey' : 'Go to Tasks';
+    String finishButtonText = 'Go to Tasks';
+
+    if (!viewModel.isError) {
+      if (viewModel.postRecordingSurvey != null) {
+        finishButtonText = 'Fill Survey';
+      }
+      if (viewModel.postRecordingProtocol != null) {
+        finishButtonText = 'Next Protocol';
+      }
+    }
 
     return PageScaffold(
         backgroundColor: NextSenseColors.lightGrey,
@@ -296,9 +303,12 @@ class ProtocolScreen extends HookWidget {
   }
 
   Future navigateOut(BuildContext context, ProtocolScreenViewModel viewModel) async {
-    if (viewModel.protocolCompleted && viewModel.postRecordingSurveys.isNotEmpty) {
-      for (ProtocolSurvey survey in viewModel.postRecordingSurveys) {
-        await _navigation.navigateTo(SurveyScreen.id, arguments: survey);
+    if (viewModel.protocolCompleted) {
+      if (viewModel.postRecordingSurvey != null) {
+        await _navigation.navigateTo(SurveyScreen.id, arguments: viewModel.postRecordingSurvey);
+      }
+      if (viewModel.postRecordingProtocol != null) {
+        await _navigation.navigateTo(ProtocolScreen.id, arguments: viewModel.postRecordingProtocol);
       }
     }
     Navigator.of(context).pop();

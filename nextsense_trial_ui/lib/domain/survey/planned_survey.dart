@@ -15,7 +15,7 @@ enum PlannedSurveyKey {
   triggers_conditional_survey_id,
 }
 
-class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> {
+class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> implements Schedulable {
 
   // Days on which survey will appear.
   late List<StudyDay> days = _plannedActivity.days;

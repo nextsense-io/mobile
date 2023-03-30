@@ -11,8 +11,8 @@ import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
-class AdhocProtocol implements RunnableProtocol {
-  final CustomLogPrinter _logger = CustomLogPrinter('AdhocProtocol');
+class AdhocSession implements RunnableProtocol {
+  final CustomLogPrinter _logger = CustomLogPrinter('AdhocSession');
 
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
@@ -26,12 +26,14 @@ class AdhocProtocol implements RunnableProtocol {
   ScheduleType get scheduleType => ScheduleType.adhoc;
   String? get lastSessionId => _record?.getSession() ?? null;
   List<Survey>? get postSurveys => getPostProtocolSurveys();
+  String? get plannedSessionId => _record?.getPlannedSessionId() ?? null;
+  String? get scheduledSessionId => null;
 
-  AdhocProtocol(ProtocolType protocolType, String studyId) : _studyId = studyId {
+  AdhocSession(ProtocolType protocolType, String studyId) : _studyId = studyId {
     protocol = Protocol(protocolType);
   }
 
-  AdhocProtocol.fromRecord(AdhocProtocolRecord record, String studyId) : _studyId = studyId {
+  AdhocSession.fromRecord(AdhocProtocolRecord record, String studyId) : _studyId = studyId {
     _record = record;
     protocol = Protocol(record.getProtocolType());
     state = record.getState();
@@ -59,19 +61,14 @@ class AdhocProtocol implements RunnableProtocol {
     } else {
       // Create new record
       DateTime now = DateTime.now();
-      String adhocProtocolKey = "${protocol.name}_${now.millisecondsSinceEpoch}";
-      FirebaseEntity? firebaseEntity = await _firestoreManager.queryEntity([
+      FirebaseEntity? firebaseEntity = await _firestoreManager.addAutoIdEntity([
         Table.users,
         Table.enrolled_studies,
         Table.adhoc_protocols
       ], [
-        _authManager.username!,
-        _studyId,
-        adhocProtocolKey
+        _authManager.user!.id,
+        _studyId
       ]);
-      if (firebaseEntity == null) {
-        return false;
-      }
       _record = AdhocProtocolRecord(firebaseEntity);
       _record!..setTimestamp(now)
         ..setState(state)
@@ -98,49 +95,58 @@ class AdhocProtocol implements RunnableProtocol {
   DocumentReference? get reference => _record?.reference;
 }
 
-enum AdhocProtocolRecordKey {
+enum AdhocSessionKey {
   protocol,
   timestamp,
   session,
-  status
+  status,
+  planned_session_id
 }
 
-class AdhocProtocolRecord extends FirebaseEntity<AdhocProtocolRecordKey> {
+class AdhocProtocolRecord extends FirebaseEntity<AdhocSessionKey> {
 
   AdhocProtocolRecord(FirebaseEntity firebaseEntity) :
         super(firebaseEntity.getDocumentSnapshot());
 
   DateTime? getTimestamp() {
-    final timestampString = getValue(AdhocProtocolRecordKey.timestamp);
+    final timestampString = getValue(AdhocSessionKey.timestamp);
     return timestampString != null ? (timestampString as Timestamp).toDate() : null;
   }
 
   void setTimestamp(DateTime timestamp) {
-    setValue(AdhocProtocolRecordKey.timestamp, timestamp.toIso8601String());
+    setValue(AdhocSessionKey.timestamp, timestamp.toIso8601String());
   }
 
   ProtocolState getState() {
-    return protocolStateFromString(getValue(AdhocProtocolRecordKey.status));
+    return protocolStateFromString(getValue(AdhocSessionKey.status));
   }
 
   // Set state of protocol in firebase
   void setState(ProtocolState state) {
-    setValue(AdhocProtocolRecordKey.status, state.name);
+    setValue(AdhocSessionKey.status, state.name);
   }
 
   void setSession(String sessionId) {
-    setValue(AdhocProtocolRecordKey.session, sessionId);
+    setValue(AdhocSessionKey.session, sessionId);
   }
 
   String? getSession() {
-    return getValue(AdhocProtocolRecordKey.session);
+    return getValue(AdhocSessionKey.session);
   }
 
   ProtocolType getProtocolType() {
-    return protocolTypeFromString(getValue(AdhocProtocolRecordKey.protocol));
+    return protocolTypeFromString(getValue(AdhocSessionKey.protocol));
   }
 
   void setProtocol(String protocolName) {
-    setValue(AdhocProtocolRecordKey.protocol, protocolName);
+    setValue(AdhocSessionKey.protocol, protocolName);
+  }
+
+  void setPlannedSessionId(String plannedSessionId) {
+    setValue(AdhocSessionKey.planned_session_id, plannedSessionId);
+  }
+
+  String? getPlannedSessionId() {
+    return getValue(AdhocSessionKey.planned_session_id);
   }
 }

@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/adhoc_session.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
@@ -27,7 +27,7 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
   final AuthManager _authManager = getIt<AuthManager>();
   final DataManager _dataManager = getIt<DataManager>();
 
-  List<ScheduledProtocol> get scheduledProtocols => _studyManager.scheduledProtocols;
+  List<ScheduledSession> get scheduledProtocols => _studyManager.scheduledProtocols;
 
   List<ScheduledSurvey> get scheduledSurveys => _surveyManager.scheduledSurveys;
 
@@ -139,8 +139,8 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
     }
   }
 
-  List<ScheduledProtocol> getScheduledProtocolsByDay(StudyDay day) {
-    List<ScheduledProtocol> result = [];
+  List<ScheduledSession> getScheduledProtocolsByDay(StudyDay day) {
+    List<ScheduledSession> result = [];
     for (var scheduledProtocol in scheduledProtocols) {
       // if (scheduledProtocol.day == day) {
       //   result.add(scheduledProtocol);
@@ -154,7 +154,7 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
     return getScheduledProtocolsByDay(day).isNotEmpty;
   }
 
-  List<ScheduledProtocol> getCurrentDayScheduledProtocols() {
+  List<ScheduledSession> getCurrentDayScheduledProtocols() {
     if (selectedDay == null) return [];
     return getScheduledProtocolsByDay(selectedDay!);
   }
@@ -178,10 +178,10 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
     return _surveyManager.getScheduledSurveyStats(scheduledSurvey);
   }
 
-  List<AdhocProtocol> getAdhocProtocols() {
+  List<AdhocSession> getAdhocProtocols() {
     List<ProtocolType> allowedProtocols = _studyManager.allowedAdhocProtocols;
 
-    return allowedProtocols.map((protocolType) => AdhocProtocol(
+    return allowedProtocols.map((protocolType) => AdhocSession(
         protocolType, _studyManager.currentStudyId!)).toList();
   }
 

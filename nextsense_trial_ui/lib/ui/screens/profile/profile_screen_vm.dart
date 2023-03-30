@@ -1,6 +1,6 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/adhoc_session.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/survey/adhoc_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
@@ -25,7 +25,7 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
   bool get isAdhocRecordingAllowed => _studyManager.currentStudy?.adhocRecordingAllowed ?? false;
   bool get isAdhocSurveysAllowed => _studyManager.currentStudy?.adhocSurveysAllowed ?? false;
   String get studyId => _studyManager.currentStudyId!;
-  String? get userId => _authManager.user?.id;
+  String? get userId => _authManager.user!.getEmail() ?? _authManager.user!.getUsername()!;
   String? version = '';
 
   @override
@@ -36,10 +36,10 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
     notifyListeners();
   }
 
-  List<AdhocProtocol> getAdhocProtocols() {
+  List<AdhocSession> getAdhocProtocols() {
     List<ProtocolType> allowedProtocols = _studyManager.allowedAdhocProtocols;
 
-    return allowedProtocols.map((protocolType) => AdhocProtocol(
+    return allowedProtocols.map((protocolType) => AdhocSession(
         protocolType, _studyManager.currentStudyId!)).toList();
   }
 
@@ -59,9 +59,8 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
     return result;
   }
 
-  AdhocSurvey getRunnableSurvey(PlannedSurvey plannedSurvey) {
-    return AdhocSurvey(plannedSurvey.id, _surveyManager.getSurveyById(plannedSurvey.surveyId)!,
-        studyId);
+  Future<AdhocSurvey> getAdhocRunnableSurvey(PlannedSurvey plannedSurvey) async {
+    return await _surveyManager.createAdhocSurvey(plannedSurvey);
   }
 
   Future disconnectDevice() async {

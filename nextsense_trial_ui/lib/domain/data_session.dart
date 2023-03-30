@@ -2,6 +2,8 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
 /// Each entry corresponds to a field name in the database instance.
 enum DataSessionKey {
+  // Name of the data session. Used to identify
+  name,
   // End of the recording data session.
   end_datetime,
   // Start of the recording data session.
@@ -13,7 +15,6 @@ enum DataSessionKey {
 
 class DataSession extends FirebaseEntity<DataSessionKey> {
 
-  DataSession(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot());
+  DataSession(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
 
 }

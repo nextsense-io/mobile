@@ -53,9 +53,9 @@ class PlannedSession extends FirebaseEntity<PlannedSessionKey> {
   List<StudyDay> get days => _plannedActivity.days;
   ScheduleType get scheduleType => ScheduleType.values.firstWhere(
           (value) => value.toString() == getValue(PlannedSessionKey.schedule_type));
-  String get triggersConditionalSessionId =>
+  String? get triggersConditionalSessionId =>
       getValue(PlannedSessionKey.triggers_conditional_session_id);
-  String get triggersConditionalSurveyId =>
+  String? get triggersConditionalSurveyId =>
       getValue(PlannedSessionKey.triggers_conditional_survey_id);
 
   PlannedSession(FirebaseEntity firebaseEntity, DateTime studyStartDate, DateTime studyEndDate) :

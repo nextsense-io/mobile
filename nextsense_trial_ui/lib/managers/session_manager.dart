@@ -47,11 +47,8 @@ class SessionManager {
     _appVersion = packageInfo.version;
   }
 
-  Future<bool> startSession(Device device, String studyId, String protocolName) async {
-    String? username = _authManager.username;
-    if (username == null) {
-      return false;
-    }
+  Future<bool> startSession({required Device device, required String studyId,
+      required plannedSessionId, required String protocolName, String? scheduledSessionId}) async {
     User? user = _authManager.user;
     if (user == null) {
       return false;
@@ -60,34 +57,37 @@ class SessionManager {
       _logger.log(Level.INFO, "Cannot start new session. Another session is already in progress.");
       return false;
     }
-    int? sessionNumber = user.getValue(UserKey.session_number);
-    int nextSessionNumber = sessionNumber == null ? _firstSessionNumber : sessionNumber + 1;
-    String sessionCode = username + '_sess_' + nextSessionNumber.toString();
 
     // Add the session.
-    FirebaseEntity sessionEntity = await _firestoreManager.addEntity(
-        [Table.sessions], [sessionCode]);
+    FirebaseEntity? sessionEntity =
+        await _firestoreManager.addAutoIdEntity([Table.sessions], []);
     _currentSession = Session(sessionEntity);
     DateTime startTime = DateTime.now();
 
     _currentSession!..setValue(SessionKey.start_datetime, startTime)
-                    ..setValue(SessionKey.user_id, username)
+                    ..setValue(SessionKey.scheduled_session_id, scheduledSessionId)
+                    ..setValue(SessionKey.planned_session_id, plannedSessionId)
+                    ..setValue(SessionKey.user_id, user.id)
                     ..setValue(SessionKey.device_id, device.name)
                     ..setValue(SessionKey.device_mac_address, device.macAddress)
+                    ..setValue(SessionKey.earbud_config,
+                        _studyManager.currentStudy?.getEarbudsConfig() ?? null)
                     ..setValue(SessionKey.study_id, studyId)
                     ..setValue(SessionKey.mobile_app_version, _appVersion)
-                    ..setValue(SessionKey.protocol, protocolName)
+                    ..setValue(SessionKey.protocol_name, protocolName)
                     ..setValue(SessionKey.timezone, user.getCurrentTimezone().name);
+
     bool success = await _currentSession!.save();
     if (!success) {
       return false;
     }
 
     // Add the data session.
-    FirebaseEntity dataSessionEntity = await _firestoreManager.addEntity(
+    FirebaseEntity? dataSessionEntity = await _firestoreManager.addAutoIdEntity(
         [Table.sessions, Table.data_sessions],
-        [_currentSession!.id, Modality.eeeg.name]);
+        [_currentSession!.id]);
     _currentDataSession = DataSession(dataSessionEntity);
+    _currentDataSession!.setValue(DataSessionKey.name, Modality.eeeg.name);
     _currentDataSession!.setValue(DataSessionKey.start_datetime, startTime);
     // TODO(eric): Add an API to get this from the connected device.
     DeviceSettings deviceSettings =
@@ -99,7 +99,7 @@ class SessionManager {
     }
 
     // Update the session number in the user entry.
-    user.setValue(UserKey.session_number, nextSessionNumber);
+    user.setValue(UserKey.session_number, user.getValue(UserKey.session_number) + 1);
     success = await user.save();
     if (!success) {
       return false;
@@ -107,7 +107,6 @@ class SessionManager {
 
     // TODO(eric): Start streaming should return the exact start time of the session, and then that
     //             should be persisted in the table?
-    String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
     try {
       _logger.log(Level.INFO, "Recording with continuous impedance: "
           "${_preferences.getBool(PreferenceKey.continuousImpedance)}");
@@ -123,7 +122,7 @@ class SessionManager {
         return false;
       }
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,
-          bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: dataSessionCode,
+          bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: _currentDataSession!.id,
           earbudsConfig: _studyManager.currentStudy?.getEarbudsConfig() ?? null);
       _logger.log(Level.INFO, "Started streaming with local session: $_currentLocalSession");
       await NextsenseBase.changeNotificationContent("NextSense recording in progress",

@@ -4,6 +4,7 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
+import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/adhoc_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
@@ -28,6 +29,7 @@ class SurveyManager {
 
   Map<String, Survey> _surveys = {};
   List<ScheduledSurvey> _scheduledSurveys = [];
+  List<PlannedSurvey>? _plannedSurveys;
   List<PlannedSurvey> _adhocPlannedSurveys = [];
   // Group by planned survey id for stats
   Map<String, List<ScheduledSurvey>> _scheduledSurveysByPlannedSurveyId = {};
@@ -41,7 +43,8 @@ class SurveyManager {
 
   SurveyStats _getSurveyStats(List<ScheduledSurvey> scheduledSurveys, DateTime dateUntil) {
     List<ScheduledSurvey> pastAndTodayScheduledSurveys = scheduledSurveys
-        .where((scheduledSurvey) => scheduledSurvey.day.date.isBefore(dateUntil)).toList();
+        .where((scheduledSurvey) => scheduledSurvey.day!= null &&
+        scheduledSurvey.day!.date.isBefore(dateUntil)).toList();
 
     final int total = pastAndTodayScheduledSurveys.length;
     final int completed = pastAndTodayScheduledSurveys
@@ -98,13 +101,12 @@ class SurveyManager {
     _scheduledSurveysByPlannedSurveyId.clear();
 
     bool fromCache = _preferences.getBool(PreferenceKey.studyDataCached);
-    List<PlannedSurvey>? plannedSurveys = await _studyManager.loadPlannedSurveys(fromCache);
-    if (plannedSurveys == null) {
+    _plannedSurveys = await _studyManager.loadPlannedSurveys(fromCache);
+    if (_plannedSurveys == null) {
       return false;
     }
 
-    // TODO(eric): Check for allowed adhoc surveys.
-    for (var plannedSurvey in plannedSurveys) {
+    for (var plannedSurvey in _plannedSurveys!) {
       if (plannedSurvey.scheduleType == ScheduleType.adhoc) {
         _adhocPlannedSurveys.add(plannedSurvey);
       }
@@ -127,7 +129,7 @@ class SurveyManager {
     } else {
       _logger.log(Level.WARNING, 'Creating scheduled surveys based on planned surveys');
 
-      for (PlannedSurvey plannedSurvey in plannedSurveys) {
+      for (PlannedSurvey plannedSurvey in _plannedSurveys!) {
         if (!_surveys.containsKey(plannedSurvey.surveyId)) {
            await _loadSurvey(plannedSurvey.surveyId);
         }
@@ -135,7 +137,7 @@ class SurveyManager {
 
       // Speed up queries by making parallel requests
       List<Future> futures = [];
-      for (var plannedSurvey in plannedSurveys) {
+      for (var plannedSurvey in _plannedSurveys!) {
         Survey? survey = getSurveyById(plannedSurvey.surveyId);
 
         if (survey == null) {
@@ -145,18 +147,14 @@ class SurveyManager {
         }
 
         for (var day in plannedSurvey.days) {
-          // This value must be unique for each different survey
-          String scheduledSurveyKey = "day_${day.dayNumber}_${plannedSurvey.surveyId}"
-              "_${plannedSurvey.period.name}";
-
-          Future future = _firestoreManager.queryEntity(
+          Future future = _firestoreManager.addAutoIdEntity(
               [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
-              [_authManager.username!, _currentStudyId, scheduledSurveyKey]);
+              [_authManager.user!.id, _currentStudyId]);
 
           future.then((firebaseEntity) {
             // Scheduled survey is created based on planned survey
             ScheduledSurvey scheduledSurvey = ScheduledSurvey(
-                firebaseEntity, survey, day, plannedSurvey: plannedSurvey);
+                firebaseEntity, survey: survey, day: day, plannedSurvey: plannedSurvey);
 
             // Copy period from planned survey
             scheduledSurvey.setPeriod(plannedSurvey.period);
@@ -200,7 +198,7 @@ class SurveyManager {
   Future<ScheduledSurvey?> queryScheduledSurvey(String scheduledSurveyId) async {
     FirebaseEntity? scheduledSurveyEntity = await _firestoreManager.queryEntity(
         [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
-        [_authManager.username!, _currentStudyId, scheduledSurveyId]);
+        [_authManager.user!.id, _currentStudyId, scheduledSurveyId]);
     if (scheduledSurveyEntity != null) {
       final plannedSurveyId = (scheduledSurveyEntity.getValue(ScheduledSurveyKey.planned_survey)
           as DocumentReference).id;
@@ -213,7 +211,7 @@ class SurveyManager {
         if (survey == null) {
           return null;
         }
-        return ScheduledSurvey(scheduledSurveyEntity, survey, StudyDay(DateTime.now(),
+        return ScheduledSurvey(scheduledSurveyEntity, survey: survey, day: StudyDay(DateTime.now(),
             scheduledSurveyEntity.getValue(ScheduledSurveyKey.day_number)),
             plannedSurvey: plannedSurvey);
       }
@@ -221,20 +219,49 @@ class SurveyManager {
     return null;
   }
 
+  PlannedSurvey _getPlannedSurveyById(String plannedSurveyId) {
+    return _plannedSurveys!.firstWhere((plannedSurvey) => plannedSurvey.id == plannedSurveyId);
+  }
+
+  Future<ScheduledSurvey?> scheduleSurveyTrigger(PlannedSession triggerPlannedSession) async {
+    if (triggerPlannedSession.triggersConditionalSurveyId == null) {
+      _logger.log(Level.WARNING, 'triggerPlannedSession.triggersConditionalSurveyId is null');
+      return null;
+    }
+    PlannedSurvey? triggeredPlannedSurvey = _getPlannedSurveyById(
+        triggerPlannedSession.triggersConditionalSurveyId!);
+    if (triggeredPlannedSurvey == null) {
+      _logger.log(Level.WARNING, 'triggered planned survey '
+          '${triggerPlannedSession.triggersConditionalSurveyId} not found');
+      return null;
+    }
+
+    FirebaseEntity entity = await _firestoreManager.addAutoIdEntity(
+        [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
+        [_authManager.user!.id, _currentStudyId]);
+
+    ScheduledSurvey scheduledSurvey = ScheduledSurvey.fromSurveyTrigger(
+        entity, plannedSurvey: triggeredPlannedSurvey,
+        survey: getSurveyById(triggeredPlannedSurvey.surveyId)!,
+        triggeredBy: triggerPlannedSession.id);
+    await scheduledSurvey.save();
+    return scheduledSurvey;
+  }
+
   // Creates an Adhoc survey record in the database and return a reference to it.
   Future<AdhocSurvey> createAdhocSurvey(PlannedSurvey plannedSurvey) async {
     if (plannedSurvey.scheduleType != ScheduleType.adhoc) {
       throw Exception('Planned survey is not an adhoc survey');
     }
-    FirebaseEntity adhocSurveyEntity = await _firestoreManager.addAutoIdReference([
+    FirebaseEntity adhocSurveyEntity = await _firestoreManager.addAutoIdEntity([
       Table.users, Table.enrolled_studies, Table.adhoc_surveys], [
-      _authManager.username!, _currentStudyId]);
+      _authManager.user!.id, _currentStudyId]);
     return AdhocSurvey(adhocSurveyEntity, plannedSurvey.id,
         getSurveyById(plannedSurvey.surveyId)!, _currentStudyId);
   }
 
   Future<SurveyResult> startSurvey(RunnableSurvey runnableSurvey) async {
-    FirebaseEntity surveyResultEntity = await _firestoreManager.addAutoIdReference([
+    FirebaseEntity surveyResultEntity = await _firestoreManager.addAutoIdEntity([
       Table.survey_results], []);
     final surveyResult = SurveyResult(surveyResultEntity);
     surveyResult.setUserId(_authManager.user!.id);
@@ -275,7 +302,7 @@ class SurveyManager {
 
   Future<SurveyResult?> getSurveyResult(String surveyResultId) async {
     FirebaseEntity? surveyResultEntity = await _firestoreManager.queryEntity([
-      Table.survey_results], [surveyResultId]);
+        Table.survey_results], [surveyResultId]);
     if (surveyResultEntity == null) {
       _logger.log(Level.SEVERE, 'Survey result with id "$surveyResultId" not found');
       return null;
@@ -338,7 +365,7 @@ class SurveyManager {
     List<ScheduledSurvey> result = [];
 
     for (FirebaseEntity entity in entities) {
-      final surveyId = entity.getValue(ScheduledSurveyKey.survey);
+      final surveyId = entity.getValue(ScheduledSurveyKey.survey_id);
       final dayNumber = entity.getValue(ScheduledSurveyKey.day_number);
       Survey? survey = getSurveyById(surveyId);
       if (survey == null) {
@@ -356,9 +383,9 @@ class SurveyManager {
         continue;
       }
 
-      final scheduledSurvey = ScheduledSurvey(entity, survey, studyDay);
+      final scheduledSurvey = ScheduledSurvey(entity, survey: survey, day: studyDay);
       _logger.log(Level.INFO, 'loaded scheduled survey: ' + scheduledSurvey.id + ' on day ' +
-          scheduledSurvey.day.dayNumber.toString() + '. State: ' + scheduledSurvey.state.name);
+          scheduledSurvey.day!.dayNumber.toString() + '. State: ' + scheduledSurvey.state.name);
       result.add(scheduledSurvey);
     }
     return result;
@@ -366,9 +393,12 @@ class SurveyManager {
 
   Future<List<FirebaseEntity>?> _queryScheduledSurveys({bool fromCache = false}) async {
     String cacheKey = "${_currentStudyId}_${Table.scheduled_surveys.name()}";
-    return await _firestoreManager.queryEntities(
+    CollectionReference? collectionReference = _firestoreManager.getEntitiesReference(
         [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
-        [_authManager.username!, _currentStudyId],
+        [_authManager.user!.id, _currentStudyId]);
+    Query query = collectionReference!.where(ScheduledSurveyKey.schedule_type.name,
+        isEqualTo: ScheduleType.scheduled.name);
+    return await _firestoreManager.queryCollectionReference(query: query,
         fromCacheWithKey: fromCache ? cacheKey : null);
   }
 }

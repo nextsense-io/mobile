@@ -5,7 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/seizure.dart';
 import 'package:nextsense_trial_ui/domain/side_effect.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
@@ -186,7 +186,7 @@ class Navigation {
       if (intent.extra!.containsKey(TargetType.protocol.name)) {
         String scheduledProtocolId = intent.extra![TargetType.protocol.name];
         _logger.log(Level.INFO, "Scheduled protocol id: $scheduledProtocolId");
-        ScheduledProtocol? scheduledProtocol =
+        ScheduledSession? scheduledProtocol =
             await _studyManager.queryScheduledProtocol(scheduledProtocolId);
         if (scheduledProtocol != null) {
           navigateWithCapabilityChecking(navigatorKey.currentState!.context, ProtocolScreen.id,

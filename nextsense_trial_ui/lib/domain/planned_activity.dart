@@ -11,6 +11,12 @@ enum ScheduleType {
   }
 }
 
+abstract class Schedulable {
+  ScheduleType get scheduleType;
+  String? get triggersConditionalSessionId;
+  String? get triggersConditionalSurveyId;
+}
+
 enum Period {
   specific_day,
   daily,

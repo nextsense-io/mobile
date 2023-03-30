@@ -3,6 +3,7 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
 /// Each entry corresponds to a field name in the database instance.
 enum EnrolledStudyKey {
+
   // Study has been scheduled for this user.
   is_scheduled,
   // Starting date of the currently enrolled study for this subject.

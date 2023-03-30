@@ -12,6 +12,7 @@ enum Table {
   data_sessions,
   enrolled_studies,
   events,
+  event_types,
   issues,
   organizations,
   questions,
@@ -71,7 +72,7 @@ class FirestoreManager {
 
   // Sets the user id so that when entities are updated the user id is set in 'updated_by'.
   setUserId(String userId) {
-    userId = userId;
+    this.userId = userId;
   }
 
   String? getUserId() {
@@ -176,7 +177,7 @@ class FirestoreManager {
     return reference!;
   }
 
-  Future<FirebaseEntity> addAutoIdReference(List<Table> tables, List<String> entityKeys) async {
+  Future<DocumentReference> addAutoIdReference(List<Table> tables, List<String> entityKeys) async {
     assert(tables.length == entityKeys.length + 1);
     DocumentReference? reference;
     for (int i = 0; i < tables.length; ++i) {
@@ -194,7 +195,19 @@ class FirestoreManager {
         }
       }
     }
-    return FirebaseEntity(await reference!.get());
+    return reference!;
+  }
+
+  /*
+   * Add a new entity to the database. The number of entries in the tables list needs to
+   * match the entityKeys size.
+   *
+   * tables: List of tables that makes up the reference, in order. One entityKey
+   *         is inserted after each table.
+   * entityKeys: List of entity keys for each table in the `tables` parameter.
+   */
+  Future<FirebaseEntity> addAutoIdEntity(List<Table> tables, List<String> entityKeys) async {
+    return FirebaseEntity(await (await addAutoIdReference(tables, entityKeys)).get());
   }
 
   Future<FirebaseEntity> addEntity(List<Table> tables, List<String> entityKeys) async {
@@ -216,6 +229,15 @@ class FirestoreManager {
   Future<List<FirebaseEntity>?> queryEntities(
       List<Table> tables, List<String> entityKeys,
       {String? fromCacheWithKey, String? orderBy}) async {
+    CollectionReference? collectionReference = getEntitiesReference(tables, entityKeys);
+    if (collectionReference == null) {
+      return null;
+    }
+    return queryCollectionReference(collectionReference: collectionReference,
+        fromCacheWithKey: fromCacheWithKey, orderBy: orderBy);
+  }
+
+  CollectionReference? getEntitiesReference(List<Table> tables, List<String> entityKeys) {
     assert(tables.length == entityKeys.length + 1);
     DocumentReference? pathReference;
     CollectionReference? collectionReference;
@@ -234,10 +256,18 @@ class FirestoreManager {
         }
       }
     }
+    return collectionReference;
+  }
 
+  Future<List<FirebaseEntity>?> queryCollectionReference({CollectionReference? collectionReference,
+      Query? query, String? fromCacheWithKey, String? orderBy}) async {
     QuerySnapshot? snapshot;
     if (fromCacheWithKey != null && _preferences.isCached(fromCacheWithKey)) {
-      snapshot = await collectionReference!.get(GetOptions(source: Source.cache));
+      if (query != null) {
+        snapshot = await query.get(GetOptions(source: Source.cache));
+      } else {
+        snapshot = await collectionReference!.get(GetOptions(source: Source.cache));
+      }
       if (snapshot.size == 0) {
         _logger.log(Level.WARNING,
             'Empty cached collection "$fromCacheWithKey", fallback to server');
@@ -251,8 +281,11 @@ class FirestoreManager {
       bool success = false;
       while (!success && attemptNumber < _retriesAttemptsNumber) {
         try {
-          if (orderBy != null) {
-            snapshot = await collectionReference!.orderBy(orderBy).get();
+          if (query != null && orderBy != null) {
+            query = query.orderBy(orderBy);
+          }
+          if (query != null) {
+            snapshot = await query.get();
           } else {
             snapshot = await collectionReference!.get();
           }

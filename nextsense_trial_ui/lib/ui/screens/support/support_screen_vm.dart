@@ -33,8 +33,8 @@ class SupportScreenViewModel extends ViewModel {
     setBusy(true);
     notifyListeners();
     _logger.log(Level.INFO, 'Issue submitted by the user.');
-    FirebaseEntity issueEntity = await _firestoreManager.addAutoIdReference(
-        [Table.users, Table.issues], [_authManager.username!]);
+    FirebaseEntity issueEntity = await _firestoreManager.addAutoIdEntity(
+        [Table.users, Table.issues], [_authManager.user!.id]);
     Issue issue = Issue(issueEntity);
     issue
       ..setValue(IssueKey.description, issueDescription)

@@ -12,18 +12,21 @@ import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
 /// Each entry corresponds to a field name in the database instance.
-enum ScheduledProtocolKey {
-  protocol,  // Protocol key
-  sessions,  // List of session objets
+enum ScheduledSessionKey {
+  planned_session_id,  // Planned session id
+  scheduled_type,  // See ScheduleType in planned_activity.dart
+  session_ids,  // List of session objets
   status,  // State, see ProtocolState in protocol.dart
   start_date,  // Used to query by date, string format
-  start_datetime  // Used to get the exact datetime, string format
+  start_datetime,  // Used to get the exact datetime, string format
+  triggered_by_session,  // Planned activity id that triggered the session
+  triggered_by_survey
 }
 
-class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements Task,
+class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Task,
     RunnableProtocol {
 
-  final CustomLogPrinter _logger = CustomLogPrinter('ScheduledProtocol');
+  final CustomLogPrinter _logger = CustomLogPrinter('ScheduledSession');
 
   late Protocol protocol;
   late DateTime startDate;
@@ -34,45 +37,71 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
   late DateTime allowedStartBefore;
   late DateTime allowedStartAfter;
 
-  ProtocolState get state => protocolStateFromString(getValue(ScheduledProtocolKey.status));
+  String get plannedSessionId => getValue(ScheduledSessionKey.planned_session_id);
+  String get scheduledSessionId => id;
+  ProtocolState get state => protocolStateFromString(getValue(ScheduledSessionKey.status));
   bool get isCompleted => state == ProtocolState.completed;
   bool get isSkipped => state == ProtocolState.skipped;
   bool get isCancelled => state == ProtocolState.cancelled;
   ScheduleType get scheduleType => ScheduleType.scheduled;
   String? get lastSessionId {
-    var sessions = getValue(ScheduledProtocolKey.sessions);
+    var sessions = getValue(ScheduledSessionKey.session_ids);
     if (sessions is List) {
       return sessions.last;
     }
     return sessions;
   }
 
-  factory ScheduledProtocol.fromStudyDay(
-      FirebaseEntity firebaseEntity, PlannedSession plannedAssessment, StudyDay studyDay) {
+  factory ScheduledSession.fromStudyDay(
+      FirebaseEntity firebaseEntity, PlannedSession plannedSession, StudyDay studyDay) {
     // Needed for later push notifications processing at backend.
-    firebaseEntity.setValue(ScheduledProtocolKey.start_date, studyDay.dateAsString);
+    firebaseEntity.setValue(ScheduledSessionKey.start_date, studyDay.dateAsString);
     DateTime startDateTime = studyDay.date.add(
-        Duration(hours: plannedAssessment.startTime.hour,
-            minutes: plannedAssessment.startTime.minute));
-    firebaseEntity.setValue(ScheduledProtocolKey.start_datetime, startDateTime.toString());
-    return ScheduledProtocol(firebaseEntity, plannedAssessment);
+        Duration(hours: plannedSession.startTime.hour,
+            minutes: plannedSession.startTime.minute));
+    firebaseEntity.setValue(ScheduledSessionKey.start_datetime, startDateTime.toString());
+    return ScheduledSession(firebaseEntity, plannedSession);
   }
 
-  ScheduledProtocol(FirebaseEntity firebaseEntity, PlannedSession plannedAssessment) :
+  factory ScheduledSession.fromSessionTrigger(FirebaseEntity firebaseEntity,
+      {required PlannedSession plannedSession, required String triggeredBy}) {
+    firebaseEntity.setValue(ScheduledSessionKey.triggered_by_session, triggeredBy);
+    return ScheduledSession._fromTrigger(firebaseEntity, plannedSession);
+  }
+
+  factory ScheduledSession.fromSurveyTrigger(FirebaseEntity firebaseEntity,
+      {required PlannedSession plannedSession, required String triggeredBy}) {
+    firebaseEntity.setValue(ScheduledSessionKey.triggered_by_survey, triggeredBy);
+    return ScheduledSession(firebaseEntity, plannedSession);
+  }
+
+  factory ScheduledSession._fromTrigger(FirebaseEntity firebaseEntity,
+      PlannedSession plannedSession) {
+    firebaseEntity.setValue(ScheduledSessionKey.scheduled_type, plannedSession.scheduleType.name);
+    firebaseEntity.setValue(ScheduledSessionKey.planned_session_id, plannedSession.id);
+    firebaseEntity.setValue(ScheduledSessionKey.session_ids, []);
+    firebaseEntity.setValue(ScheduledSessionKey.status, ProtocolState.not_started.name);
+    DateTime now = DateTime.now();
+    firebaseEntity.setValue(ScheduledSessionKey.start_date, now.date);
+    firebaseEntity.setValue(ScheduledSessionKey.start_datetime, now.toString());
+    return ScheduledSession(firebaseEntity, plannedSession);
+  }
+
+  ScheduledSession(FirebaseEntity firebaseEntity, PlannedSession plannedAssessment) :
         super(firebaseEntity.getDocumentSnapshot()) {
     protocol = plannedAssessment.protocol!;
     startTime = plannedAssessment.startTime;
-    allowedStartAfter = DateTime.parse(firebaseEntity.getValue(ScheduledProtocolKey.start_datetime))
+    allowedStartAfter = DateTime.parse(firebaseEntity.getValue(ScheduledSessionKey.start_datetime))
         .subtract(Duration(minutes: plannedAssessment.allowedEarlyStartTimeMinutes));
     allowedStartBefore = DateTime.parse(
-        firebaseEntity.getValue(ScheduledProtocolKey.start_datetime))
+        firebaseEntity.getValue(ScheduledSessionKey.start_datetime))
         .add(Duration(minutes: plannedAssessment.allowedLateStartTimeMinutes));
-    startDate = DateTime.parse(getValue(ScheduledProtocolKey.start_date));
+    startDate = DateTime.parse(getValue(ScheduledSessionKey.start_date));
   }
 
   // Set state of protocol in firebase
   void setState(ProtocolState state) {
-    setValue(ScheduledProtocolKey.status, state.name);
+    setValue(ScheduledSessionKey.status, state.name);
   }
 
   int getStudyDay(DateTime studyStartDateTime) {
@@ -82,7 +111,7 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
 
   // Store session in array of sessions
   void addSession(String sessionId) {
-    var currentSessionList = getValue(ScheduledProtocolKey.sessions);
+    var currentSessionList = getValue(ScheduledSessionKey.session_ids);
     if (currentSessionList is List) {
       if (!currentSessionList.contains(sessionId)) {
         currentSessionList.add(sessionId);
@@ -90,7 +119,7 @@ class ScheduledProtocol extends FirebaseEntity<ScheduledProtocolKey> implements 
     } else {
       currentSessionList = <String>[sessionId];
     }
-    setValue(ScheduledProtocolKey.sessions, currentSessionList);
+    setValue(ScheduledSessionKey.session_ids, currentSessionList);
   }
 
   // Protocol is within desired window to start.

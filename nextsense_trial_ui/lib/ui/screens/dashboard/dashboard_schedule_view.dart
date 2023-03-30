@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
@@ -28,7 +28,7 @@ class DashboardScheduleView extends StatelessWidget {
   final Navigation _navigation = getIt<Navigation>();
 
   _onProtocolClicked(BuildContext context, dynamic task) {
-    ScheduledProtocol scheduledProtocol = task as ScheduledProtocol;
+    ScheduledSession scheduledProtocol = task as ScheduledSession;
 
     if (scheduledProtocol.isCompleted) {
       showDialog(
@@ -109,7 +109,7 @@ class DashboardScheduleView extends StatelessWidget {
     if (task is ScheduledSurvey) {
       return _onSurveyClicked(context, task);
     }
-    if (task is ScheduledProtocol) {
+    if (task is ScheduledSession) {
       return _onProtocolClicked(context, task);
     }
     throw UnimplementedError('Task navigation not implemented!');

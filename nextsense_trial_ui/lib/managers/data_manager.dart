@@ -3,6 +3,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/enrolled_study.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
@@ -14,6 +15,7 @@ class DataManager {
   final CustomLogPrinter _logger = CustomLogPrinter('DataManager');
 
   final AuthManager _authManager = getIt<AuthManager>();
+  final EventTypesManager _eventTypesManager = getIt<EventTypesManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
   final SurveyManager _surveyManager = getIt<SurveyManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
@@ -34,8 +36,11 @@ class DataManager {
   }
 
   Future<bool> loadUserStudyData() async {
+    _logger.log(Level.INFO, 'Starting to load event types data.');
+    bool loaded = await _eventTypesManager.loadEventTypes();
+    if (!loaded) return false;
     _logger.log(Level.INFO, 'Starting to load user study data.');
-    bool loaded = await _studyManager.loadCurrentStudy();
+    loaded = await _studyManager.loadCurrentStudy();
     if (!loaded) return false;
     _logger.log(Level.INFO, 'Starting loadScheduledSurveys.');
     loaded = await _surveyManager.loadPlannedSurveys();

@@ -267,6 +267,7 @@ class AuthManager {
     }
     _updateUserDetails(user: _user!);
     _username = username;
+    _firestoreManager.setUserId(_user!.id);
     return AuthenticationResult.success;
   }
 

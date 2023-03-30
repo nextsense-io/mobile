@@ -8,17 +8,19 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/event.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
-import 'package:nextsense_trial_ui/domain/study.dart';
-import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_session.dart';
+import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
@@ -50,6 +52,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   static const Duration _timerTickInterval = const Duration(milliseconds: 50);
 
   final StudyManager _studyManager = getIt<StudyManager>();
+  final SurveyManager _surveyManager = getIt<SurveyManager>();
+  final EventTypesManager _eventTypesManager = getIt<EventTypesManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
@@ -70,8 +74,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   bool maxDurationPassed = false;
   Timer? timer;
   Timer? disconnectTimeoutTimer;
-  RunnableSurvey? postRecordingSurvey;
-  ScheduledProtocol? postRecordingProtocol;
+  ScheduledSurvey? postRecordingSurvey;
+  ScheduledSession? postRecordingProtocol;
   ProtocolCancelReason protocolCancelReason = ProtocolCancelReason.none;
   bool protocolCompletedHandlerExecuted = false;
   int currentRepetition = 0;
@@ -111,6 +115,27 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   @override
   void init() async {
     super.init();
+    if (runnableProtocol is ScheduledSession) {
+      PlannedSession? plannedSession = _studyManager.getPlannedSessionById(
+          (runnableProtocol as ScheduledSession).plannedSessionId);
+      if (plannedSession!.triggersConditionalSessionId != null &&
+          plannedSession.triggersConditionalSurveyId != null) {
+        _logger.log(Level.WARNING, 'Both conditional session and survey are set for the planned '
+            'session ${plannedSession.id}');
+      } else if (plannedSession.triggersConditionalSessionId != null) {
+        ScheduledSession? triggeredSession =
+            await _studyManager.scheduleSessionTrigger(plannedSession);
+        if (triggeredSession != null) {
+          postRecordingProtocol = triggeredSession;
+        }
+      } else if (plannedSession.triggersConditionalSurveyId != null) {
+        ScheduledSurvey? triggeredSurvey =
+            await _surveyManager.scheduleSurveyTrigger(plannedSession);
+        if (triggeredSurvey != null) {
+          postRecordingSurvey = triggeredSurvey;
+        }
+      }
+    }
     if (deviceCanRecord) {
       if (runnableProtocol.state == ProtocolState.not_started ||
           runnableProtocol.state == ProtocolState.cancelled) {
@@ -228,7 +253,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         }
         if (milliSecondsElapsed >= protocolMaxTimeSeconds * 1000) {
           _logger.log(Level.INFO,
-              'Protocol finished. $milliSecondsElapsed out of $protocolMaxTimeSeconds');
+              'Protocol finished. ${milliSecondsElapsed / 1000} out of $protocolMaxTimeSeconds');
           maxDurationPassed = true;
           timer?.cancel();
           onTimerFinished();
@@ -334,12 +359,13 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.SEVERE, "Could not save event $currentMarker, no session id!");
       return false;
     }
-    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdReference(
+    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdEntity(
         [Table.sessions, Table.events], [sessionId]);
     Event event = Event(firebaseEntity);
-    event..setValue(EventKey.start_time, eventStart)
-        ..setValue(EventKey.end_time, endTime)
-        ..setValue(EventKey.marker, currentMarker);
+    event..setValue(EventKey.start_datetime, eventStart)
+        ..setValue(EventKey.end_datetime, endTime)
+        ..setValue(EventKey.marker, currentMarker)
+        ..setValue(EventKey.type, _eventTypesManager.getEventType(currentMarker!)!.id);
     return await event.save();
   }
 
@@ -435,9 +461,11 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     if (_deviceManager.getConnectedDevice() != null) {
       _logger.log(Level.INFO, 'Starting ${protocol.name} protocol.');
       bool started = await _sessionManager.startSession(
-          _deviceManager.getConnectedDevice()!,
-          _studyManager.currentStudyId!,
-          protocol.name);
+          device: _deviceManager.getConnectedDevice()!,
+          studyId: _studyManager.currentStudyId!,
+          plannedSessionId: runnableProtocol.plannedSessionId,
+          scheduledSessionId: runnableProtocol.scheduledSessionId,
+          protocolName: protocol.name);
       if (!started) {
         setError("Failed to start streaming. Please try again and contact support if you need "
             "additional help.");

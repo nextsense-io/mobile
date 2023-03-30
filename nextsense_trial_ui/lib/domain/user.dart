@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/protocol/adhoc_session.dart';
+import 'package:nextsense_trial_ui/domain/protocol/scheduled_session.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -11,8 +11,6 @@ import 'package:timezone/timezone.dart' as tz;
 /// If any fields are added here, they need to be added to the User class in
 /// https://github.com/nextsense-io/mobile_backend/lib/models/user.py
 enum UserKey {
-  // UID used when authenticating.
-  auth_uid,
   // User's email address.
   email,
   // BigTable key. Generated as a UUID.
@@ -107,6 +105,14 @@ class User extends FirebaseEntity<UserKey> {
     setValue(UserKey.is_temp_password, tempPassword);
   }
 
+  String? getEmail() {
+    return getValue(UserKey.email);
+  }
+
+  String? getUsername() {
+    return getValue(UserKey.username);
+  }
+
   Future<dynamic> getRunningProtocol(DateTime? studyStartDate, DateTime? studyEndDate) async {
     dynamic runningProtocolRef = getValue(UserKey.running_protocol);
     if (runningProtocolRef == null) {
@@ -114,7 +120,7 @@ class User extends FirebaseEntity<UserKey> {
     }
     DocumentReference ref = runningProtocolRef as DocumentReference;
     if (runningProtocolRef.parent.path.toString().endsWith(Table.adhoc_protocols.name())) {
-      return AdhocProtocol.fromRecord(
+      return AdhocSession.fromRecord(
           AdhocProtocolRecord(FirebaseEntity(await ref.get())), getCurrentStudyId()!);
     } else {
       if (studyStartDate == null || studyEndDate == null) {
@@ -122,11 +128,11 @@ class User extends FirebaseEntity<UserKey> {
       }
       FirebaseEntity scheduledProtocolEntity = FirebaseEntity(await ref.get());
       FirebaseEntity plannedAssessmentEntity = FirebaseEntity(
-          await (scheduledProtocolEntity.getValue(ScheduledProtocolKey.protocol)
+          await (scheduledProtocolEntity.getValue(ScheduledSessionKey.planned_session_id)
           as DocumentReference).get());
       PlannedSession plannedAssessment =
           PlannedSession(plannedAssessmentEntity, studyStartDate, studyEndDate);
-      return ScheduledProtocol(scheduledProtocolEntity, plannedAssessment);
+      return ScheduledSession(scheduledProtocolEntity, plannedAssessment);
     }
   }
 
