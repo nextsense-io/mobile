@@ -1,7 +1,6 @@
 package io.nextsense.android.base.communication.firebase;
 
 import android.util.Base64;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -18,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import io.nextsense.android.Config;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Firebase functions interface.
@@ -54,7 +53,7 @@ public class CloudFunctions {
         return functionsInstance
                 .getHttpsCallable(functionName)
                 .call(data)
-                .addOnFailureListener(exception -> Log.e(TAG, "Failed to " +
+                .addOnFailureListener(exception -> RotatingFileLogger.get().loge(TAG, "Failed to " +
                         functionDisplayName + ": " + exception.getMessage()))
                 .continueWith(task -> {
                     // This continuation runs on either success or failure, but if the task has
@@ -64,7 +63,7 @@ public class CloudFunctions {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> result =
                                 (Map<String, Object>) task.getResult().getData();
-                        Util.logd(TAG, functionDisplayName + " result: " + result);
+                        RotatingFileLogger.get().logd(TAG, functionDisplayName + " result: " + result);
                         return result;
                     }
                     return new HashMap<>();
@@ -84,13 +83,13 @@ public class CloudFunctions {
             if (timeout != null) {
                 Map<String, Object> uploadResult =
                         Tasks.await(task, timeout.toMillis(), TimeUnit.MILLISECONDS);
-                Util.logd(TAG, functionDisplayName + " result: " + uploadResult.get("result"));
+                RotatingFileLogger.get().logd(TAG, functionDisplayName + " result: " + uploadResult.get("result"));
             }
             success = true;
         } catch (ExecutionException | TimeoutException e) {
-            Log.e(TAG, "Failed to " + functionDisplayName + ": " + e.getMessage(), e);
+            RotatingFileLogger.get().loge(TAG, "Failed to " + functionDisplayName + ": " + e.getMessage());
         } catch (InterruptedException e) {
-            Log.e(TAG, "Failed to" + functionDisplayName + ": " + e.getMessage(), e);
+            RotatingFileLogger.get().loge(TAG, "Failed to" + functionDisplayName + ": " + e.getMessage());
             Thread.currentThread().interrupt();
         }
         return success;

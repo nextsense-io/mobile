@@ -1,14 +1,14 @@
 package io.nextsense.android.base.emulated;
 
 import io.nextsense.android.base.DeviceScanner;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 public class EmulatedDeviceScanner implements DeviceScanner {
 
   private static final String TAG = EmulatedDeviceScanner.class.getSimpleName();
 
   public EmulatedDeviceScanner() {
-    Util.logd(TAG, "Initialized EmulatedDeviceScanner");
+    RotatingFileLogger.get().logd(TAG, "Initialized EmulatedDeviceScanner");
   }
 
   @Override

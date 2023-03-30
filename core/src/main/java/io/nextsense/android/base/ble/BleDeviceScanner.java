@@ -1,7 +1,5 @@
 package io.nextsense.android.base.ble;
 
-import static io.nextsense.android.base.utils.Util.logd;
-
 import android.bluetooth.le.ScanResult;
 
 import androidx.annotation.NonNull;
@@ -22,7 +20,7 @@ import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Scans for devices and returns the list of {@link Device} that can be connected to.
@@ -55,7 +53,7 @@ public class BleDeviceScanner implements DeviceScanner {
             return;
           }
           foundPeripheralAddresses.add(peripheral.getAddress());
-          logd(TAG, "Found valid device: " + scanResult.getDevice().getName());
+          RotatingFileLogger.get().logd(TAG, "Found valid device: " + scanResult.getDevice().getName());
 
           NextSenseDevice nextSenseDevice = deviceManager.getDeviceForName(peripheral.getName());
           if (nextSenseDevice == null) {
@@ -120,7 +118,7 @@ public class BleDeviceScanner implements DeviceScanner {
     this.centralManagerProxy = centralManagerProxy;
     this.bluetoothStateManager = bluetoothStateManager;
     centralManagerProxy.addGlobalListener(bluetoothCentralManagerCallback);
-    Util.logd(TAG, "Initialized DeviceScanner");
+    RotatingFileLogger.get().logd(TAG, "Initialized DeviceScanner");
   }
 
   @Override
@@ -136,7 +134,7 @@ public class BleDeviceScanner implements DeviceScanner {
     scanningForPeripherals = false;
     this.deviceScanListener = deviceScanListener;
     this.devices.clear();
-    Util.logd(TAG, "Finding Bluetooth devices...");
+    RotatingFileLogger.get().logd(TAG, "Finding Bluetooth devices...");
     centralManagerProxy.getCentralManager().stopScan();
     centralManagerProxy.getCentralManager()
         .scanForPeripheralsWithNames(deviceManager.getValidPrefixes().toArray(new String[0]));
@@ -150,7 +148,7 @@ public class BleDeviceScanner implements DeviceScanner {
   public void findPeripherals(DeviceScanner.PeripheralScanListener peripheralScanListener) {
     scanningForPeripherals = true;
     this.peripheralScanListener = peripheralScanListener;
-    Util.logd(TAG, "Finding Bluetooth peripherals...");
+    RotatingFileLogger.get().logd(TAG, "Finding Bluetooth peripherals...");
     centralManagerProxy.getCentralManager().stopScan();
     centralManagerProxy.getCentralManager()
         .scanForPeripheralsWithNames(deviceManager.getValidPrefixes().toArray(new String[0]));

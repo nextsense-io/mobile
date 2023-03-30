@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -36,7 +35,7 @@ import io.nextsense.android.base.db.DatabaseSink;
 import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Main Foreground service that will manage the Bluetooth connection to the NextSense device and the
@@ -88,9 +87,9 @@ public class ForegroundService extends Service {
   @Override
   @SuppressWarnings("unchecked")
   public int onStartCommand(Intent intent, int flags, int startId) {
-    Util.logd(TAG, "onStartCommand start.");
+    RotatingFileLogger.get().logd(TAG, "onStartCommand start.");
     if (initialized) {
-      Log.i(TAG, "Already initialized, keep running.");
+      RotatingFileLogger.get().logi(TAG, "Already initialized, keep running.");
       return START_REDELIVER_INTENT;
     }
     notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -110,7 +109,7 @@ public class ForegroundService extends Service {
         .setContentIntent(pendingIntent);
     startForeground(NOTIFICATION_ID, notificationBuilder.build());
     initialize();
-    Util.logd(TAG, "Service initialized.");
+    RotatingFileLogger.get().logd(TAG, "Service initialized.");
     return START_REDELIVER_INTENT;
   }
 
@@ -205,11 +204,11 @@ public class ForegroundService extends Service {
               // Token refresh succeeded
               // Get new ID token
               String idToken = getTokenResult.getToken();
-              Log.i(TAG, "Refreshed Token: " + idToken);
+              RotatingFileLogger.get().logi(TAG, "Refreshed Token: " + idToken);
             })
             .addOnFailureListener(e -> {
               // Token refresh failed
-              Log.w(TAG, "Failed ot refresh token.");
+              RotatingFileLogger.get().logw(TAG, "Failed ot refresh token.");
             });
       }
     });
@@ -218,7 +217,7 @@ public class ForegroundService extends Service {
   }
 
   private void destroy() {
-    Log.i(TAG, "destroy started.");
+    RotatingFileLogger.get().logi(TAG, "destroy started.");
     // sampleRateCalculator.stopListening();
     if (deviceScanner != null) {
       deviceScanner.stopFinding();
@@ -244,7 +243,7 @@ public class ForegroundService extends Service {
       objectBoxDatabase.stop();
     }
     initialized = false;
-    Log.i(TAG, "destroy finished.");
+    RotatingFileLogger.get().logi(TAG, "destroy finished.");
   }
 
   private void createNotificationChannel() {

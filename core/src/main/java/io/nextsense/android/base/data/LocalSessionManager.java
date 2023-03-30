@@ -1,6 +1,5 @@
 package io.nextsense.android.base.data;
 
-import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.google.common.collect.Sets;
@@ -11,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Manages the local sessions. The main rules is that only one session can be running at a time.
@@ -55,7 +55,7 @@ public class LocalSessionManager {
       float accelerationSampleRate) {
     if (activeLocalSession != null &&
         activeLocalSession.getStatus() == LocalSession.Status.RECORDING) {
-      Log.w(TAG, "Trying to start a session, but one is already active.");
+      RotatingFileLogger.get().logw(TAG, "Trying to start a session, but one is already active.");
       return -1;
     }
     activeLocalSession = LocalSession.create(userBigTableKey, cloudDataSessionId, earbudsConfig,
@@ -65,7 +65,7 @@ public class LocalSessionManager {
 
   public synchronized void stopLocalSession() {
     if (activeLocalSession == null) {
-      Log.w(TAG, "Trying to stop the active session, but none is active.");
+      RotatingFileLogger.get().logw(TAG, "Trying to stop the active session, but none is active.");
       return;
     }
     objectBoxDatabase.runInTx(() -> {
@@ -74,7 +74,7 @@ public class LocalSessionManager {
       activeLocalSession.setStatus(LocalSession.Status.FINISHED);
       activeLocalSession.setEndTime(Instant.now());
       objectBoxDatabase.putLocalSession(activeLocalSession);
-      Log.i(TAG, "Local session " + activeLocalSession.getCloudDataSessionId() + " finished.");
+      RotatingFileLogger.get().logi(TAG, "Local session " + activeLocalSession.getCloudDataSessionId() + " finished.");
     });
     lastActiveSessionEnd = Instant.now();
     lastActiveSession = activeLocalSession;

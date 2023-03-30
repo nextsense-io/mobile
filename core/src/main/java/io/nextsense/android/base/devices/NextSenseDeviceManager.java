@@ -1,7 +1,5 @@
 package io.nextsense.android.base.devices;
 
-import android.util.Log;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -9,6 +7,7 @@ import java.util.Set;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.h1.H1Device;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Abstracts the different devices that that the mobile application can connect to.
@@ -46,7 +45,7 @@ public class NextSenseDeviceManager {
       }
     }
     if (deviceClass == null) {
-      Log.w(TAG, "Could not find a device for " + name);
+      RotatingFileLogger.get().logw(TAG, "Could not find a device for " + name);
       return null;
     }
     try {
@@ -54,7 +53,7 @@ public class NextSenseDeviceManager {
       nextSenseDevice.setLocalSessionManager(localSessionManager);
       return nextSenseDevice;
     } catch (IllegalAccessException | InstantiationException e) {
-      Log.e(TAG, "Could not instantiate " + deviceClass.getName());
+      RotatingFileLogger.get().loge(TAG, "Could not instantiate " + deviceClass.getName());
       return null;
     }
   }

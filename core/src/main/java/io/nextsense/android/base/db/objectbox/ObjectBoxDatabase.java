@@ -1,7 +1,6 @@
 package io.nextsense.android.base.db.objectbox;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -21,6 +20,7 @@ import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSession_;
 import io.nextsense.android.base.data.MyObjectBox;
 import io.nextsense.android.base.db.Database;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.objectbox.Box;
 import io.objectbox.BoxStore;
 import io.objectbox.query.Query;
@@ -74,8 +74,8 @@ public class ObjectBoxDatabase implements Database {
         .greater(DeviceInternalState_.timestamp, 0).build();
     deviceInternalStateQueryTimestampIsLesserQuery = deviceInternalStateBox.query().equal(
             DeviceInternalState_.localSessionId, 0).less(DeviceInternalState_.timestamp, 0).build();
-    Log.d(TAG, "Size on disk: " + boxStore.sizeOnDisk());
-    Log.d(TAG, boxStore.diagnose());
+    RotatingFileLogger.get().logd(TAG, "Size on disk: " + boxStore.sizeOnDisk());
+    RotatingFileLogger.get().logd(TAG, boxStore.diagnose());
   }
 
   public void stop() {
@@ -134,9 +134,9 @@ public class ObjectBoxDatabase implements Database {
     return runWithExceptionLog(() -> {
       List<LocalSession> activeSessions = activeSessionQuery.find();
       if (activeSessions.size() > 1) {
-        Log.w(TAG, "More than one active session");
+        RotatingFileLogger.get().logw(TAG, "More than one active session");
         for (LocalSession session : activeSessions) {
-          Log.w(TAG, "Active session : " + session.getCloudDataSessionId());
+          RotatingFileLogger.get().logw(TAG, "Active session : " + session.getCloudDataSessionId());
         }
       }
       if (!activeSessions.isEmpty()) {
@@ -288,7 +288,7 @@ public class ObjectBoxDatabase implements Database {
       return function.call();
     }
     catch(Exception ex) {
-      Log.e(TAG, "Fatal error: " + ex.getMessage());
+      RotatingFileLogger.get().loge(TAG, "Fatal error: " + ex.getMessage());
       return null;
     }
   }

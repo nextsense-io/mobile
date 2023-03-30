@@ -14,12 +14,10 @@ enum IssueKey {
   description,
   // State of the issue, see `IssueState`.
   status,
-  // Link to the application log in firebase.
-  log_link,
-  // When the issue was reported.
-  created_at,
-  // When the issue was last updated.
-  updated_at
+  // Link to the flutter application log in firebase.
+  log_link_flutter,
+  // Link to the native application log in firebase.
+  log_link_native,
 }
 
 class Issue extends FirebaseEntity<IssueKey> {

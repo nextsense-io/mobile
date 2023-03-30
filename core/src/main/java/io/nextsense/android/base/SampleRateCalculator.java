@@ -1,7 +1,5 @@
 package io.nextsense.android.base;
 
-import android.util.Log;
-
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -13,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import io.nextsense.android.base.data.EegSample;
-import io.nextsense.android.base.utils.Util;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Listens to the samples and calculate the sample rate.
@@ -68,13 +66,13 @@ public class SampleRateCalculator {
       long intervalSkippedSamples =
           timeDiff.dividedBy(expectedSampleInterval.toMillis()).toMillis();
       skippedSamples += intervalSkippedSamples;
-      Log.w(TAG, "Skipped " + intervalSkippedSamples + " samples.");
+      RotatingFileLogger.get().logw(TAG, "Skipped " + intervalSkippedSamples + " samples.");
     }
     if (samplesReceived % expectedSampleRate == 0) {
       float sampleRate = samplesReceived / ((eegSample.getReceptionTimestamp().toEpochMilli() -
           firstSampleReceptionTime.toEpochMilli()) / 1000.0f);
       formattedSampleRate = sampleRateFormat.format(sampleRate);
-      Util.logv(TAG, "Sample rate: " + formattedSampleRate);
+      RotatingFileLogger.get().logv(TAG, "Sample rate: " + formattedSampleRate);
     }
     // Update listeners if any.
     for (RateUpdateListener rateUpdateListener : rateUpdateListeners) {

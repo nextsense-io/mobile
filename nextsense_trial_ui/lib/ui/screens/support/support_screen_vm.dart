@@ -1,4 +1,5 @@
 import 'package:logging/logging.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/issue.dart';
@@ -18,7 +19,6 @@ class SupportScreenViewModel extends ViewModel {
 
   String? issueDescription;
   bool attachLog = false;
-  String? logLink;
   String? version = '';
 
   @override
@@ -36,22 +36,24 @@ class SupportScreenViewModel extends ViewModel {
     FirebaseEntity issueEntity = await _firestoreManager.addAutoIdReference(
         [Table.users, Table.issues], [_authManager.userCode!]);
     Issue issue = Issue(issueEntity);
-    DateTime now = DateTime.now();
-    String? logLink;
+    String? logLinkFlutter;
+    String? logLinkNative;
     if (attachLog) {
-      logLink = await _firebaseStorageManager.uploadStringToFile(
-          '/users/${_authManager.userCode}/issues/${issueEntity.id}.txt',
-          _logger.getLogFileContent());
-      if (logLink == null) {
+      logLinkFlutter = await _firebaseStorageManager.uploadStringToFile(
+          '/users/${_authManager.userCode}/issues/${issueEntity.id}_flutter.txt',
+          await _logger.getLogFileContent());
+      logLinkNative = await _firebaseStorageManager.uploadStringToFile(
+          '/users/${_authManager.userCode}/issues/${issueEntity.id}_native.txt',
+          await NextsenseBase.getNativeLogs());
+      if (logLinkFlutter == null || logLinkNative == null) {
         return false;
       }
     }
     issue
       ..setValue(IssueKey.description, issueDescription)
       ..setValue(IssueKey.status, IssueState.open.name)
-      ..setValue(IssueKey.log_link, logLink)
-      ..setValue(IssueKey.created_at, now)
-      ..setValue(IssueKey.updated_at, now);
+      ..setValue(IssueKey.log_link_flutter, logLinkFlutter)
+      ..setValue(IssueKey.log_link_native, logLinkNative);
     bool success = await issue.save();
     setBusy(false);
     notifyListeners();

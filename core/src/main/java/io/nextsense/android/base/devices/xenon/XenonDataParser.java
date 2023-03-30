@@ -2,8 +2,6 @@ package io.nextsense.android.base.devices.xenon;
 
 import static java.lang.Math.pow;
 
-import android.util.Log;
-
 import com.google.common.collect.ImmutableList;
 
 import org.greenrobot.eventbus.EventBus;
@@ -27,6 +25,7 @@ import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Sample;
 import io.nextsense.android.base.data.Samples;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.base.utils.Util;
 
 /**
@@ -96,7 +95,7 @@ public class XenonDataParser {
         Sample sample = sampleOptional.get();
         if (previousTimestamp != null &&
             previousTimestamp.isAfter(sample.getEegSample().getAbsoluteSamplingTimestamp())) {
-          Log.w(TAG, "Received a sample that is before a previous sample, skipping sample. " +
+          RotatingFileLogger.get().logw(TAG, "Received a sample that is before a previous sample, skipping sample. " +
               "Previous timestamp: " + previousTimestamp + ", current timestamp: " +
               sample.getEegSample().getAbsoluteSamplingTimestamp());
           break;
@@ -111,7 +110,7 @@ public class XenonDataParser {
     Instant parseEndTime = Instant.now();
     long parseTime = parseEndTime.toEpochMilli() - receptionTimestamp.toEpochMilli();
     if (parseTime > 30) {
-      Log.d(TAG, "It took " + parseTime + " to parse xenon data.");
+      RotatingFileLogger.get().logd(TAG, "It took " + parseTime + " to parse xenon data.");
     }
   }
 
@@ -125,7 +124,7 @@ public class XenonDataParser {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
       if (!printedDataPackerWarning) {
-        Log.w(TAG, "Received data packet without an active session, cannot record it.");
+        RotatingFileLogger.get().logw(TAG, "Received data packet without an active session, cannot record it.");
         printedDataPackerWarning = true;
       }
       return Optional.empty();
@@ -195,7 +194,7 @@ public class XenonDataParser {
           "Aux status packet version " + versionNumber + " is not supported.");
     }
     short batteryMilliVolts = valuesBuffer.getShort();
-    Util.logd(TAG, "Battery milli volts: " + batteryMilliVolts);
+    RotatingFileLogger.get().logd(TAG, "Battery milli volts: " + batteryMilliVolts);
     long timestampMs = Util.bytesToLong48(new byte[]{valuesBuffer.get(),
         valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get(),
         valuesBuffer.get()}, 0, ByteOrder.LITTLE_ENDIAN);

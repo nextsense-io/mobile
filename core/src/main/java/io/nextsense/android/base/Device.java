@@ -14,7 +14,6 @@ import io.nextsense.android.base.communication.ble.ReconnectionManager;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.emulated.EmulatedDevice;
 
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;

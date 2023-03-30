@@ -1,7 +1,5 @@
 package io.nextsense.android.base.db;
 
-import android.util.Log;
-
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -10,6 +8,7 @@ import java.time.Instant;
 
 import io.nextsense.android.base.data.Samples;
 import io.nextsense.android.base.db.memory.MemoryCache;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Listens for incoming data and saves it in the in-memory cache.
@@ -30,16 +29,16 @@ public class CacheSink {
 
     public void startListening() {
         if (EventBus.getDefault().isRegistered(this)) {
-            Log.w(TAG, "Already registered to EventBus!");
+            RotatingFileLogger.get().logw(TAG, "Already registered to EventBus!");
             return;
         }
         EventBus.getDefault().register(this);
-        Log.i(TAG, "Started listening to EventBus.");
+        RotatingFileLogger.get().logi(TAG, "Started listening to EventBus.");
     }
 
     public void stopListening() {
         EventBus.getDefault().unregister(this);
-        Log.i(TAG, "Stopped listening to EventBus.");
+        RotatingFileLogger.get().logi(TAG, "Stopped listening to EventBus.");
     }
 
     @Subscribe(threadMode = ThreadMode.ASYNC)
@@ -48,7 +47,7 @@ public class CacheSink {
         memoryCache.addChannelData(samples);
         long saveTime = Instant.now().toEpochMilli() - saveStartTime.toEpochMilli();
         if (saveTime > 20) {
-            Log.d(TAG, "It took " + saveTime + " to cache xenon data.");
+            RotatingFileLogger.get().logd(TAG, "It took " + saveTime + " to cache xenon data.");
         }
     }
 }

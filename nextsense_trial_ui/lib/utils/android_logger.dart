@@ -18,12 +18,15 @@ of error. Once the user upload logs to the backend, the user can clear logs as w
 class LogFile {
   static final LogFile _logFile = new LogFile._internal();
   static final String _startLine = '*************************************************\n';
+  static const int _maxLogAgeInDays = 2;
 
   factory LogFile() {
     return _logFile;
   }
 
-  LogFile._internal();
+  LogFile._internal() {
+    _cleanupLogFiles();
+  }
 
   String appLogs = _startLine;
 
@@ -34,33 +37,54 @@ class LogFile {
 
   Future<File> get _localFile async {
     final path = await _localPath;
-    DateTime now = DateTime.now();
-    return File('$path/app_log_${now.year}_${now.month}_${now.day}.txt');
+    return File('$path/app_log_${getFileDateSuffix(DateTime.now())}.txt');
   }
 
-  Future<void> writeData(String appLog, FileMode mode) async {
+  String getFileDateSuffix(DateTime date) {
+    return '${date.year}_${date.month}_${date.day}';
+  }
+
+  Future<void> _writeData(String appLog, FileMode mode) async {
     final file = await _localFile;
     file.writeAsStringSync('$appLog' + '\n', mode: mode);
   }
 
   appendToAppLogs(String appLog) {
     this.appLogs += appLog + '\n';
-    writeData(appLog, FileMode.append);
+    _writeData(appLog, FileMode.append);
   }
 
-  Future<String> readFileLogs() async {
-    final file = await _localFile;
-    return file.readAsStringSync();
+  Future<String> getAppLogs() async {
+    final logFiles = Directory(await _localPath).listSync()
+        .where((logFile) => logFile is File && logFile.path.endsWith('.txt'))
+        .toList(growable: false)
+      ..sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+    final recentLogFiles = logFiles.take(2).toList(growable: false);
+    final logTextBuilder = StringBuffer();
+    for (final logFile in recentLogFiles) {
+      final file = logFile as File;
+      final logText = file.readAsStringSync();
+      logTextBuilder.write(logText);
+    }
+    return logTextBuilder.toString();
   }
 
-  String getAppLogs() {
-    return this.appLogs;
+  Future _cleanupLogFiles() async {
+    final now = DateTime.now();
+    final cutoffTime = now.subtract(Duration(days: _maxLogAgeInDays));
+    Directory(await _localPath).listSync().forEach((logFile) {
+      if (logFile is File && logFile.path.endsWith('.txt')) {
+        final modifiedTime = logFile.lastModifiedSync();
+        if (modifiedTime.isBefore(cutoffTime)) {
+          logFile.deleteSync();
+        }
+      }
+    });
   }
 
-  clearAppLogs() {
-    this.appLogs = _startLine;
-    writeData(this.appLogs, FileMode.write);
-  }
+  // String getAppLogs() {
+  //   return this.appLogs;
+  // }
 }
 
 /*
@@ -81,7 +105,7 @@ class CustomLogPrinter {
     LogFile().appendToAppLogs('$log');
   }
 
-  String getLogFileContent() {
-    return LogFile().appLogs;
+  Future<String> getLogFileContent() async {
+    return await LogFile().getAppLogs();
   }
 }

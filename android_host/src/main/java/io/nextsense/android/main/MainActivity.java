@@ -9,7 +9,6 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
@@ -21,6 +20,7 @@ import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
 
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.service.ForegroundService;
 
 /**
@@ -64,10 +64,10 @@ public class MainActivity extends AppCompatActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    Log.i(TAG, "Start intent received: " + getIntent().toString());
+    RotatingFileLogger.get().logi(TAG, "Start intent received: " + getIntent().toString());
     if (getIntent().getExtras() != null) {
-      Log.i(TAG, "Start intent received extras: " + getIntent().getExtras().toString());
-      Log.i(TAG, "Start intent received json: " +
+      RotatingFileLogger.get().logi(TAG, "Start intent received extras: " + getIntent().getExtras().toString());
+      RotatingFileLogger.get().logi(TAG, "Start intent received json: " +
               getIntent().getExtras().getString(EXTRA_NOTIFICATION_JSON));
       initialIntent = getIntent();
     }
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
     getApplicationContext().startService(foregroundServiceIntent);
 
-    Log.d(TAG, "started");
+    RotatingFileLogger.get().logd(TAG, "started");
   }
 
   @Override
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
     if (!nextSenseServiceBound) {
       bindService(foregroundServiceIntent, nextSenseConnection, Context.BIND_IMPORTANT);
     } else {
-      Log.i(TAG, "service bound. Flutter active: " +
+      RotatingFileLogger.get().logi(TAG, "service bound. Flutter active: " +
           nextSenseService.isFlutterActivityActive());
       if (AUTOSTART_FLUTTER) {
         if (nextSenseService.isFlutterActivityActive()) {
@@ -111,10 +111,10 @@ public class MainActivity extends AppCompatActivity {
   @SuppressWarnings("unchecked")
   protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
-    Log.i(TAG, "New intent received: " + intent.toString());
+    RotatingFileLogger.get().logi(TAG, "New intent received: " + intent.toString());
     boolean validTarget = false;
     if (intent.getExtras() != null) {
-      Log.i(TAG, "New intent received extras: " + intent.getExtras().toString());
+      RotatingFileLogger.get().logi(TAG, "New intent received extras: " + intent.getExtras().toString());
       String jsonData = intent.getExtras().getString(EXTRA_NOTIFICATION_JSON);
       if (jsonData != null) {
         Map notificationData = gson.fromJson(jsonData, Map.class);
@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
     FlutterEngine flutterEngine =
             FlutterEngineCache.getInstance().get(NextSenseApplication.FLUTTER_ENGINE_NAME);
     if (flutterEngine != null) {
-      Log.i(TAG, "Detaching flutter engine.");
+      RotatingFileLogger.get().logi(TAG, "Detaching flutter engine.");
       flutterEngine.getPlatformViewsController().detachFromView();
       flutterEngine.getLifecycleChannel().appIsDetached();
       // Calling flutterEngine.destroy() here cause a JNI error. But it does let NextSenseBase
@@ -192,14 +192,14 @@ public class MainActivity extends AppCompatActivity {
     // Confirm the link is a sign-in with email link.
     if (androidIntent != null && androidIntent.getData() != null &&
         firebaseAuth.isSignInWithEmailLink(androidIntent.getData().toString())) {
-      Log.d(TAG, "Application started with an email auth link.");
+      RotatingFileLogger.get().logd(TAG, "Application started with an email auth link.");
       flutterIntent.setData(androidIntent.getData());
     }
     if (androidIntent != null && androidIntent.getExtras() != null) {
-      Log.i(TAG, "New intent received extras: " + androidIntent.getExtras().toString());
+      RotatingFileLogger.get().logi(TAG, "New intent received extras: " + androidIntent.getExtras().toString());
       String jsonData = androidIntent.getExtras().getString(EXTRA_NOTIFICATION_JSON);
       if (jsonData != null) {
-        Log.i(TAG, "New intent received json: " +
+        RotatingFileLogger.get().logi(TAG, "New intent received json: " +
             androidIntent.getExtras().getString(EXTRA_NOTIFICATION_JSON));
         Map notificationData = gson.fromJson(jsonData, Map.class);
         Map<String, String> payloadMap = (Map<String, String>)
@@ -220,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
       ForegroundService.LocalBinder binder = (ForegroundService.LocalBinder) service;
       nextSenseService = binder.getService();
       nextSenseServiceBound = true;
-      Log.i(TAG, "service bound. Flutter active: " +
+      RotatingFileLogger.get().logi(TAG, "service bound. Flutter active: " +
           nextSenseService.isFlutterActivityActive());
       if (AUTOSTART_FLUTTER) {
         if (nextSenseService.isFlutterActivityActive()) {

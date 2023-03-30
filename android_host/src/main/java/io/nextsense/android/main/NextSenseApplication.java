@@ -1,7 +1,6 @@
 package io.nextsense.android.main;
 
 import android.app.Application;
-import android.util.Log;
 
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.appcheck.FirebaseAppCheck;
@@ -11,6 +10,7 @@ import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderF
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
 import io.flutter.embedding.engine.dart.DartExecutor;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Custom application class for the NextSense application.
@@ -18,12 +18,14 @@ import io.flutter.embedding.engine.dart.DartExecutor;
 public class NextSenseApplication extends Application {
 
   public static final String FLUTTER_ENGINE_NAME = "nextsense_engine_id";
+  private static final String TAG = NextSenseApplication.class.getSimpleName();
 
   private FlutterEngine flutterEngine;
 
   @Override
   public void onCreate() {
     super.onCreate();
+    RotatingFileLogger.initialize(getApplicationContext());
     initFirebase();
     initFlutterEngineCache();
   }
@@ -41,7 +43,7 @@ public class NextSenseApplication extends Application {
   }
 
   public void initFlutterEngineCache() {
-    Log.i("NextSenseApplication", "Initializing the flutter engine.");
+    RotatingFileLogger.get().logi(TAG, "Initializing the flutter engine.");
     // Instantiate a FlutterEngine.
     flutterEngine = new FlutterEngine(this);
 
