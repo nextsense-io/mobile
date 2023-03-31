@@ -48,11 +48,13 @@ class PlannedActivity {
 
   // Create list of study days according to period of survey.
   void _initDays(DateTime studyStartDate, DateTime studyEndDate) {
+    if (_period == Period.unknown) {
+      return;
+    }
     if (_period == Period.specific_day) {
       // For certain day number we just add single day
       days.add(StudyDay(
-          studyStartDate.add(Duration(days: _specificDayNumber! - 1)),
-          _specificDayNumber!));
+          studyStartDate.add(Duration(days: _specificDayNumber! - 1)), _specificDayNumber!));
       return;
     }
 

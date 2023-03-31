@@ -42,14 +42,14 @@ class DataManager {
     _logger.log(Level.INFO, 'Starting to load user study data.');
     loaded = await _studyManager.loadCurrentStudy();
     if (!loaded) return false;
+    _logger.log(Level.INFO, 'Starting loadScheduledProtocols.');
+    loaded = await _studyManager.loadScheduledProtocols();
+    if (!loaded) return false;
     _logger.log(Level.INFO, 'Starting loadPlannedSurveys.');
     loaded = await _surveyManager.loadPlannedSurveys();
     if (!loaded) return false;
     _logger.log(Level.INFO, 'Starting loadAdhocSurveys.');
     loaded = await _surveyManager.loadAdhocSurveys();
-    if (!loaded) return false;
-    _logger.log(Level.INFO, 'Starting loadScheduledProtocols.');
-    loaded = await _studyManager.loadScheduledProtocols();
     if (!loaded) return false;
     await _sessionManager.loadCurrentSession();
     // Mark study initialized so we can load things from cache

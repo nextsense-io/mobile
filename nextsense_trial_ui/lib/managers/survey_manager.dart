@@ -102,7 +102,7 @@ class SurveyManager {
     _adhocPlannedSurveys.clear();
 
     bool fromCache = _preferences.getBool(PreferenceKey.studyDataCached);
-    _plannedSurveys = await _studyManager.loadPlannedSurveys(fromCache);
+    _plannedSurveys = await _studyManager.loadPlannedSurveys(studyScheduled && fromCache);
     if (_plannedSurveys == null) {
       return false;
     }
@@ -147,7 +147,7 @@ class SurveyManager {
           continue;
         }
 
-        for (var day in plannedSurvey?.days ?? []) {
+        for (var day in plannedSurvey.days ?? []) {
           Future future = _firestoreManager.addAutoIdEntity(
               [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
               [_authManager.user!.id, _currentStudyId]);

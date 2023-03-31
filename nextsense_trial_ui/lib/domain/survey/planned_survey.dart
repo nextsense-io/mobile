@@ -35,7 +35,7 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> implements Schedula
       getValue(PlannedSurveyKey.triggers_conditional_survey_id);
 
   PlannedSurvey(FirebaseEntity firebaseEntity, {DateTime? studyStartDate, DateTime? studyEndDate}) :
-        super(firebaseEntity.getDocumentSnapshot()) {
+      super(firebaseEntity.getDocumentSnapshot()) {
     _specificDayNumber = getValue(PlannedSurveyKey.day);
     _lastDayNumber = getValue(PlannedSurveyKey.end_day);
     // We have following possible values for period field
@@ -51,9 +51,9 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> implements Schedula
   }
 
   void _initSurveyStartGracePeriod() {
-    int? _daysToComplete = getValue(PlannedSurveyKey.days_to_complete);
-    if (_daysToComplete != null) {
-      _daysToComplete = _daysToComplete;
+    int? daysToComplete = getValue(PlannedSurveyKey.days_to_complete);
+    if (daysToComplete != null) {
+      _daysToComplete = daysToComplete;
     } else {
       // Default values for grace period
       _daysToComplete = 1;
