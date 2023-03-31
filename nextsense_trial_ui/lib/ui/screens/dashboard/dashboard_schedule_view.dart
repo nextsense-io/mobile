@@ -54,8 +54,8 @@ class DashboardScheduleView extends StatelessWidget {
         builder: (_) => SimpleAlertDialog(
             title: 'Warning',
             content: 'This protocol can start after '
-                '${scheduledProtocol.allowedStartAfter.hhmm} and before '
-                '${scheduledProtocol.allowedStartBefore.hhmm}'),
+                '${scheduledProtocol.allowedStartAfter!.hhmm} and before '
+                '${scheduledProtocol.allowedStartBefore!.hhmm}'),
       );
       return;
     }

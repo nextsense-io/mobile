@@ -157,7 +157,7 @@ class StudyManager {
         if (plannedSession.scheduleType != ScheduleType.scheduled) {
           continue;
         }
-        for (StudyDay studyDay in plannedSession.days) {
+        for (StudyDay studyDay in plannedSession.days ?? []) {
           DocumentReference ref = await _firestoreManager.addAutoIdReference(
               [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
               [_authManager.user!.id, currentStudy!.id]);
@@ -170,8 +170,8 @@ class StudyManager {
           fields[ScheduledSessionKey.status.name] = ProtocolState.not_started.name;
           fields[ScheduledSessionKey.start_date.name] = studyDay.dateAsString;
           DateTime startDateTime = studyDay.date.add(
-              Duration(hours: plannedSession.startTime.hour,
-                  minutes: plannedSession.startTime.minute));
+              Duration(hours: plannedSession.startTime!.hour,
+                  minutes: plannedSession.startTime!.minute));
           fields[ScheduledSessionKey.start_datetime.name] = startDateTime.toString();
 
           batchWriter.add(ref, fields);

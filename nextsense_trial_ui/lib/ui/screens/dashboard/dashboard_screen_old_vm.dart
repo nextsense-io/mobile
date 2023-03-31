@@ -146,7 +146,7 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
       //   result.add(scheduledProtocol);
       // }
     }
-    result.sort((p1, p2) => p1.startTime.compareTo(p2.startTime));
+    result.sort((p1, p2) => p1.startTime!.compareTo(p2.startTime!));
     return result;
   }
 

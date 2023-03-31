@@ -6,7 +6,6 @@ import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
-import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
@@ -29,13 +28,13 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledSession');
 
   late Protocol protocol;
-  late DateTime startDate;
+  late DateTime? startDate;
 
   // Start time - hours & minutes only.
-  late DateTime startTime;
+  late DateTime? startTime;
   // Time constraints for the protocol.
-  late DateTime allowedStartBefore;
-  late DateTime allowedStartAfter;
+  late DateTime? allowedStartBefore;
+  late DateTime? allowedStartAfter;
 
   String get plannedSessionId => getValue(ScheduledSessionKey.planned_session_id);
   String get scheduledSessionId => id;
@@ -57,8 +56,8 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
     // Needed for later push notifications processing at backend.
     firebaseEntity.setValue(ScheduledSessionKey.start_date, studyDay.dateAsString);
     DateTime startDateTime = studyDay.date.add(
-        Duration(hours: plannedSession.startTime.hour,
-            minutes: plannedSession.startTime.minute));
+        Duration(hours: plannedSession.startTime!.hour,
+            minutes: plannedSession.startTime!.minute));
     firebaseEntity.setValue(ScheduledSessionKey.start_datetime, startDateTime.toString());
     return ScheduledSession(firebaseEntity, plannedSession);
   }
@@ -92,10 +91,10 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
     protocol = plannedAssessment.protocol!;
     startTime = plannedAssessment.startTime;
     allowedStartAfter = DateTime.parse(firebaseEntity.getValue(ScheduledSessionKey.start_datetime))
-        .subtract(Duration(minutes: plannedAssessment.allowedEarlyStartTimeMinutes));
+        .subtract(Duration(minutes: plannedAssessment.allowedEarlyStartTimeMinutes ?? 0));
     allowedStartBefore = DateTime.parse(
         firebaseEntity.getValue(ScheduledSessionKey.start_datetime))
-        .add(Duration(minutes: plannedAssessment.allowedLateStartTimeMinutes));
+        .add(Duration(minutes: plannedAssessment.allowedLateStartTimeMinutes ?? 0));
     startDate = DateTime.parse(getValue(ScheduledSessionKey.start_date));
   }
 
@@ -105,7 +104,7 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
   }
 
   int getStudyDay(DateTime studyStartDateTime) {
-    Duration difference = startDate.difference(studyStartDateTime.dateNoTime);
+    Duration difference = startDate!.difference(studyStartDateTime.dateNoTime);
     return difference.inDays + 1;
   }
 
@@ -127,8 +126,8 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
     final currentTime = DateTime.now();
     // Subtracts 1 second to make sure isAfter method works correctly on beginning of each minute
     // i.e 11:00:00 is after 10:59:59.
-    return currentTime.isAfter(allowedStartAfter.subtract(Duration(seconds: 1)))
-        && currentTime.isBefore(allowedStartBefore);
+    return currentTime.isAfter(allowedStartAfter!.subtract(Duration(seconds: 1)))
+        && currentTime.isBefore(allowedStartBefore!);
   }
 
   // Protocol didn't start in time, should be skipped.
@@ -138,7 +137,7 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
     }
     final currentTime = DateTime.now();
     return state == ProtocolState.not_started
-        && currentTime.isAfter(allowedStartBefore.subtract(Duration(seconds: 1)));
+        && currentTime.isAfter(allowedStartBefore!.subtract(Duration(seconds: 1)));
   }
 
   // Update fields and save to Firestore by default.
@@ -181,9 +180,9 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
 
   @override
   // Surveys can be completed anywhere in the day.
-  TimeOfDay? get windowEndTime => TimeOfDay.fromDateTime(allowedStartBefore);
+  TimeOfDay? get windowEndTime => TimeOfDay.fromDateTime(allowedStartBefore!);
 
   @override
   // Surveys can be completed anywhere in the day.
-  TimeOfDay get windowStartTime => TimeOfDay.fromDateTime(allowedStartAfter);
+  TimeOfDay get windowStartTime => TimeOfDay.fromDateTime(allowedStartAfter!);
 }

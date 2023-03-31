@@ -1,5 +1,4 @@
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
@@ -32,48 +31,49 @@ enum PlannedSessionParameter {
 
 class PlannedSession extends FirebaseEntity<PlannedSessionKey> {
 
-  final SurveyManager _surveyManager = getIt<SurveyManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('PlannedSession');
 
   // Start time string in format "HH:MM".
-  late String startTimeStr;
+  String? startTimeStr;
   // Contains only time part.
-  late DateTime startTime;
-  late int allowedEarlyStartTimeMinutes;
-  late int allowedLateStartTimeMinutes;
-  late Protocol? protocol;
-  late PlannedActivity _plannedActivity;
+  DateTime? startTime;
+  int? allowedEarlyStartTimeMinutes;
+  int? allowedLateStartTimeMinutes;
+  Protocol? protocol;
+  PlannedActivity? _plannedActivity;
 
   // defaults to specific day for legacy assessments where it was not set.
   Period get _period => Period.fromString(getValue(PlannedSessionKey.period) ?? "");
   int? get _dayNumber => getValue(PlannedSessionKey.day);
   int? get _lastDayNumber => getValue(PlannedSessionKey.end_day);
 
-  List<StudyDay> get days => _plannedActivity.days;
-  ScheduleType get scheduleType => ScheduleType.values.firstWhere(
-          (value) => value.toString() == getValue(PlannedSessionKey.schedule_type));
+  List<StudyDay>? get days => _plannedActivity?.days ?? null;
+  ScheduleType get scheduleType =>
+      ScheduleType.fromString(getValue(PlannedSessionKey.schedule_type));
   String? get triggersConditionalSessionId =>
       getValue(PlannedSessionKey.triggers_conditional_session_id);
   String? get triggersConditionalSurveyId =>
       getValue(PlannedSessionKey.triggers_conditional_survey_id);
 
   PlannedSession(FirebaseEntity firebaseEntity, DateTime studyStartDate, DateTime studyEndDate) :
-        super(firebaseEntity.getDocumentSnapshot()) {
-    if (_dayNumber == null || !(_dayNumber is int)) {
-      throw("'day' is not set or not number in planned session");
-    }
-    _plannedActivity = PlannedActivity(_period, _dayNumber, _lastDayNumber, studyStartDate,
-        studyEndDate);
-    startTimeStr = getValue(PlannedSessionKey.time) as String;
-    // TODO(alex): check HH:MM string is correctly set
-    int startTimeHours = int.parse(startTimeStr.split(":")[0]);
-    int startTimeMinutes = int.parse(startTimeStr.split(":")[1]);
-    startTime = DateTime(0, 0, 0, startTimeHours, startTimeMinutes);
+      super(firebaseEntity.getDocumentSnapshot()) {
+    if (scheduleType == ScheduleType.scheduled) {
+      if (_dayNumber == null || !(_dayNumber is int)) {
+        throw("'day' is not set or not number in planned session");
+      }
+      _plannedActivity = PlannedActivity(_period, _dayNumber, _lastDayNumber, studyStartDate,
+          studyEndDate);
+      startTimeStr = getValue(PlannedSessionKey.time) as String;
+      // TODO(alex): check HH:MM string is correctly set
+      int startTimeHours = int.parse(startTimeStr!.split(":")[0]);
+      int startTimeMinutes = int.parse(startTimeStr!.split(":")[1]);
+      startTime = DateTime(0, 0, 0, startTimeHours, startTimeMinutes);
 
-    allowedEarlyStartTimeMinutes =
-        getValue(PlannedSessionKey.allowed_early_start_time_minutes) ?? 0;
-    allowedLateStartTimeMinutes =
-        getValue(PlannedSessionKey.allowed_late_start_time_minutes) ?? 0;
+      allowedEarlyStartTimeMinutes =
+          getValue(PlannedSessionKey.allowed_early_start_time_minutes) ?? 0;
+      allowedLateStartTimeMinutes =
+          getValue(PlannedSessionKey.allowed_late_start_time_minutes) ?? 0;
+    }
 
     // Construct protocol here based on planned session fields like
     String protocolTypeString = getValue(PlannedSessionKey.type);
