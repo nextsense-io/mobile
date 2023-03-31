@@ -676,7 +676,8 @@ public class Uploader {
             RotatingFileLogger.get().logd(TAG, "No finished session, not waking up.");
             return;
           }
-          RotatingFileLogger.get().logd(TAG, "finished session, scheduling data upload finished timer.");
+          RotatingFileLogger.get().logd(TAG,
+              "finished session, scheduling data upload finished timer.");
           scheduleDataUploadFinishedTimer(localSessionId);
         });
   }

@@ -69,7 +69,7 @@ class FirebaseEntity<T extends Enum> {
       return false;
     }
     if (_addMonitoringFields) {
-      if (!getDocumentSnapshot().exists) {
+      if (getValues()[BaseEntityKey.created_at.name] == null) {
         getValues()[BaseEntityKey.created_at.name] = now;
         getValues()[BaseEntityKey.created_by.name] = userId;
       }

@@ -40,6 +40,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   Study get study =>_studyManager.currentStudy!;
   bool get studyStarted => _studyManager.isStudyStarted();
   bool get studyFinished => _studyManager.isStudyFinished();
+  bool get studyHasAdhocProtocols => _studyManager.allowedAdhocProtocols.isNotEmpty;
 
   // Current selected day in calendar
   StudyDay? selectedDay;

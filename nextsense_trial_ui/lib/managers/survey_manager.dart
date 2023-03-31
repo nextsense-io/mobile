@@ -99,6 +99,7 @@ class SurveyManager {
 
     _scheduledSurveys.clear();
     _scheduledSurveysByPlannedSurveyId.clear();
+    _adhocPlannedSurveys.clear();
 
     bool fromCache = _preferences.getBool(PreferenceKey.studyDataCached);
     _plannedSurveys = await _studyManager.loadPlannedSurveys(fromCache);
@@ -146,7 +147,7 @@ class SurveyManager {
           continue;
         }
 
-        for (var day in plannedSurvey.days) {
+        for (var day in plannedSurvey?.days ?? []) {
           Future future = _firestoreManager.addAutoIdEntity(
               [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
               [_authManager.user!.id, _currentStudyId]);
@@ -157,7 +158,7 @@ class SurveyManager {
                 firebaseEntity, survey: survey, day: day, plannedSurvey: plannedSurvey);
 
             // Copy period from planned survey
-            scheduledSurvey.setPeriod(plannedSurvey.period);
+            scheduledSurvey.setPeriod(plannedSurvey.period!);
 
             if (scheduledSurvey.getValue(ScheduledSurveyKey.status) == null) {
               scheduledSurvey.setValue(ScheduledSurveyKey.status, SurveyState.not_started.name);
@@ -206,7 +207,8 @@ class SurveyManager {
           [Table.studies, Table.planned_surveys], [_currentStudyId, plannedSurveyId]);
       if (plannedSurveyEntity != null) {
         PlannedSurvey plannedSurvey = PlannedSurvey(plannedSurveyEntity,
-            _studyManager.currentStudyStartDate!, _studyManager.currentStudyEndDate!);
+            studyStartDate: _studyManager.currentStudyStartDate,
+            studyEndDate: _studyManager.currentStudyEndDate);
         Survey? survey = getSurveyById(plannedSurvey.surveyId);
         if (survey == null) {
           return null;

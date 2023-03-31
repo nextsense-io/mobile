@@ -68,7 +68,7 @@ class DashboardHomeView extends StatelessWidget {
     ]);
 
     List<Widget> menuCards = [];
-    if (_flavor.userType == UserType.researcher) {
+    if (_flavor.userType == UserType.researcher && dashboardViewModel.studyHasAdhocProtocols) {
       menuCards.add(MenuCard(
           title: 'Protocols',
           image:

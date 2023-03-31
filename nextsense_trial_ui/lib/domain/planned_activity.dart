@@ -23,7 +23,7 @@ enum Period {
   weekly,
   unknown;
 
-  factory Period.fromString(String periodStr) {
+  factory Period.fromString(String? periodStr) {
     return Period.values.firstWhere((element) => element.name == periodStr,
         orElse: () => Period.unknown);
   }

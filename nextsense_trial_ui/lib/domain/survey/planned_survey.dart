@@ -18,9 +18,9 @@ enum PlannedSurveyKey {
 class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> implements Schedulable {
 
   // Days on which survey will appear.
-  late List<StudyDay> days = _plannedActivity.days;
+  late PlannedActivity? _plannedActivity;
   late int _daysToComplete;
-  late PlannedActivity _plannedActivity;
+  List<StudyDay>? days;
   int? _specificDayNumber;
   int? _lastDayNumber;
 
@@ -28,23 +28,25 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> implements Schedula
   ScheduleType get scheduleType => ScheduleType.fromString(
       getValue(PlannedSurveyKey.schedule_type) ?? "");
   String get surveyId => getValue(PlannedSurveyKey.survey_id);
-  Period get period => Period.fromString(getValue(PlannedSurveyKey.period));
+  Period? get period => Period.fromString(getValue(PlannedSurveyKey.period));
   String get triggersConditionalSessionId =>
       getValue(PlannedSurveyKey.triggers_conditional_session_id);
   String get triggersConditionalSurveyId =>
       getValue(PlannedSurveyKey.triggers_conditional_survey_id);
 
-  PlannedSurvey(FirebaseEntity firebaseEntity, DateTime studyStartDate, DateTime studyEndDate) :
+  PlannedSurvey(FirebaseEntity firebaseEntity, {DateTime? studyStartDate, DateTime? studyEndDate}) :
         super(firebaseEntity.getDocumentSnapshot()) {
-
     _specificDayNumber = getValue(PlannedSurveyKey.day);
     _lastDayNumber = getValue(PlannedSurveyKey.end_day);
     // We have following possible values for period field
     // 1. 'specific_day' - survey will take place certain day within study
     // 2. 'daily' - survey will take place each day of study
     // 3. 'weekly' - survey will take place on 8th day, 15th, etc.
-    _plannedActivity = PlannedActivity(period, _specificDayNumber, _lastDayNumber, studyStartDate,
-        studyEndDate);
+    if (studyStartDate != null && studyEndDate != null && period != null) {
+      _plannedActivity = PlannedActivity(period!, _specificDayNumber, _lastDayNumber,
+          studyStartDate, studyEndDate);
+      days = _plannedActivity!.days;
+    }
     _initSurveyStartGracePeriod();
   }
 

@@ -42,7 +42,7 @@ class DataManager {
     _logger.log(Level.INFO, 'Starting to load user study data.');
     loaded = await _studyManager.loadCurrentStudy();
     if (!loaded) return false;
-    _logger.log(Level.INFO, 'Starting loadScheduledSurveys.');
+    _logger.log(Level.INFO, 'Starting loadPlannedSurveys.');
     loaded = await _surveyManager.loadPlannedSurveys();
     if (!loaded) return false;
     _logger.log(Level.INFO, 'Starting loadAdhocSurveys.');

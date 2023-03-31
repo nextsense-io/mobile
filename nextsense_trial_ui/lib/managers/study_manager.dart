@@ -265,8 +265,8 @@ class StudyManager {
     return entities
         .map((firebaseEntity) =>
         PlannedSurvey(firebaseEntity,
-            currentStudyStartDate!,
-            currentStudyEndDate!
+            studyStartDate: currentStudyStartDate,
+            studyEndDate: currentStudyEndDate
         ))
         .toList();
   }
