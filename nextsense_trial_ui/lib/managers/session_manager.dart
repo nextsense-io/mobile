@@ -4,7 +4,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/data_session.dart';
 import 'package:nextsense_trial_ui/domain/device_settings.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
@@ -99,7 +99,7 @@ class SessionManager {
     }
 
     // Update the session number in the user entry.
-    user.setValue(UserKey.session_number, user.getValue(UserKey.session_number) + 1);
+    user.setValue(UserKey.session_number, user.getValue(UserKey.session_number) ?? 0 + 1);
     success = await user.save();
     if (!success) {
       return false;

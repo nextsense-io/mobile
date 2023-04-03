@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/nap_protocol_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:stacked/stacked.dart';

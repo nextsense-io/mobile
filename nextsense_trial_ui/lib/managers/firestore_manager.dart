@@ -7,7 +7,7 @@ import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 
 enum Table {
-  adhoc_protocols,
+  adhoc_sessions,
   adhoc_surveys,
   data_sessions,
   enrolled_studies,
@@ -19,7 +19,7 @@ enum Table {
   planned_sessions,
   planned_surveys,
   protocol_surveys,
-  scheduled_protocols,
+  scheduled_sessions,
   scheduled_surveys,
   sessions,
   seizures,

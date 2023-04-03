@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/adhoc_session.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_session.dart';
+import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
+import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -119,7 +119,7 @@ class User extends FirebaseEntity<UserKey> {
       return null;
     }
     DocumentReference ref = runningProtocolRef as DocumentReference;
-    if (runningProtocolRef.parent.path.toString().endsWith(Table.adhoc_protocols.name())) {
+    if (runningProtocolRef.parent.path.toString().endsWith(Table.adhoc_sessions.name())) {
       return AdhocSession.fromRecord(
           AdhocProtocolRecord(FirebaseEntity(await ref.get())), getCurrentStudyId()!);
     } else {

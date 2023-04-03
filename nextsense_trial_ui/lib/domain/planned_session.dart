@@ -1,7 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';

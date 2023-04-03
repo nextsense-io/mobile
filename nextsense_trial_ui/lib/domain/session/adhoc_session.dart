@@ -3,8 +3,8 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
@@ -64,7 +64,7 @@ class AdhocSession implements RunnableProtocol {
       FirebaseEntity? firebaseEntity = await _firestoreManager.addAutoIdEntity([
         Table.users,
         Table.enrolled_studies,
-        Table.adhoc_protocols
+        Table.adhoc_sessions
       ], [
         _authManager.user!.id,
         _studyId

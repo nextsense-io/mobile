@@ -9,8 +9,8 @@ import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/enrolled_study.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_session.dart';
+import 'package:nextsense_trial_ui/domain/session/protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
@@ -43,9 +43,9 @@ class StudyManager {
   List<StudyDay>? _days;
   List<PlannedSession>? _plannedSessions;
   List<ProtocolType> _allowedAdhocProtocols = [];
-  List<ScheduledSession> _scheduledProtocols = [];
+  List<ScheduledSession> _scheduledSessions = [];
 
-  List<ScheduledSession> get scheduledProtocols => _scheduledProtocols;
+  List<ScheduledSession> get scheduledSessions => _scheduledSessions;
   List<ProtocolType> get allowedAdhocProtocols => _allowedAdhocProtocols;
   DateTime? get currentStudyStartDate => _enrolledStudy?.getStartDate();
   DateTime? get currentStudyEndDate => _enrolledStudy?.getEndDate();
@@ -118,14 +118,15 @@ class StudyManager {
   }
 
   Future<bool> loadScheduledProtocols() async {
-    scheduledProtocols.clear();
+    scheduledSessions.clear();
+    _allowedAdhocProtocols.clear();
 
     if (studyScheduled == null) {
       throw("study not initialized. cannot load scheduled protocols");
     }
 
     bool fromCache = _preferences.getBool(PreferenceKey.studyDataCached);
-    _plannedSessions = await _loadPlannedSessions(fromCache: fromCache);
+    _plannedSessions = await _loadPlannedSessions(fromCache: fromCache && studyScheduled!);
     if (_plannedSessions == null) {
       return false;
     }
@@ -137,16 +138,16 @@ class StudyManager {
     }
 
     if (studyScheduled!) {
-      // If study already scheduled, return scheduled protocols from cache if present.
-      _logger.log(Level.INFO, 'Loading scheduled protocols from cache? $fromCache');
-      List<ScheduledSession>? protocols = await _loadScheduledProtocols(fromCache);
-      if (protocols == null) {
+      // If study already scheduled, return scheduled sessions from cache if present.
+      _logger.log(Level.INFO, 'Loading scheduled sessions from cache? $fromCache');
+      List<ScheduledSession>? scheduledSessions = await _loadScheduledSessions(fromCache);
+      if (scheduledSessions == null) {
         return false;
       }
-      _scheduledProtocols = protocols;
-      _logger.log(Level.INFO, 'Loaded ${scheduledProtocols.length} scheduled protocols');
+      _scheduledSessions = scheduledSessions;
+      _logger.log(Level.INFO, 'Loaded ${scheduledSessions.length} scheduled sessions');
     } else {
-      _logger.log(Level.INFO, 'Creating scheduled protocols based on planned assessments');
+      _logger.log(Level.INFO, 'Creating scheduled sessions based on planned sessions');
       Stopwatch stopwatch = new Stopwatch()..start();
       final batchWriter = _firestoreManager.getFirebaseBatchWriter();
       for (var plannedSession in _plannedSessions!) {
@@ -159,12 +160,12 @@ class StudyManager {
         }
         for (StudyDay studyDay in plannedSession.days ?? []) {
           DocumentReference ref = await _firestoreManager.addAutoIdReference(
-              [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
+              [Table.users, Table.enrolled_studies, Table.scheduled_sessions],
               [_authManager.user!.id, currentStudy!.id]);
 
           Map<String, dynamic> fields = {};
 
-          fields[ScheduledSessionKey.planned_session_id.name] = plannedSession.reference;
+          fields[ScheduledSessionKey.planned_session_id.name] = plannedSession.id;
           fields[ScheduledSessionKey.scheduled_type.name] = plannedSession.scheduleType.name;
           fields[ScheduledSessionKey.session_ids.name] = [];
           fields[ScheduledSessionKey.status.name] = ProtocolState.not_started.name;
@@ -193,12 +194,12 @@ class StudyManager {
       }
 
       for (var entity in scheduledProtocolEntities) {
-        PlannedSession? plannedAssessment = _plannedSessions!.firstWhereOrNull((assessment) =>
-            entity.getValue(ScheduledSessionKey.planned_session_id) == assessment.reference);
-        _scheduledProtocols.add(ScheduledSession(entity, plannedAssessment!));
+        PlannedSession? plannedSession = _plannedSessions!.firstWhereOrNull((assessment) =>
+            entity.getValue(ScheduledSessionKey.planned_session_id) == assessment.id);
+        _scheduledSessions.add(ScheduledSession(entity, plannedSession!));
       }
 
-      _logger.log(Level.INFO, "Scheduled protocols created in " +
+      _logger.log(Level.INFO, "Scheduled sessions created in " +
           '${stopwatch.elapsedMicroseconds / 1000000.0} sec');
       stopwatch.stop();
     }
@@ -225,7 +226,7 @@ class StudyManager {
     }
 
     FirebaseEntity entity = await _firestoreManager.addAutoIdEntity(
-        [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
+        [Table.users, Table.enrolled_studies, Table.scheduled_sessions],
         [_authManager.user!.id, currentStudy!.id]);
 
     ScheduledSession scheduledSession = ScheduledSession.fromSessionTrigger(
@@ -236,7 +237,7 @@ class StudyManager {
 
   Future<ScheduledSession?> queryScheduledProtocol(String scheduledProtocolId) async {
     FirebaseEntity? scheduledProtocolEntity = await _firestoreManager.queryEntity(
-        [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
+        [Table.users, Table.enrolled_studies, Table.scheduled_sessions],
         [_authManager.user!.id, _currentStudy!.id, scheduledProtocolId]);
     if (scheduledProtocolEntity != null) {
       final assessmentId = (scheduledProtocolEntity.getValue(ScheduledSessionKey.planned_session_id)
@@ -317,41 +318,41 @@ class StudyManager {
   }
 
 
-  Future<List<ScheduledSession>?> _loadScheduledProtocols(bool fromCache) async {
-    List<FirebaseEntity>? scheduledProtocolEntities =
+  Future<List<ScheduledSession>?> _loadScheduledSessions(bool fromCache) async {
+    List<FirebaseEntity>? scheduledSessionEntities =
         await _queryScheduledProtocols(fromCache: fromCache);
-    if (scheduledProtocolEntities == null) {
+    if (scheduledSessionEntities == null) {
       return null;
     }
 
-    List<PlannedSession>? assessments = await _loadPlannedSessions(fromCache: fromCache);
-    if (assessments == null) {
+    List<PlannedSession>? plannedSessions = await _loadPlannedSessions(fromCache: fromCache);
+    if (plannedSessions == null) {
       return null;
     }
 
-    List<ScheduledSession> result = [];
-    for (FirebaseEntity entity in scheduledProtocolEntities) {
-      final assessmentId = (entity.getValue(ScheduledSessionKey.planned_session_id) as DocumentReference).id;
-      PlannedSession? plannedAssessment = assessments.firstWhereOrNull(
-              (assessment) => assessmentId == assessment.reference.id);
+    List<ScheduledSession> scheduledSessions = [];
+    for (FirebaseEntity entity in scheduledSessionEntities) {
+      final plannedSessionId = entity.getValue(ScheduledSessionKey.planned_session_id);
+      PlannedSession? plannedSession = plannedSessions.firstWhereOrNull(
+          (plannedSessionCandidate) => plannedSessionId == plannedSessionCandidate.id);
 
-      if (plannedAssessment == null) {
-        _logger.log(Level.SEVERE, 'Assessment with id $assessmentId not found');
+      if (plannedSession == null) {
+        _logger.log(Level.SEVERE, 'Planned session with id $plannedSessionId not found');
         continue;
       }
 
-      final scheduledProtocol = ScheduledSession(entity, plannedAssessment);
-      result.add(scheduledProtocol);
+      final scheduledSession = ScheduledSession(entity, plannedSession);
+      scheduledSessions.add(scheduledSession);
     }
-    return result;
+    return scheduledSessions;
   }
 
   Future<List<FirebaseEntity>?> _queryScheduledProtocols({bool fromCache = false}) async {
     return await _firestoreManager.queryEntities(
-        [Table.users, Table.enrolled_studies, Table.scheduled_protocols],
+        [Table.users, Table.enrolled_studies, Table.scheduled_sessions],
         [_authManager.user!.id, _currentStudy!.id],
         fromCacheWithKey: fromCache ?
-        "${_currentStudy!.id}_${Table.scheduled_protocols.name()}" : null);
+        "${_currentStudy!.id}_${Table.scheduled_sessions.name()}" : null);
   }
 
   Future<List<PlannedSession>?> _loadPlannedSessions({bool fromCache = false}) async {

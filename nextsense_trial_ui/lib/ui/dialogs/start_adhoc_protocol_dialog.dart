@@ -18,15 +18,15 @@ class StartAdhocProtocolDialog extends HookWidget {
   Widget _buildBody(context, viewModel) {
     List<Widget> options = viewModel
         .getAdhocProtocols()
-        .map<Widget>((adhocProtocol) => Padding(
+        .map<Widget>((adhocSession) => Padding(
               padding: EdgeInsets.all(15),
               child: SimpleButton(
                   text: MediumText(
-                      text: adhocProtocol.protocol.nameForUser, color: NextSenseColors.darkBlue),
+                      text: adhocSession.protocol.nameForUser, color: NextSenseColors.darkBlue),
                   onTap: () async {
                     await _navigation.navigateWithCapabilityChecking(context,
-                        ProtocolScreenMapping.getProtocolScreenId(adhocProtocol.protocol.scheduleType),
-                        arguments: adhocProtocol);
+                        ProtocolScreenMapping.getProtocolScreenId(adhocSession.protocol.type),
+                        arguments: adhocSession);
                     _navigation.pop();
                   }),
             ))

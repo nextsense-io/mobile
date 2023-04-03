@@ -1,4 +1,4 @@
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/bio_calibration_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/erp_audio_protocol_screen.dart';

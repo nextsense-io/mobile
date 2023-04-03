@@ -1,6 +1,6 @@
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/protocol/adhoc_session.dart';
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
+import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 

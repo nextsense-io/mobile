@@ -177,7 +177,7 @@ class AuthManager {
   Future<bool> requestSignUpEmail(String email) async {
     switch (_signedInAuthMethod) {
       case AuthMethod.email_password:
-        User? user = await _loadUser(userId: email);
+        User? user = await _loadUser(authUid: email);
         user?.setTempPassword(true);
         user?.save();
         return await _emailAuthManager!.sendSignUpLinkEmail(email);
@@ -219,7 +219,7 @@ class AuthManager {
           _logger.log(Level.WARNING, 'Unknown auth method.');
           return false;
       }
-      _user = await _loadUser(userId: authUid);
+      _user = await _loadUser(authUid: authUid);
       if (_user != null) {
         _username = username;
         await _updateUserDetails(user: _user!);
@@ -251,7 +251,7 @@ class AuthManager {
 
   Future<AuthenticationResult> _signIn({required String username, required String authUid}) async {
     _logger.log(Level.INFO, 'Starting NextSense user check.');
-    _user = await _loadUser(userId: authUid);
+    _user = await _loadUser(authUid: authUid);
 
     if (_user == null) {
       await signOut();
@@ -291,8 +291,8 @@ class AuthManager {
   }
 
   // Load user from Firestore and update some data
-  Future<User?> _loadUser({required String userId}) async {
-    final User? user = await _fetchUserFromFirestore(userId);
+  Future<User?> _loadUser({required String authUid}) async {
+    final User? user = await _fetchUserFromFirestore(authUid);
 
     if (user == null) {
       _logger.log(Level.WARNING, 'Failed to fetch user from Firestore.');
@@ -301,8 +301,8 @@ class AuthManager {
     return user;
   }
 
-  Future<User?> _fetchUserFromFirestore(String userId) async {
-    FirebaseEntity? userEntity = await _firestoreManager.queryEntity([Table.users], [userId]);
+  Future<User?> _fetchUserFromFirestore(String authUid) async {
+    FirebaseEntity? userEntity = await _firestoreManager.queryEntity([Table.users], [authUid]);
     if (userEntity == null || !userEntity.getDocumentSnapshot().exists) {
       return null;
     }

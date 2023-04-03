@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/protocol/adhoc_session.dart';
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_session.dart';
+import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
+import 'package:nextsense_trial_ui/domain/session/protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
-import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
@@ -27,7 +26,7 @@ class DashboardScreenOldViewModel extends DeviceStateViewModel {
   final AuthManager _authManager = getIt<AuthManager>();
   final DataManager _dataManager = getIt<DataManager>();
 
-  List<ScheduledSession> get scheduledProtocols => _studyManager.scheduledProtocols;
+  List<ScheduledSession> get scheduledProtocols => _studyManager.scheduledSessions;
 
   List<ScheduledSurvey> get scheduledSurveys => _surveyManager.scheduledSurveys;
 

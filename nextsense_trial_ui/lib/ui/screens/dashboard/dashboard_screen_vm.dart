@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_session.dart';
+import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
@@ -30,7 +30,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   bool? get studyInitialized => _studyManager.studyScheduled;
   // Returns current day of study
   StudyDay? get today => _studyManager.today;
-  List<ScheduledSession> get scheduledProtocols => _studyManager.scheduledProtocols;
+  List<ScheduledSession> get scheduledSessions => _studyManager.scheduledSessions;
   List<ScheduledSurvey> get scheduledSurveys => _surveyManager.scheduledSurveys;
   String get studyId => _studyManager.currentStudyId!;
   String get studyName => _studyManager.currentStudy!.getName();
@@ -92,10 +92,10 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   List<ScheduledSession> getScheduledProtocolsByDay(StudyDay day) {
     List<ScheduledSession> result = [];
-    for (var scheduledProtocol in scheduledProtocols) {
-      if (scheduledProtocol.getStudyDay(
+    for (var scheduledSession in scheduledSessions) {
+      if (scheduledSession.getStudyDay(
           _studyManager.currentEnrolledStudy!.getStartDate()!) == day.dayNumber) {
-        result.add(scheduledProtocol);
+        result.add(scheduledSession);
       }
     }
     result.sort((p1, p2) => p1.startTime!.compareTo(p2.startTime!));
