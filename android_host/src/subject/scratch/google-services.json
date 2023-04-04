@@ -7,22 +7,22 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:147440904150:android:f8e2324162c2d24d6ca677",
+        "mobilesdk_app_id": "1:147440904150:android:23d2a4cc8ac2b2516ca677",
         "android_client_info": {
-          "package_name": "io.nextsense.android.main.research.scratch"
+          "package_name": "io.nextsense.android.main.study.scratch"
         }
       },
       "oauth_client": [
         {
-          "client_id": "147440904150-jlqjdic4ljpd0q7p4gr5f1cia46pojqa.apps.googleusercontent.com",
+          "client_id": "147440904150-065cumru1o3bour55tsehps9f42la0pt.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "io.nextsense.android.main.research.scratch",
-            "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+            "package_name": "io.nextsense.android.main.study.scratch",
+            "certificate_hash": "41737cd172ebd7cc5d99c9370d3e8f88479f439e"
           }
         },
         {
-          "client_id": "147440904150-m683cf9hqe41jojgp9pp136pccgtnonr.apps.googleusercontent.com",
+          "client_id": "147440904150-1hsal1vvt9iu7gfl55vbamfolin13b5q.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -35,7 +35,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "147440904150-m683cf9hqe41jojgp9pp136pccgtnonr.apps.googleusercontent.com",
+              "client_id": "147440904150-1hsal1vvt9iu7gfl55vbamfolin13b5q.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
