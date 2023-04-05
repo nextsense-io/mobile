@@ -58,7 +58,7 @@ class LogFile {
     final logFiles = Directory(await _localPath).listSync()
         .where((logFile) => logFile is File && logFile.path.endsWith('.txt'))
         .toList(growable: false)
-      ..sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified));
+      ..sort((a, b) => b.statSync().modified.compareTo(a.statSync().modified))..reversed;
     final recentLogFiles = logFiles.take(2).toList(growable: false);
     final logTextBuilder = StringBuffer();
     for (final logFile in recentLogFiles) {
