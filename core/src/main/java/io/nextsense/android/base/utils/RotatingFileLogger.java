@@ -103,9 +103,8 @@ public class RotatingFileLogger {
     if (logFiles == null || logFiles.length == 0) {
       return logTextBuilder.toString();
     }
-    Arrays.sort(logFiles, Collections.reverseOrder());
-    int numFiles = Math.min(logFiles.length, 2);
-    for (int i = 0; i < numFiles; i++) {
+    int startIndex = Math.max(0, logFiles.length - 2);
+    for (int i = startIndex; i < logFiles.length; i++) {
       File logFile = logFiles[i];
       logTextBuilder.append(readLogFile(logFile));
     }
@@ -122,7 +121,7 @@ public class RotatingFileLogger {
     if (logFiles == null || logFiles.length == 0) {
       return new File[0];
     }
-    Arrays.sort(logFiles, Collections.reverseOrder(Comparator.comparingLong(File::lastModified)));
+    Arrays.sort(logFiles, Comparator.comparingLong(File::lastModified));
     return logFiles;
   }
 
