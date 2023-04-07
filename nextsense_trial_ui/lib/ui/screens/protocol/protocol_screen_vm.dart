@@ -284,12 +284,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.SEVERE, "Could not save event $currentMarker, no session id!");
       return false;
     }
-    String eventId = '${currentMarker}-${eventStart.string}';
-    FirebaseEntity? firebaseEntity = await _firestoreManager.queryEntity(
-        [Table.sessions, Table.events], [sessionId, eventId]);
-    if (firebaseEntity == null) {
-      return false;
-    }
+    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdReference(
+        [Table.sessions, Table.events], [sessionId]);
     Event event = Event(firebaseEntity);
     event..setValue(EventKey.start_time, eventStart)
         ..setValue(EventKey.end_time, endTime)
