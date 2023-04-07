@@ -374,7 +374,7 @@ class Navigation {
 
   // Show connection check screen if needed before navigate to target route
   Future navigateWithCapabilityChecking(BuildContext context, String routeName, {Object? arguments,
-    bool replace = false, bool pop = false}) async {
+      bool replace = false, bool pop = false}) async {
     RunnableProtocol runnableProtocol = arguments as RunnableProtocol;
     if (!(await _diskSpaceManager.isDiskSpaceSufficient(runnableProtocol.protocol.minDuration))) {
       await navigateTo(InsufficientSpaceScreen.id,

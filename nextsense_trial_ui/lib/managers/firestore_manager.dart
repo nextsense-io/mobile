@@ -46,6 +46,9 @@ class FirestoreManager {
 
   FirestoreManager() {
     _firestore = FirebaseFirestore.instanceFor(app: _firebaseApp);
+    _firestore.settings = const Settings(
+      persistenceEnabled: true
+    );
     for (Table table in Table.values) {
       _references[table] = _firestore.collection(table.name());
     }
@@ -247,22 +250,18 @@ class FirestoreManager {
   }
 
   Future<bool> persistEntity<T extends Enum>(FirebaseEntity<T> entity) async {
-    int attemptNumber = 0;
-    bool success = false;
-    while (!success && attemptNumber < _retriesAttemptsNumber) {
-      try {
-        await entity
-            .getDocumentSnapshot()
-            .reference
-            .set(entity.getValues());
-        success = true;
-      } catch (exception) {
-        attemptNumber++;
-        _logger.log(Level.WARNING, "Failed to persist ${entity.reference}. Message: "
-            "${exception.toString()}");
-      }
+    if (entity.getDocumentSnapshot().exists) {
+      entity
+          .getDocumentSnapshot()
+          .reference
+          .update(entity.getValues());
+    } else {
+      entity
+          .getDocumentSnapshot()
+          .reference
+          .set(entity.getValues());
     }
-    return success;
+    return true;
   }
 
   Future<bool> deleteEntity(FirebaseEntity entity) async {
