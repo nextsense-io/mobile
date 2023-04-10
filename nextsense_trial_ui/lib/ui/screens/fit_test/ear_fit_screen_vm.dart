@@ -16,6 +16,7 @@ import 'package:wakelock/wakelock.dart';
 enum EarFitRunState {
   NOT_STARTED,
   STARTING,
+  START_FAILED,
   RUNNING,
   STOPPING,
   FINISHED
@@ -98,6 +99,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
   Future buttonPress() async {
     switch (_earFitRunState) {
       case EarFitRunState.NOT_STARTED:
+      case EarFitRunState.START_FAILED:
         _startEarFitTest();
         break;
       case EarFitRunState.RUNNING:
@@ -148,7 +150,13 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
     _earFitRunState = EarFitRunState.STARTING;
     _initEarFitResults();
     notifyListeners();
-    await _impedanceCalculator!.startADS1299AcImpedance();
+    bool started = await _impedanceCalculator!.startADS1299AcImpedance();
+    if (!started) {
+      _logger.log(Level.WARNING, 'Failed to start impedance calculation');
+      _earFitRunState = EarFitRunState.START_FAILED;
+      notifyListeners();
+      return;
+    }
     _screenRefreshTimer = new Timer.periodic(_refreshInterval, _runEarFitTest);
   }
 
@@ -187,9 +195,8 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
             earLocation: result.key, time: _variationCheckDuration);
         if (variation < 0 || variation > _maxVariationPercent) {
           _earFitResults[result.key.name] = EarLocationResultState.POOR_FIT;
-          _logger.log(Level.FINE, "Variation of ${_impedanceSeries.getVariationAcrossTime(
-              earLocation: result.key, time: _variationCheckDuration)} is negative or above the "
-              "threshold: $variation");
+          _logger.log(Level.FINE,
+              "Variation of $variation is negative or above the threshold: $_maxVariationPercent");
         } else if (result.value >= _minImpedanceThreshold &&
             result.value <= _maxImpedanceThreshold) {
           _earFitResults[result.key.name] = EarLocationResultState.GOOD_FIT;

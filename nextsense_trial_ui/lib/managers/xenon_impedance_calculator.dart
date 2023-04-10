@@ -77,8 +77,13 @@ class XenonImpedanceCalculator {
     if (macAddress == null) {
       return false;
     }
-    _localSessionId = await NextsenseBase.startImpedance(
-        macAddress, ImpedanceMode.ON_1299_AC, /*channelNumber=*/ null, /*frequencyDivider=*/ null);
+    try {
+      _localSessionId = await NextsenseBase.startImpedance(
+          macAddress, ImpedanceMode.ON_1299_AC, /*channelNumber=*/null, /*frequencyDivider=*/null);
+    } catch (e) {
+      _logger.log(Level.WARNING, "Error starting impedance", e);
+      return false;
+    }
     _impedanceMode = ImpedanceMode.ON_1299_AC;
     return true;
   }

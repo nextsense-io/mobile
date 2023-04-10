@@ -105,6 +105,10 @@ class EarFitScreen extends HookWidget {
         bodyText = 'Please wait while checking the signal quality.';
         buttonText = 'Starting...';
         break;
+      case EarFitRunState.START_FAILED:
+        bodyText = 'Failed to start the test. Please wait a few seconds and try again. If the '
+            'problem persists, please contact support.';
+        break;
       case EarFitRunState.STOPPING:
       case EarFitRunState.RUNNING:
         buttonText = 'Stop';
