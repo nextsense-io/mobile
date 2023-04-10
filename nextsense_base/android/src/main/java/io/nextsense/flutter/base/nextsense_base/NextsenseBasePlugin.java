@@ -63,6 +63,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String IS_FLUTTER_ACTIVITY_ACTIVE_COMMAND = "is_flutter_activity_active";
   public static final String CONNECT_DEVICE_COMMAND = "connect_device";
   public static final String DISCONNECT_DEVICE_COMMAND = "disconnect_device";
+  public static final String CAN_START_NEW_SESSION_COMMAND = "can_start_new_session";
   public static final String START_STREAMING_COMMAND = "start_streaming";
   public static final String STOP_STREAMING_COMMAND = "stop_streaming";
   public static final String IS_DEVICE_STREAMING_COMMAND = "is_device_streaming";
@@ -283,6 +284,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
           result.success(BluetoothAdapter.getDefaultAdapter().isEnabled());
         else
           result.success(true);
+        break;
+      case CAN_START_NEW_SESSION_COMMAND:
+        canStartNewSession(result);
         break;
       case START_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -649,6 +653,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       returnError(result, DISCONNECT_DEVICE_COMMAND, CONNECT_TO_DEVICE_ERROR_CONNECTION,
           /*errorMessage=*/"Timeout disconnecting", /*errorDetails=*/null);
     }
+  }
+
+  private void canStartNewSession(Result result) {
+    result.success(nextSenseService.getLocalSessionManager().canStartNewSession());
   }
 
   private void startStreaming(

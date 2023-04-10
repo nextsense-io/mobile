@@ -20,6 +20,7 @@ public class LocalSession extends BaseRecord {
     RECORDING(1),  // Currently recording samples from the device.
     FINISHED(2),  // Session is finished, new samples should not be acquired anymore, but some
                   // might still be left on the device to stream.
+    ALL_DATA_RECEIVED(5),  // All data received from the device.
     UPLOADED(3),  // All samples were uploaded to the cloud.
     COMPLETED(4);  // Session marked as completed in the cloud after the upload is done.
 

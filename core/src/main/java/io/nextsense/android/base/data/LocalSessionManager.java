@@ -49,12 +49,22 @@ public class LocalSessionManager {
     activeSession.ifPresent(localSession -> activeLocalSession = localSession);
   }
 
+  public synchronized boolean canStartNewSession() {
+    // Once it reach the ALL_DATA_RECEIVED status, then another session can be started.
+    LocalSession lastLocalSession = getActiveLocalSession().orElse(null);
+    if (lastLocalSession == null || !lastLocalSession.isUploadNeeded()) {
+      return true;
+    }
+    lastLocalSession = objectBoxDatabase.getLocalSession(lastLocalSession.id);
+    return lastLocalSession.getStatus() != LocalSession.Status.RECORDING &&
+        lastLocalSession.getStatus() != LocalSession.Status.FINISHED;
+  }
+
   public synchronized long startLocalSession(
       @Nullable String cloudDataSessionId, @Nullable String userBigTableKey,
       @Nullable String earbudsConfig, boolean uploadNeeded, float eegSampleRate,
       float accelerationSampleRate) {
-    if (activeLocalSession != null &&
-        activeLocalSession.getStatus() == LocalSession.Status.RECORDING) {
+    if (!canStartNewSession()) {
       RotatingFileLogger.get().logw(TAG, "Trying to start a session, but one is already active.");
       return -1;
     }
@@ -70,7 +80,21 @@ public class LocalSessionManager {
     }
     objectBoxDatabase.runInTx(() -> {
       // There must be an active session at this point so no need to check.
-      activeLocalSession = objectBoxDatabase.getActiveSession().get();
+      Optional<LocalSession> activeLocalSessionOptional = objectBoxDatabase.getActiveSession();
+      if (activeLocalSessionOptional.isPresent()) {
+        activeLocalSession = activeLocalSessionOptional.get();
+      } else {
+        RotatingFileLogger.get().logw(TAG,
+            "Trying to stop the active session, but none is active in the database.");
+        if (activeLocalSession.getStatus() == LocalSession.Status.FINISHED ||
+            activeLocalSession.getStatus() == LocalSession.Status.ALL_DATA_RECEIVED ||
+            activeLocalSession.getStatus() == LocalSession.Status.UPLOADED ||
+            activeLocalSession.getStatus() == LocalSession.Status.COMPLETED) {
+          // If not marked as finished, let it be finished to have a consistent DB state. This
+          // should not happen though.
+          return;
+        }
+      }
       activeLocalSession.setStatus(LocalSession.Status.FINISHED);
       activeLocalSession.setEndTime(Instant.now());
       objectBoxDatabase.putLocalSession(activeLocalSession);

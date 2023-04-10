@@ -66,8 +66,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
     String spacedIntString = '';
     while (intString.length > 3) {
       spacedIntString = intString.substring(max(0, intString.length - 3), intString.length) +
-          ' ' +
-          spacedIntString;
+          ' ' + spacedIntString;
       intString = intString.substring(0, max(1, intString.length - 3));
     }
     return intString + ' ' + spacedIntString.trim();
@@ -162,8 +161,20 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
                       setState(() {
                         _impedanceRunState = ImpedanceRunState.STARTING;
                       });
+                      bool started = await _impedanceCalculator!.startADS1299AcImpedance();
+                      if (!started) {
+                        await showDialog(
+                            context: context,
+                            builder: (_) => SimpleAlertDialog(
+                                title: 'Could not start impedance calculation',
+                                content: 'Please try again. If you just stopped a session it could '
+                                    'take a few seconds for the device to be ready.'));
+                        setState(() {
+                          _impedanceRunState = ImpedanceRunState.STOPPED;
+                        });
+                        return;
+                      }
                       Wakelock.enable();
-                      await _impedanceCalculator?.startADS1299AcImpedance();
                       _screenRefreshTimer =
                           new Timer.periodic(_refreshInterval, _calculateImpedance);
                       setState(() {

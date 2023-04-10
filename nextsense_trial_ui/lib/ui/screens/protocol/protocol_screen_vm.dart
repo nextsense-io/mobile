@@ -19,10 +19,10 @@ import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
-enum ProtocolCancelReason { none, deviceDisconnectedTimeout, dataReceivedTimeout }
+enum ProtocolCancelReason {
+  none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord }
 
 // Protocol part scheduled in time in the protocol. The schedule can be repeated
 // many times until the protocol time is complete.
@@ -93,7 +93,10 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     if (deviceCanRecord) {
       if (runnableProtocol.state == ProtocolState.not_started ||
           runnableProtocol.state == ProtocolState.cancelled) {
-        await startSession();
+        bool started = await startSession();
+        if (!started) {
+          return;
+        }
         _dataReceivedTimer = Timer(
           _dataReceivedTimeout, () {
             _logger.log(Level.WARNING,
@@ -130,7 +133,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     }
   }
 
-  Future startSession() async {
+  Future<bool> startSession() async {
     _logger.log(Level.INFO, "startSession");
 
     secondsElapsed = 0;
@@ -140,7 +143,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _currentProtocolPart = 0;
     currentRepetition = 0;
     protocolCancelReason = ProtocolCancelReason.none;
-    await _startProtocol();
+    sessionIsActive = await _startProtocol();
+    notifyListeners();
+    return sessionIsActive;
   }
 
   Future stopSession() async {
@@ -360,7 +365,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     }
   }
 
-  Future _startProtocol() async {
+  Future<bool> _startProtocol() async {
     if (_deviceManager.getConnectedDevice() != null) {
       _logger.log(Level.INFO, 'Starting ${protocol.name} protocol.');
       bool started = await _sessionManager.startSession(
@@ -370,7 +375,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       if (!started) {
         setError("Failed to start streaming. Please try again and contact support if you need "
             "additional help.");
-        return;
+        protocolCancelReason = ProtocolCancelReason.deviceNotReadyToRecord;
+        return false;
       }
       bool updated = await runnableProtocol.update(
           state: ProtocolState.running,
@@ -378,13 +384,17 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       if (!updated) {
         setError("Failed to start streaming. Please try again and contact support if you need "
             "additional help.");
+        return false;
       }
       _authManager.user!.setRunningProtocol(runnableProtocol.reference);
       _authManager.user!.save();
+      return true;
     } else {
       _logger.log(
           Level.WARNING, 'Cannot start ${protocol.name} protocol, device not connected.');
     }
+    ProtocolCancelReason.deviceNotReadyToRecord;
+    return false;
   }
 
   void _stopProtocol() async {

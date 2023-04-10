@@ -157,8 +157,13 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       return Futures.immediateFailedFuture(
           new IllegalStateException("No characteristic to stream on."));
     }
-    localSessionManager.startLocalSession(userBigTableKey, dataSessionId, earbudsConfig,
-        uploadToCloud, deviceSettings.getEegStreamingRate(), deviceSettings.getImuStreamingRate());
+    long localSessionId = localSessionManager.startLocalSession(userBigTableKey, dataSessionId,
+        earbudsConfig, uploadToCloud, deviceSettings.getEegStreamingRate(),
+        deviceSettings.getImuStreamingRate());
+    if (localSessionId == -1) {
+      // Previous session not finished, cannot start streaming.
+      return Futures.immediateFuture(false);
+    }
     changeStreamingStateFuture = SettableFuture.create();
     if (!peripheral.isNotifying(dataCharacteristic)) {
       peripheral.setNotify(dataCharacteristic, /*enable=*/true);

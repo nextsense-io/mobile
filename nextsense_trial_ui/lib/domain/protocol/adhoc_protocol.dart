@@ -49,7 +49,7 @@ class AdhocProtocol implements RunnableProtocol {
     }
 
     if (_record != null) {
-      // Adhoc protocol record already exists, update its values
+      // Adhoc protocol record already exists, update its values.
       _record!.setState(state);
       if (sessionId != null) {
         _record!.setSession(sessionId);

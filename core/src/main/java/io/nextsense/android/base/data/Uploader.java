@@ -195,8 +195,9 @@ public class Uploader {
     } else {
       LocalSession refreshedLocalSession = objectBoxDatabase.getLocalSession(localSession.id);
       // If null, already deleted (Upload complete).
-      if (refreshedLocalSession != null && refreshedLocalSession.getStatus() ==
-              LocalSession.Status.FINISHED) {
+      if (refreshedLocalSession != null && (
+          refreshedLocalSession.getStatus() == LocalSession.Status.FINISHED ||
+          refreshedLocalSession.getStatus() == LocalSession.Status.ALL_DATA_RECEIVED)) {
         List<EegSample> eegSamples =
                 objectBoxDatabase.getLastEegSamples(localSession.id, /*count=*/1);
         if (!eegSamples.isEmpty() && Instant.now().isAfter(
@@ -229,8 +230,9 @@ public class Uploader {
           localSession.id, relativeAccStartOffset, uploadChunkSize));
     } else {
       LocalSession refreshedLocalSession = objectBoxDatabase.getLocalSession(localSession.id);
-      if (refreshedLocalSession != null && refreshedLocalSession.getStatus() ==
-              LocalSession.Status.FINISHED) {
+      if (refreshedLocalSession != null && (
+          refreshedLocalSession.getStatus() == LocalSession.Status.FINISHED ||
+          refreshedLocalSession.getStatus() == LocalSession.Status.ALL_DATA_RECEIVED)) {
         accelerationsToUpload.addAll(objectBoxDatabase.getAccelerations(localSession.id,
                 relativeAccStartOffset,
                 sessionAccSamplesCount - localSession.getAccelerationsUploaded()));
@@ -284,8 +286,9 @@ public class Uploader {
       List<LocalSession> localSessions = objectBoxDatabase.getLocalSessions();
       RotatingFileLogger.get().logd(TAG, "There are " + localSessions.size() + " local sessions in the DB.");
       for (LocalSession localSession : localSessions) {
-        if (!localSession.isUploadNeeded() ||
-            (localSession.getStatus() != LocalSession.Status.RECORDING &&
+        if (!localSession.isUploadNeeded() || (
+            localSession.getStatus() != LocalSession.Status.RECORDING &&
+            localSession.getStatus() != LocalSession.Status.ALL_DATA_RECEIVED &&
             localSession.getStatus() != LocalSession.Status.FINISHED)) {
           continue;
         }
@@ -349,8 +352,9 @@ public class Uploader {
               if (refreshedLocalSession != null) {
                 localSession.setStatus(refreshedLocalSession.getStatus());
               }
-              if (localSession.getStatus() ==
-                  LocalSession.Status.FINISHED && localSession.getEegSamplesUploaded() ==
+              if ((localSession.getStatus() == LocalSession.Status.FINISHED ||
+                  localSession.getStatus() == LocalSession.Status.ALL_DATA_RECEIVED) &&
+                  localSession.getEegSamplesUploaded() ==
                       objectBoxDatabase.getEegSamplesCount(localSession.id) +
                           localSession.getEegSamplesDeleted()) {
                 // TODO(eric): Seems to have an issue where acceleration could be missing sometimes,
@@ -358,7 +362,8 @@ public class Uploader {
                 // localSession.getAccelerationsUploaded() ==
                 //         objectBoxDatabase.getAccelerationCount(localSession.id) +
                 //                 localSession.getAccelerationsDeleted()
-                RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + " upload is completed.");
+                RotatingFileLogger.get().logd(TAG, "Session " + localSession.id +
+                    " data all received and upload is completed.");
                 localSession.setStatus(LocalSession.Status.UPLOADED);
                 completeSession(localSession);
               }
@@ -412,8 +417,10 @@ public class Uploader {
       } else {
         if (!localSessions.isEmpty() &&
             localSessions.get(localSessions.size() - 1).isUploadNeeded() &&
+            (localSessions.get(localSessions.size() - 1).getStatus() ==
+            LocalSession.Status.FINISHED ||
             localSessions.get(localSessions.size() - 1).getStatus() ==
-                LocalSession.Status.FINISHED) {
+            LocalSession.Status.ALL_DATA_RECEIVED)) {
           RotatingFileLogger.get().logd(TAG, "no active session present, waiting for data upload finished timer");
           scheduleDataUploadFinishedTimer(localSessions.get(localSessions.size() - 1).id);
         }
@@ -686,9 +693,14 @@ public class Uploader {
                 objectBoxDatabase.getLastEegSamples(localSessionId, /*count=*/1);
         if (!eegSamples.isEmpty() && Instant.now().isAfter(
             eegSamples.get(0).getReceptionTimestamp().plus(Duration.ofSeconds(1)))) {
-            RotatingFileLogger.get().logd(TAG, "Session " + localSessionId + " finished, waking Uploader.");
+            RotatingFileLogger.get().logd(TAG,
+                "Session " + localSessionId + " data all received, waking Uploader.");
+            LocalSession localSession = objectBoxDatabase.getLocalSession(localSessionId);
+            localSession.setStatus(LocalSession.Status.ALL_DATA_RECEIVED);
+            objectBoxDatabase.putLocalSession(localSession);
             databaseSink.resetEegRecordsCounter();
             recordsToUpload.set(true);
+            waitForDataTimer.cancel();
             synchronized (syncToken) {
               syncToken.notifyAll();
             }

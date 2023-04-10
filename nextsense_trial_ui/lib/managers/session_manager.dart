@@ -58,6 +58,10 @@ class SessionManager {
     if (user == null) {
       return false;
     }
+    if (!await NextsenseBase.canStartNewSession()) {
+      _logger.log(Level.INFO, "Cannot start new session. Another session is already in progress.");
+      return false;
+    }
     int? sessionNumber = user.getValue(UserKey.session_number);
     int nextSessionNumber = sessionNumber == null ? _firstSessionNumber : sessionNumber + 1;
     String sessionCode = userCode + '_sess_' + nextSessionNumber.toString();

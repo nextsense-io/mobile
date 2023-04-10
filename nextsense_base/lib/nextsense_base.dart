@@ -66,6 +66,7 @@ class NextsenseBase {
   static const String _connectDeviceCommand = 'connect_device';
   static const String _disconnectDeviceCommand = 'disconnect_device';
   static const String _getDeviceStateCommand = 'get_device_state';
+  static const String _canStartNewSessionCommand = 'can_start_new_session';
   static const String _startStreamingCommand = 'start_streaming';
   static const String _stopStreamingCommand = 'stop_streaming';
   static const String _isDeviceStreamingCommand = 'is_device_streaming';
@@ -211,6 +212,10 @@ class NextsenseBase {
     return () {
       subscription.cancel();
     };
+  }
+
+  static Future<bool> canStartNewSession() async {
+    return await _channel.invokeMethod(_canStartNewSessionCommand);
   }
 
   static Future<int> startStreaming(String macAddress, bool uploadToCloud, String? userBigTableKey,
