@@ -22,6 +22,9 @@ abstract class DeviceStateViewModel extends ViewModel implements DeviceStateView
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceStateViewModel');
   final DeviceManager _deviceManager = getIt<DeviceManager>();
 
+  bool _mounted = false;
+
+  bool get mounted => _mounted;
   DeviceState get deviceState => _deviceManager.deviceState.value;
   bool get isHdmiCablePresent => _deviceManager.isHdmiCablePresent;
   bool get isUSdPresent => _deviceManager.isUSdPresent;
@@ -56,7 +59,10 @@ abstract class DeviceStateViewModel extends ViewModel implements DeviceStateView
   void dispose() {
     _deviceManager.deviceState.removeListener(_onDeviceStateChanged);
     _deviceInternalStateChangesSubscription?.cancel();
-    super.dispose();
+    if (mounted) {
+      super.dispose();
+      _mounted = false;
+    }
   }
 
   @override
