@@ -401,10 +401,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _logger.log(Level.INFO, 'Stopping ${protocol.name} protocol.');
     _timerPaused = false;
     try {
-      if (_deviceManager.deviceIsReady) {
-        _logger.log(Level.INFO, 'Stopping session.');
-        await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
-      }
+      _logger.log(Level.INFO, 'Stopping session.');
+      await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
     } catch (e) {
       _logger.log(Level.WARNING, "Failed to stop streaming");
     }

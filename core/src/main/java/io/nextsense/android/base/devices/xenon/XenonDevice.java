@@ -13,6 +13,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
+import com.welie.blessed.ConnectionState;
 import com.welie.blessed.GattStatus;
 import com.welie.blessed.WriteType;
 
@@ -194,7 +195,9 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       return Futures.immediateFuture(true);
     }
     return executorService.submit(() -> {
-      writeCharacteristic(dataCharacteristic, new StopStreamingCommand().getCommand());
+      if (peripheral.getState() == ConnectionState.CONNECTED) {
+        writeCharacteristic(dataCharacteristic, new StopStreamingCommand().getCommand());
+      }
       // TODO(eric): Wait until device ble buffer is empty before closing the session, or accept
       //             late packets as long as packets timestamps are valid?
       localSessionManager.stopLocalSession();
