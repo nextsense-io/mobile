@@ -188,8 +188,10 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
     EarLocationResultState leftResult = EarLocationResultState.NO_RESULT;
     EarLocationResultState rightResult = EarLocationResultState.NO_RESULT;
     for (MapEntry<EarLocation, double> result in impedanceData.impedances.entries) {
-      if (result.value < 0) {
+      if (result.value == XenonImpedanceCalculator.IMPEDANCE_NOT_ENOUGH_DATA) {
         _earFitResults[result.key.name] = EarLocationResultState.NO_RESULT;
+      } else if (result.value == XenonImpedanceCalculator.IMPEDANCE_FLAT_SIGNAL) {
+        _earFitResults[result.key.name] = EarLocationResultState.POOR_FIT;
       } else {
         int variation = _impedanceSeries.getVariationAcrossTime(
             earLocation: result.key, time: _variationCheckDuration);

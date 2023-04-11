@@ -9,11 +9,15 @@ import 'package:nextsense_trial_ui/domain/device_settings.dart';
 import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/utils/signal_utils.dart';
 import 'package:scidart/numdart.dart';
 import 'package:scidart/scidart.dart';
 
 class XenonImpedanceCalculator {
-  static const int defaultTargetFrequency = 10;
+  static const double IMPEDANCE_NOT_ENOUGH_DATA = -1.0;
+  static const double IMPEDANCE_FLAT_SIGNAL = -2.0;
+
+  static const int _defaultTargetFrequency = 10;
 
   // Manually tweaked with resistors.
   static const double _externalCurrentImpedanceConstant = 13700.94;
@@ -29,19 +33,14 @@ class XenonImpedanceCalculator {
   // Use a power of 2 of the number of samples.
   static const int _fftSize = 1024;
   static const double _ads1299AcImpedanceFrequency = 62.5;
-
-  // Maps electrode locations with channels. If more than one, they are added
-  // together before doing the FFT.
-  static const _locationMappings = {
-    'Left Helix': [8, 1],
-    'Right Canal': [8],
-    'Left Canal': [7]
-  };
+  static const double _signalMaxValue = 187500.0;
+  static const int _flatSignalThresholdPercent = 90;
 
   final int samplesSize;
-  final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
   final Map<String, dynamic> deviceSettingsValues;
+  final DeviceManager _deviceManager = GetIt.instance.get<DeviceManager>();
   final CustomLogPrinter _logger;
+
   List<dynamic>? _eegChannelList;
   int? _impedanceDivider;
   double? _impedanceFrequency;
@@ -53,7 +52,7 @@ class XenonImpedanceCalculator {
       : _logger = getLogger("XenonImpedanceCalculator") {
     DeviceSettings deviceSettings = DeviceSettings(deviceSettingsValues);
     double samplingFrequency = deviceSettings.eegSamplingRate!;
-    _impedanceDivider = (samplingFrequency / defaultTargetFrequency).round();
+    _impedanceDivider = (samplingFrequency / _defaultTargetFrequency).round();
     _impedanceFrequency = samplingFrequency / _impedanceDivider!;
     _eegChannelList = deviceSettings.enabledChannels;
     _streamingFrequency = deviceSettings.eegStreamingRate;
@@ -140,7 +139,7 @@ class XenonImpedanceCalculator {
       double eegFrequency, double impedanceConstant) async {
     String? macAddress = _deviceManager.getConnectedDevice()?.macAddress;
     if (macAddress == null || _localSessionId == null) {
-      return -1;
+      return IMPEDANCE_NOT_ENOUGH_DATA;
     }
     _logger.log(Level.INFO, "Starting impedance calculation for $impedanceConfig.");
     Map<int, List<double>> eegArrays = new HashMap();
@@ -162,14 +161,19 @@ class XenonImpedanceCalculator {
       }
       // Make sure there are enough samples to calculate a valid value.
       if (eegArray.length < samplesSize) {
-        return -1;
+        return IMPEDANCE_NOT_ENOUGH_DATA;
       }
       // Make sure all values are valid, there can be dummy 0 values if the
       // channel was disabled before.
       for (double eegValue in eegArray) {
         if (eegValue == 0.0) {
-          return -1;
+          return IMPEDANCE_NOT_ENOUGH_DATA;
         }
+      }
+      // Check if the signal is railed or not.
+      if (SignalUtils.isSignalFlat(signal: eegArray, maxValue: _signalMaxValue,
+          thresholdPercent: _flatSignalThresholdPercent)) {
+        return IMPEDANCE_FLAT_SIGNAL;
       }
       // Remove the average from every sample to account for DC drift.
       double eegArrayAverage = eegArray.average;
