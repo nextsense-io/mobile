@@ -128,10 +128,6 @@ public class BleDevice extends Device {
 
   @Override
   public ListenableFuture<Boolean> stopStreaming() {
-    if (deviceState != DeviceState.READY) {
-      return Futures.immediateFailedFuture(new IllegalStateException(
-          "Device needs to be in READY state to change its mode."));
-    }
     return nextSenseDevice.stopStreaming();
   }
 
