@@ -177,6 +177,19 @@ class FirestoreManager {
     return FirebaseEntity(await reference!.get());
   }
 
+  Future<FirebaseEntity> addEntity(List<Table> tables, List<String> entityKeys) async {
+    assert(tables.length == entityKeys.length);
+    DocumentReference? reference;
+    for (int i = 0; i < tables.length; ++i) {
+      if (i == 0) {
+        reference = _firestore.collection(tables[i].name()).doc(entityKeys[i]);
+      } else {
+        reference = reference!.collection(tables[i].name()).doc(entityKeys[i]);
+      }
+    }
+    return FirebaseEntity(await reference!.get());
+  }
+
   /*
    * Query multiple entities.
    */
