@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -67,11 +65,8 @@ class SessionManager {
     String sessionCode = userCode + '_sess_' + nextSessionNumber.toString();
 
     // Add the session.
-    FirebaseEntity? sessionEntity =
-        await _firestoreManager.queryEntity([Table.sessions], [sessionCode]);
-    if (sessionEntity == null) {
-      return false;
-    }
+    FirebaseEntity sessionEntity = await _firestoreManager.addEntity(
+        [Table.sessions], [sessionCode]);
     _currentSession = Session(sessionEntity);
     DateTime startTime = DateTime.now();
 
@@ -89,12 +84,9 @@ class SessionManager {
     }
 
     // Add the data session.
-    FirebaseEntity? dataSessionEntity = await _firestoreManager.queryEntity(
+    FirebaseEntity dataSessionEntity = await _firestoreManager.addEntity(
         [Table.sessions, Table.data_sessions],
-        [sessionCode, Modality.eeeg.name]);
-    if (dataSessionEntity == null) {
-      return false;
-    }
+        [_currentSession!.id, Modality.eeeg.name]);
     _currentDataSession = DataSession(dataSessionEntity);
     _currentDataSession!.setValue(DataSessionKey.start_datetime, startTime);
     // TODO(eric): Add an API to get this from the connected device.
