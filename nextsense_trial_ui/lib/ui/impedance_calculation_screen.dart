@@ -84,8 +84,15 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
     _impedanceCalculator?.calculate1299AcImpedance(earbudsConfig).then((impedanceData) {
       String resultsText = '';
       for (MapEntry<EarLocation, double> mapEntry in impedanceData.entries) {
-        resultsText +=
-            '${mapEntry.key.getDisplayName()}: ' + _spaceInt(mapEntry.value.round()) + '\n\n';
+        String valueText = '';
+        if (mapEntry.value == XenonImpedanceCalculator.IMPEDANCE_NOT_ENOUGH_DATA) {
+          valueText = 'Not enough data';
+        } else if (mapEntry.value == XenonImpedanceCalculator.IMPEDANCE_FLAT_SIGNAL) {
+          valueText = 'Saturated or flat signal';
+        } else {
+          valueText = _spaceInt(mapEntry.value.round());
+        }
+        resultsText += '${mapEntry.key.getDisplayName()}: $valueText\n\n';
       }
       _logger.log(Level.INFO, resultsText);
       if (mounted) {
@@ -137,7 +144,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
               child: MediumText(
                 text: 'Press start once the earbuds are inserted in your ears and stay still '
                     'while checking if there is a good contact. It will take a few seconds to get '
-                    'values, -1 might be displayed until then.',
+                    'values.',
                 color: NextSenseColors.darkBlue,
               ),
             ),
