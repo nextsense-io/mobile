@@ -273,6 +273,9 @@ public class BleDevice extends Device {
     if (nextSenseDevice.getDeviceMode() != DeviceMode.IDLE) {
       return Futures.immediateFuture(false);
     }
+    if (deviceState != DeviceState.READY && deviceState != DeviceState.CONNECTED) {
+      return Futures.immediateFuture(false);
+    }
     return executorService.submit(() -> {
       boolean applied = nextSenseDevice.applyDeviceSettings(newDeviceSettings).get();
       if (applied) {

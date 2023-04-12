@@ -809,12 +809,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
     try {
       boolean stopped = device.get().stopImpedance().get();
-      if (stopped) {
-        result.success(null);
-      } else {
-        returnError(result, STOP_IMPEDANCE_COMMAND, ERROR_STREAMING_STOP_FAILED,
-            /*errorMessage=*/null, /*errorDetails=*/null);
-      }
+      result.success(stopped);
     } catch (ExecutionException e) {
       returnError(result, STOP_IMPEDANCE_COMMAND, ERROR_STREAMING_STOP_FAILED,
           /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);

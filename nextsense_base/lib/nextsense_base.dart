@@ -243,8 +243,8 @@ class NextsenseBase {
           _frequencyDividerArg: frequencyDivider});
   }
 
-  static Future stopImpedance(String macAddress) async {
-    await _channel.invokeMethod(_stopImpedanceCommand,
+  static Future<bool> stopImpedance(String macAddress) async {
+    return await _channel.invokeMethod(_stopImpedanceCommand,
         {_macAddressArg: macAddress});
   }
 

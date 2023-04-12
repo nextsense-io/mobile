@@ -98,7 +98,8 @@ public class LocalSessionManager {
       activeLocalSession.setStatus(LocalSession.Status.FINISHED);
       activeLocalSession.setEndTime(Instant.now());
       objectBoxDatabase.putLocalSession(activeLocalSession);
-      RotatingFileLogger.get().logi(TAG, "Local session " + activeLocalSession.getCloudDataSessionId() + " finished.");
+      RotatingFileLogger.get().logi(TAG, "Local session " + activeLocalSession.id +
+          " finished. Cloud data session id: " + activeLocalSession.getCloudDataSessionId() + ".");
     });
     lastActiveSessionEnd = Instant.now();
     lastActiveSession = activeLocalSession;
