@@ -20,8 +20,6 @@ enum Modality {
 }
 
 class SessionManager {
-  static final int _firstSessionNumber = 1;
-
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
