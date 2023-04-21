@@ -27,7 +27,7 @@ class DashboardScheduleView extends StatelessWidget {
 
   final Navigation _navigation = getIt<Navigation>();
 
-  _onProtocolClicked(BuildContext context, dynamic task) {
+  Future _onProtocolClicked(BuildContext context, dynamic task) async {
     ScheduledSession scheduledProtocol = task as ScheduledSession;
 
     if (scheduledProtocol.isCompleted) {
@@ -62,7 +62,7 @@ class DashboardScheduleView extends StatelessWidget {
 
     // Remove task popup.
     _navigation.pop();
-    _navigation.navigateWithCapabilityChecking(context, ProtocolScreen.id,
+    await _navigation.navigateWithCapabilityChecking(context, ProtocolScreen.id,
         arguments: scheduledProtocol);
 
     // Refresh dashboard since protocol state can be changed
