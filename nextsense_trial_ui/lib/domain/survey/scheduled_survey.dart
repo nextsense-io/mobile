@@ -35,7 +35,7 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
 
   ScheduleType get scheduleType => ScheduleType.scheduled;
   SurveyState get state => SurveyState.fromString(getValue(ScheduledSurveyKey.status) ??
-      SurveyState.not_started);
+      SurveyState.not_started.name);
   Period get period => Period.fromString(getValue(ScheduledSurveyKey.period));
   String get plannedSurveyId => getValue(ScheduledSurveyKey.planned_survey).id;
   String? get scheduledSurveyId => id;

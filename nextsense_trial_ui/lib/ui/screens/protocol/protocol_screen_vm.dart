@@ -116,25 +116,23 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   @override
   void init() async {
     super.init();
-    if (runnableProtocol is ScheduledSession) {
-      PlannedSession? plannedSession = _studyManager.getPlannedSessionById(
-          (runnableProtocol as ScheduledSession).plannedSessionId);
-      if (plannedSession!.triggersConditionalSessionId != null &&
-          plannedSession.triggersConditionalSurveyId != null) {
-        _logger.log(Level.WARNING, 'Both conditional session and survey are set for the planned '
-            'session ${plannedSession.id}');
-      } else if (plannedSession.triggersConditionalSessionId != null) {
-        ScheduledSession? triggeredSession =
-            await _studyManager.scheduleSessionTrigger(plannedSession);
-        if (triggeredSession != null) {
-          postRecordingProtocol = triggeredSession;
-        }
-      } else if (plannedSession.triggersConditionalSurveyId != null) {
-        ScheduledSurvey? triggeredSurvey =
-            await _surveyManager.scheduleSurveyTrigger(plannedSession);
-        if (triggeredSurvey != null) {
-          postRecordingSurvey = triggeredSurvey;
-        }
+    PlannedSession? plannedSession = _studyManager.getPlannedSessionById(
+        runnableProtocol.plannedSessionId!);
+    if (plannedSession!.triggersConditionalSessionId != null &&
+        plannedSession.triggersConditionalSurveyId != null) {
+      _logger.log(Level.WARNING, 'Both conditional session and survey are set for the planned '
+          'session ${plannedSession.id}');
+    } else if (plannedSession.triggersConditionalSessionId != null) {
+      ScheduledSession? triggeredSession =
+          await _studyManager.scheduleSessionTrigger(plannedSession);
+      if (triggeredSession != null) {
+        postRecordingProtocol = triggeredSession;
+      }
+    } else if (plannedSession.triggersConditionalSurveyId != null) {
+      ScheduledSurvey? triggeredSurvey =
+          await _surveyManager.scheduleSurveyTrigger(plannedSession);
+      if (triggeredSurvey != null) {
+        postRecordingSurvey = triggeredSurvey;
       }
     }
     if (deviceCanRecord) {
