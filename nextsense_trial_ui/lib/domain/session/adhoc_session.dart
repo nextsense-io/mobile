@@ -20,17 +20,20 @@ class AdhocSession implements RunnableProtocol {
   final String _studyId;
 
   late Protocol protocol;
+  late String _plannedSessionId;
   ProtocolState state = ProtocolState.not_started;
   AdhocProtocolRecord? _record;
 
   ScheduleType get scheduleType => ScheduleType.adhoc;
   String? get lastSessionId => _record?.getSession() ?? null;
   List<Survey>? get postSurveys => getPostProtocolSurveys();
-  String? get plannedSessionId => _record?.getPlannedSessionId() ?? null;
+  String? get plannedSessionId => _record?.getPlannedSessionId() ?? _plannedSessionId;
   String? get scheduledSessionId => null;
 
-  AdhocSession(ProtocolType protocolType, String studyId) : _studyId = studyId {
+  AdhocSession(ProtocolType protocolType, String plannedSessionId, String studyId) :
+        _studyId = studyId {
     protocol = Protocol(protocolType);
+    _plannedSessionId = plannedSessionId;
   }
 
   AdhocSession.fromRecord(AdhocProtocolRecord record, String studyId) : _studyId = studyId {
@@ -72,6 +75,7 @@ class AdhocSession implements RunnableProtocol {
       _record = AdhocProtocolRecord(firebaseEntity);
       _record!..setTimestamp(now)
         ..setState(state)
+        ..setPlannedSessionId(_plannedSessionId)
         ..setSession(sessionId!)
         ..setProtocol(protocol.name);
       return await _record!.save();

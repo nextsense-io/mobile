@@ -1,7 +1,7 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
-import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/survey/adhoc_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
@@ -37,10 +37,11 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
   }
 
   List<AdhocSession> getAdhocProtocols() {
-    List<ProtocolType> allowedProtocols = _studyManager.allowedAdhocProtocols;
+    List<PlannedSession> allowedProtocols = _studyManager.allowedAdhocProtocols;
 
-    return allowedProtocols.map((protocolType) => AdhocSession(
-        protocolType, _studyManager.currentStudyId!)).toList();
+    return allowedProtocols.map((allowedProtocol) => AdhocSession(
+        allowedProtocol.protocol!.type, allowedProtocol.id, _studyManager.currentStudyId!))
+        .toList();
   }
 
   Map<PlannedSurvey, Survey> getAdhocSurveys() {

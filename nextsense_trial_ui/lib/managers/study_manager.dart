@@ -42,11 +42,11 @@ class StudyManager {
   // List of days that will appear for current study
   List<StudyDay>? _days;
   List<PlannedSession>? _plannedSessions;
-  List<ProtocolType> _allowedAdhocProtocols = [];
+  List<PlannedSession> _allowedAdhocProtocols = [];
   List<ScheduledSession> _scheduledSessions = [];
 
   List<ScheduledSession> get scheduledSessions => _scheduledSessions;
-  List<ProtocolType> get allowedAdhocProtocols => _allowedAdhocProtocols;
+  List<PlannedSession> get allowedAdhocProtocols => _allowedAdhocProtocols;
   DateTime? get currentStudyStartDate => _enrolledStudy?.getStartDate();
   DateTime? get currentStudyEndDate => _enrolledStudy?.getEndDate();
   String? get currentStudyId => _enrolledStudy?.id ?? null;
@@ -133,7 +133,7 @@ class StudyManager {
     // Initialize allowed adhoc protocols.
     for (var plannedSession in _plannedSessions!) {
       if (plannedSession.scheduleType == ScheduleType.adhoc) {
-        _allowedAdhocProtocols.add(plannedSession.protocol!.type);
+        _allowedAdhocProtocols.add(plannedSession);
       }
     }
 
