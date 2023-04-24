@@ -60,16 +60,11 @@ class DeviceManager {
 
   Stream<DeviceInternalStateEvent> get deviceInternalStateChangeStream =>
       _deviceInternalStateChangeController.stream;
-
   bool get deviceIsReady => deviceState.value == DeviceState.ready;
-
   bool get deviceInternalStateAvailable => deviceInternalState.value != null;
-
   // Internal state shortcuts.
   bool get isHdmiCablePresent => deviceInternalState.value?.hdmiCablePresent ?? false;
-
   bool get isUSdPresent => deviceInternalState.value?.uSdPresent ?? false;
-
   // There is already a paired device that can be connected to if found.
   bool get hadPairedDevice => getLastPairedDevice() != null;
 
