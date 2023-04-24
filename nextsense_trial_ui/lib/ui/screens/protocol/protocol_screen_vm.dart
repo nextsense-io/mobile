@@ -22,7 +22,7 @@ import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 enum ProtocolCancelReason {
-  none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord }
+  none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord, deviceNotConnected }
 
 // Protocol part scheduled in time in the protocol. The schedule can be repeated
 // many times until the protocol time is complete.
@@ -124,6 +124,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         dataReceived = true;
         startTimer(elapsedTime: elapsedTime);
       }
+    } else {
+      protocolCancelReason = ProtocolCancelReason.deviceNotConnected;
+      setError("Device not connected.");
     }
     if (runnableProtocol.type == RunnableProtocolType.scheduled ||
         _authManager.user!.userType == UserType.researcher) {
@@ -393,7 +396,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(
           Level.WARNING, 'Cannot start ${protocol.name} protocol, device not connected.');
     }
-    ProtocolCancelReason.deviceNotReadyToRecord;
+    protocolCancelReason = ProtocolCancelReason.deviceNotReadyToRecord;
     return false;
   }
 

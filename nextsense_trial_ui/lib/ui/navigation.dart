@@ -395,7 +395,8 @@ class Navigation {
       }
     }
 
-    if (_deviceManager.getConnectedDevice() == null) {
+    if (_deviceManager.getConnectedDevice() == null ||
+        _deviceManager.deviceState.value != DeviceState.ready) {
       await navigateTo(DeviceScanScreen.id, nextRoute: NavigationRoute(pop: true));
       if (_deviceManager.getConnectedDevice() == null) {
         _logger.log(Level.INFO, "Device not connected after scan screen, pop back");

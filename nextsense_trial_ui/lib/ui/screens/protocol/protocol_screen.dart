@@ -104,6 +104,9 @@ class ProtocolScreen extends HookWidget {
 
   String getRecordingCancelledMessage(ProtocolScreenViewModel viewModel) {
     switch (viewModel.protocolCancelReason) {
+      case ProtocolCancelReason.deviceNotConnected:
+        return ' Recording was not started because the device is not connected.\n\n'
+            'Please connect and try again';
       case ProtocolCancelReason.deviceNotReadyToRecord:
         return ' Recording was not started because the device is still finishing the previous'
             ' recording.\n\n'
