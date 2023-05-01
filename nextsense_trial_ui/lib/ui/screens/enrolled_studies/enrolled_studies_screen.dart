@@ -87,7 +87,8 @@ class _EnrolledStudiesSelector extends StatelessWidget {
       }
       studyElements.add(_StudySelectionItem(
           label: Padding(padding: EdgeInsets.all(10),
-              child: MediumText(text: enrolledStudy.id, color: NextSenseColors.darkBlue)),
+              child: MediumText(text: viewModel.getStudyName(enrolledStudy.id),
+                  color: NextSenseColors.darkBlue)),
               onPressed: () async {
                 bool studyChanged = await viewModel.changeCurrentStudy(enrolledStudy);
                 if (studyChanged) {

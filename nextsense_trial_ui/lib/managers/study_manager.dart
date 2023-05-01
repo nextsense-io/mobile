@@ -67,6 +67,18 @@ class StudyManager {
     return _days!.firstWhereOrNull((StudyDay day) => now.isSameDay(day.date));
   }
 
+  Future<Study?> getStudy(String studyId) async {
+    if (_currentStudy != null && _currentStudy!.id == studyId) {
+      return _currentStudy!;
+    }
+    FirebaseEntity? studyEntity = await _firestoreManager.queryEntity(
+        [Table.studies], [currentStudyId!]);
+    if (studyEntity == null) {
+      return null;
+    }
+    return Study(studyEntity);
+  }
+
   // Get the enrolled studies from the database. This data could change at anytime so always get it
   // from the database and not from a cache.
   Future<List<EnrolledStudy>?> getEnrolledStudies(String userId) async {
