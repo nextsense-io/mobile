@@ -27,6 +27,7 @@ enum EarFitResultState {
   POOR_QUALITY_RIGHT,
   POOR_QUALITY_LEFT,
   POOR_QUALITY_BOTH,
+  FLAT_SIGNAL,
   GOOD_FIT
 }
 
@@ -46,6 +47,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
   static const int _maxVariationPercent = 20;
   static const Duration _variationCheckDuration = Duration(seconds: 5);
   static const Duration _refreshInterval = Duration(milliseconds: 1000);
+  static const Duration _earFitTimeout = Duration(seconds: 60);
   static const List<int> _testStages = [1, 2];
 
   final CustomLogPrinter _logger = CustomLogPrinter('EarFitScreenViewModel');
@@ -65,6 +67,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
   Iterator<int> _testStageIterator = _testStages.iterator;
   bool _deviceConnected = true;
   ImpedanceSeries _impedanceSeries = ImpedanceSeries();
+  DateTime? _earFitStartTime;
 
   EarFitRunState get earFitRunState => _earFitRunState;
   EarFitResultState get earFitResultState => _earFitResultState;
@@ -157,6 +160,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
       notifyListeners();
       return;
     }
+    _earFitStartTime = DateTime.now();
     _screenRefreshTimer = new Timer.periodic(_refreshInterval, _runEarFitTest);
   }
 
@@ -176,6 +180,11 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.INFO, 'Already calculating, returning');
       return;
     }
+    bool timedOut = false;
+    if (DateTime.now().difference(_earFitStartTime!) > _earFitTimeout) {
+      _logger.log(Level.WARNING, 'Ear fit test timed out.');
+      timedOut = true;
+    }
     _calculatingImpedance = true;
     ImpedanceData impedanceData = ImpedanceData(
         impedances: await _impedanceCalculator!.calculate1299AcImpedance(_earbudsConfig!),
@@ -187,10 +196,12 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
     _impedanceSeries.addImpedanceData(impedanceData);
     EarLocationResultState leftResult = EarLocationResultState.NO_RESULT;
     EarLocationResultState rightResult = EarLocationResultState.NO_RESULT;
+    bool flatSignal = false;
     for (MapEntry<EarLocation, double> result in impedanceData.impedances.entries) {
       if (result.value == XenonImpedanceCalculator.IMPEDANCE_NOT_ENOUGH_DATA) {
         _earFitResults[result.key.name] = EarLocationResultState.NO_RESULT;
       } else if (result.value == XenonImpedanceCalculator.IMPEDANCE_FLAT_SIGNAL) {
+        flatSignal = true;
         _earFitResults[result.key.name] = EarLocationResultState.POOR_FIT;
       } else {
         int variation = _impedanceSeries.getVariationAcrossTime(
@@ -255,7 +266,21 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
       _earFitRunState = EarFitRunState.RUNNING;
     }
 
-    if (_earFitResultState == EarFitResultState.GOOD_FIT) {
+    // After the timeout, if there is no flat signal, then the fit is considered good to let the
+    // user proceed with the recording.
+    if (timedOut) {
+      if (flatSignal) {
+        _earFitResultState = EarFitResultState.FLAT_SIGNAL;
+      } else {
+        for (EarLocationName earLocationName in EarLocationName.values) {
+          _earFitResults[earLocationName] = EarLocationResultState.GOOD_FIT;
+        }
+        _earFitResultState = EarFitResultState.GOOD_FIT;
+      }
+      _stopEarFitTest();
+    }
+
+    if (_earFitResultState == EarFitResultState.GOOD_FIT || timedOut) {
       _testStage = _testStages.last;
     } else {
       if (!_testStageIterator.moveNext()) {
