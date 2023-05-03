@@ -1,9 +1,11 @@
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 
 enum IssueState {
-  open,
-  assigned,
-  resolved
+  creating,  // Issue is being created, logs getting uploaded etc...
+  created,  // Issue is created. Ready to notify support.
+  open,  // Issue was notified to support and is ready to be assigned.
+  assigned,  // Issue is assigned to someone from support.
+  resolved  // Issue has been resolved
 }
 
 /**
