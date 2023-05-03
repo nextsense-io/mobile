@@ -36,6 +36,9 @@ class SupportScreenViewModel extends ViewModel {
     FirebaseEntity issueEntity = await _firestoreManager.addAutoIdReference(
         [Table.users, Table.issues], [_authManager.userCode!]);
     Issue issue = Issue(issueEntity);
+    issue
+      ..setValue(IssueKey.description, issueDescription)
+      ..setValue(IssueKey.status, IssueState.creating);
     String? logLinkFlutter;
     String? logLinkNative;
     if (attachLog) {
@@ -50,8 +53,7 @@ class SupportScreenViewModel extends ViewModel {
       }
     }
     issue
-      ..setValue(IssueKey.description, issueDescription)
-      ..setValue(IssueKey.status, IssueState.open.name)
+      ..setValue(IssueKey.status, IssueState.created.name)
       ..setValue(IssueKey.log_link_flutter, logLinkFlutter)
       ..setValue(IssueKey.log_link_native, logLinkNative);
     bool success = await issue.save();
