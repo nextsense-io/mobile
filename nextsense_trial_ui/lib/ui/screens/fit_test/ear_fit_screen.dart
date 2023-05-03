@@ -86,6 +86,7 @@ class EarFitScreen extends HookWidget {
         leftResultAsset = 'assets/images/circle_left_red.svg';
         rightResultAsset = 'assets/images/circle_right_green.svg';
         break;
+      case EarFitResultState.FLAT_SIGNAL:
       case EarFitResultState.POOR_QUALITY_BOTH:
         leftResultAsset = 'assets/images/circle_left_red.svg';
         rightResultAsset = 'assets/images/circle_right_red.svg';
@@ -124,6 +125,7 @@ class EarFitScreen extends HookWidget {
             bodyText = 'Poor signal quality. Try adjusting the left earbud or changing the ear tip '
                 'size.';
             break;
+          case EarFitResultState.FLAT_SIGNAL:
           case EarFitResultState.POOR_QUALITY_BOTH:
             bodyText = 'Poor signal quality. The earbuds are either placed outside the ears or '
                 'have poor fit.';
@@ -158,6 +160,11 @@ class EarFitScreen extends HookWidget {
           case EarFitResultState.GOOD_FIT:
             bodyText = 'The ear tips you are using are a good fit for both ears.';
             break;
+          case EarFitResultState.FLAT_SIGNAL:
+            bodyText = 'The signal is flat. This is usually caused by the earbuds not being '
+                'in contact with your ears or a defective cable. Please try again and contact '
+                'support if it is still not resolved.';
+            break;
         }
         break;
     }
@@ -167,7 +174,7 @@ class EarFitScreen extends HookWidget {
         HeaderText(text: 'Ear Tip Fit Test'),
         SizedBox(height: 40),
         Container(
-            height: 100,
+            height: 140,
             child: MediumText(
                 marginLeft: 20, marginRight: 20, text: bodyText, color: NextSenseColors.darkBlue)),
         SizedBox(height: 20),
