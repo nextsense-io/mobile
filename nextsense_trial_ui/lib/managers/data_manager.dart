@@ -5,6 +5,7 @@ import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/medication_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
@@ -18,6 +19,7 @@ class DataManager {
   final EventTypesManager _eventTypesManager = getIt<EventTypesManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
   final SurveyManager _surveyManager = getIt<SurveyManager>();
+  final MedicationManager _medicationManager = getIt<MedicationManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
 
@@ -50,6 +52,9 @@ class DataManager {
     if (!loaded) return false;
     _logger.log(Level.INFO, 'Starting loadAdhocSurveys.');
     loaded = await _surveyManager.loadAdhocSurveys();
+    if (!loaded) return false;
+    _logger.log(Level.INFO, 'Starting loadPlannedMedications.');
+    loaded = await _medicationManager.loadPlannedMedications();
     if (!loaded) return false;
     await _sessionManager.loadCurrentSession();
     // Mark study initialized so we can load things from cache

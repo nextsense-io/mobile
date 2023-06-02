@@ -60,5 +60,4 @@ class MedicationsScreenViewModel extends ViewModel {
     result.sort((p1, p2) => p1.startDateTime!.compareTo(p2.startDateTime!));
     return result;
   }
-
 }

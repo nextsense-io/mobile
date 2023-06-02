@@ -54,6 +54,8 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   bool get studyStarted => _studyManager.isStudyStarted();
   bool get studyFinished => _studyManager.isStudyFinished();
   bool get studyHasAdhocProtocols => _studyManager.allowedAdhocProtocols.isNotEmpty;
+  List<StudyDay> get _days => _studyManager.days;
+  int get selectedDayNumber => selectedDay?.dayNumber ?? 0;
 
   // Current selected day in calendar
   StudyDay? selectedDay;
@@ -107,6 +109,10 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     if (today != null) {
       selectDay(today!);
     }
+  }
+
+  List<StudyDay> getDays() {
+    return _days;
   }
 
   List<ScheduledSession> getScheduledProtocolsByDay(StudyDay day) {
@@ -188,6 +194,21 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   List<dynamic> getWeeklyTasks(TaskType taskType) {
     return getCurrentWeekScheduledSurveys();
+  }
+
+  bool dayHasAnyScheduledMedications(StudyDay day) {
+    return getScheduledMedicationsByDay(day).isNotEmpty;
+  }
+
+  List<ScheduledMedication> getScheduledMedicationsByDay(StudyDay day) {
+    List<ScheduledMedication> result = [];
+    for (var scheduledMedication in scheduledMedications) {
+      if (scheduledMedication.getStudyDay(_studyManager.currentStudyStartDate!) == day) {
+        result.add(scheduledMedication);
+      }
+    }
+    result.sort((p1, p2) => p1.startDateTime!.compareTo(p2.startDateTime!));
+    return result;
   }
 
   void logout() {

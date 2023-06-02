@@ -13,7 +13,6 @@ import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_schedule_view.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
-import 'package:nextsense_trial_ui/ui/screens/medications/medications_screen_vm.dart';
 import 'package:provider/provider.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:shimmer/shimmer.dart';
@@ -49,7 +48,7 @@ class MedicationsScreen extends HookWidget {
 
   List<Widget> _buildTabs(BuildContext context) {
     return [
-      DashboardScheduleView(scheduleType: "Surveys", taskType: TaskType.medication),
+      _DayTabs(),
       MedicationList(medications: context.watch<DashboardScreenViewModel>().plannedMedications),
     ];
     // .map((element) => Container(
@@ -124,7 +123,7 @@ class _DayTabsState extends State<_DayTabs> {
   void initState() {
     super.initState();
 
-    final viewModel = context.read<MedicationsScreenViewModel>();
+    final viewModel = context.read<DashboardScreenViewModel>();
     subscription = viewModel.studyDayChangeStream.stream.listen(_scrollToDay);
   }
 
@@ -168,7 +167,7 @@ class _DayTabsState extends State<_DayTabs> {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<MedicationsScreenViewModel>();
+    final viewModel = context.watch<DashboardScreenViewModel>();
     List<StudyDay> days = viewModel.getDays();
 
     if (viewModel.isBusy) {
@@ -200,16 +199,22 @@ class _DayTabsState extends State<_DayTabs> {
       initialScrollIndex = 0;
     }
 
-    return Container(
-        height: 80.0,
-        child: ScrollablePositionedList.builder(
-          initialScrollIndex: initialScrollIndex,
-          scrollDirection: Axis.horizontal,
-          itemCount: days.length,
-          itemBuilder: (context, index) => _StudyDayCard(days[index]),
-          itemScrollController: itemScrollController,
-          itemPositionsListener: itemPositionsListener,
-        )
+    return Column(
+      children: [
+        Container(
+            height: 80.0,
+            child: ScrollablePositionedList.builder(
+              initialScrollIndex: initialScrollIndex,
+              scrollDirection: Axis.horizontal,
+              itemCount: days.length,
+              itemBuilder: (context, index) => _StudyDayCard(days[index]),
+              itemScrollController: itemScrollController,
+              itemPositionsListener: itemPositionsListener,
+            )
+        ),
+        SizedBox(height: 10),
+        Expanded(child: DashboardScheduleView(scheduleType: "Medications", taskType: TaskType.medication)),
+      ],
     );
   }
 }
@@ -221,7 +226,7 @@ class _StudyDayCard extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<MedicationsScreenViewModel>();
+    final viewModel = context.watch<DashboardScreenViewModel>();
     final isSelected = viewModel.selectedDay == studyDay;
     final hasMedications = viewModel.dayHasAnyScheduledMedications(studyDay);
 
