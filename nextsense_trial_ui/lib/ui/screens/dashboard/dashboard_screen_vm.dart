@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/medication/planned_medication.dart';
+import 'package:nextsense_trial_ui/domain/medication/scheduled_medication.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
@@ -11,10 +13,18 @@ import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
+import 'package:nextsense_trial_ui/managers/medication_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+
+enum TaskType {
+  survey,
+  protocol,
+  medication,
+  all
+}
 
 class DashboardScreenViewModel extends DeviceStateViewModel {
 
@@ -23,6 +33,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   final DataManager _dataManager = getIt<DataManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
   final SurveyManager _surveyManager = getIt<SurveyManager>();
+  final MedicationManager _medicationManager = getIt<MedicationManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final studyDayChangeStream = StreamController<int>.broadcast();
@@ -32,6 +43,8 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   StudyDay? get today => _studyManager.today;
   List<ScheduledSession> get scheduledSessions => _studyManager.scheduledSessions;
   List<ScheduledSurvey> get scheduledSurveys => _surveyManager.scheduledSurveys;
+  List<ScheduledMedication> get scheduledMedications => _medicationManager.scheduledMedications;
+  List<PlannedMedication> get plannedMedications => _medicationManager.plannedMedications;
   String get studyId => _studyManager.currentStudyId!;
   String get studyName => _studyManager.currentStudy!.getName();
   String get studyDescription => _studyManager.currentStudy!.getDescription();
@@ -49,6 +62,12 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   void init() async {
     super.init();
     await loadData();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    studyDayChangeStream.close();
   }
 
   Future loadData() async {
@@ -115,6 +134,14 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return surveys;
   }
 
+  List<ScheduledMedication> getCurrentDayScheduledMedications() {
+    if (selectedDay == null) return [];
+    List<ScheduledMedication> medications =
+    _getScheduledMedicationsByDay(selectedDay!, period: Period.daily);
+    medications.addAll(_getScheduledMedicationsByDay(selectedDay!, period: Period.specific_day));
+    return medications;
+  }
+
   List<ScheduledSurvey> getCurrentWeekScheduledSurveys() {
     if (selectedDay == null) return [];
     return _getScheduledSurveysByDay(selectedDay!, period: Period.weekly);
@@ -130,20 +157,36 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return result;
   }
 
+  List<ScheduledMedication> _getScheduledMedicationsByDay(StudyDay day, {Period? period}) {
+    List<ScheduledMedication> result = [];
+    for (var scheduledMedication in scheduledMedications) {
+      if (scheduledMedication.getStudyDay(_studyManager.currentStudyStartDate!) == day &&
+          (period == null || period == scheduledMedication.period)) {
+        result.add(scheduledMedication);
+      }
+    }
+    return result;
+  }
+
   SurveyStats getScheduledSurveyStats(ScheduledSurvey scheduledSurvey) {
     return _surveyManager.getScheduledSurveyStats(scheduledSurvey);
   }
 
-  List<dynamic> getTodayTasks(bool surveysOnly) {
+  List<dynamic> getTodayTasks(TaskType taskType) {
     List<Task> allTasks = [];
-    if (!surveysOnly) {
+    if (taskType == TaskType.protocol || taskType == TaskType.all) {
       allTasks.addAll(getCurrentDayScheduledProtocols());
     }
-    allTasks.addAll(getCurrentDayScheduledSurveys());
+    if (taskType == TaskType.survey || taskType == TaskType.all) {
+      allTasks.addAll(getCurrentDayScheduledSurveys());
+    }
+    if (taskType == TaskType.medication || taskType == TaskType.all) {
+      allTasks.addAll(getCurrentDayScheduledMedications());
+    }
     return allTasks;
   }
 
-  List<dynamic> getWeeklyTasks(bool surveysOnly) {
+  List<dynamic> getWeeklyTasks(TaskType taskType) {
     return getCurrentWeekScheduledSurveys();
   }
 

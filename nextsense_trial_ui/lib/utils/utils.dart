@@ -11,3 +11,8 @@ Future measureTime(Future future, String name) async {
       '${stopwatch.elapsedMicroseconds / 1000000.0} sec');
   return result;
 }
+
+extension StringCasingExtension on String {
+  String toCapitalized() => length > 0 ?'${this[0].toUpperCase()}${substring(1).toLowerCase()}':'';
+  String toTitleCase() => replaceAll(RegExp(' +'), ' ').split(' ').map((str) => str.toCapitalized()).join(' ');
+}

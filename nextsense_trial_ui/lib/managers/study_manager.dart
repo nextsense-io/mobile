@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/medication/planned_medication.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/enrolled_study.dart';
@@ -44,9 +45,11 @@ class StudyManager {
   List<PlannedSession>? _plannedSessions;
   List<PlannedSession> _allowedAdhocProtocols = [];
   List<ScheduledSession> _scheduledSessions = [];
+  List<PlannedMedication> _plannedMedications = [];
 
   List<ScheduledSession> get scheduledSessions => _scheduledSessions;
   List<PlannedSession> get allowedAdhocProtocols => _allowedAdhocProtocols;
+  List<PlannedMedication> get plannedMedications => _plannedMedications;
   DateTime? get currentStudyStartDate => _enrolledStudy?.getStartDate();
   DateTime? get currentStudyEndDate => _enrolledStudy?.getEndDate();
   String? get currentStudyId => _enrolledStudy?.id ?? null;
@@ -72,7 +75,7 @@ class StudyManager {
       return _currentStudy!;
     }
     FirebaseEntity? studyEntity = await _firestoreManager.queryEntity(
-        [Table.studies], [currentStudyId!]);
+        [Table.studies], [studyId]);
     if (studyEntity == null) {
       return null;
     }
@@ -280,6 +283,26 @@ class StudyManager {
         PlannedSurvey(firebaseEntity,
             studyStartDate: currentStudyStartDate,
             studyEndDate: currentStudyEndDate
+        ))
+        .toList();
+  }
+
+  Future<List<PlannedMedication>?> loadPlannedMedications(bool fromCache) async {
+    if (_currentStudy == null) {
+      return Future.value([]);
+    }
+    List<FirebaseEntity>? entities = await _firestoreManager.queryEntities(
+        [Table.studies, Table.planned_medications], [_currentStudy!.id],
+        fromCacheWithKey: fromCache ? "${_currentStudy!.id}_${Table.planned_medications.name()}" :
+        null);
+    if (entities == null) {
+      return null;
+    }
+    return entities
+        .map((firebaseEntity) =>
+        PlannedMedication(firebaseEntity,
+            studyStartDate: currentStudyStartDate!,
+            studyEndDate: currentStudyEndDate!
         ))
         .toList();
   }

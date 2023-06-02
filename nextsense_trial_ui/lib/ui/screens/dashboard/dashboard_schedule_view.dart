@@ -20,9 +20,9 @@ import 'package:provider/src/provider.dart';
 
 class DashboardScheduleView extends StatelessWidget {
   final String scheduleType;
-  final bool surveysOnly;
+  final TaskType taskType;
 
-  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.surveysOnly = false})
+  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.taskType = TaskType.all})
       : super(key: key);
 
   final Navigation _navigation = getIt<Navigation>();
@@ -135,7 +135,7 @@ class DashboardScheduleView extends StatelessWidget {
     } else if (viewModel.studyFinished) {
       noTasksText = 'Study finished';
     }
-    List<dynamic> todayTasks = viewModel.getTodayTasks(surveysOnly);
+    List<dynamic> todayTasks = viewModel.getTodayTasks(taskType);
     List<Widget> todayTasksWidgets;
     if (todayTasks.length == 0) {
       todayTasksWidgets = [
@@ -157,7 +157,8 @@ class DashboardScheduleView extends StatelessWidget {
       ];
     } else {
       todayTasksWidgets = [
-        MediumText(text: 'Today', color: NextSenseColors.darkBlue),
+        if (taskType != TaskType.medication)
+          MediumText(text: 'Today', color: NextSenseColors.darkBlue),
         Expanded(
             child: Scrollbar(
           thumbVisibility: true,
@@ -176,7 +177,7 @@ class DashboardScheduleView extends StatelessWidget {
       ];
     }
 
-    List<dynamic> weeklyTasks = viewModel.getWeeklyTasks(surveysOnly);
+    List<dynamic> weeklyTasks = viewModel.getWeeklyTasks(taskType);
     List<Widget> weeklyTasksWidgets = [];
     if (weeklyTasks.length != 0) {
       weeklyTasksWidgets = [
@@ -197,18 +198,24 @@ class DashboardScheduleView extends StatelessWidget {
       ];
     }
 
-    List<Widget> contents = [
-      HeaderText(text: 'My $scheduleType'),
-      SizedBox(height: 15),
-    ];
+    List<Widget> contents = [];
+    if (taskType != TaskType.medication) {
+      contents.addAll([
+        HeaderText(text: 'My $scheduleType'),
+        SizedBox(height: 15),
+      ]);
+    }
     contents.addAll(todayTasksWidgets);
     contents.addAll(weeklyTasksWidgets);
 
+    if (taskType == TaskType.medication) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents);
+    }
     return PageScaffold(
         showBackButton: _navigation.canPop(),
         padBottom: _navigation.canPop(),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents));
-  }
+    }
 }
 
 // class _TaskProtocolRow extends HookWidget {

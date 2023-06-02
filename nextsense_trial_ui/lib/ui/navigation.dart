@@ -33,6 +33,7 @@ import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/surveys_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/fit_test/ear_fit_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/medications/medications_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/profile/profile_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
@@ -313,6 +314,8 @@ class Navigation {
           builder: (context) => EnterEmailScreen());
       case WaitScreen.id: return MaterialPageRoute(
           builder: (context) => WaitScreen());
+      case MedicationsScreen.id: return MaterialPageRoute(
+          builder: (context) => MedicationsScreen());
 
       // Routes with arguments
       case SignInScreen.id: return MaterialPageRoute(

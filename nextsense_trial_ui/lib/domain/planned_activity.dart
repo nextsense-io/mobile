@@ -1,5 +1,6 @@
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
+import 'package:nextsense_trial_ui/utils/utils.dart';
 
 enum ScheduleType {
   scheduled,  // Session is scheduled at specific time/frequency.
@@ -26,6 +27,10 @@ enum Period {
   factory Period.fromString(String? periodStr) {
     return Period.values.firstWhere((element) => element.name == periodStr,
         orElse: () => Period.unknown);
+  }
+
+  String toDisplayString() {
+    return name.replaceAll('_', ' ').toCapitalized();
   }
 }
 

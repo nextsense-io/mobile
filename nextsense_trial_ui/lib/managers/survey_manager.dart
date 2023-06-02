@@ -239,7 +239,7 @@ class SurveyManager {
     }
 
     FirebaseEntity entity = await _firestoreManager.addAutoIdEntity(
-        [Table.users, Table.enrolled_studies, Table.scheduled_sessions],
+        [Table.users, Table.enrolled_studies, Table.scheduled_surveys],
         [_authManager.user!.id, _currentStudyId]);
 
     ScheduledSurvey scheduledSurvey = ScheduledSurvey.fromSurveyTrigger(

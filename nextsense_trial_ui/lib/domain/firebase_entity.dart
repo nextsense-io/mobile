@@ -47,6 +47,11 @@ class FirebaseEntity<T extends Enum> {
     return _values;
   }
 
+  setValues(Map<String, dynamic> values) {
+    _values.clear();
+    _values.addAll(values);
+  }
+
   dynamic getValue(T enumKey) {
     return getValues()[enumKey.name];
   }

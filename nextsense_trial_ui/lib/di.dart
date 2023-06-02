@@ -11,6 +11,7 @@ import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
 import 'package:nextsense_trial_ui/managers/firebase_manager.dart';
 import 'package:nextsense_trial_ui/managers/firebase_storage_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/medication_manager.dart';
 import 'package:nextsense_trial_ui/managers/nextsense_api.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
@@ -53,6 +54,7 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<EventTypesManager>(EventTypesManager());
   getIt.registerSingleton<StudyManager>(StudyManager());
   getIt.registerSingleton<SurveyManager>(SurveyManager());
+  getIt.registerSingleton<MedicationManager>(MedicationManager());
   getIt.registerSingleton<SessionManager>(SessionManager());
   getIt.registerSingleton<DataManager>(DataManager());
   getIt.registerSingleton<SeizuresManager>(SeizuresManager());

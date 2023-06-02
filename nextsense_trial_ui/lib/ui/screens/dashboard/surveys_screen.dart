@@ -13,6 +13,6 @@ class SurveysScreen extends HookWidget {
         viewModelBuilder: () => DashboardScreenViewModel(),
         onModelReady: (viewModel) => viewModel.init(),
         builder: (context, DashboardScreenViewModel viewModel, child) =>
-            DashboardScheduleView(scheduleType: "Surveys", surveysOnly: true));
+            DashboardScheduleView(scheduleType: "Surveys", taskType: TaskType.survey));
   }
 }

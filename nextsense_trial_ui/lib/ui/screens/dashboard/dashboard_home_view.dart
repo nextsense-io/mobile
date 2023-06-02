@@ -15,6 +15,7 @@ import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_protocol_dialog.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/surveys_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/medications/medications_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:provider/provider.dart';
@@ -88,7 +89,7 @@ class DashboardHomeView extends StatelessWidget {
           title: 'Medications',
           image:
               SvgPicture.asset('assets/images/pill.svg', semanticsLabel: 'Medications', height: 75),
-          onTap: _dummy));
+          onTap: () => _navigation.navigateTo(MedicationsScreen.id)));
     }
     if (dashboardViewModel.study.sideEffectsTrackingEnabled) {
       menuCards.add(MenuCard(
@@ -148,9 +149,6 @@ class DashboardHomeView extends StatelessWidget {
     return PageScaffold(
         viewModel: dashboardViewModel, showBackButton: false, padBottom: false, child: elements);
   }
-
-  // remove when all cards targets are implemented.
-  void _dummy() {}
 }
 
 class MenuCard extends StatelessWidget {
