@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:nextsense_trial_ui/domain/medication/medication.dart';
+import 'package:nextsense_trial_ui/domain/medication/scheduled_medication.dart';
 import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/medication_card.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/task_card.dart';
@@ -22,7 +25,7 @@ class DashboardScheduleView extends StatelessWidget {
   final String scheduleType;
   final TaskType taskType;
 
-  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.taskType = TaskType.all})
+  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.taskType = TaskType.any})
       : super(key: key);
 
   final Navigation _navigation = getIt<Navigation>();
@@ -105,12 +108,72 @@ class DashboardScheduleView extends StatelessWidget {
     context.read<DashboardScreenViewModel>().notifyListeners();
   }
 
+  _onMedicationClicked(BuildContext context, dynamic task) async {
+    ScheduledMedication scheduledMedication = task as ScheduledMedication;
+
+    if (task.startDate!.isAfter(DateTime.now())) {
+      return;
+    }
+
+    if (scheduledMedication.completed) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleAlertDialog(title: 'Medication already taken', content: '',),
+      );
+      return;
+    }
+
+    DateTime studyStartDateTime = context.read<DashboardScreenViewModel>().studyStartDate;
+    MedicationCard medicationCard = MedicationCard(
+      task: task, onTakenTap: () async {
+        DateTime? takenDate = await showDatePicker(context: context, initialDate: DateTime.now(),
+            firstDate: studyStartDateTime, lastDate: DateTime.now());
+        if (takenDate != null) {
+          TimeOfDay? takenTime = await showTimePicker(
+            context: context,
+            initialTime: TimeOfDay.fromDateTime(DateTime.now()),
+          );
+          if (takenTime != null) {
+            DateTime takenDateTime = DateTime(
+              takenDate.year,
+              takenDate.month,
+              takenDate.day,
+              takenTime.hour,
+              takenTime.minute,
+            );
+            if (takenDateTime.isAfter(DateTime.now())) {
+              await showDialog(
+                context: context,
+                builder: (_) =>
+                    SimpleAlertDialog(title: 'Error', content: 'Cannot select a time in the future'),
+              );
+              _navigation.pop();
+              return;
+            } else {
+              task.update(state: MedicationState.taken_on_time, takenDateTime: takenDateTime);
+            }
+          }
+        }
+        _navigation.pop();
+    }, onNotTakenTap: () => {
+        task.update(state: MedicationState.skipped),
+        _navigation.pop()
+    }
+    );
+    await medicationCard.showExpandedMedicationDialog(context, showClock: false, whenText: "");
+    // Refresh tasks since medication state can be changed.
+    context.read<DashboardScreenViewModel>().notifyListeners();
+  }
+
   _getOnTap(BuildContext context, Task task) {
     if (task is ScheduledSurvey) {
       return _onSurveyClicked(context, task);
     }
     if (task is ScheduledSession) {
       return _onProtocolClicked(context, task);
+    }
+    if (task is ScheduledMedication) {
+      return _onMedicationClicked(context, task);
     }
     throw UnimplementedError('Task navigation not implemented!');
   }
@@ -217,114 +280,3 @@ class DashboardScheduleView extends StatelessWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents));
     }
 }
-
-// class _TaskProtocolRow extends HookWidget {
-//
-//   final ScheduledProtocol scheduledProtocol;
-//
-//   _TaskProtocolRow(this.scheduledProtocol, {Key? key,}) : super(key: key);
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     Protocol protocol = scheduledProtocol.protocol;
-//     var protocolBackgroundColor = Color(0xFF6DC5D5);
-//     switch(protocol.type) {
-//       case ProtocolType.variable_daytime:
-//         protocolBackgroundColor = Color(0xFF82C3D3);
-//         break;
-//       case ProtocolType.sleep:
-//         protocolBackgroundColor = Color(0xFF984DF1);
-//         break;
-//       case ProtocolType.eoec:
-//       case ProtocolType.eyes_movement:
-//       case ProtocolType.unknown:
-//         protocolBackgroundColor = Color(0xFFE6AEA0);
-//         break;
-//     }
-//
-//     return Padding(
-//         padding: const EdgeInsets.all(10.0),
-//         child: Row(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Container(
-//               width: 60,
-//               child: Visibility(
-//                   visible: true,
-//                   child: Text(protocol.startTime.hhmm,
-//                       style: TextStyle(color: Colors.black))),
-//             ),
-//             Expanded(
-//               child: Opacity(
-//                 opacity: scheduledProtocol.isCompleted
-//                     || scheduledProtocol.isSkipped
-//                     || scheduledProtocol.isCancelled ? 0.6 : 1.0,
-//                 child: Padding(
-//                   padding: const EdgeInsets.only(top: 12.0),
-//                   child: InkWell(
-//                     onTap: () {
-//                       _onProtocolClicked(context, scheduledProtocol);
-//                     },
-//                     child: Container(
-//                         padding: const EdgeInsets.all(16.0),
-//                         decoration: new BoxDecoration(
-//                             color: protocolBackgroundColor,
-//                             borderRadius: new BorderRadius.all(
-//                                 const Radius.circular(5.0))),
-//                         child: Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                           children: [
-//                             Column(
-//                               mainAxisAlignment:
-//                               MainAxisAlignment.spaceBetween,
-//                               crossAxisAlignment: CrossAxisAlignment.start,
-//                               children: [
-//                                 Text(protocol.description,
-//                                     style: TextStyle(
-//                                         color: Colors.white,
-//                                         fontSize: 18,
-//                                         fontWeight: FontWeight.bold)),
-//                                 SizedBox(
-//                                   height: 8,
-//                                 ),
-//                                 Text(humanizeDuration(protocol.minDuration),
-//                                     style: TextStyle(color: Colors.white))
-//                               ],
-//                             ),
-//                             _protocolState(scheduledProtocol)
-//                           ],
-//                         )),
-//                   ),
-//                 ),
-//               ),
-//             ),
-//             Container(
-//               width: 40,
-//             ),
-//           ],
-//         ));
-//   }
-//
-//   Widget _protocolState(ScheduledProtocol scheduledProtocol) {
-//     switch(scheduledProtocol.state) {
-//       case ProtocolState.skipped:
-//         return Column(
-//           children: [
-//             Icon(Icons.cancel, color: Colors.white),
-//             Text("Skipped", style: TextStyle(color: Colors.white),),
-//           ],
-//         );
-//       case ProtocolState.cancelled:
-//         return Column(
-//           children: [
-//             Icon(Icons.cancel, color: Colors.white),
-//             Text("Cancelled", style: TextStyle(color: Colors.white),),
-//           ],
-//         );
-//       case ProtocolState.completed:
-//         return Icon(Icons.check_circle, color: Colors.white);
-//       default: break;
-//     }
-//     return Container();
-//   }
-// }

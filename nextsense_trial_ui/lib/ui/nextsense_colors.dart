@@ -12,4 +12,5 @@ class NextSenseColors {
   static const Color translucentGrey = Color(0x80E6E6EC);
   static const Color darkBlue = Color(0xFF2B2996);
   static const Color red = Color(0xFFF3596F);
+  static const Color darkRed = Color(0xFFEA596E);
 }

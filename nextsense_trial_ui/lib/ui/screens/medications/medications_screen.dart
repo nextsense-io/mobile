@@ -6,11 +6,14 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:intl/intl.dart';
 import 'package:nextsense_trial_ui/domain/medication/planned_medication.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
+import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medication_card.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
+import 'package:nextsense_trial_ui/ui/components/small_text.dart';
+import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_schedule_view.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:provider/provider.dart';
@@ -48,18 +51,10 @@ class MedicationsScreen extends HookWidget {
 
   List<Widget> _buildTabs(BuildContext context) {
     return [
-      _DayTabs(),
-      MedicationList(medications: context.watch<DashboardScreenViewModel>().plannedMedications),
+    Padding(padding: EdgeInsets.only(top: 10), child: _DayTabs()),
+    Padding(padding: EdgeInsets.only(top: 10), child:
+        MedicationList(medications: context.watch<DashboardScreenViewModel>().plannedMedications)),
     ];
-    // .map((element) => Container(
-    // decoration: BoxDecoration(
-    // image: DecorationImage(
-    // image: AssetImage("assets/images/background.png"),
-    // fit: BoxFit.cover,
-    // ),
-    // ),
-    // child: element,
-    // )).toList();
   }
 
   Widget _buildBody(DashboardScreenViewModel viewModel, BuildContext context) {
@@ -73,11 +68,20 @@ class MedicationsScreen extends HookWidget {
             backgroundColor: Colors.transparent,
             appBar: AppBar(
               bottom: TabBar(
+                unselectedLabelColor: NextSenseColors.darkBlue,
+                indicator: BoxDecoration(
+                    borderRadius: BorderRadius.circular(50),
+                    color: NextSenseColors.purple),
+
+                labelStyle: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
                 tabs: [
-                  Tab(child: MediumText(text: 'DAILY')),
-                  Tab(child: MediumText(text: 'ALL MEDS')),
+                  Tab(height: 30, text: 'DAILY'),
+                  Tab(height: 30, text: 'ALL MEDS'),
                 ],
               ),
+              centerTitle: false,
+              titleSpacing: 0.0,
+              leadingWidth: 0,
               title: HeaderText(text: 'Medications'),
               elevation: 0,
               backgroundColor: Colors.transparent,
@@ -134,7 +138,7 @@ class _DayTabsState extends State<_DayTabs> {
   }
 
   void _scrollToDay(int dayNumber) {
-    // Add litle delay to make sure scroll initialized
+    // Add a little delay to make sure the scroll is initialized.
     Future.delayed(Duration(milliseconds: 10), () {
       var firstVisibleDayIndex,lastVisibleDayIndex;
       try {
@@ -213,7 +217,8 @@ class _DayTabsState extends State<_DayTabs> {
             )
         ),
         SizedBox(height: 10),
-        Expanded(child: DashboardScheduleView(scheduleType: "Medications", taskType: TaskType.medication)),
+        Expanded(child: DashboardScheduleView(
+            scheduleType: "Medications", taskType: TaskType.medication)),
       ],
     );
   }
@@ -230,9 +235,6 @@ class _StudyDayCard extends HookWidget {
     final isSelected = viewModel.selectedDay == studyDay;
     final hasMedications = viewModel.dayHasAnyScheduledMedications(studyDay);
 
-    final textStyle = TextStyle(
-        fontSize: 20.0,
-        color: isSelected ? Colors.white : Colors.black);
     return Opacity(
       opacity: hasMedications ? 1.0 : 0.8,
       child: Padding(
@@ -247,25 +249,27 @@ class _StudyDayCard extends HookWidget {
                     width: 65,
                     height: 80,
                     decoration: BoxDecoration(
-                        color: isSelected ? Colors.black : Colors.white60,
+                        color: isSelected ? Colors.white70 : Colors.white10,
                         border: Border.all(
-                          color: Colors.black26,
+                          color: Colors.transparent,
                         ),
                         borderRadius: BorderRadius.all(Radius.circular(12))
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(height: 5,),
+                        SizedBox(height: 5),
                         Opacity(
                             opacity: 0.5,
-                            child: Text(DateFormat('MMMM').format(studyDay.date),
-                                style: textStyle.copyWith(fontSize: 10.0))),
+                            child: SmallText(text: DateFormat('MMMM').format(studyDay.date),
+                                color: NextSenseColors.darkBlue)),
                         Opacity(
                             opacity: 0.5,
-                            child: Text(DateFormat('EE').format(studyDay.date),
-                                style: textStyle)),
-                        Text(studyDay.dayOfMonth.toString(), style: textStyle),
+                            child: MediumText(text: DateFormat('EE').format(studyDay.date),
+                                color: NextSenseColors.darkBlue)),
+                        Opacity(
+                          opacity: 0.5, child: MediumText(text: studyDay.dayOfMonth.toString(),
+                                color: NextSenseColors.darkBlue))
                       ],
                     )),
                 if (hasMedications)
@@ -275,7 +279,7 @@ class _StudyDayCard extends HookWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: isSelected ? Colors.white : Colors.green,
+                        color: Colors.green,
                       ),
                       width: 6,
                       height: 6,

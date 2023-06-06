@@ -27,6 +27,7 @@ class ScheduledMedication extends FirebaseEntity<ScheduledMedicationKey> impleme
 
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledMedication');
 
+  @override
   late DateTime? startDate;  // Date without time for calculations.
   late DateTime? startDateTime;
   // Time constraints for the protocol.
@@ -94,6 +95,10 @@ class ScheduledMedication extends FirebaseEntity<ScheduledMedicationKey> impleme
     setValue(ScheduledMedicationKey.period, period.name);
   }
 
+  setTakenDateTime(DateTime takenDateTime) {
+    setValue(ScheduledMedicationKey.taken_datetime, takenDateTime.toIso8601String());
+  }
+
   // Medication is within desired window to start.
   bool isAllowedToBeTaken() {
     final currentTime = DateTime.now();
@@ -114,7 +119,7 @@ class ScheduledMedication extends FirebaseEntity<ScheduledMedicationKey> impleme
   }
 
   // Update fields and save to Firestore by default.
-  Future<bool> update({required MedicationState state, required DateTime takenDateTime,
+  Future<bool> update({required MedicationState state, DateTime? takenDateTime,
       bool persist = true}) async {
     if (isTaken) {
       _logger.log(Level.INFO, 'Medication $name already taken. Cannot change its state.');
@@ -125,6 +130,9 @@ class ScheduledMedication extends FirebaseEntity<ScheduledMedicationKey> impleme
     }
     _logger.log(Level.INFO, 'Medication state changing from ${this.state} to $state');
     setState(state);
+    if (takenDateTime != null) {
+      setTakenDateTime(takenDateTime);
+    }
     if (persist) {
       return await save();
     }
@@ -134,6 +142,9 @@ class ScheduledMedication extends FirebaseEntity<ScheduledMedicationKey> impleme
   // Task implementation.
   @override
   bool get completed => isTaken;
+
+  @override
+  bool get skipped => state == MedicationState.skipped;
 
   @override
   Duration? get duration => Duration(seconds: 0);
@@ -151,4 +162,7 @@ class ScheduledMedication extends FirebaseEntity<ScheduledMedicationKey> impleme
   @override
   // Surveys can be completed anywhere in the day.
   TimeOfDay get windowStartTime => TimeOfDay.fromDateTime(allowedStartAfter!);
+
+  @override
+  TaskType get type => TaskType.medication;
 }

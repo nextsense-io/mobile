@@ -131,6 +131,9 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
   bool get completed => isCompleted;
 
   @override
+  bool get skipped => isSkipped;
+
+  @override
   Duration? get duration => survey.duration;
 
   @override
@@ -146,4 +149,10 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
   @override
   // Surveys can be completed anywhere in the day.
   TimeOfDay get windowStartTime => TimeOfDay(hour: 0, minute: 0);
+
+  @override
+  DateTime? get startDate => day!.date;
+
+  @override
+  TaskType get type => TaskType.survey;
 }

@@ -28,6 +28,7 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
   final CustomLogPrinter _logger = CustomLogPrinter('ScheduledSession');
 
   late Protocol protocol;
+  @override
   late DateTime? startDate;
 
   // Start time - hours & minutes only.
@@ -170,6 +171,9 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
   bool get completed => isCompleted;
 
   @override
+  bool get skipped => isSkipped;
+
+  @override
   Duration? get duration => protocol.minDuration;
 
   @override
@@ -185,4 +189,7 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
   @override
   // Surveys can be completed anywhere in the day.
   TimeOfDay get windowStartTime => TimeOfDay.fromDateTime(allowedStartAfter!);
+
+  @override
+  TaskType get type => TaskType.recording;
 }

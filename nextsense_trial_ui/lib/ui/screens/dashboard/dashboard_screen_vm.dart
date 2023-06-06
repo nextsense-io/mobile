@@ -19,13 +19,6 @@ import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
-enum TaskType {
-  survey,
-  protocol,
-  medication,
-  all
-}
-
 class DashboardScreenViewModel extends DeviceStateViewModel {
 
   final CustomLogPrinter _logger = CustomLogPrinter('DashboardScreenViewModel');
@@ -49,6 +42,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
   String get studyName => _studyManager.currentStudy!.getName();
   String get studyDescription => _studyManager.currentStudy!.getDescription();
   String get studyLengthDays => _studyManager.getStudyLength().inDays.toString();
+  DateTime get studyStartDate => _studyManager.currentStudyStartDate!;
   String get completedSurveys => _surveyManager.getGlobalSurveyStats().completed.toString();
   Study get study =>_studyManager.currentStudy!;
   bool get studyStarted => _studyManager.isStudyStarted();
@@ -180,13 +174,13 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
 
   List<dynamic> getTodayTasks(TaskType taskType) {
     List<Task> allTasks = [];
-    if (taskType == TaskType.protocol || taskType == TaskType.all) {
+    if (taskType == TaskType.recording || taskType == TaskType.any) {
       allTasks.addAll(getCurrentDayScheduledProtocols());
     }
-    if (taskType == TaskType.survey || taskType == TaskType.all) {
+    if (taskType == TaskType.survey || taskType == TaskType.any) {
       allTasks.addAll(getCurrentDayScheduledSurveys());
     }
-    if (taskType == TaskType.medication || taskType == TaskType.all) {
+    if (taskType == TaskType.medication || taskType == TaskType.any) {
       allTasks.addAll(getCurrentDayScheduledMedications());
     }
     return allTasks;
