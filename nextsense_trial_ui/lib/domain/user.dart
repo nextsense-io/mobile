@@ -40,6 +40,12 @@ enum UserKey {
   type,
   // User name
   username,
+  // If medication notifications are enabled for this user.
+  medications_notifications_enabled,
+  // If survey notifications are enabled for this user.
+  survey_notifications_enabled,
+  // If recording notifications are enabled for this user.
+  recording_notifications_enabled
 }
 
 enum UserType {
@@ -111,6 +117,30 @@ class User extends FirebaseEntity<UserKey> {
 
   String? getUsername() {
     return getValue(UserKey.username);
+  }
+
+  bool isMedicationNotificationsEnabled() {
+    return getValue(UserKey.medications_notifications_enabled) ?? false;
+  }
+
+  bool isSurveyNotificationsEnabled() {
+    return getValue(UserKey.survey_notifications_enabled) ?? false;
+  }
+
+  bool isRecordingNotificationsEnabled() {
+    return getValue(UserKey.recording_notifications_enabled) ?? false;
+  }
+
+  void setMedicationNotificationsEnabled(bool enabled) {
+    setValue(UserKey.medications_notifications_enabled, enabled);
+  }
+
+  void setSurveyNotificationsEnabled(bool enabled) {
+    setValue(UserKey.survey_notifications_enabled, enabled);
+  }
+
+  void setRecordingNotificationsEnabled(bool enabled) {
+    setValue(UserKey.recording_notifications_enabled, enabled);
   }
 
   Future<dynamic> getRunningProtocol(DateTime? studyStartDate, DateTime? studyEndDate) async {
