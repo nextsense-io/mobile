@@ -215,8 +215,11 @@ class DeviceManager {
       return;
     }
     _requestDeviceStateTimer?.cancel();
+    _requestDeviceStateTimer = null;
     _cancelStateListening?.call();
+    _cancelStateListening = null;
     _cancelInternalStateListening?.call();
+    _cancelInternalStateListening = null;
     try {
       await NextsenseBase.disconnectDevice(getConnectedDevice()!.macAddress);
     } on PlatformException {
@@ -237,6 +240,7 @@ class DeviceManager {
     int localSession = await NextsenseBase.startStreaming(_connectedDevice!.macAddress,
         uploadToCloud ?? false, bigTableKey, dataSessionCode, earbudsConfig);
     _requestDeviceStateTimer?.cancel();
+    _requestDeviceStateTimer = null;
     return localSession;
   }
 
@@ -250,6 +254,9 @@ class DeviceManager {
   }
 
   void _listenToState(String macAddress) {
+    if (_cancelStateListening != null) {
+      _cancelStateListening?.call();
+    }
     _cancelStateListening = NextsenseBase.listenToDeviceState((newDeviceState) {
       _logger.log(Level.INFO, 'Device state changed to ' + newDeviceState);
       if (_connectedDevice != null) {
@@ -277,6 +284,9 @@ class DeviceManager {
   }
 
   Future _requestStateChanges() async {
+    if (_requestDeviceStateTimer != null) {
+      return;
+    }
     _requestDeviceStateTimer = Timer.periodic(
       const Duration(seconds: 10),
       (timer) {
@@ -289,6 +299,9 @@ class DeviceManager {
   }
 
   void _listenToInternalState() {
+    if (_cancelInternalStateListening != null) {
+      _cancelInternalStateListening?.call();
+    }
     _cancelInternalStateListening =
         NextsenseBase.listenToDeviceInternalState((newDeviceInternalStateJson) {
       _logger.log(Level.FINE, 'Device internal state changed');
@@ -340,6 +353,7 @@ class DeviceManager {
     showAlertNotification(connectionLostNotificationId, connectionLostTitle, connectionLostBody);
     deviceState.value = DeviceState.disconnected;
     _requestDeviceStateTimer?.cancel();
+    _requestDeviceStateTimer = null;
   }
 
   void _onDeviceReady() {
