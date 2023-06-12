@@ -194,6 +194,16 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     return getScheduledMedicationsByDay(day).isNotEmpty;
   }
 
+  bool dayHasAnySkippedMedications(StudyDay day) {
+    List<ScheduledMedication> dayMeds = getScheduledMedicationsByDay(day);
+    for (var med in dayMeds) {
+      if (med.skipped) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   List<ScheduledMedication> getScheduledMedicationsByDay(StudyDay day) {
     List<ScheduledMedication> result = [];
     for (var scheduledMedication in scheduledMedications) {

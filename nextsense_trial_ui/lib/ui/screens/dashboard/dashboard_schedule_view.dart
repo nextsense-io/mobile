@@ -12,6 +12,7 @@ import 'package:nextsense_trial_ui/ui/components/medication_card.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/task_card.dart';
+import 'package:nextsense_trial_ui/ui/components/themed_date_picker.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
@@ -123,43 +124,64 @@ class DashboardScheduleView extends StatelessWidget {
       return;
     }
 
-    DateTime studyStartDateTime = context.read<DashboardScreenViewModel>().studyStartDate;
+    if (scheduledMedication.skipped) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleAlertDialog(title: 'Medication already skipped', content: '',),
+      );
+      return;
+    }
+
     MedicationCard medicationCard = MedicationCard(
       task: task, onTakenTap: () async {
-        DateTime? takenDate = await showDatePicker(context: context, initialDate: DateTime.now(),
-            firstDate: studyStartDateTime, lastDate: DateTime.now());
-        if (takenDate != null) {
-          TimeOfDay? takenTime = await showTimePicker(
-            context: context,
-            initialTime: TimeOfDay.fromDateTime(DateTime.now()),
+        TimeOfDay? takenTime = await showThemedTimePicker(
+          context: context,
+          initialTime: TimeOfDay.fromDateTime(DateTime.now()),
+        );
+        if (takenTime != null) {
+          DateTime takenDateTime = DateTime(
+            task.startDateTime!.year,
+            task.startDateTime!.month,
+            task.startDateTime!.day,
+            takenTime.hour,
+            takenTime.minute,
           );
-          if (takenTime != null) {
-            DateTime takenDateTime = DateTime(
-              takenDate.year,
-              takenDate.month,
-              takenDate.day,
-              takenTime.hour,
-              takenTime.minute,
+          if (takenDateTime.isAfter(DateTime.now())) {
+            await showDialog(
+              context: context,
+              builder: (_) =>
+                  SimpleAlertDialog(title: 'Error', content: 'Cannot select a time in the future'),
             );
-            if (takenDateTime.isAfter(DateTime.now())) {
-              await showDialog(
-                context: context,
-                builder: (_) =>
-                    SimpleAlertDialog(title: 'Error', content: 'Cannot select a time in the future'),
-              );
-              _navigation.pop();
-              return;
-            } else {
-              task.update(state: MedicationState.taken_on_time, takenDateTime: takenDateTime);
-            }
+            _navigation.pop();
+            return;
+          } else {
+            task.update(state: MedicationState.taken_on_time, takenDateTime: takenDateTime);
           }
         }
         _navigation.pop();
-    }, onNotTakenTap: () => {
-        task.update(state: MedicationState.skipped),
-        _navigation.pop()
-    }
-    );
+    }, onNotTakenTap: () async {
+        bool? confirmed = await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Confirm Not Taken?'),
+            content: Text('This cannot be changed later on.'),
+            actions: <Widget>[
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('No')),
+              TextButton(
+                onPressed: () async => {Navigator.pop(context, true)},
+                child: Text('Yes'),
+              )
+            ],
+          );
+        });
+        if (confirmed ?? false) {
+          task.update(state: MedicationState.skipped);
+        }
+        _navigation.pop();
+    });
     await medicationCard.showExpandedMedicationDialog(context, showClock: false, whenText: "");
     // Refresh tasks since medication state can be changed.
     context.read<DashboardScreenViewModel>().notifyListeners();
@@ -184,7 +206,6 @@ class DashboardScheduleView extends StatelessWidget {
 
     if (viewModel.isBusy) {
       var loadingTextVisible = viewModel.studyInitialized != null && !viewModel.studyInitialized!;
-
       return WaitWidget(
           message: 'Your study is initializing.\nPlease wait...', textVisible: loadingTextVisible);
     }

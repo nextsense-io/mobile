@@ -152,8 +152,7 @@ class _DayTabsState extends State<_DayTabs> {
       final selectedDayIndex = dayNumber - 1;
       // If selected day is near edge of screen, scroll little bit to make
       // sure nearest days are also visible
-      if (firstVisibleDayIndex == selectedDayIndex ||
-          lastVisibleDayIndex == selectedDayIndex) {
+      if (firstVisibleDayIndex == selectedDayIndex || lastVisibleDayIndex == selectedDayIndex) {
         if (itemScrollController.isAttached) {
           var index = dayNumber - 3;
           if (index < 0) {
@@ -225,15 +224,17 @@ class _DayTabsState extends State<_DayTabs> {
 }
 
 class _StudyDayCard extends HookWidget {
+
   final StudyDay studyDay;
-  const _StudyDayCard(this.studyDay, {Key? key})
-      : super(key: key);
+
+  const _StudyDayCard(this.studyDay, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DashboardScreenViewModel>();
     final isSelected = viewModel.selectedDay == studyDay;
     final hasMedications = viewModel.dayHasAnyScheduledMedications(studyDay);
+    final hasSkippedMedications = viewModel.dayHasAnySkippedMedications(studyDay);
 
     return Opacity(
       opacity: hasMedications ? 1.0 : 0.8,
@@ -272,14 +273,14 @@ class _StudyDayCard extends HookWidget {
                                 color: NextSenseColors.darkBlue))
                       ],
                     )),
-                if (hasMedications)
+                if (hasMedications || hasSkippedMedications)
                   Positioned(
                     top: 6,
                     right: 6,
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.green,
+                        color: hasSkippedMedications ? Colors.red : Colors.green,
                       ),
                       width: 6,
                       height: 6,
