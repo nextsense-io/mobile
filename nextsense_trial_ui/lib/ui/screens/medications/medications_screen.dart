@@ -217,7 +217,7 @@ class _DayTabsState extends State<_DayTabs> {
         ),
         SizedBox(height: 10),
         Expanded(child: DashboardScheduleView(
-            scheduleType: "Medications", taskType: TaskType.medication)),
+            scheduleType: "Medications", taskType: TaskType.medication, showHoursColumn: true)),
       ],
     );
   }

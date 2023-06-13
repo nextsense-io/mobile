@@ -6,6 +6,7 @@ import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
+import 'package:nextsense_trial_ui/ui/components/HourTasksCard.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medication_card.dart';
@@ -25,9 +26,10 @@ import 'package:provider/src/provider.dart';
 class DashboardScheduleView extends StatelessWidget {
   final String scheduleType;
   final TaskType taskType;
+  final bool showHoursColumn;
 
-  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.taskType = TaskType.any})
-      : super(key: key);
+  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.taskType = TaskType.any,
+    this.showHoursColumn = false}) : super(key: key);
 
   final Navigation _navigation = getIt<Navigation>();
 
@@ -240,25 +242,64 @@ class DashboardScheduleView extends StatelessWidget {
             ))
       ];
     } else {
-      todayTasksWidgets = [
-        if (taskType != TaskType.medication)
-          MediumText(text: 'Today', color: NextSenseColors.darkBlue),
-        Expanded(
-            child: Scrollbar(
-          thumbVisibility: true,
-          controller: todayScrollController,
-          child: ListView.builder(
-            scrollDirection: Axis.vertical,
-            controller: todayScrollController,
-            itemCount: todayTasks.length,
-            shrinkWrap: true,
-            itemBuilder: (BuildContext context, int index) {
-              Task task = todayTasks[index];
-              return TaskCard(task, () => _getOnTap(context, task));
-            },
-          ),
-        ))
-      ];
+      if (showHoursColumn) {
+        Map<String, List<TaskWithTap>> timeTasksWithTap = {};
+        for (Task task in todayTasks) {
+          TaskWithTap taskWithTap = TaskWithTap(task, () => _getOnTap(context, task));
+          String time = task.windowStartTime.hmm;
+          if (!timeTasksWithTap.containsKey(time)) {
+            timeTasksWithTap[time] = [taskWithTap];
+          } else {
+            timeTasksWithTap[time]!.add(taskWithTap);
+          }
+        }
+        List<List<TaskWithTap>> hourTasks = timeTasksWithTap.values.toList();
+        hourTasks.sort(
+                (a, b) => a[0].task.windowStartTime.hmm.compareTo(b[0].task.windowStartTime.hmm));
+        todayTasksWidgets = [
+          Row(children: [
+            Padding(padding: EdgeInsets.only(left: 8), child:
+            MediumText(text: 'Time', color: NextSenseColors.darkBlue)),
+            Padding(padding: EdgeInsets.only(left: 33), child:
+            MediumText(text: 'Medicine', color: NextSenseColors.darkBlue)),
+          ]),
+          Expanded(
+              child: Scrollbar(
+                thumbVisibility: true,
+                controller: todayScrollController,
+                child: ListView.builder(
+                  scrollDirection: Axis.vertical,
+                  controller: todayScrollController,
+                  itemCount: hourTasks.length,
+                  shrinkWrap: true,
+                  itemBuilder: (BuildContext context, int index) {
+                    return HourTasksCard(time: hourTasks[index][0].task.windowStartTime.hmm,
+                        tasks: hourTasks[index]);
+                  },
+                ),
+              ))
+        ];
+      } else {
+        todayTasksWidgets = [
+          if (taskType != TaskType.medication)
+            MediumText(text: 'Today', color: NextSenseColors.darkBlue),
+          Expanded(
+              child: Scrollbar(
+                thumbVisibility: true,
+                controller: todayScrollController,
+                child: ListView.builder(
+                  scrollDirection: Axis.vertical,
+                  controller: todayScrollController,
+                  itemCount: todayTasks.length,
+                  shrinkWrap: true,
+                  itemBuilder: (BuildContext context, int index) {
+                    Task task = todayTasks[index];
+                    return TaskCard(task, !this.showHoursColumn, () => _getOnTap(context, task));
+                  },
+                ),
+              ))
+        ];
+      }
     }
 
     List<dynamic> weeklyTasks = viewModel.getWeeklyTasks(taskType);
@@ -276,7 +317,7 @@ class DashboardScheduleView extends StatelessWidget {
               shrinkWrap: true,
               itemBuilder: (BuildContext context, int index) {
                 Task task = weeklyTasks[index];
-                return TaskCard(task, () => _getOnTap(context, task));
+                return TaskCard(task, true, () => _getOnTap(context, task));
               },
             )),
       ];

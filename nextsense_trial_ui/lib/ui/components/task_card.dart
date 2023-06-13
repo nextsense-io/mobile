@@ -14,6 +14,7 @@ import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
+  final bool showTime;
   final Function onTap;
   final String title;
   final String intro;
@@ -22,8 +23,9 @@ class TaskCard extends StatelessWidget {
   final TimeOfDay? windowEndTime;
   final bool completed;
 
-  TaskCard(Task task, Function onTap)
+  TaskCard(Task task, bool showTime, Function onTap)
       : this.task = task,
+        this.showTime = showTime,
         this.title = task.title,
         this.intro = task.intro,
         this.duration = task.duration,
@@ -146,15 +148,17 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String whenText;
+    String whenText = '';
     bool showClock = false;
-    if (windowEndTime == null) {
-      whenText = windowStartTime.hmma;
-      showClock = true;
-    } else if (windowStartTime.hmm == '0:00' && windowEndTime!.hmm == '23:59') {
-      whenText = '';
-    } else {
-      whenText = 'Between\n${windowStartTime.hmm}-${windowEndTime!.hmma}';
+    if (showTime) {
+      if (windowEndTime == null) {
+        whenText = windowStartTime.hmma;
+        showClock = true;
+      } else if (windowStartTime.hmm == '0:00' && windowEndTime!.hmm == '23:59') {
+        whenText = '';
+      } else {
+        whenText = 'Between\n${windowStartTime.hmm}-${windowEndTime!.hmma}';
+      }
     }
 
     return ClickableZone(
@@ -163,7 +167,7 @@ class TaskCard extends StatelessWidget {
         child: Container(
             height: 115,
             child: Padding(
-              padding: const EdgeInsets.only(top: 10, bottom: 10, right: 20),
+              padding: const EdgeInsets.only(top: 10, bottom: 10, right: 10),
               child: RoundedBackground(
                   child:
                       _buildTaskHeadline(showIcon: true, showClock: showClock, whenText: whenText,
