@@ -8,6 +8,10 @@ import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/ui/components/HourTasksCard.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/components/cancel_button.dart';
+import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
+import 'package:nextsense_trial_ui/ui/components/content_text.dart';
+import 'package:nextsense_trial_ui/ui/components/emphasized_button.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medication_card.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
@@ -28,8 +32,12 @@ class DashboardScheduleView extends StatelessWidget {
   final TaskType taskType;
   final bool showHoursColumn;
 
-  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.taskType = TaskType.any,
-    this.showHoursColumn = false}) : super(key: key);
+  DashboardScheduleView(
+      {Key? key,
+      this.scheduleType = "Tasks",
+      this.taskType = TaskType.any,
+      this.showHoursColumn = false})
+      : super(key: key);
 
   final Navigation _navigation = getIt<Navigation>();
 
@@ -121,7 +129,10 @@ class DashboardScheduleView extends StatelessWidget {
     if (scheduledMedication.completed) {
       showDialog(
         context: context,
-        builder: (_) => SimpleAlertDialog(title: 'Medication already taken', content: '',),
+        builder: (_) => SimpleAlertDialog(
+          title: 'Medication already taken',
+          content: '',
+        ),
       );
       return;
     }
@@ -129,61 +140,94 @@ class DashboardScheduleView extends StatelessWidget {
     if (scheduledMedication.skipped) {
       showDialog(
         context: context,
-        builder: (_) => SimpleAlertDialog(title: 'Medication already skipped', content: '',),
+        builder: (_) => SimpleAlertDialog(
+          title: 'Medication already skipped',
+          content: '',
+        ),
       );
       return;
     }
 
     MedicationCard medicationCard = MedicationCard(
-      task: task, onTakenTap: () async {
-        TimeOfDay? takenTime = await showThemedTimePicker(
-          context: context,
-          initialTime: TimeOfDay.fromDateTime(DateTime.now()),
-        );
-        if (takenTime != null) {
-          DateTime takenDateTime = DateTime(
-            task.startDateTime!.year,
-            task.startDateTime!.month,
-            task.startDateTime!.day,
-            takenTime.hour,
-            takenTime.minute,
+        task: task,
+        onTakenTap: () async {
+          TimeOfDay? takenTime = await showThemedTimePicker(
+            context: context,
+            initialTime: TimeOfDay.fromDateTime(DateTime.now()),
           );
-          if (takenDateTime.isAfter(DateTime.now())) {
-            await showDialog(
-              context: context,
-              builder: (_) =>
-                  SimpleAlertDialog(title: 'Error', content: 'Cannot select a time in the future'),
+          if (takenTime != null) {
+            DateTime takenDateTime = DateTime(
+              task.startDateTime!.year,
+              task.startDateTime!.month,
+              task.startDateTime!.day,
+              takenTime.hour,
+              takenTime.minute,
             );
-            _navigation.pop();
-            return;
-          } else {
-            task.update(state: MedicationState.taken_on_time, takenDateTime: takenDateTime);
+            if (takenDateTime.isAfter(DateTime.now())) {
+              await showDialog(
+                context: context,
+                builder: (_) => SimpleAlertDialog(
+                    title: 'Error', content: 'Cannot select a time in the future'),
+              );
+              _navigation.pop();
+              return;
+            } else {
+              task.update(state: MedicationState.taken_on_time, takenDateTime: takenDateTime);
+            }
           }
-        }
-        _navigation.pop();
-    }, onNotTakenTap: () async {
-        bool? confirmed = await showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Confirm Not Taken?'),
-            content: Text('This cannot be changed later on.'),
-            actions: <Widget>[
-              TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text('No')),
-              TextButton(
-                onPressed: () async => {Navigator.pop(context, true)},
-                child: Text('Yes'),
-              )
-            ],
+          _navigation.pop();
+        },
+        onNotTakenTap: () async {
+          await showDialog<void>(
+            context: context,
+            barrierDismissible: true,
+            builder: (BuildContext context) {
+              return SimpleDialog(
+                children: [
+                  Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                          padding: EdgeInsets.only(left: 20, right: 20),
+                          child: CancelButton(onPressed: () => Navigator.of(context).pop()))),
+                  Padding(
+                      padding: EdgeInsets.all(20),
+                      child: SingleChildScrollView(
+                          child: Column(children: [
+                        CardTitleText(text: 'Medication Not Taken?'),
+                        SizedBox(height: 15),
+                        ContentText(
+                            text: 'Are you sure you want to mark this medication as not taken?',
+                            color: NextSenseColors.darkBlue),
+                        SizedBox(height: 15),
+                        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+                          Expanded(
+                              child: EmphasizedButton(
+                                  text: MediumText(
+                                      text: 'Yes',
+                                      color: Colors.white,
+                                      textAlign: TextAlign.center),
+                                  enabled: true,
+                                  onTap: () {
+                                    Navigator.pop(context, true);
+                                    task.update(state: MedicationState.skipped);
+                                  })),
+                          SizedBox(width: 10),
+                          Expanded(
+                              child: EmphasizedButton(
+                                  text: MediumText(
+                                      text: 'No', color: Colors.white, textAlign: TextAlign.center),
+                                  enabled: true,
+                                  onTap: () => Navigator.pop(context, false))),
+                        ])
+                      ]))),
+                ],
+                shape:
+                    RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20.0))),
+              );
+            },
           );
+          _navigation.pop();
         });
-        if (confirmed ?? false) {
-          task.update(state: MedicationState.skipped);
-        }
-        _navigation.pop();
-    });
     await medicationCard.showExpandedMedicationDialog(context, showClock: false, whenText: "");
     // Refresh tasks since medication state can be changed.
     context.read<DashboardScreenViewModel>().notifyListeners();
@@ -254,30 +298,32 @@ class DashboardScheduleView extends StatelessWidget {
           }
         }
         List<List<TaskWithTap>> hourTasks = timeTasksWithTap.values.toList();
-        hourTasks.sort(
-                (a, b) => a[0].task.windowStartTime.hmm.compareTo(b[0].task.windowStartTime.hmm));
+        hourTasks
+            .sort((a, b) => a[0].task.windowStartTime.hmm.compareTo(b[0].task.windowStartTime.hmm));
         todayTasksWidgets = [
           Row(children: [
-            Padding(padding: EdgeInsets.only(left: 8), child:
-            MediumText(text: 'Time', color: NextSenseColors.darkBlue)),
-            Padding(padding: EdgeInsets.only(left: 33), child:
-            MediumText(text: 'Medicine', color: NextSenseColors.darkBlue)),
+            Padding(
+                padding: EdgeInsets.only(left: 8),
+                child: MediumText(text: 'Time', color: NextSenseColors.darkBlue)),
+            Padding(
+                padding: EdgeInsets.only(left: 33),
+                child: MediumText(text: 'Medicine', color: NextSenseColors.darkBlue)),
           ]),
           Expanded(
               child: Scrollbar(
-                thumbVisibility: true,
-                controller: todayScrollController,
-                child: ListView.builder(
-                  scrollDirection: Axis.vertical,
-                  controller: todayScrollController,
-                  itemCount: hourTasks.length,
-                  shrinkWrap: true,
-                  itemBuilder: (BuildContext context, int index) {
-                    return HourTasksCard(time: hourTasks[index][0].task.windowStartTime.hmm,
-                        tasks: hourTasks[index]);
-                  },
-                ),
-              ))
+            thumbVisibility: true,
+            controller: todayScrollController,
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              controller: todayScrollController,
+              itemCount: hourTasks.length,
+              shrinkWrap: true,
+              itemBuilder: (BuildContext context, int index) {
+                return HourTasksCard(
+                    time: hourTasks[index][0].task.windowStartTime.hmm, tasks: hourTasks[index]);
+              },
+            ),
+          ))
         ];
       } else {
         todayTasksWidgets = [
@@ -285,19 +331,19 @@ class DashboardScheduleView extends StatelessWidget {
             MediumText(text: 'Today', color: NextSenseColors.darkBlue),
           Expanded(
               child: Scrollbar(
-                thumbVisibility: true,
-                controller: todayScrollController,
-                child: ListView.builder(
-                  scrollDirection: Axis.vertical,
-                  controller: todayScrollController,
-                  itemCount: todayTasks.length,
-                  shrinkWrap: true,
-                  itemBuilder: (BuildContext context, int index) {
-                    Task task = todayTasks[index];
-                    return TaskCard(task, !this.showHoursColumn, () => _getOnTap(context, task));
-                  },
-                ),
-              ))
+            thumbVisibility: true,
+            controller: todayScrollController,
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              controller: todayScrollController,
+              itemCount: todayTasks.length,
+              shrinkWrap: true,
+              itemBuilder: (BuildContext context, int index) {
+                Task task = todayTasks[index];
+                return TaskCard(task, !this.showHoursColumn, () => _getOnTap(context, task));
+              },
+            ),
+          ))
         ];
       }
     }
@@ -340,5 +386,5 @@ class DashboardScheduleView extends StatelessWidget {
         showBackButton: _navigation.canPop(),
         padBottom: _navigation.canPop(),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents));
-    }
+  }
 }

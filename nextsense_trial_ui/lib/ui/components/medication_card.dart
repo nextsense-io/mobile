@@ -50,20 +50,24 @@ class MedicationCard {
                 padding: EdgeInsets.all(20),
                 child: SingleChildScrollView(
                     child: Column(children: [
-                  CardTitleText(text: title),
+                  CardTitleText(text: 'Medication Taken?'),
                   SizedBox(height: 15),
-                  ContentText(text: intro, color: NextSenseColors.darkBlue),
+                  ContentText(text: 'Have you already taken this medication?',
+                      color: NextSenseColors.darkBlue),
                   SizedBox(height: 15),
                   if (!completed)
                     Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-                      EmphasizedButton(
-                          text: MediumText(text: 'Not Taken', color: Colors.white),
+                      Expanded(child: EmphasizedButton(
+                          text: MediumText(text: 'Taken', color: Colors.white,
+                              textAlign: TextAlign.center),
                           enabled: true,
-                          onTap: onNotTakenTap),
-                      EmphasizedButton(
-                          text: MediumText(text: 'Taken', color: Colors.white),
+                          onTap: onTakenTap)),
+                      SizedBox(width: 10),
+                      Expanded(child: EmphasizedButton(
+                          text: MediumText(text: 'Not Taken', color: Colors.white,
+                              textAlign: TextAlign.center),
                           enabled: true,
-                          onTap: onTakenTap),
+                          onTap: onNotTakenTap)),
                     ])
                 ]))),
           ],

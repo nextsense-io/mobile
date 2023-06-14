@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/medication/medication.dart';
@@ -86,6 +87,10 @@ class ScheduledMedication extends FirebaseEntity<ScheduledMedicationKey> impleme
   }
 
   DateTime? getStartDateTime() {
+    dynamic value = getValue(ScheduledMedicationKey.start_datetime);
+    if (value is Timestamp) {
+      return value != null ? value.toDate() : null;
+    }
     return getValue(ScheduledMedicationKey.start_datetime);
   }
 
