@@ -52,6 +52,8 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
 public class ForegroundService extends Service {
   // Class reference to know what to launch when the service notification is pressed.
   public static final String EXTRA_UI_CLASS = "ui_class";
+  // Allows data to be uploaded to the cloud via a cellular transmission.
+  public static final String EXTRA_ALLOW_DATA_VIA_CELLULAR = "allow_data_via_cellular";
 
   private static final String TAG = ForegroundService.class.getSimpleName();
   private static final String CHANNEL_ID = "NextSenseChannel";
@@ -108,7 +110,7 @@ public class ForegroundService extends Service {
         .setSmallIcon(R.drawable.ic_stat_nextsense_n_icon)
         .setContentIntent(pendingIntent);
     startForeground(NOTIFICATION_ID, notificationBuilder.build());
-    initialize();
+    initialize(intent.getBooleanExtra(EXTRA_ALLOW_DATA_VIA_CELLULAR, false));
     RotatingFileLogger.get().logd(TAG, "Service initialized.");
     return START_REDELIVER_INTENT;
   }
@@ -163,7 +165,7 @@ public class ForegroundService extends Service {
     notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
   }
 
-  private void initialize() {
+  private void initialize(boolean allowDataViaCellular) {
     objectBoxDatabase = new ObjectBoxDatabase();
     objectBoxDatabase.init(this);
     localSessionManager = LocalSessionManager.create(objectBoxDatabase);
@@ -191,6 +193,8 @@ public class ForegroundService extends Service {
     // impedance calculation.
     uploader = Uploader.create(objectBoxDatabase, databaseSink, connectivity, /*uploadChunk=*/1250,
         /*minRecordsToKeep=*/5000, /*minDurationToKeep=*/Duration.ofMillis((5000 / 250) * 1000L));
+    uploader.setMinimumConnectivityState(allowDataViaCellular ?
+        Connectivity.State.LIMITED_CONNECTION : Connectivity.State.FULL_CONNECTION);
     uploader.start();
     cloudFunctions = CloudFunctions.create();
 
