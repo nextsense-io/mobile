@@ -21,7 +21,6 @@ import java.util.Set;
 /**
  * Proxies access to the BluetoothPeripheralCallback object so that multiple objects can listens to
  * the events that are relevant to them.
- *
  * Also provides a few convenience methods to do Bluetooth operations synchronously using futures.
  */
 public class BlePeripheralCallbackProxy {
@@ -71,7 +70,7 @@ public class BlePeripheralCallbackProxy {
     if (writeFutures.get(peripheral.getAddress()) != null &&
         !writeFutures.get(peripheral.getAddress()).isDone()) {
       // Should call this function one by one for a peripheral as it is sync.
-      return Futures.immediateCancelledFuture();
+      writeFutures.get(peripheral.getAddress()).cancel(true);
     }
     SettableFuture<byte[]> writeFuture = SettableFuture.create();
     writeFutures.put(peripheral.getAddress(), writeFuture);
@@ -83,7 +82,6 @@ public class BlePeripheralCallbackProxy {
     }
     return writeFuture;
   }
-
 
   private final BluetoothPeripheralCallback deviceCallback = new BluetoothPeripheralCallback() {
     @Override
