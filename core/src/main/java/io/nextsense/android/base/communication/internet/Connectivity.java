@@ -66,6 +66,8 @@ public class Connectivity {
         state.set(State.FULL_CONNECTION);
       } else if (isMetered) {
         state.set(State.LIMITED_CONNECTION);
+      } else {
+        state.set(State.FULL_CONNECTION);
       }
     } else {
       state.set(State.NO_CONNECTION);

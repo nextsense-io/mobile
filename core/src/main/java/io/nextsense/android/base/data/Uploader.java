@@ -73,7 +73,7 @@ public class Uploader {
   // Once the session is marked as finished, run a timer to see when all data is transferred. Once
   // that is done, can upload the remaining data that is less than the chunk size.
   private Timer waitForDataTimer;
-  private boolean started;
+  private boolean started = false;
   private Connectivity.State minimumConnectivityState = Connectivity.State.FULL_CONNECTION;
   private Connectivity.State currentConnectivityState = Connectivity.State.NO_CONNECTION;
   // Used to generate test data manually, should always be false in production.
@@ -714,8 +714,13 @@ public class Uploader {
   private void onConnectivityStateChanged() {
     if (currentConnectivityState == Connectivity.State.FULL_CONNECTION ||
         currentConnectivityState == minimumConnectivityState) {
+      RotatingFileLogger.get().logi(TAG, "Connectivity state changed to " +
+              currentConnectivityState + ", starting uploader.");
       startRunning();
     } else {
+      RotatingFileLogger.get().logi(TAG,
+          "Connectivity state changed to " + currentConnectivityState +
+              " which is under the threshold, stopping uploader.");
       stopRunning();
     }
   }

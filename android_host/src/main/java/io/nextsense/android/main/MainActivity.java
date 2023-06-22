@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
   // https://github.com/flutter/plugins/blob/main/packages/shared_preferences/shared_preferences/lib/shared_preferences.dart
   private static final String FLUTTER_PREF_PREFIX = "flutter.";
   private static final String FLAVOR_PREF_KEY = "flavor";
+  private static final String ALLOW_DATA_VIA_CELLULAR_KEY = "allowDataTransmissionViaCellular";
 
   // Awesome notifications Json payload constants.
   private static final String EXTRA_NOTIFICATION_JSON = "notificationJson";
@@ -81,6 +82,8 @@ public class MainActivity extends AppCompatActivity {
 
     foregroundServiceIntent = new Intent(getApplicationContext(), ForegroundService.class);
     foregroundServiceIntent.putExtra(ForegroundService.EXTRA_UI_CLASS, MainActivity.class);
+    foregroundServiceIntent.putExtra(ForegroundService.EXTRA_ALLOW_DATA_VIA_CELLULAR,
+        sharedPref.getBoolean(FLUTTER_PREF_PREFIX + ALLOW_DATA_VIA_CELLULAR_KEY, false));
     // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
     getApplicationContext().startService(foregroundServiceIntent);
 
