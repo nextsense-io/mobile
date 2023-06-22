@@ -253,6 +253,12 @@ class DeviceManager {
     _requestStateChanges();
   }
 
+  void dispose() {
+    _requestDeviceStateTimer?.cancel();
+    _cancelStateListening?.call();
+    _cancelInternalStateListening?.call();
+  }
+
   void _listenToState(String macAddress) {
     if (_cancelStateListening != null) {
       _cancelStateListening?.call();
