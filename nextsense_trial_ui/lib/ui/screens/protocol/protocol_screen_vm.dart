@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:logging/logging.dart';
@@ -24,19 +25,20 @@ import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 enum ProtocolCancelReason {
   none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord, deviceNotConnected }
 
-// Protocol part scheduled in time in the protocol. The schedule can be repeated
-// many times until the protocol time is complete.
+// Protocol part scheduled in time in the protocol. The schedule can be repeated many times until
+// the protocol time is complete.
 class ScheduledProtocolPart {
   ProtocolPart protocolPart;
-  int relativeSeconds;
+  int relativeMilliseconds;
 
-  ScheduledProtocolPart({required ProtocolPart protocolPart, required int relativeSeconds}) :
+  ScheduledProtocolPart({required ProtocolPart protocolPart, required int relativeMilliseconds}) :
         this.protocolPart = protocolPart,
-        this.relativeSeconds = relativeSeconds;
+        this.relativeMilliseconds = relativeMilliseconds;
 }
 
 class ProtocolScreenViewModel extends DeviceStateViewModel {
   static const Duration _dataReceivedTimeout = const Duration(seconds: 15);
+  static const Duration _timerTickInterval = const Duration(milliseconds: 50);
 
   final StudyManager _studyManager = getIt<StudyManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
@@ -44,11 +46,15 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final RunnableProtocol runnableProtocol;
-  final List<ScheduledProtocolPart> _scheduledProtocolParts = [];
+  final bool useCountDownTimer;
+  List<ScheduledProtocolPart> _scheduledProtocolParts = [];
+  List<ScheduledProtocolPart> _initialScheduledProtocolParts = [];
   final CountDownController countDownController = CountDownController();
   final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
 
-  int secondsElapsed = 0;
+  int milliSecondsElapsed = 0;
+  int _blockStartMilliSeconds = 0;
+  int _blockEndMilliSeconds = 0;
   bool sessionIsActive = false;
   int disconnectTimeoutSecondsLeft = 10;
   bool minDurationPassed = false;
@@ -65,9 +71,11 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   int _currentProtocolPart = 0;
   int currentRepetition = 0;
   Duration _repetitionTime = Duration(seconds: 0);
+  Duration _initialRepetitionTime = Duration(seconds: 0);
   bool dataReceived = false;
   Timer? _dataReceivedTimer;
   CancelListening? _currentSessionDataReceivedListener;
+  Duration? _currentVariableDuration;
 
   // This indicates that the minimum duration of the protocol is passed and can mark is as
   // completed.
@@ -78,13 +86,17 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   int get protocolIndex =>
       currentRepetition * _scheduledProtocolParts.length + _currentProtocolPart;
   bool get isError => !protocolCompleted && protocolCancelReason != ProtocolCancelReason.none;
+  int get currentProtocolPart => _currentProtocolPart;
 
-  ProtocolScreenViewModel(this.runnableProtocol) {
+  ProtocolScreenViewModel(this.runnableProtocol, {this.useCountDownTimer = true}) {
     for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
       _scheduledProtocolParts.add(ScheduledProtocolPart(protocolPart: part,
-          relativeSeconds: _repetitionTime.inSeconds));
+          relativeMilliseconds: _repetitionTime.inMilliseconds));
       _repetitionTime += part.duration;
     }
+    _initialScheduledProtocolParts = [..._scheduledProtocolParts];
+    _initialRepetitionTime = _repetitionTime;
+    _blockEndMilliSeconds = _repetitionTime.inMilliseconds;
   }
 
   @override
@@ -119,7 +131,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         Duration elapsedTime = DateTime.now().difference(
             _sessionManager.getCurrentSession()?.getStartDateTime() != null ?
             _sessionManager.getCurrentSession()!.getStartDateTime()! : DateTime.now());
-        _logger.log(Level.INFO, 'Session already in progress for ${elapsedTime.inSeconds} seconds');
+        _logger.log(Level.INFO,
+            'Session already in progress for ${elapsedTime.inMilliseconds} milliseconds');
         sessionIsActive = true;
         dataReceived = true;
         startTimer(elapsedTime: elapsedTime);
@@ -139,7 +152,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   Future<bool> startSession() async {
     _logger.log(Level.INFO, "startSession");
 
-    secondsElapsed = 0;
+    milliSecondsElapsed = 0;
+    _blockStartMilliSeconds = 0;
+    _blockEndMilliSeconds = _repetitionTime.inMilliseconds;
     sessionIsActive = true;
     minDurationPassed = false;
     maxDurationPassed = false;
@@ -189,47 +204,49 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     final int protocolMaxTimeSeconds = protocol.maxDuration.inSeconds;
     if (timer?.isActive ?? false) timer?.cancel();
     if (elapsedTime == null) {
-      secondsElapsed = 0;
+      milliSecondsElapsed = 0;
       if (_scheduledProtocolParts.isNotEmpty &&
           _scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
         startEvent(_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker!,
             sequentialEvent: true);
       }
     } else {
-      secondsElapsed = elapsedTime.inSeconds;
+      milliSecondsElapsed = elapsedTime.inMilliseconds;
     }
     onTimerStart();
     timer = Timer.periodic(
-      Duration(seconds: 1),
-      (_) {
+      _timerTickInterval,
+          (_) {
         if (_timerPaused) return;
 
-        secondsElapsed += 1;
-        if (secondsElapsed >= protocolMinTimeSeconds) {
+        milliSecondsElapsed += _timerTickInterval.inMilliseconds;
+        if (milliSecondsElapsed >= protocolMinTimeSeconds * 1000) {
           minDurationPassed = true;
         }
-        if (secondsElapsed >= protocolMaxTimeSeconds) {
+        if (milliSecondsElapsed >= protocolMaxTimeSeconds * 1000) {
           _logger.log(Level.INFO,
-              'Protocol finished. ${secondsElapsed} out of ${protocolMaxTimeSeconds}');
+              'Protocol finished. $milliSecondsElapsed out of $protocolMaxTimeSeconds');
           maxDurationPassed = true;
           timer?.cancel();
           onTimerFinished();
         }
-        onTimerTick(secondsElapsed);
+        onTimerTick(milliSecondsElapsed);
         notifyListeners();
       },
     );
   }
 
-  void onTimerTick(int secondsElapsed) {
+  void onTimerTick(int millisecondsElapsed) {
     if (_scheduledProtocolParts.isEmpty) {
       // The code after this is needed only if there are parts in the protocol.
       return;
     }
     bool advanceProtocol = false;
-    int blockSecondsElapsed = secondsElapsed % _repetitionTime.inSeconds;
-    if (blockSecondsElapsed == 0) {
+    // _logger.log(Level.FINE, "Current milliseconds: $milliSecondsElapsed");
+    if (millisecondsElapsed >= _blockEndMilliSeconds &&
+        _currentProtocolPart == _scheduledProtocolParts.length - 1) {
       // Start of a repetition, reset the block index and finish the current step.
+      _logger.log(Level.FINE, "Starting a new protocol repetition.");
       if (_currentProtocolPart != 0) {
         ++currentRepetition;
         if (_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
@@ -238,22 +255,49 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         advanceProtocol = true;
       }
       _currentProtocolPart = 0;
+      _logger.log(Level.FINE, "Advanced protocol to part 0.");
+      // _repetitionTime = _initialRepetitionTime;
+      _scheduledProtocolParts = [..._initialScheduledProtocolParts];
+      _blockStartMilliSeconds = millisecondsElapsed;
+      _blockEndMilliSeconds = _blockStartMilliSeconds + _repetitionTime.inMilliseconds;
+      _logger.log(Level.FINE, "Block End milliseconds: $_blockEndMilliSeconds");
     }
+    int blockMillisecondsElapsed = millisecondsElapsed - _blockStartMilliSeconds;
     // Check if can advance the index to the next part.
     if (_currentProtocolPart < _scheduledProtocolParts.length - 1) {
-      if (blockSecondsElapsed >=
-          _scheduledProtocolParts[_currentProtocolPart + 1].relativeSeconds) {
+      // if (_currentVariableDuration != null &&
+      //     blockMillisecondsElapsed >=
+      //         _scheduledProtocolParts[_currentProtocolPart].relativeMilliseconds +
+      //             _currentVariableDuration!.inMilliseconds) {
+      //   _currentVariableDuration = null;
+      //   advanceProtocol = true;
+      if (blockMillisecondsElapsed >=
+          _scheduledProtocolParts[_currentProtocolPart + 1].relativeMilliseconds) {
+        advanceProtocol = true;
         if (_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
           endEvent(DateTime.now());
         }
         ++_currentProtocolPart;
-        advanceProtocol = true;
+        _logger.log(Level.FINE, "Advanced protocol to part $_currentProtocolPart.");
       }
     }
     if (advanceProtocol) {
-      String? currentMarker = _scheduledProtocolParts[_currentProtocolPart].protocolPart.marker;
-      if (currentMarker != null) {
-        startEvent(currentMarker, sequentialEvent: true);
+      ProtocolPart currentProtocolPart = _scheduledProtocolParts[_currentProtocolPart].protocolPart;
+      if (currentProtocolPart.marker != null) {
+        startEvent(currentProtocolPart.marker!, sequentialEvent: true);
+      }
+      if (currentProtocolPart.durationVariation != null) {
+        Duration durationVariation = Duration(milliseconds: Random().nextInt(
+            currentProtocolPart.durationVariation!.inMilliseconds));
+        _currentVariableDuration = durationVariation;
+        // Adjust future parts times to account for the duration variation.
+        // _repetitionTime += durationVariation;
+        _blockEndMilliSeconds += durationVariation.inMilliseconds;
+        _logger.log(Level.FINE, "Block End milliseconds: $_blockEndMilliSeconds");
+        for (int i = _currentProtocolPart + 1; i < _scheduledProtocolParts.length; ++i) {
+          _scheduledProtocolParts[i].relativeMilliseconds += durationVariation.inMilliseconds;
+        }
+        _logger.log(Level.FINE, "Variable duration: $_currentVariableDuration");
       }
       onAdvanceProtocol();
     }
@@ -263,7 +307,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   void onTimerFinished() {
     _logger.log(Level.INFO, "onTimerFinished");
-    countDownController.pause();
+    if (useCountDownTimer) {
+      countDownController.pause();
+    }
     stopSession();
   }
 
@@ -318,7 +364,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   }
 
   void _pauseProtocol() {
-    countDownController.pause();
+    if (useCountDownTimer) {
+      countDownController.pause();
+    }
     _timerPaused = true;
     disconnectTimeoutTimer?.cancel();
     // TODO(alex): get disconnect timeout from firebase
@@ -337,7 +385,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   }
 
   void _restartProtocol() {
-    countDownController.resume();
+    if (useCountDownTimer) {
+      countDownController.resume();
+    }
     _timerPaused = false;
     disconnectTimeoutTimer?.cancel();
   }

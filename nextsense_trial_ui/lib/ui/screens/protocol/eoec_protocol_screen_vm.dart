@@ -10,7 +10,7 @@ import 'package:wakelock/wakelock.dart';
 
 class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
-  static final String _eoec_transition_sound = "sounds/eoec_transition.wav";
+  static final String _eoecTransitionSound = "assets/sounds/eoec_transition.wav";
   static const Map<EOECState, String> _protocolPartsText = {
     EOECState.EO: 'Eyes Open',
     EOECState.EC: 'Eyes Closed'
@@ -21,15 +21,20 @@ class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
   };
 
   final AudioManager _audioManager = getIt<AudioManager>();
+  int _eoecTransitionSoundCachedId = -1;
 
-  EOECProtocolScreenViewModel(RunnableProtocol runnableProtocol) :
-        super(runnableProtocol) {
-    _audioManager.cacheAudioFile(_eoec_transition_sound);
+  EOECProtocolScreenViewModel(RunnableProtocol runnableProtocol) : super(runnableProtocol);
+
+  @override
+  void init() async {
+    super.init();
+    _eoecTransitionSoundCachedId = await _audioManager.cacheAudioFile(_eoecTransitionSound);
   }
 
   @override
   void dispose() {
-    _audioManager.stopPlayingAudio();
+    _audioManager.stopPlayingLastAudio();
+    _audioManager.clearCache();
     super.dispose();
   }
 
@@ -47,7 +52,7 @@ class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
   @override
   void onAdvanceProtocol() {
-    _audioManager.playAudioFile(_eoec_transition_sound);
+    _audioManager.playAudioFile(_eoecTransitionSoundCachedId);
   }
 
   String getTextForProtocolPart(String eoecStateString) {

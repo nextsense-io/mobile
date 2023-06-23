@@ -40,6 +40,7 @@ import 'package:nextsense_trial_ui/ui/screens/info/help_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/bio_calibration_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/erp_audio_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eyes_movement_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/entry_added_screen.dart';
@@ -324,6 +325,9 @@ class Navigation {
       case EOECProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
             EOECProtocolScreen(settings.arguments as RunnableProtocol));
+      case ERPAudioProtocolScreen.id:
+        return MaterialPageRoute(builder: (context) =>
+            ERPAudioProtocolScreen(settings.arguments as RunnableProtocol));
       case EyesMovementProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
             EyesMovementProtocolScreen(settings.arguments as RunnableProtocol));

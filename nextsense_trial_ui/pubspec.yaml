@@ -14,7 +14,7 @@ dependencies:
   nextsense_base:
     path: ../nextsense_base
   app_settings: ^4.1.5
-  audioplayers: ^1.0.1
+  audioplayers: ^4.1.0
   awesome_notifications: ^0.7.1
   charts_flutter: ^0.12.0
   circular_countdown_timer: ^0.2.1
@@ -60,6 +60,7 @@ dependencies:
   settings_ui: ^2.0.2
   shared_preferences: ^2.0.13
   shimmer: ^2.0.0
+  soundpool: ^2.3.0
   stacked: ^2.3.8
   timezone: ^0.9.1
   uuid: ^3.0.5

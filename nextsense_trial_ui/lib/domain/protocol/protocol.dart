@@ -5,6 +5,7 @@ enum ProtocolType {
   variable_daytime,  // Daytime recording of variable length
   sleep,  // Nighttime sleep recording
   eoec,  // Eyes-Open, Eyes-Closed recording
+  erp_audio,  // Event-Related Potential using audio recording
   eyes_movement, // Eyes movement recording
   nap,  // Nap recording.
   bio_calibration,  // Bio Calibration recording
@@ -55,8 +56,12 @@ abstract class Protocol {
       case ProtocolType.bio_calibration:
         protocol = BioCalibrationProtocol();
         break;
+      case ProtocolType.erp_audio:
+        protocol = ERPAudioProtocol();
+        break;
       default:
-        throw("Class for protocol type ${type} isn't defined");
+        print("Class for protocol type $type isn't defined");
+        return VariableDaytimeProtocol();
     }
     if (startTime != null) {
       protocol.setStartTime(startTime);
@@ -77,12 +82,15 @@ class ProtocolPart {
   String state;
   Duration duration;
   String? marker;
+  Duration? durationVariation;
 
   ProtocolPart({
-    required String state, required Duration duration, String? text, String? marker}) :
-        this.state = state,
-        this.duration = duration,
-        this.marker = marker;
+    required String state, required Duration duration, String? text, String? marker,
+    Duration? durationVariation}) :
+    this.state = state,
+    this.duration = duration,
+    this.marker = marker,
+    this.durationVariation = durationVariation;
 }
 
 abstract class BaseProtocol implements Protocol {
@@ -241,6 +249,67 @@ class EyesOpenEyesClosedProtocol extends BaseProtocol {
       ' • Sounds will be played to indicate transitions from EO to EC and EC to EO.\n'
       ' • Sit down comfortably at your desk.\n'
       ' • Place the phone at your desk with the sound output facing.';
+
+  @override
+  List<ProtocolPart> get protocolBlock => _protocolBlock;
+}
+
+enum ERPAudioState {
+  NORMAL_SOUND,
+  ODD_SOUND,
+  RESPONSE_WINDOW,
+  BREAK
+}
+
+class ERPAudioProtocol extends BaseProtocol {
+
+  static final ProtocolPart _normalSound = ProtocolPart(
+      state: ERPAudioState.NORMAL_SOUND.name,
+      duration: Duration(milliseconds: 100),
+      marker: ERPAudioState.NORMAL_SOUND.name);
+  static final ProtocolPart _oddSound = ProtocolPart(
+      state: ERPAudioState.ODD_SOUND.name,
+      duration: Duration(milliseconds: 100),
+      marker: ERPAudioState.ODD_SOUND.name);
+  static final ProtocolPart _responseWindow = ProtocolPart(
+      state: ERPAudioState.RESPONSE_WINDOW.name,
+      duration: Duration(milliseconds: 1000),
+      marker: ERPAudioState.RESPONSE_WINDOW.name);
+  static final ProtocolPart _break = ProtocolPart(
+      state: ERPAudioState.BREAK.name,
+      duration: Duration(milliseconds: 200),
+      durationVariation: Duration(milliseconds: 400),
+      marker: ERPAudioState.BREAK.name);
+  static final List<ProtocolPart> _protocolBlock = [
+    _normalSound, _responseWindow, _break, _normalSound, _responseWindow, _break, _normalSound,
+    _responseWindow,  _break, _normalSound, _responseWindow, _break, _oddSound, _responseWindow,
+    _break
+  ];
+
+  @override
+  ProtocolType get type => ProtocolType.erp_audio;
+
+  @override
+  String get nameForUser => "P-300 ERP Audio";
+
+  @override
+  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 6);
+
+  @override
+  Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 6);
+
+  @override
+  Duration get disconnectTimeoutDuration => Duration(seconds: 0);
+
+  @override
+  String get description => 'P-300 Event-Related Potential (ERP) Audio';
+
+  @override
+  String get intro =>
+      'IMPORTANT: Make sure the sound is perceivable and adjust the volume if needed.\n\n'
+      'You will hear a series of beeps.\n\n'
+      'When the lower beep is played, immediately press the button to respond.\n\n'
+      'Respond only to the lower beep.\n';
 
   @override
   List<ProtocolPart> get protocolBlock => _protocolBlock;
