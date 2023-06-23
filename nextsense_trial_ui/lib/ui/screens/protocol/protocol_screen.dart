@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
@@ -86,6 +87,7 @@ class ProtocolScreen extends HookWidget {
 
   final RunnableProtocol runnableProtocol;
   final Navigation _navigation = getIt<Navigation>();
+  final Logger _logger = Logger('ProtocolScreen');
 
   Protocol get protocol => runnableProtocol.protocol;
 
@@ -93,6 +95,18 @@ class ProtocolScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    // final controller = useSingleTickerProvider();
+    //
+    // void callback(Duration duration) {
+    //   // Perform your desired actions here
+    //   _logger.log(Level.INFO,'Ticker callback');
+    //
+    //   final controller = useSingleTickerProvider();
+    //   WidgetsBinding.instance.addPostFrameCallback(callback);
+    // }
+    // // Register the initial callback
+    // WidgetsBinding.instance.addPostFrameCallback(callback);
+
     return ViewModelBuilder<ProtocolScreenViewModel>.reactive(
         viewModelBuilder: () => ProtocolScreenViewModel(runnableProtocol),
         onModelReady: (viewModel) => viewModel.init(),
@@ -190,7 +204,7 @@ class ProtocolScreen extends HookWidget {
               Stack(
                   children: [
                     Center(child: CountDownTimer(duration: protocol.maxDuration, reverse: false,
-                        secondsElapsed: viewModel.secondsElapsed)),
+                        secondsElapsed: viewModel.milliSecondsElapsed)),
                     if (!viewModel.deviceCanRecord)
                       deviceInactiveOverlay(context, viewModel),
                   ]),

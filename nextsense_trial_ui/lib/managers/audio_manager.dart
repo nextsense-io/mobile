@@ -1,37 +1,45 @@
+import 'dart:typed_data';
+
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:soundpool/soundpool.dart';
 
 /// Manage the single audio player for the application and the sound files cache
 /// for low latency playback which is important when running protocols.
 class AudioManager {
   final CustomLogPrinter _logger = CustomLogPrinter('AudioManager');
 
-  final AudioPlayer _audioPlayer;
+  final Soundpool pool = Soundpool.fromOptions(options: SoundpoolOptions());
+  int _lastStreamId = -1;
+  // final AudioPlayer _audioPlayer;
 
-  AudioManager() : _audioPlayer = AudioPlayer();
+  AudioManager();
 
-  Future cacheAudioFile(String assetLocation) async {
-    _logger.log(Level.FINE, "Caching ${assetLocation}");
-    // TODO(eric): Caching is broken in this version, re-enable when fixed.
-    // await _audioPlayer.setSource(AssetSource(assetLocation));
+  Future<int> cacheAudioFile(String assetLocation) async {
+    _logger.log(Level.FINE, "Caching $assetLocation");
+    ByteData soundData = await rootBundle.load(assetLocation);
+    return pool.load(soundData);
   }
 
-  Future playAudioFile(String assetLocation, {bool? loop}) async {
-    _logger.log(Level.FINE, "Playing ${assetLocation}");
-    await _audioPlayer.play(AssetSource(assetLocation));
-    if (loop != null && loop) {
-      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-    } else {
-      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+  Future<int> playAudioFile(int cachedAudioFileId) async {
+    _logger.log(Level.FINE, "Playing cached audio file id $cachedAudioFileId");
+    _lastStreamId = await pool.play(cachedAudioFileId);
+    return _lastStreamId;
+  }
+
+  Future stopPlayingAudio(int streamId) async {
+    if (streamId >= 0) {
+      await pool.stop(streamId);
     }
   }
 
-  Future stopPlayingAudio() async {
-    await _audioPlayer.stop();
+  Future stopPlayingLastAudio() async {
+    stopPlayingAudio(_lastStreamId);
   }
 
   Future clearCache() async {
-    await _audioPlayer.audioCache.clearAll();
+    await pool.release();
   }
 }
