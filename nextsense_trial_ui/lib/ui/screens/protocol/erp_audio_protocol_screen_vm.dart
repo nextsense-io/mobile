@@ -1,5 +1,3 @@
-import 'package:flutter/widgets.dart';
-import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
 import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
@@ -22,9 +20,9 @@ class ERPAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
 
   @override
   void init() async {
+    super.init();
     _normalSoundCachedId = await _audioManager.cacheAudioFile(_normalSound);
     _oddSoundCachedId = await _audioManager.cacheAudioFile(_oddSound);
-    super.init();
   }
 
   @override

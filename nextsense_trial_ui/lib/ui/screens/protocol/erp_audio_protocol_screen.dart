@@ -70,12 +70,12 @@ class ERPAudioProtocolScreen extends ProtocolScreen {
                   child: new Container(
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.black
+                        color: NextSenseColors.purple,
                     ),
                     child: new Material(
                       child: new InkWell(
                         onTap: () {
-
+                          // TODO(eric): Register an event.
                         },
                         child: new Container(
                           width: 100.0,
