@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -13,7 +12,6 @@ class AudioManager {
 
   final Soundpool pool = Soundpool.fromOptions(options: SoundpoolOptions());
   int _lastStreamId = -1;
-  // final AudioPlayer _audioPlayer;
 
   AudioManager();
 

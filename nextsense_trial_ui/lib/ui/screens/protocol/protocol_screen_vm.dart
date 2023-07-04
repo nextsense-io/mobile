@@ -34,6 +34,15 @@ class ScheduledProtocolPart {
   ScheduledProtocolPart({required ProtocolPart protocolPart, required int relativeMilliseconds}) :
         this.protocolPart = protocolPart,
         this.relativeMilliseconds = relativeMilliseconds;
+
+  factory ScheduledProtocolPart.clone(ScheduledProtocolPart part) {
+    return ScheduledProtocolPart(protocolPart: part.protocolPart,
+        relativeMilliseconds: part.relativeMilliseconds);
+  }
+}
+
+List<ScheduledProtocolPart> deepCopy(List<ScheduledProtocolPart> source) {
+  return source.map((e) => ScheduledProtocolPart.clone(e)).toList();
 }
 
 class ProtocolScreenViewModel extends DeviceStateViewModel {
@@ -71,7 +80,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   int _currentProtocolPart = 0;
   int currentRepetition = 0;
   Duration _repetitionTime = Duration(seconds: 0);
-  Duration _initialRepetitionTime = Duration(seconds: 0);
   bool dataReceived = false;
   Timer? _dataReceivedTimer;
   CancelListening? _currentSessionDataReceivedListener;
@@ -94,8 +102,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           relativeMilliseconds: _repetitionTime.inMilliseconds));
       _repetitionTime += part.duration;
     }
-    _initialScheduledProtocolParts = [..._scheduledProtocolParts];
-    _initialRepetitionTime = _repetitionTime;
+    _initialScheduledProtocolParts = deepCopy(_scheduledProtocolParts);
     _blockEndMilliSeconds = _repetitionTime.inMilliseconds;
   }
 
@@ -257,7 +264,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _currentProtocolPart = 0;
       _logger.log(Level.FINE, "Advanced protocol to part 0.");
       // _repetitionTime = _initialRepetitionTime;
-      _scheduledProtocolParts = [..._initialScheduledProtocolParts];
+      _scheduledProtocolParts = deepCopy(_initialScheduledProtocolParts);
       _blockStartMilliSeconds = millisecondsElapsed;
       _blockEndMilliSeconds = _blockStartMilliSeconds + _repetitionTime.inMilliseconds;
       _logger.log(Level.FINE, "Block End milliseconds: $_blockEndMilliSeconds");
@@ -265,12 +272,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     int blockMillisecondsElapsed = millisecondsElapsed - _blockStartMilliSeconds;
     // Check if can advance the index to the next part.
     if (_currentProtocolPart < _scheduledProtocolParts.length - 1) {
-      // if (_currentVariableDuration != null &&
-      //     blockMillisecondsElapsed >=
-      //         _scheduledProtocolParts[_currentProtocolPart].relativeMilliseconds +
-      //             _currentVariableDuration!.inMilliseconds) {
-      //   _currentVariableDuration = null;
-      //   advanceProtocol = true;
       if (blockMillisecondsElapsed >=
           _scheduledProtocolParts[_currentProtocolPart + 1].relativeMilliseconds) {
         advanceProtocol = true;
@@ -291,7 +292,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
             currentProtocolPart.durationVariation!.inMilliseconds));
         _currentVariableDuration = durationVariation;
         // Adjust future parts times to account for the duration variation.
-        // _repetitionTime += durationVariation;
         _blockEndMilliSeconds += durationVariation.inMilliseconds;
         _logger.log(Level.FINE, "Block End milliseconds: $_blockEndMilliSeconds");
         for (int i = _currentProtocolPart + 1; i < _scheduledProtocolParts.length; ++i) {
