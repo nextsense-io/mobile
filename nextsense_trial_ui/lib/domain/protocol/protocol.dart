@@ -258,7 +258,8 @@ enum ERPAudioState {
   NORMAL_SOUND,
   ODD_SOUND,
   RESPONSE_WINDOW,
-  BREAK
+  BREAK,
+  BUTTON_PRESS
 }
 
 class ERPAudioProtocol extends BaseProtocol {
