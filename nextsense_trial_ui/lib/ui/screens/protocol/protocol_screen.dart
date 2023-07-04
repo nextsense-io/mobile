@@ -95,18 +95,6 @@ class ProtocolScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final controller = useSingleTickerProvider();
-    //
-    // void callback(Duration duration) {
-    //   // Perform your desired actions here
-    //   _logger.log(Level.INFO,'Ticker callback');
-    //
-    //   final controller = useSingleTickerProvider();
-    //   WidgetsBinding.instance.addPostFrameCallback(callback);
-    // }
-    // // Register the initial callback
-    // WidgetsBinding.instance.addPostFrameCallback(callback);
-
     return ViewModelBuilder<ProtocolScreenViewModel>.reactive(
         viewModelBuilder: () => ProtocolScreenViewModel(runnableProtocol),
         onModelReady: (viewModel) => viewModel.init(),

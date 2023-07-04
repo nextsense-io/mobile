@@ -347,6 +347,23 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     return await event.save();
   }
 
+  Future<bool> recordButtonPress() async {
+    DateTime eventTime = DateTime.now();
+    String? sessionId = runnableProtocol.lastSessionId;
+    if (sessionId == null) {
+      _logger.log(Level.SEVERE,
+          "Could not save event ${ERPAudioState.BUTTON_PRESS.name}, no session id!");
+      return false;
+    }
+    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdReference(
+        [Table.sessions, Table.events], [sessionId]);
+    Event event = Event(firebaseEntity);
+    event..setValue(EventKey.start_time, eventTime)
+      ..setValue(EventKey.end_time, eventTime)
+      ..setValue(EventKey.marker, ERPAudioState.BUTTON_PRESS.name);
+    return await event.save();
+  }
+
   @override
   void onDeviceDisconnected() {
     _pauseProtocol();

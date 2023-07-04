@@ -75,7 +75,7 @@ class ERPAudioProtocolScreen extends ProtocolScreen {
                     child: new Material(
                       child: new InkWell(
                         onTap: () {
-                          // TODO(eric): Register an event.
+                          viewModel.recordButtonPress();
                         },
                         child: new Container(
                           width: 100.0,
