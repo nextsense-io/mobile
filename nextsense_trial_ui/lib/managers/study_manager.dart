@@ -181,7 +181,7 @@ class StudyManager {
           Map<String, dynamic> fields = {};
 
           fields[ScheduledSessionKey.planned_session_id.name] = plannedSession.id;
-          fields[ScheduledSessionKey.scheduled_type.name] = plannedSession.scheduleType.name;
+          fields[ScheduledSessionKey.schedule_type.name] = plannedSession.scheduleType.name;
           fields[ScheduledSessionKey.session_ids.name] = [];
           fields[ScheduledSessionKey.status.name] = ProtocolState.not_started.name;
           fields[ScheduledSessionKey.start_date.name] = studyDay.dateAsString;

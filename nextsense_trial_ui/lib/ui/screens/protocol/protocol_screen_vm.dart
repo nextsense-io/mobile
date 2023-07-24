@@ -376,11 +376,11 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           "Could not save event ${ERPAudioState.BUTTON_PRESS.name}, no session id!");
       return false;
     }
-    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdReference(
+    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdEntity(
         [Table.sessions, Table.events], [sessionId]);
     Event event = Event(firebaseEntity);
-    event..setValue(EventKey.start_time, eventTime)
-      ..setValue(EventKey.end_time, eventTime)
+    event..setValue(EventKey.start_datetime, eventTime)
+      ..setValue(EventKey.end_datetime, eventTime)
       ..setValue(EventKey.marker, ERPAudioState.BUTTON_PRESS.name);
     return await event.save();
   }

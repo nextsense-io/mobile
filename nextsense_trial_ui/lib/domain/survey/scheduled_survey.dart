@@ -68,18 +68,19 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
   ScheduledSurvey(FirebaseEntity firebaseEntity, {required this.survey, this.day,
     PlannedSurvey? plannedSurvey}) : super(firebaseEntity.getDocumentSnapshot()) {
 
-    int? _daysToComplete = getValue(ScheduledSurveyKey.days_to_complete);
+    int _daysToComplete = getValue(ScheduledSurveyKey.days_to_complete) ?? 1;
     // Initialize from planned survey.
     if (plannedSurvey != null) {
       plannedSurvey = plannedSurvey;
       setPlannedSurvey(plannedSurvey.reference);
       _daysToComplete = plannedSurvey.daysToComplete;
       setValue(ScheduledSurveyKey.survey_id, survey.id);
+      setValue(ScheduledSurveyKey.schedule_type, plannedSurvey.scheduleType.name);
     }
 
     // Day date is at 00:00, so we need to set completion time next midnight.
     if (day != null) {
-      shouldBeCompletedBefore = day!.date.add(Duration(days: _daysToComplete!));
+      shouldBeCompletedBefore = day!.date.add(Duration(days: _daysToComplete));
       setValue(ScheduledSurveyKey.day_number, day!.dayNumber);
     }
   }

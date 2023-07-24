@@ -13,7 +13,7 @@ import 'package:nextsense_trial_ui/utils/date_utils.dart';
 /// Each entry corresponds to a field name in the database instance.
 enum ScheduledSessionKey {
   planned_session_id,  // Planned session id
-  scheduled_type,  // See ScheduleType in planned_activity.dart
+  schedule_type,  // See ScheduleType in planned_activity.dart
   session_ids,  // List of session objets
   status,  // State, see ProtocolState in protocol.dart
   start_date,  // Used to query by date, string format
@@ -77,7 +77,7 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
 
   factory ScheduledSession._fromTrigger(FirebaseEntity firebaseEntity,
       PlannedSession plannedSession) {
-    firebaseEntity.setValue(ScheduledSessionKey.scheduled_type, plannedSession.scheduleType.name);
+    firebaseEntity.setValue(ScheduledSessionKey.schedule_type, plannedSession.scheduleType.name);
     firebaseEntity.setValue(ScheduledSessionKey.planned_session_id, plannedSession.id);
     firebaseEntity.setValue(ScheduledSessionKey.session_ids, []);
     firebaseEntity.setValue(ScheduledSessionKey.status, ProtocolState.not_started.name);
