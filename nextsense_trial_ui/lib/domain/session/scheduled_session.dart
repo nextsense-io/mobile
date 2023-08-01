@@ -18,8 +18,8 @@ enum ScheduledSessionKey {
   status,  // State, see ProtocolState in protocol.dart
   start_date,  // Used to query by date, string format
   start_datetime,  // Used to get the exact datetime, string format
-  triggered_by_session,  // Planned activity id that triggered the session
-  triggered_by_survey
+  triggered_by_session_id,  // Planned activity id that triggered the session
+  triggered_by_survey_id
 }
 
 class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Task,
@@ -65,13 +65,13 @@ class ScheduledSession extends FirebaseEntity<ScheduledSessionKey> implements Ta
 
   factory ScheduledSession.fromSessionTrigger(FirebaseEntity firebaseEntity,
       {required PlannedSession plannedSession, required String triggeredBy}) {
-    firebaseEntity.setValue(ScheduledSessionKey.triggered_by_session, triggeredBy);
+    firebaseEntity.setValue(ScheduledSessionKey.triggered_by_session_id, triggeredBy);
     return ScheduledSession._fromTrigger(firebaseEntity, plannedSession);
   }
 
   factory ScheduledSession.fromSurveyTrigger(FirebaseEntity firebaseEntity,
       {required PlannedSession plannedSession, required String triggeredBy}) {
-    firebaseEntity.setValue(ScheduledSessionKey.triggered_by_survey, triggeredBy);
+    firebaseEntity.setValue(ScheduledSessionKey.triggered_by_survey_id, triggeredBy);
     return ScheduledSession(firebaseEntity, plannedSession);
   }
 
