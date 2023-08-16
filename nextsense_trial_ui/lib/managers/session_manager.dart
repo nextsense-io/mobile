@@ -120,7 +120,7 @@ class SessionManager {
         return false;
       }
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,
-          bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: _currentDataSession!.id,
+          bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: _currentSession!.id,
           earbudsConfig: _studyManager.currentStudy?.getEarbudsConfig() ?? null);
       _logger.log(Level.INFO, "Started streaming with local session: $_currentLocalSession");
       await NextsenseBase.changeNotificationContent("NextSense recording in progress",
