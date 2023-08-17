@@ -191,7 +191,7 @@ class ProtocolScreen extends HookWidget {
               Stack(
                   children: [
                     Center(child: CountDownTimer(duration: protocol.maxDuration, reverse: false,
-                        secondsElapsed: viewModel.milliSecondsElapsed)),
+                        secondsElapsed: (viewModel.milliSecondsElapsed / 1000).round())),
                     if (!viewModel.deviceCanRecord)
                       deviceInactiveOverlay(context, viewModel),
                   ]),

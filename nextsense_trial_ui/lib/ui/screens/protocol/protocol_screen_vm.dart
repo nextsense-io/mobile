@@ -116,6 +116,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   @override
   void init() async {
     super.init();
+    sessionIsActive = true;
     PlannedSession? plannedSession = _studyManager.getPlannedSessionById(
         runnableProtocol.plannedSessionId!);
     if (plannedSession!.triggersConditionalSessionId != null &&
@@ -171,6 +172,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         startTimer(elapsedTime: elapsedTime);
       }
     } else {
+      sessionIsActive = false;
       protocolCancelReason = ProtocolCancelReason.deviceNotConnected;
       setError("Device not connected.");
     }
