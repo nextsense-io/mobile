@@ -15,6 +15,7 @@ class EnrolledStudiesScreenViewModel extends ViewModel {
   Map<String, Study> _studies = {};
 
   String get currentStudyId => _studyManager.currentStudy!.getName();
+  String get currentStudyKey => _studyManager.currentStudy!.id;
 
   @override
   void init() async {

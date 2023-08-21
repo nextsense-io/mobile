@@ -81,7 +81,7 @@ class _EnrolledStudiesSelector extends StatelessWidget {
 
     List<Widget> studyElements = [];
     for (EnrolledStudy enrolledStudy in viewModel.enrolledStudies!) {
-      if (enrolledStudy.id == viewModel.currentStudyId) {
+      if (enrolledStudy.id == viewModel.currentStudyKey) {
         // Don't show the current study as a choice to switch to.
         continue;
       }
