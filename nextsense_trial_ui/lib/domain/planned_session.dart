@@ -54,7 +54,7 @@ class PlannedSession extends FirebaseEntity<PlannedSessionKey> {
   String? get triggersConditionalSurveyId =>
       getValue(PlannedSessionKey.triggers_conditional_survey_id);
 
-  PlannedSession(FirebaseEntity firebaseEntity, DateTime studyStartDate, DateTime studyEndDate) :
+  PlannedSession(FirebaseEntity firebaseEntity, DateTime studyStartDate, DateTime? studyEndDate) :
       super(firebaseEntity.getDocumentSnapshot()) {
     if (scheduleType == ScheduleType.scheduled) {
       if (_dayNumber == null || !(_dayNumber is int)) {

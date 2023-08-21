@@ -1,4 +1,6 @@
+import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
+import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 import 'package:nextsense_trial_ui/utils/utils.dart';
 
@@ -38,6 +40,7 @@ class PlannedActivity {
   static const int defaultDailyStartDay = 1;
   static const int defaultWeeklyStartDay = 8;
 
+  final CustomLogPrinter _logger = CustomLogPrinter('PlannedActivity');
   final Period _period;
   final int? _specificDayNumber;
   final int? _lastDayNumber;
@@ -46,13 +49,13 @@ class PlannedActivity {
 
 
   PlannedActivity(Period period, int? specificDayNumber, int? lastDayNumber,
-      DateTime studyStartDate, DateTime studyEndDate) :
+      DateTime studyStartDate, DateTime? studyEndDate) :
         _period = period, _specificDayNumber = specificDayNumber, _lastDayNumber = lastDayNumber {
     _initDays(studyStartDate, studyEndDate);
   }
 
   // Create list of study days according to period of survey.
-  void _initDays(DateTime studyStartDate, DateTime studyEndDate) {
+  void _initDays(DateTime studyStartDate, DateTime? studyEndDate) {
     if (_period == Period.unknown) {
       return;
     }
@@ -60,6 +63,11 @@ class PlannedActivity {
       // For certain day number we just add single day
       days.add(StudyDay(
           studyStartDate.add(Duration(days: _specificDayNumber! - 1)), _specificDayNumber!));
+      return;
+    }
+
+    if (studyEndDate == null) {
+      _logger.log(Level.WARNING, "Cannot have period $_period without study end date.");
       return;
     }
 

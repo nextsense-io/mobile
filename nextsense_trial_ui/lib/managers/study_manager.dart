@@ -401,7 +401,7 @@ class StudyManager {
       return null;
     }
     return entities.map((firebaseEntity) =>
-        PlannedSession(firebaseEntity, currentStudyStartDate!, currentStudyEndDate!))
+        PlannedSession(firebaseEntity, currentStudyStartDate!, currentStudyEndDate))
         .toList();
   }
 
