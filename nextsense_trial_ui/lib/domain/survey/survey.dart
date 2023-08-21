@@ -98,6 +98,7 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
   Conditions? _conditions;
 
   SurveyQuestionType get type => SurveyQuestionType.fromString(typeString);
+  int get position => getValue(SurveyQuestionKey.position) ?? 0;
   String get typeString => getValue(SurveyQuestionKey.type);
   String get text => getValue(SurveyQuestionKey.text);
   String? get hint => getValue(SurveyQuestionKey.hint);

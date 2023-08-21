@@ -113,6 +113,7 @@ class SurveyScreenViewModel extends ViewModel {
         }
       }
     }
+    visibleQuestions.sort((a, b) => a.position.compareTo(b.position));
     return visibleQuestions;
   }
 }
