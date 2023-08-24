@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/ui/components/acceleration_plot_data.dart';
 import 'package:nextsense_trial_ui/ui/components/drop_down_menu.dart';
 import 'package:nextsense_trial_ui/ui/components/eeg_fixed_plot_data.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
+import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/signal/visualization_settings_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -12,13 +15,15 @@ import 'package:stacked/stacked.dart';
 class SignalMonitoringScreen extends HookWidget {
   static const String id = 'signal_monitoring_screen';
 
-  SignalMonitoringScreen() {}
+  final Navigation _navigation = getIt<Navigation>();
+
+  SignalMonitoringScreen();
 
   Widget dataTypeRadio(SignalMonitoringScreenViewModel viewModel) {
     return Row(
       children: <Widget>[
         Expanded(
-          flex: 35,
+          flex: 40,
           child: ListTile(
             title: const Text('EEG'),
             leading: Radio(
@@ -30,9 +35,9 @@ class SignalMonitoringScreen extends HookWidget {
           ),
         ),
         Expanded(
-          flex: 50,
+          flex: 35,
           child: ListTile(
-            title: const Text('Acceleration'),
+            title: const Text('Acc'),
             leading: Radio(
                 value: DataType.acceleration,
                 groupValue: viewModel.dataType,
@@ -41,22 +46,15 @@ class SignalMonitoringScreen extends HookWidget {
                 }),
           ),
         ),
-        // Expanded(
-        //     flex: 15,
-        //     child: IconButton(
-        //       icon: Icon(Icons.settings),
-        //       onPressed: () {
-        //         Navigator.push(
-        //           context,
-        //           MaterialPageRoute(
-        //               builder: (context) => Scaffold(
-        //                 appBar: ProtocolAppBar.getAppbar(
-        //                     context, "Visualization settings"),
-        //                 body: VisualizationSettingsScreen(),
-        //               )),
-        //         );
-        //       },
-        //     ))
+        Expanded(
+            flex: 15,
+            child: IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () async {
+                await _navigation.navigateTo(VisualizationSettingsScreen.id);
+                viewModel.updateFilterSettings();
+              },
+            ))
       ],
     );
   }

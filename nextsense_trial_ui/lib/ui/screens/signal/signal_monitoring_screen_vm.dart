@@ -97,7 +97,7 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   static const double defaultMaxAmplitudeMicroVolts = 50;
   static const double _defaultLowPassFreq = 1;
   static const double _defaultHighPassFreq = 55;
-  static const int _defaultPowerLineFreq = 60;
+  static const double _defaultPowerLineFreq = 60;
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final _preferences = getIt<Preferences>();
@@ -107,6 +107,9 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   String? _selectedChannel;
   DataType _dataType = DataType.eeg;
   SignalProcessing _eegSignalProcessing = SignalProcessing.filtered;
+  double _powerLineFrequency = _defaultPowerLineFreq;
+  double _lowCutFrequency = _defaultLowPassFreq;
+  double _highCutFrequency = _defaultHighPassFreq;
   Duration timeWindowMin = _eegTimeWindowMin;
   Duration timeWindowMax = _eegTimeWindowMax;
   Duration _graphTimeWindow = _eegTimeWindowDefault;
@@ -128,6 +131,7 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
     device = _deviceManager.getConnectedDevice();
     eegAmplitudeMicroVolts = _preferences.getDouble(PreferenceKey.displayMaxAmplitude) ??
         _defaultMaxAmplitudeMicroVolts;
+    updateFilterSettings();
     _updateTimeSlider();
     if (device != null && _deviceManager.deviceIsReady) {
       _deviceSettings = DeviceSettings(await NextsenseBase.getDeviceSettings(device!.macAddress));
@@ -150,6 +154,17 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
       await _deviceManager.stopStreaming();
     }
     super.dispose();
+  }
+
+  void updateFilterSettings() {
+    _eegSignalProcessing = SignalProcessing.create(
+        _preferences.getString(PreferenceKey.eegSignalFilterType));
+    _powerLineFrequency =
+        _preferences.getDouble(PreferenceKey.powerLineFrequency) ?? _defaultPowerLineFreq;
+    _lowCutFrequency = _preferences.getDouble(PreferenceKey.lowCutFrequency) ??
+        _defaultLowPassFreq;
+    _highCutFrequency = _preferences.getDouble(PreferenceKey.highCutFrequency) ??
+        _defaultHighPassFreq;
   }
 
   Future _getAccData() async {
@@ -180,22 +195,21 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
           fromDatabase: false);
       double samplingFrequencyHz = _deviceSettings!.eegSamplingRate!;
       // Make sure the high cut off is not higher than the actual signal.
-      double effectiveHighCutFreq = _defaultHighPassFreq;
-      if (samplingFrequencyHz / 2 < _defaultHighPassFreq) {
+      double effectiveHighCutFreq = _highCutFrequency;
+      if (samplingFrequencyHz / 2 < _highCutFrequency) {
         effectiveHighCutFreq = samplingFrequencyHz / 2 - 1;
       }
-      if (effectiveHighCutFreq > _defaultPowerLineFreq) {
-        currentEegData = Algorithms.filterNotch(
-            currentEegData, samplingFrequencyHz, _defaultPowerLineFreq, /*notchWidth=*/ 4, /*order=*/ 2);
-      }
+      currentEegData = Algorithms.filterNotch(
+          currentEegData, samplingFrequencyHz, _powerLineFrequency.round(), /*notchWidth=*/ 4,
+          /*order=*/ 2);
       currentEegData = Algorithms.filterBandpass(
-          currentEegData, samplingFrequencyHz, _defaultLowPassFreq, _defaultHighPassFreq, /*order=*/ 2);
+          currentEegData, samplingFrequencyHz,_lowCutFrequency, effectiveHighCutFreq, /*order=*/ 2);
       // Remove some part of the data to account for the filter settle time.
       currentEegData =
           currentEegData.sublist([0, currentEegData.length - samplesToShow].reduce(max));
     } else {
       currentEegData = await NextsenseBase.getChannelData(macAddress: device!.macAddress,
-          channelName: _selectedChannel!, duration: _graphTimeWindow + _filterSettleTime,
+          channelName: _selectedChannel!, duration: _graphTimeWindow,
           fromDatabase: false);
     }
     // Display the X axis in seconds.

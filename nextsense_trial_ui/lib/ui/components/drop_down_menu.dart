@@ -20,6 +20,7 @@ class DropDownMenu extends StatelessWidget {
         child: DropdownButton(
           isExpanded: true,
           value: value,
+          dropdownColor: Colors.white,
           items: possibleValues.map((dynamic value) {
             return new DropdownMenuItem<dynamic>(
               value: value,

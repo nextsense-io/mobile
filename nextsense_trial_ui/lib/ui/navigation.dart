@@ -51,6 +51,7 @@ import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effect_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/signal/visualization_settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/support/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
@@ -316,6 +317,8 @@ class Navigation {
           builder: (context) => WaitScreen());
       case MedicationsScreen.id: return MaterialPageRoute(
           builder: (context) => MedicationsScreen());
+      case VisualizationSettingsScreen.id: return MaterialPageRoute(
+          builder: (context) => VisualizationSettingsScreen());
 
       // Routes with arguments
       case SignInScreen.id: return MaterialPageRoute(

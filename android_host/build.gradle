@@ -21,8 +21,8 @@ android {
         applicationId "io.nextsense.android.main"
         minSdkVersion 24
         targetSdkVersion 33
-        versionCode 36
-        versionName "0.4.1"
+        versionCode 37
+        versionName "0.4.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             // Filter for architectures supported by Flutter.
