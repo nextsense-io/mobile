@@ -6,6 +6,9 @@ enum DeviceInternalStateEventType {
   hdmiCableDisconnected,
   uSdConnected,
   uSdDisconnected,
+  uSdFull,
+  batteryLow,
+  poweringOff,
   unknown
 }
 
@@ -63,5 +66,4 @@ class DeviceInternalStateEvent {
   String toString() {
     return "DeviceInternalStateChangeEvent(${this.type})";
   }
-
 }

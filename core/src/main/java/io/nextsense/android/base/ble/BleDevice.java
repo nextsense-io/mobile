@@ -36,7 +36,7 @@ import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
 import io.nextsense.android.base.devices.NextSenseDevice;
-import io.nextsense.android.base.devices.xenon.StartStreamingCommand;
+import io.nextsense.android.base.devices.StreamingStartMode;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
@@ -116,10 +116,10 @@ public class BleDevice extends Device {
     //             sets.
     if (uploadToCloud) {
       parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
-          StartStreamingCommand.StartMode.WITH_LOGGING);
+          StreamingStartMode.WITH_LOGGING);
     } else {
       parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
-          StartStreamingCommand.StartMode.NO_LOGGING);
+          StreamingStartMode.NO_LOGGING);
     }
     return executorService.submit(() ->
         nextSenseDevice.startStreaming(uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig,

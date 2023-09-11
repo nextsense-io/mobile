@@ -33,6 +33,7 @@ import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.BaseNextSenseDevice;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
 import io.nextsense.android.base.devices.NextSenseDevice;
+import io.nextsense.android.base.devices.StreamingStartMode;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
@@ -63,7 +64,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private SettableFuture<Boolean> changeNotificationStateFuture;
   private SettableFuture<Boolean> changeStreamingStateFuture;
   private DeviceSettings deviceSettings;
-  private StartStreamingCommand.StartMode targetStartStreamingMode;
+  private StreamingStartMode targetStartStreamingMode;
 
   // Needed for reflexion when created by Bluetooth device name.
   public XenonDevice() {}
@@ -149,7 +150,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
               " parameter."));
     }
     targetStartStreamingMode =
-        (StartStreamingCommand.StartMode)parameters.getSerializable(STREAM_START_MODE_KEY);
+        (StreamingStartMode)parameters.getSerializable(STREAM_START_MODE_KEY);
     if (this.deviceMode == DeviceMode.STREAMING) {
       RotatingFileLogger.get().logw(TAG, "Device already streaming, nothing to do.");
       return Futures.immediateFuture(true);
@@ -163,6 +164,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
         deviceSettings.getImuStreamingRate());
     if (localSessionId == -1) {
       // Previous session not finished, cannot start streaming.
+      RotatingFileLogger.get().logw(TAG, "Previous session not finished, cannot start streaming.");
       return Futures.immediateFuture(false);
     }
     changeStreamingStateFuture = SettableFuture.create();

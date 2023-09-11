@@ -1,0 +1,143 @@
+// NextSense EEG communication protocol definition 
+// between the Kauai device and the mobile app over BLE connection.
+syntax = "proto2";
+
+package nextsense;
+
+option java_package = "io.nextsense.android.base";
+option java_outer_classname = "KauaiFirmwareMessageProto";
+
+enum MessageType {
+  MESSAGE_TYPE_UNKNOWN = 0;
+  GET_DEVICE_INFO = 1;
+  GET_DEVICE_STATUS = 2;
+  GET_RECORDING_SETTINGS = 3;
+  SET_RECORDING_SETTINGS = 4;
+  SET_DATE_TIME = 5;
+  START_RECORDING = 6;
+  STOP_RECORDING = 7;
+  NOTIFY_EVENT = 8;
+  GET_SYSTEM_LOG = 9;    // future use
+  OTA_FW_UPDATE = 10;    // future use
+}
+
+// Message sent by a mobile app to the Kauai device over BLE connection.
+message ClientMessage {
+  optional MessageType message_type = 1;
+  optional int32 message_id = 2;
+  optional RecordingSettings recording_settings = 3;
+  optional DateTime current_time = 4;
+  optional RecordingOptions recording_options = 5;
+}
+
+// Recording (ADS1299) settings
+message RecordingSettings {
+  optional bytes ads1299_registers_config = 1;
+  // Any other settings that we want to expose? Used to have OptoSync output, but never used it.
+}
+
+// Static information on the hardware and firmware.
+message DeviceInfo {
+  optional int32 device_revision = 1;
+  optional int32 device_type = 2;
+  optional int32 device_serial_number = 3;
+  optional int32 firmware_version_major = 4;
+  optional int32 firmware_version_minor = 5;
+  optional int32 firmware_version_build_number = 6;
+  optional int32 earbuds_revision = 7;
+  optional int32 earbuds_type = 8;
+  optional int32 earbuds_serial_number = 9;
+  optional int32 device_time_epoch_seconds = 10;
+  repeated bytes mac_address = 13;
+}
+
+// Possible states that the host can be in. 'state machine'
+enum HostState {
+  OFF = 0;
+  INITIALIZING = 1;
+  IDLE = 2;
+  ACTIVE_RECORDING = 3;
+  LOW_POWER_RECORDING = 4;
+  ACTIVE_CHARGING = 5;
+  LOW_POWER_CHARGING = 6;
+  CONTACT_FIT_CHECK = 7;
+  DEVICE_FIRMWARE_UPDATE = 8;
+  STANDBY = 9;
+  UNKNOWN = 10;
+}
+
+// Current status of the device.
+message DeviceStatus {
+  // What other status might be good to add here?
+  optional int32 battery_level = 1;
+  optional HostState state = 2;
+}
+
+message RecordingOptions {
+  optional bool save_to_file = 1;
+  optional bool continuous_impedance = 2;   // true = ON
+  optional int32 sample_rate = 3;
+}
+
+message DateTime {
+  optional string date_time = 1;  // iso8601_str : "YYYY-MM-DDTHH:MM:SS"
+}
+
+message SignalData {
+  optional int64 unix_timestamp = 1;
+  repeated int32 sample_counter = 2;
+  repeated sint32 eeg_data = 3;
+  repeated int32 accel_data = 4;
+  repeated int32 flags = 5;
+  repeated int32 lead_off_pos_signal = 6;
+}
+
+message SignalDataPacket {
+  optional bytes active_channels = 1;
+  repeated SignalData signal_data = 2;
+}
+
+// Error reported by the firmware in response to a client message.
+enum ErrorType {
+  ERROR_NONE = 0;
+  ALREADY_RECORDING = 1;
+  HDMI_DISCONNECTED = 2;
+  STORAGE_FULL = 3;
+}
+
+// Common fields for a firmware response to a client message.
+message Result {
+  optional ErrorType error_type = 1;
+  optional string additional_info = 2;
+}
+
+// Message sent by the Kauai device to mobile app
+message HostMessage {
+  optional MessageType message_type = 1;
+  optional int32 resp_to_message_id = 2; // Response to a specific client message. For events, no id is needed.
+  optional EventType event_type = 3;
+  optional Result result = 4;
+  optional DeviceInfo device_info = 5;
+  optional RecordingSettings recording_settings = 6;
+  optional DeviceStatus device_status = 7;
+}
+
+// Type of event that is being reported by the Kauai device.
+enum EventType {
+  UNKNOWN_EVENT = 0;
+  RECORDING_STARTED_BY_DEVICE = 1;  // When a recording is started from the device (i.e. user's button press)
+  RECORDING_STOPPED_BY_DEVICE = 2;  // When a recording is stopped from the device (i.e. user's button press or error)
+  RECORDING_STARTED_BY_APP = 3;  // When a recording started from BLE actually starts.
+  RECORDING_STOPPED_BY_APP = 4;  // When a recording started from BLE actually finished.
+  ALL_DATA_SENT = 5;  // When all data from a recording is uploaded through BLE.
+  HDMI_CABLE_CONNECTED = 6;
+  HDMI_CABLE_DISCONNECTED = 7;
+  USB_CABLE_CONNECTED = 8;
+  USB_CABLE_DISCONNECTED = 9;
+  MEMORY_STORAGE_FULL = 10;
+  GOING_TO_STANDBY = 11; // Sent to mobile app before going to standby mode.
+  POWERING_OFF = 12;  // Sent to a connected BLE device just before powering off.
+  BATTERY_LOW = 13;  // Sent just before the device stops operating from a battery low. Can we do this?
+  STATUS_CHANGE = 14;
+  SYSTEM_LOG = 15;
+}
