@@ -5,7 +5,7 @@ import io.nextsense.android.base.KauaiFirmwareMessageProto;
 public class SetRecordingOptionsCommand extends KauaiFirmwareMessage {
 
   public SetRecordingOptionsCommand(int id, boolean saveToFile, boolean continuousImpedance, int sampleRate) {
-    super(KauaiFirmwareMessageProto.MessageType.SET_REC_SETTINGS, id);
+    super(KauaiFirmwareMessageProto.MessageType.SET_RECORDING_SETTINGS, id);
 
     KauaiFirmwareMessageProto.RecordingOptions.Builder recOptionsBuilder =
         KauaiFirmwareMessageProto.RecordingOptions.newBuilder();

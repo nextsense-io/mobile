@@ -161,7 +161,8 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
               hostMessage.getResult().getAdditionalInfo());
           return false;
         }
-        applyDeviceSettings(loadDeviceSettings().get());
+        applyDeviceSettings(loadDeviceSettings().get(
+            COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
         RotatingFileLogger.get().logi(TAG, "Applied device settings.");
         // Enable notifications to get the device state change messages.
         if (!peripheral.isNotifying(notificationsCharacteristic)) {
@@ -218,13 +219,28 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       RotatingFileLogger.get().logw(TAG, "Previous session not finished, cannot start streaming.");
       return Futures.immediateFuture(false);
     }
-    changeStreamingStateFuture = SettableFuture.create();
-    if (!peripheral.isNotifying(dataCharacteristic)) {
-      peripheral.setNotify(dataCharacteristic, /*enable=*/true);
-    } else {
-      runStartStreamingCommand();
-    }
-    return changeStreamingStateFuture;
+    return executorService.submit(() -> {
+      executeCommandNoResponse(new SetRecordingOptionsCommand(lastMessageId++,
+          /*saveToFile=*/targetStartStreamingMode == StreamingStartMode.WITH_LOGGING,
+          /*continuousImpedance=*/false, (int)deviceSettings.getEegSamplingRate()));
+      KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
+          COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+      if (hostMessage.getResult().getErrorType() !=
+          KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
+        // TODO(eric): Pass error back to higher layer.
+        RotatingFileLogger.get().logw(TAG, "Failed to set recording options: " +
+            hostMessage.getResult().getErrorType() + ", " +
+            hostMessage.getResult().getAdditionalInfo());
+        return false;
+      }
+      changeStreamingStateFuture = SettableFuture.create();
+      if (!peripheral.isNotifying(dataCharacteristic)) {
+        peripheral.setNotify(dataCharacteristic, /*enable=*/true);
+      } else {
+        runStartStreamingCommand();
+      }
+      return changeStreamingStateFuture.get(COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+    });
   }
 
   @Override
