@@ -49,7 +49,7 @@ List<ScheduledProtocolPart> deepCopy(List<ScheduledProtocolPart> source) {
 }
 
 class ProtocolScreenViewModel extends DeviceStateViewModel {
-  static const Duration _dataReceivedTimeout = const Duration(seconds: 15);
+  static const Duration _dataReceivedTimeout = const Duration(seconds: 60);
   static const Duration _timerTickInterval = const Duration(milliseconds: 50);
 
   final StudyManager _studyManager = getIt<StudyManager>();
@@ -499,7 +499,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.INFO, 'Stopping session.');
       await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
     } catch (e) {
-      _logger.log(Level.WARNING, "Failed to stop streaming");
+      _logger.log(Level.WARNING, "Failed to stop streaming: " + e.toString());
     }
     try {
       await runnableProtocol.update(

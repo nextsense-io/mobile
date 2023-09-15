@@ -18,6 +18,7 @@ import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
+import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.utils.RotatingFileLogger;
@@ -37,6 +38,8 @@ public class BleDeviceScanner implements DeviceScanner {
   private Set<String> foundPeripheralAddresses = new HashSet<>();
   private DeviceScanner.DeviceScanListener deviceScanListener;
   private DeviceScanner.PeripheralScanListener peripheralScanListener;
+
+  private MemoryCache memoryCache;
   private boolean scanning = false;
 
   private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback =
@@ -70,7 +73,7 @@ public class BleDeviceScanner implements DeviceScanner {
               BleDevice.RECONNECTION_ATTEMPTS_INTERVAL);
           Device device = Device.create(
               centralManagerProxy, bluetoothStateManager, nextSenseDevice, peripheral,
-              reconnectionManager);
+              reconnectionManager, memoryCache);
           devices.add(device);
           deviceScanListener.onNewDevice(peripheral);
         }
@@ -113,10 +116,12 @@ public class BleDeviceScanner implements DeviceScanner {
 
   public BleDeviceScanner(NextSenseDeviceManager deviceManager,
                           BleCentralManagerProxy centralManagerProxy,
-                          BluetoothStateManager bluetoothStateManager) {
+                          BluetoothStateManager bluetoothStateManager,
+                          MemoryCache memoryCache) {
     this.deviceManager = deviceManager;
     this.centralManagerProxy = centralManagerProxy;
     this.bluetoothStateManager = bluetoothStateManager;
+    this.memoryCache = memoryCache;
     centralManagerProxy.addGlobalListener(bluetoothCentralManagerCallback);
     RotatingFileLogger.get().logd(TAG, "Initialized DeviceScanner");
   }

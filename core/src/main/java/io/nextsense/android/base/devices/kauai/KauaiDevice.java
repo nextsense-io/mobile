@@ -21,6 +21,8 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
@@ -45,7 +47,9 @@ import io.nextsense.android.base.devices.StreamingStartMode;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
 public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice {
-  public static final String BLUETOOTH_PREFIX = "NextSense";
+  public static final String BLUETOOTH_PREFIX = "NextSense EEG";
+
+  public static final ByteOrder BYTE_ORDER = ByteOrder.BIG_ENDIAN;
   public static final String STREAM_START_MODE_KEY = "stream.start.mode";
 
   private static final String TAG = KauaiDevice.class.getSimpleName();
@@ -55,12 +59,12 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private static final Duration COMMAND_TIMEOUT = Duration.ofSeconds(1);
 
   // TODO(eric): Set correct UUIDs.
-  private static final UUID SERVICE_UUID = UUID.fromString("cb577fc4-7260-41f8-8216-3be734c7820a");
-  private static final UUID DATA_UUID = UUID.fromString("59e33cfa-497d-4356-bb46-b87888419cb2");
+  private static final UUID SERVICE_UUID = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
+  private static final UUID DATA_UUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
   // TODO(eric): Set correct UUIDs.
-  private static final UUID COMMANDS_UUID = UUID.fromString("59e33cfa-497d-4356-bb46-b87888419cb2");
-  private static final UUID NOTIFICATIONS_UUID = UUID.fromString("59e33cfa-497d-4356-bb46-b87888419cb2");
+  private static final UUID COMMANDS_UUID = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
+  private static final UUID NOTIFICATIONS_UUID = UUID.fromString("6e400004-b5a3-f393-e0a9-e50e24dcca9e");
 
 
   private final ListeningExecutorService executorService =
@@ -92,7 +96,9 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private KauaiFirmwareMessageProto.MessageType lastMessageType = null;
 
   // Needed for reflexion when created by Bluetooth device name.
-  public KauaiDevice() {}
+  public KauaiDevice() {
+    startListening();
+  }
 
   public KauaiDevice(LocalSessionManager localSessionManager) {
     setLocalSessionManager(localSessionManager);
@@ -138,6 +144,11 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   }
 
   @Override
+  public List<String> getEegChannelNames() {
+    return Arrays.asList("1", "2", "3", "4", "5", "6");
+  }
+
+  @Override
   public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral, boolean reconnecting) {
     this.peripheral = peripheral;
     initializeCharacteristics();
@@ -149,20 +160,25 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     }
     return executorService.submit(() -> {
       try {
+        // Set the time on the device.
         executeCommandNoResponse(new SetDateTimeCommand(
             lastMessageId++, String.valueOf(Instant.now().toEpochMilli())));
-        KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
+        // TODO(eric): Enable when the device sends a response to this command.
+//        KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
+//            COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+//        // Cannot read device settings, so load the default setting and apply them when connecting.
+//        if (hostMessage.getResult().getErrorType() !=
+//            KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
+//          RotatingFileLogger.get().loge(TAG, "Failed to set the time on the device: " +
+//              hostMessage.getResult().getAdditionalInfo());
+//          return false;
+//        }
+        loadDeviceInfo().get(COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+        // TODO(eric): call get_device_state here.
+        loadDeviceSettings().get(
             COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-        // TODO(eric): call get_device_info and get_device_state here.
-        // Cannot read device settings, so load the default setting and apply them when connecting.
-        if (hostMessage.getResult().getErrorType() !=
-            KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
-          RotatingFileLogger.get().loge(TAG, "Failed to set the time on the device: " +
-              hostMessage.getResult().getAdditionalInfo());
-          return false;
-        }
-        applyDeviceSettings(loadDeviceSettings().get(
-            COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+//        applyDeviceSettings(loadDeviceSettings().get(
+//            COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
         RotatingFileLogger.get().logi(TAG, "Applied device settings.");
         // Enable notifications to get the device state change messages.
         if (!peripheral.isNotifying(notificationsCharacteristic)) {
@@ -178,7 +194,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
         Thread.currentThread().interrupt();
         return false;
       } catch (TimeoutException te) {
-        RotatingFileLogger.get().loge(TAG, "Timeout settings the time on the device: " +
+        RotatingFileLogger.get().loge(TAG, "Timeout getting the device ready: " +
             te.getMessage());
         return false;
       }
@@ -220,26 +236,27 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       return Futures.immediateFuture(false);
     }
     return executorService.submit(() -> {
-      executeCommandNoResponse(new SetRecordingOptionsCommand(lastMessageId++,
-          /*saveToFile=*/targetStartStreamingMode == StreamingStartMode.WITH_LOGGING,
-          /*continuousImpedance=*/false, (int)deviceSettings.getEegSamplingRate()));
-      KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
-          COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-      if (hostMessage.getResult().getErrorType() !=
-          KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
-        // TODO(eric): Pass error back to higher layer.
-        RotatingFileLogger.get().logw(TAG, "Failed to set recording options: " +
-            hostMessage.getResult().getErrorType() + ", " +
-            hostMessage.getResult().getAdditionalInfo());
-        return false;
-      }
+      // TODO(eric): enable when device supports this message.
+//      executeCommandNoResponse(new SetRecordingOptionsCommand(lastMessageId++,
+//          /*saveToFile=*/targetStartStreamingMode == StreamingStartMode.WITH_LOGGING,
+//          /*continuousImpedance=*/false, (int)deviceSettings.getEegSamplingRate()));
+//      KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
+//          COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+//      if (hostMessage.getResult().getErrorType() !=
+//          KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
+//        // TODO(eric): Pass error back to higher layer.
+//        RotatingFileLogger.get().logw(TAG, "Failed to set recording options: " +
+//            hostMessage.getResult().getErrorType() + ", " +
+//            hostMessage.getResult().getAdditionalInfo());
+//        return false;
+//      }
       changeStreamingStateFuture = SettableFuture.create();
       if (!peripheral.isNotifying(dataCharacteristic)) {
         peripheral.setNotify(dataCharacteristic, /*enable=*/true);
       } else {
         runStartStreamingCommand();
       }
-      return changeStreamingStateFuture.get(COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+      return changeStreamingStateFuture.get(5000, TimeUnit.MILLISECONDS);
     });
   }
 
@@ -261,31 +278,36 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   @Override
   public ListenableFuture<Boolean> stopStreaming() {
     if (this.deviceMode == DeviceMode.IDLE) {
+      localSessionManager.stopLocalSession();
       return Futures.immediateFuture(true);
     }
     return executorService.submit(() -> {
       if (peripheral.getState() == ConnectionState.CONNECTED) {
         try {
           executeCommandNoResponse(new StopRecordingCommand(lastMessageId++));
-          KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
-              COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-          // TODO(eric): call get_device_info and get_device_state here.
+          // TODO(eric): enable when device supports this message.
+//          KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
+//              COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
           // Cannot read device settings, so load the default setting and apply them when connecting.
-          if (hostMessage.getResult().getErrorType() !=
-              KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
-            // TODO(eric): Pass error back to higher layer.
-            RotatingFileLogger.get().logw(TAG, "Failed to stop streaming: " +
-                hostMessage.getResult().getErrorType() + ", " +
-                hostMessage.getResult().getAdditionalInfo());
-            return false;
-          }
-        } catch (CancellationException | ExecutionException | TimeoutException e) {
+//          if (hostMessage.getResult().getErrorType() !=
+//              KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
+//            // TODO(eric): Pass error back to higher layer.
+//            RotatingFileLogger.get().logw(TAG, "Failed to stop streaming: " +
+//                hostMessage.getResult().getErrorType() + ", " +
+//                hostMessage.getResult().getAdditionalInfo());
+//            return false;
+//          }
+        } catch (CancellationException | ExecutionException e) {
           RotatingFileLogger.get().loge(TAG, "Failed to stop streaming: " + e.getMessage());
+          localSessionManager.stopLocalSession();
+          deviceMode = DeviceMode.IDLE;
           return false;
         } catch (InterruptedException e) {
           RotatingFileLogger.get().loge(TAG, "Interrupted when trying to stop streaming: " +
               e.getMessage());
           Thread.currentThread().interrupt();
+          localSessionManager.stopLocalSession();
+          deviceMode = DeviceMode.IDLE;
           return false;
         }
       }
@@ -322,7 +344,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   public ListenableFuture<DeviceSettings> loadDeviceSettings() {
     if (deviceSettings == null) {
       deviceSettings = new DeviceSettings();
-      // TODO(eric): Load values from Kauai.
+      // No command to load settings yet in Kauai, apply default values.
       deviceSettings.setEnabledChannels(enabledChannels);
       deviceSettings.setEegSamplingRate(250);
       deviceSettings.setEegStreamingRate(250);
@@ -334,12 +356,56 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     return Futures.immediateFuture(deviceSettings);
   }
 
+  public ListenableFuture<Boolean> loadDeviceInfo() {
+    return executorService.submit(() -> {
+      try {
+        executeCommandNoResponse(new GetDeviceInfoCommand(lastMessageId++));
+        readCommandResponse();
+        KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
+            COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+        if (hostMessage.getResult().getErrorType() !=
+            KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
+          // TODO(eric): Pass error back to higher layer.
+          RotatingFileLogger.get().logw(TAG, "Failed to get device info: " +
+              hostMessage.getResult().getErrorType() + ", " +
+              hostMessage.getResult().getAdditionalInfo());
+          return true;
+        }
+        KauaiFirmwareMessageProto.DeviceInfo deviceInfo = hostMessage.getDeviceInfo();
+        RotatingFileLogger.get().logi(TAG, "Device revision: " + deviceInfo.getDeviceRevision());
+        RotatingFileLogger.get().logi(TAG, "Device type: " + deviceInfo.getDeviceType());
+        RotatingFileLogger.get().logi(TAG, "Device serial: " + deviceInfo.getDeviceSerialNumber());
+        RotatingFileLogger.get().logi(TAG, "Device time: " + Instant.ofEpochSecond(deviceInfo.getDeviceTimeEpochSeconds()).toString());
+        RotatingFileLogger.get().logi(TAG, "FW major: " + deviceInfo.getFirmwareVersionMajor());
+        RotatingFileLogger.get().logi(TAG, "FW minor: " + deviceInfo.getFirmwareVersionMinor());
+        RotatingFileLogger.get().logi(TAG, "FW build number: " + deviceInfo.getFirmwareVersionBuildNumber());
+        byte[] macAddressBytes = new byte[deviceInfo.getMacAddressList().size()];
+        for (int i = 0; i < deviceInfo.getMacAddressList().size();++i) {
+          macAddressBytes[i] = deviceInfo.getMacAddressList().get(i).byteValue();
+        }
+        String macAddress = new String(macAddressBytes, StandardCharsets.US_ASCII);
+        RotatingFileLogger.get().logi(TAG, "Mac address: " + macAddress);
+        return true;
+      } catch (ExecutionException e) {
+        RotatingFileLogger.get().loge(TAG, "Failed to get device settings: " + e.getMessage());
+        return false;
+      } catch (InterruptedException e) {
+        RotatingFileLogger.get().loge(TAG, "Interrupted when trying to get device settings: " +
+            e.getMessage());
+        Thread.currentThread().interrupt();
+        return false;
+      }
+    });
+  }
+
   @Override
   public boolean requestDeviceInternalState() {
     try {
       executeCommandNoResponse(new GetDeviceStatusCommand(lastMessageId++));
+      readCommandResponse();
       return true;
-    } catch (CancellationException | ExecutionException e) {
+    } catch (CancellationException | ExecutionException | TimeoutException |
+             FirmwareMessageParsingException e) {
       RotatingFileLogger.get().loge(TAG, "Failed to request the device state: " + e.getMessage());
       return false;
     } catch (InterruptedException e) {
@@ -351,7 +417,8 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
 
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
   public void onKauaiHostMessage(KauaiHostResponse hostResponse) {
-    RotatingFileLogger.get().logv(TAG, "Received host message: " + hostResponse);
+    RotatingFileLogger.get().logv(TAG, "Received host message: " +
+        hostResponse.getHostMessage().toString());
     if (commandResultFuture != null) {
       if (!verifyIsExpectedResponse(hostResponse)) {
         commandResultFuture.setException(new BluetoothException(
@@ -359,14 +426,15 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       }
       commandResultFuture.set(hostResponse.getHostMessage());
     } else {
-      RotatingFileLogger.get().logw(TAG, "Received host message but no command was sent: " +
-          hostResponse);
+      RotatingFileLogger.get().logw(TAG, "No command was sent for this host message");
     }
   }
 
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
   public void onKauaiHostEvent(KauaiHostEvent hostEvent) {
     // TODO(eric): Handle events. Should send them straight to Flutter layer as bytes for processing?
+    RotatingFileLogger.get().logv(TAG, "Received host event: " +
+        hostEvent.getHostMessage().toString());
   }
 
   public void startListening() {
@@ -394,12 +462,13 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
           lastMessageType + ", received: " + response.getHostMessage().getMessageType());
       return false;
     }
-    if (response.getHostMessage().getRespToMessageId() != lastMessageId) {
-      RotatingFileLogger.get().logw(TAG,
-          "Received message id not matching the expected one. Expected: " +
-          lastMessageId + ", received: " + response.getHostMessage().getRespToMessageId());
-      return false;
-    }
+    // TOD(eric): add back id verification when working correctly.
+//    if (response.getHostMessage().getRespToMessageId() != lastMessageId) {
+//      RotatingFileLogger.get().logw(TAG,
+//          "Received message id not matching the expected one. Expected: " +
+//          lastMessageId + ", received: " + response.getHostMessage().getRespToMessageId());
+//      return false;
+//    }
     return true;
   }
 
@@ -429,27 +498,46 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       RotatingFileLogger.get().logw(TAG, "No peripheral to execute command on.");
       return;
     }
+    RotatingFileLogger.get().logv(TAG, "Executing command: " + command.getType());
     blePeripheralCallbackProxy.writeCharacteristic(
         peripheral, commandsCharacteristic, command.getCommand(), WriteType.WITHOUT_RESPONSE).get();
+  }
+
+  private void readCommandResponse() throws
+      ExecutionException, InterruptedException, CancellationException, TimeoutException,
+      FirmwareMessageParsingException {
+    if (peripheral == null || commandsCharacteristic == null) {
+      RotatingFileLogger.get().logw(TAG, "No peripheral to read command response from.");
+      return;
+    }
+    RotatingFileLogger.get().logv(TAG, "Reading command response.");
     commandResultFuture = SettableFuture.create();
+    byte[] responseBytes = blePeripheralCallbackProxy.readCharacteristic(
+        peripheral, commandsCharacteristic).get(
+        COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+    RotatingFileLogger.get().logv(TAG, "Command bytes: " + Arrays.toString(responseBytes));
+    kauaiProtoDataParser.parseProtoDataBytes(responseBytes);
   }
 
   private void runStartStreamingCommand() {
     try {
       executeCommandNoResponse(new StartRecordingCommand(lastMessageId++));
-      KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
-          COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-      // TODO(eric): call get_device_info and get_device_state here.
-      // Cannot read device settings, so load the default setting and apply them when connecting.
-      if (hostMessage.getResult().getErrorType() !=
-          KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
-        // TODO(eric): Pass error back to higher layer.
-        RotatingFileLogger.get().logw(TAG, "Failed to start streaming: " +
-            hostMessage.getResult().getErrorType() + ", " +
-            hostMessage.getResult().getAdditionalInfo());
-      }
+      // readCommandResponse();
+      // TODO(eric): enable when device sends response to start recording command.
+//      KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
+//          COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+//      // Cannot read device settings, so load the default setting and apply them when connecting.
+//      if (hostMessage.getResult().getErrorType() !=
+//          KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
+//        // TODO(eric): Pass error back to higher layer.
+//        RotatingFileLogger.get().logw(TAG, "Failed to start streaming: " +
+//            hostMessage.getResult().getErrorType() + ", " +
+//            hostMessage.getResult().getAdditionalInfo());
+//      }
+      RotatingFileLogger.get().logi(TAG, "Start recording command run successfully.");
+      deviceMode = DeviceMode.STREAMING;
       changeStreamingStateFuture.set(true);
-    } catch (CancellationException | ExecutionException | TimeoutException e) {
+    } catch (CancellationException | ExecutionException e) {
       RotatingFileLogger.get().loge(TAG, "Failed to start streaming: " + e.getMessage());
       changeStreamingStateFuture.setException(e);
     } catch (InterruptedException e) {
@@ -467,8 +555,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
             @NonNull BluetoothPeripheral peripheral,
             @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
           if (isDataCharacteristic(characteristic)) {
-            if (changeStreamingStateFuture != null && !changeStreamingStateFuture.isDone() &&
-                isDataCharacteristic(characteristic)) {
+            if (changeStreamingStateFuture != null && !changeStreamingStateFuture.isDone()) {
               if (status == GattStatus.SUCCESS) {
                 RotatingFileLogger.get().logd(TAG, "Notification updated with success to " +
                     peripheral.isNotifying(characteristic));
@@ -484,16 +571,15 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
                     "Notification state update failed with code " + status));
               }
             }
-            if (changeNotificationStateFuture != null && !changeNotificationStateFuture.isDone() &&
-                isDataCharacteristic(characteristic)) {
-              if (status == GattStatus.SUCCESS) {
-                RotatingFileLogger.get().logd(TAG, "Notification updated with success to " +
-                    peripheral.isNotifying(characteristic));
-                changeNotificationStateFuture.set(true);
-              } else {
-                changeNotificationStateFuture.setException(new BluetoothException(
-                    "Notification state update failed with code " + status));
-              }
+          } else if (isNotificationsCharacteristic(characteristic) &&
+              (changeNotificationStateFuture != null && !changeNotificationStateFuture.isDone())) {
+            if (status == GattStatus.SUCCESS) {
+              RotatingFileLogger.get().logd(TAG, "Notification updated with success to " +
+                  peripheral.isNotifying(characteristic));
+              changeNotificationStateFuture.set(true);
+            } else {
+              changeNotificationStateFuture.setException(new BluetoothException(
+                  "Notification state update failed with code " + status));
             }
           }
         }
@@ -502,19 +588,21 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
         public void onCharacteristicUpdate(
             @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
             @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
+          RotatingFileLogger.get().logi(TAG, "Characteristic update received with status " +
+              status + " with value: " + Arrays.toString(value));
           if (isDataCharacteristic(characteristic)) {
             try {
               kauaiDataParser.parseDataBytes(value, getChannelCount());
             } catch (FirmwareMessageParsingException e) {
-              e.printStackTrace();
+              RotatingFileLogger.get().loge(TAG, "Failed to parse data bytes: " + e.getMessage());
             }
-          }
-          if (isCommandsCharacteristic(characteristic) ||
+          } else if (isCommandsCharacteristic(characteristic) ||
               isNotificationsCharacteristic(characteristic)) {
             try {
               kauaiProtoDataParser.parseProtoDataBytes(value);
             } catch (FirmwareMessageParsingException e) {
-              e.printStackTrace();
+              RotatingFileLogger.get().loge(TAG, "Failed to parse proto data bytes: " +
+                  e.getMessage());
             }
           }
         }

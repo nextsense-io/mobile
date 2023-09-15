@@ -8,6 +8,8 @@ import androidx.annotation.Nullable;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 
+import java.util.List;
+
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceSettings;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
@@ -28,6 +30,12 @@ public interface NextSenseDevice {
 
   // Gets the maximum number of channels that the device could have.
   int getChannelCount();
+
+  // Gets the list of EEG channel names that the device will stream.
+  List<String> getEegChannelNames();
+
+  // Gets the list of accelerometer channel names that the device will stream.
+  List<String> GetAccChannelNames();
 
   void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy);
 

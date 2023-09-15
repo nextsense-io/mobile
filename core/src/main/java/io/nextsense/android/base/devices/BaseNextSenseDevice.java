@@ -9,6 +9,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import io.nextsense.android.base.DeviceMode;
@@ -25,6 +27,10 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
     return localSessionManager;
   }
 
+  @Override
+  public List<String> GetAccChannelNames() {
+    return Arrays.asList("x", "y", "z");
+  }
   @Override
   public DeviceMode getDeviceMode() {
     return deviceMode;

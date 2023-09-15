@@ -22,6 +22,10 @@ public class MemoryCache {
   private final Object eegLock = new Object();
   private final Object accLock = new Object();
 
+  private MemoryCache() {
+    timestamps = new EvictingArray<>(DEFAULT_RETENTION_SAMPLES);
+  }
+
   private MemoryCache(List<String> eegChannelNames, List<String> accChannelNames) {
     for (String eegChannelName : eegChannelNames) {
       eegChannels.put(eegChannelName, new EvictingArray<>(DEFAULT_RETENTION_SAMPLES));
@@ -32,8 +36,23 @@ public class MemoryCache {
     timestamps = new EvictingArray<>(DEFAULT_RETENTION_SAMPLES);
   }
 
+  public static MemoryCache create() {
+    return new MemoryCache();
+  }
+
   public static MemoryCache create(List<String> eegChannelNames, List<String> accChannelNames) {
     return new MemoryCache(eegChannelNames, accChannelNames);
+  }
+  public void init(List<String> eegChannelNames, List<String> accChannelNames) {
+    eegChannels.clear();
+    for (String eegChannelName : eegChannelNames) {
+      eegChannels.put(eegChannelName, new EvictingArray<>(DEFAULT_RETENTION_SAMPLES));
+    }
+    accChannels.clear();
+    for (String accChannelName : accChannelNames) {
+      accChannels.put(accChannelName, new EvictingArray<>(DEFAULT_RETENTION_SAMPLES));
+    }
+    timestamps.clear();
   }
 
   public void addChannelData(Samples samples) {

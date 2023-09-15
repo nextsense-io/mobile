@@ -63,15 +63,17 @@ class DeviceManager {
   bool get deviceIsReady => deviceState.value == DeviceState.ready;
   bool get deviceInternalStateAvailable => deviceInternalState.value != null;
   // Internal state shortcuts.
-  bool get isHdmiCablePresent => deviceInternalState.value?.hdmiCablePresent ?? false;
-  bool get isUSdPresent => deviceInternalState.value?.uSdPresent ?? false;
+  // TODO(eric): Make this conditional on device type.
+  bool get isHdmiCablePresent => deviceInternalState.value?.hdmiCablePresent ?? true;
+  bool get isUSdPresent => deviceInternalState.value?.uSdPresent ?? true;
   // There is already a paired device that can be connected to if found.
   bool get hadPairedDevice => getLastPairedDevice() != null;
 
   Future<bool> connectDevice(Device device,
       {Duration timeout = const Duration(seconds: 10)}) async {
     _listenToState(device.macAddress);
-    _listenToInternalState();
+    // TODO(eric): Make this conditional on device type.
+    // _listenToInternalState();
     _connectedDevice = device;
     await NextsenseBase.connectDevice(device.macAddress);
     // Check device state in case it is already READY (service was already running with a connected
@@ -85,15 +87,17 @@ class DeviceManager {
         return false;
       }
     }
-    NextsenseBase.requestDeviceStateUpdate(device.macAddress);
-    bool stateAvailable = await waitInternalStateAvailable(timeout);
-    if (!stateAvailable) {
-      _logger.log(Level.WARNING, 'Timeout waiting for internal state available');
-      await disconnectDevice();
-      return false;
-    }
+    // TODO(eric): Make this conditional on device type.
+    // NextsenseBase.requestDeviceStateUpdate(device.macAddress);
+    // bool stateAvailable = await waitInternalStateAvailable(timeout);
+    // if (!stateAvailable) {
+    //   _logger.log(Level.WARNING, 'Timeout waiting for internal state available');
+    //   await disconnectDevice();
+    //   return false;
+    // }
 
-    _requestStateChanges();
+    // TODO(eric): Make this conditional on device type.
+    // _requestStateChanges();
     _authManager.user!
       ..setLastPairedDeviceMacAddress(device.macAddress)
       ..save();
@@ -250,7 +254,8 @@ class DeviceManager {
       return true;
     }
     await NextsenseBase.stopStreaming(_connectedDevice!.macAddress);
-    _requestStateChanges();
+    // TODO(erics): Make this conditional on device type.
+    // _requestStateChanges();
   }
 
   void dispose() {
@@ -369,7 +374,8 @@ class DeviceManager {
       _deviceReadyCompleter.complete(true);
     } else {
       _logger.log(Level.INFO, 'Reconnecting.');
-      _requestStateChanges();
+      // TODO(eric): Make this conditional on device type.
+      // _requestStateChanges();
     }
   }
 }

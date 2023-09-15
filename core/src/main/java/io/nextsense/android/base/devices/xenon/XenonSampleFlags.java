@@ -1,13 +1,17 @@
 package io.nextsense.android.base.devices.xenon;
 
+import androidx.annotation.Nullable;
+
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 
+import io.nextsense.android.base.devices.SampleFlags;
+
 /**
  * Xenon per-sample flags.
  */
-public class SampleFlags {
+public class XenonSampleFlags implements SampleFlags {
 
   private static final List<Byte> BIT_MASKS = ImmutableList.of(
       (byte)0x01, (byte)0x02, (byte)0x04, (byte)0x08, (byte)0x10, (byte)0x20, (byte)0x40, (byte)0x80
@@ -30,8 +34,8 @@ public class SampleFlags {
   private final boolean tbd7;
   private final boolean button;
 
-  private SampleFlags(boolean sync, boolean trigOut, boolean trigIn, boolean zMod, boolean marker,
-                      boolean tbd6, boolean tbd7, boolean button) {
+  private XenonSampleFlags(boolean sync, boolean trigOut, boolean trigIn, boolean zMod, boolean marker,
+                           boolean tbd6, boolean tbd7, boolean button) {
     this.sync = sync;
     this.trigOut = trigOut;
     this.trigIn = trigIn;
@@ -42,7 +46,7 @@ public class SampleFlags {
     this.button = button;
   }
 
-  public static SampleFlags create(byte flagsByte) {
+  public static XenonSampleFlags create(byte flagsByte) {
       boolean sync = (byte)(flagsByte & BIT_MASKS.get(FLAG_INDEX_SYNC)) ==
           BIT_MASKS.get(FLAG_INDEX_SYNC);
       boolean trigOut = (byte)(flagsByte & BIT_MASKS.get(FLAG_INDEX_TRIG_OUT)) ==
@@ -59,10 +63,10 @@ public class SampleFlags {
           BIT_MASKS.get(FLAG_INDEX_TBD_7);
       boolean button = (byte)(flagsByte & BIT_MASKS.get(FLAG_INDEX_BUTTON)) ==
           BIT_MASKS.get(FLAG_INDEX_BUTTON);
-      return new SampleFlags(sync, trigOut, trigIn, zMod, marker, tbd6, tbd7, button);
+      return new XenonSampleFlags(sync, trigOut, trigIn, zMod, marker, tbd6, tbd7, button);
   }
 
-  public static SampleFlags create(boolean[] flags) {
+  public static XenonSampleFlags create(boolean[] flags) {
     boolean sync = flags[FLAG_INDEX_SYNC];
     boolean trigOut = flags[FLAG_INDEX_TRIG_OUT];
     boolean trigIn = flags[FLAG_INDEX_TRIG_IN];
@@ -71,39 +75,57 @@ public class SampleFlags {
     boolean tbd6 = flags[FLAG_INDEX_TBD_6];
     boolean tbd7 = flags[FLAG_INDEX_TBD_7];
     boolean button = flags[FLAG_INDEX_BUTTON];
-    return new SampleFlags(sync, trigOut, trigIn, zMod, marker, tbd6, tbd7, button);
+    return new XenonSampleFlags(sync, trigOut, trigIn, zMod, marker, tbd6, tbd7, button);
   }
 
-  public boolean isSync() {
+  @Nullable
+  @Override
+  public Boolean isSync() {
     return sync;
   }
 
-  public boolean isTrigOut() {
+  @Nullable
+  @Override
+  public Boolean isTrigOut() {
     return trigOut;
   }
 
-  public boolean isTrigIn() {
+  @Nullable
+  @Override
+  public Boolean isTrigIn() {
     return trigIn;
   }
 
-  public boolean iszMod() {
+  @Nullable
+  @Override
+  public Boolean iszMod() {
     return zMod;
   }
 
-  public boolean isMarker() {
+  @Nullable
+  @Override
+  public Boolean isMarker() {
     return marker;
   }
 
-  public boolean isTbd6() {
+  public Boolean isTbd6() {
     return tbd6;
   }
 
-  public boolean isTbd7() {
+  public Boolean isTbd7() {
     return tbd7;
   }
 
-  public boolean isButton() {
+  @Nullable
+  @Override
+  public Boolean isButton() {
     return button;
+  }
+
+  @Nullable
+  @Override
+  public Boolean isHdmiPresent() {
+    return null;
   }
 
   public boolean[] getAsBooleanArray() {

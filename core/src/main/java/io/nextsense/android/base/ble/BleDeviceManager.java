@@ -20,6 +20,7 @@ import io.nextsense.android.base.DeviceState;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
+import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.utils.RotatingFileLogger;
@@ -32,6 +33,8 @@ public class BleDeviceManager implements DeviceManager {
   private final BleCentralManagerProxy centralManagerProxy;
   private final BluetoothStateManager bluetoothStateManager;
   private final NextSenseDeviceManager nextSenseDeviceManager;
+
+  private final MemoryCache memoryCache;
   private final Set<DeviceManager.DeviceScanListener> deviceScanListeners = new HashSet<>();
   private final Map<String, Device> devices = Maps.newConcurrentMap();
   private boolean scanning = false;
@@ -39,11 +42,13 @@ public class BleDeviceManager implements DeviceManager {
   public BleDeviceManager(DeviceScanner deviceScanner,
                           BleCentralManagerProxy centralManagerProxy,
                           BluetoothStateManager bluetoothStateManager,
-                          NextSenseDeviceManager nextSenseDeviceManager) {
+                          NextSenseDeviceManager nextSenseDeviceManager,
+                          MemoryCache memoryCache) {
     this.deviceScanner = deviceScanner;
     this.bluetoothStateManager = bluetoothStateManager;
     this.centralManagerProxy = centralManagerProxy;
     this.nextSenseDeviceManager = nextSenseDeviceManager;
+    this.memoryCache = memoryCache;
   }
 
   @Override
@@ -122,7 +127,7 @@ public class BleDeviceManager implements DeviceManager {
                 centralManagerProxy, bluetoothStateManager, deviceScanner,
                 BleDevice.RECONNECTION_ATTEMPTS_INTERVAL);
             Device device = Device.create(centralManagerProxy, bluetoothStateManager,
-                nextSenseDevice, peripheral, reconnectionManager);
+                nextSenseDevice, peripheral, reconnectionManager, memoryCache);
 
             if (scanning) {
               devices.putIfAbsent(device.getAddress(), device);

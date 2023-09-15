@@ -11,6 +11,7 @@ import io.nextsense.android.base.ble.BleDevice;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
+import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.emulated.EmulatedDevice;
 
@@ -29,12 +30,12 @@ public abstract class Device {
   public static Device create(
       BleCentralManagerProxy centralProxy, BluetoothStateManager bluetoothStateManager,
       NextSenseDevice nextSenseDevice, BluetoothPeripheral btPeripheral,
-      ReconnectionManager reconnectionManager) {
+      ReconnectionManager reconnectionManager, MemoryCache memoryCache) {
     if (Config.USE_EMULATED_BLE)
       return new EmulatedDevice();
 
     return new BleDevice(centralProxy, bluetoothStateManager, nextSenseDevice, btPeripheral,
-        reconnectionManager);
+        reconnectionManager, memoryCache);
   }
 
   /**

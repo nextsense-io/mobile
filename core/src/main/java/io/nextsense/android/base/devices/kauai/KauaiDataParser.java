@@ -2,14 +2,11 @@ package io.nextsense.android.base.devices.kauai;
 
 import static java.lang.Math.pow;
 
-import com.google.common.collect.ImmutableList;
-
 import org.greenrobot.eventbus.EventBus;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +14,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import io.nextsense.android.base.data.Acceleration;
+import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Sample;
@@ -31,16 +29,10 @@ import io.nextsense.android.base.utils.Util;
 public class KauaiDataParser {
 
   private static final String TAG = KauaiDataParser.class.getSimpleName();
-  private static final List<Byte> BIT_MASKS = ImmutableList.of(
-      (byte)0x01, (byte)0x02, (byte)0x04, (byte)0x08, (byte)0x10, (byte)0x20, (byte)0x40, (byte)0x80
-  );
-  private static final byte ACTIVE_CHANNELS_AUX_PACKET = 0x00;
-  private static final byte AUX_PACKET_STATUS_TYPE = 0x01;
-  private static final byte AUX_STATUS_PACKET_VERSION = 0x00;
-  private static final int DATA_TIMESTAMP_SIZE_BYTES = 6;
+  private static final int DATA_TIMESTAMP_SIZE_BYTES = 4;
   private static final int DATA_ACCELERATION_SIZE_BYTES = 6;
   private static final int DATA_CHANNEL_SIZE_BYTES = 3;
-  private static final int DATA_FLAGS_SIZE_BYTES = 1;
+  private static final int DATA_FLAGS_SIZE_BYTES = 2;
   private static final float V_REF = 4.5f;
 
   private final LocalSessionManager localSessionManager;
@@ -61,8 +53,7 @@ public class KauaiDataParser {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device data.");
     }
     ByteBuffer valuesBuffer = ByteBuffer.wrap(values);
-    byte activeChannelFlags = valuesBuffer.get();
-    List<Integer> activeChannels = getActiveChannelList(activeChannelFlags, channelsCount);
+    List<Integer> activeChannels = Arrays.asList(1, 2, 3, 4, 5, 6);
     int packetSize = getDataPacketSize(activeChannels.size());
     if (valuesBuffer.remaining() < packetSize) {
       throw new FirmwareMessageParsingException("Data is too small to parse one packet. Expected " +
@@ -113,10 +104,9 @@ public class KauaiDataParser {
       return Optional.empty();
     }
     LocalSession localSession = localSessionOptional.get();
-    valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
-    List<Short> accelerationData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
-        valuesBuffer.getShort());
+    valuesBuffer.order(KauaiDevice.BYTE_ORDER);
     HashMap<Integer, Float> eegData = new HashMap<>();
+    long sampleCounter = valuesBuffer.getInt() & 0xffffffffL;
     for (Integer activeChannel : activeChannels) {
       // The sample is encoded in 3 bytes.
       int eegValue = Util.bytesToInt24(
@@ -124,32 +114,18 @@ public class KauaiDataParser {
           ByteOrder.LITTLE_ENDIAN);
       eegData.put(activeChannel, convertToMicroVolts(eegValue));
     }
-    long samplingTimestamp = Util.bytesToLong48(new byte[]{valuesBuffer.get(),
-        valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get(),
-        valuesBuffer.get()}, 0, ByteOrder.LITTLE_ENDIAN);
-    Instant samplingTime = Instant.ofEpochMilli(samplingTimestamp);
+    List<Short> accelerationData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
+        valuesBuffer.getShort());
     Acceleration acceleration = Acceleration.create(localSession.id, /*x=*/accelerationData.get(0),
         /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), receptionTimestamp,
-        null, samplingTime);
-//    EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
-//        null, samplingTime, SampleFlags.create(valuesBuffer.get()));
-//    return Optional.of(Sample.create(eegSample, acceleration));
-    return null;
+        null, receptionTimestamp);
+    EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
+        null, receptionTimestamp, /*flags=*/KauaiSampleFlags.create(valuesBuffer.get()));
+    return Optional.of(Sample.create(eegSample, acceleration));
   }
 
   private static int getDataPacketSize(int activeChannelsSize) {
-    return DATA_ACCELERATION_SIZE_BYTES + activeChannelsSize * DATA_CHANNEL_SIZE_BYTES +
+    return activeChannelsSize * DATA_CHANNEL_SIZE_BYTES + DATA_ACCELERATION_SIZE_BYTES +
         DATA_TIMESTAMP_SIZE_BYTES + DATA_FLAGS_SIZE_BYTES;
-  }
-
-  private static List<Integer> getActiveChannelList(byte activeChannelFlags, int channelCount) {
-    List<Integer> activeChannels = new ArrayList<>();
-    for (int i = 0; i < channelCount; ++i) {
-      byte channelMask = BIT_MASKS.get(i);
-      if ((channelMask & activeChannelFlags) == channelMask) {
-        activeChannels.add(i + 1);
-      }
-    }
-    return activeChannels;
   }
 }

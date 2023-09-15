@@ -101,6 +101,11 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   }
 
   @Override
+  public List<String> getEegChannelNames() {
+    return Arrays.asList("1", "3", "6", "7", "8");
+  }
+
+  @Override
   public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral, boolean reconnecting) {
     this.peripheral = peripheral;
     initializeCharacteristics();

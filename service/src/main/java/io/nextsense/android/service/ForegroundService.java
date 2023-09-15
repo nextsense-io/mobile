@@ -173,18 +173,16 @@ public class ForegroundService extends Service {
     centralManagerProxy = (!Config.USE_EMULATED_BLE) ?
             new BleCentralManagerProxy(getApplicationContext()) : null;
     nextSenseDeviceManager = NextSenseDeviceManager.create(localSessionManager);
+    memoryCache = MemoryCache.create();
     deviceScanner = DeviceScanner.create(
-        nextSenseDeviceManager, centralManagerProxy, bluetoothStateManager);
+        nextSenseDeviceManager, centralManagerProxy, bluetoothStateManager, memoryCache);
     deviceManager = DeviceManager.create(
         deviceScanner, localSessionManager, centralManagerProxy, bluetoothStateManager,
-        nextSenseDeviceManager);
+        nextSenseDeviceManager, memoryCache);
     databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
     databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);
     // sampleRateCalculator.startListening();
-    // TODO(eric) Get from device config.
-    memoryCache = MemoryCache.create(
-            Arrays.asList("1", "3", "6", "7", "8"), Arrays.asList("x", "y", "z"));
     cacheSink = CacheSink.create(memoryCache);
     cacheSink.startListening();
     connectivity = Connectivity.create(this);

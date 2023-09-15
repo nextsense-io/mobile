@@ -18,6 +18,7 @@ import com.welie.blessed.WriteType;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -108,6 +109,11 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   @Override
   public int getChannelCount() {
     return CHANNELS_NUMBER;
+  }
+
+  @Override
+  public List<String> getEegChannelNames() {
+    return Arrays.asList("1", "3", "6", "7", "8");
   }
 
   @Override

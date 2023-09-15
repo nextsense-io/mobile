@@ -27,17 +27,18 @@ public class KauaiProtoDataParser {
   }
 
   public void parseProtoDataBytes(byte[] values) throws FirmwareMessageParsingException {
-    if (values.length < 1) {
+    if (values.length < 5) {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device proto data.");
     }
     ByteBuffer valuesBuffer = ByteBuffer.wrap(values);
-    int protoLength = valuesBuffer.getInt();
+    valuesBuffer.order(KauaiDevice.BYTE_ORDER);
+    long protoLength = valuesBuffer.getInt() & 0xffffffffL;
     if (protoLength > values.length - 4) {
       throw new FirmwareMessageParsingException("Proto length of " + protoLength +
           " bigger than values: " + values.length);
     }
     try {
-      byte[] protoBytes = new byte[protoLength];
+      byte[] protoBytes = new byte[(int) protoLength];
       valuesBuffer.get(protoBytes);
       KauaiFirmwareMessageProto.HostMessage hostMessage =
           KauaiFirmwareMessageProto.HostMessage.parseFrom(protoBytes);
@@ -73,10 +74,10 @@ public class KauaiProtoDataParser {
           incomingMessageType = IncomingMessageType.RESPONSE;
           break;
         case NOTIFY_EVENT:
-          if (!hostMessage.hasEventType()) {
-            throw new FirmwareMessageParsingException(
-                "NOTIFY_EVENT message without event type");
-          }
+//          if (!hostMessage.hasEventType()) {
+//            throw new FirmwareMessageParsingException(
+//                "NOTIFY_EVENT message without event type");
+//          }
           incomingMessageType = IncomingMessageType.EVENT;
           break;
         default:

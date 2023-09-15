@@ -32,7 +32,7 @@ import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Sample;
-import io.nextsense.android.base.devices.xenon.SampleFlags;
+import io.nextsense.android.base.devices.xenon.XenonSampleFlags;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
 public class EmulatedDevice extends Device {
@@ -104,7 +104,7 @@ public class EmulatedDevice extends Device {
             null, samplingTime);
 
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
-            null, samplingTime, SampleFlags.create((byte)0));
+            null, samplingTime, XenonSampleFlags.create((byte)0));
     EventBus.getDefault().post(Sample.create(eegSample, acceleration));
   }
 

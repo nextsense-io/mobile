@@ -24,6 +24,7 @@ import java.util.Set;
  * Also provides a few convenience methods to do Bluetooth operations synchronously using futures.
  */
 public class BlePeripheralCallbackProxy {
+  private static final String TAG = BlePeripheralCallbackProxy.class.getSimpleName();
 
   private final Set<BluetoothPeripheralCallback> componentCallbacks = new ArraySet<>();
   private final Map<String, SettableFuture<byte[]>> writeFutures = new HashMap<>();
@@ -80,7 +81,9 @@ public class BlePeripheralCallbackProxy {
       return Futures.immediateFailedFuture(new BluetoothException(
           "Failed to write to characteristic " + characteristic.getUuid()));
     }
-    return writeFuture;
+    // TODO(eric): Remove this once the Android stack is fixed.
+    return Futures.immediateFuture(value);
+    // return writeFuture;
   }
 
   private final BluetoothPeripheralCallback deviceCallback = new BluetoothPeripheralCallback() {
@@ -104,7 +107,6 @@ public class BlePeripheralCallbackProxy {
     public void onCharacteristicUpdate(
         @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-
       // Copy the values for thread-safety, they could be overwritten in the gatt object before
       // processing is finished.
       final byte[] valueCopy = new byte[value.length];

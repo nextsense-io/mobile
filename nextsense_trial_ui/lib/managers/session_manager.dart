@@ -168,7 +168,11 @@ class SessionManager {
       _logger.log(Level.WARNING, 'Tried to stop a session while none was running.');
       return;
     }
-    _deviceManager.stopStreaming();
+    try {
+      _deviceManager.stopStreaming();
+    } catch (exception) {
+      _logger.log(Level.SEVERE, 'Failed to stop streaming. Message: $exception');
+    }
     DateTime stopTime = DateTime.now();
     _currentSession!.setValue(SessionKey.end_datetime, stopTime);
     await _currentSession!.save();
