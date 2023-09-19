@@ -39,6 +39,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.StandardMethodCodec;
 import io.nextsense.android.Config;
 import io.nextsense.android.base.Device;
+import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceScanner;
@@ -48,6 +49,7 @@ import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.emulated.EmulatedDeviceManager;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.service.ForegroundService;
@@ -71,6 +73,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String STOP_IMPEDANCE_COMMAND = "stop_impedance";
   public static final String SET_IMPEDANCE_CONFIG_COMMAND = "set_impedance_config";
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
+  public static final String GET_DEVICE_INFO_COMMAND = "get_device_info";
   public static final String GET_DEVICE_STATE_COMMAND = "get_device_state";
   public static final String GET_DEVICE_SETTINGS_COMMAND = "get_device_settings";
   public static final String GET_CHANNEL_DATA_COMMAND = "get_channel_data";
@@ -121,6 +124,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       "io.nextsense.flutter.base.nextsense_base/device_state_channel";
   private static final String DEVICE_INTERNAL_STATE_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/device_internal_state_channel";
+
+  private static final String DEVICE_EVENT_CHANNEL_NAME =
+      "io.nextsense.flutter.base.nextsense_base/device_event_channel";
+
   private static final String CURRENT_SESSION_DATA_RECEIVED_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/current_session_data_received_channel";
 
@@ -129,6 +136,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private final Gson gson;
   private final Map<String, Device.DeviceStateChangeListener> deviceStateListeners =
       Maps.newConcurrentMap();
+
+  private final Map<String, NextSenseDevice.DeviceInternalStateChangeListener>
+      deviceInternalStateListeners = Maps.newConcurrentMap();
   private LocalSessionManager.OnFirstDataReceivedListener onCurrentSessionDataReceivedListener;
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
@@ -137,6 +147,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private MethodChannel methodChannel;
   private EventChannel deviceScanChannel;
   private EventChannel deviceStateChannel;
+  private EventChannel deviceEventChannel;
   private EventChannel deviceInternalStateChannel;
   private EventChannel currentSessionDataReceivedChannel;
   private Context applicationContext;
@@ -144,6 +155,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private ForegroundService nextSenseService;
   private boolean nextSenseServiceBound = false;
   private DeviceManager.DeviceScanListener deviceScanListener;
+
+  private AndroidScheduler deviceEventChannelSubscriptionScheduler;
   private AndroidScheduler deviceInternalStateSubscriptionScheduler;
   private DataSubscription deviceInternalStateSubscription;
 
@@ -196,6 +209,26 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         stopListeningToDeviceState((String) argumentList.get(1));
       }
     });
+    deviceEventChannelSubscriptionScheduler =
+        new AndroidScheduler(applicationContext.getMainLooper());
+    deviceEventChannel =
+        new EventChannel(flutterPluginBinding.getBinaryMessenger(), DEVICE_EVENT_CHANNEL_NAME);
+    deviceEventChannel.setStreamHandler(new EventChannel.StreamHandler() {
+      @Override
+      @SuppressWarnings("unchecked")
+      public void onListen(Object arguments, EventChannel.EventSink eventSink) {
+        RotatingFileLogger.get().logi(TAG, "Starting to listen to device events...");
+        List<Object> argumentList = (ArrayList<Object>) arguments;
+        startListeningToDeviceEvents(eventSink, (String) argumentList.get(1));
+      }
+      @Override
+      @SuppressWarnings("unchecked")
+      public void onCancel(Object arguments) {
+        List<Object> argumentList = (ArrayList<Object>) arguments;
+        stopListeningToDeviceEvents((String) argumentList.get(1));
+      }
+    });
+
     deviceInternalStateSubscriptionScheduler =
         new AndroidScheduler(applicationContext.getMainLooper());
     deviceInternalStateChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(),
@@ -324,6 +357,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case GET_CONNECTED_DEVICES_COMMAND:
         getConnectedDevices(result);
+        break;
+      case GET_DEVICE_INFO_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        getDeviceInfo(result, macAddress);
         break;
       case GET_DEVICE_STATE_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -462,13 +499,24 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
+  private DeviceAttributes getDeviceAttributesFromDevice(Device device) {
+    return new DeviceAttributes(device.getAddress(), device.getName(),
+        device.getInfo().getType().name(), device.getInfo().getRevision(),
+        device.getInfo().getSerialNumber(), device.getInfo().getFirmwareVersionMajor(),
+        device.getInfo().getFirmwareVersionMinor(),
+        device.getInfo().getFirmwareVersionBuildNumber(),
+        device.getInfo().getEarbudsType(), device.getInfo().getEarbudsRevision(),
+        device.getInfo().getEarbudsSerialNumber(), device.getInfo().getEarbudsVersionMajor(),
+        device.getInfo().getEarbudsVersionMinor(), device.getInfo().getEarbudsVersionBuildNumber());
+  }
+
   private void getConnectedDevices(Result result) {
     List<String> connectedDevicesJson = new ArrayList<>();
     if (nextSenseServiceBound) {
       List<Device> connectedDevices = nextSenseService.getDeviceManager().getConnectedDevices();
       for (Device device : connectedDevices) {
         connectedDevicesJson.add(
-            gson.toJson(new DeviceAttributes(device.getAddress(), device.getName())));
+            gson.toJson(getDeviceAttributesFromDevice(device)));
       }
     }
     result.success(connectedDevicesJson);
@@ -490,8 +538,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         @Override
         public void onNewDevice(Device device) {
           RotatingFileLogger.get().logi(TAG, "Found a device in Android scan: " + device.getName());
-          DeviceAttributes deviceAttributes =
-              new DeviceAttributes(device.getAddress(), device.getName());
+          DeviceAttributes deviceAttributes = getDeviceAttributesFromDevice(device);
           uiThreadHandler.post(() -> eventSink.success(gson.toJson(deviceAttributes)));
         }
 
@@ -549,6 +596,52 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       }
     } else {
       RotatingFileLogger.get().logw(TAG, "Service not connected, cannot start monitoring device state.");
+    }
+  }
+
+  // TODO(eric): fill out device events methods.
+  private void startListeningToDeviceEvents(EventChannel.EventSink eventSink, String macAddress) {
+    if (nextSenseServiceBound) {
+      Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+      if (!device.isPresent()) {
+        RotatingFileLogger.get().logw(TAG, "Cannot find the device " + macAddress +
+            " when trying to start listening to its events.");
+        uiThreadHandler.post(() ->
+            eventSink.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+                /*errorDetails=*/null));
+        return;
+      }
+      NextSenseDevice.DeviceInternalStateChangeListener deviceInternalStateListener =
+          deviceInternalStateListeners.get(macAddress);
+      if (deviceInternalStateListener != null) {
+        device.get().removeOnDeviceInternalStateChangeListener(deviceInternalStateListener);
+        RotatingFileLogger.get().logi(TAG, "Stopped listening to Android device events for " +
+            macAddress);
+      }
+    } else {
+      RotatingFileLogger.get().logw(TAG,
+          "Service not connected, cannot start monitoring internal device state.");
+    }
+  }
+
+  private void stopListeningToDeviceEvents(String macAddress) {
+    if (nextSenseServiceBound) {
+      Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+      if (!device.isPresent()) {
+        RotatingFileLogger.get().logw(TAG, "Cannot find the device " + macAddress +
+            " when trying to stop listening to its events.");
+        return;
+      }
+      NextSenseDevice.DeviceInternalStateChangeListener deviceInternalStateListener =
+          deviceInternalStateListeners.get(macAddress);
+      if (deviceInternalStateListener != null) {
+        device.get().removeOnDeviceInternalStateChangeListener(deviceInternalStateListener);
+        RotatingFileLogger.get().logi(TAG, "Stopped listening to Android device events for " +
+            macAddress);
+      }
+    } else {
+      RotatingFileLogger.get().logw(TAG,
+          "Service not connected, cannot start monitoring device events.");
     }
   }
 
@@ -818,6 +911,17 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       returnError(result, STOP_IMPEDANCE_COMMAND, ERROR_STREAMING_STOP_FAILED,
           /*errorMessage=*/e.getMessage(), /*errorDetails=*/null);
     }
+  }
+
+  private void getDeviceInfo(Result result, String macAddress) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
+      returnError(result, GET_DEVICE_INFO_COMMAND, ERROR_DEVICE_NOT_FOUND,
+          /*errorMessage=*/null, /*errorDetails=*/null);
+      return;
+    }
+    DeviceInfo deviceInfo = device.get().getInfo();
+    result.success(gson.toJson(deviceInfo));
   }
 
   private void getDeviceSettings(Result result, String macAddress) {

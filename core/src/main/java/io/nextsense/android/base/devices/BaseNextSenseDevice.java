@@ -10,7 +10,9 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import io.nextsense.android.base.DeviceMode;
@@ -22,6 +24,8 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
   protected LocalSessionManager localSessionManager;
   protected DeviceMode deviceMode = DeviceMode.IDLE;
   protected BluetoothPeripheral peripheral;
+  protected final Set<DeviceInternalStateChangeListener> deviceInternalStateChangeListeners =
+      new HashSet<>();
 
   public LocalSessionManager getLocalSessionManager() {
     return localSessionManager;
@@ -85,6 +89,23 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
     if (characteristic == null) {
       throw new UnsupportedOperationException("Cannot find the service " + serviceUuid.toString() +
           " and/or the characteristic " + charUuid + " on this device.");
+    }
+  }
+
+  @Override
+  public void addOnDeviceInternalStateChangeListener(DeviceInternalStateChangeListener listener) {
+    deviceInternalStateChangeListeners.add(listener);
+  }
+
+  @Override
+  public void removeOnDeviceInternalStateChangeListener(
+      DeviceInternalStateChangeListener listener) {
+    deviceInternalStateChangeListeners.remove(listener);
+  }
+
+  protected void notifyDeviceInternalStateChangeListeners(byte[] deviceInternalState) {
+    for (DeviceInternalStateChangeListener listener : deviceInternalStateChangeListeners) {
+      listener.onDeviceInternalStateChange(deviceInternalState);
     }
   }
 }

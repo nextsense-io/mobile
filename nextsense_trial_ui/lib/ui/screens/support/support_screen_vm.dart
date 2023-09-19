@@ -4,6 +4,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/issue.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/firebase_storage_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/utils/android_logger.dart';
@@ -16,15 +17,21 @@ class SupportScreenViewModel extends ViewModel {
   final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
   final FirebaseStorageManager _firebaseStorageManager = getIt<FirebaseStorageManager>();
   final AuthManager _authManager = getIt<AuthManager>();
+  final DeviceManager _deviceManager = getIt<DeviceManager>();
 
   String? issueDescription;
   bool attachLog = false;
   String? version = '';
+  Device? connectedDevice;
+
 
   @override
   void init() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     version = packageInfo.version;
+    if (_deviceManager.deviceIsReady) {
+      connectedDevice = _deviceManager.getConnectedDevice();
+    }
     setInitialised(true);
     notifyListeners();
   }

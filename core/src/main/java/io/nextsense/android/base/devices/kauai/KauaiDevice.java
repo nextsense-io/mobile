@@ -34,8 +34,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceSettings;
+import io.nextsense.android.base.DeviceType;
 import io.nextsense.android.base.KauaiFirmwareMessageProto;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
@@ -85,6 +87,10 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private BluetoothGattCharacteristic notificationsCharacteristic;
   private SettableFuture<Boolean> changeNotificationStateFuture;
   private SettableFuture<Boolean> changeStreamingStateFuture;
+  private DeviceInfo deviceInfo = new DeviceInfo(DeviceType.KAUAI,
+      DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN);
   private DeviceSettings deviceSettings;
   private StreamingStartMode targetStartStreamingMode;
 
@@ -320,6 +326,11 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   }
 
   @Override
+  public DeviceInfo getDeviceInfo() {
+    return deviceInfo;
+  }
+
+  @Override
   public ListenableFuture<Boolean> applyDeviceSettings(DeviceSettings newDeviceSettings) {
     return executorService.submit(() -> {
       try {
@@ -371,20 +382,31 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
               hostMessage.getResult().getAdditionalInfo());
           return true;
         }
-        KauaiFirmwareMessageProto.DeviceInfo deviceInfo = hostMessage.getDeviceInfo();
-        RotatingFileLogger.get().logi(TAG, "Device revision: " + deviceInfo.getDeviceRevision());
-        RotatingFileLogger.get().logi(TAG, "Device type: " + deviceInfo.getDeviceType());
-        RotatingFileLogger.get().logi(TAG, "Device serial: " + deviceInfo.getDeviceSerialNumber());
-        RotatingFileLogger.get().logi(TAG, "Device time: " + Instant.ofEpochSecond(deviceInfo.getDeviceTimeEpochSeconds()).toString());
-        RotatingFileLogger.get().logi(TAG, "FW major: " + deviceInfo.getFirmwareVersionMajor());
-        RotatingFileLogger.get().logi(TAG, "FW minor: " + deviceInfo.getFirmwareVersionMinor());
-        RotatingFileLogger.get().logi(TAG, "FW build number: " + deviceInfo.getFirmwareVersionBuildNumber());
-        byte[] macAddressBytes = new byte[deviceInfo.getMacAddressList().size()];
-        for (int i = 0; i < deviceInfo.getMacAddressList().size();++i) {
-          macAddressBytes[i] = deviceInfo.getMacAddressList().get(i).byteValue();
+        KauaiFirmwareMessageProto.DeviceInfo deviceInfoProto = hostMessage.getDeviceInfo();
+        RotatingFileLogger.get().logi(TAG, "Device revision: " + deviceInfoProto.getDeviceRevision());
+        RotatingFileLogger.get().logi(TAG, "Device type: " + deviceInfoProto.getDeviceType());
+        RotatingFileLogger.get().logi(TAG, "Device serial: " + deviceInfoProto.getDeviceSerialNumber());
+        RotatingFileLogger.get().logi(TAG, "Device time: " + Instant.ofEpochSecond(deviceInfoProto.getDeviceTimeEpochSeconds()).toString());
+        RotatingFileLogger.get().logi(TAG, "FW major: " + deviceInfoProto.getFirmwareVersionMajor());
+        RotatingFileLogger.get().logi(TAG, "FW minor: " + deviceInfoProto.getFirmwareVersionMinor());
+        RotatingFileLogger.get().logi(TAG, "FW build number: " + deviceInfoProto.getFirmwareVersionBuildNumber());
+        byte[] macAddressBytes = new byte[deviceInfoProto.getMacAddressList().size()];
+        for (int i = 0; i < deviceInfoProto.getMacAddressList().size();++i) {
+          macAddressBytes[i] = deviceInfoProto.getMacAddressList().get(i).byteValue();
         }
         String macAddress = new String(macAddressBytes, StandardCharsets.US_ASCII);
         RotatingFileLogger.get().logi(TAG, "Mac address: " + macAddress);
+        this.deviceInfo = new DeviceInfo(
+            DeviceType.KAUAI,
+            String.valueOf(deviceInfoProto.getDeviceRevision()),
+            String.valueOf(deviceInfoProto.getDeviceSerialNumber()),
+            String.valueOf(deviceInfoProto.getFirmwareVersionMajor()),
+            String.valueOf(deviceInfoProto.getFirmwareVersionMinor()),
+            String.valueOf(deviceInfoProto.getFirmwareVersionBuildNumber()),
+            String.valueOf(deviceInfoProto.getEarbudsType()),
+            String.valueOf(deviceInfoProto.getEarbudsRevision()),
+            String.valueOf(deviceInfoProto.getEarbudsSerialNumber()),
+            DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN);
         return true;
       } catch (ExecutionException e) {
         RotatingFileLogger.get().loge(TAG, "Failed to get device settings: " + e.getMessage());
@@ -435,6 +457,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     // TODO(eric): Handle events. Should send them straight to Flutter layer as bytes for processing?
     RotatingFileLogger.get().logv(TAG, "Received host event: " +
         hostEvent.getHostMessage().toString());
+    notifyDeviceInternalStateChangeListeners(hostEvent.getHostMessage().toByteArray());
   }
 
   public void startListening() {

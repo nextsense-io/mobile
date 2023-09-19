@@ -25,8 +25,10 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
+import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceSettings;
+import io.nextsense.android.base.DeviceType;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -52,6 +54,19 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
 
   private static final UUID SERVICE_UUID = UUID.fromString("cb577fc4-7260-41f8-8216-3be734c7820a");
   private static final UUID DATA_UUID = UUID.fromString("59e33cfa-497d-4356-bb46-b87888419cb2");
+  private static final DeviceInfo DEVICE_INFO = new DeviceInfo(
+      DeviceType.XENON,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN);
 
   private final ListeningExecutorService executorService =
       MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
@@ -211,6 +226,11 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       deviceMode = DeviceMode.IDLE;
       return true;
     });
+  }
+
+  @Override
+  public DeviceInfo getDeviceInfo() {
+    return DEVICE_INFO;
   }
 
   @Override

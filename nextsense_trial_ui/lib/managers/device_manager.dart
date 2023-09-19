@@ -16,8 +16,23 @@ import 'package:nextsense_trial_ui/utils/android_logger.dart';
 class Device {
   String macAddress;
   String name;
+  DeviceType? type;
+  String? revision;
+  String? serialNumber;
+  String? firmwareVersionMajor;
+  String? firmwareVersionMinor;
+  String? firmwareVersionBuildNumber;
+  String? earbudsType;
+  String? earbudsRevision;
+  String? earbudsSerialNumber;
+  String? earbudsVersionMajor;
+  String? earbudsVersionMinor;
+  String? earbudsVersionBuildNumber;
 
-  Device(this.macAddress, this.name);
+  Device(this.macAddress, this.name, {this.type, this.revision, this.serialNumber,
+    this.firmwareVersionMajor, this.firmwareVersionMinor, this.firmwareVersionBuildNumber,
+    this.earbudsType, this.earbudsRevision, this.earbudsSerialNumber, this.earbudsVersionMajor,
+    this.earbudsVersionMinor, this.earbudsVersionBuildNumber});
 }
 
 enum DeviceState { connecting, connected, ready, disconnecting, disconnected }
@@ -72,8 +87,9 @@ class DeviceManager {
   Future<bool> connectDevice(Device device,
       {Duration timeout = const Duration(seconds: 10)}) async {
     _listenToState(device.macAddress);
-    // TODO(eric): Make this conditional on device type.
-    // _listenToInternalState();
+    if (device.type == DeviceType.xenon) {
+      _listenToInternalState();
+    }
     _connectedDevice = device;
     await NextsenseBase.connectDevice(device.macAddress);
     // Check device state in case it is already READY (service was already running with a connected
@@ -87,17 +103,19 @@ class DeviceManager {
         return false;
       }
     }
-    // TODO(eric): Make this conditional on device type.
-    // NextsenseBase.requestDeviceStateUpdate(device.macAddress);
-    // bool stateAvailable = await waitInternalStateAvailable(timeout);
-    // if (!stateAvailable) {
-    //   _logger.log(Level.WARNING, 'Timeout waiting for internal state available');
-    //   await disconnectDevice();
-    //   return false;
-    // }
+    if (device.type == DeviceType.xenon) {
+      NextsenseBase.requestDeviceStateUpdate(device.macAddress);
+      bool stateAvailable = await waitInternalStateAvailable(timeout);
+      if (!stateAvailable) {
+        _logger.log(Level.WARNING, 'Timeout waiting for internal state available');
+        await disconnectDevice();
+        return false;
+      }
+    }
 
-    // TODO(eric): Make this conditional on device type.
-    // _requestStateChanges();
+    if (device.type == DeviceType.xenon) {
+      _requestStateChanges();
+    }
     _authManager.user!
       ..setLastPairedDeviceMacAddress(device.macAddress)
       ..save();
@@ -254,8 +272,9 @@ class DeviceManager {
       return true;
     }
     await NextsenseBase.stopStreaming(_connectedDevice!.macAddress);
-    // TODO(erics): Make this conditional on device type.
-    // _requestStateChanges();
+    if (_connectedDevice!.type == DeviceType.xenon) {
+      _requestStateChanges();
+    }
   }
 
   void dispose() {
@@ -367,15 +386,45 @@ class DeviceManager {
     _requestDeviceStateTimer = null;
   }
 
-  void _onDeviceReady() {
+  Future<Device> getDeviceInfo(Device connectedDevice) async {
+    Map<String, dynamic> deviceAttributes = await NextsenseBase.getDeviceInfo(
+        connectedDevice.macAddress);
+    String? deviceTypeString = deviceAttributes[describeEnum(DeviceAttributesFields.type)];
+    DeviceType? deviceType = deviceTypeString != null ?
+        DeviceType.values.byName(deviceTypeString.toLowerCase()) : null;
+    return new Device(connectedDevice.macAddress, connectedDevice.name,
+        type: deviceType,
+        revision: deviceAttributes[describeEnum(DeviceAttributesFields.revision)],
+        serialNumber: deviceAttributes[describeEnum(DeviceAttributesFields.serialNumber)],
+        firmwareVersionMajor:
+            deviceAttributes[describeEnum(DeviceAttributesFields.firmwareVersionMajor)],
+        firmwareVersionMinor:
+            deviceAttributes[describeEnum(DeviceAttributesFields.firmwareVersionMinor)],
+        firmwareVersionBuildNumber:
+            deviceAttributes[describeEnum(DeviceAttributesFields.firmwareVersionBuildNumber)],
+        earbudsType: deviceAttributes[describeEnum(DeviceAttributesFields.earbudsType)],
+        earbudsRevision: deviceAttributes[describeEnum(DeviceAttributesFields.earbudsRevision)],
+        earbudsSerialNumber:
+            deviceAttributes[describeEnum(DeviceAttributesFields.earbudsSerialNumber)],
+        earbudsVersionMajor:
+            deviceAttributes[describeEnum(DeviceAttributesFields.earbudsVersionMajor)],
+        earbudsVersionMinor:
+            deviceAttributes[describeEnum(DeviceAttributesFields.earbudsVersionMinor)],
+        earbudsVersionBuildNumber:
+            deviceAttributes[describeEnum(DeviceAttributesFields.earbudsVersionBuildNumber)]);
+  }
+
+  void _onDeviceReady() async {
     _notificationsManager.hideAlertNotification(connectionLostNotificationId);
+    _connectedDevice = await getDeviceInfo(_connectedDevice!);
     deviceState.value = DeviceState.ready;
     if (!_deviceReadyCompleter.isCompleted) {
       _deviceReadyCompleter.complete(true);
     } else {
       _logger.log(Level.INFO, 'Reconnecting.');
-      // TODO(eric): Make this conditional on device type.
-      // _requestStateChanges();
+      if (_connectedDevice!.type == DeviceType.xenon) {
+        _requestStateChanges();
+      }
     }
   }
 }

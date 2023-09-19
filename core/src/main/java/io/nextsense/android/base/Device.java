@@ -25,6 +25,13 @@ import java.util.Set;
  */
 public abstract class Device {
 
+  /**
+   * Interface to be notified of device changes.
+   */
+  public interface DeviceStateChangeListener {
+    void onDeviceStateChange(DeviceState deviceState);
+  }
+
   protected Device() {}
 
   public static Device create(
@@ -36,13 +43,6 @@ public abstract class Device {
 
     return new BleDevice(centralProxy, bluetoothStateManager, nextSenseDevice, btPeripheral,
         reconnectionManager, memoryCache);
-  }
-
-  /**
-   * Interface to be notified of device changes.
-   */
-  public interface DeviceStateChangeListener {
-    void onDeviceStateChange(DeviceState deviceState);
   }
 
   public enum DisconnectionStatus {
@@ -94,6 +94,12 @@ public abstract class Device {
       listener.onDeviceStateChange(deviceState);
     }
   }
+
+  public abstract void addOnDeviceInternalStateChangeListener(
+      NextSenseDevice.DeviceInternalStateChangeListener listener);
+
+  public abstract void removeOnDeviceInternalStateChangeListener(
+      NextSenseDevice.DeviceInternalStateChangeListener listener);
 
   /**
    * Tries to connect the device.

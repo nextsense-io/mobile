@@ -23,6 +23,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
+import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.utils.RotatingFileLogger;
@@ -170,6 +171,11 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     deviceModeFuture = SettableFuture.create();
     writeCharacteristic(writeDataCharacteristic, new StopStreamingCommand().getCommand());
     return deviceModeFuture;
+  }
+
+  @Override
+  public DeviceInfo getDeviceInfo() {
+    return null;
   }
 
   @Override

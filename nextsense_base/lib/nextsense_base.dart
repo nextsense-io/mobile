@@ -7,9 +7,29 @@ import 'package:gson/gson.dart';
 typedef void Listener(dynamic msg);
 typedef void CancelListening();
 
+// High-level type of the hardware device. This defines which API to use. A better way would be to
+// expose the API but it would be quite a lot of effort to do.
+enum DeviceType {
+  h1,
+  xenon,
+  kauai
+}
+
 enum DeviceAttributesFields {
   macAddress,
-  name
+  name,
+  type,
+  revision,
+  serialNumber,
+  firmwareVersionMajor,
+  firmwareVersionMinor,
+  firmwareVersionBuildNumber,
+  earbudsType,
+  earbudsRevision,
+  earbudsSerialNumber,
+  earbudsVersionMajor,
+  earbudsVersionMinor,
+  earbudsVersionBuildNumber,
 }
 
 enum DeviceSettingsFields {
@@ -54,6 +74,8 @@ class NextsenseBase {
       'io.nextsense.flutter.base.nextsense_base/device_scan_channel');
   static const EventChannel _deviceStateStream = const EventChannel(
       'io.nextsense.flutter.base.nextsense_base/device_state_channel');
+  static const EventChannel _deviceEventsStream = const EventChannel(
+      'io.nextsense.flutter.base.nextsense_base/device_events_channel');
   static const EventChannel _deviceInternalStateStream = const EventChannel(
       'io.nextsense.flutter.base.nextsense_base/device_internal_state_channel');
   static const EventChannel _currentSessionDataReceivedStream = const EventChannel(
@@ -77,6 +99,7 @@ class NextsenseBase {
   static const String _getChannelDataCommand = 'get_channel_data';
   static const String _getAccChannelDataCommand = 'get_acc_channel_data';
   static const String _getTimestampsDataCommand = 'get_timestamps_data';
+  static const String _getDeviceInfoCommand = 'get_device_info';
   static const String _getDeviceSettingsCommand = 'get_device_settings';
   static const String _deleteLocalSessionCommand = 'delete_local_session';
   static const String _requestDeviceInternalStateUpdateCommand =
@@ -108,6 +131,7 @@ class NextsenseBase {
 
   static int _nextScanningListenerId = 1;
   static int _nextDeviceStateListenerId = 1;
+  static int _nextDeviceEventsListenerId = 1;
   static int _nextDeviceInternalStateListenerId = 1;
 
   static Future<String?> get platformVersion async {
@@ -174,23 +198,29 @@ class NextsenseBase {
   }
 
   static CancelListening startScanning(Listener listener) {
-    var subscription = _deviceScanStream.receiveBroadcastStream(
-        _nextScanningListenerId++
-    ).listen(listener, cancelOnError: true);
+    var subscription = _deviceScanStream.receiveBroadcastStream(_nextScanningListenerId++)
+        .listen(listener, cancelOnError: true);
     return () {
       subscription.cancel();
     };
   }
 
   static Future<String> getDeviceState(String macAddress) async {
-    return await _channel.invokeMethod(_getDeviceStateCommand,
-        {_macAddressArg: macAddress});
+    return await _channel.invokeMethod(_getDeviceStateCommand, {_macAddressArg: macAddress});
   }
 
-  static CancelListening listenToDeviceState(Listener listener,
-      String deviceMacAddress) {
+  static CancelListening listenToDeviceState(Listener listener, String deviceMacAddress) {
     var subscription = _deviceStateStream.receiveBroadcastStream(
         [_nextDeviceStateListenerId++, deviceMacAddress]
+    ).listen(listener, cancelOnError: true);
+    return () {
+      subscription.cancel();
+    };
+  }
+
+  static CancelListening listenToDeviceEvents(Listener listener, String deviceMacAddress) {
+    var subscription = _deviceEventsStream.receiveBroadcastStream(
+        [_nextDeviceEventsListenerId++, deviceMacAddress]
     ).listen(listener, cancelOnError: true);
     return () {
       subscription.cancel();
@@ -267,6 +297,13 @@ class NextsenseBase {
     return connectedDevices;
   }
 
+  static Future<Map<String, dynamic>> getDeviceInfo(String macAddress) async {
+    String deviceInfoJson = (await _channel.invokeMethod(_getDeviceInfoCommand,
+        {_macAddressArg: macAddress})) as String;
+    return gson.decode(deviceInfoJson);
+  }
+
+
   static Future<Map<String, dynamic>> getDeviceSettings(String macAddress) async {
     String deviceSettingsJson = (await _channel.invokeMethod(_getDeviceSettingsCommand,
         {_macAddressArg: macAddress})) as String;
@@ -302,6 +339,6 @@ class NextsenseBase {
   static Future<bool> sendEmulatorCommand(EmulatorCommand command,
       {Map<String, dynamic> params = const {}}) async {
     return await _channel.invokeMethod(_emulatorCommand,
-      {'command': command.name, 'params' : params });
+        {'command': command.name, 'params' : params });
   }
 }

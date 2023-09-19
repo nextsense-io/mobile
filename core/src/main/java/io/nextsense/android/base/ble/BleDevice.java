@@ -46,7 +46,6 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
  * in the NextSenseDevice interface which needs to be given at construction time.
  */
 public class BleDevice extends Device {
-
   public static final Duration RECONNECTION_ATTEMPTS_INTERVAL = Duration.ofSeconds(30);
   private static final String TAG = BleDevice.class.getSimpleName();
 
@@ -54,7 +53,6 @@ public class BleDevice extends Device {
   private final BluetoothPeripheral btPeripheral;
   private final BleCentralManagerProxy centralManagerProxy;
   private final MemoryCache memoryCache;
-  private final DeviceInfo deviceInfo = new DeviceInfo();
   private final BlePeripheralCallbackProxy callbackProxy = new BlePeripheralCallbackProxy();
   private final ReconnectionManager reconnectionManager;
   private final ListeningExecutorService executorService =
@@ -104,6 +102,18 @@ public class BleDevice extends Device {
       return false;
     }
     return nextSenseDevice.requestDeviceInternalState();
+  }
+
+  @Override
+  public void addOnDeviceInternalStateChangeListener(
+      NextSenseDevice.DeviceInternalStateChangeListener listener) {
+    nextSenseDevice.addOnDeviceInternalStateChangeListener(listener);
+  }
+
+  @Override
+  public void removeOnDeviceInternalStateChangeListener(
+      NextSenseDevice.DeviceInternalStateChangeListener listener) {
+    nextSenseDevice.removeOnDeviceInternalStateChangeListener(listener);
   }
 
   @Override
@@ -256,7 +266,7 @@ public class BleDevice extends Device {
    */
   @Override
   public DeviceInfo getInfo() {
-    return deviceInfo;
+    return nextSenseDevice.getDeviceInfo();
   }
 
   /**
