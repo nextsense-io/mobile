@@ -117,8 +117,14 @@ class ProtocolScreen extends HookWidget {
       case ProtocolCancelReason.dataReceivedTimeout:
         return ' Recording stopped because the device failed to start recording.\n\n'
             'Please make sure that the device is fully charged, the earbuds are well-connected, the'
-            ' device storage is not full,  power it off and on again and try again. If it still did'
+            ' device storage is not full, power it off and on again and try again. If it still did'
             ' not work, please contact support.';
+      case ProtocolCancelReason.storageFull:
+        return ' Recording stopped because the device storage is full.\n\n'
+            'Please make sure that the device storage is not full, power it off and on again and'
+            ' try again. If it still did not work, please contact support.';
+      case ProtocolCancelReason.devicePoweredOff:
+        return ' Recording stopped because the device was powered off.';
       case ProtocolCancelReason.none:
         return '';
     }

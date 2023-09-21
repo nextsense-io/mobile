@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
+import 'package:nextsense_base/kauai_proto/kauai_firmware_message.pb.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state.dart';
@@ -65,6 +66,7 @@ class DeviceManager {
 
   Device? _connectedDevice;
   CancelListening? _cancelStateListening;
+  CancelListening? _cancelEventsListening;
   CancelListening? _cancelInternalStateListening;
   Completer<bool> _deviceInternalStateAvailableCompleter = Completer<bool>();
   Completer<bool> _deviceReadyCompleter = Completer<bool>();
@@ -111,6 +113,8 @@ class DeviceManager {
         await disconnectDevice();
         return false;
       }
+    } else if (device.type == DeviceType.kauai) {
+      _listenToEvents();
     }
 
     if (device.type == DeviceType.xenon) {
@@ -240,6 +244,8 @@ class DeviceManager {
     _requestDeviceStateTimer = null;
     _cancelStateListening?.call();
     _cancelStateListening = null;
+    _cancelEventsListening?.call();
+    _cancelEventsListening = null;
     _cancelInternalStateListening?.call();
     _cancelInternalStateListening = null;
     try {
@@ -280,6 +286,7 @@ class DeviceManager {
   void dispose() {
     _requestDeviceStateTimer?.cancel();
     _cancelStateListening?.call();
+    _cancelEventsListening?.call();
     _cancelInternalStateListening?.call();
   }
 
@@ -349,6 +356,53 @@ class DeviceManager {
     });
   }
 
+  void _listenToEvents() {
+    if (_connectedDevice == null) {
+      return;
+    }
+    if (_cancelEventsListening != null) {
+      _cancelEventsListening?.call();
+    }
+    _cancelEventsListening =
+        NextsenseBase.listenToDeviceEvents((deviceEventProtoBytes) {
+          _logger.log(Level.FINE, 'Device event received');
+          HostMessage hostMessage = HostMessage.fromBuffer(deviceEventProtoBytes);
+          DeviceInternalStateEvent? event = null;
+          switch (hostMessage.eventType) {
+            case EventType.HDMI_CABLE_DISCONNECTED:
+              event = DeviceInternalStateEvent.create(
+                  DeviceInternalStateEventType.hdmiCableDisconnected, true);
+              _deviceInternalStateChangeController.add(event);
+              break;
+            case EventType.HDMI_CABLE_CONNECTED:
+              event = DeviceInternalStateEvent.create(
+                  DeviceInternalStateEventType.hdmiCableConnected, true);
+              _deviceInternalStateChangeController.add(event);
+              break;
+            case EventType.MEMORY_STORAGE_FULL:
+              event = DeviceInternalStateEvent.create(
+                  DeviceInternalStateEventType.uSdFull, true);
+              _deviceInternalStateChangeController.add(event);
+              break;
+            case EventType.BATTERY_LOW:
+              event = DeviceInternalStateEvent.create(
+                  DeviceInternalStateEventType.batteryLow, true);
+              break;
+            case EventType.POWERING_OFF:
+              event = DeviceInternalStateEvent.create(
+                  DeviceInternalStateEventType.poweringOff, true);
+              break;
+            case EventType.GOING_TO_STANDBY:
+              event = DeviceInternalStateEvent.create(
+                  DeviceInternalStateEventType.poweringOff, true);
+              break;
+          }
+          if (event != null) {
+            _deviceInternalStateChangeController.add(event);
+          }
+        }, _connectedDevice!.macAddress);
+  }
+
   // Whenever a new state is received, compare it to the one that is cached and
   // generate a state transition event whenever one of the boolean flags
   // are changed (like low battery, earbuds disconnected, etc…)
@@ -370,7 +424,7 @@ class DeviceManager {
         }
 
         if (_deviceInternalStateValues!.containsKey(key) && !equal(oldValue, newValue)) {
-          final event = DeviceInternalStateEvent.create(key, newValue);
+          final event = DeviceInternalStateEvent.createFromInternalStateField(key, newValue);
           _deviceInternalStateChangeController.add(event);
         }
       }

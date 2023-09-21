@@ -208,7 +208,8 @@ public class Uploader {
                   sessionEegSamplesCount - localSession.getEegSamplesUploaded()));
           if (eegSamplesToUpload.isEmpty()) {
             // Nothing to upload, marking it as UPLOADED.
-            RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + " upload is completed.");
+            RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + "" +
+                " upload is completed.");
             localSession.setStatus(LocalSession.Status.UPLOADED);
             completeSession(localSession);
             // This could be deleted at a later time in case the data needs to be analyzed or
@@ -284,7 +285,8 @@ public class Uploader {
   private void uploadData() {
     while (running.get()) {
       List<LocalSession> localSessions = objectBoxDatabase.getLocalSessions();
-      RotatingFileLogger.get().logd(TAG, "There are " + localSessions.size() + " local sessions in the DB.");
+      RotatingFileLogger.get().logd(TAG, "There are " + localSessions.size() +
+          " local sessions in the DB.");
       for (LocalSession localSession : localSessions) {
         if (!localSession.isUploadNeeded() || (
             localSession.getStatus() != LocalSession.Status.RECORDING &&
@@ -299,8 +301,8 @@ public class Uploader {
         while (dataToUpload(samplesToUpload) && running.get()) {
           boolean uploaded = false;
           List<BaseRecord> eegSamplesToUpload = samplesToUpload.get(EEG_SAMPLES);
-          RotatingFileLogger.get().logv(TAG, "Session " + localSession.id + " has " + eegSamplesToUpload.size() +
-                  " eeg records to upload.");
+          RotatingFileLogger.get().logv(TAG, "Session " + localSession.id + " has " +
+              eegSamplesToUpload.size() + " eeg records to upload.");
           for (int eegSamplesIndex = 0; eegSamplesIndex < eegSamplesToUpload.size();
               eegSamplesIndex += uploadChunkSize) {
             int eegSamplesEndIndex =
@@ -536,7 +538,8 @@ public class Uploader {
       accelerationsToUpload = new ArrayList<>();
     }
     RotatingFileLogger.get().logv(TAG, "Uploading " + eegSamplesToUpload.size() + " eeg samples.");
-    RotatingFileLogger.get().logv(TAG, "Uploading " + accelerationsToUpload.size() + " acc samples.");
+    RotatingFileLogger.get().logv(TAG, "Uploading " + accelerationsToUpload.size() +
+        " acc samples.");
     DataSamplesProto.EegDataSamples.Builder dataSamplesProtoBuilder =
         DataSamplesProto.EegDataSamples.newBuilder();
     dataSamplesProtoBuilder.setModality(DataSamplesProto.EegDataSamples.Modality.EAR_EEG);
@@ -582,12 +585,24 @@ public class Uploader {
           }
         }
       }
-      dataSamplesProtoBuilder.addSync(eegSample.getSync());
-      dataSamplesProtoBuilder.addTrigOut(eegSample.getTrigOut());
-      dataSamplesProtoBuilder.addTrigIn(eegSample.getTrigIn());
-      dataSamplesProtoBuilder.addZMod(eegSample.getZMod());
-      dataSamplesProtoBuilder.addMarker(eegSample.getMarker());
-      dataSamplesProtoBuilder.addButton(eegSample.getButton());
+      if (eegSample.getSync() != null) {
+        dataSamplesProtoBuilder.addSync(eegSample.getSync());
+      }
+      if (eegSample.getTrigIn() != null) {
+        dataSamplesProtoBuilder.addTrigIn(eegSample.getTrigIn());
+      }
+      if (eegSample.getTrigOut() != null) {
+        dataSamplesProtoBuilder.addTrigOut(eegSample.getTrigOut());
+      }
+      if (eegSample.getZMod() != null) {
+        dataSamplesProtoBuilder.addZMod(eegSample.getZMod());
+      }
+      if (eegSample.getMarker() != null) {
+        dataSamplesProtoBuilder.addMarker(eegSample.getMarker());
+      }
+      if (eegSample.getButton() != null) {
+        dataSamplesProtoBuilder.addButton(eegSample.getButton());
+      }
     }
     for (DataSamplesProto.Channel.Builder channelBuilder : channelBuilders.values()) {
       dataSamplesProtoBuilder.addChannel(channelBuilder.build());

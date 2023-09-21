@@ -26,7 +26,8 @@ import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 enum ProtocolCancelReason {
-  none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord, deviceNotConnected }
+  none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord, deviceNotConnected,
+  storageFull, devicePoweredOff}
 
 // Protocol part scheduled in time in the protocol. The schedule can be repeated many times until
 // the protocol time is complete.
@@ -451,6 +452,14 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         if (_timerPaused) {
           _restartProtocol();
         }
+        break;
+      case DeviceInternalStateEventType.uSdFull:
+        protocolCancelReason = ProtocolCancelReason.storageFull;
+        _stopProtocol();
+        break;
+      case DeviceInternalStateEventType.poweringOff:
+        protocolCancelReason = ProtocolCancelReason.devicePoweredOff;
+        _stopProtocol();
         break;
       case DeviceInternalStateEventType.unknown:
         _logger.log(Level.WARNING, 'Unknown device internal state received.');

@@ -3,6 +3,7 @@ import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/data_session.dart';
 import 'package:nextsense_trial_ui/domain/device_settings.dart';
+import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
@@ -119,9 +120,14 @@ class SessionManager {
         _logger.log(Level.SEVERE, "Failed to set impedance config. Cannot start streaming.");
         return false;
       }
+      String? earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig() ?? null;
+      if (device.type == DeviceType.kauai) {
+        earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+      }
+
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,
           bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: _currentSession!.id,
-          earbudsConfig: _studyManager.currentStudy?.getEarbudsConfig() ?? null);
+          earbudsConfig: earbudsConfig);
       _logger.log(Level.INFO, "Started streaming with local session: $_currentLocalSession");
       await NextsenseBase.changeNotificationContent("NextSense recording in progress",
           "Press to access the application");

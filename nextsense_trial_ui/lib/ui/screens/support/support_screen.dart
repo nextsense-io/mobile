@@ -15,7 +15,7 @@ class SupportScreen extends HookWidget {
   static const String id = 'support_screen';
 
   Widget getDeviceInfo(SupportScreenViewModel viewModel) {
-    return Container(
+    return Expanded(flex: 50, child: Container(
       decoration: BoxDecoration(
         border: Border.all(
           color: NextSenseColors.darkBlue,
@@ -84,7 +84,7 @@ class SupportScreen extends HookWidget {
           SizedBox(height: 10),
         ],
       ),
-    ));
+    )));
   }
 
   Widget buildBody(SupportScreenViewModel viewModel, BuildContext context) {

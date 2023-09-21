@@ -17,13 +17,12 @@ enum DeviceInternalStateEventType {
  * Event is emitted when single field of device internal state is changed.
  */
 class DeviceInternalStateEvent {
-  final DeviceInternalStateFields field;
-  final dynamic value;
   final DeviceInternalStateEventType type;
+  final dynamic value;
 
-  const DeviceInternalStateEvent(this.field, this.value, this.type);
+  const DeviceInternalStateEvent(this.type, this.value);
 
-  factory DeviceInternalStateEvent.create(String fieldKey, dynamic value) {
+  factory DeviceInternalStateEvent.createFromInternalStateField(String fieldKey, dynamic value) {
     DeviceInternalStateFields field =
         DeviceInternalStateFields.values.asNameMap()[fieldKey]!;
     DeviceInternalStateEventType type = DeviceInternalStateEventType.unknown;
@@ -42,7 +41,11 @@ class DeviceInternalStateEvent {
         break;
     }
 
-    return DeviceInternalStateEvent(field, value, type);
+    return DeviceInternalStateEvent(type, value);
+  }
+
+  factory DeviceInternalStateEvent.create(DeviceInternalStateEventType eventType, dynamic value) {
+    return DeviceInternalStateEvent(eventType, value);
   }
 
   @override
@@ -51,9 +54,6 @@ class DeviceInternalStateEvent {
         return true;
 
       if (!(other is DeviceInternalStateEvent))
-        return false;
-
-      if (this.field != other.field)
         return false;
 
       if (this.value is List && other.value is List)
