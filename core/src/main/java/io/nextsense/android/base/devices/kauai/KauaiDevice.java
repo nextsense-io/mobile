@@ -611,11 +611,9 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
         public void onCharacteristicUpdate(
             @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
             @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-          RotatingFileLogger.get().logi(TAG, "Characteristic update received with status " +
-              status + " with value: " + Arrays.toString(value));
           if (isDataCharacteristic(characteristic)) {
             try {
-              kauaiDataParser.parseDataBytes(value, getChannelCount());
+              kauaiDataParser.parseDataBytes(value, enabledChannels);
             } catch (FirmwareMessageParsingException e) {
               RotatingFileLogger.get().loge(TAG, "Failed to parse data bytes: " + e.getMessage());
             }

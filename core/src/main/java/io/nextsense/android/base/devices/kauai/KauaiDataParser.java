@@ -33,6 +33,7 @@ public class KauaiDataParser {
   private static final int DATA_ACCELERATION_SIZE_BYTES = 6;
   private static final int DATA_CHANNEL_SIZE_BYTES = 3;
   private static final int DATA_FLAGS_SIZE_BYTES = 2;
+  private static final int DATA_PADDING_SIZE_BYTES = 2;
   private static final float V_REF = 4.5f;
 
   private final LocalSessionManager localSessionManager;
@@ -46,14 +47,13 @@ public class KauaiDataParser {
     return new KauaiDataParser(localSessionManager);
   }
 
-  public void parseDataBytes(byte[] values, int channelsCount) throws
+  public void parseDataBytes(byte[] values, List<Integer> activeChannels) throws
       FirmwareMessageParsingException {
     Instant receptionTimestamp = Instant.now();
     if (values.length < 1) {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device data.");
     }
     ByteBuffer valuesBuffer = ByteBuffer.wrap(values);
-    List<Integer> activeChannels = Arrays.asList(1, 2, 3, 4, 5, 6);
     int packetSize = getDataPacketSize(activeChannels.size());
     if (valuesBuffer.remaining() < packetSize) {
       throw new FirmwareMessageParsingException("Data is too small to parse one packet. Expected " +
@@ -121,11 +121,13 @@ public class KauaiDataParser {
         null, receptionTimestamp);
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
         null, receptionTimestamp, /*flags=*/KauaiSampleFlags.create(valuesBuffer.get()));
+    valuesBuffer.get();  // Skip the leads off flags byte.
+    valuesBuffer.getShort();  // Skip the padding bytes.
     return Optional.of(Sample.create(eegSample, acceleration));
   }
 
   private static int getDataPacketSize(int activeChannelsSize) {
     return activeChannelsSize * DATA_CHANNEL_SIZE_BYTES + DATA_ACCELERATION_SIZE_BYTES +
-        DATA_TIMESTAMP_SIZE_BYTES + DATA_FLAGS_SIZE_BYTES;
+        DATA_TIMESTAMP_SIZE_BYTES + DATA_FLAGS_SIZE_BYTES + DATA_PADDING_SIZE_BYTES;
   }
 }
