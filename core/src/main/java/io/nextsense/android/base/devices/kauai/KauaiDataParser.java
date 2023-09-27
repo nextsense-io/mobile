@@ -47,8 +47,24 @@ public class KauaiDataParser {
     return new KauaiDataParser(localSessionManager);
   }
 
-  public void parseDataBytes(byte[] values, List<Integer> activeChannels) throws
-      FirmwareMessageParsingException {
+  private Instant sessionStartTimestamp = null;
+
+  public void setSessionStartTimestamp(Instant sessionStartTimestamp) {
+    this.sessionStartTimestamp = sessionStartTimestamp;
+  }
+
+  public void parseDataBytes(byte[] values, List<Integer> activeChannels, Instant startTimestamp,
+                             int samplingRate)
+      throws FirmwareMessageParsingException {
+    Instant effectiveStartTimestamp = null;
+    if (startTimestamp == null) {
+      if (sessionStartTimestamp == null) {
+        sessionStartTimestamp = Instant.now();
+      }
+      effectiveStartTimestamp = sessionStartTimestamp;
+    } else {
+      effectiveStartTimestamp = startTimestamp;
+    }
     Instant receptionTimestamp = Instant.now();
     if (values.length < 1) {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device data.");
@@ -64,7 +80,7 @@ public class KauaiDataParser {
     Instant previousTimestamp = null;
     while (canParsePacket && valuesBuffer.remaining() >= packetSize) {
       Optional<Sample> sampleOptional =
-          parseDataPacket(valuesBuffer, activeChannels, receptionTimestamp);
+          parseDataPacket(valuesBuffer, activeChannels, effectiveStartTimestamp, samplingRate);
       if (sampleOptional.isPresent()) {
         Sample sample = sampleOptional.get();
         if (previousTimestamp != null &&
@@ -93,8 +109,9 @@ public class KauaiDataParser {
     return (float)(data * ((V_REF * 1000000.0f) / (24.0f * (pow(2, 23) - 1))));
   }
 
-  private Optional<Sample> parseDataPacket(ByteBuffer valuesBuffer, List<Integer> activeChannels,
-                                           Instant receptionTimestamp) throws NoSuchElementException {
+  private Optional<Sample> parseDataPacket(
+      ByteBuffer valuesBuffer, List<Integer> activeChannels, Instant startTimestamp,
+      int samplingRate) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
       if (!printedDataPackerWarning) {
@@ -107,6 +124,7 @@ public class KauaiDataParser {
     valuesBuffer.order(KauaiDevice.BYTE_ORDER);
     HashMap<Integer, Float> eegData = new HashMap<>();
     long sampleCounter = valuesBuffer.getInt() & 0xffffffffL;
+    Instant acquisitionTimestamp = startTimestamp.plusMillis(sampleCounter * (1000 / samplingRate));
     for (Integer activeChannel : activeChannels) {
       // The sample is encoded in 3 bytes.
       int eegValue = Util.bytesToInt24(
@@ -117,10 +135,10 @@ public class KauaiDataParser {
     List<Short> accelerationData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
         valuesBuffer.getShort());
     Acceleration acceleration = Acceleration.create(localSession.id, /*x=*/accelerationData.get(0),
-        /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), receptionTimestamp,
-        null, receptionTimestamp);
-    EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
-        null, receptionTimestamp, /*flags=*/KauaiSampleFlags.create(valuesBuffer.get()));
+        /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), acquisitionTimestamp,
+        null, acquisitionTimestamp);
+    EegSample eegSample = EegSample.create(localSession.id, eegData, acquisitionTimestamp,
+        null, acquisitionTimestamp, /*flags=*/KauaiSampleFlags.create(valuesBuffer.get()));
     valuesBuffer.get();  // Skip the leads off flags byte.
     valuesBuffer.getShort();  // Skip the padding bytes.
     return Optional.of(Sample.create(eegSample, acceleration));

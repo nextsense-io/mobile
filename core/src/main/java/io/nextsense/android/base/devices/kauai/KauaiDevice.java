@@ -236,6 +236,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     long localSessionId = localSessionManager.startLocalSession(userBigTableKey, dataSessionId,
         earbudsConfig, uploadToCloud, deviceSettings.getEegStreamingRate(),
         deviceSettings.getImuStreamingRate());
+    kauaiDataParser.setSessionStartTimestamp(null);
     if (localSessionId == -1) {
       // Previous session not finished, cannot start streaming.
       RotatingFileLogger.get().logw(TAG, "Previous session not finished, cannot start streaming.");
@@ -613,7 +614,8 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
             @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
           if (isDataCharacteristic(characteristic)) {
             try {
-              kauaiDataParser.parseDataBytes(value, enabledChannels);
+              kauaiDataParser.parseDataBytes(value, enabledChannels, null,
+                  Math.round(deviceSettings.getEegSamplingRate()));
             } catch (FirmwareMessageParsingException e) {
               RotatingFileLogger.get().loge(TAG, "Failed to parse data bytes: " + e.getMessage());
             }
