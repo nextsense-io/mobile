@@ -7,6 +7,7 @@ evaluate(new File(
 include ':core'  // Android native core library
 include ':service'  // Android native service library
 include ':nextsense_base'  // Flutter plugin for Android native components
+include ':flutter_common'  // Flutter package with common code
 include ':nextsense_trial_ui'  // Flutter module with main UI
 include ':android_host'  // Android application, entry point for the service and the flutter module
 

@@ -1,6 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_common/managers/auth/authentication_result.dart';
+import 'package:flutter_common/managers/disk_space_manager.dart';
+import 'package:flutter_common/managers/permissions_manager.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -14,9 +18,7 @@ import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/email_auth_link.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
-import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/enter_email_screen.dart';
@@ -56,7 +58,6 @@ import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/support/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:provider/provider.dart';
 
 import 'package:receive_intent/receive_intent.dart' as intent;

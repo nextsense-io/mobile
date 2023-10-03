@@ -25,8 +25,8 @@ enum SignInEmailType {
 }
 
 class NextsenseApi {
-  static final Duration _timeout = Duration(seconds: 10);
-  static final int _maxRetries = 3;
+  static const Duration _timeout = Duration(seconds: 10);
+  static const int _maxRetries = 3;
 
   final String _baseUrl;
   final _client = http.Client();
@@ -39,7 +39,7 @@ class NextsenseApi {
   NextsenseApi(String baseUrl) : _baseUrl = baseUrl;
 
   Future<ApiResponse> _callApi({required Map<String, dynamic> data, required Uri endpoint,
-      required String defaultErrorMsg}) async {
+    required String defaultErrorMsg}) async {
     Response? response;
     int attemptNumber = 0;
     while (response == null && attemptNumber < _maxRetries) {
@@ -60,7 +60,7 @@ class NextsenseApi {
       );
     }
 
-    _logger.log(Level.INFO, endpoint.path + "::response: ${response.body}");
+    _logger.log(Level.INFO, "${endpoint.path}::response: ${response.body}");
 
     if (response.statusCode == 200) {
       var responseJson = json.decode(response.body) as Map<String, dynamic>;
@@ -88,11 +88,12 @@ class NextsenseApi {
       'username': username,
       'password': password
     };
-    return _callApi(endpoint: _endpointAuth, data: data, defaultErrorMsg: "Authentication request failed");
+    return _callApi(endpoint: _endpointAuth, data: data,
+        defaultErrorMsg: "Authentication request failed");
   }
 
   // Changes the user password.
-  Future<ApiResponse> changePassword(String? token, String username, String newPassword) async {
+  Future<ApiResponse> changePassword(String token, String username, String newPassword) async {
     var data = {
       'token': token,
       'username': username,
@@ -109,7 +110,7 @@ class NextsenseApi {
       'email': email,
       'email_type': emailType.name.toLowerCase()
     };
-    _logger.log(Level.INFO, "Calling API to send signin email: " + data.toString());
+    _logger.log(Level.INFO, "Calling API to send signin email: $data");
     return _callApi(endpoint: _endpointSendSignInEmail, data: data,
         defaultErrorMsg: "Password change request failed");
   }

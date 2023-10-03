@@ -7,12 +7,13 @@ import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/kauai_proto/kauai_firmware_message.pb.dart';
 import 'package:nextsense_base/nextsense_base.dart';
+
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state.dart';
 import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 class Device {
   String macAddress;

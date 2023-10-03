@@ -4,8 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_common/managers/firebase_manager.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/managers/firebase_manager.dart';
+
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:nextsense_base/nextsense_base.dart';
@@ -21,8 +23,6 @@ import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
-
-import 'utils/android_logger.dart';
 
 void _initLogging() {
   Logger.root.level = Level.ALL;  // defaults to Level.INFO

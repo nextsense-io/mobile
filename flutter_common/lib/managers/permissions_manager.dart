@@ -15,7 +15,7 @@ class PermissionRequest {
 
 class PermissionsManager {
 
-  List<PermissionRequest> _permissionsNeeded = [
+  final List<PermissionRequest> _permissionsNeeded = [
     PermissionRequest(permission: Permission.bluetoothScan, required: true,
         requestText: 'Bluetooth scan permission is needed to find your '
             'NextSense device, please accept the permission in the popup after '

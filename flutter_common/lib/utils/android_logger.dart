@@ -16,8 +16,8 @@ Save app logs to one application file so the user can upload these logs to backe
 of error. Once the user upload logs to the backend, the user can clear logs as well.
 */
 class LogFile {
-  static final LogFile _logFile = new LogFile._internal();
-  static final String _startLine = '*************************************************\n';
+  static final LogFile _logFile = LogFile._internal();
+  static const String _startLine = '*************************************************\n';
   static const int _maxLogAgeInDays = 2;
 
   factory LogFile() {
@@ -46,11 +46,11 @@ class LogFile {
 
   Future<void> _writeData(String appLog, FileMode mode) async {
     final file = await _localFile;
-    file.writeAsStringSync('$appLog' + '\n', mode: mode);
+    file.writeAsStringSync('$appLog\n', mode: mode);
   }
 
   appendToAppLogs(String appLog) {
-    this.appLogs += appLog + '\n';
+    appLogs += '$appLog\n';
     _writeData(appLog, FileMode.append);
   }
 
@@ -71,7 +71,7 @@ class LogFile {
 
   Future _cleanupLogFiles() async {
     final now = DateTime.now();
-    final cutoffTime = now.subtract(Duration(days: _maxLogAgeInDays));
+    final cutoffTime = now.subtract(const Duration(days: _maxLogAgeInDays));
     Directory(await _localPath).listSync().forEach((logFile) {
       if (logFile is File && logFile.path.endsWith('.txt')) {
         final modifiedTime = logFile.lastModifiedSync();
@@ -81,10 +81,6 @@ class LogFile {
       }
     });
   }
-
-  // String getAppLogs() {
-  //   return this.appLogs;
-  // }
 }
 
 /*
@@ -92,7 +88,7 @@ Implementation of customized logger class to change the desired format of log in
 app is running.
 */
 class CustomLogPrinter {
-  static final DateFormat _dateFormatter = new DateFormat('yyyy:MM:dd:HH:mm:ss');
+  static final DateFormat _dateFormatter = DateFormat('yyyy:MM:dd:HH:mm:ss');
 
   final String className;
   final Logger _logger;
@@ -100,9 +96,9 @@ class CustomLogPrinter {
   CustomLogPrinter(this.className) : _logger = Logger(className) {}
 
   void log(Level logLevel, dynamic message, [dynamic error, StackTrace? stackTrace]) {
-    String log = '${_dateFormatter.format(new DateTime.now())} - $logLevel - $className - $message';
+    String log = '${_dateFormatter.format(DateTime.now())} - $logLevel - $className - $message';
     _logger.log(logLevel, '$className - $message', error, stackTrace);
-    LogFile().appendToAppLogs('$log');
+    LogFile().appendToAppLogs(log);
   }
 
   Future<String> getLogFileContent() async {

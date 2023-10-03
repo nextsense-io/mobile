@@ -1,6 +1,6 @@
 
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 final CustomLogPrinter _logger = CustomLogPrinter('Utils');
 

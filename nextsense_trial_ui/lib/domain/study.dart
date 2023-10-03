@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 /// Each entry corresponds to a field name in the database instance.
 enum StudyKey {

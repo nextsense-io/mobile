@@ -13,7 +13,7 @@
 // import 'package:nextsense_trial_ui/managers/device_manager.dart';
 // import 'package:nextsense_trial_ui/managers/study_manager.dart';
 // import 'package:nextsense_trial_ui/managers/survey_manager.dart';
-// import 'package:nextsense_trial_ui/utils/android_logger.dart';
+// import 'package:flutter_common/utils/android_logger.dart';
 // import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 //
 // class DashboardScreenOldViewModel extends DeviceStateViewModel {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_common/managers/permissions_manager.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';

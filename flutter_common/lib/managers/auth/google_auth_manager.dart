@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_common/di.dart';
+import 'package:flutter_common/managers/auth/authentication_result.dart';
+import 'package:flutter_common/managers/firebase_manager.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firebase_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 class GoogleAuthManager {
   final FirebaseApp _firebaseApp = getIt<FirebaseManager>().getFirebaseApp();
@@ -40,7 +40,7 @@ class GoogleAuthManager {
       return AuthenticationResult.error;
     }
     final GoogleSignInAuthentication googleSignInAuthentication =
-        await googleSignInAccount.authentication;
+    await googleSignInAccount.authentication;
     AuthCredential authCredential = GoogleAuthProvider.credential(
       accessToken: googleSignInAuthentication.accessToken,
       idToken: googleSignInAuthentication.idToken,
@@ -51,7 +51,7 @@ class GoogleAuthManager {
     // obtained from Google Auth.
     try {
       final UserCredential userCredential =
-          await _firebaseAuth.signInWithCredential(authCredential);
+      await _firebaseAuth.signInWithCredential(authCredential);
       if (userCredential.user == null || userCredential.user!.isAnonymous) {
         _logger.log(Level.SEVERE, "No user returned from Google Auth.");
         return AuthenticationResult.error;
