@@ -1,13 +1,13 @@
 import 'dart:collection';
 
 import 'package:collection/collection.dart';
+import 'package:flutter_common/domain/device_settings.dart';
+import 'package:flutter_common/domain/earbuds_config.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:get_it/get_it.dart';
 import 'package:gson/values.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/domain/device_settings.dart';
-import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/signal_utils.dart';
 import 'package:scidart/numdart.dart';

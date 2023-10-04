@@ -90,51 +90,51 @@ class EarbudsConfig {
 class EarbudsConfigs {
   static final Map<String, EarbudsConfig> _earbudsConfigs = {
     EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase():
-        EarbudsConfig(name: EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase(),
-            channelsConfig: {
-              1: EarEegChannel.ERW_ELC,
-              3: EarEegChannel.ELW_ELC,
-              6: EarEegChannel.ELW_ERW,
-              7: EarEegChannel.ELW_ERC,
-              8: EarEegChannel.ERW_ERC
-            },
-            earLocations: {
-              EarLocationName.RIGHT_CANAL: EarLocation(name: EarLocationName.RIGHT_CANAL,
-                  impedanceConfig: ImpedanceConfig.create(firstChannel: 8)),
-              // Cannot calculate the right helix impedance with this config
-              EarLocationName.RIGHT_HELIX: EarLocation(name: EarLocationName.RIGHT_HELIX),
-              EarLocationName.LEFT_CANAL: EarLocation(name: EarLocationName.LEFT_CANAL,
-                  impedanceConfig: ImpedanceConfig.create(firstChannel: 7)),
-              EarLocationName.LEFT_HELIX: EarLocation(name: EarLocationName.LEFT_HELIX,
-                  impedanceConfig: ImpedanceConfig.create(firstChannel: 8,
-                      channelOperator: ChannelOperator.SUBTRACTION,
-                      secondChannel: 1)),
-            }),
+    EarbudsConfig(name: EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase(),
+        channelsConfig: {
+          1: EarEegChannel.ERW_ELC,
+          3: EarEegChannel.ELW_ELC,
+          6: EarEegChannel.ELW_ERW,
+          7: EarEegChannel.ELW_ERC,
+          8: EarEegChannel.ERW_ERC
+        },
+        earLocations: {
+          EarLocationName.RIGHT_CANAL: EarLocation(name: EarLocationName.RIGHT_CANAL,
+              impedanceConfig: ImpedanceConfig.create(firstChannel: 8)),
+          // Cannot calculate the right helix impedance with this config
+          EarLocationName.RIGHT_HELIX: EarLocation(name: EarLocationName.RIGHT_HELIX),
+          EarLocationName.LEFT_CANAL: EarLocation(name: EarLocationName.LEFT_CANAL,
+              impedanceConfig: ImpedanceConfig.create(firstChannel: 7)),
+          EarLocationName.LEFT_HELIX: EarLocation(name: EarLocationName.LEFT_HELIX,
+              impedanceConfig: ImpedanceConfig.create(firstChannel: 8,
+                  channelOperator: ChannelOperator.SUBTRACTION,
+                  secondChannel: 1)),
+        }),
     EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase():
-        EarbudsConfig(name: EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase(),
-            channelsConfig: {
-              1: EarEegChannel.ERW_ERC,
-              2: EarEegChannel.ELW_ERC,
-              3: EarEegChannel.ELC_ERC,
-              4: EarEegChannel.ERW_ELW,
-              5: EarEegChannel.ELW_ELC,
-              6: EarEegChannel.ELC_ERW,
-            },
-            // TODO(eric): Verify if these are correct.
-            earLocations: {
-              EarLocationName.RIGHT_CANAL: EarLocation(name: EarLocationName.RIGHT_CANAL,
-                  impedanceConfig: ImpedanceConfig.create(firstChannel: 1)),
-              // Cannot calculate the right helix impedance with this config
-              EarLocationName.RIGHT_HELIX: EarLocation(name: EarLocationName.RIGHT_HELIX),
-              EarLocationName.LEFT_CANAL: EarLocation(name: EarLocationName.LEFT_CANAL,
-                  impedanceConfig: ImpedanceConfig.create(firstChannel: 2)),
-              EarLocationName.LEFT_HELIX: EarLocation(name: EarLocationName.LEFT_HELIX,
-                  impedanceConfig: ImpedanceConfig.create(firstChannel: 1,
-                      channelOperator: ChannelOperator.SUBTRACTION,
-                      secondChannel: 6)),
-            }),
+    EarbudsConfig(name: EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase(),
+        channelsConfig: {
+          1: EarEegChannel.ERW_ERC,
+          2: EarEegChannel.ELW_ERC,
+          3: EarEegChannel.ELC_ERC,
+          4: EarEegChannel.ERW_ELW,
+          5: EarEegChannel.ELW_ELC,
+          6: EarEegChannel.ELC_ERW,
+        },
+        // TODO(eric): Verify if these are correct.
+        earLocations: {
+          EarLocationName.RIGHT_CANAL: EarLocation(name: EarLocationName.RIGHT_CANAL,
+              impedanceConfig: ImpedanceConfig.create(firstChannel: 1)),
+          // Cannot calculate the right helix impedance with this config
+          EarLocationName.RIGHT_HELIX: EarLocation(name: EarLocationName.RIGHT_HELIX),
+          EarLocationName.LEFT_CANAL: EarLocation(name: EarLocationName.LEFT_CANAL,
+              impedanceConfig: ImpedanceConfig.create(firstChannel: 2)),
+          EarLocationName.LEFT_HELIX: EarLocation(name: EarLocationName.LEFT_HELIX,
+              impedanceConfig: ImpedanceConfig.create(firstChannel: 1,
+                  channelOperator: ChannelOperator.SUBTRACTION,
+                  secondChannel: 6)),
+        }),
   };
-  
+
   static EarbudsConfig getConfig(String configName) {
     if (!_earbudsConfigs.containsKey(configName)) {
       throw ArgumentError.value("Unknown earbuds configuration: $configName");

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_common/domain/earbuds_config.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
 import 'package:nextsense_trial_ui/ui/components/error_overlay.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';

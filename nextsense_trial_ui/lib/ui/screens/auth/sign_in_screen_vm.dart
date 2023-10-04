@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_common/managers/auth/authentication_result.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 
@@ -25,7 +25,7 @@ class SignInScreenViewModel extends ViewModel {
   String errorMsg = "";
   bool popupErrorMsg = false;
 
-  bool get hadPairedDevice => _deviceManager.hadPairedDevice;
+  bool get hadPairedDevice => _authManager.getLastPairedMacAddress() != null;
   List<AuthMethod> get authMethods => _flavor.authMethods;
   String get appTitle => _flavor.appTitle;
   bool get isTempPassword => _authManager.user!.isTempPassword();
@@ -114,7 +114,8 @@ class SignInScreenViewModel extends ViewModel {
 
   Future<bool> connectToLastPairedDevice() async {
     setBusy(true);
-    bool connected = await _deviceManager.connectToLastPairedDevice();
+    bool connected = await _deviceManager.connectToLastPairedDevice(
+        _authManager.getLastPairedMacAddress());
     setBusy(false);
     return connected;
   }

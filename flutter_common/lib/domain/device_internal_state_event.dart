@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:nextsense_trial_ui/domain/device_internal_state.dart';
+
+import 'device_internal_state.dart';
 
 enum DeviceInternalStateEventType {
   hdmiCableConnected,
@@ -26,18 +27,18 @@ class DeviceInternalStateEvent {
 
   factory DeviceInternalStateEvent.createFromInternalStateField(String fieldKey, dynamic value) {
     DeviceInternalStateFields field =
-        DeviceInternalStateFields.values.asNameMap()[fieldKey]!;
+    DeviceInternalStateFields.values.asNameMap()[fieldKey]!;
     DeviceInternalStateEventType type = DeviceInternalStateEventType.unknown;
 
     // TODO(alex): add more event mapping
     switch (field) {
       case DeviceInternalStateFields.uSdPresent:
         type = value ? DeviceInternalStateEventType.uSdConnected :
-            DeviceInternalStateEventType.uSdDisconnected;
+        DeviceInternalStateEventType.uSdDisconnected;
         break;
       case DeviceInternalStateFields.hdmiCablePresent:
         type = value ? DeviceInternalStateEventType.hdmiCableConnected :
-            DeviceInternalStateEventType.hdmiCableDisconnected;
+        DeviceInternalStateEventType.hdmiCableDisconnected;
         break;
       default:
         break;
@@ -52,20 +53,23 @@ class DeviceInternalStateEvent {
 
   @override
   bool operator==(Object other) {
-      if (identical(this, other))
-        return true;
+    if (identical(this, other)) {
+      return true;
+    }
 
-      if (!(other is DeviceInternalStateEvent))
-        return false;
+    if (other is! DeviceInternalStateEvent) {
+      return false;
+    }
 
-      if (this.value is List && other.value is List)
-        return listEquals(this.value, other.value);
+    if (value is List && other.value is List) {
+      return listEquals(value, other.value);
+    }
 
-      return this.value == other.value;
+    return value == other.value;
   }
 
   @override
   String toString() {
-    return "DeviceInternalStateChangeEvent(${this.type})";
+    return "DeviceInternalStateChangeEvent(${type})";
   }
 }

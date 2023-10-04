@@ -1,4 +1,5 @@
 import 'package:flutter_common/di.dart' as common_di;
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:flutter_common/managers/disk_space_manager.dart';
 import 'package:flutter_common/managers/firebase_manager.dart';
 import 'package:get_it/get_it.dart';
@@ -9,7 +10,6 @@ import 'package:nextsense_trial_ui/managers/audio_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
 import 'package:nextsense_trial_ui/managers/firebase_storage_manager.dart';
 import 'package:nextsense_trial_ui/managers/firestore_manager.dart';

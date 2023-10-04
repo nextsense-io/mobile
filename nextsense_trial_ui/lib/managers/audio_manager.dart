@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:flutter_common/utils/android_logger.dart';

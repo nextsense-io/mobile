@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter_common/domain/device_settings.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/device_settings.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/utils/algorithms.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';

@@ -1,6 +1,7 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
@@ -8,6 +9,11 @@ import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 
 const int _notificationMessageId = 999;
+const int connectionLostNotificationId = 2;
+const String connectionLostTitle = 'Connection lost';
+const String connectionLostBody = 'The connection with your NextSense device was lost. '
+    'Please make sure it was not turned off by accident and make sure your phone is not more '
+    'than a few meters away. It should reconnect automatically.';
 
 Future showAlertNotification(
     int id, String title, String body, {Map<String, String>? payload}) async {
@@ -90,9 +96,10 @@ class NotificationsManager {
   // TODO(alex): discuss notification types that can be replaced and fix
   // _notificationMessageId depends on notification entity type
 
+  final _deviceManager = getIt<DeviceManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('NotificationsManager');
   
-  NotificationManager() {}
+  NotificationsManager();
 
   Future init() async {
     _logger.log(Level.INFO, 'initializing');
@@ -136,6 +143,17 @@ class NotificationsManager {
     var messaging = FirebaseMessaging.instance;
     messaging.getToken().then((token)=> _onFcmTokenUpdated(token!));
     messaging.onTokenRefresh.listen(_onFcmTokenUpdated);
+
+    _deviceManager.deviceState.addListener(() {
+      if (_deviceManager.deviceState.value == DeviceState.connected ||
+          (_deviceManager.deviceState.value == DeviceState.disconnected &&
+              _deviceManager.getConnectedDevice() != null)) {
+        hideAlertNotification(connectionLostNotificationId);
+      } else if (_deviceManager.deviceState.value == DeviceState.disconnected &&
+          _deviceManager.getConnectedDevice() == null) {
+        showAlertNotification(connectionLostNotificationId, connectionLostTitle, connectionLostBody);
+      }
+    });
 
     _logger.log(Level.INFO, 'initialized');
   }

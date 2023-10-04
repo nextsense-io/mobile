@@ -1,4 +1,4 @@
-import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
+import 'package:flutter_common/domain/earbuds_config.dart';
 import 'package:nextsense_trial_ui/utils/algorithms.dart';
 
 class ImpedanceData implements Comparable<ImpedanceData> {

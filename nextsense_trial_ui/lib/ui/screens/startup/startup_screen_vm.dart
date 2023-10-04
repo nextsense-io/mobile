@@ -1,4 +1,5 @@
 import 'package:flutter_common/managers/auth/authentication_result.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:flutter_common/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/di.dart';
@@ -8,7 +9,6 @@ import 'package:nextsense_trial_ui/managers/auth/email_auth_link.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
@@ -169,8 +169,9 @@ class StartupScreenViewModel extends ViewModel {
     // device before, then navigate directly to dashboard. Note: we have same logic in sign in
     // screen.
     String screen = PrepareDeviceScreen.id;
-    if (_deviceManager.hadPairedDevice) {
-      bool connected = await _deviceManager.connectToLastPairedDevice();
+    if (_authManager.getLastPairedMacAddress() != null) {
+      bool connected = await _deviceManager.connectToLastPairedDevice(
+          _authManager.getLastPairedMacAddress());
       RunnableProtocol? runnableProtocol = await _authManager.user!.getRunningProtocol(
           _studyManager.currentStudyStartDate, _studyManager.currentStudyEndDate);
       if (runnableProtocol != null) {

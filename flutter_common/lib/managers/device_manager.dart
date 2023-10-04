@@ -3,16 +3,12 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_common/domain/device_internal_state.dart';
+import 'package:flutter_common/domain/device_internal_state_event.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/kauai_proto/kauai_firmware_message.pb.dart';
 import 'package:nextsense_base/nextsense_base.dart';
-
-import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/device_internal_state.dart';
-import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
-import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 
 class Device {
@@ -46,21 +42,13 @@ DeviceState deviceStateFromString(String str) {
 
 // Contains the currently connected devices for ease of use.
 class DeviceManager {
-  static final int connectionLostNotificationId = 2;
-  static final String connectionLostTitle = 'Connection lost';
-  static final String connectionLostBody = 'The connection with your NextSense device was lost. '
-      'Please make sure it was not turned off by accident and make sure your phone is not more '
-      'than a few meters away. It should reconnect automatically.';
-
   // It takes a maximum of about 1 second to find the device if it is already powered up. 2 seconds
   // gives enough safety and is not too long to wait if the device is not powered on or is too far.
   static final Duration _scanTimeout = Duration(seconds: 2);
 
-  final _notificationsManager = getIt<NotificationsManager>();
-  final _authManager = getIt<AuthManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceManager');
   final _deviceInternalStateChangeController =
-      StreamController<DeviceInternalStateEvent>.broadcast();
+  StreamController<DeviceInternalStateEvent>.broadcast();
 
   ValueNotifier<DeviceState> deviceState = ValueNotifier(DeviceState.disconnected);
   ValueNotifier<DeviceInternalState?> deviceInternalState = ValueNotifier(null);
@@ -84,8 +72,6 @@ class DeviceManager {
   // TODO(eric): Make this conditional on device type.
   bool get isHdmiCablePresent => deviceInternalState.value?.hdmiCablePresent ?? true;
   bool get isUSdPresent => deviceInternalState.value?.uSdPresent ?? true;
-  // There is already a paired device that can be connected to if found.
-  bool get hadPairedDevice => getLastPairedDevice() != null;
 
   Future<bool> connectDevice(Device device,
       {Duration timeout = const Duration(seconds: 10)}) async {
@@ -121,20 +107,13 @@ class DeviceManager {
     if (_connectedDevice!.type == DeviceType.xenon) {
       _requestStateChanges();
     }
-    _authManager.user!
-      ..setLastPairedDeviceMacAddress(_connectedDevice!.macAddress)
-      ..save();
-
     return true;
   }
 
-  Device? getLastPairedDevice() {
-    final userEntity = _authManager.user!;
-    final macAddress = userEntity.getLastPairedDeviceMacAddress();
+  Device? getLastPairedDevice(String? macAddress) {
     if (macAddress == null) {
       return null;
     }
-    // TODO(alex): get device name for constructor?
     return Device(macAddress, "");
   }
 
@@ -144,8 +123,8 @@ class DeviceManager {
   }
 
   // Try connect to last paired device, returns true on success
-  Future<bool> connectToLastPairedDevice() async {
-    Device? lastPairedDevice = getLastPairedDevice();
+  Future<bool> connectToLastPairedDevice(String? macAddress) async {
+    Device? lastPairedDevice = getLastPairedDevice(macAddress);
     if (lastPairedDevice == null) {
       return false;
     }
@@ -154,10 +133,10 @@ class DeviceManager {
     CancelListening _cancelScanning = NextsenseBase.startScanning((deviceAttributesJson) {
       Map<String, dynamic> deviceAttributes = gson.decode(deviceAttributesJson);
       String macAddress = deviceAttributes[describeEnum(DeviceAttributesFields.macAddress)];
-      _logger.log(Level.INFO, 'Found a device: ' + macAddress);
+      _logger.log(Level.INFO, 'Found a device: $macAddress');
       if (macAddress == lastPairedDevice.macAddress) {
         String name = deviceAttributes[describeEnum(DeviceAttributesFields.name)];
-        _scannedDevice = new Device(macAddress, name);
+        _scannedDevice = Device(macAddress, name);
         _logger.log(Level.INFO, 'Last paired device found, reconnecting');
         _scanFinishedCompleter.complete(true);
       }
@@ -183,15 +162,15 @@ class DeviceManager {
       _logger.log(
           Level.WARNING,
           "Failed connect to last paired device "
-          "${lastPairedDevice.macAddress}");
+              "${lastPairedDevice.macAddress}");
     }
     _scannedDevice = null;
     return connected;
   }
 
   Future<bool> waitScanFinished(Duration timeout) async {
-    _scanFinishedCompleter = new Completer<bool>();
-    new Timer(timeout, () {
+    _scanFinishedCompleter = Completer<bool>();
+    Timer(timeout, () {
       if (!_scanFinishedCompleter.isCompleted) {
         _scanFinishedCompleter.complete(_scannedDevice != null);
       }
@@ -200,8 +179,8 @@ class DeviceManager {
   }
 
   Future<bool> waitDeviceReady(Duration timeout) async {
-    _deviceReadyCompleter = new Completer<bool>();
-    new Timer(timeout, () {
+    _deviceReadyCompleter = Completer<bool>();
+    Timer(timeout, () {
       if (!_deviceReadyCompleter.isCompleted) {
         _deviceReadyCompleter.complete(deviceState.value == DeviceState.ready);
       }
@@ -210,8 +189,8 @@ class DeviceManager {
   }
 
   Future<bool> waitInternalStateAvailable(Duration timeout) async {
-    _deviceInternalStateAvailableCompleter = new Completer<bool>();
-    new Timer(timeout, () {
+    _deviceInternalStateAvailableCompleter = Completer<bool>();
+    Timer(timeout, () {
       if (!_deviceInternalStateAvailableCompleter.isCompleted) {
         _deviceInternalStateAvailableCompleter.complete(deviceInternalStateAvailable);
       }
@@ -232,11 +211,9 @@ class DeviceManager {
 
   Future manualDisconnect() async {
     await disconnectDevice();
-    await _authManager.user!..setLastPairedDeviceMacAddress(null)..save();
   }
 
   Future disconnectDevice() async {
-    _notificationsManager.hideAlertNotification(connectionLostNotificationId);
     if (getConnectedDevice() == null) {
       _logger.log(Level.FINE, "Trying to disconnect but no connected device");
       return;
@@ -260,9 +237,9 @@ class DeviceManager {
 
   Future<int> startStreaming(
       {bool? uploadToCloud,
-      String? bigTableKey,
-      String? dataSessionCode,
-      String? earbudsConfig}) async {
+        String? bigTableKey,
+        String? dataSessionCode,
+        String? earbudsConfig}) async {
     if (_connectedDevice == null) {
       throw Exception('No connected device');
     }
@@ -296,7 +273,7 @@ class DeviceManager {
       _cancelStateListening?.call();
     }
     _cancelStateListening = NextsenseBase.listenToDeviceState((newDeviceState) {
-      _logger.log(Level.INFO, 'Device state changed to ' + newDeviceState);
+      _logger.log(Level.INFO, 'Device state changed to $newDeviceState');
       if (_connectedDevice != null) {
         final DeviceState state = deviceStateFromString(newDeviceState);
         switch (state) {
@@ -327,7 +304,7 @@ class DeviceManager {
     }
     _requestDeviceStateTimer = Timer.periodic(
       const Duration(seconds: 10),
-      (timer) {
+          (timer) {
         if (_connectedDevice != null && deviceIsReady) {
           _logger.log(Level.FINE, 'Requesting device state update.');
           NextsenseBase.requestDeviceStateUpdate(_connectedDevice!.macAddress);
@@ -342,19 +319,19 @@ class DeviceManager {
     }
     _cancelInternalStateListening =
         NextsenseBase.listenToDeviceInternalState((newDeviceInternalStateJson) {
-      _logger.log(Level.FINE, 'Device internal state changed');
-      Map<String, dynamic> newStateValues = jsonDecode(newDeviceInternalStateJson);
+          _logger.log(Level.FINE, 'Device internal state changed');
+          Map<String, dynamic> newStateValues = jsonDecode(newDeviceInternalStateJson);
 
-      DeviceInternalState state = new DeviceInternalState(newStateValues);
+          DeviceInternalState state = DeviceInternalState(newStateValues);
 
-      deviceInternalState.value = state;
-      if (!_deviceInternalStateAvailableCompleter.isCompleted) {
-        _deviceInternalStateAvailableCompleter.complete(true);
-      }
+          deviceInternalState.value = state;
+          if (!_deviceInternalStateAvailableCompleter.isCompleted) {
+            _deviceInternalStateAvailableCompleter.complete(true);
+          }
 
-      _detectInternalStateValueChange(newStateValues);
-      _deviceInternalStateValues = newStateValues;
-    });
+          _detectInternalStateValueChange(newStateValues);
+          _deviceInternalStateValues = newStateValues;
+        });
   }
 
   void _listenToEvents() {
@@ -440,7 +417,6 @@ class DeviceManager {
   void _onDeviceDisconnected() {
     // Disconnected without being requested by the user.
     _logger.log(Level.INFO, "Device disconnected without being requested by the user.");
-    showAlertNotification(connectionLostNotificationId, connectionLostTitle, connectionLostBody);
     deviceState.value = DeviceState.disconnected;
     _requestDeviceStateTimer?.cancel();
     _requestDeviceStateTimer = null;
@@ -451,31 +427,30 @@ class DeviceManager {
         connectedDevice.macAddress);
     String? deviceTypeString = deviceAttributes[describeEnum(DeviceAttributesFields.type)];
     DeviceType? deviceType = deviceTypeString != null ?
-        DeviceType.values.byName(deviceTypeString.toLowerCase()) : null;
-    return new Device(connectedDevice.macAddress, connectedDevice.name,
+    DeviceType.values.byName(deviceTypeString.toLowerCase()) : null;
+    return Device(connectedDevice.macAddress, connectedDevice.name,
         type: deviceType,
         revision: deviceAttributes[describeEnum(DeviceAttributesFields.revision)],
         serialNumber: deviceAttributes[describeEnum(DeviceAttributesFields.serialNumber)],
         firmwareVersionMajor:
-            deviceAttributes[describeEnum(DeviceAttributesFields.firmwareVersionMajor)],
+        deviceAttributes[describeEnum(DeviceAttributesFields.firmwareVersionMajor)],
         firmwareVersionMinor:
-            deviceAttributes[describeEnum(DeviceAttributesFields.firmwareVersionMinor)],
+        deviceAttributes[describeEnum(DeviceAttributesFields.firmwareVersionMinor)],
         firmwareVersionBuildNumber:
-            deviceAttributes[describeEnum(DeviceAttributesFields.firmwareVersionBuildNumber)],
+        deviceAttributes[describeEnum(DeviceAttributesFields.firmwareVersionBuildNumber)],
         earbudsType: deviceAttributes[describeEnum(DeviceAttributesFields.earbudsType)],
         earbudsRevision: deviceAttributes[describeEnum(DeviceAttributesFields.earbudsRevision)],
         earbudsSerialNumber:
-            deviceAttributes[describeEnum(DeviceAttributesFields.earbudsSerialNumber)],
+        deviceAttributes[describeEnum(DeviceAttributesFields.earbudsSerialNumber)],
         earbudsVersionMajor:
-            deviceAttributes[describeEnum(DeviceAttributesFields.earbudsVersionMajor)],
+        deviceAttributes[describeEnum(DeviceAttributesFields.earbudsVersionMajor)],
         earbudsVersionMinor:
-            deviceAttributes[describeEnum(DeviceAttributesFields.earbudsVersionMinor)],
+        deviceAttributes[describeEnum(DeviceAttributesFields.earbudsVersionMinor)],
         earbudsVersionBuildNumber:
-            deviceAttributes[describeEnum(DeviceAttributesFields.earbudsVersionBuildNumber)]);
+        deviceAttributes[describeEnum(DeviceAttributesFields.earbudsVersionBuildNumber)]);
   }
 
   void _onDeviceReady() async {
-    _notificationsManager.hideAlertNotification(connectionLostNotificationId);
     _connectedDevice = await getDeviceInfo(_connectedDevice!);
     deviceState.value = DeviceState.ready;
     if (!_deviceReadyCompleter.isCompleted) {

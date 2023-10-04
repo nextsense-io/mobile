@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 
 class DeviceSettings {
-
   late double? eegSamplingRate;
   late double? eegStreamingRate;
   late double? imuSamplingRate;

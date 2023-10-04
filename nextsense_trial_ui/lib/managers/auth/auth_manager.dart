@@ -171,6 +171,11 @@ class AuthManager {
     }
   }
 
+
+  String? getLastPairedMacAddress() {
+    return user?.getLastPairedDeviceMacAddress();
+  }
+
   // Make sure the user data is loaded from Firestore before doing any authorized operations.
   //
   // Returns true if the user is successfully initialized, otherwise returns false.
