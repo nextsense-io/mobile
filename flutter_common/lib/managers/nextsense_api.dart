@@ -39,7 +39,7 @@ class NextsenseApi {
   NextsenseApi(String baseUrl) : _baseUrl = baseUrl;
 
   Future<ApiResponse> _callApi({required Map<String, dynamic> data, required Uri endpoint,
-    required String defaultErrorMsg}) async {
+      required String defaultErrorMsg}) async {
     Response? response;
     int attemptNumber = 0;
     while (response == null && attemptNumber < _maxRetries) {
@@ -93,7 +93,7 @@ class NextsenseApi {
   }
 
   // Changes the user password.
-  Future<ApiResponse> changePassword(String token, String username, String newPassword) async {
+  Future<ApiResponse> changePassword(String? token, String username, String newPassword) async {
     var data = {
       'token': token,
       'username': username,
