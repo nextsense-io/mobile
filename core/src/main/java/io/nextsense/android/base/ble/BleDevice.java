@@ -38,6 +38,7 @@ import io.nextsense.android.base.communication.ble.ReconnectionManager;
 import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.StreamingStartMode;
+import io.nextsense.android.base.devices.kauai.KauaiDevice;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
@@ -74,6 +75,9 @@ public class BleDevice extends Device {
     centralProxy.addPeripheralListener(bluetoothCentralManagerCallback, btPeripheral.getAddress());
     callbackProxy.addPeripheralCallbackListener(peripheralCallback);
     this.reconnectionManager = reconnectionManager;
+    if (nextSenseDevice instanceof KauaiDevice) {
+      ((KauaiDevice) nextSenseDevice).startListening();
+    }
   }
 
   @Override

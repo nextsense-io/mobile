@@ -107,6 +107,8 @@ enum ErrorType {
   ALREADY_RECORDING = 1;
   HDMI_DISCONNECTED = 2;
   STORAGE_FULL = 3;
+  INVALID_PARAM = 4;
+  INTERNAL_ERROR = 5;
 }
 
 // Common fields for a firmware response to a client message.
