@@ -5,13 +5,13 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/data_session.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -21,7 +21,7 @@ enum Modality {
 }
 
 class SessionManager {
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();

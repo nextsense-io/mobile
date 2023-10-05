@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 
 /// Each entry corresponds to a field name in the database instance.
 enum SessionKey {
@@ -47,7 +47,8 @@ enum SessionKey {
 
 class Session extends FirebaseEntity<SessionKey> {
 
-  Session(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
+  Session(FirebaseEntity firebaseEntity) :
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   DateTime? getStartDateTime() {
     final Timestamp? startDateTime = getValue(SessionKey.start_datetime);

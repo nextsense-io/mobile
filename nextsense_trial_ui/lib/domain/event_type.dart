@@ -1,4 +1,4 @@
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 
 enum EventTypeKey {
   abbreviation,
@@ -9,7 +9,8 @@ enum EventTypeKey {
 }
 
 class EventType extends FirebaseEntity<EventTypeKey> {
-  EventType(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
+  EventType(FirebaseEntity firebaseEntity) :
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   String getAbbreviation() {
     return getValue(EventTypeKey.abbreviation);

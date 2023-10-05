@@ -1,5 +1,5 @@
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
@@ -55,7 +55,7 @@ class PlannedSession extends FirebaseEntity<PlannedSessionKey> {
       getValue(PlannedSessionKey.triggers_conditional_survey_id);
 
   PlannedSession(FirebaseEntity firebaseEntity, DateTime studyStartDate, DateTime? studyEndDate) :
-      super(firebaseEntity.getDocumentSnapshot()) {
+      super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager()) {
     if (scheduleType == ScheduleType.scheduled) {
       if (_dayNumber == null || !(_dayNumber is int)) {
         throw("'day' is not set or not number in planned session");

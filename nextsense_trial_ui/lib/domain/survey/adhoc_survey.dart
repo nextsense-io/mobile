@@ -1,4 +1,4 @@
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
@@ -18,7 +18,7 @@ class AdhocSurvey extends FirebaseEntity<AdhocSurveyKey> implements RunnableSurv
   String? get scheduledSurveyId => null;
 
   AdhocSurvey(FirebaseEntity firebaseEntity, this.plannedSurveyId, this.survey, this.studyId)
-      : super(firebaseEntity.getDocumentSnapshot());
+      : super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   void setPlannedSurveyId(String plannedSurveyId) {
     setValue(AdhocSurveyKey.planned_survey_id, plannedSurveyId);

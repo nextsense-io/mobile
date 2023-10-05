@@ -1,20 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
 
 class AdhocSession implements RunnableProtocol {
   final CustomLogPrinter _logger = CustomLogPrinter('AdhocSession');
 
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final SurveyManager _surveyManager = getIt<SurveyManager>();
   final String _studyId;
@@ -110,7 +110,7 @@ enum AdhocSessionKey {
 class AdhocProtocolRecord extends FirebaseEntity<AdhocSessionKey> {
 
   AdhocProtocolRecord(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot());
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   DateTime? getTimestamp() {
     final timestampString = getValue(AdhocSessionKey.timestamp);

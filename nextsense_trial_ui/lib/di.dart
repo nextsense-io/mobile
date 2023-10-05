@@ -1,5 +1,4 @@
 import 'package:flutter_common/di.dart' as common_di;
-import 'package:flutter_common/managers/device_manager.dart';
 import 'package:flutter_common/managers/disk_space_manager.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/config.dart';
@@ -10,7 +9,6 @@ import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
 import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/medication_manager.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
 import 'package:nextsense_trial_ui/managers/seizures_manager.dart';
@@ -18,6 +16,7 @@ import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/side_effects_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
+import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 
@@ -43,7 +42,7 @@ Future<void> initDependencies() async {
   // The order here matters as some of these components might use a component
   // that was initialised before.
   await common_di.initDependencies(Config.nextsenseApiUrl);
-  getIt.registerSingleton<FirestoreManager>(FirestoreManager());
+  getIt.registerSingleton<TrialUiFirestoreManager>(TrialUiFirestoreManager());
   getIt.registerSingleton<AuthManager>(AuthManager());
   getIt.registerSingleton<NotificationsManager>(NotificationsManager());
   getIt.registerSingleton<EventTypesManager>(EventTypesManager());

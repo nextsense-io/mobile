@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
 import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 /// Each entry corresponds to a field name in the database instance.
@@ -66,7 +66,7 @@ class User extends FirebaseEntity<UserKey> {
   UserType get userType => getUserTypeFromString(getValue(UserKey.type));
 
   User(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot());
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   String? getCurrentStudyId() {
     return getValue(UserKey.current_study_id);
@@ -151,15 +151,17 @@ class User extends FirebaseEntity<UserKey> {
     DocumentReference ref = runningProtocolRef as DocumentReference;
     if (runningProtocolRef.parent.path.toString().endsWith(Table.adhoc_sessions.name())) {
       return AdhocSession.fromRecord(
-          AdhocProtocolRecord(FirebaseEntity(await ref.get())), getCurrentStudyId()!);
+          AdhocProtocolRecord(FirebaseEntity(await ref.get(), super.getFirestoreManager())),
+          getCurrentStudyId()!);
     } else {
       if (studyStartDate == null || studyEndDate == null) {
         throw Exception("Study start and end dates are required for scheduled protocols");
       }
-      FirebaseEntity scheduledProtocolEntity = FirebaseEntity(await ref.get());
+      FirebaseEntity scheduledProtocolEntity = FirebaseEntity(
+          await ref.get(), getFirestoreManager());
       FirebaseEntity plannedAssessmentEntity = FirebaseEntity(
           await (scheduledProtocolEntity.getValue(ScheduledSessionKey.planned_session_id)
-          as DocumentReference).get());
+          as DocumentReference).get(), getFirestoreManager());
       PlannedSession plannedAssessment =
           PlannedSession(plannedAssessmentEntity, studyStartDate, studyEndDate);
       return ScheduledSession(scheduledProtocolEntity, plannedAssessment);

@@ -10,7 +10,7 @@ import 'package:nextsense_trial_ui/domain/medication/planned_medication.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/enrolled_study.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
@@ -18,7 +18,7 @@ import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
@@ -28,7 +28,7 @@ class StudyManager {
   static const String _studiesDir = 'studies';
   static const String _introDir = 'intro';
 
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final FirebaseStorageManager _firebaseStorageManager = getIt<FirebaseStorageManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final Preferences _preferences = getIt<Preferences>();

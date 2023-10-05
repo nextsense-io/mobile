@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/timed_entry.dart';
 
 // List of side effect types that can be entered by the user.
@@ -22,9 +22,7 @@ enum SideEffectType {
   final String label;
 }
 
-/**
- * Each entry corresponds to a field name in the database instance.
- */
+/// Each entry corresponds to a field name in the database instance.
 enum SideEffectKey {
   // Start date and time of the side effect.
   start_datetime,
@@ -38,7 +36,8 @@ enum SideEffectKey {
 
 class SideEffect extends FirebaseEntity<SideEffectKey> implements TimedEntry {
 
-  SideEffect(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
+  SideEffect(FirebaseEntity firebaseEntity) :
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   DateTime? getStartDateTime() {
     final value = getValue(SideEffectKey.start_datetime);

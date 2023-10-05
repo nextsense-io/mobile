@@ -8,7 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/event.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
@@ -18,11 +18,11 @@ import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 
 enum ProtocolCancelReason {
@@ -58,7 +58,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   final EventTypesManager _eventTypesManager = getIt<EventTypesManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final RunnableProtocol runnableProtocol;
   final bool useCountDownTimer;

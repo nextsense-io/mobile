@@ -106,7 +106,7 @@ packages:
     source: hosted
     version: "1.1.1"
   cloud_firestore:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: cloud_firestore
       sha256: "1179ae4c69e2ea18179d844d70fc6ed2f082a2bbeb7fa62d35a2a24e2992bd4d"

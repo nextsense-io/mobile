@@ -1,4 +1,4 @@
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 
@@ -35,7 +35,7 @@ class PlannedSurvey extends FirebaseEntity<PlannedSurveyKey> implements Schedula
       getValue(PlannedSurveyKey.triggers_conditional_survey_id);
 
   PlannedSurvey(FirebaseEntity firebaseEntity, {DateTime? studyStartDate, DateTime? studyEndDate}) :
-      super(firebaseEntity.getDocumentSnapshot()) {
+      super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager()) {
     _specificDayNumber = getValue(PlannedSurveyKey.day);
     _lastDayNumber = getValue(PlannedSurveyKey.end_day);
     // We have following possible values for period field

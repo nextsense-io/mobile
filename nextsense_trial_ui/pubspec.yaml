@@ -19,7 +19,6 @@ dependencies:
   awesome_notifications: ^0.8.2
   community_charts_flutter: ^1.0.1
   circular_countdown_timer: ^0.2.1
-  cloud_firestore: ^4.3.1
   connectivity_plus: ^2.2.1
   dropdown_button2: ^1.5.2
   file: ^6.1.4

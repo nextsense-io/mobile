@@ -1,4 +1,4 @@
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 
 enum SurveyResultKey {
   user_id,
@@ -15,7 +15,8 @@ enum SurveyResultKey {
 class SurveyResult extends FirebaseEntity<SurveyResultKey> {
 
   SurveyResult(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot(), addMonitoringFields: false);
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager(),
+          addMonitoringFields: false);
 
   void setUserId(String userId) {
     setValue(SurveyResultKey.user_id, userId);

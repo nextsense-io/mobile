@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/timed_entry.dart';
 
 // List of triggers that can be entered by the user.
@@ -38,7 +38,8 @@ enum SeizureKey {
 
 class Seizure extends FirebaseEntity<SeizureKey> implements TimedEntry {
 
-  Seizure(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
+  Seizure(FirebaseEntity firebaseEntity) :
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   DateTime? getStartDateTime() {
     final value = getValue(SeizureKey.start_datetime);

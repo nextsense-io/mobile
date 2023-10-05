@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 
 /// Each entry corresponds to a field name in the database instance.
 enum EnrolledStudyKey {
@@ -16,7 +16,8 @@ enum EnrolledStudyKey {
 
 class EnrolledStudy extends FirebaseEntity<EnrolledStudyKey> {
 
-  EnrolledStudy(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
+  EnrolledStudy(FirebaseEntity firebaseEntity) :
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   bool get isScheduled => getValue(EnrolledStudyKey.is_scheduled) ?? false;
 

@@ -1,4 +1,4 @@
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 
 /// Each entry corresponds to a field name in the database instance.
 enum DataSessionKey {
@@ -15,6 +15,7 @@ enum DataSessionKey {
 
 class DataSession extends FirebaseEntity<DataSessionKey> {
 
-  DataSession(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
+  DataSession(FirebaseEntity firebaseEntity) :
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
 }

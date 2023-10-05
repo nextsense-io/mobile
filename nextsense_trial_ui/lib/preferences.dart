@@ -60,14 +60,4 @@ class Preferences {
   double? getDouble(PreferenceKey key) {
     return sharedPrefs.getDouble(key.name);
   }
-
-  // Determines that entity specified by 'key' is cached
-  bool isCached(String key) {
-    return sharedPrefs.getBool(key) ?? false;
-  }
-
-  // Mark entity specified by 'key' as cached
-  void markAsCached(String key) {
-    sharedPrefs.setBool(key, true);
-  }
 }

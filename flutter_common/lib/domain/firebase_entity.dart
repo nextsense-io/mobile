@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:flutter_common/managers/firestore_manager.dart';
 
 enum BaseEntityKey {
   // User id of the user who created this record.
@@ -14,8 +13,7 @@ enum BaseEntityKey {
 }
 
 class FirebaseEntity<T extends Enum> {
-
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final FirestoreManager _firestoreManager;
 
   // Snapshot from Firebase to be able to persist or listen to value changes.
   final DocumentSnapshot _documentSnapshot;
@@ -32,15 +30,21 @@ class FirebaseEntity<T extends Enum> {
 
   DocumentReference get reference => _documentSnapshot.reference;
 
-  FirebaseEntity(DocumentSnapshot documentSnapshot, {bool addMonitoringFields = true}) :
-      _documentSnapshot = documentSnapshot,
-      _addMonitoringFields = addMonitoringFields,
-      _values = documentSnapshot.exists ?
-          documentSnapshot.data() as Map<String, dynamic> :
-          new Map<String, dynamic>() {}
+  FirebaseEntity(DocumentSnapshot documentSnapshot, FirestoreManager firestoreManager,
+      {bool addMonitoringFields = true}) :
+        _documentSnapshot = documentSnapshot,
+        _firestoreManager = firestoreManager,
+        _addMonitoringFields = addMonitoringFields,
+        _values = documentSnapshot.exists ?
+        documentSnapshot.data() as Map<String, dynamic> :
+        <String, dynamic>{};
 
   DocumentSnapshot getDocumentSnapshot() {
     return _documentSnapshot;
+  }
+
+  FirestoreManager getFirestoreManager() {
+    return _firestoreManager;
   }
 
   Map<String, dynamic> getValues() {
@@ -62,7 +66,7 @@ class FirebaseEntity<T extends Enum> {
 
   @override
   String toString() {
-    final type = this.runtimeType.toString();
+    final type = runtimeType.toString();
     return "$type($id) [${getValues()}]";
   }
 

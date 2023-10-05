@@ -1,11 +1,11 @@
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/event_type.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
 
 class EventTypesManager {
   
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
 
   Map<String, EventType> _eventTypes = {};
 

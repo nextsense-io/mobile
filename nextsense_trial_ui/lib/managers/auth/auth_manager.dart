@@ -6,11 +6,11 @@ import 'package:flutter_common/managers/auth/google_auth_manager.dart';
 import 'package:flutter_common/managers/auth/password_change_result.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/auth/nextsense_auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:uuid/uuid.dart';
@@ -20,7 +20,7 @@ class AuthManager {
 
   final _logger = CustomLogPrinter('AuthManager');
   final _preferences = getIt<Preferences>();
-  final _firestoreManager = getIt<FirestoreManager>();
+  final _firestoreManager = getIt<TrialUiFirestoreManager>();
   final _firebaseAuth = FirebaseAuth.instance;
   final _flavor = getIt<Flavor>();
 

@@ -1,9 +1,9 @@
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/survey/condition.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
 
 enum SurveyKey {
   abbreviation,
@@ -108,7 +108,8 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
   // Optional question can be skipped
   bool get optional => getValue(SurveyQuestionKey.optional) ?? false;
 
-  SurveyQuestion(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot()) {
+  SurveyQuestion(FirebaseEntity firebaseEntity) :
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager()) {
     if (getValue(SurveyQuestionKey.conditions) != null) {
       _conditions = Conditions.fromArray(getValue(SurveyQuestionKey.conditions));
     }
@@ -196,7 +197,7 @@ class SurveyQuestion extends FirebaseEntity<SurveyQuestionKey>{
 
 class Survey extends FirebaseEntity<SurveyKey> {
 
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('Survey');
 
   List<SurveyQuestion>? _questions;
@@ -206,7 +207,8 @@ class Survey extends FirebaseEntity<SurveyKey> {
   String get introText => getValue(SurveyKey.intro_text) ?? "";
   Duration get duration => Duration(minutes: getValue(SurveyKey.duration_minutes) ?? 0);
 
-  Survey(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
+  Survey(FirebaseEntity firebaseEntity) :
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   Future<bool> loadQuestions({bool fromCache = false}) async {
     _logger.log(Level.INFO, 'Loading questions for survey ${this.id} fromCache = $fromCache');
