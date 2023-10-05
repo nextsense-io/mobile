@@ -164,7 +164,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     return executorService.submit(() -> {
       try {
         // Set the time on the device.
-        executeCommandNoResponse(new SetDateTimeCommand(lastMessageId++, Instant.now()));
+        executeCommandNoResponse(new SetDateTimeCommand(++lastMessageId, Instant.now()));
         readCommandResponse();
         KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
             COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
@@ -288,7 +288,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     return executorService.submit(() -> {
       if (peripheral.getState() == ConnectionState.CONNECTED) {
         try {
-          executeCommandNoResponse(new StopRecordingCommand(lastMessageId++));
+          executeCommandNoResponse(new StopRecordingCommand(++lastMessageId));
           // TODO(eric): Uncomment when device sends back response.
 //          readCommandResponse();
 //          KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
@@ -333,7 +333,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   public ListenableFuture<Boolean> applyDeviceSettings(DeviceSettings newDeviceSettings) {
     return executorService.submit(() -> {
       try {
-        executeCommandNoResponse(new SetRecordingOptionsCommand(lastMessageId++,
+        executeCommandNoResponse(new SetRecordingOptionsCommand(++lastMessageId,
             /*saveToFile=*/false, /*continuousImpedance=*/true,
             (int)newDeviceSettings.getEegSamplingRate()));
         this.deviceSettings = newDeviceSettings;
@@ -369,7 +369,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   public ListenableFuture<Boolean> loadDeviceInfo() {
     return executorService.submit(() -> {
       try {
-        executeCommandNoResponse(new GetDeviceInfoCommand(lastMessageId++));
+        executeCommandNoResponse(new GetDeviceInfoCommand(++lastMessageId));
         readCommandResponse();
         KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
             COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
@@ -422,7 +422,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   @Override
   public boolean requestDeviceInternalState() {
     try {
-      executeCommandNoResponse(new GetDeviceStatusCommand(lastMessageId++));
+      executeCommandNoResponse(new GetDeviceStatusCommand(++lastMessageId));
       readCommandResponse();
       return true;
     } catch (CancellationException | ExecutionException | TimeoutException |
@@ -484,13 +484,12 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
           lastMessageType + ", received: " + response.getHostMessage().getMessageType());
       return false;
     }
-    // TODO(eric): Uncomment when device supports message id.
-//    if (response.getHostMessage().getRespToMessageId() != lastMessageId) {
-//      RotatingFileLogger.get().logw(TAG,
-//          "Received message id not matching the expected one. Expected: " +
-//          lastMessageId + ", received: " + response.getHostMessage().getRespToMessageId());
-//      return false;
-//    }
+    if (response.getHostMessage().getRespToMessageId() != lastMessageId) {
+      RotatingFileLogger.get().logw(TAG,
+          "Received message id not matching the expected one. Expected: " +
+          lastMessageId + ", received: " + response.getHostMessage().getRespToMessageId());
+      return false;
+    }
     return true;
   }
 
