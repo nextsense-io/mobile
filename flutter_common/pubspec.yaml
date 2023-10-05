@@ -6,7 +6,7 @@ homepage: nextsense.io
 
 environment:
   sdk: '>=2.19.2 <3.0.0'
-  flutter: ">=1.17.0"
+  flutter: ">=3.0.0 <4.0.0" # Flutter SDK
 
 dependencies:
   flutter:
@@ -18,10 +18,11 @@ dependencies:
   firebase_app_check: ^0.1.1+12
   firebase_auth: ^4.10.1
   firebase_core: ^2.4.1
+  firebase_storage: ^11.0.10
   get_it: ^7.2.0
   google_sign_in: ^5.1.0
   http: ^0.13.4
-  intl: ^0.18.1
+  intl: ^0.18.0
   logging: ^1.0.2
   path_provider: ^2.0.8
   permission_handler: ^10.2.0

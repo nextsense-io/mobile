@@ -5,8 +5,8 @@ publish_to: none
 version: 0.1.0
 
 environment:
-  sdk: ">=2.18.0" # Dart version
-  flutter: ">=3.0.0" # Flutter SDK
+  sdk: ">=2.18.0 <3.0.0" # Dart version
+  flutter: ">=3.0.0 <4.0.0" # Flutter SDK
 
 dependencies:
   flutter:
@@ -27,7 +27,6 @@ dependencies:
   firebase_crashlytics: ^3.0.10
   firebase_dynamic_links: ^5.0.11
   firebase_messaging: ^14.2.1
-  firebase_storage: ^11.0.10
   fixnum: ^1.1.0
   fluttertoast: ^8.1.1
   flutter_dotenv: ^5.0.2

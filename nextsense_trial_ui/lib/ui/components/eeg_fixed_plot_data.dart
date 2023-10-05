@@ -1,5 +1,5 @@
-import 'package:community_charts_flutter/community_charts_flutter.dart' as charts;
 import 'package:flutter/material.dart';
+import 'package:community_charts_flutter/community_charts_flutter.dart' as charts;
 import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen_vm.dart';
 
 /* A view to display live plot for eeg signal. */

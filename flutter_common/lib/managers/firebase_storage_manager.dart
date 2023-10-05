@@ -1,10 +1,10 @@
 import 'dart:io';
 
+import 'package:logging/logging.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_common/di.dart';
 import 'package:flutter_common/managers/firebase_manager.dart';
-import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/di.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 
 class FirebaseStorageManager {
@@ -21,14 +21,14 @@ class FirebaseStorageManager {
 
   Future<bool> downloadFile(String gsUrl, File destinationFile) async {
     final Reference gsReference = _storage.refFromURL(gsUrl);
-    _logger.log(Level.INFO, 'Starting to download ${gsUrl}');
+    _logger.log(Level.INFO, 'Starting to download $gsUrl');
     try {
       await gsReference.writeToFile(destinationFile);
     } on FirebaseException catch (e) {
-      _logger.log(Level.SEVERE, 'Error downloading ${gsUrl}: $e');
+      _logger.log(Level.SEVERE, 'Error downloading $gsUrl: $e');
       return false;
     }
-    _logger.log(Level.INFO, 'Downloaded ${gsUrl} with success');
+    _logger.log(Level.INFO, 'Downloaded $gsUrl with success');
     return true;
   }
 
