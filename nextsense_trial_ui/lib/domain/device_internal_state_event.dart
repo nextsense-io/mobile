@@ -4,6 +4,8 @@ import 'package:nextsense_trial_ui/domain/device_internal_state.dart';
 enum DeviceInternalStateEventType {
   hdmiCableConnected,
   hdmiCableDisconnected,
+  usbCableConnected,
+  usbCableDisconnected,
   uSdConnected,
   uSdDisconnected,
   uSdFull,

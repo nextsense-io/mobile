@@ -104,24 +104,26 @@ class DeviceManager {
         await disconnectDevice();
         return false;
       }
+    } else {
+      _connectedDevice = await getDeviceInfo(_connectedDevice!);
     }
-    if (device.type == DeviceType.xenon) {
-      NextsenseBase.requestDeviceStateUpdate(device.macAddress);
+    if (_connectedDevice!.type == DeviceType.xenon) {
+      NextsenseBase.requestDeviceStateUpdate(_connectedDevice!.macAddress);
       bool stateAvailable = await waitInternalStateAvailable(timeout);
       if (!stateAvailable) {
         _logger.log(Level.WARNING, 'Timeout waiting for internal state available');
         await disconnectDevice();
         return false;
       }
-    } else if (device.type == DeviceType.kauai) {
+    } else if (_connectedDevice!.type == DeviceType.kauai) {
       _listenToEvents();
     }
 
-    if (device.type == DeviceType.xenon) {
+    if (_connectedDevice!.type == DeviceType.xenon) {
       _requestStateChanges();
     }
     _authManager.user!
-      ..setLastPairedDeviceMacAddress(device.macAddress)
+      ..setLastPairedDeviceMacAddress(_connectedDevice!.macAddress)
       ..save();
 
     return true;
@@ -367,22 +369,27 @@ class DeviceManager {
         NextsenseBase.listenToDeviceEvents((deviceEventProtoBytes) {
           _logger.log(Level.FINE, 'Device event received');
           HostMessage hostMessage = HostMessage.fromBuffer(deviceEventProtoBytes);
-          DeviceInternalStateEvent? event = null;
+          DeviceInternalStateEvent? event;
           switch (hostMessage.eventType) {
+            case EventType.USB_CABLE_CONNECTED:
+              event = DeviceInternalStateEvent.create(
+                  DeviceInternalStateEventType.usbCableConnected, true);
+              break;
+            case EventType.USB_CABLE_DISCONNECTED:
+              event = DeviceInternalStateEvent.create(
+                  DeviceInternalStateEventType.usbCableDisconnected, true);
+              break;
             case EventType.HDMI_CABLE_DISCONNECTED:
               event = DeviceInternalStateEvent.create(
                   DeviceInternalStateEventType.hdmiCableDisconnected, true);
-              _deviceInternalStateChangeController.add(event);
               break;
             case EventType.HDMI_CABLE_CONNECTED:
               event = DeviceInternalStateEvent.create(
                   DeviceInternalStateEventType.hdmiCableConnected, true);
-              _deviceInternalStateChangeController.add(event);
               break;
             case EventType.MEMORY_STORAGE_FULL:
               event = DeviceInternalStateEvent.create(
                   DeviceInternalStateEventType.uSdFull, true);
-              _deviceInternalStateChangeController.add(event);
               break;
             case EventType.BATTERY_LOW:
               event = DeviceInternalStateEvent.create(

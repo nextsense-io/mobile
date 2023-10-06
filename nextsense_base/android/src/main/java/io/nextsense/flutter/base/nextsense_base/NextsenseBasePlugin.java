@@ -126,7 +126,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       "io.nextsense.flutter.base.nextsense_base/device_internal_state_channel";
 
   private static final String DEVICE_EVENT_CHANNEL_NAME =
-      "io.nextsense.flutter.base.nextsense_base/device_event_channel";
+      "io.nextsense.flutter.base.nextsense_base/device_events_channel";
 
   private static final String CURRENT_SESSION_DATA_RECEIVED_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/current_session_data_received_channel";
@@ -176,6 +176,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     methodChannel.setMethodCallHandler(this);
     RotatingFileLogger.get().logi(TAG, "Getting context.");
     applicationContext = flutterPluginBinding.getApplicationContext();
+
     deviceScanChannel =
         new EventChannel(flutterPluginBinding.getBinaryMessenger(), DEVICE_SCAN_CHANNEL_NAME);
     deviceScanChannel.setStreamHandler(new EventChannel.StreamHandler() {
@@ -189,6 +190,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         stopScanning();
       }
     });
+
     deviceStateChannel =
         new EventChannel(flutterPluginBinding.getBinaryMessenger(), DEVICE_STATE_CHANNEL_NAME);
     deviceStateChannel.setStreamHandler(new EventChannel.StreamHandler() {
@@ -209,6 +211,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         stopListeningToDeviceState((String) argumentList.get(1));
       }
     });
+
     deviceEventChannelSubscriptionScheduler =
         new AndroidScheduler(applicationContext.getMainLooper());
     deviceEventChannel =
@@ -611,13 +614,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
                 /*errorDetails=*/null));
         return;
       }
-      NextSenseDevice.DeviceInternalStateChangeListener deviceInternalStateListener =
-          deviceInternalStateListeners.get(macAddress);
-      if (deviceInternalStateListener != null) {
-        device.get().removeOnDeviceInternalStateChangeListener(deviceInternalStateListener);
-        RotatingFileLogger.get().logi(TAG, "Stopped listening to Android device events for " +
-            macAddress);
-      }
+      deviceInternalStateListeners.put(macAddress, newDeviceInternalState ->
+          uiThreadHandler.post(() -> eventSink.success(newDeviceInternalState)));
+      device.get().addOnDeviceInternalStateChangeListener(
+          deviceInternalStateListeners.get(macAddress));
     } else {
       RotatingFileLogger.get().logw(TAG,
           "Service not connected, cannot start monitoring internal device state.");
@@ -641,7 +641,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       }
     } else {
       RotatingFileLogger.get().logw(TAG,
-          "Service not connected, cannot start monitoring device events.");
+          "Service not connected, cannot stop monitoring device events.");
     }
   }
 
