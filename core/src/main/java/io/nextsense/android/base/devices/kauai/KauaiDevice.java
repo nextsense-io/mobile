@@ -578,7 +578,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
           if (isDataCharacteristic(characteristic)) {
             if (changeStreamingStateFuture != null && !changeStreamingStateFuture.isDone()) {
               if (status == GattStatus.SUCCESS) {
-                RotatingFileLogger.get().logd(TAG, "Notification updated with success to " +
+                RotatingFileLogger.get().logd(TAG, "Data notification updated with success to " +
                     peripheral.isNotifying(characteristic));
                 if (peripheral.isNotifying(characteristic)) {
                   runStartStreamingCommand();
@@ -589,18 +589,18 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
                 }
               } else {
                 changeStreamingStateFuture.setException(new BluetoothException(
-                    "Notification state update failed with code " + status));
+                    "Data notification state update failed with code " + status));
               }
             }
           } else if (isNotificationsCharacteristic(characteristic) &&
               (changeNotificationStateFuture != null && !changeNotificationStateFuture.isDone())) {
             if (status == GattStatus.SUCCESS) {
-              RotatingFileLogger.get().logd(TAG, "Notification updated with success to " +
+              RotatingFileLogger.get().logd(TAG, "Events notification updated with success to " +
                   peripheral.isNotifying(characteristic));
               changeNotificationStateFuture.set(true);
             } else {
               changeNotificationStateFuture.setException(new BluetoothException(
-                  "Notification state update failed with code " + status));
+                  "Events notification state update failed with code " + status));
             }
           }
         }

@@ -31,9 +31,9 @@ class SeizureScreen extends HookWidget {
 
   SeizureScreen(this.seizure);
 
-  List<FormBuilderFieldOption> _getTriggerOptions() {
+  List<FormBuilderChipOption> _getTriggerOptions() {
     return Trigger.values
-        .map((trigger) => FormBuilderFieldOption(
+        .map((trigger) => FormBuilderChipOption(
             value: trigger.label,
             child: ContentText(text: trigger.label, color: NextSenseColors.darkBlue)))
         .toList();

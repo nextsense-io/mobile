@@ -31,9 +31,9 @@ class SideEffectScreen extends HookWidget {
 
   SideEffectScreen(this.sideEffect);
 
-  List<FormBuilderFieldOption> _getSideEffectTypeOptions() {
+  List<FormBuilderChipOption> _getSideEffectTypeOptions() {
     return SideEffectType.values
-        .map((sideEffectType) => FormBuilderFieldOption(
+        .map((sideEffectType) => FormBuilderChipOption(
             value: sideEffectType.label,
             child: ContentText(text: sideEffectType.label, color: NextSenseColors.darkBlue)))
         .toList();

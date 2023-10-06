@@ -84,8 +84,7 @@ class SurveyScreen extends HookWidget {
     }
 
     for (String questionKey in viewModel.formValues?.keys ?? []) {
-      _formKey.currentState?.setInternalFieldValue(questionKey, viewModel.formValues?[questionKey],
-          isSetState: false);
+      _formKey.currentState?.setInternalFieldValue(questionKey, viewModel.formValues?[questionKey]);
     }
     bool showQuestionsProgress = viewModel.survey.getQuestions()!.length > 1;
     return PageScaffold(
@@ -351,14 +350,14 @@ class _SurveyQuestionWidget extends StatelessWidget {
   }
 
   // Generate choices
-  List<FormBuilderFieldOption> _generateChoices() {
-    List<FormBuilderFieldOption> result = [];
+  List<FormBuilderChipOption> _generateChoices() {
+    List<FormBuilderChipOption> result = [];
     switch (question.type) {
       case SurveyQuestionType.yesno:
-        result.add(FormBuilderFieldOption(
+        result.add(FormBuilderChipOption(
             value: SurveyYesNoChoices.no.name,
             child: WideChoiceChip('No')));
-        result.add(FormBuilderFieldOption(
+        result.add(FormBuilderChipOption(
             value: SurveyYesNoChoices.yes.name,
             child: WideChoiceChip('Yes')));
         break;
@@ -368,7 +367,7 @@ class _SurveyQuestionWidget extends StatelessWidget {
           for (SurveyQuestionChoice choice in question.choices) {
             Widget choiceChip = question.choices.length > maxVerticalChoiceChips
                 ? SmallChoiceChip(choice.text) : WideChoiceChip(choice.text);
-            result.add(FormBuilderFieldOption(
+            result.add(FormBuilderChipOption(
                 value: choice.value,
                 child: choiceChip));
           }

@@ -93,11 +93,11 @@ class NextsenseApi {
   }
 
   // Changes the user password.
-  Future<ApiResponse> changePassword(String token, String username, String new_password) async {
+  Future<ApiResponse> changePassword(String? token, String username, String newPassword) async {
     var data = {
       'token': token,
       'username': username,
-      'new_password': new_password
+      'new_password': newPassword
     };
     return _callApi(endpoint: _endpointChangePassword, data: data,
         defaultErrorMsg: "Password change request failed");
