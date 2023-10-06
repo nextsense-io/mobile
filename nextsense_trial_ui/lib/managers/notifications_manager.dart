@@ -55,41 +55,41 @@ class NotificationController {
 
   static final CustomLogPrinter _logger = CustomLogPrinter('NotificationsManager');
 
-  /// Use this method to detect when a new notification or a schedule is created
-  @pragma("vm:entry-point")
-  static Future <void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
-    // Your code goes here
-  }
-
-  /// Use this method to detect every time that a new notification is displayed
-  @pragma("vm:entry-point")
-  static Future <void> onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {
-    // Your code goes here
-  }
-
-  /// Use this method to detect if the user dismissed a notification
-  @pragma("vm:entry-point")
-  static Future <void> onDismissActionReceivedMethod(ReceivedAction receivedAction) async {
-    // Your code goes here
-  }
+  // /// Use this method to detect when a new notification or a schedule is created
+  // @pragma("vm:entry-point")
+  // static Future <void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
+  //   // Your code goes here
+  // }
+  //
+  // /// Use this method to detect every time that a new notification is displayed
+  // @pragma("vm:entry-point")
+  // static Future <void> onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {
+  //   // Your code goes here
+  // }
+  //
+  // /// Use this method to detect if the user dismissed a notification
+  // @pragma("vm:entry-point")
+  // static Future <void> onDismissActionReceivedMethod(ReceivedAction receivedAction) async {
+  //   // Your code goes here
+  // }
 
   /// Use this method to detect when the user taps on a notification or action button
-  @pragma("vm:entry-point")
-  static Future <void> onActionReceivedMethod(ReceivedAction receivedAction) async {
-    // Your code goes here
-
-    _logger.log(Level.INFO, "User clicked on a notification.");
-    _logger.log(Level.INFO, "User clicked on a notification going to "
-        "${receivedAction.payload?[TargetType.protocol.name] ?? "dashboard."}");
-    // Navigator.of(context).pushNamed(
-    //     '/NotificationPage',
-    //     arguments: {
-    //       // your page params. I recommend you to pass the
-    //       // entire *receivedNotification* object
-    //       id: receivedNotification.id
-    //     }
-    // );
-  }
+  // @pragma("vm:entry-point")
+  // static Future <void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+  //   // Your code goes here
+  //
+  //   _logger.log(Level.INFO, "User clicked on a notification.");
+  //   _logger.log(Level.INFO, "User clicked on a notification going to "
+  //       "${receivedAction.payload?[TargetType.protocol.name] ?? "dashboard."}");
+  //   // Navigator.of(context).pushNamed(
+  //   //     '/NotificationPage',
+  //   //     arguments: {
+  //   //       // your page params. I recommend you to pass the
+  //   //       // entire *receivedNotification* object
+  //   //       id: receivedNotification.id
+  //   //     }
+  //   // );
+  // }
 }
 
 class NotificationsManager {
