@@ -22,7 +22,7 @@ android {
         minSdkVersion 24
         targetSdkVersion 33
         versionCode 38
-        versionName "0.5.1"
+        versionName "0.5.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             // Filter for architectures supported by Flutter.

@@ -7,6 +7,7 @@ import java.util.Set;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.h1.H1Device;
 import io.nextsense.android.base.devices.kauai.KauaiDevice;
+import io.nextsense.android.base.devices.nitro.NitroDevice;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
@@ -26,6 +27,7 @@ public class NextSenseDeviceManager {
     this.localSessionManager = localSessionManager;
     devicesMapping = new HashMap<>();
     devicesMapping.put(H1Device.BLUETOOTH_PREFIX, H1Device.class);
+    devicesMapping.put(NitroDevice.BLUETOOTH_PREFIX, NitroDevice.class);
     devicesMapping.put(XenonDevice.BLUETOOTH_PREFIX, XenonDevice.class);
     devicesMapping.put(KauaiDevice.BLUETOOTH_PREFIX, KauaiDevice.class);
   }

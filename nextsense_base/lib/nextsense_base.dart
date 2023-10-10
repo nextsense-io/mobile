@@ -11,6 +11,7 @@ typedef void CancelListening();
 // expose the API but it would be quite a lot of effort to do.
 enum DeviceType {
   h1,
+  nitro,
   xenon,
   kauai
 }

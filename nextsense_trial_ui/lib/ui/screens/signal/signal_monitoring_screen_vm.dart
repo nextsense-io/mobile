@@ -178,6 +178,9 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
         channelName: 'z', duration: graphTimeWindow, fromDatabase: false);
     List<AccelerationData> accelerations = [];
     for (int i = 0; i < timestamps.length; ++i) {
+      if (accXData.length <= i || accYData.length <= i || accZData.length <= i) {
+        break;
+      }
       accelerations.add(AccelerationData(x: accXData[i].toInt(), y: accYData[i].toInt(),
           z: accZData[i].toInt(), timestamp:
           DateTime.fromMillisecondsSinceEpoch(timestamps[i].toInt())));
