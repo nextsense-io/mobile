@@ -96,7 +96,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
 
   private SettableFuture<KauaiFirmwareMessageProto.HostMessage> commandResultFuture;
   // Id of the last message sent to the device. Used to verify the response message id.
-  private int lastMessageId = -1;
+  private int lastMessageId = 0;
 
   // Message type of the last message sent to the device. Used to verify the response message type.
   private KauaiFirmwareMessageProto.MessageType lastMessageType = null;
@@ -442,8 +442,22 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
         hostResponse.getHostMessage().toString());
     if (commandResultFuture != null) {
       if (!verifyIsExpectedResponse(hostResponse)) {
-        commandResultFuture.setException(new BluetoothException(
-            "Received unexpected response: " + hostResponse.getHostMessage()));
+        if (hostResponse.getHostMessage().getRespToMessageId() < lastMessageId) {
+          // Read previous message, try again to get the response.
+          try {
+            readCommandResponse();
+          } catch (ExecutionException | TimeoutException | FirmwareMessageParsingException e) {
+            RotatingFileLogger.get().loge(TAG, "Failed to read message: " + e.getMessage());
+          } catch (InterruptedException e) {
+            RotatingFileLogger.get().loge(TAG, "Interrupted when trying to read message: " +
+                e.getMessage());
+            Thread.currentThread().interrupt();
+          }
+          return;
+        } else {
+          commandResultFuture.setException(new BluetoothException(
+              "Received unexpected response: " + hostResponse.getHostMessage()));
+        }
       }
       commandResultFuture.set(hostResponse.getHostMessage());
     } else {
@@ -533,11 +547,16 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     }
     RotatingFileLogger.get().logv(TAG, "Reading command response.");
     commandResultFuture = SettableFuture.create();
-    byte[] responseBytes = blePeripheralCallbackProxy.readCharacteristic(
-        peripheral, commandsCharacteristic).get(
-        COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-    RotatingFileLogger.get().logv(TAG, "Command bytes: " + Arrays.toString(responseBytes));
-    kauaiProtoDataParser.parseProtoDataBytes(responseBytes);
+    try {
+      byte[] responseBytes = blePeripheralCallbackProxy.readCharacteristic(
+          peripheral, commandsCharacteristic).get(
+          COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+      RotatingFileLogger.get().logv(TAG, "Command bytes: " + Arrays.toString(responseBytes));
+      kauaiProtoDataParser.parseProtoDataBytes(responseBytes);
+    } catch (FirmwareMessageParsingException e) {
+      RotatingFileLogger.get().loge(TAG, "Failed to parse command response.");
+      commandResultFuture.setException(e);
+    }
   }
 
   private void runStartStreamingCommand() {

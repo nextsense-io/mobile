@@ -100,7 +100,7 @@ public class KauaiDataParser {
     Instant parseEndTime = Instant.now();
     long parseTime = parseEndTime.toEpochMilli() - receptionTimestamp.toEpochMilli();
     if (parseTime > 30) {
-      RotatingFileLogger.get().logd(TAG, "It took " + parseTime + " to parse xenon data.");
+      RotatingFileLogger.get().logd(TAG, "It took " + parseTime + " to parse Kauai data.");
     }
   }
 
@@ -115,7 +115,8 @@ public class KauaiDataParser {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
       if (!printedDataPackerWarning) {
-        RotatingFileLogger.get().logw(TAG, "Received data packet without an active session, cannot record it.");
+        RotatingFileLogger.get().logw(TAG,
+            "Received data packet without an active session, cannot record it.");
         printedDataPackerWarning = true;
       }
       return Optional.empty();
