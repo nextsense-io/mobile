@@ -12,7 +12,7 @@ class BackgroundContainer extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
           image: DecorationImage(
-              image: Svg("assets/images/background.svg"), fit: BoxFit.cover)),
+              image: Svg("packages/nextsense_trial_ui/assets/images/background.svg"), fit: BoxFit.cover)),
       child: child,
     );
   }

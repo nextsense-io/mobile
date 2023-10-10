@@ -26,7 +26,7 @@ class PageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(children: <Widget>[
       if (showBackground) Image(
-          image: Svg('assets/images/background.svg'),
+          image: Svg("packages/nextsense_trial_ui/assets/images/background.svg"),
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           fit: BoxFit.cover,

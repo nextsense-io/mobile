@@ -10,14 +10,14 @@ import 'package:wakelock/wakelock.dart';
 
 class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
-  static final String _eoecTransitionSound = "assets/sounds/eoec_transition.wav";
+  static final String _eoecTransitionSound = "packages/nextsense_trial_ui/assets/sounds/eoec_transition.wav";
   static const Map<EOECState, String> _protocolPartsText = {
     EOECState.EO: 'Eyes Open',
     EOECState.EC: 'Eyes Closed'
   };
   static const Map<EOECState, ImageProvider> _protocolPartsImage = {
-    EOECState.EO: Svg('assets/images/eye_open.svg'),
-    EOECState.EC: Svg('assets/images/eye_closed.svg')
+    EOECState.EO: Svg('packages/nextsense_trial_ui/assets/images/eye_open.svg'),
+    EOECState.EC: Svg('packages/nextsense_trial_ui/assets/images/eye_closed.svg')
   };
 
   final AudioManager _audioManager = getIt<AudioManager>();

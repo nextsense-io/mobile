@@ -20,13 +20,13 @@ class EyesMovementProtocolScreenViewModel extends ProtocolScreenViewModel {
     EyesMovementState.MOVE_DOWN_UP: "5x Down-Up"
   };
   static const Map<EyesMovementState, ImageProvider> _protocolPartsImage = {
-    EyesMovementState.REST: Svg('assets/images/plant.svg'),
-    EyesMovementState.BLACK_SCREEN: Svg('assets/images/plant.svg'),
-    EyesMovementState.BLINK: Svg('assets/images/blinking.svg'),
-    EyesMovementState.MOVE_RIGHT_LEFT: Svg('assets/images/left_right.svg'),
-    EyesMovementState.MOVE_LEFT_RIGHT: Svg('assets/images/left_right.svg'),
-    EyesMovementState.MOVE_UP_DOWN: Svg('assets/images/up_down.svg'),
-    EyesMovementState.MOVE_DOWN_UP: Svg('assets/images/up_down.svg'),
+    EyesMovementState.REST: Svg('packages/nextsense_trial_ui/assets/images/plant.svg'),
+    EyesMovementState.BLACK_SCREEN: Svg('packages/nextsense_trial_ui/assets/images/plant.svg'),
+    EyesMovementState.BLINK: Svg('packages/nextsense_trial_ui/assets/images/blinking.svg'),
+    EyesMovementState.MOVE_RIGHT_LEFT: Svg('packages/nextsense_trial_ui/assets/images/left_right.svg'),
+    EyesMovementState.MOVE_LEFT_RIGHT: Svg('packages/nextsense_trial_ui/assets/images/left_right.svg'),
+    EyesMovementState.MOVE_UP_DOWN: Svg('packages/nextsense_trial_ui/assets/images/up_down.svg'),
+    EyesMovementState.MOVE_DOWN_UP: Svg('packages/nextsense_trial_ui/assets/images/up_down.svg'),
   };
 
   final protocolPartChangeStream = StreamController<int>.broadcast();

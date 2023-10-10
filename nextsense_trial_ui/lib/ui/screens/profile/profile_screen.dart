@@ -223,7 +223,7 @@ class _MainMenuItem extends StatelessWidget {
                     MediumText(text: label, color: NextSenseColors.darkBlue),
                     if (details != null) MediumText(text: details!)
                   ]),
-                  Image(image: Svg('assets/images/arrow_right.svg'), height: 14)
+                  Image(image: Svg('packages/nextsense_trial_ui/assets/images/arrow_right.svg'), height: 14)
                 ],
               )),
         ),

@@ -7,8 +7,8 @@ import 'package:wakelock/wakelock.dart';
 
 class ERPAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
 
-  static final String _normalSound = "assets/sounds/audiobeep2_988Hz_0p1s.wav";
-  static final String _oddSound = "assets/sounds/audiobeep1_350Hz_0p1s.wav";
+  static final String _normalSound = "packages/nextsense_trial_ui/assets/sounds/audiobeep2_988Hz_0p1s.wav";
+  static final String _oddSound = "packages/nextsense_trial_ui/assets/sounds/audiobeep1_350Hz_0p1s.wav";
 
   final AudioManager _audioManager = getIt<AudioManager>();
 

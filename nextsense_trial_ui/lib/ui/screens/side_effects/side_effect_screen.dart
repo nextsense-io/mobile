@@ -174,7 +174,7 @@ class SideEffectScreen extends HookWidget {
                             } else {
                               _navigation.navigateTo(EntryAddedScreen.id, replace: true,
                                   arguments: ['You have logged a side effect',
-                                    Image(image: AssetImage('assets/images/hand_pen.png'))]);
+                                    Image(image: AssetImage('packages/nextsense_trial_ui/assets/images/hand_pen.png'))]);
                             }
                           }),
                       dotsDecorator: const DotsDecorator(

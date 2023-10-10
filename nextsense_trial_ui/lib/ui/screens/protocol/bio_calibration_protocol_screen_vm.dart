@@ -18,12 +18,12 @@ class BioCalibrationProtocolScreenViewModel extends ProtocolScreenViewModel {
     BioCalibrationState.JAW_CLENCH: "Clench your jaws"
   };
   static const Map<BioCalibrationState, ImageProvider> _protocolPartsImage = {
-    BioCalibrationState.REST: Svg('assets/images/plant.svg'),
-    BioCalibrationState.BLACK_SCREEN: Svg('assets/images/plant.svg'),
-    BioCalibrationState.BLINK: Svg('assets/images/blinking.svg'),
-    BioCalibrationState.MOVE_HORIZONTAL: Svg('assets/images/left_right.svg'),
-    BioCalibrationState.MOVE_VERTICAL: Svg('assets/images/up_down.svg'),
-    BioCalibrationState.JAW_CLENCH: Svg('assets/images/plant.svg'),
+    BioCalibrationState.REST: Svg('packages/nextsense_trial_ui/assets/images/plant.svg'),
+    BioCalibrationState.BLACK_SCREEN: Svg('packages/nextsense_trial_ui/assets/images/plant.svg'),
+    BioCalibrationState.BLINK: Svg('packages/nextsense_trial_ui/assets/images/blinking.svg'),
+    BioCalibrationState.MOVE_HORIZONTAL: Svg('packages/nextsense_trial_ui/assets/images/left_right.svg'),
+    BioCalibrationState.MOVE_VERTICAL: Svg('packages/nextsense_trial_ui/assets/images/up_down.svg'),
+    BioCalibrationState.JAW_CLENCH: Svg('packages/nextsense_trial_ui/assets/images/plant.svg'),
   };
 
   final protocolPartChangeStream = StreamController<int>.broadcast();

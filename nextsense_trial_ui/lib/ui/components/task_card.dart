@@ -76,7 +76,7 @@ class TaskCard extends StatelessWidget {
     Widget? icon;
     if (completed) {
       icon = Expanded(
-          child: SvgPicture.asset('assets/images/circle_checked.svg',
+          child: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/circle_checked.svg',
               semanticsLabel: 'completed', height: 20));
     } else if (task.skipped) {
       icon = Padding(padding: EdgeInsets.only(top: 6, left: 1), child: Container(
@@ -89,7 +89,7 @@ class TaskCard extends StatelessWidget {
       ));
     } else {
       icon = Expanded(
-          child: SvgPicture.asset('assets/images/circle.svg',
+          child: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/circle.svg',
               semanticsLabel: 'not completed', height: 20));
     }
     return Row(
@@ -113,7 +113,7 @@ class TaskCard extends StatelessWidget {
                   Flexible(child: CardTitleText(text: title)),
                   SizedBox(width: 5),
                   if (showClock && duration != null)
-                    SvgPicture.asset('assets/images/clock.svg',
+                    SvgPicture.asset('packages/nextsense_trial_ui/assets/images/clock.svg',
                         semanticsLabel: 'specific time', width: 16),
                   SizedBox(height: 5),
                   Align(

@@ -197,7 +197,7 @@ class SeizureScreen extends HookWidget {
                                   replace: true,
                                   arguments: [
                                     'You have reported a seizure',
-                                    Image(image: AssetImage('assets/images/hand_pen_writing.png'))
+                                    Image(image: AssetImage('packages/nextsense_trial_ui/assets/images/hand_pen_writing.png'))
                                   ]);
                             }
                           }),

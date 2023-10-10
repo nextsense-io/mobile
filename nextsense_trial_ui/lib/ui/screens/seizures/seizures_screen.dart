@@ -66,7 +66,7 @@ class SeizuresScreen extends HookWidget {
                   onPressed: () => _getSeizureEditFunction(seizure),
                   child: Padding(
                       padding: EdgeInsets.all(12),
-                      child: Image(image: Svg('assets/images/pen.svg'), width: 25, height: 25)))),
+                      child: Image(image: Svg('packages/nextsense_trial_ui/assets/images/pen.svg'), width: 25, height: 25)))),
           CustomSlidableAction(
               backgroundColor: Colors.transparent,
               onPressed: (context) => _deleteSeizure(context, seizure),
@@ -79,7 +79,7 @@ class SeizuresScreen extends HookWidget {
                   child: Padding(
                       padding: EdgeInsets.all(12),
                       child: Image(
-                          image: Svg('assets/images/thrash_can.svg'), width: 25, height: 25)))),
+                          image: Svg('packages/nextsense_trial_ui/assets/images/thrash_can.svg'), width: 25, height: 25)))),
         ],
       ),
     ));

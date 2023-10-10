@@ -34,7 +34,7 @@ class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
               ? ClickableZone(
                   child: RoundBackground(
                       child:
-                          Image(image: Svg('assets/images/arrow_left.svg'), height: 14, width: 14),
+                          Image(image: Svg('packages/nextsense_trial_ui/assets/images/arrow_left.svg'), height: 14, width: 14),
                       color: NextSenseColors.translucentGrey),
                   onTap: backButtonCallback != null
                       ? () => backButtonCallback!.call()

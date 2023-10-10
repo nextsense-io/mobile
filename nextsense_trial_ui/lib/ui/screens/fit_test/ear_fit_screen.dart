@@ -54,15 +54,15 @@ class EarFitScreen extends HookWidget {
     double width = 24;
     switch (viewModel.earFitResults[earLocation]) {
       case EarLocationResultState.POOR_FIT:
-        return SvgPicture.asset('assets/images/tip_status_red_stage$stage.svg',
+        return SvgPicture.asset('packages/nextsense_trial_ui/assets/images/tip_status_red_stage$stage.svg',
             semanticsLabel: 'tip status', width: width);
       case EarLocationResultState.GOOD_FIT:
-        return SvgPicture.asset('assets/images/tip_status_green_stage$stage.svg',
+        return SvgPicture.asset('packages/nextsense_trial_ui/assets/images/tip_status_green_stage$stage.svg',
             semanticsLabel: 'tip status', width: width);
       case EarLocationResultState.NO_RESULT:
       // Fallthrough.
       default:
-        return SvgPicture.asset('assets/images/tip_status_blue_stage$stage.svg',
+        return SvgPicture.asset('packages/nextsense_trial_ui/assets/images/tip_status_blue_stage$stage.svg',
             semanticsLabel: 'tip status', width: width);
     }
   }
@@ -70,30 +70,30 @@ class EarFitScreen extends HookWidget {
   Widget buildBody(EarFitScreenViewModel viewModel, BuildContext context) {
     String bodyText = '';
     String buttonText = 'Go';
-    String leftResultAsset = 'assets/images/circle_left_blue.svg';
-    String rightResultAsset = 'assets/images/circle_right_blue.svg';
+    String leftResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_left_blue.svg';
+    String rightResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_right_blue.svg';
 
     switch (viewModel.earFitResultState) {
       case EarFitResultState.NO_RESULTS:
-        leftResultAsset = 'assets/images/circle_left_blue.svg';
-        rightResultAsset = 'assets/images/circle_right_blue.svg';
+        leftResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_left_blue.svg';
+        rightResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_right_blue.svg';
         break;
       case EarFitResultState.POOR_QUALITY_RIGHT:
-        leftResultAsset = 'assets/images/circle_left_green.svg';
-        rightResultAsset = 'assets/images/circle_right_red.svg';
+        leftResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_left_green.svg';
+        rightResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_right_red.svg';
         break;
       case EarFitResultState.POOR_QUALITY_LEFT:
-        leftResultAsset = 'assets/images/circle_left_red.svg';
-        rightResultAsset = 'assets/images/circle_right_green.svg';
+        leftResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_left_red.svg';
+        rightResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_right_green.svg';
         break;
       case EarFitResultState.FLAT_SIGNAL:
       case EarFitResultState.POOR_QUALITY_BOTH:
-        leftResultAsset = 'assets/images/circle_left_red.svg';
-        rightResultAsset = 'assets/images/circle_right_red.svg';
+        leftResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_left_red.svg';
+        rightResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_right_red.svg';
         break;
       case EarFitResultState.GOOD_FIT:
-        leftResultAsset = 'assets/images/circle_left_green.svg';
-        rightResultAsset = 'assets/images/circle_right_green.svg';
+        leftResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_left_green.svg';
+        rightResultAsset = 'packages/nextsense_trial_ui/assets/images/circle_right_green.svg';
         break;
     }
 
@@ -179,7 +179,7 @@ class EarFitScreen extends HookWidget {
                 marginLeft: 20, marginRight: 20, text: bodyText, color: NextSenseColors.darkBlue)),
         SizedBox(height: 20),
         Stack(children: [
-          Center(child: Image(image: AssetImage('assets/images/earbuds.png'), width: 267)),
+          Center(child: Image(image: AssetImage('packages/nextsense_trial_ui/assets/images/earbuds.png'), width: 267)),
           Column(children: [
             SizedBox(height: 6),
             Row(children: [

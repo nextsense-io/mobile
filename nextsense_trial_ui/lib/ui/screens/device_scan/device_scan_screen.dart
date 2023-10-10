@@ -54,7 +54,7 @@ class DeviceScanScreen extends HookWidget {
         // An overlay will appear with instructions on how to enable Bluetooth.
         return Column(mainAxisAlignment: MainAxisAlignment.start, children: [
           Stack(children: <Widget>[
-            Center(child: Image(image: AssetImage('assets/images/earbuds.png'), width: 180)),
+            Center(child: Image(image: AssetImage('packages/nextsense_trial_ui/assets/images/earbuds.png'), width: 180)),
           ]),
         ]);
       case ScanningState.SCANNING_NO_RESULTS:
@@ -65,8 +65,8 @@ class DeviceScanScreen extends HookWidget {
         return Column(mainAxisAlignment: MainAxisAlignment.start, children: [
           Stack(children: <Widget>[
             // TODO(eric): Try to animate this.
-            Center(child: SvgPicture.asset('assets/images/scanning.svg', height: 250)),
-            Center(child: Image(image: AssetImage('assets/images/earbuds.png'), width: 180)),
+            Center(child: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/scanning.svg', height: 250)),
+            Center(child: Image(image: AssetImage('packages/nextsense_trial_ui/assets/images/earbuds.png'), width: 180)),
           ]),
           UnderlinedTextButton(
               text: 'Not now',
@@ -92,19 +92,19 @@ class DeviceScanScreen extends HookWidget {
             ));
       case ScanningState.CONNECTED:
         return Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-          Center(child: Image(image: AssetImage('assets/images/earbuds.png'), width: 180)),
+          Center(child: Image(image: AssetImage('packages/nextsense_trial_ui/assets/images/earbuds.png'), width: 180)),
           SizedBox(height: 20),
           SimpleButton(
               text: MediumText(text: 'Continue', color: NextSenseColors.darkBlue),
               onTap: () => _navigation.navigateToNextRoute()),
           SizedBox(height: 20),
-          SvgPicture.asset('assets/images/circle_checked_blue.svg',
+          SvgPicture.asset('packages/nextsense_trial_ui/assets/images/circle_checked_blue.svg',
               semanticsLabel: 'connected', height: 60),
           SizedBox(height: 20),
         ]);
       case ScanningState.NOT_FOUND_OR_ERROR:
         return Column(mainAxisAlignment: MainAxisAlignment.start, children: [
-          Center(child: Image(image: AssetImage('assets/images/earbuds.png'), width: 180)),
+          Center(child: Image(image: AssetImage('packages/nextsense_trial_ui/assets/images/earbuds.png'), width: 180)),
           SizedBox(height: 20),
           Icon(Icons.cancel, size: 60, color: NextSenseColors.red),
           SizedBox(height: 20),

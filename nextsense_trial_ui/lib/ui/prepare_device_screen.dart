@@ -23,7 +23,7 @@ class PrepareDeviceScreen extends HookWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               HeaderText(text: 'Device Setup'),
-              Image(image: AssetImage('assets/images/xenon.png')),
+              Image(image: AssetImage('packages/nextsense_trial_ui/assets/images/xenon.png')),
               Padding(
                 padding: EdgeInsets.all(20.0),
                 child: MediumText(text:

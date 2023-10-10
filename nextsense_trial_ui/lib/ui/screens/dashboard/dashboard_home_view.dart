@@ -73,7 +73,7 @@ class DashboardHomeView extends StatelessWidget {
       menuCards.add(MenuCard(
           title: 'Protocols',
           image:
-              SvgPicture.asset('assets/images/tasks.svg', semanticsLabel: 'Protocols', height: 75),
+              SvgPicture.asset('packages/nextsense_trial_ui/assets/images/tasks.svg', semanticsLabel: 'Protocols', height: 75),
           onTap: () async =>
               {await showDialog(context: context, builder: (_) => StartAdhocProtocolDialog())}));
     }
@@ -81,27 +81,27 @@ class DashboardHomeView extends StatelessWidget {
       menuCards.add(MenuCard(
           title: 'Seizures',
           image:
-              SvgPicture.asset('assets/images/brain.svg', semanticsLabel: 'Seizures', height: 75),
+              SvgPicture.asset('packages/nextsense_trial_ui/assets/images/brain.svg', semanticsLabel: 'Seizures', height: 75),
           onTap: () => _navigation.navigateTo(SeizuresScreen.id)));
     }
     if (dashboardViewModel.study.medicationTrackingEnabled) {
       menuCards.add(MenuCard(
           title: 'Medications',
           image:
-              SvgPicture.asset('assets/images/pill.svg', semanticsLabel: 'Medications', height: 75),
+              SvgPicture.asset('packages/nextsense_trial_ui/assets/images/pill.svg', semanticsLabel: 'Medications', height: 75),
           onTap: () => _navigation.navigateTo(MedicationsScreen.id)));
     }
     if (dashboardViewModel.study.sideEffectsTrackingEnabled) {
       menuCards.add(MenuCard(
           title: 'Side Effects',
-          image: SvgPicture.asset('assets/images/head.svg',
+          image: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/head.svg',
               semanticsLabel: 'Side Effects', height: 75),
           onTap: () => _navigation.navigateTo(SideEffectsScreen.id)));
     }
     if (dashboardViewModel.scheduledSurveys.isNotEmpty) {
       menuCards.add(MenuCard(
           title: 'Surveys',
-          image: SvgPicture.asset('assets/images/tasks.svg', semanticsLabel: 'Surveys', height: 75),
+          image: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/tasks.svg', semanticsLabel: 'Surveys', height: 75),
           onTap: () => _navigation.navigateTo(SurveysScreen.id)));
     }
 

@@ -11,16 +11,16 @@ class SearchDeviceBluetooth extends StatelessWidget {
     String path;
     switch (count) {
       case 1:
-        path = 'assets/images/bluetooth_1.png';
+        path = 'packages/nextsense_trial_ui/assets/images/bluetooth_1.png';
         break;
       case 2:
-        path = 'assets/images/bluetooth_2.png';
+        path = 'packages/nextsense_trial_ui/assets/images/bluetooth_2.png';
         break;
       case 3:
-        path = 'assets/images/bluetooth_3.png';
+        path = 'packages/nextsense_trial_ui/assets/images/bluetooth_3.png';
         break;
       default:
-        path = 'assets/images/bluetooth_1.png';
+        path = 'packages/nextsense_trial_ui/assets/images/bluetooth_1.png';
         break;
     }
 

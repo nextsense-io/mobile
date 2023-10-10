@@ -61,7 +61,7 @@ class _StartupScreenState extends State<StartupScreen> {
     // TODO(alex): match splash screen position?
     return Container(
         width: 155,
-        child: Image.asset("assets/images/splash_logo.png")
+        child: Image.asset("packages/nextsense_trial_ui/assets/images/splash_logo.png")
     );
   }
 
