@@ -215,6 +215,7 @@ class DeviceScanScreen extends HookWidget {
     Future.delayed(Duration.zero, () {
       if (viewModel.hasError) {
         showConnectionError(context);
+        viewModel.clearErrors();
       }
     });
 
