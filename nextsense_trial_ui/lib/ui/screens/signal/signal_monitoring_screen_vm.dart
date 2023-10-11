@@ -137,8 +137,13 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
       _deviceSettings = DeviceSettings(await NextsenseBase.getDeviceSettings(device!.macAddress));
       dataType = DataType.create(_preferences.getString(PreferenceKey.displayDataType));
       eegChannelList = _deviceSettings!.enabledChannels;
-      selectedChannel = _preferences.getString(PreferenceKey.displaySelectedChannel) ??
+      String userSelectedChannel = _preferences.getString(PreferenceKey.displaySelectedChannel) ??
           eegChannelList[0];
+      if (eegChannelList.contains(userSelectedChannel)) {
+        selectedChannel = userSelectedChannel;
+      } else {
+        selectedChannel = eegChannelList[0];
+      }
       await _deviceManager.startStreaming();
       _screenRefreshTimer = new Timer.periodic(_refreshInterval, _updateScreen);
     }
