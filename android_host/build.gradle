@@ -44,6 +44,11 @@ android {
             applicationIdSuffix ".research"
         }
 
+        consumer {
+            dimension "target_user_type"
+            applicationIdSuffix ".consumer"
+        }
+
         scratch {
 //            getIsDefault().set(true)
             dimension "env"
@@ -78,6 +83,14 @@ android {
 
         subjectProd {
             setRoot 'src/subject/prod'
+        }
+
+        consumerDev {
+            setRoot 'src/consumer/dev'
+        }
+
+        consumerProd {
+            setRoot 'src/consumer/prod'
         }
     }
 
