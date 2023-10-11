@@ -39,10 +39,10 @@ void main() async {
   intent.Intent? initialIntent = await _getInitialIntent();
   String? route = initialIntent != null && initialIntent.extra != null &&
       initialIntent.extra!.isNotEmpty ? initialIntent.extra!['route'] : null;
-  umbrellaApp(route ?? routeTrialUi);
+  proxyApp(route ?? routeTrialUi);
 }
 
-void umbrellaApp(String route) {
+void proxyApp(String route) {
   switch (route) {
     case routeTrialUi:
       {
