@@ -154,8 +154,8 @@ class SeizureScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<SeizureScreenViewModel>.reactive(
         viewModelBuilder: () => SeizureScreenViewModel(),
-        onModelReady: (viewModel) => viewModel.initWithSeizure(seizure),
-        createNewModelOnInsert: true,
+        onViewModelReady: (viewModel) => viewModel.initWithSeizure(seizure),
+        // createNewModelOnInsert: true,
         builder: (context, SeizureScreenViewModel viewModel, child) => WillPopScope(
             child: PageScaffold(
                 backgroundColor: NextSenseColors.lightGrey,

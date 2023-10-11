@@ -1116,18 +1116,18 @@ packages:
     dependency: "direct main"
     description:
       name: stacked
-      sha256: "3c071d053dbce6afc87ff6b86dd17bdeab9b2674a6409d84dcbe9b21e55bc629"
+      sha256: "9b314261e675b6d153caee14c3e8fc4590e8a8f3fdd0f418d545c5963372a46f"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.8"
-  stacked_core:
+    version: "3.4.1+1"
+  stacked_shared:
     dependency: transitive
     description:
-      name: stacked_core
-      sha256: "1e09e90274dc815e97e1f896afb6daa9d881b01cc390c6ad14f20f49e0f7d96c"
+      name: stacked_shared
+      sha256: e6bc2921eb59b7c741c551fbb4060f22a543ea9c2d9351315fb58aa055b535f3
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "1.4.0"
   stream_channel:
     dependency: transitive
     description:

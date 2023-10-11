@@ -133,8 +133,8 @@ class SideEffectScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<SideEffectScreenViewModel>.reactive(
         viewModelBuilder: () => SideEffectScreenViewModel(),
-        onModelReady: (viewModel) => viewModel.initWithSideEffect(sideEffect),
-        createNewModelOnInsert: true,
+        onViewModelReady: (viewModel) => viewModel.initWithSideEffect(sideEffect),
+        // createNewModelOnInsert: true,
         builder: (context, SideEffectScreenViewModel viewModel, child) => WillPopScope(
             child: PageScaffold(
                 backgroundColor: NextSenseColors.lightGrey,

@@ -89,8 +89,8 @@ class SeizuresScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<SeizuresScreenViewModel>.reactive(
         viewModelBuilder: () => SeizuresScreenViewModel(),
-        onModelReady: (viewModel) => viewModel.init(),
-        createNewModelOnInsert: true,
+        onViewModelReady: (viewModel) => viewModel.init(),
+        // createNewModelOnInsert: true,
         builder: (context, SeizuresScreenViewModel viewModel, child) => PageScaffold(
             floatingActionButton: AddFloatingButton(
                 onPressed: () => _navigation.navigateTo(SeizureScreen.id, pop: true)),

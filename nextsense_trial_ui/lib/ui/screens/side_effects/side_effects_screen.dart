@@ -90,8 +90,8 @@ class SideEffectsScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<SideEffectsScreenViewModel>.reactive(
         viewModelBuilder: () => SideEffectsScreenViewModel(),
-        onModelReady: (viewModel) => viewModel.init(),
-        createNewModelOnInsert: true,
+        onViewModelReady: (viewModel) => viewModel.init(),
+        // createNewModelOnInsert: true,
         builder: (context, SideEffectsScreenViewModel viewModel, child) => PageScaffold(
             floatingActionButton: AddFloatingButton(
                 onPressed: () => _navigation.navigateTo(SideEffectScreen.id, pop: true)),
