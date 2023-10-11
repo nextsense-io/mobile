@@ -16,7 +16,7 @@ import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/side_effects_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
-import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 

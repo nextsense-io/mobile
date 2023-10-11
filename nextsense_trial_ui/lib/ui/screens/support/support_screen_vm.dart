@@ -7,7 +7,7 @@ import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/issue.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 

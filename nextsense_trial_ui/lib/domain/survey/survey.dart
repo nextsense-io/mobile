@@ -3,7 +3,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/survey/condition.dart';
 import 'package:flutter_common/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 
 enum SurveyKey {
   abbreviation,

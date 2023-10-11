@@ -4,7 +4,7 @@ import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
 import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
-import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 /// Each entry corresponds to a field name in the database instance.

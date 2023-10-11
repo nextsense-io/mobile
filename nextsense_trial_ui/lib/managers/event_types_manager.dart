@@ -1,7 +1,7 @@
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/event_type.dart';
 import 'package:flutter_common/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/managers/trail_ui_firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 
 class EventTypesManager {
   
