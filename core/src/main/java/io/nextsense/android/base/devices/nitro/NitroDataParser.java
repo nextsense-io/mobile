@@ -55,9 +55,12 @@ public class NitroDataParser {
 
   // The values that come from the device have half of the 24 bits int max value added so that they
   // can't be negative. Need to subtract it to get the real value.
-  //  private static int makeSigned(int data) {
-  //    return data - MID_VALUE_24_BITS;
-  //  }
+//  private int makeSigned(int data) {
+//    if (data > MID_VALUE_24_BITS) {
+//      return data - MID_VALUE_24_BITS;
+//    }
+//    return data;
+//  }
 
   public void parseDataBytes(byte[] values) throws
       FirmwareMessageParsingException {
@@ -103,7 +106,7 @@ public class NitroDataParser {
     valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
     int eegValue = Util.bytesToInt24(
         new byte[]{valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get()}, 0,
-        ByteOrder.BIG_ENDIAN);
+        ByteOrder.LITTLE_ENDIAN);
     HashMap<Integer, Float> eegData = new HashMap<>();
     eegData.put(CHANNEL_1, convertToMicroVolts(eegValue));
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
