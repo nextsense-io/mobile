@@ -241,7 +241,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     }
     return executorService.submit(() -> {
       // TODO(eric): enable when device supports this message.
-//      executeCommandNoResponse(new SetRecordingOptionsCommand(lastMessageId++,
+//      executeCommandNoResponse(new SetRecordingOptionsCommand(++lastMessageId,
 //          /*saveToFile=*/targetStartStreamingMode == StreamingStartMode.WITH_LOGGING,
 //          /*continuousImpedance=*/false, (int)deviceSettings.getEegSamplingRate()));
 //      KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
@@ -440,11 +440,12 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   public void onKauaiHostMessage(KauaiHostResponse hostResponse) {
     RotatingFileLogger.get().logv(TAG, "Received host message: " +
         hostResponse.getHostMessage().toString());
-    if (commandResultFuture != null) {
+    if (commandResultFuture != null && !commandResultFuture.isDone()) {
       if (!verifyIsExpectedResponse(hostResponse)) {
         if (hostResponse.getHostMessage().getRespToMessageId() < lastMessageId) {
           // Read previous message, try again to get the response.
           try {
+            Thread.sleep(200);
             readCommandResponse();
           } catch (ExecutionException | TimeoutException | FirmwareMessageParsingException e) {
             RotatingFileLogger.get().loge(TAG, "Failed to read message: " + e.getMessage());
@@ -561,7 +562,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
 
   private void runStartStreamingCommand() {
     try {
-      executeCommandNoResponse(new StartRecordingCommand(lastMessageId++));
+      executeCommandNoResponse(new StartRecordingCommand(++lastMessageId));
       // TODO(eric): Uncomment when device sends back response.
 //      readCommandResponse();
 //      KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
