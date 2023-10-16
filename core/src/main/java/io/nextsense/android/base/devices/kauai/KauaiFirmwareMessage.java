@@ -7,13 +7,15 @@ import io.nextsense.android.base.KauaiFirmwareMessageProto;
 public class KauaiFirmwareMessage {
 
   private final KauaiFirmwareMessageProto.MessageType type;
+  private final int messageId;
   private final KauaiFirmwareMessageProto.ClientMessage.Builder builder;
 
   public KauaiFirmwareMessage(KauaiFirmwareMessageProto.MessageType type, int id) {
     this.type = type;
-    this.builder = KauaiFirmwareMessageProto.ClientMessage.newBuilder();
-    this.builder.setMessageType(type);
-    this.builder.setMessageId(id);
+    messageId = id;
+    builder = KauaiFirmwareMessageProto.ClientMessage.newBuilder();
+    builder.setMessageType(type);
+    builder.setMessageId(id);
   }
 
   public KauaiFirmwareMessageProto.MessageType getType() {
@@ -32,5 +34,9 @@ public class KauaiFirmwareMessage {
     buffer.putInt((short) commandBytes.length & 0xffff);
     buffer.put(commandBytes);
     return buffer.array();
+  }
+
+  public int getMessageId() {
+    return messageId;
   }
 }

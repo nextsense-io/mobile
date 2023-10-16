@@ -67,6 +67,8 @@ public class KauaiProtoDataParser {
           break;
         case SET_RECORDING_SETTINGS:
         case SET_DATE_TIME:
+        case START_RECORDING:
+        case STOP_RECORDING:
           if (!hostMessage.hasResult()) {
             throw new FirmwareMessageParsingException(
                 "SET message without result");

@@ -59,6 +59,8 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private static final int CHANNELS_NUMBER = 6;
 
   private static final Duration COMMAND_TIMEOUT = Duration.ofSeconds(1);
+  private static final Duration READ_RETRY_INTERVAL = Duration.ofMillis(200);
+  private static final int READ_MAX_ATTEMPTS = 3;
 
   // TODO(eric): Set correct UUIDs.
   private static final UUID SERVICE_UUID = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
@@ -159,7 +161,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       // If reconnecting, we do not want to reset the time and apply settings as there might be a
       // recording in progress and this is not supported.
       RotatingFileLogger.get().logi(TAG, "Reconnecting, no need to re-apply device settings.");
-      return Futures.immediateFuture(true);
+      return enableEventsNotifications();
     }
     return executorService.submit(() -> {
       try {
@@ -184,30 +186,24 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
 //            COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
         RotatingFileLogger.get().logi(TAG, "Applied device settings.");
         // Enable notifications to get the device state change messages.
-        if (!peripheral.isNotifying(notificationsCharacteristic)) {
-          changeNotificationStateFuture = SettableFuture.create();
-          peripheral.setNotify(notificationsCharacteristic, /*enable=*/true);
-          return changeNotificationStateFuture.get();
-        }
+        return enableEventsNotifications().get(COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
       } catch (ExecutionException e) {
         RotatingFileLogger.get().loge(TAG, "Failed to set the time on the device: " + e.getMessage());
-        return false;
       } catch (InterruptedException e) {
         RotatingFileLogger.get().loge(TAG, "Interrupted when trying to set the time on the device: " + e.getMessage());
         Thread.currentThread().interrupt();
-        return false;
       } catch (TimeoutException te) {
         RotatingFileLogger.get().loge(TAG, "Timeout getting the device ready: " +
             te.getMessage());
-        return false;
       }
-      return true;
+      return false;
     });
   }
 
   @Override
   public void disconnect(BluetoothPeripheral peripheral) {
     this.peripheral = null;
+    this.deviceMode = DeviceMode.IDLE;
     clearCharacteristics();
   }
 
@@ -366,6 +362,15 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     return Futures.immediateFuture(deviceSettings);
   }
 
+  private ListenableFuture<Boolean> enableEventsNotifications() {
+    if (!peripheral.isNotifying(notificationsCharacteristic)) {
+      changeNotificationStateFuture = SettableFuture.create();
+      peripheral.setNotify(notificationsCharacteristic, /*enable=*/true);
+      return changeNotificationStateFuture;
+    }
+    return Futures.immediateFuture(true);
+  }
+
   public ListenableFuture<Boolean> loadDeviceInfo() {
     return executorService.submit(() -> {
       try {
@@ -445,7 +450,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
         if (hostResponse.getHostMessage().getRespToMessageId() < lastMessageId) {
           // Read previous message, try again to get the response.
           try {
-            Thread.sleep(200);
+            Thread.sleep(READ_RETRY_INTERVAL.toMillis());
             readCommandResponse();
           } catch (ExecutionException | TimeoutException | FirmwareMessageParsingException e) {
             RotatingFileLogger.get().loge(TAG, "Failed to read message: " + e.getMessage());
@@ -534,7 +539,8 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       RotatingFileLogger.get().logw(TAG, "No peripheral to execute command on.");
       return;
     }
-    RotatingFileLogger.get().logv(TAG, "Executing command: " + command.getType());
+    RotatingFileLogger.get().logv(TAG, "Executing command: " + command.getType() +
+        " with message id " + command.getMessageId());
     blePeripheralCallbackProxy.writeCharacteristic(
         peripheral, commandsCharacteristic, command.getCommand(), WriteType.WITHOUT_RESPONSE).get();
   }
@@ -546,17 +552,27 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       RotatingFileLogger.get().logw(TAG, "No peripheral to read command response from.");
       return;
     }
-    RotatingFileLogger.get().logv(TAG, "Reading command response.");
     commandResultFuture = SettableFuture.create();
-    try {
-      byte[] responseBytes = blePeripheralCallbackProxy.readCharacteristic(
-          peripheral, commandsCharacteristic).get(
-          COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-      RotatingFileLogger.get().logv(TAG, "Command bytes: " + Arrays.toString(responseBytes));
-      kauaiProtoDataParser.parseProtoDataBytes(responseBytes);
-    } catch (FirmwareMessageParsingException e) {
-      RotatingFileLogger.get().loge(TAG, "Failed to parse command response.");
-      commandResultFuture.setException(e);
+    int tryNumber = 0;
+    boolean readWithSuccess = false;
+    while (tryNumber < READ_MAX_ATTEMPTS && !readWithSuccess) {
+      try {
+        RotatingFileLogger.get().logv(TAG, "Reading command response.");
+        ++tryNumber;
+        byte[] responseBytes = blePeripheralCallbackProxy.readCharacteristic(
+            peripheral, commandsCharacteristic).get(
+            COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+        RotatingFileLogger.get().logv(TAG, "Command bytes: " + Arrays.toString(responseBytes));
+        kauaiProtoDataParser.parseProtoDataBytes(responseBytes);
+        readWithSuccess = true;
+      } catch (FirmwareMessageParsingException e) {
+        RotatingFileLogger.get().loge(TAG, "Failed to parse command response.");
+        if (tryNumber == READ_MAX_ATTEMPTS) {
+          commandResultFuture.setException(e);
+        } else {
+          Thread.sleep(READ_RETRY_INTERVAL.toMillis());
+        }
+      }
     }
   }
 
