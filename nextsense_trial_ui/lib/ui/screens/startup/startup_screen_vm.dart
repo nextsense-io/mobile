@@ -22,7 +22,7 @@ import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_mapping.dart';
 import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen.dart';
 import 'package:flutter_common/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 

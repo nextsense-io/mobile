@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/ui/components/background_container.dart';
 import 'package:nextsense_trial_ui/ui/components/loading_error_widget.dart';
-import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
+import 'package:flutter_common/ui/components/session_pop_scope.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_home_view.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_schedule_view.dart';

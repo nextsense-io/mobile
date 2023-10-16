@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
 

@@ -4,7 +4,7 @@ import 'package:nextsense_trial_ui/domain/medication/scheduled_medication.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/ui/components/cancel_button.dart';
 import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
-import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_button.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';

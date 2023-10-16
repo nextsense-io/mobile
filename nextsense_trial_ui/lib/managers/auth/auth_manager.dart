@@ -1,5 +1,6 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'package:flutter_common/managers/auth/auth_method.dart';
 import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/managers/auth/email_auth_manager.dart';
 import 'package:flutter_common/managers/auth/google_auth_manager.dart';

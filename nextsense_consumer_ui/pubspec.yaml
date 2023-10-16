@@ -23,6 +23,24 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  nextsense_base:
+    path: ../nextsense_base
+  flutter_common:
+    path: ../flutter_common
+  cloud_firestore: ^4.3.1
+  connectivity_plus: ^2.2.1
+  email_validator: ^2.1.16
+  firebase_auth: ^4.10.1
+  firebase_crashlytics: ^3.0.10
+  fluttertoast: ^8.1.1
+  flutter_svg: ^1.1.0
+  flutter_svg_provider: ^1.0.3
+  get_it: ^7.6.4
+  logging: ^1.0.2
+  provider: ^6.0.1
+  receive_intent: ^0.2.1
+  timezone: ^0.9.1
+  uuid: ^3.0.5
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

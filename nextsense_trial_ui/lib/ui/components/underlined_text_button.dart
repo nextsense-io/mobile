@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 
 // Button with muted colors that should not grab the attention too much.

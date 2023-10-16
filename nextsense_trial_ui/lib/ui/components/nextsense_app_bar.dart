@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/round_background.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/profile/profile_screen.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 // App bar at the top of the UI pages once logged in.
 class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -18,48 +18,50 @@ class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback? backButtonCallback;
 
   NextSenseAppBar(
-      {this.viewModel, this.showBackButton = false, this.showProfileButton = true,
+      {super.key, this.viewModel, this.showBackButton = false, this.showProfileButton = true,
         this.showCancelButton = false, this.backButtonCallback});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 40,
-      padding: EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 0),
+      padding: const EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 0),
       color: Colors.transparent,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           showBackButton
               ? ClickableZone(
-                  child: RoundBackground(
-                      child:
-                          Image(image: Svg('packages/nextsense_trial_ui/assets/images/arrow_left.svg'), height: 14, width: 14),
-                      color: NextSenseColors.translucentGrey),
                   onTap: backButtonCallback != null
                       ? () => backButtonCallback!.call()
                       : () => _navigation.pop(),
+                  child: RoundBackground(
+                      color: NextSenseColors.translucentGrey,
+                      child:
+                          const Image(image:
+                          Svg('packages/nextsense_trial_ui/assets/images/arrow_left.svg'),
+                              height: 14, width: 14)),
                 )
-              : SizedBox.shrink(),
-          Spacer(),
+              : const SizedBox.shrink(),
+          const Spacer(),
           showProfileButton
               ? ClickableZone(
-                  child: RoundBackground(child: Icon(Icons.person, size: 24, color: Colors.black)),
+                  child: RoundBackground(child: const Icon(Icons.person, size: 24, color: Colors.black)),
                   onTap: () async => {
                     await _navigation.navigateTo(ProfileScreen.id),
                     viewModel?.notifyListeners()
                   })
-              : SizedBox.shrink(),
+              : const SizedBox.shrink(),
           showCancelButton
-              ? ClickableZone(child: Icon(Icons.cancel, size: 40, color: NextSenseColors.red),
-                  onTap: backButtonCallback != null
+              ? ClickableZone(onTap: backButtonCallback != null
                       ? () => backButtonCallback!.call()
-                      : () => _navigation.pop()) : SizedBox.shrink()
+                      : () => _navigation.pop(), child:
+          const Icon(Icons.cancel, size: 40, color: NextSenseColors.red)) : const SizedBox.shrink()
         ],
       ),
     );
   }
 
   @override
-  Size get preferredSize => Size(32, 1080);
+  Size get preferredSize => const Size(32, 1080);
 }

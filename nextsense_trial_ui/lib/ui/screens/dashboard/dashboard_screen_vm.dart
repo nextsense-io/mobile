@@ -17,7 +17,7 @@ import 'package:nextsense_trial_ui/managers/medication_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
 
 class DashboardScreenViewModel extends DeviceStateViewModel {
 

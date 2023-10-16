@@ -6,7 +6,7 @@ class WaitWidget extends StatelessWidget {
   final String message;
   final bool textVisible;
 
-  const WaitWidget({required this.message, this.textVisible = true});
+  const WaitWidget({super.key, required this.message, this.textVisible = true});
 
   @override
   Widget build(BuildContext context) {
@@ -17,10 +17,10 @@ class WaitWidget extends StatelessWidget {
           Visibility(
             visible: textVisible,
             child: MediumText(text: message, textAlign: TextAlign.center)),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
-          Container(
+          const SizedBox(
             width: 30,
             height: 30,
             child: CircularProgressIndicator(

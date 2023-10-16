@@ -10,7 +10,7 @@ import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class ProfileScreenViewModel extends DeviceStateViewModel {

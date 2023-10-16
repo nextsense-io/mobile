@@ -19,10 +19,13 @@ dependencies:
   awesome_notifications: ^0.8.2
   community_charts_flutter: ^1.0.1
   circular_countdown_timer: ^0.2.1
+  cloud_firestore: ^4.3.1
   connectivity_plus: ^2.2.1
   dropdown_button2: ^1.5.2
   file: ^6.1.4
-  firebase_core: ^2.4.1
+  email_validator: ^2.1.16
+  firebase_auth: ^4.10.1
+  firebase_core: ^2.4.2
   firebase_crashlytics: ^3.0.10
   firebase_dynamic_links: ^5.0.11
   firebase_messaging: ^14.2.1
@@ -43,6 +46,7 @@ dependencies:
   iirjdart: ^0.1.0
   introduction_screen: # ^3.0.2
     path: ../../introduction_screen
+  logging: ^1.0.2
   package_info_plus: ^3.1.2
   path_provider: ^2.0.8
   persistent_bottom_nav_bar_v2: ^4.2.3
@@ -67,7 +71,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  flutter_lints: ^2.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -92,7 +96,7 @@ flutter:
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
-  # https://flutter.dev/assets-and-images/#resolution-aware.
+  # https://flutter.dev/assets-and-images/#resolution-aware
 
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/assets-and-images/#from-packages

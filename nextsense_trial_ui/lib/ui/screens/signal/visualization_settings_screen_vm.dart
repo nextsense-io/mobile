@@ -1,7 +1,7 @@
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen_vm.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 class VisualizationSettingsScreenViewModel extends ViewModel {
 

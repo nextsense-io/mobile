@@ -5,8 +5,8 @@ class ClickableZone extends StatelessWidget {
   final Widget child;
   final Function onTap;
 
-  ClickableZone(
-      {required this.child,
+  const ClickableZone(
+      {super.key, required this.child,
        required this.onTap});
 
   @override

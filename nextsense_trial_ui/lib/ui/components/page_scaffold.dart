@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:nextsense_trial_ui/ui/components/nextsense_app_bar.dart';
 import 'package:nextsense_trial_ui/ui/components/page_container.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 class PageScaffold extends StatelessWidget {
 
@@ -17,7 +17,7 @@ class PageScaffold extends StatelessWidget {
   final Widget? floatingActionButton;
   final VoidCallback? backButtonCallback;
 
-  PageScaffold({required this.child, this.viewModel, this.showBackground = true,
+  const PageScaffold({super.key, required this.child, this.viewModel, this.showBackground = true,
     this.showBackButton = true, this.showProfileButton = true, this.floatingActionButton,
     this.showCancelButton = false, this.backgroundColor = Colors.transparent,
     this.padBottom = true, this.backButtonCallback});
@@ -26,7 +26,7 @@ class PageScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(children: <Widget>[
       if (showBackground) Image(
-          image: Svg("packages/nextsense_trial_ui/assets/images/background.svg"),
+          image: const Svg("packages/nextsense_trial_ui/assets/images/background.svg"),
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           fit: BoxFit.cover,
@@ -38,7 +38,7 @@ class PageScaffold extends StatelessWidget {
               viewModel: viewModel, showBackButton: showBackButton,
               showProfileButton: showProfileButton, backButtonCallback: backButtonCallback,
               showCancelButton: showCancelButton),
-          body: PageContainer(child: child, padBottom: padBottom,),
+          body: PageContainer(padBottom: padBottom, child: child),
           floatingActionButton: floatingActionButton,
       ),
     ]);

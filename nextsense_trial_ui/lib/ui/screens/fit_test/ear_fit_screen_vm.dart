@@ -10,7 +10,7 @@ import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:flutter_common/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
 import 'package:wakelock/wakelock.dart';
 
 enum EarFitRunState {

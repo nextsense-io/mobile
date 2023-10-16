@@ -23,7 +23,7 @@ import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
 
 enum ProtocolCancelReason {
   none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord, deviceNotConnected,
