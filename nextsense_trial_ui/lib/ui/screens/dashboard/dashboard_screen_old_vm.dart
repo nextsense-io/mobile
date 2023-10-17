@@ -3,7 +3,7 @@
 // import 'package:logging/logging.dart';
 // import 'package:nextsense_trial_ui/di.dart';
 // import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
-// import 'package:nextsense_trial_ui/domain/session/protocol.dart';
+// import 'package:flutter_common/domain/protocol.dart';
 // import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 // import 'package:nextsense_trial_ui/domain/study.dart';
 // import 'package:nextsense_trial_ui/domain/study_day.dart';

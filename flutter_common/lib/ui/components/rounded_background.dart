@@ -10,8 +10,8 @@ class RoundedBackground extends StatelessWidget {
   final bool fullWidth;
   final bool transparent;
 
-  RoundedBackground(
-      {required this.child,
+  const RoundedBackground(
+      {super.key, required this.child,
         this.elevation = 4,
         this.paddingPixels = 12.0,
         this.gradient,
@@ -24,7 +24,7 @@ class RoundedBackground extends StatelessWidget {
     return Material(
       type: MaterialType.canvas,
       elevation: elevation,
-      borderRadius: BorderRadius.all(Radius.circular(20)),
+      borderRadius: const BorderRadius.all(Radius.circular(20)),
       shadowColor: Colors.black.withOpacity(0.3),
       surfaceTintColor: Colors.white.withOpacity(0.7),
       color: Colors.white.withOpacity(0.7),
@@ -36,7 +36,6 @@ class RoundedBackground extends StatelessWidget {
         decoration: BoxDecoration(
           color: transparent ? Colors.transparent : Colors.white,
           border: border ?? Border.all(width: 0, color: Colors.black12),
-          borderRadius: BorderRadius.all(Radius.circular(20)),
           gradient: gradient
         ),
         child: child,

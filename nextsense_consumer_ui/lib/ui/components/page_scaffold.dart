@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_common/ui/components/page_container.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
+import 'package:nextsense_consumer_ui/ui/components/nextsense_app_bar.dart';
 
 class PageScaffold extends StatelessWidget {
 

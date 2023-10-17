@@ -12,10 +12,10 @@ class WaitScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     return SessionPopScope(
-            child: PageScaffold(
+            child: const PageScaffold(
                 showBackButton: false,
                 showProfileButton: false,
-                child: const Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+                child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
                   Spacer(),
                   WaitWidget(message: 'Please wait'),
                   Spacer()

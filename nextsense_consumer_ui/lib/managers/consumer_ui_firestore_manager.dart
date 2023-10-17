@@ -15,6 +15,7 @@ enum DbVersion {
 }
 
 enum Table {
+  data_sessions,
   events,
   event_types,
   issues,

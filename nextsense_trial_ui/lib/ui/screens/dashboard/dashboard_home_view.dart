@@ -8,7 +8,7 @@ import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/components/thick_content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_protocol_dialog.dart';

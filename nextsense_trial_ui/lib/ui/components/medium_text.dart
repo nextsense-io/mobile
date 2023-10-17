@@ -10,8 +10,8 @@ class MediumText extends StatelessWidget {
   final double marginRight;
   final double marginLeft;
   final double marginBottom;
-  MediumText(
-      {required this.text,
+  const MediumText(
+      {super.key, required this.text,
         this.color = NextSenseColors.grey,
         this.textAlign = TextAlign.left,
         this.marginTop = 0,

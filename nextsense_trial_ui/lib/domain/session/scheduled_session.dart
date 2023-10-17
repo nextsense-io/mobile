@@ -3,7 +3,7 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:flutter_common/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/domain/session/protocol.dart';
+import 'package:flutter_common/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';

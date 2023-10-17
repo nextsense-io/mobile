@@ -10,7 +10,7 @@ import 'package:wakelock/wakelock.dart';
 
 class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
-  static final String _eoecTransitionSound = "packages/nextsense_trial_ui/assets/sounds/eoec_transition.wav";
+  static const String _eoecTransitionSound = "packages/nextsense_trial_ui/assets/sounds/eoec_transition.wav";
   static const Map<EOECState, String> _protocolPartsText = {
     EOECState.EO: 'Eyes Open',
     EOECState.EC: 'Eyes Closed'

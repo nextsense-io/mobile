@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_common/ui/components/clickable_zone.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
 
 // Button with emphasized colors that should grab the attention as a main next action.
 class EmphasizedButton extends StatelessWidget {

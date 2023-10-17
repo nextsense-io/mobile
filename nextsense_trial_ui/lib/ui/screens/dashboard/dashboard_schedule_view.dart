@@ -7,7 +7,7 @@ import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/ui/components/HourTasksCard.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/cancel_button.dart';
 import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';

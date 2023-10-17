@@ -8,13 +8,13 @@ class UnderlinedTextButton extends StatelessWidget {
   final String text;
   final Function onTap;
 
-  UnderlinedTextButton({required this.text, required this.onTap});
+  const UnderlinedTextButton({super.key, required this.text, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return ClickableZone(
         onTap: onTap,
-        child: Text(text, style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16,
+        child: Text(text, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16,
             color: NextSenseColors.darkBlue, decoration: TextDecoration.underline)));
   }
 }

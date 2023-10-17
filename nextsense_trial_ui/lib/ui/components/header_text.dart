@@ -9,8 +9,8 @@ class HeaderText extends StatelessWidget {
   final double marginRight;
   final double marginLeft;
   final double marginBottom;
-  HeaderText(
-      {required this.text,
+  const HeaderText(
+      {super.key, required this.text,
         this.color = NextSenseColors.darkBlue,
         this.marginTop = 0,
         this.marginRight = 0,

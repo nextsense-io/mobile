@@ -1,5 +1,5 @@
 // Defines the list of existing protocols and common properties of each.
-import 'package:flutter/foundation.dart';
+import 'package:flutter_common/domain/protocol.dart';
 
 enum ProtocolType {
   variable_daytime,  // Daytime recording of variable length
@@ -12,31 +12,13 @@ enum ProtocolType {
   unknown
 }
 
-enum ProtocolState {
-  not_started,
-  skipped,
-  running,
-  cancelled,
-  completed,
-  unknown
-}
+abstract class TrialProtocol extends Protocol {
 
-abstract class Protocol {
-  ProtocolType get type;
-  DateTime get startTime;
-  Duration get minDuration;
-  Duration get maxDuration;
-  Duration get disconnectTimeoutDuration;
-  String get description;
-  String get intro;
-  String get name;
-  String get nameForUser;
-  List<String> get postRecordingSurveys;
-  List<ProtocolPart> get protocolBlock;
+  ProtocolType get protocolType;
 
-  factory Protocol(ProtocolType type,
+  factory TrialProtocol(ProtocolType type,
       {DateTime? startTime, Duration? minDuration, Duration? maxDuration}) {
-    BaseProtocol protocol;
+    TrialBaseProtocol protocol;
     switch (type) {
       case ProtocolType.variable_daytime:
         protocol = VariableDaytimeProtocol();
@@ -75,75 +57,31 @@ abstract class Protocol {
 
     return protocol;
   }
+
+  @override
+  String get type => ProtocolType.unknown.name;
 }
 
-// Part of a protocol that works in discrete phases.
-class ProtocolPart {
-  String state;
-  Duration duration;
-  String? marker;
-  Duration? durationVariation;
+abstract class TrialBaseProtocol extends BaseProtocol implements TrialProtocol {
 
-  ProtocolPart({
-    required String state, required Duration duration, String? text, String? marker,
-    Duration? durationVariation}) :
-    this.state = state,
-    this.duration = duration,
-    this.marker = marker,
-    this.durationVariation = durationVariation;
+  @override
+  String get type => protocolType.name;
+
 }
 
-abstract class BaseProtocol implements Protocol {
-  DateTime? _startTime;
-  Duration? _minDurationOverride;
-  Duration? _maxDurationOverride;
+class VariableDaytimeProtocol extends TrialBaseProtocol {
 
   @override
-  ProtocolType get type => ProtocolType.unknown;
-
-  @override
-  String get name => describeEnum(type);
-
-  @override
-  DateTime get startTime => _startTime!;
-
-  @override
-  Duration get disconnectTimeoutDuration => Duration(minutes: 5);
-
-  @override
-  List<ProtocolPart> get protocolBlock => [];
-
-  @override
-  List<String> get postRecordingSurveys => [];
-
-  BaseProtocol();
-
-  void setStartTime(DateTime startTime) {
-    this._startTime = startTime;
-  }
-
-  void setMinDuration(Duration duration) {
-    _minDurationOverride = duration;
-  }
-
-  void setMaxDuration(Duration duration) {
-    _maxDurationOverride = duration;
-  }
-}
-
-class VariableDaytimeProtocol extends BaseProtocol {
-
-  @override
-  ProtocolType get type => ProtocolType.variable_daytime;
+  ProtocolType get protocolType => ProtocolType.variable_daytime;
 
   @override
   String get nameForUser => "Daytime";
 
   @override
-  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 0);
+  Duration get minDuration => minDurationOverride ?? const Duration(minutes: 0);
 
   @override
-  Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 24);
+  Duration get maxDuration => maxDurationOverride ?? const Duration(hours: 24);
 
   @override
   String get description => 'Record at daytime';
@@ -153,22 +91,22 @@ class VariableDaytimeProtocol extends BaseProtocol {
       ' You can stop the recording at any time.';
 
   @override
-  Duration get disconnectTimeoutDuration => Duration(hours: 24);
+  Duration get disconnectTimeoutDuration => const Duration(hours: 24);
 }
 
-class SleepProtocol extends BaseProtocol {
+class SleepProtocol extends TrialBaseProtocol {
 
   @override
-  ProtocolType get type => ProtocolType.sleep;
+  ProtocolType get protocolType => ProtocolType.sleep;
 
   @override
   String get nameForUser => 'Sleep';
 
   @override
-  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 0);
+  Duration get minDuration => minDurationOverride ?? const Duration(minutes: 0);
 
   @override
-  Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 12);
+  Duration get maxDuration => maxDurationOverride ?? const Duration(hours: 12);
 
   @override
   String get description => 'Sleep';
@@ -177,19 +115,19 @@ class SleepProtocol extends BaseProtocol {
   String get intro => 'Lay down in bed to get ready for your night then press the start button.';
 }
 
-class NapProtocol extends BaseProtocol {
+class NapProtocol extends TrialBaseProtocol {
 
   @override
-  ProtocolType get type => ProtocolType.nap;
+  ProtocolType get protocolType => ProtocolType.nap;
 
   @override
   String get nameForUser => 'Nap';
 
   @override
-  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 0);
+  Duration get minDuration => minDurationOverride ?? const Duration(minutes: 0);
 
   @override
-  Duration get maxDuration => _maxDurationOverride ?? Duration(hours: 4);
+  Duration get maxDuration => maxDurationOverride ?? const Duration(hours: 4);
 
   @override
   String get description => 'Nap';
@@ -208,32 +146,32 @@ enum EOECState {
   EC  // Eyes Closed
 }
 
-class EyesOpenEyesClosedProtocol extends BaseProtocol {
+class EyesOpenEyesClosedProtocol extends TrialBaseProtocol {
 
   static final ProtocolPart _eyesOpen = ProtocolPart(
       state: EOECState.EO.name,
-      duration: Duration(seconds: 60),
+      duration: const Duration(seconds: 60),
       marker: EOECState.EO.name);
   static final ProtocolPart _eyesClosed = ProtocolPart(
       state: EOECState.EC.name,
-      duration: Duration(seconds: 60),
+      duration: const Duration(seconds: 60),
       marker: EOECState.EC.name);
   static final List<ProtocolPart> _protocolBlock = [_eyesOpen, _eyesClosed];
 
   @override
-  ProtocolType get type => ProtocolType.eoec;
+  ProtocolType get protocolType => ProtocolType.eoec;
 
   @override
   String get nameForUser => "Eyes Open, Eyes Closed";
 
   @override
-  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 4);
+  Duration get minDuration => minDurationOverride ?? const Duration(minutes: 4);
 
   @override
-  Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 4);
+  Duration get maxDuration => maxDurationOverride ?? const Duration(minutes: 4);
 
   @override
-  Duration get disconnectTimeoutDuration => Duration(seconds: 20);
+  Duration get disconnectTimeoutDuration => const Duration(seconds: 20);
 
   @override
   String get description => 'Eyes Open, Eyes Closed';
@@ -262,24 +200,24 @@ enum ERPAudioState {
   BUTTON_PRESS
 }
 
-class ERPAudioProtocol extends BaseProtocol {
+class ERPAudioProtocol extends TrialBaseProtocol {
 
   static final ProtocolPart _normalSound = ProtocolPart(
       state: ERPAudioState.NORMAL_SOUND.name,
-      duration: Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 100),
       marker: ERPAudioState.NORMAL_SOUND.name);
   static final ProtocolPart _oddSound = ProtocolPart(
       state: ERPAudioState.ODD_SOUND.name,
-      duration: Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 100),
       marker: ERPAudioState.ODD_SOUND.name);
   static final ProtocolPart _responseWindow = ProtocolPart(
       state: ERPAudioState.RESPONSE_WINDOW.name,
-      duration: Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 1000),
       marker: ERPAudioState.RESPONSE_WINDOW.name);
   static final ProtocolPart _break = ProtocolPart(
       state: ERPAudioState.BREAK.name,
-      duration: Duration(milliseconds: 200),
-      durationVariation: Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 200),
+      durationVariation: const Duration(milliseconds: 400),
       marker: ERPAudioState.BREAK.name);
   static final List<ProtocolPart> _protocolBlock = [
     _normalSound, _responseWindow, _break, _normalSound, _responseWindow, _break, _normalSound,
@@ -288,19 +226,19 @@ class ERPAudioProtocol extends BaseProtocol {
   ];
 
   @override
-  ProtocolType get type => ProtocolType.erp_audio;
+  ProtocolType get protocolType => ProtocolType.erp_audio;
 
   @override
   String get nameForUser => "P-300 ERP Audio";
 
   @override
-  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 6);
+  Duration get minDuration => minDurationOverride ?? const Duration(minutes: 6);
 
   @override
-  Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 6);
+  Duration get maxDuration => maxDurationOverride ?? const Duration(minutes: 6);
 
   @override
-  Duration get disconnectTimeoutDuration => Duration(seconds: 0);
+  Duration get disconnectTimeoutDuration => const Duration(seconds: 0);
 
   @override
   String get description => 'P-300 Event-Related Potential (ERP) Audio';
@@ -328,53 +266,53 @@ enum EyesMovementState {
   MOVE_DOWN_UP,  // Moves eyes back and forth vertically.
 }
 
-class EyesMovementProtocol extends BaseProtocol {
+class EyesMovementProtocol extends TrialBaseProtocol {
 
   static final ProtocolPart _rest = ProtocolPart(
       state: EyesMovementState.REST.name,
-      duration: Duration(seconds: 15),
+      duration: const Duration(seconds: 15),
       marker: "REST");
   static final ProtocolPart _blackScreen = ProtocolPart(
       state: EyesMovementState.BLACK_SCREEN.name,
-      duration: Duration(seconds: 5),
+      duration: const Duration(seconds: 5),
       marker: "REST");
   static final ProtocolPart _blink = ProtocolPart(
       state: EyesMovementState.BLINK.name,
-      duration: Duration(seconds: 10),
+      duration: const Duration(seconds: 10),
       marker: "BLINKS");
   static final ProtocolPart _rightLeft = ProtocolPart(
       state: EyesMovementState.MOVE_RIGHT_LEFT.name,
-      duration: Duration(seconds: 10),
+      duration: const Duration(seconds: 10),
       marker: "HEOG");
   static final ProtocolPart _leftRight = ProtocolPart(
       state: EyesMovementState.MOVE_LEFT_RIGHT.name,
-      duration: Duration(seconds: 10),
+      duration: const Duration(seconds: 10),
       marker: "HEOG");
   static final ProtocolPart _upDown = ProtocolPart(
       state: EyesMovementState.MOVE_UP_DOWN.name,
-      duration: Duration(seconds: 10),
+      duration: const Duration(seconds: 10),
       marker: "VEOG");
   static final ProtocolPart _downUp = ProtocolPart(
       state: EyesMovementState.MOVE_DOWN_UP.name,
-      duration: Duration(seconds: 10),
+      duration: const Duration(seconds: 10),
       marker: "VEOG");
   static final List<ProtocolPart> _protocolBlock = [_rest, _blink, _blackScreen,
     _leftRight, _blackScreen, _upDown, _blackScreen];
 
   @override
-  ProtocolType get type => ProtocolType.eyes_movement;
+  ProtocolType get protocolType => ProtocolType.eyes_movement;
 
   @override
   String get nameForUser => "Eyes Movement";
 
   @override
-  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 5);
+  Duration get minDuration => minDurationOverride ?? const Duration(minutes: 5);
 
   @override
-  Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 5);
+  Duration get maxDuration => maxDurationOverride ?? const Duration(minutes: 5);
 
   @override
-  Duration get disconnectTimeoutDuration => Duration(seconds: 20);
+  Duration get disconnectTimeoutDuration => const Duration(seconds: 20);
 
   @override
   String get description => 'Eyes Movement';
@@ -397,45 +335,45 @@ enum BioCalibrationState {
   JAW_CLENCH  // Clench the jaws.
 }
 
-class BioCalibrationProtocol extends BaseProtocol {
+class BioCalibrationProtocol extends TrialBaseProtocol {
 
   static final ProtocolPart _rest = ProtocolPart(
       state: BioCalibrationState.REST.name,
-      duration: Duration(seconds: 15),
+      duration: const Duration(seconds: 15),
       marker: "REST");
   static final ProtocolPart _blink = ProtocolPart(
       state: BioCalibrationState.BLINK.name,
-      duration: Duration(seconds: 10),
+      duration: const Duration(seconds: 10),
       marker: "BLINKS");
   static final ProtocolPart _horizontal = ProtocolPart(
       state: BioCalibrationState.MOVE_HORIZONTAL.name,
-      duration: Duration(seconds: 10),
+      duration: const Duration(seconds: 10),
       marker: "HEOG");
   static final ProtocolPart _vertical = ProtocolPart(
       state: BioCalibrationState.MOVE_VERTICAL.name,
-      duration: Duration(seconds: 10),
+      duration: const Duration(seconds: 10),
       marker: "VEOG");
   static final ProtocolPart _jawClench = ProtocolPart(
       state: BioCalibrationState.JAW_CLENCH.name,
-      duration: Duration(seconds: 15),
+      duration: const Duration(seconds: 15),
       marker: "CLENCH");
   static final List<ProtocolPart> _protocolBlock =
       [_rest, _blink, _horizontal, _vertical, _jawClench];
 
   @override
-  ProtocolType get type => ProtocolType.bio_calibration;
+  ProtocolType get protocolType => ProtocolType.bio_calibration;
 
   @override
   String get nameForUser => "Bio Calibration";
 
   @override
-  Duration get minDuration => _minDurationOverride ?? Duration(minutes: 2);
+  Duration get minDuration => minDurationOverride ?? const Duration(minutes: 2);
 
   @override
-  Duration get maxDuration => _maxDurationOverride ?? Duration(minutes: 2);
+  Duration get maxDuration => maxDurationOverride ?? const Duration(minutes: 2);
 
   @override
-  Duration get disconnectTimeoutDuration => Duration(seconds: 20);
+  Duration get disconnectTimeoutDuration => const Duration(seconds: 20);
 
   @override
   String get description => 'Bio Calibration';
@@ -457,10 +395,4 @@ class BioCalibrationProtocol extends BaseProtocol {
 ProtocolType protocolTypeFromString(String typeStr) {
   return ProtocolType.values.firstWhere((element) => element.name == typeStr,
       orElse: () => ProtocolType.unknown);
-}
-
-ProtocolState protocolStateFromString(String protocolStateStr) {
-  return ProtocolState.values.firstWhere(
-      (element) => element.name == protocolStateStr,
-      orElse: () => ProtocolState.unknown);
 }

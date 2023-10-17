@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
-import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:flutter_common/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/components/small_text.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';

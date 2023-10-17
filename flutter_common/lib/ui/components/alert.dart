@@ -7,8 +7,8 @@ class SimpleAlertDialog extends StatelessWidget {
   final bool popNavigator;
   final Function? onPressed;
 
-  SimpleAlertDialog({required this.title, required this.content,
-      this.buttonText = 'ok', this.popNavigator = false, this.onPressed = null});
+  const SimpleAlertDialog({super.key, required this.title, required this.content,
+      this.buttonText = 'ok', this.popNavigator = false, this.onPressed});
 
   @override
   Widget build(BuildContext context) {

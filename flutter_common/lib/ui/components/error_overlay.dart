@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
 
-/**
- * Error overlay display on top of another page.
- */
+/// Error overlay display on top of another page.
 class ErrorOverlay extends StatelessWidget {
   final Widget child;
 
-  ErrorOverlay({required this.child});
+  const ErrorOverlay({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

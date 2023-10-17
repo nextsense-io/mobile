@@ -10,6 +10,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/event.dart';
 import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
+import 'package:flutter_common/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
@@ -35,9 +36,7 @@ class ScheduledProtocolPart {
   ProtocolPart protocolPart;
   int relativeMilliseconds;
 
-  ScheduledProtocolPart({required ProtocolPart protocolPart, required int relativeMilliseconds}) :
-        this.protocolPart = protocolPart,
-        this.relativeMilliseconds = relativeMilliseconds;
+  ScheduledProtocolPart({required this.protocolPart, required this.relativeMilliseconds});
 
   factory ScheduledProtocolPart.clone(ScheduledProtocolPart part) {
     return ScheduledProtocolPart(protocolPart: part.protocolPart,
@@ -50,8 +49,8 @@ List<ScheduledProtocolPart> deepCopy(List<ScheduledProtocolPart> source) {
 }
 
 class ProtocolScreenViewModel extends DeviceStateViewModel {
-  static const Duration _dataReceivedTimeout = const Duration(seconds: 60);
-  static const Duration _timerTickInterval = const Duration(milliseconds: 50);
+  static const Duration _dataReceivedTimeout = Duration(seconds: 60);
+  static const Duration _timerTickInterval = Duration(milliseconds: 50);
 
   final StudyManager _studyManager = getIt<StudyManager>();
   final SurveyManager _surveyManager = getIt<SurveyManager>();
@@ -88,7 +87,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   DateTime? _lastEventEnd;
   String? _currentEventMarker;
   int _currentProtocolPart = 0;
-  Duration _repetitionTime = Duration(seconds: 0);
+  Duration _repetitionTime = const Duration(seconds: 0);
   Timer? _dataReceivedTimer;
   CancelListening? _currentSessionDataReceivedListener;
   Duration? _currentVariableDuration;
@@ -508,7 +507,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.INFO, 'Stopping session.');
       await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
     } catch (e) {
-      _logger.log(Level.WARNING, "Failed to stop streaming: " + e.toString());
+      _logger.log(Level.WARNING, "Failed to stop streaming: $e");
     }
     try {
       await runnableProtocol.update(

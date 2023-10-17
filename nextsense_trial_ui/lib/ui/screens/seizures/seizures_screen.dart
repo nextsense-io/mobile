@@ -6,7 +6,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/seizure.dart';
 import 'package:nextsense_trial_ui/domain/timed_entry.dart';
 import 'package:nextsense_trial_ui/ui/components/add_floating_button.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/round_background.dart';

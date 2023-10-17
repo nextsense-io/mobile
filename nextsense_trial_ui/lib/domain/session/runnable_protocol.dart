@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_common/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
-import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 
 // Class to represents protocol running and track its state
 abstract class RunnableProtocol {

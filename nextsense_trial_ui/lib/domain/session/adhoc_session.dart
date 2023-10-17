@@ -3,6 +3,7 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
+import 'package:flutter_common/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
@@ -32,13 +33,13 @@ class AdhocSession implements RunnableProtocol {
 
   AdhocSession(ProtocolType protocolType, String plannedSessionId, String studyId) :
         _studyId = studyId {
-    protocol = Protocol(protocolType);
+    protocol = TrialProtocol(protocolType);
     _plannedSessionId = plannedSessionId;
   }
 
   AdhocSession.fromRecord(AdhocProtocolRecord record, String studyId) : _studyId = studyId {
     _record = record;
-    protocol = Protocol(record.getProtocolType());
+    protocol = TrialProtocol(record.getProtocolType());
     state = record.getState();
   }
 

@@ -6,11 +6,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
-import 'package:nextsense_trial_ui/ui/components/error_overlay.dart';
+import 'package:flutter_common/ui/components/error_overlay.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
-import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:flutter_common/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/components/underlined_text_button.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/scan_result_list.dart';
@@ -27,12 +27,12 @@ class DeviceScanScreen extends HookWidget {
 
   List<ScanResult> scanResultsWidgets = [];
 
-  DeviceScanScreen({this.autoConnect = false});
+  DeviceScanScreen({super.key, this.autoConnect = false});
 
   Future<void> showConnectionError(BuildContext context) async {
     await showDialog(
         context: context,
-        builder: (_) => SimpleAlertDialog(
+        builder: (_) => const SimpleAlertDialog(
             title: 'Connection Error',
             content: 'Failed to connect to the NextSense device. Make sure it is turned on an try '
                 'again. It it still fails, please contact NextSense support.'));

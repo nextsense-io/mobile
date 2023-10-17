@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nextsense_trial_ui/domain/session/protocol.dart';
+import 'package:flutter_common/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';

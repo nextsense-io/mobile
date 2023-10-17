@@ -3,6 +3,7 @@ import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:flutter_common/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:flutter_common/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/managers/auth/email_auth_link.dart';
@@ -181,7 +182,8 @@ class StartupScreenViewModel extends ViewModel {
           setBusy(false);
           _navigation.navigateTo(DashboardScreen.id, replace: true);
           _navigation.navigateTo(
-              ProtocolScreenMapping.getProtocolScreenId(runnableProtocol.protocol.type),
+              ProtocolScreenMapping.getProtocolScreenId(
+                  protocolTypeFromString(runnableProtocol.protocol.type)),
               arguments: runnableProtocol);
           return;
         } else {
