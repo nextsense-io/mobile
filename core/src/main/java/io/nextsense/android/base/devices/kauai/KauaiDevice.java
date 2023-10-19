@@ -58,9 +58,10 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private static final int TARGET_MTU = 256;
   private static final int CHANNELS_NUMBER = 6;
 
-  private static final Duration COMMAND_TIMEOUT = Duration.ofSeconds(1);
+  private static final Duration COMMAND_TIMEOUT = Duration.ofMillis(1500);
   private static final Duration READ_RETRY_INTERVAL = Duration.ofMillis(200);
   private static final int READ_MAX_ATTEMPTS = 3;
+  private static final int READ_CORRECT_MESSAGE_MAX_ATTEMPTS = 10;
 
   // TODO(eric): Set correct UUIDs.
   private static final UUID SERVICE_UUID = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
@@ -99,6 +100,8 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private SettableFuture<KauaiFirmwareMessageProto.HostMessage> commandResultFuture;
   // Id of the last message sent to the device. Used to verify the response message id.
   private int lastMessageId = 0;
+  // If the message id that was read does not corresponds, read again a few times before giving up.
+  private int wrongMessageReadRetryCount = 0;
 
   // Message type of the last message sent to the device. Used to verify the response message type.
   private KauaiFirmwareMessageProto.MessageType lastMessageType = null;
@@ -286,18 +289,17 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
         try {
           executeCommandNoResponse(new StopRecordingCommand(++lastMessageId));
           // TODO(eric): Uncomment when device sends back response.
-//          readCommandResponse();
-//          KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
-//              COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-//          // Cannot read device settings, so load the default setting and apply them when connecting.
-//          if (hostMessage.getResult().getErrorType() !=
-//              KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
-//            // TODO(eric): Pass error back to higher layer.
-//            RotatingFileLogger.get().logw(TAG, "Failed to stop streaming: " +
-//                hostMessage.getResult().getErrorType() + ", " +
-//                hostMessage.getResult().getAdditionalInfo());
-//            return false;
-//          }
+          readCommandResponse();
+          KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
+              COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+          if (hostMessage.getResult().getErrorType() !=
+              KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
+            // TODO(eric): Pass error back to higher layer.
+            RotatingFileLogger.get().logw(TAG, "Failed to stop streaming: " +
+                hostMessage.getResult().getErrorType() + ", " +
+                hostMessage.getResult().getAdditionalInfo());
+            return false;
+          }
         } catch (CancellationException | ExecutionException e) {
           RotatingFileLogger.get().loge(TAG, "Failed to stop streaming: " + e.getMessage());
           localSessionManager.stopLocalSession();
@@ -447,8 +449,10 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
         hostResponse.getHostMessage().toString());
     if (commandResultFuture != null && !commandResultFuture.isDone()) {
       if (!verifyIsExpectedResponse(hostResponse)) {
-        if (hostResponse.getHostMessage().getRespToMessageId() < lastMessageId) {
+        if (hostResponse.getHostMessage().getRespToMessageId() != lastMessageId &&
+            wrongMessageReadRetryCount < READ_CORRECT_MESSAGE_MAX_ATTEMPTS) {
           // Read previous message, try again to get the response.
+          ++wrongMessageReadRetryCount;
           try {
             Thread.sleep(READ_RETRY_INTERVAL.toMillis());
             readCommandResponse();
@@ -539,6 +543,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       RotatingFileLogger.get().logw(TAG, "No peripheral to execute command on.");
       return;
     }
+    wrongMessageReadRetryCount = 0;
     RotatingFileLogger.get().logv(TAG, "Executing command: " + command.getType() +
         " with message id " + command.getMessageId());
     blePeripheralCallbackProxy.writeCharacteristic(
@@ -565,13 +570,18 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
         RotatingFileLogger.get().logv(TAG, "Command bytes: " + Arrays.toString(responseBytes));
         kauaiProtoDataParser.parseProtoDataBytes(responseBytes);
         readWithSuccess = true;
-      } catch (FirmwareMessageParsingException e) {
+      } catch (FirmwareMessageParsingException | CancellationException e) {
         RotatingFileLogger.get().loge(TAG, "Failed to parse command response.");
         if (tryNumber == READ_MAX_ATTEMPTS) {
           commandResultFuture.setException(e);
         } else {
           Thread.sleep(READ_RETRY_INTERVAL.toMillis());
         }
+      } catch (TimeoutException e) {
+        RotatingFileLogger.get().loge(TAG, "Timeout when trying to read command response.");
+        blePeripheralCallbackProxy.cancelReadCharacteristic(peripheral, commandsCharacteristic);
+        commandResultFuture.setException(e);
+        break;
       }
     }
   }

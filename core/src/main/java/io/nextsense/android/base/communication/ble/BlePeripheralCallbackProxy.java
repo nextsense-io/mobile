@@ -62,6 +62,15 @@ public class BlePeripheralCallbackProxy {
     return readFuture;
   }
 
+  public synchronized void cancelReadCharacteristic(
+      BluetoothPeripheral peripheral, BluetoothGattCharacteristic characteristic) {
+    if (readFutures.get(peripheral.getAddress()) != null &&
+        !readFutures.get(peripheral.getAddress()).isDone()) {
+      // Should call this function one by one for a peripheral as it is sync.
+      readFutures.get(peripheral.getAddress()).cancel(true);
+    }
+  }
+
   /**
    * Write a characteristic for a peripheral and return a Future that will be completed when it is
    * confirmed by the Android stack.
