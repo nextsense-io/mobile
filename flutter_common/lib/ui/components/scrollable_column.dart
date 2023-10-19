@@ -31,13 +31,13 @@ class ScrollableColumn extends StatelessWidget {
           // It will always use the full height of the parent, or the natural size of the children, whichever is greater.
           child: IntrinsicHeight(
             child: Column(
-              children: children,
               crossAxisAlignment: crossAxisAlignment,
               textDirection: textDirection,
               mainAxisAlignment: mainAxisAlignment,
               mainAxisSize: mainAxisSize,
               verticalDirection: verticalDirection,
               textBaseline: textBaseline,
+              children: children,
             ),
           ),
         ),

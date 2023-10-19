@@ -3,14 +3,24 @@ import 'package:flutter_common/managers/auth/auth_method.dart';
 import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/managers/auth/email_auth_manager.dart';
 import 'package:flutter_common/managers/permissions_manager.dart';
+import 'package:flutter_common/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/scrollable_column.dart';
+import 'package:flutter_common/ui/components/simple_button.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:flutter_common/ui/components/session_pop_scope.dart';
 import 'package:nextsense_consumer_ui/di.dart';
+import 'package:nextsense_consumer_ui/ui/components/emphasized_text.dart';
+import 'package:nextsense_consumer_ui/ui/components/header_text.dart';
 import 'package:nextsense_consumer_ui/ui/components/medium_text.dart';
 import 'package:nextsense_consumer_ui/ui/components/page_scaffold.dart';
+import 'package:nextsense_consumer_ui/ui/components/small_text.dart';
 import 'package:nextsense_consumer_ui/ui/navigation.dart';
 import 'package:nextsense_consumer_ui/ui/nextsense_colors.dart';
+import 'package:nextsense_consumer_ui/ui/screens/auth/sign_in_screen_vm.dart';
+import 'package:nextsense_consumer_ui/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:nextsense_consumer_ui/ui/screens/request_permission_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
@@ -30,7 +40,7 @@ class SignInScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<SignInScreenViewModel>.reactive(
         viewModelBuilder: () => SignInScreenViewModel(initialErrorMessage: initialErrorMessage),
-        onModelReady: (viewModel) => viewModel.init(),
+        onViewModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) => SessionPopScope(
             child: PageScaffold(
                 showBackButton: false,
@@ -39,12 +49,12 @@ class SignInScreen extends HookWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.max,
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [const Spacer(), HeaderText(text: 'Get started'),
+                    children: [const Spacer(), const HeaderText(text: 'Get started'),
                       const SizedBox(height: 20)] +
                         _buildBody(context) +
                         [
                           const Spacer(),
-                          SmallText(text:
+                          const SmallText(text:
                           'By creating a new account, you are agreeing to our Terms of Service '
                               'and Privacy Policy.'),
                         ]))));
@@ -79,12 +89,12 @@ class SignInScreen extends HookWidget {
           onTap: authenticating ? () => {} :
               () => _signIn(context, AuthMethod.email_password))
       ),
-      const SizedBox(height: 20),
-      Align(
-          alignment: Alignment.center,
-          child: AbsorbPointer(absorbing: authenticating, child: UnderlinedTextButton(
-              text: 'Forgot your password?',
-              onTap: () async => await _navigation.navigateTo(RequestPasswordResetScreen.id))))
+      // const SizedBox(height: 20),
+      // Align(
+      //     alignment: Alignment.center,
+      //     child: AbsorbPointer(absorbing: authenticating, child: UnderlinedTextButton(
+      //         text: 'Forgot your password?',
+      //         onTap: () async => await _navigation.navigateTo(RequestPasswordResetScreen.id))))
     ];
   }
 
@@ -212,24 +222,11 @@ class SignInScreen extends HookWidget {
       return;
     }
 
-    // If the user had a temporary password, first ask to change it before proceeding.
-    if (viewModel.isTempPassword) {
-      await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true),
-          arguments: true);
-    }
-
-    bool studyLoaded = await viewModel.loadCurrentStudy();
-    if (!studyLoaded) {
-      authenticating = false;
-      // Cannot proceed without study data.
-      await showDialog(
-          context: context,
-          builder: (_) => SimpleAlertDialog(
-              title: 'Error with your account',
-              content: 'Please contact NextSense support and mention that there is an issue with '
-                  'your account study setup.'));
-      return;
-    }
+    // // If the user had a temporary password, first ask to change it before proceeding.
+    // if (viewModel.isTempPassword) {
+    //   await _navigation.navigateTo(SetPasswordScreen.id, nextRoute: NavigationRoute(pop: true),
+    //       arguments: true);
+    // }
 
     // If there are permissions that need to be granted, go through them one by one with an
     // explanation screen.
@@ -246,19 +243,18 @@ class SignInScreen extends HookWidget {
     // already have paired device before, then navigate directly to dashboard
     // Note: same logic in startup screen
     // TODO(eric): Might want to add a 'Do not show this again'
-    String screen = PrepareDeviceScreen.id;
+    String screen = DashboardScreen.id;
     if (viewModel.hadPairedDevice) {
       await viewModel.connectToLastPairedDevice();
-      screen = DashboardScreen.id;
     }
 
-    _navigation.navigateWithConnectionChecking(screen, replace: true);
+    _navigation.navigateTo(screen, replace: true);
 
-    // If there is an initial intent, navigate to the screen that it asks for. If not, navigate to
-    // the device scan screen or the dashboard, depending if there is a connection yet.
-    if (_navigation.hasInitialIntent()) {
-      _navigation.navigateToInitialIntent();
-    }
+    // // If there is an initial intent, navigate to the screen that it asks for. If not, navigate to
+    // // the device scan screen or the dashboard, depending if there is a connection yet.
+    // if (_navigation.hasInitialIntent()) {
+    //   _navigation.navigateToInitialIntent();
+    // }
     authenticating = false;
   }
 }
@@ -288,7 +284,6 @@ class _UserPasswordSignInInputField extends StatelessWidget {
           initialValue: field.value,
           maxLength: maxLength,
           obscureText: obscureText ?? false,
-          //enabled: !_askForPassword,
           decoration: InputDecoration(
             label: HeaderText(text: labelText, color: NextSenseColors.darkBlue),
             helperText: helperText,

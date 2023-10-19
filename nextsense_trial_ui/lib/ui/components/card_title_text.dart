@@ -8,8 +8,8 @@ class CardTitleText extends StatelessWidget {
   final double marginRight;
   final double marginLeft;
   final double marginBottom;
-  CardTitleText(
-      {required this.text,
+  const CardTitleText(
+      {super.key, required this.text,
         this.marginTop = 0,
         this.marginRight = 0,
         this.marginBottom = 0,
@@ -17,7 +17,7 @@ class CardTitleText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headerStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.w500,
+    const headerStyle = TextStyle(fontSize: 16, fontWeight: FontWeight.w500,
         color: NextSenseColors.darkBlue);
     return Container(
       margin: EdgeInsets.only(

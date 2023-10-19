@@ -6,6 +6,7 @@ import 'package:nextsense_consumer_ui/di.dart';
 import 'package:nextsense_consumer_ui/ui/components/round_background.dart';
 import 'package:nextsense_consumer_ui/ui/navigation.dart';
 import 'package:nextsense_consumer_ui/ui/nextsense_colors.dart';
+import 'package:nextsense_consumer_ui/ui/screens/profile/profile_screen.dart';
 
 // App bar at the top of the UI pages once logged in.
 class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {

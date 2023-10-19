@@ -43,8 +43,7 @@ class SessionManager {
     _appVersion = packageInfo.version;
   }
 
-  Future<bool> startSession({required Device device, required String studyId,
-    required plannedSessionId, required String protocolName, String? scheduledSessionId}) async {
+  Future<bool> startSession({required Device device, required String protocolName}) async {
     User? user = _authManager.user;
     if (user == null) {
       return false;
@@ -60,12 +59,17 @@ class SessionManager {
     _currentSession = Session(sessionEntity);
     DateTime startTime = DateTime.now();
 
+    String? earbudsConfig = EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase();
+    if (device.type == DeviceType.kauai) {
+      earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+    }
+
     _currentSession!..setValue(SessionKey.start_datetime, startTime)
       ..setValue(SessionKey.user_id, user.id)
       ..setValue(SessionKey.device_id, device.name)
       ..setValue(SessionKey.device_mac_address, device.macAddress)
-      ..setValue(SessionKey.earbud_config,
-          _studyManager.currentStudy?.getEarbudsConfig() ?? null)
+      // TODO(eric): Get this from the device?
+      ..setValue(SessionKey.earbud_config, earbudsConfig)
       ..setValue(SessionKey.mobile_app_version, _appVersion)
       ..setValue(SessionKey.protocol_name, protocolName)
       ..setValue(SessionKey.timezone, user.getCurrentTimezone().name);
@@ -114,10 +118,6 @@ class SessionManager {
         _logger.log(Level.SEVERE, "Failed to set impedance config. Cannot start streaming.");
         return false;
       }
-      String? earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig() ?? null;
-      if (device.type == DeviceType.kauai) {
-        earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
-      }
 
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,
           bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: _currentSession!.id,
@@ -143,21 +143,16 @@ class SessionManager {
     if (user == null) {
       return null;
     }
-    RunnableProtocol? runningProtocol = await user.getRunningProtocol(
-        _studyManager.currentStudyStartDate, _studyManager.currentStudyEndDate);
-    if (runningProtocol != null) {
-      _logger.log(Level.INFO, 'Running sessions, load ${runningProtocol.lastSessionId}');
-      FirebaseEntity? sessionEntity =
-      await _firestoreManager.queryEntity([Table.sessions], [runningProtocol.lastSessionId!]);
-      if (sessionEntity != null) {
-        FirebaseEntity? dataSessionEntity = await _firestoreManager.queryEntity(
-            [Table.sessions, Table.data_sessions],
-            [sessionEntity.id, Modality.eeeg.name]);
-        if (dataSessionEntity != null) {
-          _currentSession = Session(sessionEntity);
-          _currentDataSession = DataSession(dataSessionEntity);
-          return _currentSession;
-        }
+    Session? runningSession = await user.getRunningSession();
+    if (runningSession != null) {
+      _logger.log(Level.INFO, 'Running session found: $runningSession');
+      FirebaseEntity? dataSessionEntity = await _firestoreManager.queryEntity(
+          [Table.sessions, Table.data_sessions],
+          [runningSession.id, Modality.eeeg.name]);
+      if (dataSessionEntity != null) {
+        _currentSession = runningSession;
+        _currentDataSession = DataSession(dataSessionEntity);
+        return _currentSession;
       }
     }
     return null;
@@ -187,7 +182,7 @@ class SessionManager {
           'might be marked as still running.');
       return;
     }
-    user.setValue(UserKey.running_protocol, null);
+    user.setValue(UserKey.running_session, null);
     await user.save();
     await NextsenseBase.changeNotificationContent(_appName!, "Press to access the application");
   }

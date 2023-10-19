@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nextsense_trial_ui/ui/components/nextsense_button.dart';
+import 'package:nextsense_consumer_ui/ui/components/nextsense_button.dart';
 
 class LoadingErrorWidget extends StatelessWidget {
 

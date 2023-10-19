@@ -43,6 +43,8 @@ class Session extends FirebaseEntity<SessionKey> {
 
   DateTime? getStartDateTime() {
     final Timestamp? startDateTime = getValue(SessionKey.start_datetime);
-    return startDateTime != null ? startDateTime.toDate() : null;
+    return startDateTime?.toDate();
   }
+
+  String get protocolName => getValue(SessionKey.protocol_name);
 }

@@ -1,5 +1,6 @@
 name: nextsense_consumer_ui
 description: NextSense consumer application Flutter UI
+publish_to: none
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -44,8 +45,10 @@ dependencies:
   logging: ^1.0.2
   package_info_plus: ^3.1.2
   permission_handler: ^10.2.0
+  persistent_bottom_nav_bar_v2: ^4.2.3
   provider: ^6.0.1
   receive_intent: ^0.2.1
+  settings_ui: ^2.0.2
   stacked: ^3.4.1+1
   timezone: ^0.9.1
   uuid: ^3.0.5

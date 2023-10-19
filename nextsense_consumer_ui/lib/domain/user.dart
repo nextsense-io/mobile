@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:nextsense_consumer_ui/domain/session.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:flutter_common/domain/firebase_entity.dart';
@@ -21,8 +22,8 @@ enum UserKey {
   last_paired_device_id,
   // String containing the salted and hashed password.
   password,
-  // Currently recording protocol
-  running_protocol,
+  // Currently recording session
+  running_session,
   // How many sessions were recorded by this user.
   session_number,
   // Current user's timezone
@@ -62,7 +63,7 @@ class User extends FirebaseEntity<UserKey> {
 
   DateTime? getLastLogin() {
     final Timestamp? lastLoginDateTime = getValue(UserKey.last_login);
-    return lastLoginDateTime != null ? lastLoginDateTime.toDate() : null;
+    return lastLoginDateTime?.toDate();
   }
 
   void setLastLogin(DateTime dateTime) {
@@ -79,7 +80,7 @@ class User extends FirebaseEntity<UserKey> {
 
   bool isTempPassword() {
     bool? isTempPassword = getValue(UserKey.is_temp_password);
-    return isTempPassword != null ? isTempPassword : false;
+    return isTempPassword ?? false;
   }
 
   void setTempPassword(bool tempPassword) {
@@ -94,33 +95,18 @@ class User extends FirebaseEntity<UserKey> {
     return getValue(UserKey.username);
   }
 
-  // Future<dynamic> getRunningProtocol(DateTime? studyStartDate, DateTime? studyEndDate) async {
-  //   dynamic runningProtocolRef = getValue(UserKey.running_protocol);
-  //   if (runningProtocolRef == null) {
-  //     return null;
-  //   }
-  //   DocumentReference ref = runningProtocolRef as DocumentReference;
-  //   if (runningProtocolRef.parent.path.toString().endsWith(Table.adhoc_sessions.name())) {
-  //     return AdhocSession.fromRecord(
-  //         AdhocProtocolRecord(FirebaseEntity(await ref.get(), super.getFirestoreManager())),
-  //         getCurrentStudyId()!);
-  //   } else {
-  //     if (studyStartDate == null || studyEndDate == null) {
-  //       throw Exception("Study start and end dates are required for scheduled protocols");
-  //     }
-  //     FirebaseEntity scheduledProtocolEntity = FirebaseEntity(
-  //         await ref.get(), getFirestoreManager());
-  //     FirebaseEntity plannedAssessmentEntity = FirebaseEntity(
-  //         await (scheduledProtocolEntity.getValue(ScheduledSessionKey.planned_session_id)
-  //         as DocumentReference).get(), getFirestoreManager());
-  //     PlannedSession plannedAssessment =
-  //         PlannedSession(plannedAssessmentEntity, studyStartDate, studyEndDate);
-  //     return ScheduledSession(scheduledProtocolEntity, plannedAssessment);
-  //   }
-  // }
+  Future<Session?> getRunningSession() async {
+    dynamic runningSessionRef = getValue(UserKey.running_session);
+    if (runningSessionRef == null) {
+      return null;
+    }
+    DocumentReference ref = runningSessionRef as DocumentReference;
+    FirebaseEntity runningSessionEntity = FirebaseEntity(await ref.get(), getFirestoreManager());
+    return Session(runningSessionEntity);
+  }
 
-  void setRunningProtocol(DocumentReference? runnableProtocol) {
-    setValue(UserKey.running_protocol, runnableProtocol);
+  void setRunningSession(DocumentReference? sessionRef) {
+    setValue(UserKey.running_session, sessionRef);
   }
 
   static UserType getUserTypeFromString(String? userTypeStr) {

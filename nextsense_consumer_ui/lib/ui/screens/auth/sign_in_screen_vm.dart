@@ -44,11 +44,6 @@ class SignInScreenViewModel extends ViewModel {
     }
   }
 
-  void loadCredentialsFromEnvironment() {
-    username.value = envGet(EnvironmentKey.USERNAME, fallback: "");
-    password.value = envGet(EnvironmentKey.PASSWORD, fallback: "");
-  }
-
   Future<AuthenticationResult> signIn(AuthMethod authMethod) async {
     notifyListeners();
     errorMsg = '';

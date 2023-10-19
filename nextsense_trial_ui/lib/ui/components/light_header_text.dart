@@ -10,8 +10,8 @@ class LightHeaderText extends StatelessWidget {
   final double marginRight;
   final double marginLeft;
   final double marginBottom;
-  LightHeaderText(
-      {required this.text,
+  const LightHeaderText(
+      {super.key, required this.text,
         this.color = NextSenseColors.darkBlue,
         this.textAlign = TextAlign.start,
         this.marginTop = 0,

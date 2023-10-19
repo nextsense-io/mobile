@@ -1,6 +1,6 @@
 /* A widget to display small text. */
 import 'package:flutter/material.dart';
-import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
+import 'package:nextsense_consumer_ui/ui/nextsense_colors.dart';
 
 class SmallText extends StatelessWidget {
   final String text;

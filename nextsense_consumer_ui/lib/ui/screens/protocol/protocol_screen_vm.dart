@@ -8,7 +8,6 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_consumer_ui/di.dart';
 import 'package:nextsense_consumer_ui/domain/event.dart';
-import 'package:nextsense_consumer_ui/domain/user.dart';
 import 'package:nextsense_consumer_ui/managers/auth_manager.dart';
 import 'package:nextsense_consumer_ui/managers/consumer_ui_firestore_manager.dart';
 import 'package:flutter_common/domain/firebase_entity.dart';
@@ -49,7 +48,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   final SessionManager _sessionManager = getIt<SessionManager>();
   final ConsumerUiFirestoreManager _firestoreManager = getIt<ConsumerUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
-  final RunnableProtocol runnableProtocol;
+  final Protocol protocol;
   final bool useCountDownTimer;
   List<ScheduledProtocolPart> _scheduledProtocolParts = [];
   List<ScheduledProtocolPart> _initialScheduledProtocolParts = [];
@@ -65,8 +64,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   bool maxDurationPassed = false;
   Timer? timer;
   Timer? disconnectTimeoutTimer;
-  ScheduledSurvey? postRecordingSurvey;
-  ScheduledSession? postRecordingProtocol;
   ProtocolCancelReason protocolCancelReason = ProtocolCancelReason.none;
   bool protocolCompletedHandlerExecuted = false;
   int currentRepetition = 0;
@@ -85,15 +82,14 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   // This indicates that the minimum duration of the protocol is passed and can mark is as
   // completed.
   bool get protocolCompleted => minDurationPassed == true;
-  Protocol get protocol => runnableProtocol.protocol;
   int get repetitions => (protocol.minDuration.inSeconds / _repetitionTime.inSeconds).round();
   int get protocolIndex =>
       currentRepetition * _scheduledProtocolParts.length + _currentProtocolPart;
   bool get isError => !protocolCompleted && protocolCancelReason != ProtocolCancelReason.none;
   int get currentProtocolPart => _currentProtocolPart;
 
-  ProtocolScreenViewModel(this.runnableProtocol, {this.useCountDownTimer = true}) {
-    for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
+  ProtocolScreenViewModel(this.protocol, {this.useCountDownTimer = true}) {
+    for (ProtocolPart part in protocol.protocolBlock) {
       _scheduledProtocolParts.add(ScheduledProtocolPart(protocolPart: part,
           relativeMilliseconds: _repetitionTime.inMilliseconds));
       _repetitionTime += part.duration;
@@ -106,28 +102,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   void init() async {
     super.init();
     sessionIsActive = true;
-    PlannedSession? plannedSession = _studyManager.getPlannedSessionById(
-        runnableProtocol.plannedSessionId!);
-    if (plannedSession!.triggersConditionalSessionId != null &&
-        plannedSession.triggersConditionalSurveyId != null) {
-      _logger.log(Level.WARNING, 'Both conditional session and survey are set for the planned '
-          'session ${plannedSession.id}');
-    } else if (plannedSession.triggersConditionalSessionId != null) {
-      ScheduledSession? triggeredSession =
-          await _studyManager.scheduleSessionTrigger(plannedSession);
-      if (triggeredSession != null) {
-        postRecordingProtocol = triggeredSession;
-      }
-    } else if (plannedSession.triggersConditionalSurveyId != null) {
-      ScheduledSurvey? triggeredSurvey =
-          await _surveyManager.scheduleSurveyTrigger(plannedSession);
-      if (triggeredSurvey != null) {
-        postRecordingSurvey = triggeredSurvey;
-      }
-    }
     if (deviceCanRecord) {
-      if (runnableProtocol.state == ProtocolState.not_started ||
-          runnableProtocol.state == ProtocolState.cancelled) {
+      if (_sessionManager.getCurrentSession() == null) {
         bool started = await startSession();
         if (!started) {
           return;
@@ -213,8 +189,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   }
 
   List<ProtocolPart> getRemainingProtocolParts() {
-    return runnableProtocol.protocol.protocolBlock.sublist(
-        (protocolIndex % runnableProtocol.protocol.protocolBlock.length).toInt());
+    return protocol.protocolBlock.sublist((protocolIndex % protocol.protocolBlock.length).toInt());
   }
 
   void startTimer({Duration? elapsedTime}) {
@@ -344,7 +319,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _lastEventEnd = endTime;
     DateTime eventStart = _currentEventStart!;
     String? currentMarker = _currentEventMarker;
-    String? sessionId = runnableProtocol.lastSessionId;
+    String? sessionId = _sessionManager.currentSessionId;
     if (sessionId == null) {
       _logger.log(Level.SEVERE, "Could not save event $currentMarker, no session id!");
       return false;
@@ -361,7 +336,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   Future<bool> recordSingleEvent(String markerName) async {
     DateTime eventTime = DateTime.now();
-    String? sessionId = runnableProtocol.lastSessionId;
+    String? sessionId = _sessionManager.currentSessionId;
     if (sessionId == null) {
       _logger.log(Level.SEVERE,
           "Could not save event $markerName, no session id!");
@@ -461,8 +436,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.INFO, 'Starting ${protocol.name} protocol.');
       bool started = await _sessionManager.startSession(
           device: _deviceManager.getConnectedDevice()!,
-          plannedSessionId: runnableProtocol.plannedSessionId,
-          scheduledSessionId: runnableProtocol.scheduledSessionId,
           protocolName: protocol.name);
       if (!started) {
         setError("Failed to start streaming. Please try again and contact support if you need "
@@ -470,15 +443,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         protocolCancelReason = ProtocolCancelReason.deviceNotReadyToRecord;
         return false;
       }
-      bool updated = await runnableProtocol.update(
-          state: ProtocolState.running,
-          sessionId: _sessionManager.currentSessionId);
-      if (!updated) {
-        setError("Failed to start streaming. Please try again and contact support if you need "
-            "additional help.");
-        return false;
-      }
-      _authManager.user!.setRunningProtocol(runnableProtocol.reference);
+      _authManager.user!.setRunningSession(_sessionManager.getCurrentSession()!.reference);
       _authManager.user!.save();
       return true;
     } else {
@@ -497,15 +462,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
     } catch (e) {
       _logger.log(Level.WARNING, "Failed to stop streaming: $e");
-    }
-    try {
-      await runnableProtocol.update(
-          state: protocolCompleted
-              ? ProtocolState.completed
-              : ProtocolState.cancelled);
-      _authManager.user!.setValue(UserKey.running_protocol, null);
-    } catch (e) {
-      _logger.log(Level.WARNING, "Failed to update protocol state when stopping the session: $e");
     }
   }
 }

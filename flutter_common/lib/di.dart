@@ -1,4 +1,5 @@
 import 'package:flutter_common/managers/device_manager.dart';
+import 'package:flutter_common/managers/disk_space_manager.dart';
 import 'package:flutter_common/managers/firebase_manager.dart';
 import 'package:flutter_common/managers/firebase_storage_manager.dart';
 import 'package:flutter_common/managers/nextsense_api.dart';
@@ -18,4 +19,5 @@ Future<void> initDependencies(String configBaseUrl) async {
   getIt.registerSingleton<NextsenseApi>(NextsenseApi(configBaseUrl));
   getIt.registerSingleton<DeviceManager>(DeviceManager());
   getIt.registerSingleton<FirebaseStorageManager>(FirebaseStorageManager());
+  getIt.registerSingleton<DiskSpaceManager>(DiskSpaceManager());
 }

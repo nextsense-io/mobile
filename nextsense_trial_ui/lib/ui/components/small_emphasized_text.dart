@@ -10,8 +10,8 @@ class SmallEmphasizedText extends StatelessWidget {
   final double marginRight;
   final double marginLeft;
   final double marginBottom;
-  SmallEmphasizedText(
-      {required this.text,
+  const SmallEmphasizedText(
+      {super.key, required this.text,
         this.color = NextSenseColors.darkBlue,
         this.textAlign = TextAlign.start,
         this.marginTop = 0,
