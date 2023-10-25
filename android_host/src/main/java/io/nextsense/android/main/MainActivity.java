@@ -207,8 +207,10 @@ public class MainActivity extends AppCompatActivity {
         Map notificationData = gson.fromJson(jsonData, Map.class);
         Map<String, String> payloadMap = (Map<String, String>)
                 ((Map) notificationData.get(JSON_KEY_CONTENT)).get(JSON_KEY_PAYLOAD);
-        for (Map.Entry<String, String> entry : payloadMap.entrySet()) {
-          flutterIntent.putExtra(entry.getKey(), entry.getValue());
+        if (payloadMap != null) {
+          for (Map.Entry<String, String> entry : payloadMap.entrySet()) {
+            flutterIntent.putExtra(entry.getKey(), entry.getValue());
+          }
         }
       }
     }
