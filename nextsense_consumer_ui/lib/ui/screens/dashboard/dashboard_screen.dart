@@ -97,7 +97,8 @@ class DashboardScreen extends HookWidget {
 
   List<Widget> _buildTabs(BuildContext context) {
     return [
-      DashboardHomeView(),
+      const DashboardHomeView(),
+      const Spacer()
     ].map((element) => BackgroundContainer(child: element)).toList();
   }
 }

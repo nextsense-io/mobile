@@ -19,6 +19,9 @@ public class NextSenseApplication extends Application {
 
   public static final String FLUTTER_ENGINE_NAME = "nextsense_engine_id";
   private static final String TAG = NextSenseApplication.class.getSimpleName();
+  private static final String ROUTE_CONSUMER_UI = "/consumer_ui";
+  private static final String ROUTE_TRIAL_UI = "/trial_ui";
+  private static final String FLAVOR_CONSUMER = "consumer";
 
   private FlutterEngine flutterEngine;
 
@@ -46,6 +49,16 @@ public class NextSenseApplication extends Application {
     RotatingFileLogger.get().logi(TAG, "Initializing the flutter engine.");
     // Instantiate a FlutterEngine.
     flutterEngine = new FlutterEngine(this);
+
+    // Initial route which determines which Flutter module will be used.
+    String route = ROUTE_TRIAL_UI;
+    if (BuildConfig.FLAVOR.contains(FLAVOR_CONSUMER)) {
+      RotatingFileLogger.get().logi(TAG, "Consumer app");
+      route = ROUTE_CONSUMER_UI;
+    } else {
+      RotatingFileLogger.get().logi(TAG, "Medical app");
+    }
+    flutterEngine.getNavigationChannel().setInitialRoute(route);
 
     // Start executing Dart code to pre-warm the FlutterEngine.
     flutterEngine.getDartExecutor().executeDartEntrypoint(

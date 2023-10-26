@@ -44,12 +44,8 @@ public class MainActivity extends AppCompatActivity {
   // Awesome notifications Json payload constants.
   private static final String EXTRA_NOTIFICATION_JSON = "notificationJson";
   // Initial route which determines which Flutter module will run.
-  private static final String EXTRA_ROUTE = "route";
   private static final String JSON_KEY_CONTENT = "content";
   private static final String JSON_KEY_PAYLOAD = "payload";
-  private static final String ROUTE_CONSUMER_UI = "/consumer_ui";
-  private static final String ROUTE_TRIAL_UI = "/trial_ui";
-  private static final String FLAVOR_CONSUMER = "consumer";
 
   // Custom scheme Json elements for navigation.
   enum NavigationTarget {
@@ -197,12 +193,6 @@ public class MainActivity extends AppCompatActivity {
   private Intent getFlutterIntent(@Nullable Intent androidIntent) {
     Intent flutterIntent = FlutterActivity.withCachedEngine(
             NextSenseApplication.FLUTTER_ENGINE_NAME).build(this);
-    // Set up the base route which will start the correct Flutter module.
-    String route = ROUTE_TRIAL_UI;
-    if (BuildConfig.FLAVOR.contains(FLAVOR_CONSUMER)) {
-      route = ROUTE_CONSUMER_UI;
-    }
-    flutterIntent.putExtra(EXTRA_ROUTE, route);
     // Confirm the link is a sign-in with email link.
     if (androidIntent != null && androidIntent.getData() != null &&
         firebaseAuth.isSignInWithEmailLink(androidIntent.getData().toString())) {

@@ -20,7 +20,7 @@ class SignInScreenViewModel extends ViewModel {
   bool popupErrorMsg = false;
 
   bool get hadPairedDevice => _authManager.getLastPairedMacAddress() != null;
-  List<AuthMethod> get authMethods => [AuthMethod.google_auth, AuthMethod.email_password];
+  List<AuthMethod> get authMethods => [AuthMethod.google_auth];
   bool get isTempPassword => _authManager.user!.isTempPassword();
   String? initialErrorMessage;
 

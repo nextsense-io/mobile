@@ -65,6 +65,7 @@ class AuthManager {
   }
 
   Future<AuthenticationResult> signInGoogle() async {
+    // return AuthenticationResult.success;
     AuthenticationResult authResult = await _googleAuthManager!.handleSignIn();
     if (authResult != AuthenticationResult.success) {
       return authResult;

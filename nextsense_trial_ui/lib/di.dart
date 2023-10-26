@@ -54,7 +54,6 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<SeizuresManager>(SeizuresManager());
   getIt.registerSingleton<SideEffectsManager>(SideEffectsManager());
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
-  getIt.registerSingleton<DiskSpaceManager>(DiskSpaceManager());
   getIt.registerSingleton<AudioManager>(AudioManager());
   getIt.registerSingleton<Navigation>(Navigation());
 }
