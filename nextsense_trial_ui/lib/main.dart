@@ -71,7 +71,6 @@ Future<intent.Intent?> _getInitialIntent() async {
 }
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   await _initFirebase();
   runZonedGuarded<Future<void>>(() async {
     _initLogging();
@@ -93,7 +92,6 @@ void main() async {
 }
 
 class NextSenseTrialApp extends StatelessWidget {
-
   final Navigation _navigation = getIt<Navigation>();
   final Flavor _flavor = getIt<Flavor>();
   final AuthManager _authManager = getIt<AuthManager>();

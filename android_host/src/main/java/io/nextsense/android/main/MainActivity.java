@@ -118,7 +118,8 @@ public class MainActivity extends AppCompatActivity {
     RotatingFileLogger.get().logi(TAG, "New intent received: " + intent.toString());
     boolean validTarget = false;
     if (intent.getExtras() != null) {
-      RotatingFileLogger.get().logi(TAG, "New intent received extras: " + intent.getExtras().toString());
+      RotatingFileLogger.get().logi(TAG, "New intent received extras: " +
+          intent.getExtras().toString());
       String jsonData = intent.getExtras().getString(EXTRA_NOTIFICATION_JSON);
       if (jsonData != null) {
         Map notificationData = gson.fromJson(jsonData, Map.class);

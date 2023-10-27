@@ -4,8 +4,10 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
+import 'package:timezone/data/latest.dart' as tz;
 import 'package:nextsense_consumer_ui/di.dart';
 import 'package:nextsense_consumer_ui/managers/connectivity_manager.dart';
+import 'package:nextsense_consumer_ui/preferences.dart';
 import 'package:nextsense_consumer_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_consumer_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/startup/startup_screen.dart';
@@ -25,14 +27,20 @@ Future _initFirebase() async {
   await flutter_common_di.getIt<FirebaseManager>().initializeFirebase();
 }
 
+Future _initPreferences() async {
+  await getIt<Preferences>().init();
+}
+
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   getLogger(_tag).log(Level.INFO, "Initial intent does not have data or extras, ignoring.");
   await _initFirebase();
   runZonedGuarded<Future<void>>(() async {
-    NextsenseBase.startService();
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    tz.initializeTimeZones();
+    NextsenseBase.startService();
     await initDependencies();
+    await _initPreferences();
     runApp(NextSenseConsumerApp());
   }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));
 }
