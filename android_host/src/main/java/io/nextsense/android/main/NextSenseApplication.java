@@ -10,6 +10,8 @@ import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderF
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
 import io.flutter.embedding.engine.dart.DartExecutor;
+import io.nextsense.android.ApplicationType;
+import io.nextsense.android.ApplicationTypeHelper;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
@@ -21,16 +23,22 @@ public class NextSenseApplication extends Application {
   private static final String TAG = NextSenseApplication.class.getSimpleName();
   private static final String ROUTE_CONSUMER_UI = "/consumer_ui";
   private static final String ROUTE_TRIAL_UI = "/trial_ui";
-  private static final String FLAVOR_CONSUMER = "consumer";
 
+  private ApplicationType applicationType;
   private FlutterEngine flutterEngine;
 
   @Override
   public void onCreate() {
     super.onCreate();
     RotatingFileLogger.initialize(getApplicationContext());
+    initApplicationType();
     initFirebase();
     initFlutterEngineCache();
+  }
+
+  private void initApplicationType() {
+    applicationType = ApplicationTypeHelper.getApplicationType(BuildConfig.FLAVOR);
+    RotatingFileLogger.get().logi(TAG, "Application type: " + applicationType);
   }
 
   private void initFirebase() {
@@ -52,11 +60,8 @@ public class NextSenseApplication extends Application {
 
     // Initial route which determines which Flutter module will be used.
     String route = ROUTE_TRIAL_UI;
-    if (BuildConfig.FLAVOR.contains(FLAVOR_CONSUMER)) {
-      RotatingFileLogger.get().logi(TAG, "Consumer app");
+    if (applicationType == ApplicationType.CONSUMER) {
       route = ROUTE_CONSUMER_UI;
-    } else {
-      RotatingFileLogger.get().logi(TAG, "Medical app");
     }
     flutterEngine.getNavigationChannel().setInitialRoute(route);
 
@@ -69,5 +74,9 @@ public class NextSenseApplication extends Application {
     FlutterEngineCache
         .getInstance()
         .put(FLUTTER_ENGINE_NAME, flutterEngine);
+  }
+
+  public ApplicationType getApplicationType() {
+    return applicationType;
   }
 }

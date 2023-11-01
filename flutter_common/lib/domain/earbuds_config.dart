@@ -49,11 +49,7 @@ class ImpedanceConfig {
     return ImpedanceConfig._(firstChannel: firstChannel);
   }
 
-  ImpedanceConfig._(
-      {required int firstChannel, ChannelOperator? channelOperator, int? secondChannel}) :
-        this.firstChannel = firstChannel,
-        this.channelOperator = channelOperator,
-        this.secondChannel = secondChannel;
+  ImpedanceConfig._({required this.firstChannel, this.channelOperator, this.secondChannel});
 
   @override
   String toString() {
@@ -82,10 +78,11 @@ class EarbudsConfig {
   String name;
   Map<int, EarEegChannel> channelsConfig;
   Map<EarLocationName, EarLocation> earLocations;
+  int bestSignalChannel;
 
-  EarbudsConfig({required this.name, required this.channelsConfig, required this.earLocations});
+  EarbudsConfig({required this.name, required this.channelsConfig, required this.earLocations,
+    required this.bestSignalChannel});
 }
-
 
 class EarbudsConfigs {
   static final Map<String, EarbudsConfig> _earbudsConfigs = {
@@ -109,7 +106,7 @@ class EarbudsConfigs {
               impedanceConfig: ImpedanceConfig.create(firstChannel: 8,
                   channelOperator: ChannelOperator.SUBTRACTION,
                   secondChannel: 1)),
-        }),
+        }, bestSignalChannel: 6),
     EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase():
     EarbudsConfig(name: EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase(),
         channelsConfig: {
@@ -132,7 +129,7 @@ class EarbudsConfigs {
               impedanceConfig: ImpedanceConfig.create(firstChannel: 1,
                   channelOperator: ChannelOperator.SUBTRACTION,
                   secondChannel: 6)),
-        }),
+        }, bestSignalChannel: 4),
   };
 
   static EarbudsConfig getConfig(String configName) {

@@ -69,6 +69,18 @@ enum EmulatorCommand {
   INTERNAL_STATE_CHANGE
 }
 
+// String results from sleep staging will be one of those.
+enum SleepStagingResult {
+  n1,
+  n2,
+  n3,
+  rem,
+  wake
+}
+
+const int sleepResultsIndex = 0;
+const int sleepConfidencesIndex = 1;
+
 class NextsenseBase {
   static const MethodChannel _channel = const MethodChannel('nextsense_base');
   static const EventChannel _deviceScanStream = const EventChannel(
@@ -110,6 +122,7 @@ class NextsenseBase {
   static const String _getFreeDiskSpaceCommand = 'get_free_disk_space';
   static const String _getTimezoneIdCommand = 'get_timezone_id';
   static const String _getNativeLogsCommand = 'get_native_logs';
+  static const String _runSleepStagingCommand = 'run_sleep_staging';
   static const String _emulatorCommand = 'emulator_command';
   static const String _macAddressArg = 'mac_address';
   static const String _uploadToCloudArg = 'upload_to_cloud';
@@ -191,6 +204,24 @@ class NextsenseBase {
     final List<Object?> channelData = await _channel.invokeMethod(_getTimestampsDataCommand,
         {_macAddressArg: macAddress, _durationMillisArg: duration.inMilliseconds});
     return channelData.cast<int>();
+  }
+
+  /**
+   * Returns a map of of two lists: sleep results and sleep confidences.
+   * Each map can be obtained with the index from `sleepResultsIndex` and `sleepConfidencesIndex`.
+   * Sleep results will conform to the `SleepStagingResult` enum.
+   * Sleep confidences will be a list of doubles between 0 and 1.
+   */
+  static Future<Map<String, dynamic>> runSleepStaging({
+    required String macAddress, required String channelName, required Duration duration,
+    required int localSessionId, bool fromDatabase = true}) async {
+    final Map<String, dynamic> channelData =
+        gson.decode(await _channel.invokeMethod(_runSleepStagingCommand,
+        {_macAddressArg: macAddress, _localSessionIdArg: localSessionId,
+          _channelNumberArg: channelName,
+          _durationMillisArg: duration.inMilliseconds,
+          _fromDatabaseArg: fromDatabase}));
+    return channelData;
   }
 
   static Future deleteLocalSession(int localSessionId) async {

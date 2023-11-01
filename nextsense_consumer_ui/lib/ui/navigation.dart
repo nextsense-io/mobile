@@ -8,6 +8,7 @@ import 'package:nextsense_consumer_ui/ui/screens/dashboard/dashboard_screen.dart
 import 'package:nextsense_consumer_ui/ui/screens/device_scan/device_scan_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/insufficient_space_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/profile/profile_screen.dart';
+import 'package:nextsense_consumer_ui/ui/screens/protocol/nap_protocol_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/request_permission_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/settings/settings_screen.dart';
@@ -279,9 +280,9 @@ class Navigation {
       case ProtocolScreen.id:
         return MaterialPageRoute(builder: (context) =>
             ProtocolScreen(settings.arguments as Protocol));
-      // case EOECProtocolScreen.id:
-      //   return MaterialPageRoute(builder: (context) =>
-      //       EOECProtocolScreen(settings.arguments as RunnableProtocol));
+      case NapProtocolScreen.id:
+        return MaterialPageRoute(builder: (context) =>
+            NapProtocolScreen(settings.arguments as Protocol));
       // case ERPAudioProtocolScreen.id:
       //   return MaterialPageRoute(builder: (context) =>
       //       ERPAudioProtocolScreen(settings.arguments as RunnableProtocol));

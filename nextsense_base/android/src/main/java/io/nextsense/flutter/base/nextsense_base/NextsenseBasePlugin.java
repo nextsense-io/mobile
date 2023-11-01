@@ -90,6 +90,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String GET_TIMEZONE_ID_COMMAND = "get_timezone_id";
 
   public static final String GET_NATIVE_LOGS_COMMAND = "get_native_logs";
+  public static final String RUN_SLEEP_STAGING_COMMAND = "run_sleep_staging";
   public static final String EMULATOR_COMMAND = "emulator_command";
   public static final String IS_BLUETOOTH_ENABLED_ARGUMENT = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
@@ -155,7 +156,6 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private ForegroundService nextSenseService;
   private boolean nextSenseServiceBound = false;
   private DeviceManager.DeviceScanListener deviceScanListener;
-
   private AndroidScheduler deviceEventChannelSubscriptionScheduler;
   private AndroidScheduler deviceInternalStateSubscriptionScheduler;
   private DataSubscription deviceInternalStateSubscription;
@@ -422,6 +422,15 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         break;
       case GET_NATIVE_LOGS_COMMAND:
         getNativeLogs(result);
+        break;
+      case RUN_SLEEP_STAGING_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
+        channelName = call.argument(CHANNEL_NUMBER_ARGUMENT);
+        durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
+        fromDatabase= call.argument(FROM_DATABASE_ARGUMENT);
+        runSleepStaging(result, macAddress, localSessionId, channelName, durationMillis,
+            fromDatabase);
         break;
       case EMULATOR_COMMAND:
         String command = call.argument("command");
@@ -987,6 +996,35 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         (float) durationMillis / Math.round(1000f /
             device.get().getSettings().getEegStreamingRate())));
     result.success(nextSenseService.getMemoryCache().getLastTimestamps(numberOfSamples));
+  }
+
+  private void runSleepStaging(
+      Result result, String macAddress, Integer localSessionId, String channelName,
+      Integer durationMillis, Boolean fromDatabase) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
+      returnError(result, GET_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    List<Float> data;
+    if (fromDatabase != null && fromDatabase) {
+      data = nextSenseService.getObjectBoxDatabase().getLastChannelData(
+          localSessionId, channelName, Duration.ofMillis(durationMillis));
+    } else {
+      int numberOfSamples = (int) Math.round(Math.ceil(
+          (float) durationMillis / Math.round(1000f /
+              device.get().getSettings().getEegStreamingRate())));
+      data = nextSenseService.getMemoryCache().getLastEegChannelData(
+          channelName, numberOfSamples);
+    }
+    if (data != null && !data.isEmpty()) {
+      Map<Integer, Object> results = nextSenseService.getSleepTransformerModel().doInference(data,
+          device.get().getSettings().getEegStreamingRate());
+      result.success(gson.toJson(results));
+    } else {
+      result.success(null);
+    }
   }
 
   private void getDeviceInternalStateData(

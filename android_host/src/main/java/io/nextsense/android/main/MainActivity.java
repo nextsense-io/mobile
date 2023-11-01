@@ -83,6 +83,8 @@ public class MainActivity extends AppCompatActivity {
     editor.apply();
 
     foregroundServiceIntent = new Intent(getApplicationContext(), ForegroundService.class);
+    foregroundServiceIntent.putExtra(ForegroundService.EXTRA_APPLICATION_TYPE,
+        ((NextSenseApplication) getApplication()).getApplicationType().name());
     foregroundServiceIntent.putExtra(ForegroundService.EXTRA_UI_CLASS, MainActivity.class);
     foregroundServiceIntent.putExtra(ForegroundService.EXTRA_ALLOW_DATA_VIA_CELLULAR,
         sharedPref.getBoolean(FLUTTER_PREF_PREFIX + ALLOW_DATA_VIA_CELLULAR_KEY, false));

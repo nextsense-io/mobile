@@ -25,6 +25,8 @@ class SessionManager {
   final Preferences _preferences = getIt<Preferences>();
   final CustomLogPrinter _logger = CustomLogPrinter('SessionManager');
 
+  int? get currentLocalSession => _currentLocalSession;
+
   Session? _currentSession;
   Session? _lastSession;
   DataSession? _currentDataSession;
@@ -88,7 +90,7 @@ class SessionManager {
     _currentDataSession!.setValue(DataSessionKey.start_datetime, startTime);
     // TODO(eric): Add an API to get this from the connected device.
     DeviceSettings deviceSettings =
-    DeviceSettings(await NextsenseBase.getDeviceSettings(device.macAddress));
+        DeviceSettings(await NextsenseBase.getDeviceSettings(device.macAddress));
     _currentDataSession!.setValue(DataSessionKey.streaming_rate, deviceSettings.eegStreamingRate);
     success = await _currentDataSession!.save();
     if (!success) {

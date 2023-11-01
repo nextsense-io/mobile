@@ -51,6 +51,9 @@ abstract class ConsumerBaseProtocol extends BaseProtocol implements ConsumerProt
   @override
   String get type => protocolType.name;
 
+  @override
+  String get name => protocolType.name;
+
 }
 
 class VariableDaytimeProtocol extends ConsumerBaseProtocol {

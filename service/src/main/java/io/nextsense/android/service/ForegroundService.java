@@ -17,10 +17,12 @@ import androidx.core.app.NotificationCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.io.IOException;
 import java.time.Duration;
-import java.util.Arrays;
 
+import io.nextsense.android.ApplicationType;
 import io.nextsense.android.Config;
+import io.nextsense.android.algo.tflite.SleepTransformerModel;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.SampleRateCalculator;
@@ -50,6 +52,8 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
  * to our device if that is something we want to do.
  */
 public class ForegroundService extends Service {
+  // Type of application from the `ApplicationType` class.
+  public static final String EXTRA_APPLICATION_TYPE = "applicationType";
   // Class reference to know what to launch when the service notification is pressed.
   public static final String EXTRA_UI_CLASS = "ui_class";
   // Allows data to be uploaded to the cloud via a cellular transmission.
@@ -64,6 +68,7 @@ public class ForegroundService extends Service {
   // Binder given to clients.
   private final IBinder binder = new LocalBinder();
 
+  private ApplicationType applicationType;
   private NotificationManager notificationManager;
   private FirebaseAuth firebaseAuth;
   private NextSenseDeviceManager nextSenseDeviceManager;
@@ -80,6 +85,7 @@ public class ForegroundService extends Service {
   private CloudFunctions cloudFunctions;
   private Uploader uploader;
   private SampleRateCalculator sampleRateCalculator;
+  private SleepTransformerModel sleepTransformerModel;
   private boolean initialized = false;
   // Starts true so the activity is launched on first start.
   private boolean flutterActivityActive = true;
@@ -99,7 +105,11 @@ public class ForegroundService extends Service {
     if (intent == null || intent.getExtras() == null) {
       return START_REDELIVER_INTENT;
     }
-
+    String applicationTypeExtra = intent.getStringExtra(EXTRA_APPLICATION_TYPE);
+    if (applicationTypeExtra == null) {
+      return START_REDELIVER_INTENT;
+    }
+    applicationType = ApplicationType.valueOf(applicationTypeExtra);
     Class<Activity> uiClass = (Class<Activity>) intent.getSerializableExtra(EXTRA_UI_CLASS);
     Intent notificationIntent = new Intent(this, uiClass);
     PendingIntent pendingIntent = PendingIntent.getActivity(this,
@@ -149,6 +159,9 @@ public class ForegroundService extends Service {
 
   public Uploader getUploader() {
     return uploader;
+  }
+  public SleepTransformerModel getSleepTransformerModel() {
+    return sleepTransformerModel;
   }
 
   public boolean isFlutterActivityActive() {
@@ -215,8 +228,21 @@ public class ForegroundService extends Service {
             );
       }
     });
-
+    initializeAlgorithms();
     initialized = true;
+  }
+
+  private void initializeAlgorithms() {
+    if (applicationType == ApplicationType.CONSUMER) {
+      sleepTransformerModel = new SleepTransformerModel(getApplicationContext());
+      try {
+        sleepTransformerModel.loadModel();
+        RotatingFileLogger.get().logi(TAG, "Initialized sleep transformer model.");
+      } catch (IOException e) {
+        RotatingFileLogger.get().loge(TAG, "Failed to load sleep transformer model: " +
+            e.getMessage());
+      }
+    }
   }
 
   private void destroy() {

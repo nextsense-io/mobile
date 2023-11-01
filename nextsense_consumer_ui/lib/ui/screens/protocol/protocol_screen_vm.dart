@@ -44,8 +44,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   static const Duration _timerTickInterval = Duration(milliseconds: 50);
 
   final EventTypesManager _eventTypesManager = getIt<EventTypesManager>();
-  final DeviceManager _deviceManager = getIt<DeviceManager>();
-  final SessionManager _sessionManager = getIt<SessionManager>();
+  final DeviceManager deviceManager = getIt<DeviceManager>();
+  final SessionManager sessionManager = getIt<SessionManager>();
   final ConsumerUiFirestoreManager _firestoreManager = getIt<ConsumerUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final Protocol protocol;
@@ -74,7 +74,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   DateTime? _lastEventEnd;
   String? _currentEventMarker;
   int _currentProtocolPart = 0;
-  Duration _repetitionTime = Duration(seconds: 0);
+  Duration _repetitionTime = const Duration(seconds: 0);
   Timer? _dataReceivedTimer;
   CancelListening? _currentSessionDataReceivedListener;
   Duration? _currentVariableDuration;
@@ -103,7 +103,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     super.init();
     sessionIsActive = true;
     if (deviceCanRecord) {
-      if (_sessionManager.getCurrentSession() == null) {
+      if (sessionManager.getCurrentSession() == null) {
         bool started = await startSession();
         if (!started) {
           return;
@@ -128,8 +128,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       } else {
         // Already in progress, show the progress.
         Duration elapsedTime = DateTime.now().difference(
-            _sessionManager.getCurrentSession()?.getStartDateTime() != null ?
-            _sessionManager.getCurrentSession()!.getStartDateTime()! : DateTime.now());
+            sessionManager.getCurrentSession()?.getStartDateTime() != null ?
+            sessionManager.getCurrentSession()!.getStartDateTime()! : DateTime.now());
         _logger.log(Level.INFO,
             'Session already in progress for ${elapsedTime.inMilliseconds} milliseconds');
         sessionIsActive = true;
@@ -319,7 +319,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _lastEventEnd = endTime;
     DateTime eventStart = _currentEventStart!;
     String? currentMarker = _currentEventMarker;
-    String? sessionId = _sessionManager.currentSessionId;
+    String? sessionId = sessionManager.currentSessionId;
     if (sessionId == null) {
       _logger.log(Level.SEVERE, "Could not save event $currentMarker, no session id!");
       return false;
@@ -336,7 +336,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   Future<bool> recordSingleEvent(String markerName) async {
     DateTime eventTime = DateTime.now();
-    String? sessionId = _sessionManager.currentSessionId;
+    String? sessionId = sessionManager.currentSessionId;
     if (sessionId == null) {
       _logger.log(Level.SEVERE,
           "Could not save event $markerName, no session id!");
@@ -432,10 +432,10 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   }
 
   Future<bool> _startProtocol() async {
-    if (_deviceManager.getConnectedDevice() != null) {
+    if (deviceManager.getConnectedDevice() != null) {
       _logger.log(Level.INFO, 'Starting ${protocol.name} protocol.');
-      bool started = await _sessionManager.startSession(
-          device: _deviceManager.getConnectedDevice()!,
+      bool started = await sessionManager.startSession(
+          device: deviceManager.getConnectedDevice()!,
           protocolName: protocol.name);
       if (!started) {
         setError("Failed to start streaming. Please try again and contact support if you need "
@@ -443,7 +443,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         protocolCancelReason = ProtocolCancelReason.deviceNotReadyToRecord;
         return false;
       }
-      _authManager.user!.setRunningSession(_sessionManager.getCurrentSession()!.reference);
+      _authManager.user!.setRunningSession(sessionManager.getCurrentSession()!.reference);
       _authManager.user!.save();
       return true;
     } else {
@@ -459,7 +459,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _timerPaused = false;
     try {
       _logger.log(Level.INFO, 'Stopping session.');
-      await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
+      await sessionManager.stopSession(deviceManager.getConnectedDevice()!.macAddress);
     } catch (e) {
       _logger.log(Level.WARNING, "Failed to stop streaming: $e");
     }
