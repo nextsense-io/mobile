@@ -51,13 +51,13 @@ public class Uploader {
   private static final String ACC_SAMPLES = "acc_samples";
   private static final String INT_STATE_SAMPLES = "device_internal_state_samples";
 
+  // Should be 1 second of data to be simple to import in BigTable.
+  private final Duration uploadChunkSize;
   private final ObjectBoxDatabase objectBoxDatabase;
   private final DatabaseSink databaseSink;
   private final CloudFunctions firebaseFunctions;
   private final Connectivity connectivity;
   private final AtomicBoolean running = new AtomicBoolean(false);
-  // Should be 1 second of data to be simple to import in BigTable.
-  private final int uploadChunkSize;
   // How many recent records to keep in a session locally after upload.
   private final int minRecordsToKeep;
   // Minimum retention time for records, used to match timestamps in database.
@@ -80,7 +80,7 @@ public class Uploader {
   private boolean saveData = false;
 
   private Uploader(ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
-                   Connectivity connectivity, int uploadChunkSize, int minRecordsToKeep,
+                   Connectivity connectivity, Duration uploadChunkSize, int minRecordsToKeep,
                    Duration minDurationToKeep) {
     this.objectBoxDatabase = objectBoxDatabase;
     this.databaseSink = databaseSink;
@@ -93,7 +93,7 @@ public class Uploader {
 
   public static Uploader create(
       ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink, Connectivity connectivity,
-      int uploadChunkSize, int minRecordsToKeep, Duration minDurationToKeep) {
+      Duration uploadChunkSize, int minRecordsToKeep, Duration minDurationToKeep) {
     return new Uploader(objectBoxDatabase, databaseSink, connectivity, uploadChunkSize,
         minRecordsToKeep, minDurationToKeep);
   }
@@ -189,9 +189,11 @@ public class Uploader {
         localSession.getEegSamplesDeleted();
     long sessionEegSamplesCount = objectBoxDatabase.getEegSamplesCount(localSession.id) +
         localSession.getEegSamplesDeleted();
-    if (sessionEegSamplesCount - localSession.getEegSamplesUploaded() >= uploadChunkSize) {
+    if (sessionEegSamplesCount - localSession.getEegSamplesUploaded() >=
+        localSession.getEegSampleRate() * uploadChunkSize.getSeconds()) {
       eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(
-          localSession.id, relativeEegStartOffset, uploadChunkSize));
+          localSession.id, relativeEegStartOffset,
+          (long)localSession.getEegSampleRate() * uploadChunkSize.getSeconds()));
     } else {
       LocalSession refreshedLocalSession = objectBoxDatabase.getLocalSession(localSession.id);
       // If null, already deleted (Upload complete).
@@ -226,9 +228,11 @@ public class Uploader {
         localSession.getEegSamplesDeleted();
     long sessionAccSamplesCount = objectBoxDatabase.getAccelerationCount(localSession.id) +
         localSession.getAccelerationsDeleted();
-    if (sessionAccSamplesCount - localSession.getAccelerationsUploaded() >= uploadChunkSize) {
+    if (sessionAccSamplesCount - localSession.getAccelerationsUploaded() >=
+        localSession.getAccelerationSampleRate() * uploadChunkSize.getSeconds()) {
       accelerationsToUpload.addAll(objectBoxDatabase.getAccelerations(
-          localSession.id, relativeAccStartOffset, uploadChunkSize));
+          localSession.id, relativeAccStartOffset,
+          (long) localSession.getAccelerationSampleRate() * uploadChunkSize.getSeconds()));
     } else {
       LocalSession refreshedLocalSession = objectBoxDatabase.getLocalSession(localSession.id);
       if (refreshedLocalSession != null && (
@@ -247,7 +251,9 @@ public class Uploader {
       List<BaseRecord> deviceInternalStatesToUpload = new ArrayList<>(
               objectBoxDatabase.getSessionDeviceInternalStates(
               localSession.id, localSession.getDeviceInternalStateUploaded(),
-              deviceInternalStatesToUploadCount > uploadChunkSize ? uploadChunkSize :
+              deviceInternalStatesToUploadCount > localSession.getEegSampleRate() *
+                  uploadChunkSize.getSeconds() ?
+                  (long)localSession.getEegSampleRate() * uploadChunkSize.getSeconds() :
                       deviceInternalStatesToUploadCount));
       samplesToUpload.put(INT_STATE_SAMPLES, deviceInternalStatesToUpload);
     }
@@ -294,7 +300,7 @@ public class Uploader {
             localSession.getStatus() != LocalSession.Status.FINISHED)) {
           continue;
         }
-        RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + " has " +
+         RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + " has " +
             localSession.getEegSamplesUploaded() + " uploaded.");
         Map<String, List<BaseRecord>> samplesToUpload = getSamplesToUpload(localSession);
 
@@ -304,15 +310,15 @@ public class Uploader {
           RotatingFileLogger.get().logv(TAG, "Session " + localSession.id + " has " +
               eegSamplesToUpload.size() + " eeg records to upload.");
           for (int eegSamplesIndex = 0; eegSamplesIndex < eegSamplesToUpload.size();
-              eegSamplesIndex += uploadChunkSize) {
+              eegSamplesIndex += localSession.getEegSampleRate() * uploadChunkSize.getSeconds()) {
             int eegSamplesEndIndex =
-                Math.min(eegSamplesToUpload.size(), eegSamplesIndex + uploadChunkSize);
+                Math.min(eegSamplesToUpload.size(), eegSamplesIndex +
+                    (int)(localSession.getEegSampleRate() * uploadChunkSize.getSeconds()));
             Map<String, List<BaseRecord>> samplesChunkToUpload = new HashMap<>();
             samplesChunkToUpload.put(EEG_SAMPLES,
                 eegSamplesToUpload.subList(eegSamplesIndex, eegSamplesEndIndex));
             if (samplesToUpload.containsKey(ACC_SAMPLES) &&
-                    samplesToUpload.get(ACC_SAMPLES).size() >=
-                            eegSamplesIndex + eegSamplesEndIndex) {
+                samplesToUpload.get(ACC_SAMPLES).size() >= eegSamplesIndex + eegSamplesEndIndex) {
               samplesChunkToUpload.put(ACC_SAMPLES,
                   samplesToUpload.get(ACC_SAMPLES).subList(eegSamplesIndex, eegSamplesEndIndex));
             }
@@ -401,8 +407,9 @@ public class Uploader {
       // Wait until there are new samples to upload.
       eegSampleSubscription =
           objectBoxDatabase.subscribe(EegSample.class, eegSample -> {
-            if (databaseSink.getEegRecordsCounter() > uploadChunkSize) {
-              RotatingFileLogger.get().logd(TAG, "waking up: " + databaseSink.getEegRecordsCounter());
+            if (databaseSink.getEegRecordsCounter() > databaseSink.getLastSessionEegFrequency()) {
+              RotatingFileLogger.get().logd(TAG, "waking up: " +
+                  databaseSink.getEegRecordsCounter());
               databaseSink.resetEegRecordsCounter();
               recordsToUpload.set(true);
               synchronized (syncToken) {
@@ -470,7 +477,8 @@ public class Uploader {
 
   private long deleteEegOldRecords(LocalSession localSession) {
     if (objectBoxDatabase.getEegSamplesCount(localSession.id) > minRecordsToKeep) {
-      RotatingFileLogger.get().logd(TAG, "Got " + objectBoxDatabase.getEegSamplesCount(localSession.id) +
+      RotatingFileLogger.get().logd(TAG, "Got " +
+          objectBoxDatabase.getEegSamplesCount(localSession.id) +
           " eeg records in db, need to delete " +
           (objectBoxDatabase.getEegSamplesCount(localSession.id) - minRecordsToKeep));
       Instant lastSampleTime = objectBoxDatabase.getEegSamples(
@@ -546,10 +554,10 @@ public class Uploader {
     if (localSession.getEarbudsConfig() != null) {
       dataSamplesProtoBuilder.setEarbudsConfig(localSession.getEarbudsConfig());
     }
-    dataSamplesProtoBuilder.setFrequency(uploadChunkSize);
+    dataSamplesProtoBuilder.setFrequency((int)localSession.getEegSampleRate());
     dataSamplesProtoBuilder.setExpectedSamplesCount(eegSamplesToUpload.size());
     Instant expectedStartInstant = getExpectedFirstEegTimestamp(
-        localSession, (EegSample) eegSamplesToUpload.get(0), uploadChunkSize);
+        localSession, (EegSample) eegSamplesToUpload.get(0), (int)localSession.getEegSampleRate());
     Timestamp expectedStartTimestamp = Timestamp.newBuilder()
         .setSeconds(expectedStartInstant.getEpochSecond())
         .setNanos(expectedStartInstant.getNano()).build();

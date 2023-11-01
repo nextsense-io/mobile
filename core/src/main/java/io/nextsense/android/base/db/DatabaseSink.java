@@ -24,6 +24,7 @@ public class DatabaseSink {
   private final LocalSessionManager localSessionManager;
   private final AtomicInteger eegRecordsCounter = new AtomicInteger(0);
   private Samples previousSamples = null;
+  private int lastEegFrequency = 0;
 
   private DatabaseSink(ObjectBoxDatabase boxDatabase, LocalSessionManager localSessionManager) {
     this.boxDatabase = boxDatabase;
@@ -53,6 +54,10 @@ public class DatabaseSink {
     return eegRecordsCounter.get();
   }
 
+  public int getLastSessionEegFrequency() {
+    return lastEegFrequency;
+  }
+
   public void resetEegRecordsCounter() {
     eegRecordsCounter.set(0);
   }
@@ -66,7 +71,8 @@ public class DatabaseSink {
       if (currentLocalSession.isUploadNeeded()) {
         // Verify that the timestamps are moving forward in time.
         EegSample lastEegSample = null;
-        if (previousSamples != null) {
+        if (previousSamples != null && !previousSamples.getEegSamples().isEmpty() &&
+            !samples.getEegSamples().isEmpty()) {
           lastEegSample =
               previousSamples.getEegSamples().get(previousSamples.getEegSamples().size() - 1);
           if (samples.getEegSamples().get(0).localSession.getTargetId() !=
@@ -89,6 +95,7 @@ public class DatabaseSink {
           packetIndex++;
         }
 
+        lastEegFrequency = (int)localSessionManager.getActiveLocalSession().get().getEegSampleRate();
         // Save the samples in the local database.
         boxDatabase.runInTx(() -> {
           boxDatabase.putEegSamples(samples.getEegSamples());
