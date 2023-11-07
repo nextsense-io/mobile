@@ -18,6 +18,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -107,6 +108,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String FREQUENCY_DIVIDER_ARGUMENT = "frequency_divider";
   public static final String MIN_CONNECTION_TYPE_ARGUMENT = "min_connection_type";
   public static final String NOTIFICATION_TITLE_ARGUMENT = "notification_title";
+  public static final String START_DATE_TIME_EPOCH_MS_ARGUMENT = "start_date_time_epoch_ms";
   public static final String NOTIFICATION_TEXT_ARGUMENT = "notification_text";
   public static final String ERROR_SERVICE_NOT_AVAILABLE = "service_not_available";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
@@ -427,10 +429,12 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
         channelName = call.argument(CHANNEL_NUMBER_ARGUMENT);
+        Instant startDateTime =
+            Instant.ofEpochMilli(call.argument(START_DATE_TIME_EPOCH_MS_ARGUMENT));
         durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
         fromDatabase= call.argument(FROM_DATABASE_ARGUMENT);
-        runSleepStaging(result, macAddress, localSessionId, channelName, durationMillis,
-            fromDatabase);
+        runSleepStaging(result, macAddress, localSessionId, channelName, startDateTime,
+            durationMillis, fromDatabase);
         break;
       case EMULATOR_COMMAND:
         String command = call.argument("command");
@@ -1000,7 +1004,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   private void runSleepStaging(
       Result result, String macAddress, Integer localSessionId, String channelName,
-      Integer durationMillis, Boolean fromDatabase) {
+      Instant startDateTime, Integer durationMillis, Boolean fromDatabase) {
     Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
     if (!device.isPresent()) {
       returnError(result, GET_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
@@ -1008,13 +1012,20 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       return;
     }
     List<Float> data;
+    float eegSamplingRate = device.get().getSettings().getEegStreamingRate();
     if (fromDatabase != null && fromDatabase) {
-      data = nextSenseService.getObjectBoxDatabase().getLastChannelData(
-          localSessionId, channelName, Duration.ofMillis(durationMillis));
+      LocalSession localSession = nextSenseService.getObjectBoxDatabase().getLocalSession(
+          localSessionId);
+      int eegOffset = (int) Math.round(Math.ceil(
+          (float) (startDateTime.toEpochMilli() - localSession.getStartTime().toEpochMilli()) /
+              Math.round(1000f / eegSamplingRate)));
+      long relativeEegOffset = eegOffset - localSession.getEegSamplesDeleted();
+      data = nextSenseService.getObjectBoxDatabase().getChannelData(
+          localSessionId, channelName, relativeEegOffset,
+          durationMillis / Math.round(1000f / eegSamplingRate));
     } else {
       int numberOfSamples = (int) Math.round(Math.ceil(
-          (float) durationMillis / Math.round(1000f /
-              device.get().getSettings().getEegStreamingRate())));
+          (float) durationMillis / Math.round(1000f / eegSamplingRate)));
       data = nextSenseService.getMemoryCache().getLastEegChannelData(
           channelName, numberOfSamples);
     }

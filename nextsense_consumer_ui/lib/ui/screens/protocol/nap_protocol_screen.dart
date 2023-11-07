@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_common/domain/protocol.dart';
 import 'package:flutter_common/ui/components/simple_button.dart';
+import 'package:nextsense_consumer_ui/managers/sleep_staging_manager.dart';
 import 'package:nextsense_consumer_ui/ui/components/light_header_text.dart';
 import 'package:nextsense_consumer_ui/ui/components/medium_text.dart';
 import 'package:nextsense_consumer_ui/ui/components/page_scaffold.dart';
@@ -9,6 +10,7 @@ import 'package:nextsense_consumer_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/nap_protocol_screen_vm.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen_vm.dart';
+import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
 class NapProtocolScreen extends ProtocolScreen {
@@ -20,7 +22,9 @@ class NapProtocolScreen extends ProtocolScreen {
 
   @override
   Widget notRunningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
-    NapProtocolScreenViewModel napViewModel = (viewModel as NapProtocolScreenViewModel);
+    final SleepStagingManager sleepStagingManager = context.watch<SleepStagingManager>();
+    final NapProtocolScreenViewModel napProtocolScreenViewModel =
+        viewModel as NapProtocolScreenViewModel;
     var statusMsg = '';
     if (viewModel.isError) {
       statusMsg = getRecordingCancelledMessage(viewModel);
@@ -33,11 +37,11 @@ class NapProtocolScreen extends ProtocolScreen {
     String finishButtonText = 'Go to Tasks';
 
     if (!viewModel.isError) {
-      if (napViewModel.sleepCalculationState == SleepCalculationState.calculating) {
+      if (sleepStagingManager.sleepCalculationState == SleepCalculationState.calculating) {
         statusMsg += "\n\nCalculating sleep staging results...";
-      } else if (napViewModel.sleepCalculationState == SleepCalculationState.calculated) {
-        statusMsg += "\n\nResult: ${napViewModel.sleepStagingLabels![0]}\n";
-        statusMsg += "Confidence: ${napViewModel.sleepStagingConfidences![0]}";
+      } else if (sleepStagingManager.sleepStagingLabels.isNotEmpty) {
+        statusMsg += "\n\nResult: ${sleepStagingManager.sleepStagingLabels[0]}\n";
+        statusMsg += "Confidence: ${sleepStagingManager.sleepStagingConfidences[0]}";
         finishButtonText = 'Finish';
       }
     }
@@ -61,8 +65,9 @@ class NapProtocolScreen extends ProtocolScreen {
               LightHeaderText(text: viewModel.protocol.nameForUser + statusMsg,
                   textAlign: TextAlign.center),
               const Spacer(),
-              if (napViewModel.sleepCalculationState == SleepCalculationState.calculated)
-                SizedBox(height: 250, child: SleepPieChart.withSampleData()),
+              if (sleepStagingManager.sleepStagingLabels.isNotEmpty)
+                SizedBox(height: 250,
+                    child: SleepPieChart.withData(napProtocolScreenViewModel.getSleepStages())),
                 const Spacer(),
               Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 const Spacer(),

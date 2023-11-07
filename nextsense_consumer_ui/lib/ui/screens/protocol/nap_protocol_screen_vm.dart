@@ -1,63 +1,48 @@
-import 'package:flutter_common/domain/earbuds_config.dart';
-import 'package:flutter_common/managers/device_manager.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_consumer_ui/di.dart';
-import 'package:nextsense_consumer_ui/managers/session_manager.dart';
+import 'package:nextsense_consumer_ui/managers/sleep_staging_manager.dart';
+import 'package:nextsense_consumer_ui/ui/components/sleep_pie_chart.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen_vm.dart';
-
-enum SleepCalculationState {
-  notStarted,
-  calculating,
-  calculated
-}
 
 class NapProtocolScreenViewModel extends ProtocolScreenViewModel {
   NapProtocolScreenViewModel(super.protocol);
 
-  final Duration singleSleepEpoch = const Duration(seconds: 30 * 21);
+  final SleepStagingManager _sleepStagingManager = getIt<SleepStagingManager>();
 
-  SleepCalculationState get sleepCalculationState => _sleepCalculationState;
-  Map<String, dynamic>? get sleepStagingResults => _sleepStagingResults;
-  List<dynamic>? get sleepStagingLabels => _sleepStagingLabels;
-  List<dynamic>? get sleepStagingConfidences => _sleepStagingConfidences;
-
-  SleepCalculationState _sleepCalculationState = SleepCalculationState.notStarted;
-  Map<String, dynamic>? _sleepStagingResults;
-  List<dynamic>? _sleepStagingLabels;
-  List<dynamic>? _sleepStagingConfidences;
-
-  Future calculateSleepStagingResults() async {
-    _sleepCalculationState = SleepCalculationState.calculating;
-    notifyListeners();
-    Device? device = deviceManager.getConnectedDevice();
-    if (device == null) {
-      return null;
+  @override
+  Future<bool> startSession() async {
+    bool started = await super.startSession();
+    if (!started) {
+      return false;
     }
-    String channelName = '1';
-    switch (device.type) {
-      case DeviceType.xenon:
-        channelName = EarbudsConfigs.getConfig(EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase())
-            .bestSignalChannel.toString();
-        break;
-      case DeviceType.kauai:
-        channelName = EarbudsConfigs.getConfig(EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase())
-            .bestSignalChannel.toString();
-        break;
-      default:
-        break;
+    _sleepStagingManager.startSleepStaging();
+    return true;
+  }
+
+  List<SleepStage> getSleepStages() {
+    if (_sleepStagingManager.sleepStagingLabels.isEmpty) {
+      return [];
     }
-    _sleepStagingResults = await NextsenseBase.runSleepStaging(macAddress: device.macAddress,
-        localSessionId: sessionManager.currentLocalSession!, channelName: channelName,
-        duration: singleSleepEpoch);
-    _sleepStagingLabels = _sleepStagingResults!["0"] as List<dynamic>;
-    _sleepStagingConfidences = _sleepStagingResults!["1"] as List<dynamic>;
-    _sleepCalculationState = SleepCalculationState.calculated;
-    notifyListeners();
+    Map<SleepStagingResult, int> sleepStageCounts = {};
+    for (SleepStagingResult sleepStagingResult in SleepStagingResult.values) {
+      sleepStageCounts[sleepStagingResult] = 0;
+    }
+    for (String sleepStageLabel in _sleepStagingManager.sleepStagingLabels) {
+      final sleepStagingResult = SleepStagingResult.fromString(sleepStageLabel);
+      sleepStageCounts[sleepStagingResult] = sleepStageCounts[sleepStagingResult]! + 1;
+    }
+    List<SleepStage> sleepStages = [];
+    for (SleepStagingResult sleepStagingResult in SleepStagingResult.values) {
+      sleepStages.add(SleepStage(sleepStagingResult.name.toLowerCase(),
+          ((sleepStageCounts[sleepStagingResult]! /
+              _sleepStagingManager.sleepStagingLabels.length) * 100).round()));
+    }
+    return sleepStages;
   }
 
   @override
   Future stopSession() async {
     await super.stopSession();
-    await calculateSleepStagingResults();
+    _sleepStagingManager.stopSleepStaging();
   }
 }

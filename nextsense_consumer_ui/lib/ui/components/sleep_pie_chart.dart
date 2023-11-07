@@ -7,12 +7,13 @@ class SleepPieChart extends StatelessWidget {
 
   const SleepPieChart(this.seriesList, {super.key, required this.animate});
 
-  factory SleepPieChart.withSampleData() {
+  factory SleepPieChart.withData(List<SleepStage> data) {
     return SleepPieChart(
-      _createSampleData(),
+      _createData(data),
       animate: false,
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return charts.PieChart<Object>(seriesList,
@@ -25,20 +26,13 @@ class SleepPieChart extends StatelessWidget {
     );
   }
 
-  static List<charts.Series<SleepStage, Object>> _createSampleData() {
-    final data = [
-      SleepStage("N1", 10),
-      SleepStage("N2", 15),
-      SleepStage("N3", 20),
-      SleepStage("WAKE", 25),
-      SleepStage("REM", 30),
-    ];
+  static List<charts.Series<SleepStage, Object>> _createData(List<SleepStage> sleepStages) {
     return [
       charts.Series<SleepStage, Object>(
         id: 'Sleep Staging',
         domainFn: (SleepStage sales, _) => sales.stage,
         measureFn: (SleepStage sales, _) => sales.percent,
-        data: data,
+        data: sleepStages,
         labelAccessorFn: (SleepStage row, _) => row.stage.toString(),
       )
     ];

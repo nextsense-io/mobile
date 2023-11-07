@@ -75,7 +75,12 @@ enum SleepStagingResult {
   n2,
   n3,
   rem,
-  wake
+  wake;
+
+  factory SleepStagingResult.fromString(String result) {
+    return values.firstWhere((mode) => describeEnum(mode) == result.toLowerCase(),
+        orElse: () => throw ArgumentError('Invalid sleep staging result: $result'));
+  }
 }
 
 const int sleepResultsIndex = 0;
@@ -138,6 +143,7 @@ class NextsenseBase {
   static const String _fromDatabaseArg = 'from_database';
   static const String _notificationTitleArg = 'notification_title';
   static const String _notificationTextArg = 'notification_text';
+  static const String _startDateTimeEpochMsArg = 'start_date_time_epoch_ms';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
@@ -213,14 +219,14 @@ class NextsenseBase {
    * Sleep confidences will be a list of doubles between 0 and 1.
    */
   static Future<Map<String, dynamic>> runSleepStaging({
-    required String macAddress, required String channelName, required Duration duration,
-    required int localSessionId, bool fromDatabase = true}) async {
+    required String macAddress, required String channelName, required DateTime startDateTime,
+    required Duration duration, required int localSessionId, bool fromDatabase = true}) async {
     final Map<String, dynamic> channelData =
         gson.decode(await _channel.invokeMethod(_runSleepStagingCommand,
         {_macAddressArg: macAddress, _localSessionIdArg: localSessionId,
           _channelNumberArg: channelName,
-          _durationMillisArg: duration.inMilliseconds,
-          _fromDatabaseArg: fromDatabase}));
+          _startDateTimeEpochMsArg: startDateTime.millisecondsSinceEpoch,
+          _durationMillisArg: duration.inMilliseconds, _fromDatabaseArg: fromDatabase}));
     return channelData;
   }
 

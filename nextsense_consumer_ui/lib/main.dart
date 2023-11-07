@@ -4,6 +4,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
+import 'package:nextsense_consumer_ui/managers/sleep_staging_manager.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:nextsense_consumer_ui/di.dart';
 import 'package:nextsense_consumer_ui/managers/connectivity_manager.dart';
@@ -60,7 +61,8 @@ class NextSenseConsumerApp extends StatelessWidget {
     ]);
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider.value(value: getIt<ConnectivityManager>())
+        ChangeNotifierProvider.value(value: getIt<ConnectivityManager>()),
+        ChangeNotifierProvider.value(value: getIt<SleepStagingManager>())
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
