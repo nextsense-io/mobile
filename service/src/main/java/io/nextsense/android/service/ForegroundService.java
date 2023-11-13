@@ -248,6 +248,9 @@ public class ForegroundService extends Service {
   private void destroy() {
     RotatingFileLogger.get().logi(TAG, "destroy started.");
     // sampleRateCalculator.stopListening();
+    if (sleepTransformerModel != null) {
+      sleepTransformerModel.closeModel();
+    }
     if (deviceScanner != null) {
       deviceScanner.stopFinding();
       deviceScanner.close();

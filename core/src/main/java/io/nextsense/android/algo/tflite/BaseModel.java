@@ -24,18 +24,29 @@ public abstract class BaseModel {
         this.modelName = modelName;
     }
 
-    public void loadModel() throws IOException {
-        if (tflite != null) {
-            RotatingFileLogger.get().logi(TAG, "Model already loaded.");
-            return;
-        }
-        try (AssetFileDescriptor fileDescriptor = context.getAssets().openFd(modelName);
+    protected Interpreter loadModelAsset(String modelAssetPath) throws IOException {
+        try (AssetFileDescriptor fileDescriptor = context.getAssets().openFd(modelAssetPath);
              FileInputStream inputStream =
                  new FileInputStream(fileDescriptor.getFileDescriptor())) {
             FileChannel fileChannel = inputStream.getChannel();
             MappedByteBuffer model = fileChannel.map(FileChannel.MapMode.READ_ONLY,
                 fileDescriptor.getStartOffset(), fileDescriptor.getDeclaredLength());
-            tflite = new Interpreter(model);
+            return new Interpreter(model);
+        }
+    }
+
+    public void loadModel() throws IOException {
+        if (tflite != null) {
+            RotatingFileLogger.get().logi(TAG, "Model already loaded.");
+            return;
+        }
+        tflite = loadModelAsset(modelName);
+    }
+
+    public void closeModel() {
+        if (tflite != null) {
+            tflite.close();
+            tflite = null;
         }
     }
 
