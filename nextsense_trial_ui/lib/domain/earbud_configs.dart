@@ -27,7 +27,8 @@ enum EarLocationName {
 
 enum EarbudsConfigNames {
   XENON_B_CONFIG,
-  KAUAI_CONFIG
+  KAUAI_CONFIG,
+  NITRO_CONFIG
 }
 
 class ImpedanceConfig {

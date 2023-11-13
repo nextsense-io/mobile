@@ -41,6 +41,9 @@ public class NitroDataParser {
 
   private final LocalSessionManager localSessionManager;
 
+  private Instant firstEegSampleTimestamp = null;
+  private int eegSampleCounter = 0;
+
   private NitroDataParser(LocalSessionManager localSessionManager) {
     this.localSessionManager = localSessionManager;
   }
@@ -57,6 +60,11 @@ public class NitroDataParser {
   // can't be negative. Need to subtract it to get the real value.
   private int makeSigned(int data) {
     return data - MID_VALUE_24_BITS;
+  }
+
+  public void startNewSession() {
+    firstEegSampleTimestamp = null;
+    eegSampleCounter = 0;
   }
 
   public void parseDataBytes(byte[] values) throws
@@ -79,6 +87,9 @@ public class NitroDataParser {
 
   private void parseEegPacket(ByteBuffer valuesBuffer) {
     Instant receptionTimestamp = Instant.now();
+    if (firstEegSampleTimestamp == null) {
+      firstEegSampleTimestamp = receptionTimestamp;
+    }
     Samples samples = Samples.create();
     boolean canParsePacket = true;
     while (canParsePacket && valuesBuffer.remaining() >= EEG_SAMPLE_SIZE_BYTES) {
@@ -106,8 +117,14 @@ public class NitroDataParser {
         ByteOrder.LITTLE_ENDIAN, /*signed=*/false);
     HashMap<Integer, Float> eegData = new HashMap<>();
     eegData.put(CHANNEL_1, convertToMicroVolts(makeSigned(eegValue)));
+    // The sampling timestamp is calculated based on the first sample timestamp and the sample rate.
+    // It is not provided by the simple Nitro/Softy protocol. If there are lost packets, they won't
+    // be seen as the timestamp will be contiguous.
+    Instant samplingTimestamp = firstEegSampleTimestamp.plusMillis(
+        (long)(eegSampleCounter * 1000.0f / localSession.getEegSampleRate()));
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
-        null, /*samplingTime=*/receptionTimestamp, null);
+        null, samplingTimestamp, null);
+    ++eegSampleCounter;
     return Optional.of(Sample.create(eegSample, null));
   }
 

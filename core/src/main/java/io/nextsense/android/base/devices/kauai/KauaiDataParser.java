@@ -56,7 +56,7 @@ public class KauaiDataParser {
   public void parseDataBytes(byte[] values, List<Integer> activeChannels, Instant startTimestamp,
                              int samplingRate)
       throws FirmwareMessageParsingException {
-    Instant effectiveStartTimestamp = null;
+    Instant effectiveStartTimestamp;
     if (startTimestamp == null) {
       if (sessionStartTimestamp == null) {
         sessionStartTimestamp = Instant.now();
@@ -85,7 +85,8 @@ public class KauaiDataParser {
         Sample sample = sampleOptional.get();
         if (previousTimestamp != null &&
             previousTimestamp.isAfter(sample.getEegSample().getAbsoluteSamplingTimestamp())) {
-          RotatingFileLogger.get().logw(TAG, "Received a sample that is before a previous sample, skipping sample. " +
+          RotatingFileLogger.get().logw(TAG,
+              "Received a sample that is before a previous sample, skipping sample. " +
               "Previous timestamp: " + previousTimestamp + ", current timestamp: " +
               sample.getEegSample().getAbsoluteSamplingTimestamp());
           break;

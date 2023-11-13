@@ -191,9 +191,12 @@ public class Uploader {
         localSession.getEegSamplesDeleted();
     if (sessionEegSamplesCount - localSession.getEegSamplesUploaded() >=
         localSession.getEegSampleRate() * uploadChunkSize.getSeconds()) {
-      eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(
+      List<EegSample> eegSamples = objectBoxDatabase.getEegSamples(
           localSession.id, relativeEegStartOffset,
-          (long)localSession.getEegSampleRate() * uploadChunkSize.getSeconds()));
+          (long)localSession.getEegSampleRate() * uploadChunkSize.getSeconds());
+      if (eegSamples != null && !eegSamples.isEmpty()) {
+        eegSamplesToUpload.addAll(eegSamples);
+      }
     } else {
       LocalSession refreshedLocalSession = objectBoxDatabase.getLocalSession(localSession.id);
       // If null, already deleted (Upload complete).
@@ -225,7 +228,7 @@ public class Uploader {
 
     List<BaseRecord> accelerationsToUpload = new ArrayList<>();
     long relativeAccStartOffset = localSession.getAccelerationsUploaded() -
-        localSession.getEegSamplesDeleted();
+        localSession.getAccelerationsDeleted();
     long sessionAccSamplesCount = objectBoxDatabase.getAccelerationCount(localSession.id) +
         localSession.getAccelerationsDeleted();
     if (sessionAccSamplesCount - localSession.getAccelerationsUploaded() >=

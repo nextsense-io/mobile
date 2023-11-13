@@ -63,14 +63,27 @@ class SessionManager {
     _currentSession = Session(sessionEntity);
     DateTime startTime = DateTime.now();
 
+    String? earbudsConfig;
+    switch (device.type) {
+      case DeviceType.kauai:
+        earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+        break;
+      case DeviceType.nitro:
+        earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
+        break;
+      default:
+        earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig() ??
+            EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase();
+        break;
+    }
+
     _currentSession!..setValue(SessionKey.start_datetime, startTime)
                     ..setValue(SessionKey.scheduled_session_id, scheduledSessionId)
                     ..setValue(SessionKey.planned_session_id, plannedSessionId)
                     ..setValue(SessionKey.user_id, user.id)
                     ..setValue(SessionKey.device_id, device.name)
                     ..setValue(SessionKey.device_mac_address, device.macAddress)
-                    ..setValue(SessionKey.earbud_config,
-                        _studyManager.currentStudy?.getEarbudsConfig() ?? null)
+                    ..setValue(SessionKey.earbud_config, earbudsConfig)
                     ..setValue(SessionKey.study_id, studyId)
                     ..setValue(SessionKey.mobile_app_version, _appVersion)
                     ..setValue(SessionKey.protocol_name, protocolName)
@@ -123,6 +136,8 @@ class SessionManager {
       String? earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig() ?? null;
       if (device.type == DeviceType.kauai) {
         earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+      } else if (device.type == DeviceType.nitro) {
+        earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
       }
 
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,

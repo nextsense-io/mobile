@@ -8,17 +8,13 @@ import androidx.annotation.Nullable;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
 import com.welie.blessed.GattStatus;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executors;
 
 import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceMode;
@@ -56,13 +52,9 @@ public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice 
       DeviceInfo.UNKNOWN,
       DeviceInfo.UNKNOWN);
 
-  private final ListeningExecutorService executorService =
-      MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
-
   private NitroDataParser nitroDataParser;
   private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
   private BluetoothGattCharacteristic dataCharacteristic;
-  private SettableFuture<Boolean> changeNotificationStateFuture;
   private SettableFuture<Boolean> changeStreamingStateFuture;
   private DeviceSettings deviceSettings;
 
@@ -84,7 +76,7 @@ public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice 
 
   @Override
   public List<String> getEegChannelNames() {
-    return Arrays.asList("1");
+    return List.of("1");
   }
 
   @Override
@@ -113,7 +105,7 @@ public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice 
     if (deviceSettings == null) {
       deviceSettings = new DeviceSettings();
       // No command to load settings yet in Nitro, apply default values.
-      deviceSettings.setEnabledChannels(Arrays.asList(1));
+      deviceSettings.setEnabledChannels(List.of(1));
       deviceSettings.setEegSamplingRate(600f);
       deviceSettings.setEegStreamingRate(60f);
       deviceSettings.setImuSamplingRate(0.1f);
@@ -124,6 +116,7 @@ public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice 
     return Futures.immediateFuture(deviceSettings);
   }
 
+  @Override
   public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral, boolean reconnecting) {
     this.peripheral = peripheral;
     initializeCharacteristics();
@@ -156,6 +149,7 @@ public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice 
       RotatingFileLogger.get().logw(TAG, "Previous session not finished, cannot start streaming.");
       return Futures.immediateFuture(false);
     }
+    nitroDataParser.startNewSession();
     if (!peripheral.isNotifying(dataCharacteristic)) {
       changeStreamingStateFuture = SettableFuture.create();
       peripheral.setNotify(dataCharacteristic, /*enable=*/true);
@@ -171,6 +165,11 @@ public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice 
     }
     localSessionManager.stopLocalSession();
     deviceMode = DeviceMode.IDLE;
+    if (peripheral.isNotifying(dataCharacteristic)) {
+      changeStreamingStateFuture = SettableFuture.create();
+      peripheral.setNotify(dataCharacteristic, /*enable=*/false);
+      return changeStreamingStateFuture;
+    }
     return Futures.immediateFuture(true);
   }
 
@@ -199,6 +198,8 @@ public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice 
             if (status == GattStatus.SUCCESS) {
               RotatingFileLogger.get().logd(TAG, "Notification updated with success to " +
                   peripheral.isNotifying(characteristic));
+              deviceMode = peripheral.isNotifying(characteristic) ? DeviceMode.STREAMING :
+                  DeviceMode.IDLE;
               changeStreamingStateFuture.set(true);
             } else {
               changeStreamingStateFuture.setException(new BluetoothException(
