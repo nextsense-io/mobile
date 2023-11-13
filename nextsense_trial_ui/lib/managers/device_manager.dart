@@ -89,9 +89,6 @@ class DeviceManager {
   Future<bool> connectDevice(Device device,
       {Duration timeout = const Duration(seconds: 10)}) async {
     _listenToState(device.macAddress);
-    if (device.type == DeviceType.xenon) {
-      _listenToInternalState();
-    }
     _connectedDevice = device;
     await NextsenseBase.connectDevice(device.macAddress);
     // Check device state in case it is already READY (service was already running with a connected
@@ -108,6 +105,7 @@ class DeviceManager {
       _connectedDevice = await getDeviceInfo(_connectedDevice!);
     }
     if (_connectedDevice!.type == DeviceType.xenon) {
+      _listenToInternalState();
       NextsenseBase.requestDeviceStateUpdate(_connectedDevice!.macAddress);
       bool stateAvailable = await waitInternalStateAvailable(timeout);
       if (!stateAvailable) {
