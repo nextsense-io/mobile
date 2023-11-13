@@ -428,6 +428,11 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       case DeviceInternalStateEventType.unknown:
         _logger.log(Level.WARNING, 'Unknown device internal state received.');
         break;
+        // TODO: Handle this case.
+      case DeviceInternalStateEventType.usbCableConnected:
+      case DeviceInternalStateEventType.usbCableDisconnected:
+        // Nothing to do.
+        break;
     }
   }
 

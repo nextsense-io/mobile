@@ -45,7 +45,7 @@ abstract class BaseProtocol implements Protocol {
   String get type => "unknown";
 
   @override
-  String get name => describeEnum(type);
+  String get name => type;
 
   @override
   DateTime get startTime => _startTime!;
