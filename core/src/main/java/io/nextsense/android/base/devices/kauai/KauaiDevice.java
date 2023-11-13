@@ -58,16 +58,14 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private static final int TARGET_MTU = 256;
   private static final int CHANNELS_NUMBER = 6;
 
-  private static final Duration COMMAND_TIMEOUT = Duration.ofMillis(1500);
-  private static final Duration READ_RETRY_INTERVAL = Duration.ofMillis(200);
+  private static final Duration COMMAND_TIMEOUT = Duration.ofMillis(500);
+  private static final Duration READ_RETRY_INTERVAL = Duration.ofMillis(300);
   private static final int READ_MAX_ATTEMPTS = 3;
   private static final int READ_CORRECT_MESSAGE_MAX_ATTEMPTS = 10;
 
-  // TODO(eric): Set correct UUIDs.
   private static final UUID SERVICE_UUID = UUID.fromString("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
   private static final UUID DATA_UUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
-  // TODO(eric): Set correct UUIDs.
   private static final UUID COMMANDS_UUID = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
   private static final UUID NOTIFICATIONS_UUID = UUID.fromString("6e400004-b5a3-f393-e0a9-e50e24dcca9e");
 
@@ -96,7 +94,6 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN, DeviceInfo.UNKNOWN);
   private DeviceSettings deviceSettings;
   private StreamingStartMode targetStartStreamingMode;
-
   private SettableFuture<KauaiFirmwareMessageProto.HostMessage> commandResultFuture;
   // Id of the last message sent to the device. Used to verify the response message id.
   private int lastMessageId = 0;
@@ -289,17 +286,17 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
         try {
           executeCommandNoResponse(new StopRecordingCommand(++lastMessageId));
           // TODO(eric): Uncomment when device sends back response.
-          readCommandResponse();
-          KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
-              COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
-          if (hostMessage.getResult().getErrorType() !=
-              KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
-            // TODO(eric): Pass error back to higher layer.
-            RotatingFileLogger.get().logw(TAG, "Failed to stop streaming: " +
-                hostMessage.getResult().getErrorType() + ", " +
-                hostMessage.getResult().getAdditionalInfo());
-            return false;
-          }
+//          readCommandResponse();
+//          KauaiFirmwareMessageProto.HostMessage hostMessage = commandResultFuture.get(
+//              COMMAND_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+//          if (hostMessage.getResult().getErrorType() !=
+//              KauaiFirmwareMessageProto.ErrorType.ERROR_NONE) {
+//            // TODO(eric): Pass error back to higher layer.
+//            RotatingFileLogger.get().logw(TAG, "Failed to stop streaming: " +
+//                hostMessage.getResult().getErrorType() + ", " +
+//                hostMessage.getResult().getAdditionalInfo());
+//            return false;
+//          }
         } catch (CancellationException | ExecutionException e) {
           RotatingFileLogger.get().loge(TAG, "Failed to stop streaming: " + e.getMessage());
           localSessionManager.stopLocalSession();
@@ -477,7 +474,6 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
 
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
   public void onKauaiHostEvent(KauaiHostEvent hostEvent) {
-    // TODO(eric): Handle events. Should send them straight to Flutter layer as bytes for processing?
     RotatingFileLogger.get().logv(TAG, "Received host event: " +
         hostEvent.getHostMessage().toString());
     notifyDeviceInternalStateChangeListeners(hostEvent.getHostMessage().toByteArray());
@@ -570,7 +566,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
         RotatingFileLogger.get().logv(TAG, "Command bytes: " + Arrays.toString(responseBytes));
         kauaiProtoDataParser.parseProtoDataBytes(responseBytes);
         readWithSuccess = true;
-      } catch (FirmwareMessageParsingException | CancellationException e) {
+      } catch (FirmwareMessageParsingException e) {
         RotatingFileLogger.get().loge(TAG, "Failed to parse command response.");
         if (tryNumber == READ_MAX_ATTEMPTS) {
           commandResultFuture.setException(e);
@@ -580,8 +576,14 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       } catch (TimeoutException e) {
         RotatingFileLogger.get().loge(TAG, "Timeout when trying to read command response.");
         blePeripheralCallbackProxy.cancelReadCharacteristic(peripheral, commandsCharacteristic);
-        commandResultFuture.setException(e);
-        break;
+        if (tryNumber == READ_MAX_ATTEMPTS) {
+          commandResultFuture.setException(e);
+        } else {
+          Thread.sleep(READ_RETRY_INTERVAL.toMillis());
+        }
+      } catch (CancellationException e) {
+        // no action needed, cancelReadCharacteristic was called.
+        RotatingFileLogger.get().loge(TAG, "Cancellation when trying to read command response.");
       }
     }
   }
@@ -662,8 +664,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
             } catch (FirmwareMessageParsingException e) {
               RotatingFileLogger.get().loge(TAG, "Failed to parse data bytes: " + e.getMessage());
             }
-          } else if (isCommandsCharacteristic(characteristic) ||
-              isNotificationsCharacteristic(characteristic)) {
+          } else if (isNotificationsCharacteristic(characteristic)) {
             try {
               RotatingFileLogger.get().logi(TAG, "Received proto data bytes. Command: " +
                   isCommandsCharacteristic(characteristic) + " Notify: " +
