@@ -38,15 +38,16 @@ class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
                   child: RoundBackground(
                       color: NextSenseColors.translucentGrey,
                       child:
-                          const Image(image:
-                          Svg('packages/nextsense_trial_ui/assets/images/arrow_left.svg'),
-                              height: 14, width: 14)),
+                          SvgPicture.asset('packages/nextsense_trial_ui/assets/images/arrow_left.svg',
+                          semanticsLabel: 'Back', height: 18, width: 18, fit: BoxFit.none)
+                      ))
                 )
               : const SizedBox.shrink(),
           const Spacer(),
           showProfileButton
               ? ClickableZone(
-                  child: RoundBackground(child: const Icon(Icons.person, size: 24, color: Colors.black)),
+                  child: RoundBackground(child:
+                      const Icon(Icons.person, size: 24, color: Colors.black)),
                   onTap: () async => {
                     await _navigation.navigateTo(ProfileScreen.id),
                     viewModel?.notifyListeners()

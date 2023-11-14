@@ -39,8 +39,8 @@ dependencies:
   fluttertoast: ^8.1.1
   flutter_hooks: ^0.18.2+1
   flutter_signin_button: ^2.0.0
-  flutter_svg: ^1.1.0
-  flutter_svg_provider: ^1.0.3
+  flutter_svg: ^2.0.9
+  flutter_svg_provider: ^1.0.4
   get_it: ^7.6.4
   gson: ^0.1.6-dev
   logging: ^1.0.2

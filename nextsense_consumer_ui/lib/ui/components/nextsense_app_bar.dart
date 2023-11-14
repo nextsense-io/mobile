@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg_provider/flutter_svg_provider.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:nextsense_consumer_ui/di.dart';
@@ -35,13 +35,12 @@ class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
             onTap: backButtonCallback != null
                 ? () => backButtonCallback!.call()
                 : () => _navigation.pop(),
-            child: const RoundBackground(
+            child: RoundBackground(
                 color: NextSenseColors.translucentGrey,
                 child:
-                Image(image:
-                Svg('packages/nextsense_trial_ui/assets/images/arrow_left.svg'),
-                    height: 14, width: 14)),
-          )
+                    SvgPicture.asset('packages/nextsense_trial_ui/assets/images/arrow_left.svg',
+                        semanticsLabel: 'Back', height: 18, width: 18, fit: BoxFit.none)
+            ))
               : const SizedBox.shrink(),
           const Spacer(),
           showProfileButton

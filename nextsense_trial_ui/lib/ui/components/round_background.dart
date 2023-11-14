@@ -17,11 +17,11 @@ class RoundBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(width: width, height: height, child: Card( // with Card
+    return Container(width: width, height: height, child: Card(
       elevation: 3.0,
       shape: const CircleBorder(),
       margin: padding,
-      clipBehavior: Clip.antiAlias, // with Card
+      clipBehavior: Clip.antiAlias,
       child: child,
     ));
   }
