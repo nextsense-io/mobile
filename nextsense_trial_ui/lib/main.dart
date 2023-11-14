@@ -71,8 +71,9 @@ Future<intent.Intent?> _getInitialIntent() async {
 }
 
 void main() async {
-  await _initFirebase();
   runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await _initFirebase();
     _initLogging();
     await initEnvironmentFile();
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;

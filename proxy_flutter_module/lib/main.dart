@@ -1,24 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_consumer_ui/main.dart' as consumer_ui;
 import 'package:nextsense_trial_ui/main.dart' as trial_ui;
 import 'package:proxy_flutter_module/routes.dart';
 
-void _initLogging() {
-  Logger.root.level = Level.ALL;  // defaults to Level.INFO
-  Logger.root.onRecord.listen((record) {
-    print('${record.level.name}: ${record.time}: ${record.message}');
-  });
-}
-
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  _initLogging();
-  getLogger("ProxyMain").log(Level.INFO, "Default route: ${window.defaultRouteName}");
-  proxyApp(window.defaultRouteName ?? routeTrialUi);
+  proxyApp(PlatformDispatcher.instance.defaultRouteName);
 }
 
 void proxyApp(String route) {
