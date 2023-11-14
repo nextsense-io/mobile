@@ -43,7 +43,7 @@ class AuthManager {
   String? get email => _email;
 
   AuthManager() {
-    for (AuthMethod authMethod in [AuthMethod.google_auth, AuthMethod.email_password]) {
+    for (AuthMethod authMethod in [AuthMethod.email_password, AuthMethod.google_auth]) {
       switch (authMethod) {
         case AuthMethod.email_password:
           _emailAuthManager = EmailAuthManager();
@@ -250,7 +250,6 @@ class AuthManager {
   // Load user from Firestore and update some data
   Future<User?> _loadUser({required String authUid}) async {
     final User? user = await _fetchUserFromFirestore(authUid);
-
     if (user == null) {
       _logger.log(Level.WARNING, 'Failed to fetch user from Firestore.');
       return null;

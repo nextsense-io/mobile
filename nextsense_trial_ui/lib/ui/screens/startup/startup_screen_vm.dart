@@ -104,7 +104,13 @@ class StartupScreenViewModel extends ViewModel {
     if (!_dataManager.userLoaded) {
       bool success = false;
       try {
-        success = await _dataManager.loadUser();
+        final authResult = await _authManager.signInGoogle();
+        _logger.log(Level.INFO, 'Automatic authResult: $authResult');
+        if (authResult == AuthenticationResult.success) {
+          success = await _dataManager.loadUserStudyData();
+        } else {
+          success = false;
+        }
       } catch (e, stacktrace) {
         _logger.log(Level.SEVERE,
             'load user failed with exception: ${e.toString()}, ${stacktrace.toString()}');

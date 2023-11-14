@@ -29,7 +29,7 @@ class DashboardScreenViewModel extends DeviceStateViewModel {
     notifyListeners();
     setBusy(true);
     try {
-      if (!_dataManager.userStudyDataLoaded) {
+      if (!_dataManager.userDataLoaded) {
         bool success = await _dataManager.loadUserData();
         if (!success) {
           _logger.log(Level.WARNING, 'Failed to load user. Fallback to signup');

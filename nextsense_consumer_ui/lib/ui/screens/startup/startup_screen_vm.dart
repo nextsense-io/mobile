@@ -1,3 +1,4 @@
+import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:flutter_common/managers/permissions_manager.dart';
@@ -90,7 +91,13 @@ class StartupScreenViewModel extends ViewModel {
     if (!_dataManager.userLoaded) {
       bool success = false;
       try {
-        success = await _dataManager.loadUser();
+        final authResult = await _authManager.signInGoogle();
+        _logger.log(Level.INFO, 'Automatic authResult: $authResult');
+        if (authResult == AuthenticationResult.success) {
+          success = await _dataManager.loadData();
+        } else {
+          success = false;
+        }
       } catch (e, stacktrace) {
         _logger.log(Level.SEVERE,
             'load user failed with exception: ${e.toString()}, ${stacktrace.toString()}');
@@ -118,21 +125,21 @@ class StartupScreenViewModel extends ViewModel {
     //   return;
     // }
 
-    if (!_dataManager.userStudyDataLoaded) {
-      bool success = false;
-      try {
-        success = await _dataManager.loadData();
-      } catch (e, stacktrace) {
-        _logger.log(Level.SEVERE, 'load user data failed with exception: ${e.toString()}, '
-            '${stacktrace.toString()}');
-      }
-      if (!success) {
-        setBusy(false);
-        _logger.log(Level.SEVERE, 'Failed to load user. Fallback to sign in');
-        await logout();
-        return;
-      }
-    }
+    // if (!_dataManager.userDataLoaded) {
+    //   bool success = false;
+    //   try {
+    //     success = await _dataManager.loadData();
+    //   } catch (e, stacktrace) {
+    //     _logger.log(Level.SEVERE, 'load user data failed with exception: ${e.toString()}, '
+    //         '${stacktrace.toString()}');
+    //   }
+    //   if (!success) {
+    //     setBusy(false);
+    //     _logger.log(Level.SEVERE, 'Failed to load user. Fallback to sign in');
+    //     await logout();
+    //     return;
+    //   }
+    // }
 
     // If there are permissions that need to be granted, go through them one by one with an
     // explanation screen.
