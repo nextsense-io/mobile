@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_common/domain/earbuds_config.dart';
@@ -111,30 +112,34 @@ class SleepStagingManager extends ChangeNotifier {
         break;
     }
     DateTime startTime = _sleepStartTime!.add(_calculatedDuration);
-    DateTime endTime = startTime.add(_singleSleepEpoch);
-    DateTime now = DateTime.now().subtract(_singleSleepEpoch);
+    DateTime endTime = startTime;
+    DateTime nowLessSingleEpoch = DateTime.now().subtract(_singleSleepEpoch);
     // Add time epoch by epoch to be able to concatenate the results after calculation.
-    while (endTime.isBefore(now.subtract(_singleSleepEpoch))) {
+    while (endTime.isBefore(nowLessSingleEpoch.subtract(_singleSleepEpoch))) {
       endTime = endTime.add(_singleSleepEpoch);
     }
-    Duration addedDuration = endTime.difference(startTime);
-    Map<String, dynamic> sleepStagingResults = await NextsenseBase.runSleepStaging(
-        macAddress: device.macAddress, localSessionId: _sessionManager.currentLocalSession!,
-        channelName: channelName, startDateTime: endTime.subtract(_calculationEpoch),
-        duration: _calculationEpoch);
-    List<dynamic>? newSleepStagingResults = sleepStagingResults[_stagingLabelsKey] as List<dynamic>?;
-    List<dynamic>? newSleepConfidences = sleepStagingResults[_confidencesKey] as List<dynamic>?;
-    if (newSleepStagingResults != null && newSleepConfidences != null &&
-        newSleepStagingResults.isNotEmpty && newSleepConfidences.isNotEmpty) {
-      _calculatedDuration += addedDuration;
-      int startIndex = ((_calculationEpoch.inSeconds - addedDuration.inSeconds) /
-          _singleSleepEpoch.inSeconds).round();
-      _logger.log(Level.WARNING, "Sleep staging: Adding results from $startIndex. Total results: "
-          "${_sleepStagingLabels.length}.");
-      _sleepStagingLabels += newSleepStagingResults.sublist(startIndex);
-      _sleepStagingConfidences = newSleepConfidences.sublist(startIndex);
+    if (startTime != endTime) {
+      Duration addedDuration = endTime.difference(startTime);
+      Map<String, dynamic> sleepStagingResults = await NextsenseBase.runSleepStaging(
+          macAddress: device.macAddress, localSessionId: _sessionManager.currentLocalSession!,
+          channelName: channelName, startDateTime: endTime.subtract(_calculationEpoch),
+          duration: _calculationEpoch);
+      List<dynamic>? newSleepStagingResults = sleepStagingResults[_stagingLabelsKey] as List<dynamic>?;
+      List<dynamic>? newSleepConfidences = sleepStagingResults[_confidencesKey] as List<dynamic>?;
+      if (newSleepStagingResults != null && newSleepConfidences != null &&
+          newSleepStagingResults.isNotEmpty && newSleepConfidences.isNotEmpty) {
+        _calculatedDuration += addedDuration;
+        int startIndex = max(0, ((_calculationEpoch.inSeconds - addedDuration.inSeconds) /
+            _singleSleepEpoch.inSeconds).round());
+        _logger.log(Level.WARNING, "Sleep staging: Adding results from $startIndex. Total results: "
+            "${_sleepStagingLabels.length}.");
+        _sleepStagingLabels += newSleepStagingResults.sublist(startIndex);
+        _sleepStagingConfidences += newSleepConfidences.sublist(startIndex);
+      } else {
+        _logger.log(Level.WARNING, "Sleep staging results are null or empty.");
+      }
     } else {
-      _logger.log(Level.WARNING, "Sleep staging results are null or empty.");
+      _logger.log(Level.INFO, "Not enough new data to run sleep staging.");
     }
     _sleepCalculationState = SleepCalculationState.waiting;
     if (_sleepStagingState == SleepStagingState.stopping) {
