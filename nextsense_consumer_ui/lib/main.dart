@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
 import 'package:nextsense_consumer_ui/managers/sleep_staging_manager.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:nextsense_consumer_ui/di.dart';
@@ -19,6 +20,13 @@ import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_consumer_ui/managers/auth_manager.dart';
 import 'package:nextsense_consumer_ui/ui/navigation.dart';
 
+void _initLogging() {
+  Logger.root.level = Level.ALL;  // defaults to Level.INFO
+  Logger.root.onRecord.listen((record) {
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
+}
+
 Future _initFirebase() async {
   flutter_common_di.initFirebase();
   await flutter_common_di.getIt<FirebaseManager>().initializeFirebase();
@@ -32,6 +40,7 @@ void main() async {
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
     await _initFirebase();
+    _initLogging();
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     tz.initializeTimeZones();
