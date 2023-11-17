@@ -90,7 +90,10 @@ public class SleepTransformerModel extends BaseModel {
 
     // Run the inference.
     float[][][] inferenceOutput = new float[1][INPUT_EPOCHS_SIZE][NUM_SLEEP_STAGING_CATEGORIES];
-    getTflite().run(preprocessingOutput, inferenceOutput);
+    Object[] inferenceInputs = new Object[]{preprocessingOutput, false};
+    Map<Integer, Object> inferenceOutputs = new HashMap<>();
+    inferenceOutputs.put(POSTPROCESSING_RESULTS_INDEX, inferenceOutput);
+    getTflite().runForMultipleInputsOutputs(inferenceInputs, inferenceOutputs);
 
     // The run postprocessor.
     Map<Integer, Object> mapOfIndicesToOutputs = new HashMap<>();
