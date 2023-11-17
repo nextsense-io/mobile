@@ -200,11 +200,10 @@ public class ForegroundService extends Service {
     cacheSink.startListening();
     connectivity = Connectivity.create(this);
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
-    // minRecordsToKeep is set at 5000 as ~4000 records is the upper limit we are considering for
-    // impedance calculation.
+    // minRecordsToKeep is set at 12 minutes as we need 1 0minutes for sleep staging.
     uploader = Uploader.create(objectBoxDatabase, databaseSink, connectivity,
-        /*uploadChunk=*/Duration.ofSeconds(5), /*minRecordsToKeep=*/5000,
-        /*minDurationToKeep=*/Duration.ofMillis((5000 / 250) * 1000L));
+        /*uploadChunk=*/Duration.ofSeconds(5), /*minRecordsToKeep=*/250 * 60 * 12,
+        /*minDurationToKeep=*/Duration.ofMinutes(12));
     uploader.setMinimumConnectivityState(allowDataViaCellular ?
         Connectivity.State.LIMITED_CONNECTION : Connectivity.State.FULL_CONNECTION);
     uploader.start();

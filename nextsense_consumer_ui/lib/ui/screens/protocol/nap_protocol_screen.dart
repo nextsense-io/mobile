@@ -40,8 +40,10 @@ class NapProtocolScreen extends ProtocolScreen {
       if (sleepStagingManager.sleepCalculationState == SleepCalculationState.calculating) {
         statusMsg += "\n\nCalculating sleep staging results...";
       } else if (sleepStagingManager.sleepStagingLabels.isNotEmpty) {
-        statusMsg += "\n\nResult: ${sleepStagingManager.sleepStagingLabels[0]}\n";
-        statusMsg += "Confidence: ${sleepStagingManager.sleepStagingConfidences[0]}";
+        statusMsg += "\n";
+        for (SleepStage sleepStage in viewModel.getSleepStages()) {
+          statusMsg += "\n${sleepStage.stage}: ${sleepStage.percent}";
+        }
         finishButtonText = 'Finish';
       }
     }
@@ -80,20 +82,6 @@ class NapProtocolScreen extends ProtocolScreen {
                     })
               ],)
             ]));
-
-    // Re-add status messages.
-    // Container(
-    //   child: Visibility(
-    //     visible: viewModel.hasError,
-    //       child: Column(
-    //         children: [
-    //           Text(viewModel.modelError ?? "",
-    //             style: TextStyle(color: Colors.white),
-    //            )
-    //           ],
-    //       ),
-    //   ),
-    // ),
   }
 
   @override

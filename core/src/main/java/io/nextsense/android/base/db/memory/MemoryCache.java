@@ -13,8 +13,8 @@ import io.nextsense.android.base.utils.EvictingArray;
  * Memory cache for recent data for performance.
  */
 public class MemoryCache {
-  // 250 samples per second times 60 seconds times 5 minutes.
-  private static final int DEFAULT_RETENTION_SAMPLES = 250 * 60 * 5;
+  // 250 samples per second times 60 seconds times 12 minutes.
+  private static final int DEFAULT_RETENTION_SAMPLES = 250 * 60 * 12;
 
   private final Map<String, EvictingArray<Float>> eegChannels = new HashMap<>();
   private final Map<String, EvictingArray<Integer>> accChannels = new HashMap<>();

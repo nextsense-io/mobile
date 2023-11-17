@@ -220,7 +220,7 @@ class NextsenseBase {
    */
   static Future<Map<String, dynamic>> runSleepStaging({
     required String macAddress, required String channelName, required DateTime startDateTime,
-    required Duration duration, required int localSessionId, bool fromDatabase = true}) async {
+    required Duration duration, required int localSessionId, bool fromDatabase = false}) async {
     final Map<String, dynamic> channelData =
         gson.decode(await _channel.invokeMethod(_runSleepStagingCommand,
         {_macAddressArg: macAddress, _localSessionIdArg: localSessionId,

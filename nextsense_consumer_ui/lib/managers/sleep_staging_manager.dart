@@ -48,7 +48,7 @@ class SleepStagingManager extends ChangeNotifier {
   List<dynamic> get sleepStagingLabels => _sleepStagingLabels;
   List<dynamic> get sleepStagingConfidences => _sleepStagingConfidences;
 
-  void startSleepStaging({Duration calculationInterval = const Duration(minutes: 5)}) {
+  void startSleepStaging({Duration calculationInterval = const Duration(minutes: 1)}) {
     clearSleepStaging();
     _sleepStartTime = DateTime.now();
     _sleepStagingCalculationInterval = calculationInterval;
@@ -81,6 +81,7 @@ class SleepStagingManager extends ChangeNotifier {
   }
 
   Future _checkIfNeedToCalculate() async {
+    _logger.log(Level.INFO, "Checking if need to calculate sleep staging...");
     if (_sleepCalculationState == SleepCalculationState.waiting) {
       if (DateTime.now().difference(_sleepStartTime!.add(_calculatedDuration)) >=
           _sleepStagingCalculationInterval!) {
@@ -90,9 +91,10 @@ class SleepStagingManager extends ChangeNotifier {
   }
 
   Future _calculateSleepStagingResults() async {
+    _logger.log(Level.INFO, "Calculating sleep staging results...");
     _sleepCalculationState = SleepCalculationState.calculating;
     Device? device = _deviceManager.getConnectedDevice();
-    if (device == null) {
+    if (device == null || _sleepStartTime == null) {
       return null;
     }
     String channelName = '1';
@@ -110,21 +112,30 @@ class SleepStagingManager extends ChangeNotifier {
     }
     DateTime startTime = _sleepStartTime!.add(_calculatedDuration);
     DateTime endTime = startTime.add(_singleSleepEpoch);
+    DateTime now = DateTime.now().subtract(_singleSleepEpoch);
     // Add time epoch by epoch to be able to concatenate the results after calculation.
-    while (endTime.isBefore(DateTime.now().subtract(_singleSleepEpoch))) {
-      endTime.add(_singleSleepEpoch);
+    while (endTime.isBefore(now.subtract(_singleSleepEpoch))) {
+      endTime = endTime.add(_singleSleepEpoch);
     }
     Duration addedDuration = endTime.difference(startTime);
-    Map<String, dynamic>? sleepStagingResults = await NextsenseBase.runSleepStaging(
+    Map<String, dynamic> sleepStagingResults = await NextsenseBase.runSleepStaging(
         macAddress: device.macAddress, localSessionId: _sessionManager.currentLocalSession!,
         channelName: channelName, startDateTime: endTime.subtract(_calculationEpoch),
         duration: _calculationEpoch);
-    _calculatedDuration += addedDuration;
-    List<dynamic> newSleepStagingResults = sleepStagingResults[_stagingLabelsKey] as List<dynamic>;
-    List<dynamic> newSleepConfidences = sleepStagingResults[_confidencesKey] as List<dynamic>;
-    int startIndex = ((_calculationEpoch.inSeconds - addedDuration.inSeconds) / 21).round();
-    _sleepStagingLabels += newSleepStagingResults.sublist(startIndex);
-    _sleepStagingConfidences = newSleepConfidences.sublist(startIndex);
+    List<dynamic>? newSleepStagingResults = sleepStagingResults[_stagingLabelsKey] as List<dynamic>?;
+    List<dynamic>? newSleepConfidences = sleepStagingResults[_confidencesKey] as List<dynamic>?;
+    if (newSleepStagingResults != null && newSleepConfidences != null &&
+        newSleepStagingResults.isNotEmpty && newSleepConfidences.isNotEmpty) {
+      _calculatedDuration += addedDuration;
+      int startIndex = ((_calculationEpoch.inSeconds - addedDuration.inSeconds) /
+          _singleSleepEpoch.inSeconds).round();
+      _logger.log(Level.WARNING, "Sleep staging: Adding results from $startIndex. Total results: "
+          "${_sleepStagingLabels.length}.");
+      _sleepStagingLabels += newSleepStagingResults.sublist(startIndex);
+      _sleepStagingConfidences = newSleepConfidences.sublist(startIndex);
+    } else {
+      _logger.log(Level.WARNING, "Sleep staging results are null or empty.");
+    }
     _sleepCalculationState = SleepCalculationState.waiting;
     if (_sleepStagingState == SleepStagingState.stopping) {
       _sleepStagingState = SleepStagingState.complete;

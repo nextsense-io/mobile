@@ -5,7 +5,6 @@ import android.content.Context;
 import com.google.common.primitives.Floats;
 
 import org.tensorflow.lite.Interpreter;
-import org.tensorflow.lite.Tensor;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
@@ -20,14 +19,14 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
 public class SleepTransformerModel extends BaseModel {
 
   public static final Duration EPOCH_LENGTH = Duration.ofSeconds(30);
-  public static final int MAX_INPUT_EPOCHS = 21;
+  public static final int INPUT_EPOCHS_SIZE = 21;
   public static final int POSTPROCESSING_RESULTS_INDEX = 0;
   public static final int POSTPROCESSING_CONFIDENCES_INDEX = 1;
-  private static final int PREPROCESSING_INPUT_DATA_INDEX = 0;
   private static final String TAG = SleepTransformerModel.class.getSimpleName();
   private static final String PREPROCESSOR_NAME = "sleep_stage_preprocessor.tflite";
   private static final String MODEL_NAME = "sleep_stage_classifier.tflite";
   private static final String POSTPROCESSOR_NAME = "sleep_stage_postprocessor.tflite";
+  private static final int NUM_SLEEP_STAGING_CATEGORIES = 5;
 
   private Interpreter preprocessorTflite;
   private Interpreter postprocessorTflite;
@@ -68,57 +67,42 @@ public class SleepTransformerModel extends BaseModel {
       IllegalArgumentException {
     int numEpochs = (int)Math.round(Math.floor(
         (data.size() / samplingRate) / (int) EPOCH_LENGTH.getSeconds()));
-    if (numEpochs > MAX_INPUT_EPOCHS) {
+    if (numEpochs > INPUT_EPOCHS_SIZE) {
       RotatingFileLogger.get().logw(TAG,
-          "Input data is too long. Max input length is " + MAX_INPUT_EPOCHS + " epochs." +
+          "Input data is too long. Max input length is " + INPUT_EPOCHS_SIZE + " epochs." +
           "Ignoring the rest of the data.");
-      numEpochs = MAX_INPUT_EPOCHS;
     }
-    int inputSize = MAX_INPUT_EPOCHS * (int) EPOCH_LENGTH.getSeconds() * (int) samplingRate;
+    int inputSize = INPUT_EPOCHS_SIZE * (int) EPOCH_LENGTH.getSeconds() * (int) samplingRate;
     if (data.size() < inputSize) {
       String errorText = "Input data is too short. Min input length is " + inputSize + " samples.";
       RotatingFileLogger.get().logw(TAG, errorText);
-      // throw new IllegalArgumentException(errorText);
+      return new HashMap<>();
     }
 
+    // Run the preprocessor.
     float[] preprocessingData = new float[inputSize];
-    float[][][][][] preprocessingOutput = new float[1][21][29][128][1];
     int copySize = Math.min(data.size(), inputSize);
     int srcPos = Math.max(0, data.size() - inputSize);
-    System.arraycopy(Floats.toArray(data), srcPos, preprocessingData, 0, copySize);
     Arrays.fill(preprocessingData, 0.0f);
-    FloatBuffer floatBuffer = FloatBuffer.allocate(1 * 21 * 29 * 128 * 1);
+    System.arraycopy(Floats.toArray(data), srcPos, preprocessingData, 0, copySize);
+    float[][][][][] preprocessingOutput = new float[1][INPUT_EPOCHS_SIZE][29][128][1];
+    preprocessorTflite.run(preprocessingData, preprocessingOutput);
 
-    Map<String, Object> inputs = new HashMap<>();
-    inputs.put("index", preprocessingData);
-    Map<String, Object> outputs = new HashMap<>();
-    outputs.put("index", floatBuffer);
+    // Run the inference.
+    float[][][] inferenceOutput = new float[1][INPUT_EPOCHS_SIZE][NUM_SLEEP_STAGING_CATEGORIES];
+    getTflite().run(preprocessingOutput, inferenceOutput);
 
-    // Run the preprocessor.
-    preprocessorTflite.run(preprocessingData, floatBuffer);
+    // The run postprocessor.
+    Map<Integer, Object> mapOfIndicesToOutputs = new HashMap<>();
+    String[] resultsOutput = new String[INPUT_EPOCHS_SIZE];
+    mapOfIndicesToOutputs.put(POSTPROCESSING_RESULTS_INDEX, resultsOutput);
+    FloatBuffer confidencesOutput = FloatBuffer.allocate(INPUT_EPOCHS_SIZE);
+    mapOfIndicesToOutputs.put(POSTPROCESSING_CONFIDENCES_INDEX, confidencesOutput);
+    Object[] inferenceOutputWrapper = new Object[]{inferenceOutput};
+    postprocessorTflite.runForMultipleInputsOutputs(inferenceOutputWrapper, mapOfIndicesToOutputs);
 
-    Map<Integer, Object> mapOfIndicesToInputs = new HashMap<>();
-//    String[] resultsOutput = new String[numEpochs];
-//    mapOfIndicesToInputs.put(0, preprocessingOutput);
-//    FloatBuffer confidencesOutput = FloatBuffer.allocate(numEpochs);
-//    mapOfIndicesToInputs.put(1, false);
-//    Map<Integer, Object> mapOfIndicesOutputs = new HashMap<>();
-//    float[][][] inferenceOutput = new float[1][21][5];
-//    mapOfIndicesOutputs.put(0, inferenceOutput);
-//    getTflite().
-//    getTflite().runForMultipleInputsOutputs(mapOfIndicesToInputs, mapOfIndicesOutputs);
-//
-//
-//    Map<Integer, Object> mapOfIndicesToOutputs = new HashMap<>();
-//    String[] resultsOutput = new String[numEpochs];
-//    mapOfIndicesToOutputs.put(RESULTS_INDEX, resultsOutput);
-//    FloatBuffer confidencesOutput = FloatBuffer.allocate(numEpochs);
-//    mapOfIndicesToOutputs.put(CONFIDENCES_INDEX, confidencesOutput);
-//    getTflite().runForMultipleInputsOutputs(mapOfIndicesToOutputs, mapOfIndicesToOutputs);
-//
-//
-//    // Put the backing array in the result that is returned instead of the buffer.
-//    mapOfIndicesToOutputs.put(CONFIDENCES_INDEX, confidencesOutput.array());
-    return mapOfIndicesToInputs;
+    // Put the backing array in the result that is returned instead of the buffer.
+    mapOfIndicesToOutputs.put(POSTPROCESSING_CONFIDENCES_INDEX, confidencesOutput.array());
+    return mapOfIndicesToOutputs;
   }
 }

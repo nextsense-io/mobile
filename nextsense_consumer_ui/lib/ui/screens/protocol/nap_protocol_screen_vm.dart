@@ -1,3 +1,4 @@
+import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_consumer_ui/di.dart';
 import 'package:nextsense_consumer_ui/managers/sleep_staging_manager.dart';
@@ -8,6 +9,7 @@ class NapProtocolScreenViewModel extends ProtocolScreenViewModel {
   NapProtocolScreenViewModel(super.protocol);
 
   final SleepStagingManager _sleepStagingManager = getIt<SleepStagingManager>();
+  final _logger = Logger('NapProtocolScreenViewModel');
 
   @override
   Future<bool> startSession() async {
@@ -20,6 +22,7 @@ class NapProtocolScreenViewModel extends ProtocolScreenViewModel {
   }
 
   List<SleepStage> getSleepStages() {
+    _logger.log(Level.INFO, "Getting sleep stages.");
     if (_sleepStagingManager.sleepStagingLabels.isEmpty) {
       return [];
     }
