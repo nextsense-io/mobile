@@ -6,7 +6,7 @@ import 'package:nextsense_consumer_ui/di.dart';
 import 'package:nextsense_consumer_ui/ui/components/round_background.dart';
 import 'package:nextsense_consumer_ui/ui/navigation.dart';
 import 'package:nextsense_consumer_ui/ui/nextsense_colors.dart';
-import 'package:nextsense_consumer_ui/ui/screens/profile/profile_screen.dart';
+//import 'package:nextsense_consumer_ui/ui/screens/profile/profile_screen.dart';
 
 // App bar at the top of the UI pages once logged in.
 class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -47,8 +47,8 @@ class NextSenseAppBar extends StatelessWidget implements PreferredSizeWidget {
               ? ClickableZone(
               child: const RoundBackground(child: Icon(Icons.person, size: 24, color: Colors.black)),
               onTap: () async => {
-                await _navigation.navigateTo(ProfileScreen.id),
-                viewModel?.notifyListeners()
+                //await _navigation.navigateTo(ProfileScreen.id),
+                //viewModel?.notifyListeners()
               })
               : const SizedBox.shrink(),
           showCancelButton
