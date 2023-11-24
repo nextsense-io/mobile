@@ -16,4 +16,10 @@ class NextSenseColors {
   static const Color backgroundColor = Color(0xFF0B0D1C);
   static const Color blueColor = Color(0xFF444FB1);
   static const Color lightBlue = Color(0xFF3A448A);
+
+  static const Color coreSleep = Color(0xFFE4766F);
+  static const Color deepSleep = Color(0xFF4CC9F0);
+  static const Color remSleep = Color(0xFF444FB1);
+  static const Color awakeSleep = Color(0xFF7336BA);
+  static const Color cardBackground = Color(0xCC10142C);
 }
