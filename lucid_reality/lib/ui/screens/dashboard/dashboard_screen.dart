@@ -10,7 +10,8 @@ import 'package:lucid_reality/ui/screens/sleep/sleep_screen.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:stacked/stacked.dart';
 
-import '../brain_checking/brain_checking_screen.dart';
+import '../brain_checking/brain_checking_tab_screen.dart';
+
 
 class DashboardScreen extends HookWidget {
   static const String id = 'dashboard_screen';
@@ -20,7 +21,7 @@ class DashboardScreen extends HookWidget {
   final _pages = <Widget>[
     const HomeScreen(),
     const LearnScreen(),
-    const BrainCheckingScreen(),
+    const BrainCheckingResultsListScreen(),
     const LucidScreen(),
     const SleepScreen()
   ];

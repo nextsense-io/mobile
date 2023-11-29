@@ -1,4 +1,5 @@
 import 'package:flutter_common/utils/android_logger.dart';
+import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 
 final CustomLogPrinter _logger = CustomLogPrinter('Utils');
@@ -24,4 +25,18 @@ extension StringCasingExtension on String {
 
   String toTitleCase() =>
       replaceAll(RegExp(' +'), ' ').split(' ').map((str) => str.toCapitalized()).join(' ');
+}
+
+extension DateTimeFormating on DateTime {
+  String getDate() {
+    return DateFormat('MMM d, yyyy').format(this);
+  }
+
+  String getTime() {
+    return DateFormat('h:mma').format(this);
+  }
+
+  String get hms {
+    return DateFormat('h:mm:ss:S').format(this);
+  }
 }

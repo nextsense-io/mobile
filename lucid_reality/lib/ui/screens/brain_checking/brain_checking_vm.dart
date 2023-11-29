@@ -1,39 +1,54 @@
+import 'dart:math';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
-import 'package:lucid_reality/domain/brain_checking.dart';
+
+import '../../../di.dart';
+import '../../../domain/brain_checking.dart';
+import '../../../domain/brain_checking_data_provider.dart';
+import '../navigation.dart';
+import 'brain_checking_tab_screen.dart';
 
 class BrainCheckingViewModule extends ViewModel {
-  List brainCheckingResult = <BrainChecking>[];
+  final BrainCheckingDataProvider brainCheckingDataProvider = getIt<BrainCheckingDataProvider>();
+  final Navigation _navigation = getIt<Navigation>();
+  late ValueNotifier<BrainCheckingStages> page;
+  final Random random = Random();
+  ValueNotifier<bool>? btnVisibility;
+  BrainChecking? brainChecking;
 
-  @override
-  void init() {
-    super.init();
-    brainCheckingResult.add(
-      BrainChecking(
-        'Highly Alert',
-        0000,
-        DateTime(
-          2023,
-          10,
-          8,
-          9,
-          5,
-        ),
-        ResultType.awakeSleep,
-      ),
+  BrainCheckingViewModule(this.page);
+
+  void redirectToBrainCheckingTab() {
+    brainChecking = null;
+    page.value = BrainCheckingStages.brainCheckingMain;
+  }
+
+  void navigateToBrainChecking() {
+    page.value = BrainCheckingStages.brainChecking;
+  }
+
+  void navigateToBrainCheckingResultsPage() {
+    if (brainChecking != null) {
+      brainCheckingDataProvider.generateReport(brainChecking!);
+    }
+    page.value = BrainCheckingStages.brainCheckingResults;
+  }
+
+  void scheduleButtonVisibility() {
+    brainChecking ??= BrainChecking('Highly Alert', 0, DateTime.now(), ResultType.coreSleep);
+    Future.delayed(
+      Duration(seconds: random.nextInt(5) + 1),
+      () {
+        brainChecking?.taps.add(TapTime(startTime: DateTime.now()));
+        btnVisibility?.value = true;
+      },
     );
-    brainCheckingResult.add(
-      BrainChecking(
-        'Sleepy',
-        0000,
-        DateTime(
-          2023,
-          10,
-          7,
-          20,
-          35,
-        ),
-        ResultType.coreSleep,
-      ),
-    );
+  }
+
+  void rescheduleButtonVisibility() {
+    brainChecking?.taps.lastOrNull?.endTime = DateTime.now();
+    btnVisibility?.value = false;
+    scheduleButtonVisibility();
   }
 }
