@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../di.dart';
-import '../preferences.dart';
+import 'package:lucid_reality/di.dart';
+import 'package:lucid_reality/preferences.dart';
 
 enum ConnectivityState {
   mobile,

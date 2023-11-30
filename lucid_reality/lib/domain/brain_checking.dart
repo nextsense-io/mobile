@@ -1,6 +1,7 @@
+import 'dart:math';
 import 'dart:ui';
 
-import '../ui/nextsense_colors.dart';
+import 'package:lucid_reality/ui/nextsense_colors.dart';
 
 enum ResultType { coreSleep, deepSleep, remSleep, awakeSleep }
 
@@ -12,6 +13,22 @@ class BrainChecking {
   final List<TapTime> taps = [];
 
   BrainChecking(this.title, this.spendTime, this.dateTime, this.type);
+
+  int get average {
+    return taps.map((e) => e.getSpendTime()).reduce((value, element) => value + element) ~/
+        taps.length;
+  }
+
+  int get fastest {
+    return taps
+        .where((element) => element.getSpendTime() != 0)
+        .map((e) => e.getSpendTime())
+        .reduce(min);
+  }
+
+  int get slowest {
+    return taps.map((e) => e.getSpendTime()).reduce(max);
+  }
 }
 
 class TapTime {
@@ -26,13 +43,12 @@ class TapTime {
   }
 }
 
-
 /// Sample linear data type.
 class TapData {
-  final int year;
-  final int sales;
+  final int domain;
+  final int primary;
 
-  TapData(this.year, this.sales);
+  TapData(this.domain, this.primary);
 }
 
 class BrainCheckingReport {

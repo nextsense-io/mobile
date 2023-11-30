@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 
-import '../../../utils/utils.dart';
-import '../../nextsense_colors.dart';
+import 'package:lucid_reality/utils/utils.dart';
+import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'brain_checking_vm.dart';
 
 class BrainCheckingScreen extends HookWidget {

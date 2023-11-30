@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/utils/text_theme.dart';
 
 import '../../../domain/brain_checking.dart';
 import '../../../utils/utils.dart';
@@ -41,7 +42,7 @@ class BrainCheckingResults extends HookWidget {
           const SizedBox(height: 23),
           Text(
             'RESULTS',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.bodyMediumWithFontWeight600,
           ),
           const SizedBox(height: 10),
           Expanded(
@@ -127,15 +128,14 @@ class BrainCheckingResults extends HookWidget {
         children: [
           Text(
             checkingReport.title,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w600,
+            style: Theme.of(context).textTheme.bodySmallWithFontWeight600?.copyWith(
                   color: checkingReport.color,
                 ),
           ),
           const SizedBox(height: 12),
           Text(
             checkingReport.responseTimeInSecondsInString,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 12),
+            style: Theme.of(context).textTheme.bodyCaption,
           ),
         ],
       ),
@@ -143,8 +143,47 @@ class BrainCheckingResults extends HookWidget {
   }
 
   Widget prepareChart(BrainChecking brainChecking) {
+    final slowest = brainChecking.slowest;
+    final fastest = brainChecking.fastest;
+    final average = brainChecking.average;
     return NumericComboChart(
       feedData(brainChecking),
+      animate: true,
+      primaryMeasureAxis: NumericAxisSpec(
+        tickProviderSpec: BasicNumericTickProviderSpec(
+          desiredTickCount: brainChecking.taps.length,
+          zeroBound: false,
+        ),
+        showAxisLine: true,
+        tickFormatterSpec: BasicNumericTickFormatterSpec((measure) => '${measure?.toInt()}ms'),
+        renderSpec: SmallTickRendererSpec(
+          // Tick and Label styling here.
+          labelStyle: TextStyleSpec(
+            fontSize: 10,
+            fontFamily: 'Montserrat',
+            color: ColorUtil.fromDartColor(NextSenseColors.remSleep),
+          ),
+          lineStyle: LineStyleSpec(color: ColorUtil.fromDartColor(NextSenseColors.remSleep)),
+        ),
+        viewport: NumericExtents(fastest, slowest),
+      ),
+      domainAxis: NumericAxisSpec(
+        showAxisLine: true,
+        tickProviderSpec: BasicNumericTickProviderSpec(
+          desiredTickCount: brainChecking.taps.length,
+          zeroBound: false,
+        ),
+        renderSpec: SmallTickRendererSpec(
+          // Tick and Label styling here.
+          labelStyle: TextStyleSpec(
+            fontSize: 10,
+            fontFamily: 'Montserrat',
+            color: ColorUtil.fromDartColor(NextSenseColors.remSleep),
+          ),
+          lineStyle: LineStyleSpec(color: ColorUtil.fromDartColor(NextSenseColors.remSleep)),
+        ),
+        viewport: NumericExtents(1, brainChecking.taps.length),
+      ),
       // Configure the default renderer as a line renderer. This will be used
       // for any series that does not define a rendererIdKey.
       defaultRenderer: LineRendererConfig(),
@@ -154,27 +193,68 @@ class BrainCheckingResults extends HookWidget {
             // ID used to link series to this renderer.
             customRendererId: 'customPoint')
       ],
+      behaviors: [
+        RangeAnnotation(
+          [
+            LineAnnotationSegment(
+              brainChecking.average,
+              RangeAnnotationAxisType.measure,
+              endLabel: '${average}ms',
+              color: ColorUtil.fromDartColor(NextSenseColors.awakeSleep),
+              labelAnchor: AnnotationLabelAnchor.start,
+            ),
+            LineAnnotationSegment(
+              fastest + 20,
+              RangeAnnotationAxisType.measure,
+              color: ColorUtil.fromDartColor(NextSenseColors.awakeSleep),
+              dashPattern: [2, 2],
+            ),
+            LineAnnotationSegment(
+              slowest - 20,
+              RangeAnnotationAxisType.measure,
+              color: ColorUtil.fromDartColor(NextSenseColors.awakeSleep),
+              labelAnchor: AnnotationLabelAnchor.start,
+              dashPattern: [2, 2],
+            ),
+          ],
+          defaultLabelStyleSpec: TextStyleSpec(
+            fontSize: 12,
+            fontFamily: 'Montserrat',
+            color: ColorUtil.fromDartColor(NextSenseColors.awakeSleep),
+          ),
+        )
+      ],
     );
   }
 
   List<Series<TapData, int>> feedData(BrainChecking brainChecking) {
     int counter = 0;
-    var myFakeMobileData =
-        brainChecking.taps.map((e) => TapData(counter++, e.getSpendTime())).toList();
+    final tapsData = brainChecking.taps.map((e) => TapData(counter++, e.getSpendTime())).toList();
+    final slowestIndex = tapsData.indexWhere((element) => element.primary == brainChecking.slowest);
+    final fastestIndex = tapsData.indexWhere((element) => element.primary == brainChecking.fastest);
     return [
       Series<TapData, int>(
-        id: 'Desktop',
+        id: 'Taps',
         colorFn: (_, __) => ColorUtil.fromDartColor(NextSenseColors.awakeSleep),
-        domainFn: (TapData sales, _) => sales.year,
-        measureFn: (TapData sales, _) => sales.sales,
-        data: myFakeMobileData,
+        domainFn: (TapData tap, _) => tap.domain,
+        measureFn: (TapData tap, _) => tap.primary,
+        data: tapsData,
       ),
       Series<TapData, int>(
-          id: 'Mobile',
-          colorFn: (_, __) => ColorUtil.fromDartColor(NextSenseColors.coreSleep),
-          domainFn: (TapData sales, _) => sales.year,
-          measureFn: (TapData sales, _) => sales.sales,
-          data: myFakeMobileData)
+        id: 'MinMaxPoints',
+        colorFn: (tap, __) {
+          if (tap.domain == slowestIndex) {
+            return ColorUtil.fromDartColor(NextSenseColors.coreSleep);
+          } else if (tap.domain == fastestIndex) {
+            return ColorUtil.fromDartColor(NextSenseColors.deepSleep);
+          } else {
+            return ColorUtil.fromDartColor(Colors.transparent);
+          }
+        },
+        domainFn: (TapData tap, _) => tap.domain,
+        measureFn: (TapData tap, _) => tap.primary,
+        data: tapsData,
+      )
         // Configure our custom point renderer for this series.
         ..setAttribute(rendererIdKey, 'customPoint'),
     ];

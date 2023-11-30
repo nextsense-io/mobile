@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 
 import 'brain_checking.dart';
@@ -53,21 +51,10 @@ class BrainCheckingDataProvider {
 
   void generateReport(BrainChecking brainChecking) {
     _results.clear();
-    print('Length1=>${_brainCheckingResult.length}');
     add(brainChecking);
-    print('Length2=>${_brainCheckingResult.length}');
-    final average = brainChecking.taps
-            .map((e) => e.getSpendTime())
-            .reduce((value, element) => value + element) ~/
-        brainChecking.taps.length;
-    _results.add(BrainCheckingReport('Average response time', average, NextSenseColors.awakeSleep));
-    final fastest = brainChecking.taps
-        .where((element) => element.getSpendTime() != 0)
-        .map((e) => e.getSpendTime())
-        .reduce(min);
-    _results.add(BrainCheckingReport('Fastest response', fastest, NextSenseColors.deepSleep));
-    final slowest = brainChecking.taps.map((e) => e.getSpendTime()).reduce(max);
-    _results.add(BrainCheckingReport('Slowest response', slowest, NextSenseColors.coreSleep));
+    _results.add(BrainCheckingReport('Average response time', brainChecking.average, NextSenseColors.awakeSleep));
+    _results.add(BrainCheckingReport('Fastest response', brainChecking.fastest, NextSenseColors.deepSleep));
+    _results.add(BrainCheckingReport('Slowest response', brainChecking.slowest, NextSenseColors.coreSleep));
     final missed = brainChecking.taps
         .where((element) => element.startTime == null || element.endTime == null)
         .length;

@@ -10,7 +10,7 @@ import 'package:lucid_reality/ui/screens/sleep/sleep_screen.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:stacked/stacked.dart';
 
-import '../brain_checking/brain_checking_tab_screen.dart';
+import 'package:lucid_reality/ui/screens/brain_checking/brain_checking_tab_screen.dart';
 
 
 class DashboardScreen extends HookWidget {
