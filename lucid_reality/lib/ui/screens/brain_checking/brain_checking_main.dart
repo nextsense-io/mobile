@@ -89,7 +89,12 @@ class BrainCheckingMain extends HookWidget {
             child: ListView.separated(
               itemBuilder: (context, index) {
                 final item = viewModel.brainCheckingDataProvider.getData()[index];
-                return _rowBrainCheckingResultItem(context, item);
+                return InkWell(
+                  onTap: () {
+                    viewModel.navigateToBrainCheckingResultsPage();
+                  },
+                  child: _rowBrainCheckingResultItem(context, item),
+                );
               },
               separatorBuilder: (context, index) {
                 return const Divider(

@@ -56,6 +56,11 @@ android {
             applicationIdSuffix ".consumer"
         }
 
+        lucidReality {
+            dimension "target_user_type"
+            applicationIdSuffix ".lucid_reality"
+        }
+
         scratch {
 //            getIsDefault().set(true)
             dimension "env"
@@ -94,6 +99,10 @@ android {
 
         consumerDev {
             setRoot 'src/consumer/dev'
+        }
+
+        lucidReality {
+            setRoot 'src/lucidReality/dev'
         }
 
         consumerProd {
