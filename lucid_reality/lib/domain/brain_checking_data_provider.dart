@@ -51,13 +51,43 @@ class BrainCheckingDataProvider {
 
   void generateReport(BrainChecking brainChecking) {
     _results.clear();
-    add(brainChecking);
-    _results.add(BrainCheckingReport('Average response time', brainChecking.average, NextSenseColors.awakeSleep));
-    _results.add(BrainCheckingReport('Fastest response', brainChecking.fastest, NextSenseColors.deepSleep));
-    _results.add(BrainCheckingReport('Slowest response', brainChecking.slowest, NextSenseColors.coreSleep));
+    final average = brainChecking.average;
+    final fastest = brainChecking.fastest;
+    final slowest = brainChecking.slowest;
+    _results.add(BrainCheckingReport('Average response time', average, NextSenseColors.awakeSleep));
+    _results.add(BrainCheckingReport('Fastest response', fastest, NextSenseColors.deepSleep));
+    _results.add(BrainCheckingReport('Slowest response', slowest, NextSenseColors.coreSleep));
     final missed = brainChecking.taps
         .where((element) => element.startTime == null || element.endTime == null)
         .length;
     _results.add(BrainCheckingReport('Missed Responses', missed, NextSenseColors.remSleep));
+    if (brainChecking.title.isEmpty) {
+      switch (average) {
+        case <= highlyAlertMS:
+          brainChecking.title = "Highly Alert";
+          brainChecking.spendTime = average;
+          brainChecking.type = ResultType.awakeSleep;
+          break;
+        case <= sleepyMS && > highlyAlertMS:
+          brainChecking.title = "Alert";
+          brainChecking.spendTime = average;
+          brainChecking.type = ResultType.deepSleep;
+          break;
+        case <= verySleepyMS && > sleepyMS:
+          brainChecking.title = "Drowsy";
+          brainChecking.spendTime = average;
+          brainChecking.type = ResultType.coreSleep;
+          break;
+        case > verySleepyMS:
+          brainChecking.title = "Very Drowsy";
+          brainChecking.spendTime = average;
+          brainChecking.type = ResultType.coreSleep;
+          break;
+        default:
+          brainChecking.title = "Alert";
+          brainChecking.spendTime = average;
+          brainChecking.type = ResultType.deepSleep;
+      }
+    }
   }
 }

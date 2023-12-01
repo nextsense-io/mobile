@@ -30,13 +30,19 @@ class BrainCheckingViewModule extends ViewModel {
 
   void navigateToBrainCheckingResultsPage() {
     if (brainChecking != null) {
+      brainCheckingDataProvider.add(brainChecking!);
       brainCheckingDataProvider.generateReport(brainChecking!);
     }
     page.value = BrainCheckingStages.brainCheckingResults;
   }
 
+  void navigateToBrainCheckingResultsPageWithData(BrainChecking brainChecking) {
+    brainCheckingDataProvider.generateReport(brainChecking);
+    page.value = BrainCheckingStages.brainCheckingResults;
+  }
+
   void scheduleButtonVisibility() {
-    brainChecking ??= BrainChecking('Highly Alert', 0, DateTime.now(), ResultType.coreSleep);
+    brainChecking ??= BrainChecking.instance(DateTime.now());
     Future.delayed(
       Duration(seconds: random.nextInt(5) + 1),
       () {

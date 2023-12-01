@@ -91,7 +91,7 @@ class BrainCheckingMain extends HookWidget {
                 final item = viewModel.brainCheckingDataProvider.getData()[index];
                 return InkWell(
                   onTap: () {
-                    viewModel.navigateToBrainCheckingResultsPage();
+                    viewModel.navigateToBrainCheckingResultsPageWithData(item);
                   },
                   child: _rowBrainCheckingResultItem(context, item),
                 );
@@ -176,7 +176,7 @@ class BrainCheckingMain extends HookWidget {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  '${brainChecking.spendTime}000ms',
+                  '${brainChecking.spendTime}ms'.padLeft(5, '0'),
                   style: Theme.of(context).textTheme.bodyCaption,
                 )
               ],

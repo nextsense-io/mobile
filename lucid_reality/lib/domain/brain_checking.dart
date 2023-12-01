@@ -5,29 +5,43 @@ import 'package:lucid_reality/ui/nextsense_colors.dart';
 
 enum ResultType { coreSleep, deepSleep, remSleep, awakeSleep }
 
+const int highlyAlertMS = 300;
+const int sleepyMS = 400;
+const int verySleepyMS = 500;
+
 class BrainChecking {
-  final String title;
-  final int spendTime;
+  String title = '';
+  int spendTime = 0;
   final DateTime dateTime;
-  final ResultType type;
   final List<TapTime> taps = [];
+  ResultType type = ResultType.deepSleep;
+
+  BrainChecking.instance(this.dateTime);
 
   BrainChecking(this.title, this.spendTime, this.dateTime, this.type);
 
   int get average {
-    return taps.map((e) => e.getSpendTime()).reduce((value, element) => value + element) ~/
-        taps.length;
+    return taps.isEmpty
+        ? 0
+        : taps.map((e) => e.getSpendTime()).reduce((value, element) => value + element) ~/
+            taps.length;
   }
 
   int get fastest {
-    return taps
-        .where((element) => element.getSpendTime() != 0)
-        .map((e) => e.getSpendTime())
-        .reduce(min);
+    return taps.isEmpty
+        ? 0
+        : taps
+            .where((element) => element.getSpendTime() != 0)
+            .map((e) => e.getSpendTime())
+            .reduce(min);
   }
 
   int get slowest {
-    return taps.map((e) => e.getSpendTime()).reduce(max);
+    return taps.isEmpty ? 0 : taps.map((e) => e.getSpendTime()).reduce(max);
+  }
+
+  String get lastClickSpendTime {
+    return taps.isEmpty ? '' : '${taps.last.getSpendTime()}ms';
   }
 }
 

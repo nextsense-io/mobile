@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
-
-import 'package:lucid_reality/utils/utils.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/utils/utils.dart';
+
 import 'brain_checking_vm.dart';
 
 class BrainCheckingScreen extends HookWidget {
@@ -18,14 +18,13 @@ class BrainCheckingScreen extends HookWidget {
     final btnVisibility = useState(false);
     final controller = useAnimationController(duration: const Duration(seconds: 30));
     useEffect(() {
-      controller
-        .addStatusListener(
-          (AnimationStatus status) {
-            if (status == AnimationStatus.completed) {
-              viewModel.navigateToBrainCheckingResultsPage();
-            }
-          },
-        );
+      controller.addStatusListener(
+        (AnimationStatus status) {
+          if (status == AnimationStatus.completed) {
+            viewModel.navigateToBrainCheckingResultsPage();
+          }
+        },
+      );
       viewModel.scheduleButtonVisibility();
       viewModel.btnVisibility = btnVisibility;
       return null;
@@ -70,32 +69,35 @@ class BrainCheckingScreen extends HookWidget {
                 ),
               ),
               alignment: Alignment.center,
-              child: Visibility(
-                visible: btnVisibility.value,
-                child: ElevatedButton(
-                  onPressed: () {
-                    viewModel.rescheduleButtonVisibility();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    padding: EdgeInsets.zero,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(360)),
-                  ),
-                  child: Container(
-                    width: 131,
-                    height: 131,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: Svg(imageBasePath.plus('btn_brain_check.svg')),
-                        fit: BoxFit.fill,
+              child: btnVisibility.value
+                  ? ElevatedButton(
+                      onPressed: () {
+                        viewModel.rescheduleButtonVisibility();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        padding: EdgeInsets.zero,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(360)),
                       ),
+                      child: Container(
+                        width: 131,
+                        height: 131,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: Svg(imageBasePath.plus('btn_brain_check.svg')),
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: const MyCountdown(Duration(milliseconds: 10)),
+                      ),
+                    )
+                  : Text(
+                      viewModel.brainChecking?.lastClickSpendTime ?? '',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    alignment: Alignment.center,
-                    child: const MyCountdown(Duration(milliseconds: 10)),
-                  ),
-                ),
-              ),
             ),
           ),
           const SizedBox(height: 30),
