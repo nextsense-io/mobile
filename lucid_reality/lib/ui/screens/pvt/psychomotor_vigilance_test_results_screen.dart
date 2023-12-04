@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/ui/screens/pvt/psychomotor_vigilance_test_vm.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/text_theme_for_chart.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
-import '../../../domain/psychomotor_vigilance_test.dart';
-import 'brain_checking_vm.dart';
+import 'package:lucid_reality/domain/psychomotor_vigilance_test.dart';
 
-class BrainCheckingResults extends HookWidget {
-  final BrainCheckingViewModule viewModel;
+class PsychomotorVigilanceTestResultsScreen extends HookWidget {
+  final PsychomotorVigilanceTestViewModule viewModel;
 
-  const BrainCheckingResults({super.key, required this.viewModel});
+  const PsychomotorVigilanceTestResultsScreen({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class BrainCheckingResults extends HookWidget {
             alignment: Alignment.topRight,
             child: IconButton(
               onPressed: () {
-                viewModel.redirectToBrainCheckingTab();
+                viewModel.redirectToPVTMain();
               },
               icon: Image.asset(
                 imageBasePath.plus("close_button.png"),
@@ -70,7 +70,7 @@ class BrainCheckingResults extends HookWidget {
                     alignment: Alignment.centerRight,
                     child: ElevatedButton(
                       onPressed: () {
-                        viewModel.redirectToBrainCheckingTab();
+                        viewModel.redirectToPVTMain();
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
@@ -113,7 +113,7 @@ class BrainCheckingResults extends HookWidget {
     );
   }
 
-  Widget _rowReportItem(BuildContext context, BrainCheckingReport checkingReport) {
+  Widget _rowReportItem(BuildContext context, PsychomotorVigilanceTestReport checkingReport) {
     return Container(
       height: 78,
       padding: const EdgeInsets.all(16),
@@ -143,16 +143,16 @@ class BrainCheckingResults extends HookWidget {
     );
   }
 
-  Widget prepareChart(PsychomotorVigilanceTest brainChecking) {
-    final slowest = brainChecking.slowest;
-    final fastest = brainChecking.fastest;
-    final average = brainChecking.average;
+  Widget prepareChart(PsychomotorVigilanceTest psychomotorVigilanceTest) {
+    final slowest = psychomotorVigilanceTest.slowest;
+    final fastest = psychomotorVigilanceTest.fastest;
+    final average = psychomotorVigilanceTest.average;
     return NumericComboChart(
-      feedData(brainChecking),
+      feedData(psychomotorVigilanceTest),
       animate: true,
       primaryMeasureAxis: NumericAxisSpec(
         tickProviderSpec: BasicNumericTickProviderSpec(
-          desiredTickCount: brainChecking.taps.length,
+          desiredTickCount: psychomotorVigilanceTest.taps.length,
           zeroBound: false,
         ),
         showAxisLine: true,
@@ -167,7 +167,7 @@ class BrainCheckingResults extends HookWidget {
       domainAxis: NumericAxisSpec(
         showAxisLine: true,
         tickProviderSpec: BasicNumericTickProviderSpec(
-          desiredTickCount: brainChecking.taps.length,
+          desiredTickCount: psychomotorVigilanceTest.taps.length,
           zeroBound: false,
         ),
         renderSpec: SmallTickRendererSpec(
@@ -175,7 +175,7 @@ class BrainCheckingResults extends HookWidget {
           labelStyle: const TextStyleSpec().caption,
           lineStyle: LineStyleSpec(color: ColorUtil.fromDartColor(NextSenseColors.royalBlue)),
         ),
-        viewport: NumericExtents(1, brainChecking.taps.length),
+        viewport: NumericExtents(1, psychomotorVigilanceTest.taps.length),
       ),
       // Configure the default renderer as a line renderer. This will be used
       // for any series that does not define a rendererIdKey.
@@ -190,7 +190,7 @@ class BrainCheckingResults extends HookWidget {
         RangeAnnotation(
           [
             LineAnnotationSegment(
-              brainChecking.average,
+              psychomotorVigilanceTest.average,
               RangeAnnotationAxisType.measure,
               endLabel: '${average}ms',
               color: ColorUtil.fromDartColor(NextSenseColors.royalPurple),
@@ -220,11 +220,11 @@ class BrainCheckingResults extends HookWidget {
     );
   }
 
-  List<Series<TapData, int>> feedData(PsychomotorVigilanceTest brainChecking) {
+  List<Series<TapData, int>> feedData(PsychomotorVigilanceTest psychomotorVigilanceTest) {
     int counter = 0;
-    final tapsData = brainChecking.taps.map((e) => TapData(counter++, e.getSpendTime())).toList();
-    final slowestIndex = tapsData.indexWhere((element) => element.primary == brainChecking.slowest);
-    final fastestIndex = tapsData.indexWhere((element) => element.primary == brainChecking.fastest);
+    final tapsData = psychomotorVigilanceTest.taps.map((e) => TapData(counter++, e.getSpendTime())).toList();
+    final slowestIndex = tapsData.indexWhere((element) => element.primary == psychomotorVigilanceTest.slowest);
+    final fastestIndex = tapsData.indexWhere((element) => element.primary == psychomotorVigilanceTest.fastest);
     return [
       Series<TapData, int>(
         id: 'Taps',

@@ -6,11 +6,11 @@ import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:lucid_reality/ui/screens/home/home_screen.dart';
 import 'package:lucid_reality/ui/screens/learn/learn_screen.dart';
 import 'package:lucid_reality/ui/screens/lucid/lucid_screen.dart';
+import 'package:lucid_reality/ui/screens/pvt/psychomotor_vigilance_test_list_screen.dart';
 import 'package:lucid_reality/ui/screens/sleep/sleep_screen.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:stacked/stacked.dart';
 
-import 'package:lucid_reality/ui/screens/brain_checking/brain_checking_tab_screen.dart';
 
 
 class DashboardScreen extends HookWidget {
@@ -21,7 +21,7 @@ class DashboardScreen extends HookWidget {
   final _pages = <Widget>[
     const HomeScreen(),
     const LearnScreen(),
-    const BrainCheckingResultsListScreen(),
+    const PsychomotorVigilanceTestListScreen(),
     const LucidScreen(),
     const SleepScreen()
   ];

@@ -69,12 +69,12 @@ class TapData {
   TapData(this.domain, this.primary);
 }
 
-class BrainCheckingReport {
+class PsychomotorVigilanceTestReport {
   final String title;
   final int responseTimeInSeconds;
   final Color color;
 
-  BrainCheckingReport(this.title, this.responseTimeInSeconds, this.color);
+  PsychomotorVigilanceTestReport(this.title, this.responseTimeInSeconds, this.color);
 
   String get responseTimeInSecondsInString {
     return '$responseTimeInSeconds${title != 'Missed Responses' ? 'ms' : ''}';

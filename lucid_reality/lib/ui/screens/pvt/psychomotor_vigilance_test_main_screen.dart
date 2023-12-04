@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
-import 'package:lucid_reality/ui/screens/brain_checking/brain_checking_vm.dart';
+import 'package:lucid_reality/ui/screens/pvt/psychomotor_vigilance_test_vm.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
-import '../../../domain/psychomotor_vigilance_test.dart';
+import 'package:lucid_reality/domain/psychomotor_vigilance_test.dart';
 
 
-class BrainCheckingMain extends HookWidget {
-  final BrainCheckingViewModule viewModel;
+class PsychomotorVigilanceTestMainScreen extends HookWidget {
+  final PsychomotorVigilanceTestViewModule viewModel;
 
-  const BrainCheckingMain({super.key, required this.viewModel});
+  const PsychomotorVigilanceTestMainScreen({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +54,7 @@ class BrainCheckingMain extends HookWidget {
                   alignment: Alignment.center,
                   child: ElevatedButton(
                     onPressed: () {
-                      viewModel.navigateToBrainChecking();
+                      viewModel.navigateToPVT();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
@@ -93,9 +93,9 @@ class BrainCheckingMain extends HookWidget {
                 final item = viewModel.brainCheckingDataProvider.getData()[index];
                 return InkWell(
                   onTap: () {
-                    viewModel.navigateToBrainCheckingResultsPageWithData(item);
+                    viewModel.navigateToPVTPageWithData(item);
                   },
-                  child: _rowBrainCheckingResultItem(context, item),
+                  child: _rowPVTResultItem(context, item),
                 );
               },
               separatorBuilder: (context, index) {
@@ -112,7 +112,7 @@ class BrainCheckingMain extends HookWidget {
     );
   }
 
-  Widget _rowBrainCheckingResultItem(BuildContext context, PsychomotorVigilanceTest brainChecking) {
+  Widget _rowPVTResultItem(BuildContext context, PsychomotorVigilanceTest psychomotorVigilanceTest) {
     return Container(
       height: 106,
       padding: const EdgeInsets.all(12),
@@ -140,7 +140,7 @@ class BrainCheckingMain extends HookWidget {
                 SizedBox(
                   height: 37,
                   child: Text(
-                    brainChecking.dateTime.getDate(),
+                    psychomotorVigilanceTest.dateTime.getDate(),
                     textAlign: TextAlign.center,
                     style: Theme.of(context)
                         .textTheme
@@ -152,7 +152,7 @@ class BrainCheckingMain extends HookWidget {
                 SizedBox(
                   width: double.infinity,
                   child: Text(
-                    brainChecking.dateTime.getTime(),
+                    psychomotorVigilanceTest.dateTime.getTime(),
                     textAlign: TextAlign.center,
                     style:
                         Theme.of(context).textTheme.bodySmallWithFontWeight600FontSize12?.copyWith(
@@ -171,14 +171,14 @@ class BrainCheckingMain extends HookWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  brainChecking.title,
+                  psychomotorVigilanceTest.title,
                   style: Theme.of(context).textTheme.bodySmallWithFontWeight600?.copyWith(
-                        color: brainChecking.alertnessLevel.getColor(),
+                        color: psychomotorVigilanceTest.alertnessLevel.getColor(),
                       ),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  '${brainChecking.averageTapLatencyMs}ms'.padLeft(5, '0'),
+                  '${psychomotorVigilanceTest.averageTapLatencyMs}ms'.padLeft(5, '0'),
                   style: Theme.of(context).textTheme.bodyCaption,
                 )
               ],
