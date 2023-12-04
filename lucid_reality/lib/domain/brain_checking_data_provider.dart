@@ -3,12 +3,12 @@ import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'brain_checking.dart';
 
 class BrainCheckingDataProvider {
-  final List<BrainChecking> _brainCheckingResult = <BrainChecking>[];
+  final List<PsychomotorVigilanceTest> _brainCheckingResult = <PsychomotorVigilanceTest>[];
   final _results = <BrainCheckingReport>[];
 
   BrainCheckingDataProvider() {
     _brainCheckingResult.add(
-      BrainChecking(
+      PsychomotorVigilanceTest(
         'Highly Alert',
         0000,
         DateTime(
@@ -18,11 +18,11 @@ class BrainCheckingDataProvider {
           9,
           5,
         ),
-        ResultType.awakeSleep,
+        SleepStage.awakeSleep,
       ),
     );
     _brainCheckingResult.add(
-      BrainChecking(
+      PsychomotorVigilanceTest(
         'Sleepy',
         0000,
         DateTime(
@@ -32,12 +32,12 @@ class BrainCheckingDataProvider {
           20,
           35,
         ),
-        ResultType.coreSleep,
+        SleepStage.coreSleep,
       ),
     );
   }
 
-  List<BrainChecking> getData() {
+  List<PsychomotorVigilanceTest> getData() {
     return _brainCheckingResult;
   }
 
@@ -45,11 +45,11 @@ class BrainCheckingDataProvider {
     return _results;
   }
 
-  void add(BrainChecking brainChecking) {
+  void add(PsychomotorVigilanceTest brainChecking) {
     _brainCheckingResult.insert(0, brainChecking);
   }
 
-  void generateReport(BrainChecking brainChecking) {
+  void generateReport(PsychomotorVigilanceTest brainChecking) {
     _results.clear();
     final average = brainChecking.average;
     final fastest = brainChecking.fastest;
@@ -65,28 +65,28 @@ class BrainCheckingDataProvider {
       switch (average) {
         case <= highlyAlertMS:
           brainChecking.title = "Highly Alert";
-          brainChecking.spendTime = average;
-          brainChecking.type = ResultType.awakeSleep;
+          brainChecking.averageTapLatencyMs = average;
+          brainChecking.sleepStage = SleepStage.awakeSleep;
           break;
         case <= sleepyMS && > highlyAlertMS:
           brainChecking.title = "Alert";
-          brainChecking.spendTime = average;
-          brainChecking.type = ResultType.deepSleep;
+          brainChecking.averageTapLatencyMs = average;
+          brainChecking.sleepStage = SleepStage.deepSleep;
           break;
         case <= verySleepyMS && > sleepyMS:
           brainChecking.title = "Drowsy";
-          brainChecking.spendTime = average;
-          brainChecking.type = ResultType.coreSleep;
+          brainChecking.averageTapLatencyMs = average;
+          brainChecking.sleepStage = SleepStage.coreSleep;
           break;
         case > verySleepyMS:
           brainChecking.title = "Very Drowsy";
-          brainChecking.spendTime = average;
-          brainChecking.type = ResultType.coreSleep;
+          brainChecking.averageTapLatencyMs = average;
+          brainChecking.sleepStage = SleepStage.coreSleep;
           break;
         default:
           brainChecking.title = "Alert";
-          brainChecking.spendTime = average;
-          brainChecking.type = ResultType.deepSleep;
+          brainChecking.averageTapLatencyMs = average;
+          brainChecking.sleepStage = SleepStage.deepSleep;
       }
     }
   }

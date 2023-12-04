@@ -110,7 +110,7 @@ class BrainCheckingMain extends HookWidget {
     );
   }
 
-  Widget _rowBrainCheckingResultItem(BuildContext context, BrainChecking brainChecking) {
+  Widget _rowBrainCheckingResultItem(BuildContext context, PsychomotorVigilanceTest brainChecking) {
     return Container(
       height: 106,
       padding: const EdgeInsets.all(12),
@@ -171,12 +171,12 @@ class BrainCheckingMain extends HookWidget {
                 Text(
                   brainChecking.title,
                   style: Theme.of(context).textTheme.bodySmallWithFontWeight600?.copyWith(
-                        color: brainChecking.type.getColor(),
+                        color: brainChecking.sleepStage.getColor(),
                       ),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  '${brainChecking.spendTime}ms'.padLeft(5, '0'),
+                  '${brainChecking.averageTapLatencyMs}ms'.padLeft(5, '0'),
                   style: Theme.of(context).textTheme.bodyCaption,
                 )
               ],

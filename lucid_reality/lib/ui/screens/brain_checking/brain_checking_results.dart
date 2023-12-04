@@ -142,7 +142,7 @@ class BrainCheckingResults extends HookWidget {
     );
   }
 
-  Widget prepareChart(BrainChecking brainChecking) {
+  Widget prepareChart(PsychomotorVigilanceTest brainChecking) {
     final slowest = brainChecking.slowest;
     final fastest = brainChecking.fastest;
     final average = brainChecking.average;
@@ -227,7 +227,7 @@ class BrainCheckingResults extends HookWidget {
     );
   }
 
-  List<Series<TapData, int>> feedData(BrainChecking brainChecking) {
+  List<Series<TapData, int>> feedData(PsychomotorVigilanceTest brainChecking) {
     int counter = 0;
     final tapsData = brainChecking.taps.map((e) => TapData(counter++, e.getSpendTime())).toList();
     final slowestIndex = tapsData.indexWhere((element) => element.primary == brainChecking.slowest);

@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
-import 'package:lucid_reality/main.dart' as lucid_reality_ui;
+import 'package:lucid_reality/main.dart' as lucid_ui;
 import 'package:nextsense_consumer_ui/main.dart' as consumer_ui;
 import 'package:nextsense_trial_ui/main.dart' as trial_ui;
 import 'package:proxy_flutter_module/routes.dart';
@@ -13,7 +13,6 @@ void main() async {
 }
 
 void proxyApp(String route) {
-  print("routeName==>>$route");
   switch (route) {
     case routeTrialUi:
       {
@@ -25,9 +24,9 @@ void proxyApp(String route) {
         consumer_ui.main();
         break;
       }
-    case routeLucidRealityUi:
+    case routeLucidUi:
       {
-        lucid_reality_ui.main();
+        lucid_ui.main();
         break;
       }
     default:

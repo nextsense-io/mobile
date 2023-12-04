@@ -3,22 +3,22 @@ import 'dart:ui';
 
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 
-enum ResultType { coreSleep, deepSleep, remSleep, awakeSleep }
+enum SleepStage { coreSleep, deepSleep, remSleep, awakeSleep }
 
 const int highlyAlertMS = 300;
 const int sleepyMS = 400;
 const int verySleepyMS = 500;
 
-class BrainChecking {
+class PsychomotorVigilanceTest {
   String title = '';
-  int spendTime = 0;
+  int averageTapLatencyMs = 0;
   final DateTime dateTime;
   final List<TapTime> taps = [];
-  ResultType type = ResultType.deepSleep;
+  SleepStage sleepStage = SleepStage.deepSleep;
 
-  BrainChecking.instance(this.dateTime);
+  PsychomotorVigilanceTest.instance(this.dateTime);
 
-  BrainChecking(this.title, this.spendTime, this.dateTime, this.type);
+  PsychomotorVigilanceTest(this.title, this.averageTapLatencyMs, this.dateTime, this.sleepStage);
 
   int get average {
     return taps.isEmpty
@@ -57,7 +57,11 @@ class TapTime {
   }
 }
 
-/// Sample linear data type.
+/// *
+/// This is wrapper class for representation of tap report.
+/// domain: Represent the  x axis data in chart
+/// primary: Represent the  y axis data in chart
+///  *
 class TapData {
   final int domain;
   final int primary;
@@ -77,16 +81,16 @@ class BrainCheckingReport {
   }
 }
 
-extension ColorBaseOnType on ResultType {
+extension ColorBaseOnSleepStage on SleepStage {
   Color getColor() {
     switch (this) {
-      case ResultType.coreSleep:
+      case SleepStage.coreSleep:
         return NextSenseColors.coreSleep;
-      case ResultType.deepSleep:
+      case SleepStage.deepSleep:
         return NextSenseColors.deepSleep;
-      case ResultType.remSleep:
+      case SleepStage.remSleep:
         return NextSenseColors.remSleep;
-      case ResultType.awakeSleep:
+      case SleepStage.awakeSleep:
         return NextSenseColors.awakeSleep;
     }
   }

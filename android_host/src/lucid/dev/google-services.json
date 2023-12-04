@@ -191,9 +191,9 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:894094054051:android:04e22b8267e7d9f2272516",
+        "mobilesdk_app_id": "1:894094054051:android:0b534255f6c2dce8272516",
         "android_client_info": {
-          "package_name": "io.nextsense.android.main.lucid_reality"
+          "package_name": "io.nextsense.android.main.lucid.dev"
         }
       },
       "oauth_client": [

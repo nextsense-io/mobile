@@ -15,7 +15,7 @@ class BrainCheckingViewModule extends ViewModel {
   late ValueNotifier<BrainCheckingStages> page;
   final Random random = Random();
   ValueNotifier<bool>? btnVisibility;
-  BrainChecking? brainChecking;
+  PsychomotorVigilanceTest? brainChecking;
 
   BrainCheckingViewModule(this.page);
 
@@ -36,13 +36,13 @@ class BrainCheckingViewModule extends ViewModel {
     page.value = BrainCheckingStages.brainCheckingResults;
   }
 
-  void navigateToBrainCheckingResultsPageWithData(BrainChecking brainChecking) {
+  void navigateToBrainCheckingResultsPageWithData(PsychomotorVigilanceTest brainChecking) {
     brainCheckingDataProvider.generateReport(brainChecking);
     page.value = BrainCheckingStages.brainCheckingResults;
   }
 
   void scheduleButtonVisibility() {
-    brainChecking ??= BrainChecking.instance(DateTime.now());
+    brainChecking ??= PsychomotorVigilanceTest.instance(DateTime.now());
     Future.delayed(
       Duration(seconds: random.nextInt(5) + 1),
       () {
