@@ -2,13 +2,12 @@ import 'package:community_charts_flutter/community_charts_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
+import 'package:lucid_reality/domain/psychomotor_vigilance_test.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/pvt/psychomotor_vigilance_test_vm.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/text_theme_for_chart.dart';
 import 'package:lucid_reality/utils/utils.dart';
-
-import 'package:lucid_reality/domain/psychomotor_vigilance_test.dart';
 
 class PsychomotorVigilanceTestResultsScreen extends HookWidget {
   final PsychomotorVigilanceTestViewModule viewModel;
@@ -61,7 +60,7 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
                         borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                    child: prepareChart(viewModel.brainCheckingDataProvider.getData().first),
+                    child: getPvtChart(viewModel.brainCheckingDataProvider.getData().first),
                   );
                 } else if (index ==
                     (viewModel.brainCheckingDataProvider.getReportData().length + 1)) {
@@ -143,12 +142,9 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
     );
   }
 
-  Widget prepareChart(PsychomotorVigilanceTest psychomotorVigilanceTest) {
-    final slowest = psychomotorVigilanceTest.slowest;
-    final fastest = psychomotorVigilanceTest.fastest;
-    final average = psychomotorVigilanceTest.average;
+  Widget getPvtChart(PsychomotorVigilanceTest psychomotorVigilanceTest) {
     return NumericComboChart(
-      feedData(psychomotorVigilanceTest),
+      convertPvtTestDataToChartData(psychomotorVigilanceTest),
       animate: true,
       primaryMeasureAxis: NumericAxisSpec(
         tickProviderSpec: BasicNumericTickProviderSpec(
@@ -162,7 +158,8 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
           labelStyle: const TextStyleSpec().caption,
           lineStyle: LineStyleSpec(color: ColorUtil.fromDartColor(NextSenseColors.royalBlue)),
         ),
-        viewport: NumericExtents(fastest, slowest),
+        viewport:
+            NumericExtents(psychomotorVigilanceTest.fastest, psychomotorVigilanceTest.slowest),
       ),
       domainAxis: NumericAxisSpec(
         showAxisLine: true,
@@ -192,7 +189,7 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
             LineAnnotationSegment(
               psychomotorVigilanceTest.average,
               RangeAnnotationAxisType.measure,
-              endLabel: '${average}ms',
+              endLabel: '${psychomotorVigilanceTest.average}ms',
               color: ColorUtil.fromDartColor(NextSenseColors.royalPurple),
               labelAnchor: AnnotationLabelAnchor.start,
             ),
@@ -220,11 +217,15 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
     );
   }
 
-  List<Series<TapData, int>> feedData(PsychomotorVigilanceTest psychomotorVigilanceTest) {
+  List<Series<TapData, int>> convertPvtTestDataToChartData(
+      PsychomotorVigilanceTest psychomotorVigilanceTest) {
     int counter = 0;
-    final tapsData = psychomotorVigilanceTest.taps.map((e) => TapData(counter++, e.getSpendTime())).toList();
-    final slowestIndex = tapsData.indexWhere((element) => element.primary == psychomotorVigilanceTest.slowest);
-    final fastestIndex = tapsData.indexWhere((element) => element.primary == psychomotorVigilanceTest.fastest);
+    final tapsData =
+        psychomotorVigilanceTest.taps.map((e) => TapData(counter++, e.getTapLatency())).toList();
+    final slowestIndex =
+        tapsData.indexWhere((element) => element.primary == psychomotorVigilanceTest.slowest);
+    final fastestIndex =
+        tapsData.indexWhere((element) => element.primary == psychomotorVigilanceTest.fastest);
     return [
       Series<TapData, int>(
         id: 'Taps',
@@ -252,4 +253,16 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
         ..setAttribute(rendererIdKey, 'customPoint'),
     ];
   }
+}
+
+/// *
+/// This is wrapper class for representation of tap report.
+/// domain: Represent the 'x' axis data in chart
+/// primary: Represent the 'y' axis data in chart
+///  *
+class TapData {
+  final int domain;
+  final int primary;
+
+  TapData(this.domain, this.primary);
 }

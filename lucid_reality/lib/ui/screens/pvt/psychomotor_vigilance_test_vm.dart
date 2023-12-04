@@ -36,7 +36,7 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
     page.value = PsychomotorVigilanceTestStages.pvtResults;
   }
 
-  void navigateToPVTPageWithData(PsychomotorVigilanceTest psychomotorVigilanceTest) {
+  void navigateToPVTResultsWithData(PsychomotorVigilanceTest psychomotorVigilanceTest) {
     brainCheckingDataProvider.generateReport(psychomotorVigilanceTest);
     page.value = PsychomotorVigilanceTestStages.pvtResults;
   }

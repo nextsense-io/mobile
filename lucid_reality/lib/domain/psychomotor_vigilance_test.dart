@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 
-enum SleepStage { coreSleep, deepSleep, remSleep, awakeSleep }
+enum Alertness { drowsy, alert, veryDrowsy, highlyAlert }
 
 const int highlyAlertMS = 300;
 const int sleepyMS = 400;
@@ -14,16 +14,17 @@ class PsychomotorVigilanceTest {
   int averageTapLatencyMs = 0;
   final DateTime dateTime;
   final List<TapTime> taps = [];
-  SleepStage alertnessLevel = SleepStage.deepSleep;
+  Alertness alertnessLevel = Alertness.alert;
 
   PsychomotorVigilanceTest.instance(this.dateTime);
 
-  PsychomotorVigilanceTest(this.title, this.averageTapLatencyMs, this.dateTime, this.alertnessLevel);
+  PsychomotorVigilanceTest(
+      this.title, this.averageTapLatencyMs, this.dateTime, this.alertnessLevel);
 
   int get average {
     return taps.isEmpty
         ? 0
-        : taps.map((e) => e.getSpendTime()).reduce((value, element) => value + element) ~/
+        : taps.map((e) => e.getTapLatency()).reduce((value, element) => value + element) ~/
             taps.length;
   }
 
@@ -31,17 +32,17 @@ class PsychomotorVigilanceTest {
     return taps.isEmpty
         ? 0
         : taps
-            .where((element) => element.getSpendTime() != 0)
-            .map((e) => e.getSpendTime())
+            .where((element) => element.getTapLatency() != 0)
+            .map((e) => e.getTapLatency())
             .reduce(min);
   }
 
   int get slowest {
-    return taps.isEmpty ? 0 : taps.map((e) => e.getSpendTime()).reduce(max);
+    return taps.isEmpty ? 0 : taps.map((e) => e.getTapLatency()).reduce(max);
   }
 
   String get lastClickSpendTime {
-    return taps.isEmpty ? '' : '${taps.last.getSpendTime()}ms';
+    return taps.isEmpty ? '' : '${taps.last.getTapLatency()}ms';
   }
 }
 
@@ -51,22 +52,10 @@ class TapTime {
 
   TapTime({this.startTime, this.endTime});
 
-  int getSpendTime() {
+  int getTapLatency() {
     if (startTime == null || endTime == null) return 0;
     return endTime!.difference(startTime!).inMilliseconds;
   }
-}
-
-/// *
-/// This is wrapper class for representation of tap report.
-/// domain: Represent the 'x' axis data in chart
-/// primary: Represent the 'y' axis data in chart
-///  *
-class TapData {
-  final int domain;
-  final int primary;
-
-  TapData(this.domain, this.primary);
 }
 
 class PsychomotorVigilanceTestReport {
@@ -81,16 +70,16 @@ class PsychomotorVigilanceTestReport {
   }
 }
 
-extension Alertness on SleepStage {
+extension AlertnessToColorValue on Alertness {
   Color getColor() {
     switch (this) {
-      case SleepStage.coreSleep:
+      case Alertness.drowsy:
         return NextSenseColors.coral;
-      case SleepStage.deepSleep:
+      case Alertness.alert:
         return NextSenseColors.skyBlue;
-      case SleepStage.remSleep:
+      case Alertness.veryDrowsy:
         return NextSenseColors.royalBlue;
-      case SleepStage.awakeSleep:
+      case Alertness.highlyAlert:
         return NextSenseColors.royalPurple;
     }
   }

@@ -17,7 +17,7 @@ class PsychomotorVigilanceTestDataProvider {
           9,
           5,
         ),
-        SleepStage.awakeSleep,
+        Alertness.highlyAlert,
       ),
     );
     _brainCheckingResult.add(
@@ -31,7 +31,7 @@ class PsychomotorVigilanceTestDataProvider {
           20,
           35,
         ),
-        SleepStage.coreSleep,
+        Alertness.drowsy,
       ),
     );
   }
@@ -66,27 +66,27 @@ class PsychomotorVigilanceTestDataProvider {
         case <= highlyAlertMS:
           psychomotorVigilanceTest.title = "Highly Alert";
           psychomotorVigilanceTest.averageTapLatencyMs = average;
-          psychomotorVigilanceTest.alertnessLevel = SleepStage.awakeSleep;
+          psychomotorVigilanceTest.alertnessLevel = Alertness.highlyAlert;
           break;
         case <= sleepyMS && > highlyAlertMS:
           psychomotorVigilanceTest.title = "Alert";
           psychomotorVigilanceTest.averageTapLatencyMs = average;
-          psychomotorVigilanceTest.alertnessLevel = SleepStage.deepSleep;
+          psychomotorVigilanceTest.alertnessLevel = Alertness.alert;
           break;
         case <= verySleepyMS && > sleepyMS:
           psychomotorVigilanceTest.title = "Drowsy";
           psychomotorVigilanceTest.averageTapLatencyMs = average;
-          psychomotorVigilanceTest.alertnessLevel = SleepStage.coreSleep;
+          psychomotorVigilanceTest.alertnessLevel = Alertness.drowsy;
           break;
         case > verySleepyMS:
           psychomotorVigilanceTest.title = "Very Drowsy";
           psychomotorVigilanceTest.averageTapLatencyMs = average;
-          psychomotorVigilanceTest.alertnessLevel = SleepStage.coreSleep;
+          psychomotorVigilanceTest.alertnessLevel = Alertness.veryDrowsy;
           break;
         default:
           psychomotorVigilanceTest.title = "Alert";
           psychomotorVigilanceTest.averageTapLatencyMs = average;
-          psychomotorVigilanceTest.alertnessLevel = SleepStage.deepSleep;
+          psychomotorVigilanceTest.alertnessLevel = Alertness.alert;
       }
     }
   }

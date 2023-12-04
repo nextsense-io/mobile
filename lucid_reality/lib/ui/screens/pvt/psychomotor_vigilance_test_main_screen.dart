@@ -93,7 +93,7 @@ class PsychomotorVigilanceTestMainScreen extends HookWidget {
                 final item = viewModel.brainCheckingDataProvider.getData()[index];
                 return InkWell(
                   onTap: () {
-                    viewModel.navigateToPVTPageWithData(item);
+                    viewModel.navigateToPVTResultsWithData(item);
                   },
                   child: _rowPVTResultItem(context, item),
                 );
