@@ -38,7 +38,7 @@ class LetsGoScreen extends StatelessWidget {
                           backgroundColor: Colors.transparent,
                           padding: EdgeInsets.zero,
                           shape: RoundedRectangleBorder(
-                            side: const BorderSide(width: 1, color: NextSenseColors.awakeSleep),
+                            side: const BorderSide(width: 1, color: NextSenseColors.royalPurple),
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
@@ -55,7 +55,7 @@ class LetsGoScreen extends StatelessWidget {
                               colors: NextSenseColors.purpleGradiantColors,
                             ),
                             shape: RoundedRectangleBorder(
-                              side: const BorderSide(width: 1, color: NextSenseColors.awakeSleep),
+                              side: const BorderSide(width: 1, color: NextSenseColors.royalPurple),
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),

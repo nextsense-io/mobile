@@ -4,9 +4,10 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
+import 'package:lucid_reality/utils/text_theme_for_chart.dart';
+import 'package:lucid_reality/utils/utils.dart';
 
-import '../../../domain/brain_checking.dart';
-import '../../../utils/utils.dart';
+import '../../../domain/psychomotor_vigilance_test.dart';
 import 'brain_checking_vm.dart';
 
 class BrainCheckingResults extends HookWidget {
@@ -158,12 +159,8 @@ class BrainCheckingResults extends HookWidget {
         tickFormatterSpec: BasicNumericTickFormatterSpec((measure) => '${measure?.toInt()}ms'),
         renderSpec: SmallTickRendererSpec(
           // Tick and Label styling here.
-          labelStyle: TextStyleSpec(
-            fontSize: 10,
-            fontFamily: 'Montserrat',
-            color: ColorUtil.fromDartColor(NextSenseColors.remSleep),
-          ),
-          lineStyle: LineStyleSpec(color: ColorUtil.fromDartColor(NextSenseColors.remSleep)),
+          labelStyle: const TextStyleSpec().caption,
+          lineStyle: LineStyleSpec(color: ColorUtil.fromDartColor(NextSenseColors.royalBlue)),
         ),
         viewport: NumericExtents(fastest, slowest),
       ),
@@ -175,12 +172,8 @@ class BrainCheckingResults extends HookWidget {
         ),
         renderSpec: SmallTickRendererSpec(
           // Tick and Label styling here.
-          labelStyle: TextStyleSpec(
-            fontSize: 10,
-            fontFamily: 'Montserrat',
-            color: ColorUtil.fromDartColor(NextSenseColors.remSleep),
-          ),
-          lineStyle: LineStyleSpec(color: ColorUtil.fromDartColor(NextSenseColors.remSleep)),
+          labelStyle: const TextStyleSpec().caption,
+          lineStyle: LineStyleSpec(color: ColorUtil.fromDartColor(NextSenseColors.royalBlue)),
         ),
         viewport: NumericExtents(1, brainChecking.taps.length),
       ),
@@ -200,19 +193,19 @@ class BrainCheckingResults extends HookWidget {
               brainChecking.average,
               RangeAnnotationAxisType.measure,
               endLabel: '${average}ms',
-              color: ColorUtil.fromDartColor(NextSenseColors.awakeSleep),
+              color: ColorUtil.fromDartColor(NextSenseColors.royalPurple),
               labelAnchor: AnnotationLabelAnchor.start,
             ),
             LineAnnotationSegment(
-              fastest + 20,
+              300,
               RangeAnnotationAxisType.measure,
-              color: ColorUtil.fromDartColor(NextSenseColors.awakeSleep),
+              color: ColorUtil.fromDartColor(NextSenseColors.royalPurple),
               dashPattern: [4, 4],
             ),
             LineAnnotationSegment(
-              slowest - 20,
+              1200,
               RangeAnnotationAxisType.measure,
-              color: ColorUtil.fromDartColor(NextSenseColors.awakeSleep),
+              color: ColorUtil.fromDartColor(NextSenseColors.royalPurple),
               labelAnchor: AnnotationLabelAnchor.start,
               dashPattern: [4, 4],
             ),
@@ -220,7 +213,7 @@ class BrainCheckingResults extends HookWidget {
           defaultLabelStyleSpec: TextStyleSpec(
             fontSize: 14,
             fontFamily: 'Montserrat',
-            color: ColorUtil.fromDartColor(NextSenseColors.awakeSleep),
+            color: ColorUtil.fromDartColor(NextSenseColors.royalPurple),
           ),
         )
       ],
@@ -235,7 +228,7 @@ class BrainCheckingResults extends HookWidget {
     return [
       Series<TapData, int>(
         id: 'Taps',
-        colorFn: (_, __) => ColorUtil.fromDartColor(NextSenseColors.awakeSleep),
+        colorFn: (_, __) => ColorUtil.fromDartColor(NextSenseColors.royalPurple),
         domainFn: (TapData tap, _) => tap.domain,
         measureFn: (TapData tap, _) => tap.primary,
         data: tapsData,
@@ -244,9 +237,9 @@ class BrainCheckingResults extends HookWidget {
         id: 'MinMaxPoints',
         colorFn: (tap, __) {
           if (tap.domain == slowestIndex) {
-            return ColorUtil.fromDartColor(NextSenseColors.coreSleep);
+            return ColorUtil.fromDartColor(NextSenseColors.coral);
           } else if (tap.domain == fastestIndex) {
-            return ColorUtil.fromDartColor(NextSenseColors.deepSleep);
+            return ColorUtil.fromDartColor(NextSenseColors.skyBlue);
           } else {
             return ColorUtil.fromDartColor(Colors.transparent);
           }

@@ -17,10 +17,10 @@ class NextSenseColors {
   static const Color blueColor = Color(0xFF444FB1);
   static const Color lightBlue = Color(0xFF3A448A);
 
-  static const Color coreSleep = Color(0xFFE4766F);
-  static const Color deepSleep = Color(0xFF4CC9F0);
-  static const Color remSleep = Color(0xFF444FB1);
-  static const Color awakeSleep = Color(0xFF7336BA);
+  static const Color coral = Color(0xFFE4766F);
+  static const Color skyBlue = Color(0xFF4CC9F0);
+  static const Color royalBlue = Color(0xFF444FB1);
+  static const Color royalPurple = Color(0xFF7336BA);
   static const Color cardBackground = Color(0xCC10142C);
   static const Color transparentGray = Color(0x3F000000);
   static const purpleGradiantColors = [Color(0xE09E1FF6), Color(0x386D2F98)];

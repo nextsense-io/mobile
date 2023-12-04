@@ -14,11 +14,11 @@ class PsychomotorVigilanceTest {
   int averageTapLatencyMs = 0;
   final DateTime dateTime;
   final List<TapTime> taps = [];
-  SleepStage sleepStage = SleepStage.deepSleep;
+  SleepStage alertnessLevel = SleepStage.deepSleep;
 
   PsychomotorVigilanceTest.instance(this.dateTime);
 
-  PsychomotorVigilanceTest(this.title, this.averageTapLatencyMs, this.dateTime, this.sleepStage);
+  PsychomotorVigilanceTest(this.title, this.averageTapLatencyMs, this.dateTime, this.alertnessLevel);
 
   int get average {
     return taps.isEmpty
@@ -59,8 +59,8 @@ class TapTime {
 
 /// *
 /// This is wrapper class for representation of tap report.
-/// domain: Represent the  x axis data in chart
-/// primary: Represent the  y axis data in chart
+/// domain: Represent the 'x' axis data in chart
+/// primary: Represent the 'y' axis data in chart
 ///  *
 class TapData {
   final int domain;
@@ -81,17 +81,17 @@ class BrainCheckingReport {
   }
 }
 
-extension ColorBaseOnSleepStage on SleepStage {
+extension Alertness on SleepStage {
   Color getColor() {
     switch (this) {
       case SleepStage.coreSleep:
-        return NextSenseColors.coreSleep;
+        return NextSenseColors.coral;
       case SleepStage.deepSleep:
-        return NextSenseColors.deepSleep;
+        return NextSenseColors.skyBlue;
       case SleepStage.remSleep:
-        return NextSenseColors.remSleep;
+        return NextSenseColors.royalBlue;
       case SleepStage.awakeSleep:
-        return NextSenseColors.awakeSleep;
+        return NextSenseColors.royalPurple;
     }
   }
 }

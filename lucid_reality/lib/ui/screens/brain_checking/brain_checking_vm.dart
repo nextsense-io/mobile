@@ -3,10 +3,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:lucid_reality/di.dart';
-import 'package:lucid_reality/domain/brain_checking.dart';
 import 'package:lucid_reality/domain/brain_checking_data_provider.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 
+import 'package:lucid_reality/domain/psychomotor_vigilance_test.dart';
 import 'brain_checking_tab_screen.dart';
 
 class BrainCheckingViewModule extends ViewModel {

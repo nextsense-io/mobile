@@ -96,7 +96,7 @@ class QuestionsScreen extends HookWidget {
                 colors: NextSenseColors.purpleGradiantColors,
               ),
               shape: RoundedRectangleBorder(
-                side: const BorderSide(width: 2, color: NextSenseColors.awakeSleep),
+                side: const BorderSide(width: 2, color: NextSenseColors.royalPurple),
                 borderRadius: BorderRadius.circular(16),
               ),
             ),

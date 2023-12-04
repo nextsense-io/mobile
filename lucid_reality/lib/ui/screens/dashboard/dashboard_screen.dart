@@ -51,7 +51,7 @@ class DashboardScreen extends HookWidget {
               showSelectedLabels: false,
               showUnselectedLabels: false,
               selectedItemColor: Colors.white,
-              unselectedItemColor: NextSenseColors.remSleep,
+              unselectedItemColor: NextSenseColors.royalBlue,
               type: BottomNavigationBarType.fixed,
               onTap: (index) {
                 activeTab.value = index;
@@ -61,35 +61,35 @@ class DashboardScreen extends HookWidget {
                   label: "Home",
                   icon: Image(
                     image: Svg(imageBasePath.plus('home.svg')),
-                    color: activeTab.value == 0 ? Colors.white : NextSenseColors.remSleep,
+                    color: activeTab.value == 0 ? Colors.white : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
                   label: "Learn",
                   icon: Image(
                     image: Svg(imageBasePath.plus('learn.svg')),
-                    color: activeTab.value == 1 ? Colors.white : NextSenseColors.remSleep,
+                    color: activeTab.value == 1 ? Colors.white : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
                   label: "Mind",
                   icon: Image(
                     image: Svg(imageBasePath.plus('brain_check.svg')),
-                    color: activeTab.value == 2 ? Colors.white : NextSenseColors.remSleep,
+                    color: activeTab.value == 2 ? Colors.white : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
                   label: "Lucid",
                   icon: Image(
                     image: Svg(imageBasePath.plus('lucid.svg')),
-                    color: activeTab.value == 3 ? Colors.white : NextSenseColors.remSleep,
+                    color: activeTab.value == 3 ? Colors.white : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
                   label: "Sleep",
                   icon: Image(
                     image: Svg(imageBasePath.plus('sleep.svg')),
-                    color: activeTab.value == 4 ? Colors.white : NextSenseColors.remSleep,
+                    color: activeTab.value == 4 ? Colors.white : NextSenseColors.royalBlue,
                   ),
                 ),
               ],

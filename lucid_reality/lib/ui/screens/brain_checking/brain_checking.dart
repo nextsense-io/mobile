@@ -103,7 +103,7 @@ class BrainCheckingScreen extends HookWidget {
           const SizedBox(height: 30),
           Container(
             decoration: ShapeDecoration(
-              color: NextSenseColors.remSleep,
+              color: NextSenseColors.royalBlue,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9)),
             ),
             child: AnimatedBuilder(
@@ -111,7 +111,7 @@ class BrainCheckingScreen extends HookWidget {
               builder: (context, animation) {
                 return LinearProgressIndicator(
                   value: controller.value,
-                  backgroundColor: NextSenseColors.remSleep,
+                  backgroundColor: NextSenseColors.royalBlue,
                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                 );
               },
