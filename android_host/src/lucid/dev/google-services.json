@@ -1,0 +1,475 @@
+{
+  "project_info": {
+    "project_number": "894094054051",
+    "firebase_url": "https://nextsense-dev-default-rtdb.firebaseio.com",
+    "project_id": "nextsense-dev",
+    "storage_bucket": "nextsense-dev.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894094054051:android:c5b9d28265214fee272516",
+        "android_client_info": {
+          "package_name": "io.nextsense.android.main"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "894094054051-06t4g85enf11thmalet3dmj61cfqkdpu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main",
+            "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
+        {
+          "client_id": "894094054051-8ktqc0qa1ra3e6k9g0ts1e9bal30q148.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main",
+            "certificate_hash": "9db4914f5ada563d8fab6b2fc47bdc445e1e4fa7"
+          }
+        },
+        {
+          "client_id": "894094054051-a41v8vhiaatb148tglp126qfuvrhu9ai.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main",
+            "certificate_hash": "05a96ff56fe5a743c3ae042490ca4b5e3a00b873"
+          }
+        },
+        {
+          "client_id": "894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApTxZwsk_EOT60KnGfVLCnd81shtWedew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894094054051-582gb3am3efuj76dm2li7cja2gpnt907.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894094054051:android:f776b0444e172fa5272516",
+        "android_client_info": {
+          "package_name": "io.nextsense.android.main.consumer.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "894094054051-0njtu2uu3cfid9b09q4k6sd1lc3fbsn6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.consumer.dev",
+            "certificate_hash": "396fcf39f66fe653150904858f74ebf9337d4f43"
+          }
+        },
+        {
+          "client_id": "894094054051-37gued9vvivuikjbsetvl0piksgjqsgl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.consumer.dev",
+            "certificate_hash": "05a96ff56fe5a743c3ae042490ca4b5e3a00b873"
+          }
+        },
+        {
+          "client_id": "894094054051-pahredae8ctjgvk6rtj6odrferqsa86f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.consumer.dev",
+            "certificate_hash": "b45570bb7772b7b6712333bc27b28a9e5aba065b"
+          }
+        },
+        {
+          "client_id": "894094054051-qa43n53qdg0rdb5suvej1pm5v37ni5op.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.consumer.dev",
+            "certificate_hash": "9db4914f5ada563d8fab6b2fc47bdc445e1e4fa7"
+          }
+        },
+        {
+          "client_id": "894094054051-r14s7cg3vf18hoe3hdikgt5mlob17n18.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.consumer.dev",
+            "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
+        {
+          "client_id": "894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApTxZwsk_EOT60KnGfVLCnd81shtWedew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894094054051-582gb3am3efuj76dm2li7cja2gpnt907.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894094054051:android:d2dccd3e5e655fe7272516",
+        "android_client_info": {
+          "package_name": "io.nextsense.android.main.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "894094054051-3biotv24d7di3k91rpb9cdja3u2smjed.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.dev",
+            "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
+        {
+          "client_id": "894094054051-3ks06hrls9j2em056bqlu0fhlqtgo2m2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.dev",
+            "certificate_hash": "9db4914f5ada563d8fab6b2fc47bdc445e1e4fa7"
+          }
+        },
+        {
+          "client_id": "894094054051-a81h0gljl3e93nq1bumeeaeuf84ifm9u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.dev",
+            "certificate_hash": "05a96ff56fe5a743c3ae042490ca4b5e3a00b873"
+          }
+        },
+        {
+          "client_id": "894094054051-de8k8v42s1ue2fohjq6df5pn0gclv3q6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.dev",
+            "certificate_hash": "41737cd172ebd7cc5d99c9370d3e8f88479f439e"
+          }
+        },
+        {
+          "client_id": "894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApTxZwsk_EOT60KnGfVLCnd81shtWedew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894094054051-582gb3am3efuj76dm2li7cja2gpnt907.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894094054051:android:0b534255f6c2dce8272516",
+        "android_client_info": {
+          "package_name": "io.nextsense.android.main.lucid.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApTxZwsk_EOT60KnGfVLCnd81shtWedew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894094054051-582gb3am3efuj76dm2li7cja2gpnt907.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894094054051:android:ac853ba51d199ca1272516",
+        "android_client_info": {
+          "package_name": "io.nextsense.android.main.lucid_reality.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApTxZwsk_EOT60KnGfVLCnd81shtWedew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894094054051-582gb3am3efuj76dm2li7cja2gpnt907.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894094054051:android:f9520abd5f87b3d6272516",
+        "android_client_info": {
+          "package_name": "io.nextsense.android.main.research.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "894094054051-bpaktol42tas7ocb95e01jkr6vjbuofi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.dev",
+            "certificate_hash": "41737cd172ebd7cc5d99c9370d3e8f88479f439e"
+          }
+        },
+        {
+          "client_id": "894094054051-gikgpdnb2h4s03s2dluasm7retfup3o1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.dev",
+            "certificate_hash": "9db4914f5ada563d8fab6b2fc47bdc445e1e4fa7"
+          }
+        },
+        {
+          "client_id": "894094054051-jd0lgalpbi3jg8d6epc9pagn0tbqghg3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.dev",
+            "certificate_hash": "b45570bb7772b7b6712333bc27b28a9e5aba065b"
+          }
+        },
+        {
+          "client_id": "894094054051-l78h29m2d68tlk77fa4d0n1f5n0jioi3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.dev",
+            "certificate_hash": "e5aa4e260baf75d5a9907bfec7626ad447f373b0"
+          }
+        },
+        {
+          "client_id": "894094054051-r7f0ok5c9406msc2d4hvil4r3bv6ni44.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.dev",
+            "certificate_hash": "05a96ff56fe5a743c3ae042490ca4b5e3a00b873"
+          }
+        },
+        {
+          "client_id": "894094054051-smm720npn9p5ji8lo9dhm50jfmu0k87g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.dev",
+            "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
+        {
+          "client_id": "894094054051-tque31750pa19kfc1nh7ogf8uevmf9s4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.dev",
+            "certificate_hash": "396fcf39f66fe653150904858f74ebf9337d4f43"
+          }
+        },
+        {
+          "client_id": "894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApTxZwsk_EOT60KnGfVLCnd81shtWedew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894094054051-582gb3am3efuj76dm2li7cja2gpnt907.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894094054051:android:014d510588b247ae272516",
+        "android_client_info": {
+          "package_name": "io.nextsense.android.main.study.dev"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "894094054051-0jrubor43hk5l41hikjckmhu0mipkd3e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.dev",
+            "certificate_hash": "05a96ff56fe5a743c3ae042490ca4b5e3a00b873"
+          }
+        },
+        {
+          "client_id": "894094054051-92uia08eq1f0kbl0b2i4ivbe5f670ev3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.dev",
+            "certificate_hash": "396fcf39f66fe653150904858f74ebf9337d4f43"
+          }
+        },
+        {
+          "client_id": "894094054051-943jdu29t5kdtjdve64fm7h8jf7edcee.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.dev",
+            "certificate_hash": "9db4914f5ada563d8fab6b2fc47bdc445e1e4fa7"
+          }
+        },
+        {
+          "client_id": "894094054051-h2pn1p8ugtd4q056a2j26out03t58sr1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.dev",
+            "certificate_hash": "41737cd172ebd7cc5d99c9370d3e8f88479f439e"
+          }
+        },
+        {
+          "client_id": "894094054051-i5kdb06sr8jlcljt9imv99a9s233s62i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.dev",
+            "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
+        {
+          "client_id": "894094054051-man83v0ls3ap1ep53lb65ivul375a1ld.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.dev",
+            "certificate_hash": "b45570bb7772b7b6712333bc27b28a9e5aba065b"
+          }
+        },
+        {
+          "client_id": "894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApTxZwsk_EOT60KnGfVLCnd81shtWedew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894094054051-582gb3am3efuj76dm2li7cja2gpnt907.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894094054051:android:751ad21cdc27d827272516",
+        "android_client_info": {
+          "package_name": "io.nextsense.mobile.trial"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "894094054051-3qa1qqmef0ipgrqn1cooigegqg5jab5o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.mobile.trial",
+            "certificate_hash": "41737cd172ebd7cc5d99c9370d3e8f88479f439e"
+          }
+        },
+        {
+          "client_id": "894094054051-eblvp1coqdg0hok5nd48h0s3peo0hsuu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.mobile.trial",
+            "certificate_hash": "1d1e708623e85122b1bc285598d14293ed4eb948"
+          }
+        },
+        {
+          "client_id": "894094054051-f5sut48f5ele2mod398sfjlp39unn22g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.mobile.trial",
+            "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
+        {
+          "client_id": "894094054051-f9c8hcmb91bk7lgksf4t2s0v0oofmo75.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.mobile.trial",
+            "certificate_hash": "9db4914f5ada563d8fab6b2fc47bdc445e1e4fa7"
+          }
+        },
+        {
+          "client_id": "894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApTxZwsk_EOT60KnGfVLCnd81shtWedew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "894094054051-582gb3am3efuj76dm2li7cja2gpnt907.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

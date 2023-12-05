@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucid_reality/utils/text_theme.dart';
 
 class HowItScreen extends StatelessWidget {
   const HowItScreen({super.key});
@@ -24,10 +25,7 @@ class HowItScreen extends StatelessWidget {
                   ),
                   TextSpan(
                     text: ' sleep',
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelLarge
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.labelLargeWithFontWeight600,
                   ),
                   TextSpan(
                     text: ', ',
@@ -35,10 +33,7 @@ class HowItScreen extends StatelessWidget {
                   ),
                   TextSpan(
                     text: 'rest',
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelLarge
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.labelLargeWithFontWeight600,
                   ),
                   TextSpan(
                     text: ', ',
@@ -46,10 +41,7 @@ class HowItScreen extends StatelessWidget {
                   ),
                   TextSpan(
                     text: 'daytime alertness',
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelLarge
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.labelLargeWithFontWeight600,
                   ),
                   TextSpan(
                     text: ', and ',
@@ -57,10 +49,7 @@ class HowItScreen extends StatelessWidget {
                   ),
                   TextSpan(
                     text: 'dream exploration',
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelLarge
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.labelLargeWithFontWeight600,
                   ),
                   TextSpan(
                     text: '.\n\nHere’s how...',

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 
-import '../../../utils/utils.dart';
+import 'package:lucid_reality/utils/utils.dart';
 
 class DreamScreen extends StatelessWidget {
   const DreamScreen({super.key});

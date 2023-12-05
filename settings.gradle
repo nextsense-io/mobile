@@ -11,5 +11,6 @@ include ':flutter_common'  // Flutter package with common code
 include ':proxy_flutter_module'  // Proxy Flutter module that calls the module for the current flavor
 include ':nextsense_consumer_ui'  // Flutter module with main UI
 include ':nextsense_trial_ui'  // Flutter module with main UI
+include ':lucid_reality' // Flutter module with main UI
 include ':android_host'  // Android application, entry point for the service and the flutter module
 

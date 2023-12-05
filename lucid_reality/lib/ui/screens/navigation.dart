@@ -8,7 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 
-import '../../di.dart';
+import 'package:lucid_reality/di.dart';
 import 'onboarding/onboarding_screen.dart';
 import 'startup/startup_screen.dart';
 

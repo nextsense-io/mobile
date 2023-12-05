@@ -1,7 +1,7 @@
 import 'package:flutter_common/domain/firebase_entity.dart';
 
-import '../di.dart';
-import '../domain/event_type.dart';
+import 'package:lucid_reality/di.dart';
+import 'package:lucid_reality/domain/event_type.dart';
 import 'consumer_ui_firestore_manager.dart';
 
 class EventTypesManager {

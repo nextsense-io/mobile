@@ -1,8 +1,7 @@
 package io.nextsense.android;
 
-import io.nextsense.android.base.utils.RotatingFileLogger;
-
 public enum ApplicationType {
   CONSUMER,
+  LUCID_REALITY,
   MEDICAL
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:lucid_reality/domain/question.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
 class QuestionsScreen extends HookWidget {
@@ -53,10 +54,7 @@ class QuestionsScreen extends HookWidget {
               const SizedBox(height: 32),
               Text(
                 'I WANT TO...',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(fontWeight: FontWeight.w700, fontSize: 12),
+                style: Theme.of(context).textTheme.bodySmallWithFontWeight700FontSize12,
               ),
               const SizedBox(height: 32),
               Expanded(
@@ -95,28 +93,28 @@ class QuestionsScreen extends HookWidget {
               gradient: const RadialGradient(
                 center: Alignment(0.07, 0.78),
                 radius: 0,
-                colors: [Color(0xE09E1FF6), Color(0x386D2F98)],
+                colors: NextSenseColors.purpleGradiantColors,
               ),
               shape: RoundedRectangleBorder(
-                side: const BorderSide(width: 2, color: Color(0xFF7336BA)),
+                side: const BorderSide(width: 2, color: NextSenseColors.royalPurple),
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
             child: Text(
               question.question,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.bodyMediumWithFontWeight600,
             ),
           )
         : Container(
             padding: const EdgeInsets.all(24),
             decoration: ShapeDecoration(
-              color: const Color(0xCC10142C),
+              color: NextSenseColors.cardBackground,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
               shadows: const [
                 BoxShadow(
-                  color: Color(0x3F000000),
+                  color: NextSenseColors.transparentGray,
                   blurRadius: 4,
                   offset: Offset(0, 4),
                   spreadRadius: 0,
@@ -125,7 +123,7 @@ class QuestionsScreen extends HookWidget {
             ),
             child: Text(
               question.question,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.bodyMediumWithFontWeight600,
             ),
           );
   }

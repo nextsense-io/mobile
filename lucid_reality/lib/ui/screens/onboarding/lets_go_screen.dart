@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:stacked/stacked.dart';
 
 import 'onboarding_screen_vm.dart';
@@ -37,7 +38,7 @@ class LetsGoScreen extends StatelessWidget {
                           backgroundColor: Colors.transparent,
                           padding: EdgeInsets.zero,
                           shape: RoundedRectangleBorder(
-                            side: const BorderSide(width: 1, color: Color(0xFF7336BA)),
+                            side: const BorderSide(width: 1, color: NextSenseColors.royalPurple),
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
@@ -51,10 +52,10 @@ class LetsGoScreen extends StatelessWidget {
                             gradient: const RadialGradient(
                               center: Alignment(0.07, 0.78),
                               radius: 0,
-                              colors: [Color(0xE09E1FF6), Color(0x386D2F98)],
+                              colors: NextSenseColors.purpleGradiantColors,
                             ),
                             shape: RoundedRectangleBorder(
-                              side: const BorderSide(width: 1, color: Color(0xFF7336BA)),
+                              side: const BorderSide(width: 1, color: NextSenseColors.royalPurple),
                               borderRadius: BorderRadius.circular(20),
                             ),
                           ),

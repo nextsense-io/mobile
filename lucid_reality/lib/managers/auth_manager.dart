@@ -10,9 +10,9 @@ import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:uuid/uuid.dart';
 
-import '../di.dart';
-import '../domain/user.dart';
-import '../preferences.dart';
+import 'package:lucid_reality/di.dart';
+import 'package:lucid_reality/domain/user.dart';
+import 'package:lucid_reality/preferences.dart';
 import 'consumer_ui_firestore_manager.dart';
 
 class AuthManager {

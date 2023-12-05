@@ -3,7 +3,7 @@ import 'package:lucid_reality/ui/screens/startup/startup_screen_vm.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:stacked/stacked.dart';
 
-import '../../../utils/utils.dart';
+import 'package:lucid_reality/utils/utils.dart';
 
 class StartupScreen extends StatefulWidget {
   static const String id = 'startup_screen';

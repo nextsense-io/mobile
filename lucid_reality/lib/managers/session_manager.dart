@@ -7,11 +7,11 @@ import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../di.dart';
-import '../domain/data_session.dart';
-import '../domain/session.dart';
-import '../domain/user.dart';
-import '../preferences.dart';
+import 'package:lucid_reality/di.dart';
+import 'package:lucid_reality/domain/data_session.dart';
+import 'package:lucid_reality/domain/session.dart';
+import 'package:lucid_reality/domain/user.dart';
+import 'package:lucid_reality/preferences.dart';
 import 'auth_manager.dart';
 import 'consumer_ui_firestore_manager.dart';
 

@@ -2,7 +2,7 @@ import 'package:logging/logging.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:lucid_reality/managers/session_manager.dart';
 
-import '../di.dart';
+import 'package:lucid_reality/di.dart';
 import 'auth_manager.dart';
 import 'event_types_manager.dart';
 

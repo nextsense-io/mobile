@@ -23,6 +23,8 @@ public class NextSenseApplication extends Application {
   private static final String TAG = NextSenseApplication.class.getSimpleName();
   private static final String ROUTE_CONSUMER_UI = "/consumer_ui";
   private static final String ROUTE_TRIAL_UI = "/trial_ui";
+  private static final String LUCID_UI = "/lucid_ui";
+
 
   private ApplicationType applicationType;
   private FlutterEngine flutterEngine;
@@ -62,6 +64,8 @@ public class NextSenseApplication extends Application {
     String route = ROUTE_TRIAL_UI;
     if (applicationType == ApplicationType.CONSUMER) {
       route = ROUTE_CONSUMER_UI;
+    } else if (applicationType == ApplicationType.LUCID_REALITY) {
+      route = LUCID_UI;
     }
     flutterEngine.getNavigationChannel().setInitialRoute(route);
 

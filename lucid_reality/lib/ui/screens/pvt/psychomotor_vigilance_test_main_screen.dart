@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
-import 'package:lucid_reality/ui/screens/brain_checking/brain_checking_vm.dart';
+import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/ui/screens/pvt/psychomotor_vigilance_test_vm.dart';
+import 'package:lucid_reality/utils/text_theme.dart';
+import 'package:lucid_reality/utils/utils.dart';
 
-import '../../../domain/brain_checking.dart';
-import '../../../utils/utils.dart';
-import '../../nextsense_colors.dart';
+import 'package:lucid_reality/domain/psychomotor_vigilance_test.dart';
 
-class BrainCheckingMain extends HookWidget {
-  final BrainCheckingViewModule viewModel;
 
-  const BrainCheckingMain({super.key, required this.viewModel});
+class PsychomotorVigilanceTestMainScreen extends HookWidget {
+  final PsychomotorVigilanceTestViewModule viewModel;
+
+  const PsychomotorVigilanceTestMainScreen({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +40,8 @@ class BrainCheckingMain extends HookWidget {
               children: [
                 Text(
                   'Non-sleep deep rest',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: NextSenseColors.remSleep,
+                  style: Theme.of(context).textTheme.bodySmallWithFontWeight600?.copyWith(
+                        color: NextSenseColors.royalBlue,
                       ),
                 ),
                 const SizedBox(height: 12),
@@ -53,7 +54,7 @@ class BrainCheckingMain extends HookWidget {
                   alignment: Alignment.center,
                   child: ElevatedButton(
                     onPressed: () {
-                      viewModel.navigateToBrainChecking();
+                      viewModel.navigateToPVT();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.transparent,
@@ -83,16 +84,19 @@ class BrainCheckingMain extends HookWidget {
           const SizedBox(height: 10),
           Text(
             'PREVIOUS RESULTS',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: Theme.of(context).textTheme.bodyMediumWithFontWeight700,
           ),
           const SizedBox(height: 10),
           Expanded(
             child: ListView.separated(
               itemBuilder: (context, index) {
                 final item = viewModel.brainCheckingDataProvider.getData()[index];
-                return _rowBrainCheckingResultItem(context, item);
+                return InkWell(
+                  onTap: () {
+                    viewModel.navigateToPVTResultsWithData(item);
+                  },
+                  child: _rowPVTResultItem(context, item),
+                );
               },
               separatorBuilder: (context, index) {
                 return const Divider(
@@ -108,7 +112,7 @@ class BrainCheckingMain extends HookWidget {
     );
   }
 
-  Widget _rowBrainCheckingResultItem(BuildContext context, BrainChecking brainChecking) {
+  Widget _rowPVTResultItem(BuildContext context, PsychomotorVigilanceTest psychomotorVigilanceTest) {
     return Container(
       height: 106,
       padding: const EdgeInsets.all(12),
@@ -125,7 +129,7 @@ class BrainCheckingMain extends HookWidget {
             height: 82,
             decoration: const BoxDecoration(
               border: Border(
-                right: BorderSide(width: 1, color: NextSenseColors.remSleep),
+                right: BorderSide(width: 1, color: NextSenseColors.royalBlue),
               ),
             ),
             child: Column(
@@ -136,25 +140,24 @@ class BrainCheckingMain extends HookWidget {
                 SizedBox(
                   height: 37,
                   child: Text(
-                    brainChecking.dateTime.getDate(),
+                    psychomotorVigilanceTest.creationDate.getDate(),
                     textAlign: TextAlign.center,
                     style: Theme.of(context)
                         .textTheme
-                        .bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600, color: NextSenseColors.deepSleep),
+                        .bodyMediumWithFontWeight600
+                        ?.copyWith(color: NextSenseColors.skyBlue),
                   ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: Text(
-                    brainChecking.dateTime.getTime(),
+                    psychomotorVigilanceTest.creationDate.getTime(),
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                          color: NextSenseColors.deepSleep,
-                        ),
+                    style:
+                        Theme.of(context).textTheme.bodySmallWithFontWeight600FontSize12?.copyWith(
+                              color: NextSenseColors.skyBlue,
+                            ),
                   ),
                 ),
               ],
@@ -168,18 +171,15 @@ class BrainCheckingMain extends HookWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  brainChecking.title,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: brainChecking.type.getColor(),
+                  psychomotorVigilanceTest.title,
+                  style: Theme.of(context).textTheme.bodySmallWithFontWeight600?.copyWith(
+                        color: psychomotorVigilanceTest.alertnessLevel.getColor(),
                       ),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  '${brainChecking.spendTime}000ms',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontSize: 12,
-                      ),
+                  '${psychomotorVigilanceTest.averageTapLatencyMs}ms'.padLeft(5, '0'),
+                  style: Theme.of(context).textTheme.bodyCaption,
                 )
               ],
             ),

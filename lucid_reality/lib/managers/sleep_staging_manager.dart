@@ -8,7 +8,7 @@ import 'package:logging/logging.dart';
 import 'package:lucid_reality/managers/session_manager.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 
-import '../di.dart';
+import 'package:lucid_reality/di.dart';
 
 enum SleepCalculationState {
   calculating,  // Currently calculating sleep staging results.

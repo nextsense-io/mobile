@@ -3,7 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 
-import 'domain/brain_checking_data_provider.dart';
+import 'domain/psychomotor_vigilance_test_data_provider.dart';
 import 'managers/auth_manager.dart';
 import 'managers/connectivity_manager.dart';
 import 'managers/consumer_ui_firestore_manager.dart';
@@ -31,5 +31,5 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<DataManager>(DataManager());
   getIt.registerSingleton<Navigation>(Navigation());
   getIt.registerSingleton<SleepStagingManager>(SleepStagingManager());
-  getIt.registerSingleton<BrainCheckingDataProvider>(BrainCheckingDataProvider());
+  getIt.registerSingleton<PsychomotorVigilanceTestDataProvider>(PsychomotorVigilanceTestDataProvider());
 }
