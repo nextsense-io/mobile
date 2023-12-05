@@ -42,7 +42,7 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
   }
 
   void scheduleButtonVisibility() {
-    psychomotorVigilanceTest ??= PsychomotorVigilanceTest.instance(DateTime.now());
+    psychomotorVigilanceTest ??= PsychomotorVigilanceTest.getInstance(DateTime.now());
     Future.delayed(
       Duration(seconds: random.nextInt(5) + 1),
       () {
@@ -53,7 +53,7 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
   }
 
   void rescheduleButtonVisibility() {
-    psychomotorVigilanceTest?.taps.lastOrNull?.setEndDate(DateTime.now());
+    psychomotorVigilanceTest?.taps.lastOrNull?.endTime = DateTime.now();
     btnVisibility?.value = false;
     scheduleButtonVisibility();
   }

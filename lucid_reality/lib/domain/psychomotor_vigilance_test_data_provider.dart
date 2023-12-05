@@ -67,29 +67,29 @@ class PsychomotorVigilanceTestDataProvider {
     if (psychomotorVigilanceTest.title.isEmpty) {
       switch (average) {
         case <= highlyAlertMS:
-          psychomotorVigilanceTest.setTitle("Highly Alert");
-          psychomotorVigilanceTest.setAverageTapLatencyMs(average);
-          psychomotorVigilanceTest.setAlertnessLevel(Alertness.highlyAlert);
+          psychomotorVigilanceTest.title = "Highly Alert";
+          psychomotorVigilanceTest.averageTapLatencyMs = average;
+          psychomotorVigilanceTest.alertnessLevel = Alertness.highlyAlert;
           break;
         case <= sleepyMS && > highlyAlertMS:
-          psychomotorVigilanceTest.setTitle("Alert");
-          psychomotorVigilanceTest.setAverageTapLatencyMs(average);
-          psychomotorVigilanceTest.setAlertnessLevel(Alertness.alert);
+          psychomotorVigilanceTest.title = "Alert";
+          psychomotorVigilanceTest.averageTapLatencyMs = average;
+          psychomotorVigilanceTest.alertnessLevel = Alertness.alert;
           break;
         case <= verySleepyMS && > sleepyMS:
-          psychomotorVigilanceTest.setTitle("Drowsy");
-          psychomotorVigilanceTest.setAverageTapLatencyMs(average);
-          psychomotorVigilanceTest.setAlertnessLevel(Alertness.drowsy);
+          psychomotorVigilanceTest.title = "Drowsy";
+          psychomotorVigilanceTest.averageTapLatencyMs = average;
+          psychomotorVigilanceTest.alertnessLevel = Alertness.drowsy;
           break;
         case > verySleepyMS:
-          psychomotorVigilanceTest.setTitle("Very Drowsy");
-          psychomotorVigilanceTest.setAverageTapLatencyMs(average);
-          psychomotorVigilanceTest.setAlertnessLevel(Alertness.veryDrowsy);
+          psychomotorVigilanceTest.title = "Very Drowsy";
+          psychomotorVigilanceTest.averageTapLatencyMs = average;
+          psychomotorVigilanceTest.alertnessLevel = Alertness.veryDrowsy;
           break;
         default:
-          psychomotorVigilanceTest.setTitle("Alert");
-          psychomotorVigilanceTest.setAverageTapLatencyMs(average);
-          psychomotorVigilanceTest.setAlertnessLevel(Alertness.alert);
+          psychomotorVigilanceTest.title = "Alert";
+          psychomotorVigilanceTest.averageTapLatencyMs = average;
+          psychomotorVigilanceTest.alertnessLevel = Alertness.alert;
       }
     }
   }

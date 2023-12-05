@@ -26,21 +26,22 @@ class PsychomotorVigilanceTest {
 
   Alertness get alertnessLevel => _alertnessLevel;
 
-  PsychomotorVigilanceTest.instance(this._creationDate);
+  PsychomotorVigilanceTest.getInstance(this._creationDate);
 
   PsychomotorVigilanceTest(
       this._title, this._averageTapLatencyMs, this._creationDate, this._alertnessLevel);
 
-  setTitle(String title) {
-    _title = title;
+
+  set alertnessLevel(Alertness value) {
+    _alertnessLevel = value;
   }
 
-  setAverageTapLatencyMs(int averageTapLatencyMs) {
-    _averageTapLatencyMs = averageTapLatencyMs;
+  set averageTapLatencyMs(int value) {
+    _averageTapLatencyMs = value;
   }
 
-  setAlertnessLevel(Alertness alertnessLevel) {
-    _alertnessLevel = alertnessLevel;
+  set title(String value) {
+    _title = value;
   }
 
   int get average {
@@ -69,6 +70,7 @@ class PsychomotorVigilanceTest {
 }
 
 class TapTime {
+
   DateTime? _startTime;
   DateTime? _endTime;
 
@@ -83,12 +85,12 @@ class TapTime {
     return endTime!.difference(startTime!).inMilliseconds;
   }
 
-  setStartDate(DateTime startTime) {
-    _startTime = startTime;
+  set endTime(DateTime? value) {
+    _endTime = value;
   }
 
-  setEndDate(DateTime endTime) {
-    _endTime = endTime;
+  set startTime(DateTime? value) {
+    _startTime = value;
   }
 }
 
