@@ -10,16 +10,38 @@ const int sleepyMS = 400;
 const int verySleepyMS = 500;
 
 class PsychomotorVigilanceTest {
-  String title = '';
-  int averageTapLatencyMs = 0;
-  final DateTime dateTime;
-  final List<TapTime> taps = [];
-  Alertness alertnessLevel = Alertness.alert;
+  String _title = '';
+  int _averageTapLatencyMs = 0;
+  final DateTime _creationDate;
+  final List<TapTime> _taps = <TapTime>[];
+  Alertness _alertnessLevel = Alertness.alert;
 
-  PsychomotorVigilanceTest.instance(this.dateTime);
+  String get title => _title;
+
+  int get averageTapLatencyMs => _averageTapLatencyMs;
+
+  DateTime get creationDate => _creationDate;
+
+  List<TapTime> get taps => _taps;
+
+  Alertness get alertnessLevel => _alertnessLevel;
+
+  PsychomotorVigilanceTest.instance(this._creationDate);
 
   PsychomotorVigilanceTest(
-      this.title, this.averageTapLatencyMs, this.dateTime, this.alertnessLevel);
+      this._title, this._averageTapLatencyMs, this._creationDate, this._alertnessLevel);
+
+  setTitle(String title) {
+    _title = title;
+  }
+
+  setAverageTapLatencyMs(int averageTapLatencyMs) {
+    _averageTapLatencyMs = averageTapLatencyMs;
+  }
+
+  setAlertnessLevel(Alertness alertnessLevel) {
+    _alertnessLevel = alertnessLevel;
+  }
 
   int get average {
     return taps.isEmpty
@@ -47,26 +69,42 @@ class PsychomotorVigilanceTest {
 }
 
 class TapTime {
-  DateTime? startTime;
-  DateTime? endTime;
+  DateTime? _startTime;
+  DateTime? _endTime;
 
-  TapTime({this.startTime, this.endTime});
+  DateTime? get startTime => _startTime;
+
+  DateTime? get endTime => _endTime;
+
+  TapTime.getInstance(this._startTime);
 
   int getTapLatency() {
     if (startTime == null || endTime == null) return 0;
     return endTime!.difference(startTime!).inMilliseconds;
   }
+
+  setStartDate(DateTime startTime) {
+    _startTime = startTime;
+  }
+
+  setEndDate(DateTime endTime) {
+    _endTime = endTime;
+  }
 }
 
 class PsychomotorVigilanceTestReport {
-  final String title;
-  final int responseTimeInSeconds;
-  final Color color;
+  final String _title;
+  final int _responseTimeInSeconds;
+  final Color _color;
 
-  PsychomotorVigilanceTestReport(this.title, this.responseTimeInSeconds, this.color);
+  String get title => _title;
+
+  Color get color => _color;
+
+  PsychomotorVigilanceTestReport(this._title, this._responseTimeInSeconds, this._color);
 
   String get responseTimeInSecondsInString {
-    return '$responseTimeInSeconds${title != 'Missed Responses' ? 'ms' : ''}';
+    return '$_responseTimeInSeconds${_title != 'Missed Responses' ? 'ms' : ''}';
   }
 }
 

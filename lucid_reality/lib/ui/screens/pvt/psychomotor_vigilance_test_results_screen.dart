@@ -261,8 +261,12 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
 /// primary: Represent the 'y' axis data in chart
 ///  *
 class TapData {
-  final int domain;
-  final int primary;
+  final int _domain;
+  final int _primary;
 
-  TapData(this.domain, this.primary);
+  int get domain => _domain;
+
+  int get primary => _primary;
+
+  TapData(this._domain, this._primary);
 }

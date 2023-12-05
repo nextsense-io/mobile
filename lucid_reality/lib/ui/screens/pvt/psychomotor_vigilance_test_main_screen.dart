@@ -140,7 +140,7 @@ class PsychomotorVigilanceTestMainScreen extends HookWidget {
                 SizedBox(
                   height: 37,
                   child: Text(
-                    psychomotorVigilanceTest.dateTime.getDate(),
+                    psychomotorVigilanceTest.creationDate.getDate(),
                     textAlign: TextAlign.center,
                     style: Theme.of(context)
                         .textTheme
@@ -152,7 +152,7 @@ class PsychomotorVigilanceTestMainScreen extends HookWidget {
                 SizedBox(
                   width: double.infinity,
                   child: Text(
-                    psychomotorVigilanceTest.dateTime.getTime(),
+                    psychomotorVigilanceTest.creationDate.getTime(),
                     textAlign: TextAlign.center,
                     style:
                         Theme.of(context).textTheme.bodySmallWithFontWeight600FontSize12?.copyWith(

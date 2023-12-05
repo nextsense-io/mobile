@@ -53,40 +53,43 @@ class PsychomotorVigilanceTestDataProvider {
     final average = psychomotorVigilanceTest.average;
     final fastest = psychomotorVigilanceTest.fastest;
     final slowest = psychomotorVigilanceTest.slowest;
+    _results.add(PsychomotorVigilanceTestReport(
+        'Average response time', average, NextSenseColors.royalPurple));
     _results
-        .add(PsychomotorVigilanceTestReport('Average response time', average, NextSenseColors.royalPurple));
-    _results.add(PsychomotorVigilanceTestReport('Fastest response', fastest, NextSenseColors.skyBlue));
-    _results.add(PsychomotorVigilanceTestReport('Slowest response', slowest, NextSenseColors.coral));
+        .add(PsychomotorVigilanceTestReport('Fastest response', fastest, NextSenseColors.skyBlue));
+    _results
+        .add(PsychomotorVigilanceTestReport('Slowest response', slowest, NextSenseColors.coral));
     final missed = psychomotorVigilanceTest.taps
         .where((element) => element.startTime == null || element.endTime == null)
         .length;
-    _results.add(PsychomotorVigilanceTestReport('Missed Responses', missed, NextSenseColors.royalBlue));
+    _results
+        .add(PsychomotorVigilanceTestReport('Missed Responses', missed, NextSenseColors.royalBlue));
     if (psychomotorVigilanceTest.title.isEmpty) {
       switch (average) {
         case <= highlyAlertMS:
-          psychomotorVigilanceTest.title = "Highly Alert";
-          psychomotorVigilanceTest.averageTapLatencyMs = average;
-          psychomotorVigilanceTest.alertnessLevel = Alertness.highlyAlert;
+          psychomotorVigilanceTest.setTitle("Highly Alert");
+          psychomotorVigilanceTest.setAverageTapLatencyMs(average);
+          psychomotorVigilanceTest.setAlertnessLevel(Alertness.highlyAlert);
           break;
         case <= sleepyMS && > highlyAlertMS:
-          psychomotorVigilanceTest.title = "Alert";
-          psychomotorVigilanceTest.averageTapLatencyMs = average;
-          psychomotorVigilanceTest.alertnessLevel = Alertness.alert;
+          psychomotorVigilanceTest.setTitle("Alert");
+          psychomotorVigilanceTest.setAverageTapLatencyMs(average);
+          psychomotorVigilanceTest.setAlertnessLevel(Alertness.alert);
           break;
         case <= verySleepyMS && > sleepyMS:
-          psychomotorVigilanceTest.title = "Drowsy";
-          psychomotorVigilanceTest.averageTapLatencyMs = average;
-          psychomotorVigilanceTest.alertnessLevel = Alertness.drowsy;
+          psychomotorVigilanceTest.setTitle("Drowsy");
+          psychomotorVigilanceTest.setAverageTapLatencyMs(average);
+          psychomotorVigilanceTest.setAlertnessLevel(Alertness.drowsy);
           break;
         case > verySleepyMS:
-          psychomotorVigilanceTest.title = "Very Drowsy";
-          psychomotorVigilanceTest.averageTapLatencyMs = average;
-          psychomotorVigilanceTest.alertnessLevel = Alertness.veryDrowsy;
+          psychomotorVigilanceTest.setTitle("Very Drowsy");
+          psychomotorVigilanceTest.setAverageTapLatencyMs(average);
+          psychomotorVigilanceTest.setAlertnessLevel(Alertness.veryDrowsy);
           break;
         default:
-          psychomotorVigilanceTest.title = "Alert";
-          psychomotorVigilanceTest.averageTapLatencyMs = average;
-          psychomotorVigilanceTest.alertnessLevel = Alertness.alert;
+          psychomotorVigilanceTest.setTitle("Alert");
+          psychomotorVigilanceTest.setAverageTapLatencyMs(average);
+          psychomotorVigilanceTest.setAlertnessLevel(Alertness.alert);
       }
     }
   }
