@@ -9,6 +9,7 @@ import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 
 import 'package:lucid_reality/di.dart';
+import 'auth/sign_in_screen.dart';
 import 'onboarding/onboarding_screen.dart';
 import 'startup/startup_screen.dart';
 
@@ -229,6 +230,8 @@ class Navigation {
         return MaterialPageRoute(builder: (context) => OnboardingScreen());
       case DashboardScreen.id:
         return MaterialPageRoute(builder: (context) => DashboardScreen());
+      case SignInScreen.id:
+        return MaterialPageRoute(builder: (context) => SignInScreen());
 
       // case ImpedanceCalculationScreen.id: return MaterialPageRoute(
       //     builder: (context) => ImpedanceCalculationScreen());
