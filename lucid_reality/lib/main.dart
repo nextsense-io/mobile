@@ -73,24 +73,33 @@ class LucidRealityApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: "Lucid Reality",
         theme: ThemeData(
-            canvasColor: Colors.transparent,
-            primaryColor: NextSenseColors.purple,
+          canvasColor: Colors.transparent,
+          primaryColor: NextSenseColors.purple,
+          backgroundColor: NextSenseColors.backgroundColor,
+          primarySwatch: Colors.blue,
+          fontFamily: 'Montserrat',
+          textTheme: const TextTheme(
+            titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400),
+            titleMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+            titleLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+            bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+            bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+            bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            labelLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
+          ).apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          ),
+          dialogTheme: const DialogTheme(
             backgroundColor: NextSenseColors.backgroundColor,
-            primarySwatch: Colors.blue,
-            fontFamily: 'Montserrat',
-            textTheme: const TextTheme(
-              titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400),
-              titleMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-              titleLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
-              bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-              bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-              bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              labelLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
-            ).apply(
-              bodyColor: Colors.white,
-              displayColor: Colors.white,
+            contentTextStyle: TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+              fontWeight: FontWeight.normal,
             ),
-            scaffoldBackgroundColor: NextSenseColors.backgroundColor),
+          ),
+          scaffoldBackgroundColor: NextSenseColors.backgroundColor,
+        ),
         home: _authManager.isAuthenticated || initialIntent != null
             ? StartupScreen(initialIntent: initialIntent)
             : StartupScreen(initialIntent: initialIntent),

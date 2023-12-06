@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucid_reality/ui/screens/startup/startup_screen_vm.dart';
+import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:stacked/stacked.dart';
 
@@ -35,27 +36,26 @@ class _StartupScreenState extends State<StartupScreen> {
                   image: DecorationImage(
                       image: ExactAssetImage(imageBasePath.plus("splash_screen.png")),
                       fit: BoxFit.fill)),
-              child: Stack(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    padding: EdgeInsets.only(top: 0.65 * MediaQuery.of(context).size.height),
-                    alignment: Alignment.center,
-                    child: Text("LUCID REALITY",
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w500)),
+                  const Spacer(
+                    flex: 8,
                   ),
-                  Container(
-                    padding: EdgeInsets.only(top: 0.75 * MediaQuery.of(context).size.height),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Enhancing human potential",
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w300),
-                    ),
+                  const SizedBox(
+                    height: 16,
+                  ),
+                  Text("LUCID REALITY",
+                      style: Theme.of(context).textTheme.titleMediumWithFontWeight500),
+                  const SizedBox(
+                    height: 4,
+                  ),
+                  Text(
+                    "Enhancing human potential",
+                    style: Theme.of(context).textTheme.bodyMediumWithFontWeight300,
+                  ),
+                  const Spacer(
+                    flex: 2,
                   ),
                 ],
               ),
