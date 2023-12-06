@@ -154,8 +154,8 @@ flutter:
   # identifiers, which may be completely independent or the same as these.
   module:
     androidX: true
-    androidPackage: io.nextsense.android.main.lucid.dev
-    iosBundleIdentifier: io.nextsense.android.main.lucid.dev
+    androidPackage: io.nextsense.android.main.lucid_reality
+    iosBundleIdentifier: io.nextsense.android.main.lucid_reality
 
 # Run "./scripts/update_splash.sh" after update any fields here
 flutter_native_splash:
