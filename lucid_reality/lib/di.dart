@@ -1,5 +1,6 @@
 import 'package:flutter_common/di.dart' as common_di;
 import 'package:get_it/get_it.dart';
+import 'package:lucid_reality/managers/google_fit_manager.dart';
 import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 
@@ -32,4 +33,5 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<Navigation>(Navigation());
   getIt.registerSingleton<SleepStagingManager>(SleepStagingManager());
   getIt.registerSingleton<PsychomotorVigilanceTestDataProvider>(PsychomotorVigilanceTestDataProvider());
+  getIt.registerSingleton<GoogleFitManager>(GoogleFitManager());
 }

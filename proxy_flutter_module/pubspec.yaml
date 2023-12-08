@@ -30,7 +30,7 @@ dependencies:
   nextsense_consumer_ui:
     path: ../nextsense_consumer_ui
   lucid_reality:
-   path: ../lucid_reality
+    path: ../lucid_reality
   logging: ^1.0.2
 
   # The following adds the Cupertino Icons font to your application.
