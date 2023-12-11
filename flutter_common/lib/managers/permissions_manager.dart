@@ -66,7 +66,7 @@ class PermissionsManager {
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
     List<PermissionRequest> permissionRequests = [];
     for (PermissionRequest permissionRequest in permissionsNeeded) {
-      if (androidInfo.version.sdkInt < permissionRequest.minApiVersion) {
+      if (androidInfo.version.sdkInt! < permissionRequest.minApiVersion!) {
         continue;
       }
       if (!(await permissionRequest.permission.isGranted)) {

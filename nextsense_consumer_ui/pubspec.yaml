@@ -44,7 +44,7 @@ dependencies:
   get_it: ^7.6.4
   gson: ^0.1.6-dev
   logging: ^1.0.2
-  package_info_plus: ^3.1.2
+  package_info_plus: ^4.2.0
   permission_handler: ^10.2.0
   persistent_bottom_nav_bar_v2: ^4.2.3
   provider: ^6.0.1

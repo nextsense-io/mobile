@@ -11,7 +11,7 @@ import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 enum EarFitRunState {
   NOT_STARTED,
@@ -80,7 +80,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
     _logger.log(Level.INFO, 'Initializing state.');
     super.init();
 
-    Wakelock.enable();
+    WakelockPlus.enable();
 
     _earbudsConfig = EarbudsConfigs.getConfig(_studyManager.currentStudy!.getEarbudsConfig());
     _initEarFitResults();
@@ -172,7 +172,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
     _calculatingImpedance = false;
     _earFitRunState = EarFitRunState.FINISHED;
     notifyListeners();
-    Wakelock.disable();
+    WakelockPlus.disable();
   }
 
   Future _runEarFitTest(Timer timer) async {
