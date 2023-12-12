@@ -32,16 +32,16 @@ dependencies:
   awesome_notifications: ^0.8.2
   community_charts_flutter: ^1.0.2
   circular_countdown_timer: ^0.2.1
-  cloud_firestore: ^4.3.1
   connectivity_plus: ^2.2.1
   dropdown_button2: ^1.5.2
   file: ^6.1.4
   email_validator: ^2.1.16
   firebase_auth: ^4.10.1
-  firebase_core: ^2.4.2
   firebase_crashlytics: ^3.0.10
   firebase_dynamic_links: ^5.0.11
   firebase_messaging: ^14.2.1
+  firebase_core: 2.17.0
+  firebase_database: 10.2.7
   fixnum: ^1.1.0
   fluttertoast: ^8.1.1
   flutter_dotenv: ^5.0.2
@@ -154,8 +154,8 @@ flutter:
   # identifiers, which may be completely independent or the same as these.
   module:
     androidX: true
-    androidPackage: io.nextsense.android.main.lucid.dev
-    iosBundleIdentifier: io.nextsense.android.main.lucid.dev
+    androidPackage: io.nextsense.android.main.lucid_reality
+    iosBundleIdentifier: io.nextsense.android.main.lucid_reality
 
 # Run "./scripts/update_splash.sh" after update any fields here
 flutter_native_splash:

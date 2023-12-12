@@ -5,6 +5,10 @@ extension LucidRealityTextTheme on TextTheme {
     return labelLarge?.copyWith(fontWeight: FontWeight.w600);
   }
 
+  TextStyle? get bodyMediumWithFontWeight300 {
+    return bodyMedium?.copyWith(fontWeight: FontWeight.w300);
+  }
+
   TextStyle? get bodyMediumWithFontWeight600 {
     return bodyMedium?.copyWith(fontWeight: FontWeight.w600);
   }
@@ -27,5 +31,9 @@ extension LucidRealityTextTheme on TextTheme {
 
   TextStyle? get bodyCaption {
     return bodySmall?.copyWith(fontSize: 12);
+  }
+
+  TextStyle? get titleMediumWithFontWeight500 {
+    return titleMedium?.copyWith(fontWeight: FontWeight.w500);
   }
 }

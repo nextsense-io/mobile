@@ -8,6 +8,7 @@ import 'package:flutter_common/managers/firebase_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/ui/screens/auth/sign_in_screen.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/ui/screens/startup/startup_screen.dart';
 import 'package:nextsense_base/nextsense_base.dart';
@@ -18,7 +19,6 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'di.dart';
 import 'managers/auth_manager.dart';
 import 'managers/connectivity_manager.dart';
-import 'managers/sleep_staging_manager.dart';
 
 void _initLogging() {
   Logger.root.level = Level.ALL; // defaults to Level.INFO
@@ -67,33 +67,41 @@ class LucidRealityApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: getIt<ConnectivityManager>()),
-        ChangeNotifierProvider.value(value: getIt<SleepStagingManager>())
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: "Lucid Reality",
         theme: ThemeData(
-            canvasColor: Colors.transparent,
-            primaryColor: NextSenseColors.purple,
+          canvasColor: Colors.transparent,
+          primaryColor: NextSenseColors.purple,
+          backgroundColor: NextSenseColors.backgroundColor,
+          primarySwatch: Colors.blue,
+          fontFamily: 'Montserrat',
+          textTheme: const TextTheme(
+            titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400),
+            titleMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+            titleLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+            bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+            bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+            bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            labelLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
+          ).apply(
+            bodyColor: Colors.white,
+            displayColor: Colors.white,
+          ),
+          dialogTheme: const DialogTheme(
             backgroundColor: NextSenseColors.backgroundColor,
-            primarySwatch: Colors.blue,
-            fontFamily: 'Montserrat',
-            textTheme: const TextTheme(
-              titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400),
-              titleMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-              titleLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
-              bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-              bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-              bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              labelLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
-            ).apply(
-              bodyColor: Colors.white,
-              displayColor: Colors.white,
+            contentTextStyle: TextStyle(
+              fontSize: 16,
+              color: Colors.white,
+              fontWeight: FontWeight.normal,
             ),
-            scaffoldBackgroundColor: NextSenseColors.backgroundColor),
+          ),
+          scaffoldBackgroundColor: NextSenseColors.backgroundColor,
+        ),
         home: _authManager.isAuthenticated || initialIntent != null
             ? StartupScreen(initialIntent: initialIntent)
-            : StartupScreen(initialIntent: initialIntent),
+            : SignInScreen(),
         navigatorKey: _navigation.navigatorKey,
         onGenerateRoute: _navigation.onGenerateRoute,
       ),
