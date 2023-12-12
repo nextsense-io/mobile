@@ -5,7 +5,6 @@ extension QueryBuilder on String {
 }
 
 class FirebaseRealtimeDBEntity<T extends Enum> {
-  // Current user values. Valid keys are in the UserKey enum.
   final Map<String, dynamic> _values = <String, dynamic>{};
 
   Map<String, dynamic> getValues() {

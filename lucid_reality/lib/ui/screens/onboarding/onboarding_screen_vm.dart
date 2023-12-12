@@ -21,7 +21,7 @@ class OnboardingScreenViewModel extends ViewModel {
     _authManager.user?.setGoal(goal.tag);
     if (_authManager.user != null && _authManager.authUid != null) {
       await firebaseRealTimeDb.setEntity(
-          _authManager.user!, UsersEntity.table.where(_authManager.authUid!));
+          _authManager.user!, UserEntity.table.where(_authManager.authUid!));
     }
   }
 }

@@ -25,7 +25,7 @@ class AuthManager {
   EmailAuthManager? _emailAuthManager;
   String? _email;
   String? _username;
-  UsersEntity? _user;
+  UserEntity? _user;
   AuthMethod? _signedInAuthMethod;
 
   // User has logged in with Firebase account.
@@ -34,7 +34,7 @@ class AuthManager {
   // User is fetched from Firestore and allowed to use his account.
   bool get isAuthorized => _user != null;
 
-  UsersEntity? get user => _user;
+  UserEntity? get user => _user;
 
   String? get username => _username;
 
@@ -141,8 +141,8 @@ class AuthManager {
   }
 
   // Load user from Firestore and update some data
-  Future<UsersEntity?> _loadUser({required String authUid}) async {
-    final UsersEntity? user = await _fetchUserFromFirebaseRealtimeDb(authUid);
+  Future<UserEntity?> _loadUser({required String authUid}) async {
+    final UserEntity? user = await _fetchUserFromFirebaseRealtimeDb(authUid);
     if (user == null) {
       _logger.log(Level.WARNING, 'Failed to fetch user from Firestore.');
       return null;
@@ -150,16 +150,16 @@ class AuthManager {
     return user;
   }
 
-  Future<UsersEntity?> _fetchUserFromFirebaseRealtimeDb(String authUid) async {
+  Future<UserEntity?> _fetchUserFromFirebaseRealtimeDb(String authUid) async {
     final userEntity =
-        await firebaseRealTimeDb.getEntity(UsersEntity(), UsersEntity.table.where(authUid));
+        await firebaseRealTimeDb.getEntity(UserEntity.instance, UserEntity.table.where(authUid));
     return userEntity;
   }
 
-  Future<UsersEntity> _createNewUser({required String email, required String authUid}) async {
-    final user = UsersEntity();
+  Future<UserEntity> _createNewUser({required String email, required String authUid}) async {
+    final user = UserEntity.instance;
     user.setEmail(email);
-    await firebaseRealTimeDb.setEntity(user, UsersEntity.table.where(authUid));
+    await firebaseRealTimeDb.setEntity(user, UserEntity.table.where(authUid));
     return user;
   }
 }
