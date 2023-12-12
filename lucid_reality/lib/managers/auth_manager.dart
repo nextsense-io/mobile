@@ -58,6 +58,7 @@ class AuthManager {
           continue;
       }
     }
+    ensureUserLoaded();
   }
 
   setEmail(String email) {
@@ -74,7 +75,7 @@ class AuthManager {
     return await _signIn(email: _googleAuthManager!.email, authUid: _googleAuthManager!.authUid);
   }
 
-  // Make sure the user data is loaded from Firestore before doing any authorized operations.
+  // Make sure the user data is loaded from firebaseDb before doing any authorized operations.
   //
   // Returns true if the user is successfully initialized, otherwise returns false.
   Future<bool> ensureUserLoaded() async {
@@ -104,6 +105,7 @@ class AuthManager {
       _user = await _loadUser(authUid: authUid);
       if (_user != null) {
         _username = username;
+        firebaseRealTimeDb.setUserId(authUid);
         return true;
       }
     }
@@ -137,6 +139,7 @@ class AuthManager {
       return AuthenticationResult.user_fetch_failed;
     }
     _username = email;
+    firebaseRealTimeDb.setUserId(authUid);
     return AuthenticationResult.success;
   }
 

@@ -27,11 +27,24 @@ class LucidUiFirebaseRealtimeDBManager {
   final CustomLogPrinter _logger = CustomLogPrinter('FirebaseRealtimeDBManager');
   late FirebaseDatabase _firebaseDatabase;
   late DatabaseReference _lucidDatabase;
+  String? userId;
 
   LucidUiFirebaseRealtimeDBManager() {
     _firebaseDatabase = FirebaseDatabase.instanceFor(app: _firebaseApp);
     _firebaseDatabase.setPersistenceEnabled(true);
     _lucidDatabase = _firebaseDatabase.ref(dbRootDBName);
+  }
+
+  setUserId(String userId) {
+    this.userId = userId;
+  }
+
+  String? getUserId() {
+    return userId;
+  }
+
+  Future<void> updateEntity<T extends FirebaseRealtimeDBEntity>(T entity, String reference) async {
+    return _lucidDatabase.child('$reference/$userId').update(entity.getValues());
   }
 
   Future<void> setEntity<T extends FirebaseRealtimeDBEntity>(T entity, String reference) async {
