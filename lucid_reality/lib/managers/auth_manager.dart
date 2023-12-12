@@ -1,19 +1,16 @@
-import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:flutter_common/managers/auth/auth_method.dart';
 import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/managers/auth/email_auth_manager.dart';
 import 'package:flutter_common/managers/auth/google_auth_manager.dart';
-import 'package:flutter_common/managers/auth/password_change_result.dart';
-import 'package:logging/logging.dart';
-import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:flutter_common/utils/android_logger.dart';
-import 'package:uuid/uuid.dart';
-
+import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
-import 'package:lucid_reality/domain/user.dart';
+import 'package:lucid_reality/domain/users_entity.dart';
+import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
+import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
 import 'package:lucid_reality/preferences.dart';
-import 'consumer_ui_firestore_manager.dart';
+import 'package:uuid/uuid.dart';
 
 class AuthManager {
   static const minimumPasswordLength = 8;
@@ -21,14 +18,14 @@ class AuthManager {
 
   final _logger = CustomLogPrinter('AuthManager');
   final _preferences = getIt<Preferences>();
-  final _firestoreManager = getIt<ConsumerUiFirestoreManager>();
   final _firebaseAuth = FirebaseAuth.instance;
+  final firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
 
   GoogleAuthManager? _googleAuthManager;
   EmailAuthManager? _emailAuthManager;
   String? _email;
   String? _username;
-  User? _user;
+  UsersEntity? _user;
   AuthMethod? _signedInAuthMethod;
 
   // User has logged in with Firebase account.
@@ -37,11 +34,13 @@ class AuthManager {
   // User is fetched from Firestore and allowed to use his account.
   bool get isAuthorized => _user != null;
 
-  bool get isTempPassword => _user?.isTempPassword() ?? false;
+  UsersEntity? get user => _user;
 
-  User? get user => _user;
   String? get username => _username;
+
   String? get email => _email;
+
+  String? get authUid => _firebaseAuth.currentUser?.uid;
 
   AuthManager() {
     for (AuthMethod authMethod in [AuthMethod.email_password, AuthMethod.google_auth]) {
@@ -72,93 +71,7 @@ class AuthManager {
       return authResult;
     }
     _logger.log(Level.INFO, 'Authenticated with Google with success');
-    return await _signIn(username: _googleAuthManager!.email, authUid: _googleAuthManager!.authUid);
-  }
-
-  Future<AuthenticationResult> signInEmailLink(String emailLink, String email) async {
-    AuthenticationResult authResult = await _emailAuthManager!.signInWithLink(email, emailLink);
-    if (authResult != AuthenticationResult.success) {
-      return authResult;
-    }
-    authResult = await _signIn(username: email, authUid: _emailAuthManager!.authUid);
-    return authResult;
-  }
-
-  Future<AuthenticationResult> signInEmailPassword(String username, String password) async {
-    AuthenticationResult authResult = await _emailAuthManager!.handleSignIn(username, password);
-    if (authResult != AuthenticationResult.success) {
-      return authResult;
-    }
-    authResult = await _signIn(username: username, authUid: _emailAuthManager!.authUid);
-    return authResult;
-  }
-
-  // Might not need this?
-  Future<AuthenticationResult> signUpEmailPassword(String email, String password) async {
-    AuthenticationResult result = await _signIn(username: email, authUid: "");
-    if (result == AuthenticationResult.success) {
-      result = await _emailAuthManager!.handleSignUp(email, password);
-    }
-    return result;
-  }
-
-  Future<AuthenticationResult> reAuthenticate(String password) async {
-    switch (_signedInAuthMethod) {
-      case AuthMethod.email_password:
-        return await _emailAuthManager!.reAuthenticate(password);
-      default:
-        return AuthenticationResult.error;
-    }
-  }
-
-  Future<PasswordChangeResult> changePassword(String newPassword) async {
-    switch (_signedInAuthMethod) {
-      case AuthMethod.email_password:
-        PasswordChangeResult result = await _emailAuthManager!.changePassword(newPassword);
-        if (result == PasswordChangeResult.success) {
-          _user!.setTempPassword(false);
-          await _user!.save();
-          return result;
-        }
-        return result;
-      default:
-        return PasswordChangeResult.error;
-    }
-  }
-
-  Future<bool> requestPasswordResetEmail(String email) async {
-    switch (_signedInAuthMethod) {
-      case AuthMethod.email_password:
-        if (!EmailValidator.validate(email)) {
-          _logger.log(Level.WARNING, "Invalid email: $email");
-          return false;
-        }
-        _email = email;
-        return await _emailAuthManager!.sendResetPasswordEmail(email);
-      default:
-        _logger.log(Level.WARNING,
-            'Cannot send a password reset email for $_signedInAuthMethod users.');
-        return false;
-    }
-  }
-
-  Future<bool> requestSignUpEmail(String email) async {
-    switch (_signedInAuthMethod) {
-      case AuthMethod.email_password:
-        User? user = await _loadUser(authUid: email);
-        user?.setTempPassword(true);
-        user?.save();
-        return await _emailAuthManager!.sendSignUpLinkEmail(email);
-      default:
-        _logger.log(Level.WARNING,
-            'Cannot send a signup email for $_signedInAuthMethod users.');
-        return false;
-    }
-  }
-
-
-  String? getLastPairedMacAddress() {
-    return user?.getLastPairedDeviceMacAddress();
+    return await _signIn(email: _googleAuthManager!.email, authUid: _googleAuthManager!.authUid);
   }
 
   // Make sure the user data is loaded from Firestore before doing any authorized operations.
@@ -191,7 +104,6 @@ class AuthManager {
       _user = await _loadUser(authUid: authUid);
       if (_user != null) {
         _username = username;
-        await _updateUserDetails(user: _user!);
         return true;
       }
     }
@@ -215,42 +127,22 @@ class AuthManager {
     _email = null;
   }
 
-  Future<AuthenticationResult> _signIn({required String username, required String authUid}) async {
+  Future<AuthenticationResult> _signIn({required String email, required String authUid}) async {
     _logger.log(Level.INFO, 'Starting NextSense user check.');
-    _user = await _loadUser(authUid: authUid);
+    _user =
+        (await _loadUser(authUid: authUid) ?? await _createNewUser(email: email, authUid: authUid));
 
     if (_user == null) {
       await signOut();
       return AuthenticationResult.user_fetch_failed;
     }
-    _updateUserDetails(user: _user!);
-    _username = username;
-    _firestoreManager.setUserId(_user!.id);
+    _username = email;
     return AuthenticationResult.success;
   }
 
-  Future _updateUserDetails({required User user}) async {
-    // Persist bt_key
-    if (user.getValue(UserKey.bt_key) == null) {
-      user.setValue(UserKey.bt_key, _uuid.v4());
-    }
-
-    // Persist fcm token
-    String? fcmToken = _preferences.getString(PreferenceKey.fcmToken);
-    if (fcmToken != null) {
-      user.setFcmToken(fcmToken);
-    }
-
-    // Save timezone
-    // TODO(alex): handle timezone change in broadcast receiver
-    await user.updateTimezone();
-    user.setLastLogin(DateTime.now());
-    await user.save();
-  }
-
   // Load user from Firestore and update some data
-  Future<User?> _loadUser({required String authUid}) async {
-    final User? user = await _fetchUserFromFirestore(authUid);
+  Future<UsersEntity?> _loadUser({required String authUid}) async {
+    final UsersEntity? user = await _fetchUserFromFirebaseRealtimeDb(authUid);
     if (user == null) {
       _logger.log(Level.WARNING, 'Failed to fetch user from Firestore.');
       return null;
@@ -258,11 +150,16 @@ class AuthManager {
     return user;
   }
 
-  Future<User?> _fetchUserFromFirestore(String authUid) async {
-    FirebaseEntity? userEntity = await _firestoreManager.queryEntity([Table.users], [authUid]);
-    if (userEntity == null || !userEntity.getDocumentSnapshot().exists) {
-      return null;
-    }
-    return User(userEntity);
+  Future<UsersEntity?> _fetchUserFromFirebaseRealtimeDb(String authUid) async {
+    final userEntity =
+        await firebaseRealTimeDb.getEntity(UsersEntity(), UsersEntity.table.where(authUid));
+    return userEntity;
+  }
+
+  Future<UsersEntity> _createNewUser({required String email, required String authUid}) async {
+    final user = UsersEntity();
+    user.setEmail(email);
+    await firebaseRealTimeDb.setEntity(user, UsersEntity.table.where(authUid));
+    return user;
   }
 }

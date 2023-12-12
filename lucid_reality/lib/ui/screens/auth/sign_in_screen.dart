@@ -73,7 +73,6 @@ class SignInScreen extends HookWidget {
     final viewModel = context.read<SignInViewModel>();
     authenticating = true;
     AuthenticationResult authResult = await viewModel.signIn(authMethod);
-    print('authResult==>$authResult');
     if (authResult != AuthenticationResult.success) {
       authenticating = false;
       String dialogTitle, dialogContent;
@@ -98,7 +97,7 @@ class SignInScreen extends HookWidget {
           builder: (_) => SimpleAlertDialog(title: dialogTitle, content: dialogContent));
       return;
     }
-    viewModel.redirectToDashboard();
+    viewModel.redirectToOnboarding();
     authenticating = false;
   }
 }

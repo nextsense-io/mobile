@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:lucid_reality/domain/question.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/ui/screens/onboarding/onboarding_screen_vm.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
 class QuestionsScreen extends HookWidget {
-  const QuestionsScreen({super.key});
+  final OnboardingScreenViewModel? viewModel;
+
+  const QuestionsScreen({super.key, required this.viewModel});
 
   @override
   Widget build(BuildContext context) {
@@ -15,11 +18,12 @@ class QuestionsScreen extends HookWidget {
 
     Future<List<Question>> allQuestions() async {
       final questions = <Question>[];
-      questions.add(Question('Be more lucid during the day', false));
-      questions.add(Question('Start lucid dreaming', false));
-      questions.add(Question('Learn how to relax and recharge during the day', false));
-      questions.add(Question('Get better sleep at night', false));
-      questions.add(Question('Promote and protect brain health', false));
+      questions.add(Question('Be more lucid during the day', Goal.moreLucid, false));
+      questions.add(Question('Start lucid dreaming', Goal.startLucidDreaming, false));
+      questions.add(
+          Question('Learn how to relax and recharge during the day', Goal.learnRelaxingDay, false));
+      questions.add(Question('Get better sleep at night', Goal.getBetterSleep, false));
+      questions.add(Question('Promote and protect brain health', Goal.protectBrainHealth, false));
       questionsList.value = questions;
       return questionsList.value;
     }
@@ -66,6 +70,7 @@ class QuestionsScreen extends HookWidget {
                     return InkWell(
                       onTap: () {
                         selectedIndex.value = index; // Update selected index
+                        viewModel?.updateGoal(question.goal);
                       },
                       child: _rowQuestion(context, question),
                     );
