@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:lucid_reality/domain/pvt_result.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 
 enum Alertness { drowsy, alert, veryDrowsy, highlyAlert }
@@ -30,7 +31,6 @@ class PsychomotorVigilanceTest {
 
   PsychomotorVigilanceTest(
       this._title, this._averageTapLatencyMs, this._creationDate, this._alertnessLevel);
-
 
   set alertnessLevel(Alertness value) {
     _alertnessLevel = value;
@@ -67,10 +67,47 @@ class PsychomotorVigilanceTest {
   String get lastClickSpendTime {
     return taps.isEmpty ? '' : '${taps.last.getTapLatency()}ms';
   }
+
+  PVTResult toPVTResult() {
+    final PVTResult pvtResult = PVTResult();
+    pvtResult.setAverageTapLatencyMs(_averageTapLatencyMs);
+    pvtResult.setTimeInterval(_creationDate.millisecondsSinceEpoch);
+    if (_taps.isNotEmpty) {
+      pvtResult.setReactions(_taps.map((e) => e.getTapLatency()).toList());
+    }
+    return pvtResult;
+  }
+
+  factory PsychomotorVigilanceTest.fromPVTResult(PVTResult pvtResult) {
+    final instance = PsychomotorVigilanceTest.getInstance(
+        DateTime.fromMillisecondsSinceEpoch(pvtResult.getTimeInterval() ?? 0));
+    instance.averageTapLatencyMs = pvtResult.getAverageTapLatencyMs();
+    switch (pvtResult.getAverageTapLatencyMs()) {
+      case <= highlyAlertMS:
+        instance.title = "Highly Alert";
+        instance.alertnessLevel = Alertness.highlyAlert;
+        break;
+      case <= sleepyMS && > highlyAlertMS:
+        instance.title = "Alert";
+        instance.alertnessLevel = Alertness.alert;
+        break;
+      case <= verySleepyMS && > sleepyMS:
+        instance.title = "Drowsy";
+        instance.alertnessLevel = Alertness.drowsy;
+        break;
+      case > verySleepyMS:
+        instance.title = "Very Drowsy";
+        instance.alertnessLevel = Alertness.veryDrowsy;
+        break;
+      default:
+        instance.title = "Alert";
+        instance.alertnessLevel = Alertness.alert;
+    }
+    return instance;
+  }
 }
 
 class TapTime {
-
   DateTime? _startTime;
   DateTime? _endTime;
 

@@ -1,6 +1,7 @@
 import 'package:flutter_common/di.dart' as common_di;
 import 'package:get_it/get_it.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
+import 'package:lucid_reality/managers/pvt_manager.dart';
 import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 
@@ -25,4 +26,5 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<Navigation>(Navigation());
   getIt.registerSingleton<PsychomotorVigilanceTestDataProvider>(
       PsychomotorVigilanceTestDataProvider());
+  getIt.registerSingleton<PVTManager>(PVTManager());
 }

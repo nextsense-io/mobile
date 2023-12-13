@@ -60,10 +60,10 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
                         borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                    child: getPvtChart(viewModel.brainCheckingDataProvider.getData().first),
+                    child: getPvtChart(viewModel.psychomotorVigilanceTestDataProvider.getData().first),
                   );
                 } else if (index ==
-                    (viewModel.brainCheckingDataProvider.getReportData().length + 1)) {
+                    (viewModel.psychomotorVigilanceTestDataProvider.getReportData().length + 1)) {
                   //Footer
                   return Align(
                     alignment: Alignment.centerRight,
@@ -94,7 +94,7 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
                     ),
                   );
                 } else {
-                  final item = viewModel.brainCheckingDataProvider.getReportData()[index - 1];
+                  final item = viewModel.psychomotorVigilanceTestDataProvider.getReportData()[index - 1];
                   return _rowReportItem(context, item);
                 }
               },
@@ -104,7 +104,7 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
                   color: Colors.transparent,
                 );
               },
-              itemCount: viewModel.brainCheckingDataProvider.getReportData().length + 2,
+              itemCount: viewModel.psychomotorVigilanceTestDataProvider.getReportData().length + 2,
             ),
           ),
         ],
