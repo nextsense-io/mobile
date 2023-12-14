@@ -6,7 +6,7 @@ import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/managers/audio_manager.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
@@ -40,14 +40,14 @@ class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
   @override
   void onTimerStart() {
-    Wakelock.enable();
+    WakelockPlus.enable();
     super.onTimerStart();
   }
 
   @override
   void onTimerFinished() {
     super.onTimerFinished();
-    Wakelock.disable();
+    WakelockPlus.disable();
   }
 
   @override

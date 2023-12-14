@@ -485,7 +485,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     if (applicationContext != null) {
       try {
         Class<?> uiClass = Class.forName(
-            "io.flutter.embedding.android.FlutterActivity");
+            "io.flutter.embedding.android.FlutterFragmentActivity");
         RotatingFileLogger.get().logi(TAG, "Creating intent.");
         foregroundServiceIntent = new Intent(applicationContext, ForegroundService.class);
         foregroundServiceIntent.putExtra("ui_class", uiClass);

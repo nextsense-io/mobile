@@ -2,20 +2,20 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class PermissionRequest {
-  Permission permission;
-  bool required;
-  String requestText;
-  String? deniedText;
-  bool showRequest;
-  int minApiVersion;
+  final Permission permission;
+  final bool required;
+  final String requestText;
+  final String? deniedText;
+  final bool showRequest;
+  final int minApiVersion;
 
-  PermissionRequest({required this.permission, required this.required,
+  const PermissionRequest({required this.permission, required this.required,
     required this.requestText, this.showRequest = true, this.deniedText, this.minApiVersion = 1});
 }
 
 class PermissionsManager {
 
-  final List<PermissionRequest> _permissionsNeeded = [
+  static const List<PermissionRequest> basicPermissionsNeeded = [
     PermissionRequest(permission: Permission.bluetoothScan, required: true,
         requestText: 'Bluetooth scan permission is needed to find your '
             'NextSense device, please accept the permission in the popup after '
@@ -46,11 +46,13 @@ class PermissionsManager {
             'run in the background after you press "Continue."'),
   ];
 
-  PermissionsManager();
+  late List<PermissionRequest> permissionsNeeded;
+
+  PermissionsManager({permissionsNeeded = basicPermissionsNeeded});
 
   Future<bool> allPermissionsGranted() async {
     bool granted = true;
-    for (PermissionRequest permissionRequest in _permissionsNeeded) {
+    for (PermissionRequest permissionRequest in permissionsNeeded) {
       if (!(await permissionRequest.permission.isGranted)) {
         granted = false;
         break;
@@ -63,8 +65,8 @@ class PermissionsManager {
     DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
     List<PermissionRequest> permissionRequests = [];
-    for (PermissionRequest permissionRequest in _permissionsNeeded) {
-      if (androidInfo.version.sdkInt! < permissionRequest.minApiVersion) {
+    for (PermissionRequest permissionRequest in permissionsNeeded) {
+      if (androidInfo.version.sdkInt! < permissionRequest.minApiVersion!) {
         continue;
       }
       if (!(await permissionRequest.permission.isGranted)) {

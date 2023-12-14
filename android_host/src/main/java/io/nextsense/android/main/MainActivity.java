@@ -16,7 +16,7 @@ import com.google.gson.GsonBuilder;
 
 import java.util.Map;
 
-import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.android.FlutterFragmentActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
 
@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private Intent getFlutterIntent(@Nullable Intent androidIntent) {
-    Intent flutterIntent = FlutterActivity.withCachedEngine(
+    Intent flutterIntent = FlutterFragmentActivity.withCachedEngine(
             NextSenseApplication.FLUTTER_ENGINE_NAME).build(this);
     // Confirm the link is a sign-in with email link.
     if (androidIntent != null && androidIntent.getData() != null &&

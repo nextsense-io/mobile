@@ -17,13 +17,9 @@ class PsychomotorVigilanceTest {
   Alertness _alertnessLevel = Alertness.alert;
 
   String get title => _title;
-
   int get averageTapLatencyMs => _averageTapLatencyMs;
-
   DateTime get creationDate => _creationDate;
-
   List<TapTime> get taps => _taps;
-
   Alertness get alertnessLevel => _alertnessLevel;
 
   PsychomotorVigilanceTest.getInstance(this._creationDate);

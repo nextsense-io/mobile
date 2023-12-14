@@ -12,11 +12,15 @@ class SignInViewModel extends ViewModel {
   final Navigation _navigation = getIt<Navigation>();
   final AuthManager _authManager = getIt<AuthManager>();
   final ConnectivityManager _connectivityManager = getIt<ConnectivityManager>();
+  
   bool internetConnection = true;
   String errorMsg = "";
   bool popupErrorMsg = false;
-  List<AuthMethod> get authMethods => [AuthMethod.google_auth];
   String? initialErrorMessage;
+  
+  bool get hadPairedDevice => _authManager.getLastPairedMacAddress() != null;
+  List<AuthMethod> get authMethods => [AuthMethod.google_auth];
+  bool get isTempPassword => _authManager.user!.isTempPassword();
 
   @override
   void init() async {

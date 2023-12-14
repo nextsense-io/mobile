@@ -1,5 +1,7 @@
 package io.nextsense.android.service;
 
+import static android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
+
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -13,6 +15,7 @@ import android.os.IBinder;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -119,7 +122,8 @@ public class ForegroundService extends Service {
         .setContentText(getString(R.string.notif_content))
         .setSmallIcon(R.drawable.ic_stat_nextsense_n_icon)
         .setContentIntent(pendingIntent);
-    startForeground(NOTIFICATION_ID, notificationBuilder.build());
+    ServiceCompat.startForeground(this, NOTIFICATION_ID, notificationBuilder.build(),
+        FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
     initialize(intent.getBooleanExtra(EXTRA_ALLOW_DATA_VIA_CELLULAR, false));
     RotatingFileLogger.get().logd(TAG, "Service initialized.");
     return START_REDELIVER_INTENT;
