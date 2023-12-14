@@ -2,10 +2,11 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_common/di.dart';
 import 'package:flutter_common/managers/firebase_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
-import 'package:logging/logging.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 
 const String dbRootDBName = 'LucidReality';
+
+enum SortBy { ASC, DESC }
 
 enum Table {
   acknowledgements,
@@ -69,13 +70,15 @@ class LucidUiFirebaseRealtimeDBManager {
     }
   }
 
-  Future<Map<String, dynamic>> getEntities(String reference) async {
+  Future<List<T>> getEntities<T>(
+      String reference, T Function(MapEntry<String, dynamic> data) fromMap,
+      {SortBy sortBy = SortBy.ASC}) async {
     final snapshot = await _lucidDatabase.child('$reference/$userId').get();
-    _logger.log(Level.INFO, 'request =>$reference/$userId, fetch result->${snapshot.value}');
     if (snapshot.exists) {
-      return snapshot.toMap();
+      final entityList = snapshot.toMap().entries.map(fromMap).toList();
+      return sortBy == SortBy.ASC ? entityList : entityList.reversed.toList();
     }
-    return <String, dynamic>{};
+    return [];
   }
 
   Future<void> addAutoIdEntity<T extends FirebaseRealtimeDBEntity>(

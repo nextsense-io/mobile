@@ -37,7 +37,17 @@ class PVTResult extends FirebaseRealtimeDBEntity<PVTResultKey> {
   }
 
   List<int> getReactions() {
-    return getValue(PVTResultKey.timeInterval) ?? [];
+    List<int> ints = [];
+    final reactions = getValue(PVTResultKey.reactions);
+    if (reactions != null) {
+      List<Object?> objects = reactions;
+      for (var obj in objects) {
+        if (obj is int) {
+          ints.add(obj);
+        }
+      }
+    }
+    return ints;
   }
 
   void setReactions(List<int> reactions) {

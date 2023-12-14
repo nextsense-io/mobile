@@ -10,11 +10,38 @@ const int highlyAlertMS = 300;
 const int sleepyMS = 400;
 const int verySleepyMS = 500;
 
+extension GeneratePVTResultData on int {
+  void generatePVTResultData(PsychomotorVigilanceTest psychomotorVigilanceTest) {
+    psychomotorVigilanceTest.averageTapLatencyMs = this;
+    switch (this) {
+      case <= highlyAlertMS:
+        psychomotorVigilanceTest.title = "Highly Alert";
+        psychomotorVigilanceTest.alertnessLevel = Alertness.highlyAlert;
+        break;
+      case <= sleepyMS && > highlyAlertMS:
+        psychomotorVigilanceTest.title = "Alert";
+        psychomotorVigilanceTest.alertnessLevel = Alertness.alert;
+        break;
+      case <= verySleepyMS && > sleepyMS:
+        psychomotorVigilanceTest.title = "Drowsy";
+        psychomotorVigilanceTest.alertnessLevel = Alertness.drowsy;
+        break;
+      case > verySleepyMS:
+        psychomotorVigilanceTest.title = "Very Drowsy";
+        psychomotorVigilanceTest.alertnessLevel = Alertness.veryDrowsy;
+        break;
+      default:
+        psychomotorVigilanceTest.title = "Alert";
+        psychomotorVigilanceTest.alertnessLevel = Alertness.alert;
+    }
+  }
+}
+
 class PsychomotorVigilanceTest {
   String _title = '';
   int _averageTapLatencyMs = 0;
   final DateTime _creationDate;
-  final List<TapTime> _taps = <TapTime>[];
+  final List<int> _taps = <int>[];
   Alertness _alertnessLevel = Alertness.alert;
 
   String get title => _title;
@@ -23,7 +50,7 @@ class PsychomotorVigilanceTest {
 
   DateTime get creationDate => _creationDate;
 
-  List<TapTime> get taps => _taps;
+  List<int> get taps => _taps;
 
   Alertness get alertnessLevel => _alertnessLevel;
 
@@ -45,27 +72,19 @@ class PsychomotorVigilanceTest {
   }
 
   int get average {
-    return taps.isEmpty
-        ? 0
-        : taps.map((e) => e.getTapLatency()).reduce((value, element) => value + element) ~/
-            taps.length;
+    return taps.isEmpty ? 0 : taps.reduce((value, element) => value + element) ~/ taps.length;
   }
 
   int get fastest {
-    return taps.isEmpty
-        ? 0
-        : taps
-            .where((element) => element.getTapLatency() != 0)
-            .map((e) => e.getTapLatency())
-            .reduce(min);
+    return taps.isEmpty ? 0 : taps.where((element) => element != 0).reduce(min);
   }
 
   int get slowest {
-    return taps.isEmpty ? 0 : taps.map((e) => e.getTapLatency()).reduce(max);
+    return taps.isEmpty ? 0 : taps.reduce(max);
   }
 
   String get lastClickSpendTime {
-    return taps.isEmpty ? '' : '${taps.last.getTapLatency()}ms';
+    return taps.isEmpty ? '' : '${taps.last}ms';
   }
 
   PVTResult toPVTResult() {
@@ -73,7 +92,7 @@ class PsychomotorVigilanceTest {
     pvtResult.setAverageTapLatencyMs(_averageTapLatencyMs);
     pvtResult.setTimeInterval(_creationDate.millisecondsSinceEpoch);
     if (_taps.isNotEmpty) {
-      pvtResult.setReactions(_taps.map((e) => e.getTapLatency()).toList());
+      pvtResult.setReactions(_taps);
     }
     return pvtResult;
   }
@@ -81,28 +100,8 @@ class PsychomotorVigilanceTest {
   factory PsychomotorVigilanceTest.fromPVTResult(PVTResult pvtResult) {
     final instance = PsychomotorVigilanceTest.getInstance(
         DateTime.fromMillisecondsSinceEpoch(pvtResult.getTimeInterval() ?? 0));
-    instance.averageTapLatencyMs = pvtResult.getAverageTapLatencyMs();
-    switch (pvtResult.getAverageTapLatencyMs()) {
-      case <= highlyAlertMS:
-        instance.title = "Highly Alert";
-        instance.alertnessLevel = Alertness.highlyAlert;
-        break;
-      case <= sleepyMS && > highlyAlertMS:
-        instance.title = "Alert";
-        instance.alertnessLevel = Alertness.alert;
-        break;
-      case <= verySleepyMS && > sleepyMS:
-        instance.title = "Drowsy";
-        instance.alertnessLevel = Alertness.drowsy;
-        break;
-      case > verySleepyMS:
-        instance.title = "Very Drowsy";
-        instance.alertnessLevel = Alertness.veryDrowsy;
-        break;
-      default:
-        instance.title = "Alert";
-        instance.alertnessLevel = Alertness.alert;
-    }
+    instance.taps.addAll(pvtResult.getReactions());
+    pvtResult.getAverageTapLatencyMs().generatePVTResultData(instance);
     return instance;
   }
 }

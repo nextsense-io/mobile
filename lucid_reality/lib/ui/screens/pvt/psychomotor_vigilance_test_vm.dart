@@ -4,15 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/psychomotor_vigilance_test.dart';
-import 'package:lucid_reality/domain/psychomotor_vigilance_test_data_provider.dart';
 import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/pvt_manager.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/ui/screens/pvt/psychomotor_vigilance_test_list_screen.dart';
 
 class PsychomotorVigilanceTestViewModule extends ViewModel {
-  final PsychomotorVigilanceTestDataProvider psychomotorVigilanceTestDataProvider =
-      getIt<PsychomotorVigilanceTestDataProvider>();
   final AuthManager _authManager = getIt<AuthManager>();
   final PVTManager pvtManager = getIt<PVTManager>();
   final Navigation _navigation = getIt<Navigation>();
@@ -20,6 +17,7 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
   final Random random = Random();
   ValueNotifier<bool>? btnVisibility;
   PsychomotorVigilanceTest? psychomotorVigilanceTest;
+  TapTime? tapTime;
 
   PsychomotorVigilanceTestViewModule(this.page);
 
@@ -35,6 +33,7 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
 
   void redirectToPVTMain() {
     psychomotorVigilanceTest = null;
+    tapTime = null;
     page.value = PsychomotorVigilanceTestStages.pvtMain;
   }
 
@@ -44,15 +43,15 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
 
   void navigateToPVTResultsPage() async {
     if (psychomotorVigilanceTest != null) {
-      psychomotorVigilanceTestDataProvider.add(psychomotorVigilanceTest!);
-      psychomotorVigilanceTestDataProvider.generateReport(psychomotorVigilanceTest!);
-      await pvtManager.addPVTResult(psychomotorVigilanceTest!.toPVTResult());
+      pvtManager.add(psychomotorVigilanceTest!);
+      pvtManager.generateReport(psychomotorVigilanceTest!);
     }
     page.value = PsychomotorVigilanceTestStages.pvtResults;
   }
 
   void navigateToPVTResultsWithData(PsychomotorVigilanceTest psychomotorVigilanceTest) {
-    psychomotorVigilanceTestDataProvider.generateReport(psychomotorVigilanceTest);
+    this.psychomotorVigilanceTest = psychomotorVigilanceTest;
+    pvtManager.generateReport(psychomotorVigilanceTest);
     page.value = PsychomotorVigilanceTestStages.pvtResults;
   }
 
@@ -61,15 +60,16 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
     Future.delayed(
       Duration(seconds: random.nextInt(5) + 1),
       () {
-        psychomotorVigilanceTest?.taps.add(TapTime.getInstance(DateTime.now()));
         btnVisibility?.value = true;
+        tapTime = TapTime.getInstance(DateTime.now());
       },
     );
   }
 
   void rescheduleButtonVisibility() {
-    psychomotorVigilanceTest?.taps.lastOrNull?.endTime = DateTime.now();
     btnVisibility?.value = false;
+    tapTime?.endTime = DateTime.now();
+    psychomotorVigilanceTest?.taps.add(tapTime?.getTapLatency() ?? 0);
     scheduleButtonVisibility();
   }
 }

@@ -70,29 +70,23 @@ class PsychomotorVigilanceTestScreen extends HookWidget {
               ),
               alignment: Alignment.center,
               child: btnVisibility.value
-                  ? ElevatedButton(
-                      onPressed: () {
-                        viewModel.rescheduleButtonVisibility();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        padding: EdgeInsets.zero,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(360)),
-                      ),
-                      child: Container(
-                        width: 131,
-                        height: 131,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: Svg(imageBasePath.plus('btn_brain_check.svg')),
-                            fit: BoxFit.fill,
-                          ),
+                  ? InkWell(
+                    onTap: (){
+                      viewModel.rescheduleButtonVisibility();
+                    },
+                    child: Container(
+                      width: 131,
+                      height: 131,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: Svg(imageBasePath.plus('btn_brain_check.svg')),
+                          fit: BoxFit.fill,
                         ),
-                        alignment: Alignment.center,
-                        child: const MyCountdown(Duration(milliseconds: 10)),
                       ),
-                    )
+                      alignment: Alignment.center,
+                      child: const MyCountdown(Duration(milliseconds: 10)),
+                    ),
+                  )
                   : Text(
                       viewModel.psychomotorVigilanceTest?.lastClickSpendTime ?? '',
                       textAlign: TextAlign.center,
