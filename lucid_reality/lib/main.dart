@@ -8,6 +8,7 @@ import 'package:flutter_common/managers/firebase_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/ui/screens/auth/sign_in_screen.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/ui/screens/startup/startup_screen.dart';
 import 'package:nextsense_base/nextsense_base.dart';
@@ -18,7 +19,6 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'di.dart';
 import 'managers/auth_manager.dart';
 import 'managers/connectivity_manager.dart';
-import 'managers/sleep_staging_manager.dart';
 
 void _initLogging() {
   Logger.root.level = Level.ALL; // defaults to Level.INFO
@@ -67,7 +67,6 @@ class LucidRealityApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: getIt<ConnectivityManager>()),
-        ChangeNotifierProvider.value(value: getIt<SleepStagingManager>())
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -102,7 +101,7 @@ class LucidRealityApp extends StatelessWidget {
         ),
         home: _authManager.isAuthenticated || initialIntent != null
             ? StartupScreen(initialIntent: initialIntent)
-            : StartupScreen(initialIntent: initialIntent),
+            : SignInScreen(),
         navigatorKey: _navigation.navigatorKey,
         onGenerateRoute: _navigation.onGenerateRoute,
       ),

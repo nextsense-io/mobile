@@ -16,24 +16,28 @@ import 'lets_go_screen.dart';
 class OnboardingScreen extends HookWidget {
   static const String id = 'onboarding_screen';
 
-  OnboardingScreen({super.key});
-
-  final List<Widget> _pages = [
-    const QuestionsScreen(),
-    const HowItScreen(),
-    const BrainChecking(),
-    const SleepScreen(),
-    const LearnScreen(),
-    const DreamScreen(),
-    const LetsGoScreen(),
-  ];
+  const OnboardingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final pageController = usePageController(initialPage: 0);
     final activePage = useState(0);
+    final pages = useRef<List<Widget>>([]);
+    final viewModel = useRef(OnboardingScreenViewModel());
+    useEffect(() {
+      pages.value = [
+        QuestionsScreen(viewModel: viewModel.value),
+        const HowItScreen(),
+        const BrainChecking(),
+        const SleepScreen(),
+        const LearnScreen(),
+        const DreamScreen(),
+        const LetsGoScreen(),
+      ];
+      return null;
+    }, []);
     return ViewModelBuilder.reactive(
-      viewModelBuilder: () => OnboardingScreenViewModel(),
+      viewModelBuilder: () => viewModel.value,
       onViewModelReady: (viewModel) => viewModel.init(),
       builder: (context, viewModel, child) {
         return SafeArea(
@@ -55,11 +59,11 @@ class OnboardingScreen extends HookWidget {
                   onPageChanged: (int page) {
                     activePage.value = page;
                   },
-                  itemCount: _pages.length,
+                  itemCount: pages.value.length,
                   itemBuilder: (BuildContext context, int index) {
                     return Padding(
                       padding: EdgeInsets.symmetric(vertical: index == 0 ? 0 : 60),
-                      child: _pages[index % _pages.length],
+                      child: pages.value[index % pages.value.length],
                     );
                   },
                 ),
@@ -79,7 +83,7 @@ class OnboardingScreen extends HookWidget {
                   ),
                 ),
                 Visibility(
-                  visible: activePage.value != 0 && (activePage.value + 1) < _pages.length,
+                  visible: activePage.value != 0 && (activePage.value + 1) < pages.value.length,
                   child: Positioned(
                     left: 0,
                     bottom: 0,
@@ -109,7 +113,7 @@ class OnboardingScreen extends HookWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List<Widget>.generate(
-                      _pages.length,
+                      pages.value.length,
                       (index) => Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: InkWell(
@@ -138,11 +142,13 @@ class OnboardingScreen extends HookWidget {
                       padding: const EdgeInsets.only(right: 24),
                       child: IconButton(
                         onPressed: () {
-                          if ((activePage.value + 1) == _pages.length) {
+                          if ((activePage.value + 1) == pages.value.length) {
                             viewModel.redirectToDashboard();
                           } else {
-                            pageController.animateToPage((activePage.value + 1) % _pages.length,
-                                duration: const Duration(milliseconds: 300), curve: Curves.easeIn);
+                            pageController.animateToPage(
+                                (activePage.value + 1) % pages.value.length,
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeIn);
                           }
                         },
                         icon: Image.asset(
