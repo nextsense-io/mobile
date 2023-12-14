@@ -18,9 +18,7 @@ class SignInViewModel extends ViewModel {
   bool popupErrorMsg = false;
   String? initialErrorMessage;
   
-  bool get hadPairedDevice => _authManager.getLastPairedMacAddress() != null;
   List<AuthMethod> get authMethods => [AuthMethod.google_auth];
-  bool get isTempPassword => _authManager.user!.isTempPassword();
 
   @override
   void init() async {
