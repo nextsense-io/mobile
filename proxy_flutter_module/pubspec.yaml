@@ -18,7 +18,7 @@ description: Proxy module that launches the correct Flutter UI application
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.1.3 <4.0.0'
+  sdk: '>=3.1.1 <4.0.0'
 
 dependencies:
   flutter:
