@@ -19,14 +19,14 @@ android {
             keyPassword RELEASE_KEY_PASSWORD
         }
     }
-    compileSdkVersion 33
+    compileSdkVersion 34
     buildToolsVersion "30.0.3"
     namespace "io.nextsense.android.main"
 
     defaultConfig {
         applicationId "io.nextsense.android.main"
-        minSdkVersion 24
-        targetSdkVersion 33
+        minSdkVersion 28
+        targetSdkVersion 34
         versionCode 40
         versionName "0.6.0"
         multiDexEnabled true

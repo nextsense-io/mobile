@@ -12,11 +12,13 @@ class SignInViewModel extends ViewModel {
   final Navigation _navigation = getIt<Navigation>();
   final AuthManager _authManager = getIt<AuthManager>();
   final ConnectivityManager _connectivityManager = getIt<ConnectivityManager>();
+  
   bool internetConnection = true;
   String errorMsg = "";
   bool popupErrorMsg = false;
-  List<AuthMethod> get authMethods => [AuthMethod.google_auth];
   String? initialErrorMessage;
+  
+  List<AuthMethod> get authMethods => [AuthMethod.google_auth];
 
   @override
   void init() async {

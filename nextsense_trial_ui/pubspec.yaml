@@ -47,7 +47,7 @@ dependencies:
   introduction_screen: # ^3.0.2
     path: ../../introduction_screen
   logging: ^1.0.2
-  package_info_plus: ^3.1.2
+  package_info_plus: ^4.2.0
   path_provider: ^2.0.8
   permission_handler: ^10.2.0
   persistent_bottom_nav_bar_v2: ^4.2.3
@@ -63,7 +63,7 @@ dependencies:
   stacked: ^3.4.1+1
   timezone: ^0.9.1
   uuid: ^3.0.5
-  wakelock: ^0.6.1+2
+  wakelock_plus: ^1.1.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

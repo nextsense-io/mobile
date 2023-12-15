@@ -15,7 +15,7 @@ import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:flutter_common/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:flutter_common/utils/android_logger.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 enum ImpedanceRunState {
   STOPPED,
@@ -114,7 +114,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
   Future _stopCalculating() async {
     _screenRefreshTimer?.cancel();
     await _impedanceCalculator?.stopCalculatingImpedance();
-    await Wakelock.disable();
+    await WakelockPlus.disable();
     _impedanceRunState = ImpedanceRunState.STOPPED;
     if (mounted) {
       setState(() {});
@@ -181,7 +181,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
                         });
                         return;
                       }
-                      Wakelock.enable();
+                      WakelockPlus.enable();
                       _screenRefreshTimer =
                           new Timer.periodic(_refreshInterval, _calculateImpedance);
                       setState(() {

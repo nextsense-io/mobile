@@ -14,7 +14,7 @@ dependencies:
   nextsense_base:
     path: ../nextsense_base
   cloud_firestore: ^4.3.1
-  device_info_plus: ^5.0.1
+  device_info_plus: ^9.0.0
   email_validator: ^2.1.16
   firebase_app_check: ^0.1.1+12
   firebase_auth: ^4.10.1
@@ -26,7 +26,7 @@ dependencies:
   intl: ^0.18.0
   logging: ^1.0.2
   path_provider: ^2.0.8
-  permission_handler: ^10.2.0
+  permission_handler: ^10.4.5
   shared_preferences: ^2.0.13
   stacked: ^3.4.1+1
 

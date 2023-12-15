@@ -1,5 +1,6 @@
 import 'package:flutter_common/di.dart' as common_di;
 import 'package:get_it/get_it.dart';
+import 'package:lucid_reality/managers/google_fit_manager.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
 import 'package:lucid_reality/managers/pvt_manager.dart';
 import 'package:lucid_reality/preferences.dart';
@@ -23,5 +24,8 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
   getIt.registerSingleton<AuthManager>(AuthManager());
   getIt.registerSingleton<Navigation>(Navigation());
+  getIt.registerSingleton<GoogleFitManager>(GoogleFitManager());
+  getIt.registerSingleton<PsychomotorVigilanceTestDataProvider>(
+      PsychomotorVigilanceTestDataProvider());
   getIt.registerSingleton<PVTManager>(PVTManager());
 }
