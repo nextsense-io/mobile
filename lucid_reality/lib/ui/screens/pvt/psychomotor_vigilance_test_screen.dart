@@ -71,7 +71,7 @@ class PsychomotorVigilanceTestScreen extends HookWidget {
               alignment: Alignment.center,
               child: btnVisibility.value
                   ? InkWell(
-                    onTap: (){
+                    onTapDown: (details) {
                       viewModel.rescheduleButtonVisibility();
                     },
                     child: Container(

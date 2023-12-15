@@ -24,8 +24,6 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
   getIt.registerSingleton<AuthManager>(AuthManager());
   getIt.registerSingleton<Navigation>(Navigation());
-  getIt.registerSingleton<GoogleFitManager>(GoogleFitManager());
-  getIt.registerSingleton<PsychomotorVigilanceTestDataProvider>(
-      PsychomotorVigilanceTestDataProvider());
   getIt.registerSingleton<PVTManager>(PVTManager());
+  getIt.registerSingleton<GoogleFitManager>(GoogleFitManager());
 }
