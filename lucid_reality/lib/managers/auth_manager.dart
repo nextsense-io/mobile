@@ -78,7 +78,7 @@ class AuthManager {
   // Make sure the user data is loaded from firebaseDb before doing any authorized operations.
   //
   // Returns true if the user is successfully initialized, otherwise returns false.
-  Future<bool>  ensureUserLoaded() async {
+  Future<bool> ensureUserLoaded() async {
     _logger.log(Level.INFO, 'ensure user loaded');
     if (_user != null) {
       // User already initialized
