@@ -60,10 +60,9 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
                         borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                    child: getPvtChart(viewModel.brainCheckingDataProvider.getData().first),
+                    child: getPvtChart(viewModel.psychomotorVigilanceTest!),
                   );
-                } else if (index ==
-                    (viewModel.brainCheckingDataProvider.getReportData().length + 1)) {
+                } else if (index == (viewModel.pvtManager.getReportData().length + 1)) {
                   //Footer
                   return Align(
                     alignment: Alignment.centerRight,
@@ -94,7 +93,7 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
                     ),
                   );
                 } else {
-                  final item = viewModel.brainCheckingDataProvider.getReportData()[index - 1];
+                  final item = viewModel.pvtManager.getReportData()[index - 1];
                   return _rowReportItem(context, item);
                 }
               },
@@ -104,7 +103,7 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
                   color: Colors.transparent,
                 );
               },
-              itemCount: viewModel.brainCheckingDataProvider.getReportData().length + 2,
+              itemCount: viewModel.pvtManager.getReportData().length + 2,
             ),
           ),
         ],
@@ -158,8 +157,7 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
           labelStyle: const TextStyleSpec().caption,
           lineStyle: LineStyleSpec(color: ColorUtil.fromDartColor(NextSenseColors.royalBlue)),
         ),
-        viewport:
-            NumericExtents(psychomotorVigilanceTest.fastest, psychomotorVigilanceTest.slowest),
+        viewport: psychomotorVigilanceTest.getChartViewPort(),
       ),
       domainAxis: NumericAxisSpec(
         showAxisLine: true,
@@ -220,8 +218,7 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
   List<Series<TapData, int>> convertPvtTestDataToChartData(
       PsychomotorVigilanceTest psychomotorVigilanceTest) {
     int counter = 0;
-    final tapsData =
-        psychomotorVigilanceTest.taps.map((e) => TapData(counter++, e.getTapLatency())).toList();
+    final tapsData = psychomotorVigilanceTest.taps.map((e) => TapData(counter++, e)).toList();
     final slowestIndex =
         tapsData.indexWhere((element) => element.primary == psychomotorVigilanceTest.slowest);
     final fastestIndex =
@@ -269,4 +266,12 @@ class TapData {
   int get primary => _primary;
 
   TapData(this._domain, this._primary);
+}
+
+extension GenerateChartViewPort on PsychomotorVigilanceTest {
+  NumericExtents getChartViewPort() {
+    final min = fastest >= 300 ? 200 : fastest;
+    final max = slowest <= 1200 ? 1300 : slowest;
+    return NumericExtents(min, max);
+  }
 }

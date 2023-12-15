@@ -6,6 +6,8 @@ import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 
 const String dbRootDBName = 'LucidReality';
 
+enum SortBy { ASC, DESC }
+
 enum Table {
   acknowledgements,
   brainChecks,
@@ -19,6 +21,12 @@ enum Table {
 extension ParseToString on Table {
   String name() {
     return toString().split('.').last;
+  }
+}
+
+extension SnapshotToMap on DataSnapshot {
+  Map<String, dynamic> toMap() {
+    return Map<String, dynamic>.from(value as Map);
   }
 }
 
@@ -54,11 +62,27 @@ class LucidUiFirebaseRealtimeDBManager {
   Future<T?> getEntity<T extends FirebaseRealtimeDBEntity>(T entity, String reference) async {
     final snapshot = await _lucidDatabase.child(reference).get();
     if (snapshot.exists) {
-      Map<String, dynamic> snapshotValue = Map<String, dynamic>.from(snapshot.value as Map);
+      Map<String, dynamic> snapshotValue = snapshot.toMap();
       entity.setValues(snapshotValue);
       return entity;
     } else {
       return null;
     }
+  }
+
+  Future<List<T>> getEntities<T>(
+      String reference, T Function(MapEntry<String, dynamic> data) fromMap,
+      {SortBy sortBy = SortBy.ASC}) async {
+    final snapshot = await _lucidDatabase.child('$reference/$userId').get();
+    if (snapshot.exists) {
+      final entityList = snapshot.toMap().entries.map(fromMap).toList();
+      return sortBy == SortBy.ASC ? entityList : entityList.reversed.toList();
+    }
+    return [];
+  }
+
+  Future<void> addAutoIdEntity<T extends FirebaseRealtimeDBEntity>(
+      T entity, String reference) async {
+    _lucidDatabase.child('$reference/$userId').push().set(entity.toJson());
   }
 }

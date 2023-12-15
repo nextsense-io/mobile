@@ -59,9 +59,7 @@ class PsychomotorVigilanceTestDataProvider {
         .add(PsychomotorVigilanceTestReport('Fastest response', fastest, NextSenseColors.skyBlue));
     _results
         .add(PsychomotorVigilanceTestReport('Slowest response', slowest, NextSenseColors.coral));
-    final missed = psychomotorVigilanceTest.taps
-        .where((element) => element.startTime == null || element.endTime == null)
-        .length;
+    final missed = psychomotorVigilanceTest.taps.where((element) => element == 0).length;
     _results
         .add(PsychomotorVigilanceTestReport('Missed Responses', missed, NextSenseColors.royalBlue));
     if (psychomotorVigilanceTest.title.isEmpty) {
