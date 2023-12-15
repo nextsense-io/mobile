@@ -89,7 +89,7 @@ class PsychomotorVigilanceTest {
 
   PVTResult toPVTResult() {
     final PVTResult pvtResult = PVTResult();
-    pvtResult.setAverageTapLatencyMs(_averageTapLatencyMs);
+    pvtResult.setAverageTapLatencyMs(average);
     pvtResult.setTimeInterval(_creationDate.millisecondsSinceEpoch);
     if (_taps.isNotEmpty) {
       pvtResult.setReactions(_taps);
