@@ -11,7 +11,6 @@ import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/auth/sign_in_screen.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/ui/screens/startup/startup_screen.dart';
-import 'package:nextsense_base/nextsense_base.dart';
 import 'package:provider/provider.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:timezone/data/latest.dart' as tz;
@@ -44,7 +43,6 @@ void main() async {
     FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     tz.initializeTimeZones();
-    NextsenseBase.startService();
     await initDependencies();
     await _initPreferences();
     runApp(LucidRealityApp());
@@ -78,13 +76,19 @@ class LucidRealityApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           fontFamily: 'Montserrat',
           textTheme: const TextTheme(
-            titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400),
-            titleMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-            titleLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
-            bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
-            bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-            bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            labelLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
+            displaySmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
+            displayMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
+            displayLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
+            headlineSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
+            headlineLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
+            titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
+            titleMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
+            titleLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
+            bodySmall: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: Colors.white),
+            bodyMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w400, color: Colors.white),
+            bodyLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+            labelSmall: TextStyle(fontSize: 18, fontWeight: FontWeight.w400, color: Colors.white),
+            labelLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: Colors.white),
           ).apply(
             bodyColor: Colors.white,
             displayColor: Colors.white,

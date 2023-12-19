@@ -11,8 +11,6 @@ import 'package:lucid_reality/ui/screens/sleep/sleep_screen.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:stacked/stacked.dart';
 
-
-
 class DashboardScreen extends HookWidget {
   static const String id = 'dashboard_screen';
 
@@ -23,7 +21,7 @@ class DashboardScreen extends HookWidget {
     const LearnScreen(),
     const PsychomotorVigilanceTestListScreen(),
     const LucidScreen(),
-    const SleepScreen()
+    SleepScreen()
   ];
 
   @override

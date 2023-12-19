@@ -7,11 +7,13 @@ enum FitResult {
   NO_DATA
 }
 
-class GoogleFitManager {
+class HealthConnectManager {
 
   static const types = [
     HealthDataType.SLEEP_SESSION
   ];
+
+  static const String fitnessSource = "com.google.android.apps.fitness";
 
   final _health = HealthFactory(useHealthConnectIfAvailable: true);
   final _logger = Logger('GoogleFitManager');
@@ -19,8 +21,13 @@ class GoogleFitManager {
   bool _authorized = false;
   List<HealthDataPoint>? _sleepSessions;
 
+  /// Requests authorization to access health data.
   Future<bool> authorize() async {
     if (_authorized) {
+      return true;
+    }
+    if (await _health.hasPermissions(types) ?? false) {
+      _authorized = true;
       return true;
     }
     _logger.log(Level.INFO, "Requesting health connect authorization");
@@ -33,18 +40,23 @@ class GoogleFitManager {
     return true;
   }
 
-  Future<List<HealthDataPoint>?> getSleepSessionData(int days) async {
-    if (_sleepSessions != null) {
-      return _sleepSessions;
+  /// Returns a list of sleep session data points for the last [days] days.
+  /// Returns null if the user is not authorized.
+  /// Returns an empty list if no data is available.
+  Future<List<HealthDataPoint>?> getSleepSessionData(
+      {required DateTime startDate, required int days}) async {
+    if (days < 1) {
+      throw ArgumentError("Days must be greater than 0");
     }
+
     if (!_authorized) {
       _logger.log(Level.INFO, "Health connect authorization missing.");
       return null;
     }
-    DateTime now = DateTime.now();
-    _logger.log(Level.INFO, "Requesting health data from ${now.subtract(Duration(days: days))} to $now");
+    DateTime endDate = startDate.add(Duration(days: days));
+    _logger.log(Level.INFO, "Requesting health data from $startDate to $endDate");
     List<HealthDataPoint> healthData = await _health.getHealthDataFromTypes(
-        now.subtract(Duration(days: days)), now, types);
+        startDate, endDate, types);
     _logger.log(Level.INFO, "Received ${healthData.length} health data points");
     _sleepSessions = healthData;
     if (healthData.isEmpty) {
