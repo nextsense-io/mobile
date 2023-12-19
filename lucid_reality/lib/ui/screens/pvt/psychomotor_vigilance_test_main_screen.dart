@@ -90,7 +90,7 @@ class PsychomotorVigilanceTestMainScreen extends HookWidget {
           Expanded(
             child: ListView.separated(
               itemBuilder: (context, index) {
-                final item = viewModel.brainCheckingDataProvider.getData()[index];
+                final item = viewModel.pvtManager.getPVTResults()[index];
                 return InkWell(
                   onTap: () {
                     viewModel.navigateToPVTResultsWithData(item);
@@ -104,7 +104,7 @@ class PsychomotorVigilanceTestMainScreen extends HookWidget {
                   color: Colors.transparent,
                 );
               },
-              itemCount: viewModel.brainCheckingDataProvider.getData().length,
+              itemCount: viewModel.pvtManager.getPVTResults().length,
             ),
           )
         ],
