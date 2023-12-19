@@ -14,7 +14,7 @@ extension TimeUtils on TimeOfDay {
 
 extension DateUtils on DateTime {
 
-  static final DateFormat _dateOnlyFormatter = new DateFormat('d MMM, yyyy');
+  static final DateFormat _dateOnlyFormatter = new DateFormat('MMM d, yyyy');
   static final DateFormat _hhmmFormatter = new DateFormat('HH:mm');
   static final DateFormat _hmmFormatter = new DateFormat('h:mm');
   static final DateFormat _hmmaFormatter = new DateFormat('h:mma');

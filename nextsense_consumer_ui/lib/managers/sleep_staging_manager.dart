@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_common/domain/earbuds_config.dart';
 import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
