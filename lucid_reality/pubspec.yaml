@@ -28,11 +28,11 @@ dependencies:
     path: ../nextsense_base
   flutter_common:
     path: ../flutter_common
-  app_settings: ^4.1.5
+  app_settings: ^5.1.1
   awesome_notifications: ^0.8.2
   community_charts_flutter: ^1.0.2
   circular_countdown_timer: ^0.2.1
-  connectivity_plus: ^2.2.1
+  connectivity_plus: ^5.0.2
   dropdown_button2: ^1.5.2
   file: ^6.1.4
   email_validator: ^2.1.16
@@ -56,9 +56,9 @@ dependencies:
   form_builder_validators: ^9.1.0
   get_it: ^7.6.4
   gson: ^0.1.6-dev
-  # health: ^8.0.0
-  health:
-    path: ../../flutter-plugins/packages/health
+  health: ^8.0.0
+#  health:
+#    path: ../../flutter-plugins/packages/health
   iirjdart: ^0.1.0
   introduction_screen: # ^3.0.2
     path: ../../introduction_screen
