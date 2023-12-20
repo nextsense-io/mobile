@@ -8,7 +8,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.0'
+        classpath 'com.android.tools.build:gradle:8.2.0'
         classpath 'com.google.gms:google-services:4.3.14'
     }
 }
@@ -23,7 +23,9 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
+
+    namespace = "io.nextsense.flutter.base.nextsense_base"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
