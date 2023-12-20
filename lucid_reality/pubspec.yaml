@@ -56,9 +56,9 @@ dependencies:
   form_builder_validators: ^9.1.0
   get_it: ^7.6.4
   gson: ^0.1.6-dev
-  health: ^8.0.0
-#  health:
-#    path: ../../flutter-plugins/packages/health
+  # health: ^8.0.0
+  health:
+    path: ../../flutter-plugins/packages/health
   iirjdart: ^0.1.0
   introduction_screen: # ^3.0.2
     path: ../../introduction_screen
@@ -69,13 +69,21 @@ dependencies:
   persistent_bottom_nav_bar_v2: ^4.2.3
   protobuf: ^2.0.0
   provider: ^6.0.1
-  receive_intent: ^0.2.1
+  # Applied https://github.com/daadu/receive_intent/pull/25 for AGP 8 compatibility and updated
+  # kotlin version.
+  receive_intent:  # ^0.2.4
+    git:
+      url: https://github.com/eric-nextsense/receive_intent
   scidart: ^0.0.2-dev.9
   scrollable_positioned_list: ^0.3.2
   settings_ui: ^2.0.2
   shared_preferences: ^2.0.13
   shimmer: ^2.0.0
-  soundpool: ^2.3.0
+  # Updated kotlin version for AGP 8 compatibility.
+  soundpool:  # ^2.4.1
+    git:
+      url: https://github.com/eric-nextsense/soundpool
+      path: soundpool
   stacked: ^3.4.1+1
   timezone: ^0.9.1
   uuid: ^3.0.5

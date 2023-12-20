@@ -162,7 +162,7 @@ class DeviceScanScreen extends HookWidget {
               text: MediumText(text: 'Open Bluetooth Settings', color: NextSenseColors.darkBlue),
               onTap: () async {
                 // Check if Bluetooth is ON.
-                AppSettings.openBluetoothSettings();
+                AppSettings.openAppSettings(type: AppSettingsType.bluetooth);
               },
             )),
         Padding(
