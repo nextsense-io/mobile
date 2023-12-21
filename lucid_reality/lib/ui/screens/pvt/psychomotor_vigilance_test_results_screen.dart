@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/domain/psychomotor_vigilance_test.dart';
+import 'package:lucid_reality/ui/components/app_close_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/pvt/psychomotor_vigilance_test_vm.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
@@ -23,15 +24,10 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
         children: [
           Align(
             alignment: Alignment.topRight,
-            child: IconButton(
+            child: AppCloseButton(
               onPressed: () {
                 viewModel.redirectToPVTMain();
               },
-              icon: Image.asset(
-                imageBasePath.plus("close_button.png"),
-                height: 34,
-                width: 34,
-              ),
             ),
           ),
           const SizedBox(height: 5),

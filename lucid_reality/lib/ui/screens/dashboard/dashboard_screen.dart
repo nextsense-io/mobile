@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
+import 'package:lucid_reality/ui/components/app_body.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:lucid_reality/ui/screens/home/home_screen.dart';
@@ -10,8 +11,6 @@ import 'package:lucid_reality/ui/screens/pvt/psychomotor_vigilance_test_list_scr
 import 'package:lucid_reality/ui/screens/sleep/sleep_screen.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:stacked/stacked.dart';
-
-
 
 class DashboardScreen extends HookWidget {
   static const String id = 'dashboard_screen';
@@ -35,17 +34,7 @@ class DashboardScreen extends HookWidget {
       builder: (context, viewModel, child) {
         return SafeArea(
           child: Scaffold(
-            body: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(
-                    imageBasePath.plus("onboarding_bg.png"),
-                  ),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: _pages.elementAt(activeTab.value),
-            ),
+            body: AppBody(child: _pages.elementAt(activeTab.value)),
             bottomNavigationBar: BottomNavigationBar(
               currentIndex: activeTab.value,
               showSelectedLabels: false,

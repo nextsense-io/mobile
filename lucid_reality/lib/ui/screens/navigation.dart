@@ -5,12 +5,19 @@ import 'package:flutter_common/managers/device_manager.dart';
 import 'package:flutter_common/managers/disk_space_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
+import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:lucid_reality/ui/screens/reality_check/lucid_reality_category_screen.dart';
+import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 
-import 'package:lucid_reality/di.dart';
 import 'auth/sign_in_screen.dart';
 import 'onboarding/onboarding_screen.dart';
+import 'reality_check/reality_check_bedtime_screen.dart';
+import 'reality_check/reality_check_completion_screen.dart';
+import 'reality_check/reality_check_tone_category_screen.dart';
+import 'reality_check/reality_check_tone_selection_screen.dart';
+import 'reality_check/set_goal_screen.dart';
 import 'startup/startup_screen.dart';
 
 class NavigationRoute {
@@ -227,11 +234,25 @@ class Navigation {
       case StartupScreen.id:
         return MaterialPageRoute(builder: (context) => StartupScreen());
       case OnboardingScreen.id:
-        return MaterialPageRoute(builder: (context) => OnboardingScreen());
+        return MaterialPageRoute(builder: (context) => const OnboardingScreen());
       case DashboardScreen.id:
         return MaterialPageRoute(builder: (context) => DashboardScreen());
       case SignInScreen.id:
         return MaterialPageRoute(builder: (context) => SignInScreen());
+      case LucidRealityCategoryScreen.id:
+        return MaterialPageRoute(builder: (context) => const LucidRealityCategoryScreen());
+      case SetGoalScreen.id:
+        return MaterialPageRoute(builder: (context) => const SetGoalScreen());
+      case RealityCheckTimeScreen.id:
+        return MaterialPageRoute(builder: (context) => const RealityCheckTimeScreen());
+      case RealityCheckToneCategoryScreen.id:
+        return MaterialPageRoute(builder: (context) => const RealityCheckToneCategoryScreen());
+      case RealityCheckBedtimeScreen.id:
+        return MaterialPageRoute(builder: (context) => const RealityCheckBedtimeScreen());
+      case RealityCheckToneSelectionScreen.id:
+        return MaterialPageRoute(builder: (context) => const RealityCheckToneSelectionScreen());
+      case RealityCheckCompletionScreen.id:
+        return MaterialPageRoute(builder: (context) => const RealityCheckCompletionScreen());
 
       // case ImpedanceCalculationScreen.id: return MaterialPageRoute(
       //     builder: (context) => ImpedanceCalculationScreen());
@@ -331,6 +352,12 @@ class Navigation {
   void pop() {
     if (canPop()) {
       return navigatorKey.currentState!.pop();
+    }
+  }
+
+  void popWithResult<T extends Object?>([T? result]) {
+    if (canPop()) {
+      return navigatorKey.currentState!.pop(result);
     }
   }
 

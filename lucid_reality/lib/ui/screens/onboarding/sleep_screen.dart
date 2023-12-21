@@ -13,9 +13,9 @@ class SleepScreen extends StatelessWidget {
           right: 0,
           left: 0,
           top: 120,
-          child: Image.asset(
+          child: Image(
             alignment: Alignment.bottomCenter,
-            imageBasePath.plus("onboarding_sleep_bg.png"),
+            image: Svg(imageBasePath.plus("onboarding_sleep_bg.svg")),
             fit: BoxFit.fitWidth,
           ),
         ),

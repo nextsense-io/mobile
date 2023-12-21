@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
-
 import 'package:lucid_reality/utils/utils.dart';
 
 class DreamScreen extends StatelessWidget {
@@ -12,8 +11,8 @@ class DreamScreen extends StatelessWidget {
       children: [
         Expanded(
           flex: 6,
-          child: Image.asset(
-            imageBasePath.plus('onboarding_dream_bg.png'),
+          child: Image(
+            image: Svg(imageBasePath.plus('onboarding_dream_bg.svg')),
             fit: BoxFit.fitWidth,
           ),
         ),

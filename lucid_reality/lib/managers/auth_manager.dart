@@ -6,7 +6,7 @@ import 'package:flutter_common/managers/auth/google_auth_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
-import 'package:lucid_reality/domain/users_entity.dart';
+import 'package:lucid_reality/domain/user_entity.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
 import 'package:lucid_reality/preferences.dart';
@@ -81,6 +81,7 @@ class AuthManager {
   Future<bool> ensureUserLoaded() async {
     _logger.log(Level.INFO, 'ensure user loaded');
     if (_user != null) {
+      firebaseRealTimeDb.setUserId(authUid!);
       // User already initialized
       return true;
     }

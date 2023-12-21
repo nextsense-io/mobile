@@ -5,6 +5,7 @@ import 'package:logging/logging.dart';
 final CustomLogPrinter _logger = CustomLogPrinter('Utils');
 
 const String imageBasePath = "packages/lucid_reality/assets/images/";
+const String soundBasePath = "packages/lucid_reality/assets/sounds/TotemSounds/";
 
 extension StringAppend on String {
   String plus(String str) {

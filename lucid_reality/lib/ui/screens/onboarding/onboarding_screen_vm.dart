@@ -1,7 +1,7 @@
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/question.dart';
-import 'package:lucid_reality/domain/users_entity.dart';
+import 'package:lucid_reality/domain/user_entity.dart';
 import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen.dart';

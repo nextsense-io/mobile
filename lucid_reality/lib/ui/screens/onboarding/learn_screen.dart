@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
-
 import 'package:lucid_reality/utils/utils.dart';
 
 class LearnScreen extends StatelessWidget {
@@ -14,8 +13,8 @@ class LearnScreen extends StatelessWidget {
           flex: 6,
           child: Container(
             padding: const EdgeInsets.all(24),
-            child: Image.asset(
-              imageBasePath.plus('onboarding_learn_bg.png'),
+            child: Image(
+              image: Svg(imageBasePath.plus('onboarding_learn_bg.svg')),
               fit: BoxFit.fitWidth,
             ),
           ),
