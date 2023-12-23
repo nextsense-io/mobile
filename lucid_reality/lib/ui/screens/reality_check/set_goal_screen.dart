@@ -84,7 +84,7 @@ class SetGoalScreen extends HookWidget {
                     ),
                     const Spacer(flex: 1),
                     RealityCheckBottomBar(
-                      onForwardClick: () async {
+                      onPressed: () async {
                         await viewModel.lucidManager.updateDescription(textController.text.trim());
                         viewModel.navigateToSetTimerScreen();
                       },

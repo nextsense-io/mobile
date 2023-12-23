@@ -80,7 +80,7 @@ class RealityCheckToneSelectionScreen extends HookWidget {
                     ),
                     const SizedBox(height: 30),
                     RealityCheckBottomBar(
-                      onForwardClick: () {
+                      onPressed: () {
                         viewModel.goBack();
                       },
                     ),

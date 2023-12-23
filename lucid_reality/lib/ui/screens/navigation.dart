@@ -244,11 +244,11 @@ class Navigation {
       case SetGoalScreen.id:
         return MaterialPageRoute(builder: (context) => const SetGoalScreen());
       case RealityCheckTimeScreen.id:
-        return MaterialPageRoute(builder: (context) => const RealityCheckTimeScreen());
+        return MaterialPageRoute(builder: (context) => RealityCheckTimeScreen());
       case RealityCheckToneCategoryScreen.id:
         return MaterialPageRoute(builder: (context) => const RealityCheckToneCategoryScreen());
       case RealityCheckBedtimeScreen.id:
-        return MaterialPageRoute(builder: (context) => const RealityCheckBedtimeScreen());
+        return MaterialPageRoute(builder: (context) => RealityCheckBedtimeScreen());
       case RealityCheckToneSelectionScreen.id:
         return MaterialPageRoute(builder: (context) => const RealityCheckToneSelectionScreen());
       case RealityCheckCompletionScreen.id:

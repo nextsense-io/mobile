@@ -5,7 +5,7 @@ class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
 
-  AppCard(this.child, {this.padding = const EdgeInsets.all(16)});
+  const AppCard(this.child, {super.key, this.padding = const EdgeInsets.all(16)});
 
   @override
   Widget build(BuildContext context) {

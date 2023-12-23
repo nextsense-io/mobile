@@ -56,7 +56,7 @@ class LucidRealityApp extends StatelessWidget {
   final AuthManager _authManager = getIt<AuthManager>();
   final intent.Intent? initialIntent;
 
-  LucidRealityApp({this.initialIntent});
+  LucidRealityApp({super.key, this.initialIntent});
 
   @override
   Widget build(BuildContext context) {

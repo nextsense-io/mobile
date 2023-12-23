@@ -72,7 +72,7 @@ class RealityCheckToneCategoryScreen extends HookWidget {
                       ),
                     ),
                     RealityCheckBottomBar(
-                      onForwardClick: () {
+                      onPressed: () {
                         viewModel.navigateToBedtimeScreen();
                       },
                     ),
