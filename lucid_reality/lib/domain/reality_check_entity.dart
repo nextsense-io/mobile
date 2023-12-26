@@ -77,10 +77,9 @@ class RealityCheckEntity extends FirebaseRealtimeDBEntity<RealityCheckKey> {
     setValue(RealityCheckKey.realityTest, realityTest.getValues());
   }
 
-  factory RealityCheckEntity.fromJson(MapEntry<String, dynamic> e) {
+  factory RealityCheckEntity.fromJson(Map<String, dynamic> data) {
     RealityCheckEntity instance = RealityCheckEntity.instance;
-    instance.entityId = e.key;
-    instance.setValues(Map.from(e.value));
+    instance.setValues(data);
     return instance;
   }
 }

@@ -59,10 +59,12 @@ class IntentEntity extends FirebaseRealtimeDBEntity<IntentKey> {
     setValue(IntentKey.id, id);
   }
 
-  factory IntentEntity.fromJson(MapEntry<String, dynamic> e) {
+  factory IntentEntity.fromJson(Map<String, dynamic> data) {
     IntentEntity instance = IntentEntity.instance;
-    instance.entityId = e.key;
-    instance.setValues(Map.from(e.value));
+    if (data.entries.isNotEmpty) {
+      instance.entityId = data.entries.first.key;
+      instance.setValues(Map.from(data.entries.first.value));
+    }
     return instance;
   }
 }

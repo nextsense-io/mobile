@@ -7,6 +7,7 @@ import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen.dart';
+import 'package:lucid_reality/ui/screens/dream_journal/dream_journal_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/lucid_reality_category_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
@@ -253,6 +254,8 @@ class Navigation {
         return MaterialPageRoute(builder: (context) => const RealityCheckToneSelectionScreen());
       case RealityCheckCompletionScreen.id:
         return MaterialPageRoute(builder: (context) => const RealityCheckCompletionScreen());
+      case DreamJournalScreen.id:
+        return MaterialPageRoute(builder: (context) => const DreamJournalScreen());
 
       // case ImpedanceCalculationScreen.id: return MaterialPageRoute(
       //     builder: (context) => ImpedanceCalculationScreen());

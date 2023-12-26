@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_common/di.dart';
 import 'package:flutter_common/managers/firebase_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
+import 'package:logging/logging.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 
 const String dbRootDBName = 'LucidReality';
@@ -72,12 +73,14 @@ class LucidUiFirebaseRealtimeDBManager {
 
   Future<T?> getEntityAs<T extends FirebaseRealtimeDBEntity>(
     String reference,
-    T Function(MapEntry<String, dynamic> data) fromMap,
+    T Function(Map<String, dynamic> data) fromMap,
   ) async {
+    _logger.log(Level.INFO, 'request=>$reference');
     final snapshot = await _lucidDatabase.child(reference).get();
     if (snapshot.exists) {
       Map<String, dynamic> snapshotValue = snapshot.toMap();
-      return snapshotValue.entries.map(fromMap).firstOrNull;
+      _logger.log(Level.INFO, 'response=>$snapshotValue');
+      return fromMap(snapshotValue);
     } else {
       return null;
     }

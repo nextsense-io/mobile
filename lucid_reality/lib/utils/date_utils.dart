@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 extension TimeUtils on TimeOfDay {
-
   String get hmm {
     return '${hour.toString()}:${minute.toString().padLeft(2, '0')}';
   }
@@ -13,7 +12,6 @@ extension TimeUtils on TimeOfDay {
 }
 
 extension DateUtils on DateTime {
-
   static final DateFormat _dateOnlyFormatter = new DateFormat('d MMM, yyyy');
   static final DateFormat _hhmmFormatter = new DateFormat('HH:mm');
   static final DateFormat _hmmFormatter = new DateFormat('h:mm');
@@ -75,23 +73,19 @@ extension DateUtils on DateTime {
 
   // Compare only day part of datetime, omitting hours, minutes etc.
   bool isSameDay(DateTime other) {
-    return year == other.year && month == other.month
-        && day == other.day;
+    return year == other.year && month == other.month && day == other.day;
   }
 
   // Returns closest future midnight to desired date
   DateTime get closestFutureMidnight {
-    return DateTime(
-      this.year,
-      this.month,
-      this.day,
-      23,
-      59,
-      59
-    );
+    return DateTime(this.year, this.month, this.day, 23, 59, 59);
   }
 
   DateTime get dateNoTime {
     return DateTime(this.year, this.month, this.day);
   }
+}
+
+extension IntToDate on int {
+  DateTime toDate() => DateTime.fromMillisecondsSinceEpoch(this);
 }

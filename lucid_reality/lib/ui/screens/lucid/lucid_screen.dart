@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/lucid/lucid_screen_vm.dart';
+import 'package:lucid_reality/ui/screens/reality_check/reality_check_settings.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:stacked/stacked.dart';
@@ -35,7 +36,11 @@ class LucidScreen extends HookWidget {
               const SizedBox(height: 5),
               InkWell(
                 onTap: () {
-                  viewModel.navigateToCategoryScreen();
+                  if (viewModel.isRealitySettingsCompleted()) {
+                    viewModel.navigateToDreamJournalScreen();
+                  } else {
+                    viewModel.navigateToCategoryScreen();
+                  }
                 },
                 child: Container(
                   width: double.maxFinite,
@@ -82,7 +87,9 @@ class LucidScreen extends HookWidget {
                     ],
                   ),
                 ),
-              )
+              ),
+              const SizedBox(height: 10),
+              if (viewModel.isRealitySettingsCompleted()) RealityCheckSettings(),
             ],
           ),
         );
