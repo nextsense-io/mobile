@@ -101,6 +101,7 @@ class LucidUiFirebaseRealtimeDBManager {
       T entity, String reference) async {
     final databaseReference = _lucidDatabase.child('$reference/$userId').push();
     entity.entityId = databaseReference.key;
+    _logger.log(Level.INFO, 'request=>$reference/$userId Data=>${entity.toJson()}');
     await databaseReference.set(entity.toJson());
   }
 }

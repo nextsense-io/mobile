@@ -83,6 +83,8 @@ dependencies:
   intl: ^0.18.1
   assets_audio_player: ^3.1.1
   progressive_time_picker: ^0.0.9
+  hand_signature: ^3.0.2
+  record: ^5.0.4
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2

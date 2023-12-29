@@ -1,9 +1,11 @@
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
+import 'package:lucid_reality/domain/dream_journal.dart';
 import 'package:lucid_reality/domain/intent_entity.dart';
 import 'package:lucid_reality/domain/reality_check_entity.dart';
 import 'package:lucid_reality/domain/reality_test.dart';
+import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
 
@@ -57,9 +59,7 @@ class LucidManager {
   }
 
   Future<void> saveNumberOfReminders(
-      {required int startTime,
-      required int endTime,
-      required int numberOfReminders}) async {
+      {required int startTime, required int endTime, required int numberOfReminders}) async {
     realityCheck.setNumberOfReminders(numberOfReminders);
     realityCheck.setStartTime(startTime);
     realityCheck.setEndTime(endTime);
@@ -102,5 +102,15 @@ class LucidManager {
     intentEntity.setDescription(description);
     intentEntity.setUpdatedAt(DateTime.now());
     await _updateIntent();
+  }
+
+  Future<bool> saveDreamJournalRecord(DreamJournal dreamJournal) async {
+    try {
+      await firebaseRealTimeDb.addAutoIdEntity<DreamJournal>(dreamJournal, DreamJournal.table);
+    } catch (e) {
+      _logger.log(Level.WARNING, e);
+      return false;
+    }
+    return true;
   }
 }

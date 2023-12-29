@@ -13,6 +13,8 @@ import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen
 import 'package:receive_intent/receive_intent.dart' as intent;
 
 import 'auth/sign_in_screen.dart';
+import 'dream_journal/dream_confirmation_screen.dart';
+import 'dream_journal/record_your_dream_screen.dart';
 import 'onboarding/onboarding_screen.dart';
 import 'reality_check/reality_check_bedtime_screen.dart';
 import 'reality_check/reality_check_completion_screen.dart';
@@ -256,6 +258,10 @@ class Navigation {
         return MaterialPageRoute(builder: (context) => const RealityCheckCompletionScreen());
       case DreamJournalScreen.id:
         return MaterialPageRoute(builder: (context) => const DreamJournalScreen());
+      case DreamConfirmationScreen.id:
+        return MaterialPageRoute(builder: (context) => const DreamConfirmationScreen());
+      case RecordYourDreamScreen.id:
+        return MaterialPageRoute(builder: (context) => const RecordYourDreamScreen());
 
       // case ImpedanceCalculationScreen.id: return MaterialPageRoute(
       //     builder: (context) => ImpedanceCalculationScreen());

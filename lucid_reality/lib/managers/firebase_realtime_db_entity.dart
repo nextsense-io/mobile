@@ -18,6 +18,7 @@ class FirebaseRealtimeDBEntity<T extends Enum> {
 
   set entityId(String? value) {
     _entityId = value;
+    getValues()['id'] = value;
   }
 
   Map<String, dynamic> getValues() {

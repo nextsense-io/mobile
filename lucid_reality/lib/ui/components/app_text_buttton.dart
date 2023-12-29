@@ -5,11 +5,15 @@ import 'package:lucid_reality/utils/utils.dart';
 class AppTextButton extends StatelessWidget {
   final String text;
   final VoidCallback? onPressed;
+  final String backgroundImage;
+  final EdgeInsetsGeometry? padding;
 
   const AppTextButton({
     super.key,
     required this.text,
     required this.onPressed,
+    this.backgroundImage = 'btn_start.svg',
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
   });
 
   @override
@@ -23,12 +27,14 @@ class AppTextButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: padding,
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: Svg(imageBasePath.plus('btn_start.svg')),
-            fit: BoxFit.fill,
+            image: Svg(imageBasePath.plus(backgroundImage)),
+            fit: BoxFit.fitWidth,
           ),
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+          color: onPressed == null ? Colors.brown.withOpacity(0.5) : null,
         ),
         child: Text(
           text,

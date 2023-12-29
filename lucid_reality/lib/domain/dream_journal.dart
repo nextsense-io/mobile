@@ -17,6 +17,8 @@ enum DreamJournalKey {
 }
 
 class DreamJournal extends FirebaseRealtimeDBEntity<DreamJournalKey> {
+  static const String table = 'journals';
+
   String? getId() {
     return getValue(DreamJournalKey.id);
   }
@@ -45,7 +47,7 @@ class DreamJournal extends FirebaseRealtimeDBEntity<DreamJournalKey> {
     return getValue(DreamJournalKey.intentionMatchingRating);
   }
 
-  void setIntentionMatchingRating(String intentionMatchingRating) {
+  void setIntentionMatchingRating(int intentionMatchingRating) {
     setValue(DreamJournalKey.intentionMatchingRating, intentionMatchingRating);
   }
 
@@ -53,7 +55,7 @@ class DreamJournal extends FirebaseRealtimeDBEntity<DreamJournalKey> {
     return getValue(DreamJournalKey.categoryID);
   }
 
-  void setCategoryID(String categoryID) {
+  void setCategoryID(String? categoryID) {
     setValue(DreamJournalKey.categoryID, categoryID);
   }
 
@@ -61,7 +63,7 @@ class DreamJournal extends FirebaseRealtimeDBEntity<DreamJournalKey> {
     return getValue(DreamJournalKey.intentID);
   }
 
-  void setIntentID(String intentID) {
+  void setIntentID(String? intentID) {
     setValue(DreamJournalKey.intentID, intentID);
   }
 
@@ -93,7 +95,7 @@ class DreamJournal extends FirebaseRealtimeDBEntity<DreamJournalKey> {
     return getValue(DreamJournalKey.isLucid);
   }
 
-  void setLucid(String isLucid) {
+  void setLucid(bool isLucid) {
     setValue(DreamJournalKey.isLucid, isLucid);
   }
 

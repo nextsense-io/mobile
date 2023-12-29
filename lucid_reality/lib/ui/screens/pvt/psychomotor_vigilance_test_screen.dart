@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/pvt/psychomotor_vigilance_test_vm.dart';
+import 'package:lucid_reality/utils/custom_hooks.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
 class PsychomotorVigilanceTestScreen extends HookWidget {
@@ -131,14 +130,5 @@ class MyCountdown extends HookWidget {
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall,
     );
-  }
-
-  void useInterval(VoidCallback callback, Duration delay) {
-    final savedCallback = useRef(callback);
-    savedCallback.value = callback;
-    useEffect(() {
-      final timer = Timer.periodic(delay, (_) => savedCallback.value());
-      return timer.cancel;
-    }, [delay]);
   }
 }
