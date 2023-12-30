@@ -9,14 +9,12 @@ class RealityCheckBaseViewModel extends ViewModel {
   final Navigation navigation = getIt<Navigation>();
   final AuthManager _authManager = getIt<AuthManager>();
   final LucidManager lucidManager = getIt<LucidManager>();
-  final firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
 
   @override
   void init() async {
     super.init();
     final userLoaded = await _authManager.ensureUserLoaded();
     if (userLoaded) {
-      firebaseRealTimeDb.setUserId(_authManager.authUid ?? '');
       await lucidManager.fetchIntent();
       notifyListeners();
     }

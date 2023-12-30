@@ -27,7 +27,6 @@ class LucidScreenViewModel extends ViewModel {
   }
 
   bool isRealitySettingsCompleted() {
-    print('object=>${_lucidManager.intentEntity.getValues()}');
     return _lucidManager.realityCheck.getBedTime() != null &&
         _lucidManager.realityCheck.getWakeTime() != null;
   }

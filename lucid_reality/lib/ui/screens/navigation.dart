@@ -260,8 +260,8 @@ class Navigation {
         return MaterialPageRoute(builder: (context) => const DreamJournalScreen());
       case DreamConfirmationScreen.id:
         return MaterialPageRoute(builder: (context) => const DreamConfirmationScreen());
-      case RecordYourDreamScreen.id:
-        return MaterialPageRoute(builder: (context) => const RecordYourDreamScreen());
+      // case RecordYourDreamScreen.id:
+      //   return MaterialPageRoute(builder: (context) => const RecordYourDreamScreen());
 
       // case ImpedanceCalculationScreen.id: return MaterialPageRoute(
       //     builder: (context) => ImpedanceCalculationScreen());
@@ -303,8 +303,10 @@ class Navigation {
       //     builder: (context) => VisualizationSettingsScreen());
 
       // Routes with arguments
-      //   case SignInScreen.id: return MaterialPageRoute(
-      //       builder: (context) => SignInScreen(initialErrorMessage: settings.arguments as String?));
+      case RecordYourDreamScreen.id:
+        return MaterialPageRoute(
+            builder: (context) => RecordYourDreamScreen(),
+            settings: RouteSettings(arguments: settings.arguments));
       // case SetPasswordScreen.id: return MaterialPageRoute(
       //     builder: (context) => SetPasswordScreen(isSignup: settings.arguments as bool));
       // case ProtocolScreen.id:

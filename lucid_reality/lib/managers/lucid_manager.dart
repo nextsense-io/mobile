@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
@@ -5,7 +6,6 @@ import 'package:lucid_reality/domain/dream_journal.dart';
 import 'package:lucid_reality/domain/intent_entity.dart';
 import 'package:lucid_reality/domain/reality_check_entity.dart';
 import 'package:lucid_reality/domain/reality_test.dart';
-import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
 
@@ -14,6 +14,7 @@ class LucidManager {
   final firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
   final IntentEntity intentEntity = IntentEntity.instance;
   final RealityCheckEntity realityCheck = RealityCheckEntity.instance;
+  final ValueNotifier<String> newDreamJournalCreatedNotifier = ValueNotifier('');
 
   Future<void> fetchIntent() async {
     await firebaseRealTimeDb.getEntityAs<IntentEntity>(
@@ -107,10 +108,19 @@ class LucidManager {
   Future<bool> saveDreamJournalRecord(DreamJournal dreamJournal) async {
     try {
       await firebaseRealTimeDb.addAutoIdEntity<DreamJournal>(dreamJournal, DreamJournal.table);
+      newDreamJournalCreatedNotifier.value = dreamJournal.getId() ?? '';
     } catch (e) {
       _logger.log(Level.WARNING, e);
       return false;
     }
     return true;
+  }
+
+  Future<List<DreamJournal>> fetchDreamJournals() async {
+    return await firebaseRealTimeDb.getEntities(
+      DreamJournal.table,
+      DreamJournal.fromJson,
+      sortBy: SortBy.DESC,
+    );
   }
 }

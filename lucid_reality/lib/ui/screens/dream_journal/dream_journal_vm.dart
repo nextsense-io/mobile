@@ -1,18 +1,25 @@
-import 'package:flutter_common/viewmodels/viewmodel.dart';
-import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/dream_journal.dart';
-import 'package:lucid_reality/ui/screens/navigation.dart';
+import 'package:lucid_reality/ui/screens/reality_check/reality_check_base_vm.dart';
 
 import 'dream_confirmation_screen.dart';
 
-class DreamJournalViewModel extends ViewModel {
-  final Navigation _navigation = getIt<Navigation>();
+class DreamJournalViewModel extends RealityCheckBaseViewModel {
   final List<DreamJournal> dreamJournalList = List.empty(growable: true);
 
   @override
-  void init() {
-    prepareDreamJournalDummyData();
+  void init() async {
     super.init();
+    _fetchDreamJournals();
+    lucidManager.newDreamJournalCreatedNotifier.addListener(
+      () {
+        _fetchDreamJournals();
+      },
+    );
+  }
+
+  void _fetchDreamJournals() async {
+    dreamJournalList.addAll(await lucidManager.fetchDreamJournals());
+    notifyListeners();
   }
 
   void prepareDreamJournalDummyData() {
@@ -26,11 +33,7 @@ class DreamJournalViewModel extends ViewModel {
     notifyListeners();
   }
 
-  goBack() {
-    _navigation.pop();
-  }
-
   void navigateToDreamConfirmationScreen() {
-    _navigation.navigateTo(DreamConfirmationScreen.id);
+    navigation.navigateTo(DreamConfirmationScreen.id);
   }
 }

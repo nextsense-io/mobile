@@ -19,6 +19,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'di.dart';
 import 'managers/auth_manager.dart';
 import 'managers/connectivity_manager.dart';
+import 'ui/screens/startup/startup_screen.dart';
 
 void _initLogging() {
   Logger.root.level = Level.ALL; // defaults to Level.INFO
@@ -100,7 +101,7 @@ class LucidRealityApp extends StatelessWidget {
           scaffoldBackgroundColor: NextSenseColors.backgroundColor,
         ),
         home: _authManager.isAuthenticated || initialIntent != null
-            ? RecordYourDreamScreen()//StartupScreen(initialIntent: initialIntent)
+            ? StartupScreen(initialIntent: initialIntent)
             : SignInScreen(),
         navigatorKey: _navigation.navigatorKey,
         onGenerateRoute: _navigation.onGenerateRoute,

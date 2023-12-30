@@ -9,7 +9,6 @@ import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/dream_journal.dart';
 import 'package:lucid_reality/managers/firebase_storage_manager.dart';
 import 'package:lucid_reality/managers/storage_manager.dart';
-import 'package:lucid_reality/ui/screens/dream_journal/dream_journal_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_base_vm.dart';
 import 'package:lucid_reality/utils/duration.dart';
 
@@ -164,6 +163,6 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
     dreamJournal.setIntentID(lucidManager.intentEntity.getId());
     await lucidManager.saveDreamJournalRecord(dreamJournal);
     setBusy(false);
-    navigation.navigateTo(DreamJournalScreen.id, popAll: true);
+    goBack();
   }
 }

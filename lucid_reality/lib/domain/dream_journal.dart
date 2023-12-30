@@ -19,6 +19,8 @@ enum DreamJournalKey {
 class DreamJournal extends FirebaseRealtimeDBEntity<DreamJournalKey> {
   static const String table = 'journals';
 
+  DreamJournal();
+
   String? getId() {
     return getValue(DreamJournalKey.id);
   }
@@ -121,5 +123,12 @@ class DreamJournal extends FirebaseRealtimeDBEntity<DreamJournalKey> {
 
   void setSketchPath(String sketchPath) {
     setValue(DreamJournalKey.sketchPath, sketchPath);
+  }
+
+  factory DreamJournal.fromJson(MapEntry<String, dynamic> e) {
+    DreamJournal dreamJournal = DreamJournal();
+    dreamJournal.entityId = e.key;
+    dreamJournal.setValues(Map.from(e.value));
+    return dreamJournal;
   }
 }

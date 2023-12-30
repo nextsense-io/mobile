@@ -11,6 +11,7 @@ import 'package:lucid_reality/ui/screens/dream_journal/dream_journal_vm.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
+import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
 class DreamJournalScreen extends HookWidget {
@@ -155,6 +156,7 @@ class DreamJournalScreen extends HookWidget {
   }
 
   Widget buildEmptyView(BuildContext context) {
+    final viewModel = context.watch<DreamJournalViewModel>();
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -175,7 +177,9 @@ class DreamJournalScreen extends HookWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
-            onPressed: () {},
+            onPressed: () {
+              viewModel.navigateToDreamConfirmationScreen();
+            },
             child: Container(
               height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
