@@ -257,9 +257,15 @@ class Navigation {
       case RealityCheckCompletionScreen.id:
         return MaterialPageRoute(builder: (context) => const RealityCheckCompletionScreen());
       case DreamJournalScreen.id:
-        return MaterialPageRoute(builder: (context) => const DreamJournalScreen());
+        return MaterialPageRoute(
+          builder: (context) => const DreamJournalScreen(),
+          settings: settings,
+        );
       case DreamConfirmationScreen.id:
-        return MaterialPageRoute(builder: (context) => const DreamConfirmationScreen());
+        return MaterialPageRoute(
+          builder: (context) => const DreamConfirmationScreen(),
+          settings: settings,
+        );
       // case RecordYourDreamScreen.id:
       //   return MaterialPageRoute(builder: (context) => const RecordYourDreamScreen());
 
@@ -304,9 +310,7 @@ class Navigation {
 
       // Routes with arguments
       case RecordYourDreamScreen.id:
-        return MaterialPageRoute(
-            builder: (context) => RecordYourDreamScreen(),
-            settings: RouteSettings(arguments: settings.arguments));
+        return MaterialPageRoute(builder: (context) => RecordYourDreamScreen(), settings: settings);
       // case SetPasswordScreen.id: return MaterialPageRoute(
       //     builder: (context) => SetPasswordScreen(isSignup: settings.arguments as bool));
       // case ProtocolScreen.id:
@@ -370,6 +374,11 @@ class Navigation {
     if (canPop()) {
       return navigatorKey.currentState!.pop(result);
     }
+  }
+
+  void popUntil(String routeName) {
+    final currentState = navigatorKey.currentState!;
+    currentState.popUntil(ModalRoute.withName(routeName));
   }
 
 // Show connection check screen if needed before navigate to target route

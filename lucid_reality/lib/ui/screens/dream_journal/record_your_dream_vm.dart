@@ -12,6 +12,8 @@ import 'package:lucid_reality/managers/storage_manager.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_base_vm.dart';
 import 'package:lucid_reality/utils/duration.dart';
 
+import 'dream_journal_screen.dart';
+
 class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
   final _logger = CustomLogPrinter('RecordYourDreamViewModel');
   final StorageManager _storageManager = getIt<StorageManager>();
@@ -163,6 +165,6 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
     dreamJournal.setIntentID(lucidManager.intentEntity.getId());
     await lucidManager.saveDreamJournalRecord(dreamJournal);
     setBusy(false);
-    goBack();
+    navigation.popUntil(DreamJournalScreen.id);
   }
 }

@@ -14,12 +14,13 @@ class LucidScreenViewModel extends ViewModel {
   @override
   void init() async {
     super.init();
+    setBusy(true);
     final userLoaded = await _authManager.ensureUserLoaded();
     if (userLoaded) {
       await _lucidManager.fetchIntent();
       await _lucidManager.fetchRealityCheck();
-      notifyListeners();
     }
+    setBusy(false);
   }
 
   void navigateToCategoryScreen() {

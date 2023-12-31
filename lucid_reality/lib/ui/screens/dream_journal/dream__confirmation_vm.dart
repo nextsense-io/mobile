@@ -11,6 +11,6 @@ class DreamConfirmationViewModel extends ViewModel {
   }
 
   void navigateToDreamYourRecordScreen(int selected) {
-    _navigation.navigateTo(RecordYourDreamScreen.id, replace: true, arguments: selected);
+    _navigation.navigateTo(RecordYourDreamScreen.id, arguments: selected);
   }
 }

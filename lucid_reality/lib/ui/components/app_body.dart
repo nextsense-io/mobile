@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:lucid_reality/ui/components/app_circular_progress_indicator.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
 class AppBody extends StatelessWidget {
   final Widget child;
+  final bool isLoading;
 
-  const AppBody({super.key, required this.child});
+  const AppBody({super.key, required this.child, this.isLoading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +19,7 @@ class AppBody extends StatelessWidget {
           fit: BoxFit.cover,
         ),
       ),
-      child: child,
+      child: isLoading ? AppCircleProgressIndicator() : child,
     );
   }
 }

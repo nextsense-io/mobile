@@ -18,8 +18,13 @@ class DreamJournalViewModel extends RealityCheckBaseViewModel {
   }
 
   void _fetchDreamJournals() async {
+    setBusy(true);
+    // Clear data if exist
+    if (dreamJournalList.isNotEmpty) {
+      dreamJournalList.clear();
+    }
     dreamJournalList.addAll(await lucidManager.fetchDreamJournals());
-    notifyListeners();
+    setBusy(false);
   }
 
   void prepareDreamJournalDummyData() {
