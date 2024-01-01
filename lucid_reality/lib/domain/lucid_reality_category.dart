@@ -1,17 +1,9 @@
 class LucidRealityCategory {
   late final LucidRealityCategoryEnum _category;
-  late final String _image;
 
-  LucidRealityCategory(this._category, this._image);
+  LucidRealityCategory(this._category);
 
   LucidRealityCategoryEnum get category => _category;
-
-
-  String get image => _image;
-
-  set imagePath(String value) {
-    _image = value;
-  }
 
   set category(LucidRealityCategoryEnum value) {
     _category = value;
@@ -42,6 +34,23 @@ extension LucidRealityCategoryExtension on LucidRealityCategoryEnum {
         return "OUT OF BODY EXPERIENCE";
       case LucidRealityCategoryEnum.c6:
         return "PROBLEM SOLVING";
+    }
+  }
+
+  String get image {
+    switch (this) {
+      case LucidRealityCategoryEnum.c1:
+        return 'c1_colm.png';
+      case LucidRealityCategoryEnum.c2:
+        return 'c2_creativity.png';
+      case LucidRealityCategoryEnum.c3:
+        return 'c3_fun.png';
+      case LucidRealityCategoryEnum.c4:
+        return 'c4_personal_insight.png';
+      case LucidRealityCategoryEnum.c5:
+        return 'c5_out_of_body.png';
+      case LucidRealityCategoryEnum.c6:
+        return 'c6_problem_solving.png';
     }
   }
 

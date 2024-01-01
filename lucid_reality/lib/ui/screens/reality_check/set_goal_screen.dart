@@ -17,6 +17,9 @@ class SetGoalScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isStartForResult = (ModalRoute.of(context)?.settings.arguments is bool
+        ? ModalRoute.of(context)?.settings.arguments as bool
+        : false);
     final textController = useTextEditingController();
     final viewModel = useRef(SetGoalViewModel());
     useEffect(() {
@@ -84,9 +87,14 @@ class SetGoalScreen extends HookWidget {
                     ),
                     const Spacer(flex: 1),
                     RealityCheckBottomBar(
+                      progressBarVisibility: !isStartForResult,
                       onPressed: () async {
                         await viewModel.lucidManager.updateDescription(textController.text.trim());
-                        viewModel.navigateToSetTimerScreen();
+                        if (isStartForResult) {
+                          viewModel.goBackWithResult(textController.text.trim());
+                        } else {
+                          viewModel.navigateToSetTimerScreen();
+                        }
                       },
                     ),
                   ],

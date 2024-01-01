@@ -60,9 +60,16 @@ class RealityTest extends FirebaseRealtimeDBEntity<RealityTestKey> {
     setValue(RealityTestKey.type, type);
   }
 
-  factory RealityTest.fromJson(Map<String, dynamic> data) {
+  factory RealityTest.fromJson(Map<dynamic, dynamic> data) {
     RealityTest realityTest = RealityTest.instance;
-    realityTest.setValues(data);
+    try {
+      if (data.entries.isNotEmpty) {
+        realityTest.setValues(Map<String, dynamic>.fromEntries(
+            data.entries.map((e) => MapEntry(e.key.toString(), e.value))));
+      }
+    } catch (e) {
+      print(e);
+    }
     return realityTest;
   }
 }

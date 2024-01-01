@@ -7,9 +7,13 @@ import 'package:lucid_reality/utils/utils.dart';
 class RealityCheckBottomBar extends StatelessWidget {
   final VoidCallback? onPressed;
   final ButtonType buttonType;
+  final bool progressBarVisibility;
 
   const RealityCheckBottomBar(
-      {super.key, required this.onPressed, this.buttonType = ButtonType.forwardArrow});
+      {super.key,
+      required this.onPressed,
+      this.buttonType = ButtonType.forwardArrow,
+      this.progressBarVisibility = true});
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +22,15 @@ class RealityCheckBottomBar extends StatelessWidget {
         const Spacer(
           flex: 2,
         ),
-        const Flexible(
+        Flexible(
           flex: 6,
-          child: LinearProgressIndicator(
-            value: 0.2,
-            backgroundColor: NextSenseColors.royalBlue,
-            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-          ),
+          child: progressBarVisibility
+              ? LinearProgressIndicator(
+                  value: 0.2,
+                  backgroundColor: NextSenseColors.royalBlue,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                )
+              : Container(),
         ),
         const SizedBox(width: 16),
         Flexible(

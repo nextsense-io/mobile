@@ -147,7 +147,8 @@ class AppTimePicker extends HookWidget {
     required PickedTime init,
     required PickedTime end,
   }) {
-    return '${end.h - init.h}h ${end.m - init.m}m';
+    final time = formatIntervalTime(init: init, end: end);
+    return '${time.h}h ${time.m}m';
   }
 }
 

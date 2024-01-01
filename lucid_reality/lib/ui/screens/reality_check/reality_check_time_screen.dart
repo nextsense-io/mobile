@@ -22,11 +22,25 @@ class RealityCheckTimeScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isStartForResult = (ModalRoute.of(context)?.settings.arguments is bool
+        ? ModalRoute.of(context)?.settings.arguments as bool
+        : false);
     final numberOfReminders = useState(4);
     final startTime = useRef(DateTime.now().copyWith(hour: 0, minute: 0, second: 0));
     final endTime = useRef(startTime.value.add(const Duration(hours: 8)));
     return ViewModelBuilder.reactive(
       viewModelBuilder: () => RealityCheckTimeScreenViewModel(),
+      onViewModelReady: (viewModel) {
+        viewModel.init();
+        if (viewModel.lucidManager.realityCheck.getStartTime() != null) {
+          startTime.value = DateTime.fromMillisecondsSinceEpoch(
+              viewModel.lucidManager.realityCheck.getStartTime() ?? 0);
+        }
+        if (viewModel.lucidManager.realityCheck.getEndTime() != null) {
+          endTime.value = DateTime.fromMillisecondsSinceEpoch(
+              viewModel.lucidManager.realityCheck.getEndTime() ?? 0);
+        }
+      },
       builder: (context, viewModel, child) {
         return SafeArea(
           child: Scaffold(
@@ -64,7 +78,8 @@ class RealityCheckTimeScreen extends HookWidget {
                           startTime.value =
                               startTime.value.copyWith(hour: start.h, minute: start.m);
                           endTime.value = endTime.value.copyWith(hour: end.h, minute: end.m);
-                          _logger.log(Level.INFO, 'startTime=>${startTime.value.getTime()} endTime=>${endTime.value.getTime()}');
+                          _logger.log(Level.INFO,
+                              'startTime=>${startTime.value.getTime()} endTime=>${endTime.value.getTime()}');
                         },
                       ),
                     ),
@@ -110,12 +125,17 @@ class RealityCheckTimeScreen extends HookWidget {
                     ),
                     const Spacer(flex: 1),
                     RealityCheckBottomBar(
-                      onPressed: () {
-                        viewModel.navigateToToneCategoryScreen(
-                          startTime: startTime.value,
-                          endTime: endTime.value,
-                          numberOfReminders: numberOfReminders.value,
-                        );
+                      progressBarVisibility: !isStartForResult,
+                      onPressed: () async {
+                        viewModel.saveNumberOfReminders(
+                            startTime: startTime.value,
+                            endTime: endTime.value,
+                            numberOfReminders: numberOfReminders.value);
+                        if (isStartForResult) {
+                          viewModel.goBackWithResult('success');
+                        } else {
+                          viewModel.navigateToToneCategoryScreen();
+                        }
                       },
                     ),
                   ],

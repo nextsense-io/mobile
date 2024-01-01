@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/ui/screens/lucid/lucid_screen_vm.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
 class RealityCheckSettings extends HookWidget {
-  const RealityCheckSettings({super.key});
+  final LucidScreenViewModel viewModel;
+
+  const RealityCheckSettings(this.viewModel, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,33 +22,45 @@ class RealityCheckSettings extends HookWidget {
           style: Theme.of(context).textTheme.bodySmallWithFontWeight700FontSize12,
         ),
         const SizedBox(height: 5),
-        Container(
-          padding: const EdgeInsets.all(16),
-          width: double.maxFinite,
-          height: 81,
-          decoration: BoxDecoration(
-            color: NextSenseColors.cardBackground,
-            image: DecorationImage(
-              image: AssetImage(imageBasePath.plus('reality_check_settings_bg.png')),
-              fit: BoxFit.fill,
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
+        AppCard(
+          padding: EdgeInsets.only(left: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Healing',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmallWithFontWeight700
-                    ?.copyWith(color: NextSenseColors.skyBlue),
+              Expanded(
+                flex: 1,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        viewModel.navigateToCategoryScreenForResult();
+                      },
+                      child: Text(
+                        viewModel.realityCheckTitle(),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodySmallWithFontWeight700
+                            ?.copyWith(color: NextSenseColors.skyBlue),
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    InkWell(
+                      onTap: () {
+                        viewModel.navigateToSetGoalScreenForResult();
+                      },
+                      child: Text(
+                        viewModel.realityCheckDescription(),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              SizedBox(height: 8),
-              Text(
-                'Manage and alleviate chronic pain ',
-                style: Theme.of(context).textTheme.bodySmall,
+              SizedBox(
+                height: 81,
+                child: Image.asset(imageBasePath.plus(viewModel.realityCheckImage())),
               ),
             ],
           ),
@@ -58,8 +73,12 @@ class RealityCheckSettings extends HookWidget {
               flex: 1,
               child: RealityCheckSettingsWidget(
                 title: 'Reality check time',
-                description: '5 times\n8:00a-6:00p',
+                description:
+                    '5 times\n${viewModel.realityCheckingStartTime()}-${viewModel.realityCheckingEndTime()}',
                 titleColor: NextSenseColors.coral,
+                onPressed: () {
+                  viewModel.navigateToRealityCheckTimeScreenForResult();
+                },
               ),
             ),
             SizedBox(width: 4),
@@ -67,8 +86,11 @@ class RealityCheckSettings extends HookWidget {
               flex: 1,
               child: RealityCheckSettingsWidget(
                 title: 'Reality check Action',
-                description: 'breathe',
+                description: '${viewModel.realityCheckActionName()}',
                 titleColor: NextSenseColors.royalPurple,
+                onPressed: () {
+                  viewModel.navigateToToneCategoryScreenForResult();
+                },
               ),
             ),
             SizedBox(width: 4),
@@ -76,8 +98,12 @@ class RealityCheckSettings extends HookWidget {
               flex: 1,
               child: RealityCheckSettingsWidget(
                 title: 'Bedtime',
-                description: '5 times from\n11:00a-6:00p',
+                description:
+                    '5 times from\n${viewModel.realityCheckingBedTime()}-${viewModel.realityCheckingWakeUpTime()}',
                 titleColor: NextSenseColors.royalBlue,
+                onPressed: () {
+                  viewModel.navigateToRealityCheckBedtimeScreenForResult();
+                },
               ),
             ),
           ],
@@ -91,31 +117,39 @@ class RealityCheckSettingsWidget extends StatelessWidget {
   final String title;
   final String description;
   final Color titleColor;
+  final VoidCallback? onPressed;
 
   const RealityCheckSettingsWidget(
-      {super.key, required this.title, required this.description, required this.titleColor});
+      {super.key,
+      required this.title,
+      required this.description,
+      required this.titleColor,
+      this.onPressed});
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      SizedBox(
-        height: 72,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmallWithFontWeight700FontSize10
-                  ?.copyWith(color: titleColor),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              description,
-              style: Theme.of(context).textTheme.bodySmallWithFontSize10,
-            ),
-          ],
+    return InkWell(
+      onTap: onPressed,
+      child: AppCard(
+        SizedBox(
+          height: 56,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmallWithFontWeight700FontSize10
+                    ?.copyWith(color: titleColor),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                description,
+                style: Theme.of(context).textTheme.bodySmallWithFontSize10,
+              ),
+            ],
+          ),
         ),
       ),
     );

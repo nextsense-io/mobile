@@ -14,16 +14,12 @@ class LucidRealityCategoryViewModel extends RealityCheckBaseViewModel {
   }
 
   void _prepareLucidRealityCategories() {
-    _lucidRealityCategories.add(LucidRealityCategory(LucidRealityCategoryEnum.c1, 'c1_colm.png'));
-    _lucidRealityCategories
-        .add(LucidRealityCategory(LucidRealityCategoryEnum.c2, 'c2_creativity.png'));
-    _lucidRealityCategories.add(LucidRealityCategory(LucidRealityCategoryEnum.c3, 'c3_fun.png'));
-    _lucidRealityCategories
-        .add(LucidRealityCategory(LucidRealityCategoryEnum.c4, 'c4_personal_insight.png'));
-    _lucidRealityCategories
-        .add(LucidRealityCategory(LucidRealityCategoryEnum.c5, 'c5_out_of_body.png'));
-    _lucidRealityCategories
-        .add(LucidRealityCategory(LucidRealityCategoryEnum.c6, 'c6_problem_solving.png'));
+    _lucidRealityCategories.add(LucidRealityCategory(LucidRealityCategoryEnum.c1));
+    _lucidRealityCategories.add(LucidRealityCategory(LucidRealityCategoryEnum.c2));
+    _lucidRealityCategories.add(LucidRealityCategory(LucidRealityCategoryEnum.c3));
+    _lucidRealityCategories.add(LucidRealityCategory(LucidRealityCategoryEnum.c4));
+    _lucidRealityCategories.add(LucidRealityCategory(LucidRealityCategoryEnum.c5));
+    _lucidRealityCategories.add(LucidRealityCategory(LucidRealityCategoryEnum.c6));
   }
 
   void navigateToSetGoalScreen() {

@@ -92,7 +92,7 @@ class LucidScreen extends HookWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    if (viewModel.isRealitySettingsCompleted()) RealityCheckSettings(),
+                    if (viewModel.isRealitySettingsCompleted()) RealityCheckSettings(viewModel),
                   ],
                 ),
               );

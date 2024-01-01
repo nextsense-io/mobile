@@ -16,6 +16,9 @@ class LucidRealityCategoryScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isStartForResult = (ModalRoute.of(context)?.settings.arguments is bool
+        ? ModalRoute.of(context)?.settings.arguments as bool
+        : false);
     return ViewModelBuilder.reactive(
       viewModelBuilder: () => LucidRealityCategoryViewModel(),
       onViewModelReady: (viewModel) => viewModel.init(),
@@ -58,7 +61,11 @@ class LucidRealityCategoryScreen extends HookWidget {
                             onTap: () async {
                               await viewModel.lucidManager
                                   .updateCategoryId(lucidRealityCategory.category.name);
-                              viewModel.navigateToSetGoalScreen();
+                              if (isStartForResult) {
+                                viewModel.goBackWithResult(lucidRealityCategory);
+                              } else {
+                                viewModel.navigateToSetGoalScreen();
+                              }
                             },
                             child: _lucidRealityCategoryItem(context, lucidRealityCategory),
                           );
@@ -91,7 +98,7 @@ class LucidRealityCategoryScreen extends HookWidget {
           Positioned.fill(
             child: Center(
               child: Image.asset(
-                imageBasePath.plus(lucidRealityCategory.image),
+                imageBasePath.plus(lucidRealityCategory.category.image),
                 fit: BoxFit.fitWidth,
               ),
             ),

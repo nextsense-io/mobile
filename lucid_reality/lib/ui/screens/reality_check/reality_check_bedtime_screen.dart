@@ -21,11 +21,24 @@ class RealityCheckBedtimeScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isStartForResult = (ModalRoute.of(context)?.settings.arguments is bool
+        ? ModalRoute.of(context)?.settings.arguments as bool
+        : false);
     final bedtime = useRef(DateTime.now().copyWith(hour: 0, minute: 0, second: 0));
     final wakeUpTime = useRef(bedtime.value.add(const Duration(hours: 8)));
     return ViewModelBuilder.reactive(
       viewModelBuilder: () => RealityCheckBedtimeScreenViewModel(),
-      onViewModelReady: (viewModel) => viewModel.init(),
+      onViewModelReady: (viewModel) {
+        viewModel.init();
+        if (viewModel.lucidManager.realityCheck.getBedTime() != null) {
+          bedtime.value = DateTime.fromMillisecondsSinceEpoch(
+              viewModel.lucidManager.realityCheck.getBedTime() ?? 0);
+        }
+        if (viewModel.lucidManager.realityCheck.getWakeTime() != null) {
+          wakeUpTime.value = DateTime.fromMillisecondsSinceEpoch(
+              viewModel.lucidManager.realityCheck.getWakeTime() ?? 0);
+        }
+      },
       builder: (context, viewModel, child) {
         return SafeArea(
           child: Scaffold(
@@ -70,9 +83,16 @@ class RealityCheckBedtimeScreen extends HookWidget {
                     ),
                     const Spacer(flex: 1),
                     RealityCheckBottomBar(
-                      onPressed: () {
-                        viewModel.navigateToRealityCheckCompletionScreen(
-                            bedtime: bedtime.value, wakeUpTime: wakeUpTime.value);
+                      progressBarVisibility: !isStartForResult,
+                      onPressed: () async {
+                        if (isStartForResult) {
+                          await viewModel.saveBedtime(
+                              bedtime: bedtime.value, wakeUpTime: wakeUpTime.value);
+                          viewModel.goBackWithResult('success');
+                        } else {
+                          viewModel.navigateToRealityCheckCompletionScreen(
+                              bedtime: bedtime.value, wakeUpTime: wakeUpTime.value);
+                        }
                       },
                       buttonType: ButtonType.saveButton,
                     ),

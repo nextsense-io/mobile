@@ -19,7 +19,9 @@ class RealityCheckToneCategoryScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = useState(0);
+    final bool isStartForResult = (ModalRoute.of(context)?.settings.arguments is bool
+        ? ModalRoute.of(context)?.settings.arguments as bool
+        : false);
     return ViewModelBuilder.reactive(
       viewModelBuilder: () => RealityCheckToneCategoryViewModel(),
       onViewModelReady: (viewModel) => viewModel.init(),
@@ -27,6 +29,7 @@ class RealityCheckToneCategoryScreen extends HookWidget {
         return SafeArea(
           child: Scaffold(
             body: AppBody(
+              isLoading: viewModel.isBusy,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -61,10 +64,10 @@ class RealityCheckToneCategoryScreen extends HookWidget {
                         ),
                         itemBuilder: (context, index) {
                           final toneCategory = viewModel.toneCategories[index];
-                          toneCategory.isSelected = index == selectedIndex.value;
+                          toneCategory.isSelected = index == viewModel.selectedIndexCategory;
                           return InkWell(
                             onTap: () {
-                              selectedIndex.value = index;
+                              viewModel.onCategoryIndexChanged(index);
                             },
                             child: roundItem(context, toneCategory),
                           );
@@ -72,8 +75,16 @@ class RealityCheckToneCategoryScreen extends HookWidget {
                       ),
                     ),
                     RealityCheckBottomBar(
-                      onPressed: () {
-                        viewModel.navigateToBedtimeScreen();
+                      progressBarVisibility: !isStartForResult,
+                      onPressed: () async {
+                        await viewModel.lucidManager.saveRealityTest(viewModel.toneCategories
+                            .firstWhere((element) => element.isSelected)
+                            .toRealityTest());
+                        if (isStartForResult) {
+                          viewModel.goBackWithResult('success');
+                        } else {
+                          viewModel.navigateToBedtimeScreen();
+                        }
                       },
                     ),
                   ],

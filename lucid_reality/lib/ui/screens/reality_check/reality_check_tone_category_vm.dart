@@ -6,11 +6,12 @@ import 'reality_check_bedtime_screen.dart';
 
 class RealityCheckToneCategoryViewModel extends RealityCheckBaseViewModel {
   final List<ToneCategory> toneCategories = List.empty(growable: true);
+  int selectedIndexCategory = 0;
 
   @override
   void init() {
-    prepareToneCategory();
     super.init();
+    prepareToneCategory();
   }
 
   void navigateToToneSelectionScreen(ToneCategory toneCategory) async {
@@ -23,8 +24,6 @@ class RealityCheckToneCategoryViewModel extends RealityCheckBaseViewModel {
   }
 
   void navigateToBedtimeScreen() {
-    lucidManager.saveRealityTest(
-        toneCategories.firstWhere((element) => element.isSelected).toRealityTest());
     navigation.navigateTo(RealityCheckBedtimeScreen.id, replace: true);
   }
 
@@ -38,5 +37,15 @@ class RealityCheckToneCategoryViewModel extends RealityCheckBaseViewModel {
     toneCategories.add(ToneCategory(
         "HAND", "Can you push your hand through a solid surface?", "PEBBLE", "m4r", "rt4", "Hand"));
     toneCategories.add(ToneCategory("MATH", "Can you add 4 + 4?", "TEMPLE", "m4r", "rt5", "Maths"));
+    final indexAt = toneCategories.indexWhere(
+        (element) => element.name == lucidManager.realityCheck.getRealityTest()?.getName());
+    if (indexAt != -1) {
+      onCategoryIndexChanged(indexAt);
+    }
+  }
+
+  void onCategoryIndexChanged(int index) {
+    selectedIndexCategory = index;
+    notifyListeners();
   }
 }

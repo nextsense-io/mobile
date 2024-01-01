@@ -243,15 +243,30 @@ class Navigation {
       case SignInScreen.id:
         return MaterialPageRoute(builder: (context) => SignInScreen());
       case LucidRealityCategoryScreen.id:
-        return MaterialPageRoute(builder: (context) => const LucidRealityCategoryScreen());
+        return MaterialPageRoute(
+          builder: (context) => const LucidRealityCategoryScreen(),
+          settings: settings,
+        );
       case SetGoalScreen.id:
-        return MaterialPageRoute(builder: (context) => const SetGoalScreen());
+        return MaterialPageRoute(
+          builder: (context) => const SetGoalScreen(),
+          settings: settings,
+        );
       case RealityCheckTimeScreen.id:
-        return MaterialPageRoute(builder: (context) => RealityCheckTimeScreen());
+        return MaterialPageRoute(
+          builder: (context) => RealityCheckTimeScreen(),
+          settings: settings,
+        );
       case RealityCheckToneCategoryScreen.id:
-        return MaterialPageRoute(builder: (context) => const RealityCheckToneCategoryScreen());
+        return MaterialPageRoute(
+          builder: (context) => const RealityCheckToneCategoryScreen(),
+          settings: settings,
+        );
       case RealityCheckBedtimeScreen.id:
-        return MaterialPageRoute(builder: (context) => RealityCheckBedtimeScreen());
+        return MaterialPageRoute(
+          builder: (context) => RealityCheckBedtimeScreen(),
+          settings: settings,
+        );
       case RealityCheckToneSelectionScreen.id:
         return MaterialPageRoute(builder: (context) => const RealityCheckToneSelectionScreen());
       case RealityCheckCompletionScreen.id:
