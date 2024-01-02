@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:lucid_reality/ui/components/app_body.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
-import 'package:lucid_reality/ui/components/app_svg_button.dart';
+import 'package:lucid_reality/ui/components/svg_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/dream__confirmation_vm.dart';
 import 'package:stacked/stacked.dart';
@@ -52,31 +52,31 @@ class DreamConfirmationScreen extends HookWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              AppSvgButton(
+                              SvgButton(
                                 imageName: 'ic_full_circle.svg',
                                 onPressed: () {
                                   viewModel.navigateToDreamYourRecordScreen(5);
                                 },
                               ),
-                              AppSvgButton(
+                              SvgButton(
                                 imageName: 'ic_third_fourth_circle.svg',
                                 onPressed: () {
                                   viewModel.navigateToDreamYourRecordScreen(4);
                                 },
                               ),
-                              AppSvgButton(
+                              SvgButton(
                                 imageName: 'ic_half_circle.svg',
                                 onPressed: () {
                                   viewModel.navigateToDreamYourRecordScreen(3);
                                 },
                               ),
-                              AppSvgButton(
+                              SvgButton(
                                 imageName: 'ic_quarter_circle.svg',
                                 onPressed: () {
                                   viewModel.navigateToDreamYourRecordScreen(2);
                                 },
                               ),
-                              AppSvgButton(
+                              SvgButton(
                                 imageName: 'ic_empty_circle.svg',
                                 onPressed: () {
                                   viewModel.navigateToDreamYourRecordScreen(1);

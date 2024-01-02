@@ -2,7 +2,6 @@ import 'package:flutter_common/di.dart' as common_di;
 import 'package:get_it/get_it.dart';
 import 'package:lucid_reality/managers/health_connect_manager.dart';
 import 'package:lucid_reality/managers/firebase_storage_manager.dart';
-import 'package:lucid_reality/managers/google_fit_manager.dart';
 import 'package:lucid_reality/managers/lucid_manager.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
 import 'package:lucid_reality/managers/pvt_manager.dart';
@@ -30,7 +29,6 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<Navigation>(Navigation());
   getIt.registerSingleton<HealthConnectManager>(HealthConnectManager());
   getIt.registerSingleton<PVTManager>(PVTManager());
-  getIt.registerSingleton<GoogleFitManager>(GoogleFitManager());
   getIt.registerSingleton<LucidManager>(LucidManager());
   getIt.registerSingleton<StorageManager>(StorageManager());
   getIt.registerSingleton<FirebaseStorageManager>(FirebaseStorageManager());

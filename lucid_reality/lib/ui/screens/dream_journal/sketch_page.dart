@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hand_signature/signature.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
-import 'package:lucid_reality/ui/components/app_svg_button.dart';
+import 'package:lucid_reality/ui/components/svg_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 
 import 'record_your_dream_vm.dart';
@@ -34,7 +34,7 @@ class SketchPage extends HookWidget {
             left: 0,
             child: Row(
               children: [
-                AppSvgButton(
+                SvgButton(
                   imageName: 'undo.svg',
                   onPressed: () {
                     if (viewModel.sketchControl.paths.isNotEmpty) {
@@ -44,7 +44,7 @@ class SketchPage extends HookWidget {
                   },
                 ),
                 SizedBox(width: 16),
-                AppSvgButton(
+                SvgButton(
                   imageName: 'redo.svg',
                   onPressed: () {
                     if (redoData.value.isNotEmpty) {

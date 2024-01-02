@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_circular_progress_bar.dart';
-import 'package:lucid_reality/ui/components/app_svg_button.dart';
+import 'package:lucid_reality/ui/components/svg_button.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/record_your_dream_vm.dart';
 import 'package:lucid_reality/utils/custom_hooks.dart';
 import 'package:lucid_reality/utils/duration.dart';
@@ -61,14 +61,14 @@ class AudioRecorderPage extends HookWidget {
               children: [
                 Visibility(
                   visible: !isRecording.value && viewModel.recordingFile != null,
-                  child: AppSvgButton(
+                  child: SvgButton(
                     imageName: 'ic_delete.svg',
                     onPressed: () {
                       viewModel.deleteRecordingOnExist();
                     },
                   ),
                 ),
-                AppSvgButton(
+                SvgButton(
                   size: Size(50, 50),
                   imageName: isRecording.value ? 'ic_pause.svg' : 'ic_recording.svg',
                   onPressed: () async {
@@ -95,7 +95,7 @@ class AudioRecorderPage extends HookWidget {
                   visible: !isRecording.value && viewModel.recordingFile != null,
                   child: viewModel.assetsAudioPlayer.builderIsPlaying(
                     builder: (context, isPlaying) {
-                      return AppSvgButton(
+                      return SvgButton(
                         imageName: isPlaying ? 'ic_pause.svg' : 'ic_play.svg',
                         onPressed: () {
                           viewModel.playOrPause();
