@@ -22,7 +22,7 @@ class DashboardScreen extends HookWidget {
     const LearnScreen(),
     const PsychomotorVigilanceTestListScreen(),
     const LucidScreen(),
-    const SleepScreen()
+    SleepScreen()
   ];
 
   @override

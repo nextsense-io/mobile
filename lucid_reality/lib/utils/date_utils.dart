@@ -12,7 +12,8 @@ extension TimeUtils on TimeOfDay {
 }
 
 extension DateUtils on DateTime {
-  static final DateFormat _dateOnlyFormatter = new DateFormat('d MMM, yyyy');
+
+  static final DateFormat _dateOnlyFormatter = new DateFormat('MMM d, yyyy');
   static final DateFormat _hhmmFormatter = new DateFormat('HH:mm');
   static final DateFormat _hmmFormatter = new DateFormat('h:mm');
   static final DateFormat _hmmaFormatter = new DateFormat('h:mma');
@@ -73,12 +74,20 @@ extension DateUtils on DateTime {
 
   // Compare only day part of datetime, omitting hours, minutes etc.
   bool isSameDay(DateTime other) {
-    return year == other.year && month == other.month && day == other.day;
+    return year == other.year && month == other.month
+        && day == other.day;
   }
 
   // Returns closest future midnight to desired date
   DateTime get closestFutureMidnight {
-    return DateTime(this.year, this.month, this.day, 23, 59, 59);
+    return DateTime(
+      this.year,
+      this.month,
+      this.day,
+      23,
+      59,
+      59
+    );
   }
 
   DateTime get dateNoTime {

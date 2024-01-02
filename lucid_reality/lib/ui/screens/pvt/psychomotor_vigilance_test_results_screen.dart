@@ -76,7 +76,7 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
                           image: DecorationImage(
-                            image: Svg(imageBasePath.plus('btn_start.svg')),
+                            image: Svg(imageBasePath.plus('btn_background.svg')),
                             fit: BoxFit.fill,
                           ),
                         ),
