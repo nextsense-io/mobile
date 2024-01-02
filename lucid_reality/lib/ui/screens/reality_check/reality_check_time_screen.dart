@@ -10,13 +10,14 @@ import 'package:lucid_reality/ui/components/app_close_button.dart';
 import 'package:lucid_reality/ui/components/app_time_picker.dart';
 import 'package:lucid_reality/ui/components/reality_check_bottom_bar.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen_vm.dart';
+import 'package:lucid_reality/utils/notification.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:progressive_time_picker/progressive_time_picker.dart';
 import 'package:stacked/stacked.dart';
 
 class RealityCheckTimeScreen extends HookWidget {
   static const String id = 'reality_check_time_screen';
-  final CustomLogPrinter _logger = CustomLogPrinter('RealityCheckTimeScreen');
+  final CustomLogPrinter _logger = CustomLogPrinter('RealityCheckTimeScreens');
 
   RealityCheckTimeScreen({super.key});
 
@@ -40,6 +41,9 @@ class RealityCheckTimeScreen extends HookWidget {
           endTime.value = DateTime.fromMillisecondsSinceEpoch(
               viewModel.lucidManager.realityCheck.getEndTime() ?? 0);
         }
+        // if (viewModel.lucidManager.realityCheck.getNumberOfReminders() > 0) {
+        //   numberOfReminders.value = viewModel.lucidManager.realityCheck.getNumberOfReminders();
+        // }
       },
       builder: (context, viewModel, child) {
         return SafeArea(
@@ -127,14 +131,17 @@ class RealityCheckTimeScreen extends HookWidget {
                     RealityCheckBottomBar(
                       progressBarVisibility: !isStartForResult,
                       onPressed: () async {
-                        viewModel.saveNumberOfReminders(
-                            startTime: startTime.value,
-                            endTime: endTime.value,
-                            numberOfReminders: numberOfReminders.value);
-                        if (isStartForResult) {
-                          viewModel.goBackWithResult('success');
-                        } else {
-                          viewModel.navigateToToneCategoryScreen();
+                        final isNotificationAllow = await notificationPermission(context);
+                        if (isNotificationAllow) {
+                          await viewModel.saveNumberOfReminders(
+                              startTime: startTime.value,
+                              endTime: endTime.value,
+                              numberOfReminders: numberOfReminders.value);
+                          if (isStartForResult) {
+                            viewModel.goBackWithResult('success');
+                          } else {
+                            viewModel.navigateToToneCategoryScreen();
+                          }
                         }
                       },
                     ),

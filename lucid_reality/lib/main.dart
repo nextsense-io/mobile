@@ -9,8 +9,8 @@ import 'package:logging/logging.dart';
 import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/auth/sign_in_screen.dart';
-import 'package:lucid_reality/ui/screens/dream_journal/record_your_dream_screen.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
+import 'package:lucid_reality/utils/notification.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:provider/provider.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
@@ -48,6 +48,7 @@ void main() async {
     NextsenseBase.startService();
     await initDependencies();
     await _initPreferences();
+    await initializeNotification();
     runApp(LucidRealityApp());
   }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));
 }

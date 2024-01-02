@@ -7,6 +7,7 @@ import 'package:lucid_reality/ui/components/app_body.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
 import 'package:lucid_reality/ui/components/app_time_picker.dart';
 import 'package:lucid_reality/ui/components/reality_check_bottom_bar.dart';
+import 'package:lucid_reality/utils/notification.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:progressive_time_picker/progressive_time_picker.dart';
 import 'package:stacked/stacked.dart';
@@ -85,13 +86,15 @@ class RealityCheckBedtimeScreen extends HookWidget {
                     RealityCheckBottomBar(
                       progressBarVisibility: !isStartForResult,
                       onPressed: () async {
-                        if (isStartForResult) {
+                        final isNotificationAllow = await notificationPermission(context);
+                        if (isNotificationAllow) {
                           await viewModel.saveBedtime(
                               bedtime: bedtime.value, wakeUpTime: wakeUpTime.value);
-                          viewModel.goBackWithResult('success');
-                        } else {
-                          viewModel.navigateToRealityCheckCompletionScreen(
-                              bedtime: bedtime.value, wakeUpTime: wakeUpTime.value);
+                          if (isStartForResult) {
+                            viewModel.goBackWithResult('success');
+                          } else {
+                            viewModel.navigateToRealityCheckCompletionScreen();
+                          }
                         }
                       },
                       buttonType: ButtonType.saveButton,

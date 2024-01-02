@@ -7,6 +7,7 @@ import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
 import 'package:lucid_reality/ui/components/reality_check_bottom_bar.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/utils/custom_hooks.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:stacked/stacked.dart';
 
@@ -64,7 +65,7 @@ class RealityCheckToneSelectionScreen extends HookWidget {
                               return InkWell(
                                 onTap: () {
                                   selectedIndex.value = index;
-                                  //viewModel.playMusic(tone.musicFile);
+                                  viewModel.playMusic(tone.musicFile);
                                 },
                                 child: rowToneListItem(context, tone),
                               );

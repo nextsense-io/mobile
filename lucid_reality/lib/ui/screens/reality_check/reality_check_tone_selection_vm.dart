@@ -55,7 +55,7 @@ class RealityCheckToneSelectionViewModel extends RealityCheckBaseViewModel {
   void playMusic(String musicFile) async {
     try {
       AssetsAudioPlayer.playAndForget(
-        Audio.network(soundBasePath.plus(musicFile)),
+        Audio(soundBasePath.plus(musicFile)),
       );
     } catch (t) {
       //mp3 unreachable
