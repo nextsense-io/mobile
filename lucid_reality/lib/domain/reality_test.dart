@@ -36,6 +36,10 @@ class RealityTest extends FirebaseRealtimeDBEntity<RealityTestKey> {
     return getValue(RealityTestKey.totemSound);
   }
 
+  String? getType() {
+    return getValue(RealityTestKey.type);
+  }
+
   void setRealityTestID(String realityTestID) {
     setValue(RealityTestKey.realityTestID, realityTestID);
   }

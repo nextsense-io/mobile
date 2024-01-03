@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/utils/utils.dart';
 
 const String realityCheckingTimeChannelKey = 'realityCheckingTimeChannel';
 const String realityCheckingBedTimeChannelKey = 'realityCheckingBedTimeChannel';
@@ -29,6 +30,7 @@ Future<void> scheduleNotification({
   required String title,
   required String message,
   required DateTime date,
+  required String sound,
 }) async {
   final notificationId = Random().nextInt(100); // Generate a unique ID
   await AwesomeNotifications().cancelSchedulesByChannelKey(notificationType.notificationChannelKey);
@@ -38,6 +40,7 @@ Future<void> scheduleNotification({
       channelKey: notificationType.notificationChannelKey,
       title: title,
       body: message,
+      customSound: customSoundPath.plus(sound),
     ),
     schedule: NotificationCalendar.fromDate(
       date: date,

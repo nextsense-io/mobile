@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/domain/dream_journal.dart';
 import 'package:lucid_reality/ui/components/app_body.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
+import 'package:lucid_reality/ui/components/svg_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/dream_journal_vm.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
@@ -97,6 +99,7 @@ class DreamJournalScreen extends HookWidget {
   }
 
   Widget rowDreamJournalListItem(BuildContext context, DreamJournal dreamJournal) {
+    final viewModel = context.watch<DreamJournalViewModel>();
     return Stack(
       children: [
         AppCard(
@@ -121,7 +124,22 @@ class DreamJournalScreen extends HookWidget {
                           ?.copyWith(color: NextSenseColors.skyBlue),
                     ),
                     SizedBox(height: 12),
-                    Image(image: Svg(imageBasePath.plus('lucid.svg'))),
+                    MenuAnchor(
+                      builder: (context, controller, child) {
+                        return SvgButton(
+                          imageName: 'lucid.svg',
+                          onPressed: () {
+                            if (controller.isOpen) {
+                              controller.close();
+                            } else {
+                              controller.open();
+                            }
+                          },
+                        );
+                      },
+                      menuChildren: viewModel.dreamJournalMenuItem.map((menuItem) => buildMenuChildren(context, menuItem)).toList(),
+                    ),
+                    //Image(image: Svg(imageBasePath.plus('lucid.svg'))),
                   ],
                 ),
               ),
@@ -209,6 +227,26 @@ class DreamJournalScreen extends HookWidget {
               ),
             ),
           )
+        ],
+      ),
+    );
+  }
+
+  MenuItemButton buildMenuChildren(BuildContext context, DreamJournalMenu menuItem) {
+    final viewModel = context.watch<DreamJournalViewModel>();
+    return MenuItemButton(
+      child: Row(
+        children: [
+          Text(
+            menuItem.label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: menuItem.foregroundColor),
+          ),
+          SvgButton(
+            imageName: menuItem.iconName,
+            onPressed: () {
+
+            },
+          ),
         ],
       ),
     );

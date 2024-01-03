@@ -12,7 +12,7 @@ class AppTextButton extends StatelessWidget {
     super.key,
     required this.text,
     required this.onPressed,
-    this.backgroundImage = 'btn_start.svg',
+    this.backgroundImage = 'btn_save_entry.svg',
     this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
   });
 

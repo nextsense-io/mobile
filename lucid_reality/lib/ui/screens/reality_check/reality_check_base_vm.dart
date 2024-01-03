@@ -6,6 +6,7 @@ import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/lucid_manager.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/utils/notification.dart';
+import 'package:lucid_reality/utils/utils.dart';
 import 'package:progressive_time_picker/progressive_time_picker.dart';
 
 class RealityCheckBaseViewModel extends ViewModel {
@@ -41,6 +42,8 @@ class RealityCheckBaseViewModel extends ViewModel {
       required int numberOfReminders}) async {
     final realityTest = lucidManager.realityCheck.getRealityTest();
     if (realityTest != null) {
+      final sound =
+          '${realityTest.getTotemSound()}'.replaceAll(" ", '_').plus('.${realityTest.getType()}');
       final totalTime = formatIntervalTime(
           init: PickedTime(h: startTime.hour, m: startTime.minute),
           end: PickedTime(h: endTime.hour, m: endTime.hour));
@@ -51,12 +54,13 @@ class RealityCheckBaseViewModel extends ViewModel {
       var initialTime = startTime;
       for (int i = 0; i < numberOfReminders; i++) {
         // Schedule each notification with calculated interval
-        _logger.log(Level.INFO, "Time:${initialTime.hour}:${initialTime.minute}");
+        _logger.log(Level.INFO, "Time:${initialTime.hour}:${initialTime.minute}, Sound:$sound");
         await scheduleNotification(
           notificationType: notificationType,
           date: initialTime,
           title: realityTest.getName() ?? '',
           message: realityTest.getDescription() ?? '',
+          sound: sound,
         );
         initialTime = initialTime.add(timeOffset);
       }

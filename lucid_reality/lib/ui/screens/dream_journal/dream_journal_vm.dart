@@ -1,13 +1,18 @@
+import 'dart:ui';
+
 import 'package:lucid_reality/domain/dream_journal.dart';
+import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_base_vm.dart';
 
 import 'dream_confirmation_screen.dart';
 
 class DreamJournalViewModel extends RealityCheckBaseViewModel {
   final List<DreamJournal> dreamJournalList = List.empty(growable: true);
+  final List<DreamJournalMenu> dreamJournalMenuItem = List.empty(growable: true);
 
   @override
   void init() async {
+    prepareDreamJournalMenuItem();
     super.init();
     _fetchDreamJournals();
     lucidManager.newDreamJournalCreatedNotifier.addListener(
@@ -40,5 +45,34 @@ class DreamJournalViewModel extends RealityCheckBaseViewModel {
 
   void navigateToDreamConfirmationScreen() {
     navigation.navigateTo(DreamConfirmationScreen.id);
+  }
+
+  void prepareDreamJournalMenuItem() {
+    dreamJournalMenuItem.add(DreamJournalMenu('Edit', 'ic_edit.svg'));
+    dreamJournalMenuItem.add(DreamJournalMenu(
+      'Delete',
+      'ic_delete.svg',
+      foregroundColor: NextSenseColors.coral,
+    ));
+  }
+}
+
+class DreamJournalMenu {
+  late final String _label;
+  late final String _iconName;
+  late final Color foregroundColor;
+
+  DreamJournalMenu(this._label, this._iconName, {this.foregroundColor = NextSenseColors.white});
+
+  String get iconName => _iconName;
+
+  set iconName(String value) {
+    _iconName = value;
+  }
+
+  String get label => _label;
+
+  set label(String value) {
+    _label = value;
   }
 }
