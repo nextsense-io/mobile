@@ -60,7 +60,7 @@ class LucidRealityCategoryScreen extends HookWidget {
                           return InkWell(
                             onTap: () async {
                               await viewModel.lucidManager
-                                  .updateCategoryId(lucidRealityCategory.category.name);
+                                  .updateCategoryId(lucidRealityCategory.category.tag);
                               if (isStartForResult) {
                                 viewModel.goBackWithResult(lucidRealityCategory);
                               } else {

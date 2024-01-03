@@ -14,7 +14,7 @@ class AppBody extends StatelessWidget {
       decoration: BoxDecoration(
         image: DecorationImage(
           image: AssetImage(
-            imageBasePath.plus("onboarding_bg.png"),
+            imageBasePath.plus("app_background.png"),
           ),
           fit: BoxFit.cover,
         ),

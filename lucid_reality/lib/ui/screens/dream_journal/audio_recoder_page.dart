@@ -16,7 +16,7 @@ class AudioRecorderPage extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final record = useAudioController();
+    final recorder = useAudioController();
     final isRecording = useState(false);
     if (isRecording.value) {
       useInterval(
@@ -74,17 +74,17 @@ class AudioRecorderPage extends HookWidget {
                   onPressed: () async {
                     // Check and request permission if needed
                     if (isRecording.value) {
-                      if (await record.isRecording()) {
-                        await record.stop();
+                      if (await recorder.isRecording()) {
+                        await recorder.stop();
                       }
                       isRecording.value = false;
                       viewModel.validateSaveEntryButton();
                     } else {
                       //Delete recorded file if exist
                       viewModel.deleteRecordingOnExist();
-                      if (await record.hasPermission()) {
+                      if (await recorder.hasPermission()) {
                         // Start recording to file
-                        await record.start(const RecordConfig(),
+                        await recorder.start(const RecordConfig(),
                             path: viewModel.getNewRecordingFilePath());
                         isRecording.value = true;
                       }
