@@ -10,6 +10,8 @@ import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/auth/sign_in_screen.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
+import 'package:lucid_reality/utils/notification.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:lucid_reality/ui/screens/startup/startup_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
@@ -18,6 +20,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'di.dart';
 import 'managers/auth_manager.dart';
 import 'managers/connectivity_manager.dart';
+import 'ui/screens/startup/startup_screen.dart';
 
 void _initLogging() {
   Logger.root.level = Level.ALL; // defaults to Level.INFO
@@ -45,6 +48,7 @@ void main() async {
     tz.initializeTimeZones();
     await initDependencies();
     await _initPreferences();
+    await initializeNotification();
     runApp(LucidRealityApp());
   }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));
 }
@@ -54,7 +58,7 @@ class LucidRealityApp extends StatelessWidget {
   final AuthManager _authManager = getIt<AuthManager>();
   final intent.Intent? initialIntent;
 
-  LucidRealityApp({this.initialIntent});
+  LucidRealityApp({super.key, this.initialIntent});
 
   @override
   Widget build(BuildContext context) {

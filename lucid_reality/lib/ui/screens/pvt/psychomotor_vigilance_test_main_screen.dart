@@ -52,7 +52,8 @@ class PsychomotorVigilanceTestMainScreen extends HookWidget {
                 const SizedBox(height: 24),
                 Align(
                   alignment: Alignment.center,
-                  child: ElevatedButton(
+                  child:
+                  ElevatedButton(
                     onPressed: () {
                       viewModel.navigateToPVT();
                     },

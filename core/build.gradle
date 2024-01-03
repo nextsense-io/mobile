@@ -45,7 +45,6 @@ android {
         }
     }
 
-    buildToolsVersion '30.0.3'
     namespace 'io.nextsense.android.base'
     androidResources {
         noCompress 'tflite'

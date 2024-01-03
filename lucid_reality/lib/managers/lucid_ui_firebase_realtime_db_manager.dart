@@ -52,11 +52,11 @@ class LucidUiFirebaseRealtimeDBManager {
   }
 
   Future<void> updateEntity<T extends FirebaseRealtimeDBEntity>(T entity, String reference) async {
-    return _lucidDatabase.child('$reference/$userId').update(entity.getValues());
+    return _lucidDatabase.child('$reference/$userId').update(entity.toJson());
   }
 
   Future<void> setEntity<T extends FirebaseRealtimeDBEntity>(T entity, String reference) async {
-    return _lucidDatabase.child(reference).set(entity.getValues());
+    return _lucidDatabase.child(reference).set(entity.toJson());
   }
 
   Future<T?> getEntity<T extends FirebaseRealtimeDBEntity>(T entity, String reference) async {
@@ -65,6 +65,19 @@ class LucidUiFirebaseRealtimeDBManager {
       Map<String, dynamic> snapshotValue = snapshot.toMap();
       entity.setValues(snapshotValue);
       return entity;
+    } else {
+      return null;
+    }
+  }
+
+  Future<T?> getEntityAs<T extends FirebaseRealtimeDBEntity>(
+    String reference,
+    T Function(Map<String, dynamic> data) fromMap,
+  ) async {
+    final snapshot = await _lucidDatabase.child(reference).get();
+    if (snapshot.exists) {
+      Map<String, dynamic> snapshotValue = snapshot.toMap();
+      return fromMap(snapshotValue);
     } else {
       return null;
     }
@@ -83,6 +96,8 @@ class LucidUiFirebaseRealtimeDBManager {
 
   Future<void> addAutoIdEntity<T extends FirebaseRealtimeDBEntity>(
       T entity, String reference) async {
-    _lucidDatabase.child('$reference/$userId').push().set(entity.toJson());
+    final databaseReference = _lucidDatabase.child('$reference/$userId').push();
+    entity.entityId = databaseReference.key;
+    await databaseReference.set(entity.toJson());
   }
 }

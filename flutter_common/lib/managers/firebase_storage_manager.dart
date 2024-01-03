@@ -11,16 +11,16 @@ class FirebaseStorageManager {
   static const String _baseNodeName = '/mobile';
   final FirebaseApp _firebaseApp = getIt<FirebaseManager>().getFirebaseApp();
   final CustomLogPrinter _logger = CustomLogPrinter('FirebaseStorageManager');
-  late FirebaseStorage _storage;
+  late FirebaseStorage storage;
   late Reference _baseNode;
 
   FirebaseStorageManager() {
-    _storage = FirebaseStorage.instanceFor(app: _firebaseApp);
-    _baseNode = _storage.ref(_baseNodeName);
+    storage = FirebaseStorage.instanceFor(app: _firebaseApp);
+    _baseNode = storage.ref(_baseNodeName);
   }
 
   Future<bool> downloadFile(String gsUrl, File destinationFile) async {
-    final Reference gsReference = _storage.refFromURL(gsUrl);
+    final Reference gsReference = storage.refFromURL(gsUrl);
     _logger.log(Level.INFO, 'Starting to download $gsUrl');
     try {
       await gsReference.writeToFile(destinationFile);

@@ -29,7 +29,7 @@ class PVTResult extends FirebaseRealtimeDBEntity<PVTResultKey> {
   }
 
   int getAverageTapLatencyMs() {
-    return getValue(PVTResultKey.avg);
+    return getValue(PVTResultKey.avg) ?? 0;
   }
 
   void setAverageTapLatencyMs(int averageTapLatencyMs) {
