@@ -5,10 +5,12 @@ import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_base_vm.dart';
 
 import 'dream_confirmation_screen.dart';
+import 'record_your_dream_screen.dart';
 
 class DreamJournalViewModel extends RealityCheckBaseViewModel {
   final List<DreamJournal> dreamJournalList = List.empty(growable: true);
-  final List<DreamJournalMenu> dreamJournalMenuItem = List.empty(growable: true);
+  final List<DreamJournalMenu> dreamJournalMenuItem =
+      List.empty(growable: true);
 
   @override
   void init() async {
@@ -48,10 +50,16 @@ class DreamJournalViewModel extends RealityCheckBaseViewModel {
   }
 
   void prepareDreamJournalMenuItem() {
-    dreamJournalMenuItem.add(DreamJournalMenu('Edit', 'ic_edit.svg'));
+    dreamJournalMenuItem.add(
+      DreamJournalMenu(
+        'Edit',
+        'ic_edit.svg',
+        routeName: RecordYourDreamScreen.id,
+      ),
+    );
     dreamJournalMenuItem.add(DreamJournalMenu(
       'Delete',
-      'ic_delete.svg',
+      'ic_delete_coral.svg',
       foregroundColor: NextSenseColors.coral,
     ));
   }
@@ -60,9 +68,11 @@ class DreamJournalViewModel extends RealityCheckBaseViewModel {
 class DreamJournalMenu {
   late final String _label;
   late final String _iconName;
+  late final String routeName;
   late final Color foregroundColor;
 
-  DreamJournalMenu(this._label, this._iconName, {this.foregroundColor = NextSenseColors.white});
+  DreamJournalMenu(this._label, this._iconName,
+      {this.foregroundColor = NextSenseColors.white, this.routeName = ''});
 
   String get iconName => _iconName;
 
