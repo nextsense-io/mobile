@@ -17,15 +17,17 @@ import 'dream_journal_screen.dart';
 class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
   final _logger = CustomLogPrinter('RecordYourDreamViewModel');
   final StorageManager _storageManager = getIt<StorageManager>();
-  final LucidFirebaseStorageManager _firebaseStorageManager = getIt<LucidFirebaseStorageManager>();
+  final LucidFirebaseStorageManager _firebaseStorageManager =
+      getIt<LucidFirebaseStorageManager>();
   final assetsAudioPlayer = AssetsAudioPlayer();
-  File? recordingFile;
   final recordedDuration = ValueNotifier(0);
   final sketchControl = HandSignatureControl(
     threshold: 3.0,
     smoothRatio: 0.65,
     velocityRange: 2.0,
   );
+
+  File? recordingFile;
   String _title = '';
   String _description = '';
   String _tags = '';
@@ -53,17 +55,19 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
       if (!assetsAudioPlayer.current.hasValue) {
         assetsAudioPlayer.open(Audio.file(recordingFile!.absolute.path));
       } else {
-        if (assetsAudioPlayer.current.value?.audio.assetAudioPath.compareTo(recordingFile!.path) !=
+        if (assetsAudioPlayer.current.value?.audio.assetAudioPath
+                .compareTo(recordingFile!.path) !=
             0) {
           assetsAudioPlayer.open(Audio.file(recordingFile!.absolute.path));
         } else {
           assetsAudioPlayer.playOrPause();
         }
       }
-      recordedDuration.value = assetsAudioPlayer.current.value!.audio.duration.inSeconds;
+      recordedDuration.value =
+          assetsAudioPlayer.current.value!.audio.duration.inSeconds;
       notifyListeners();
-    } catch (t) {
-      print(t);
+    } catch (e) {
+      _logger.log(Level.WARNING, e);
     }
   }
 
@@ -80,7 +84,7 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
       pauseMusic();
       assetsAudioPlayer.dispose();
     } catch (e) {
-      print(e);
+      _logger.log(Level.WARNING, e);
     }
   }
 
@@ -91,14 +95,15 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
         recordingFile = null;
         pauseMusic();
         if (assetsAudioPlayer.current.value?.audio != null) {
-          assetsAudioPlayer.playlist?.remove(assetsAudioPlayer.current.value?.audio as Audio);
+          assetsAudioPlayer.playlist
+              ?.remove(assetsAudioPlayer.current.value?.audio as Audio);
         }
         recordedDuration.value = 0;
         validateSaveEntryButton();
       }
       notifyListeners();
     } catch (e) {
-      print(e);
+      _logger.log(Level.WARNING, e);
     }
   }
 
@@ -109,7 +114,9 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
 
   void validateSaveEntryButton() {
     isValidForSavingData = _title.isNotEmpty &&
-        (_description.isNotEmpty || recordingFile != null || sketchControl.paths.isNotEmpty);
+        (_description.isNotEmpty ||
+            recordingFile != null ||
+            sketchControl.paths.isNotEmpty);
     notifyListeners();
   }
 
@@ -136,12 +143,14 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
       final imageData = await sketchControl.toImage();
       if (imageData != null) {
         final File sketchFile = await _storageManager.writeToFile(imageData);
-        sketchGSUrl = await _firebaseStorageManager.uploadDrawingFile(sketchFile);
+        sketchGSUrl =
+            await _firebaseStorageManager.uploadDrawingFile(sketchFile);
       }
     }
     String? recordingGSUrl;
     if (recordingFile != null) {
-      recordingGSUrl = await _firebaseStorageManager.uploadRecordingFile(recordingFile!);
+      recordingGSUrl =
+          await _firebaseStorageManager.uploadRecordingFile(recordingFile!);
     }
     final DreamJournal dreamJournal = DreamJournal();
     dreamJournal.setCreatedAt(DateTime.now().millisecondsSinceEpoch);
@@ -152,7 +161,8 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
       dreamJournal.setRecordPath(recordingGSUrl);
     }
     if (recordedDuration.value != 0) {
-      dreamJournal.setDescription(formatDuration(Duration(seconds: recordedDuration.value)));
+      dreamJournal.setDescription(
+          formatDuration(Duration(seconds: recordedDuration.value)));
     }
     if (sketchGSUrl != null) {
       dreamJournal.setSketchPath(sketchGSUrl);

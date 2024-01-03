@@ -15,10 +15,12 @@ class _AudioControllerHook extends Hook<AudioRecorder> {
   const _AudioControllerHook();
 
   @override
-  HookState<AudioRecorder, Hook<AudioRecorder>> createState() => _AudioControllerHookState();
+  HookState<AudioRecorder, Hook<AudioRecorder>> createState() =>
+      _AudioControllerHookState();
 }
 
-class _AudioControllerHookState extends HookState<AudioRecorder, _AudioControllerHook> {
+class _AudioControllerHookState
+    extends HookState<AudioRecorder, _AudioControllerHook> {
   late final controller = AudioRecorder();
 
   @override
@@ -28,7 +30,7 @@ class _AudioControllerHookState extends HookState<AudioRecorder, _AudioControlle
   void dispose() => controller.dispose();
 
   @override
-  String get debugLabel => 'useTabController';
+  String get debugLabel => 'useAudioController';
 }
 
 void useInterval(VoidCallback callback, Duration delay) {
@@ -40,7 +42,6 @@ void useInterval(VoidCallback callback, Duration delay) {
   }, [delay]);
 }
 
-
 AssetsAudioPlayer useMusicController() {
   return use(
     _MusicControllerHook(),
@@ -51,10 +52,12 @@ class _MusicControllerHook extends Hook<AssetsAudioPlayer> {
   const _MusicControllerHook();
 
   @override
-  HookState<AssetsAudioPlayer, Hook<AssetsAudioPlayer>> createState() => _MusicControllerHookState();
+  HookState<AssetsAudioPlayer, Hook<AssetsAudioPlayer>> createState() =>
+      _MusicControllerHookState();
 }
 
-class _MusicControllerHookState extends HookState<AssetsAudioPlayer, _MusicControllerHook> {
+class _MusicControllerHookState
+    extends HookState<AssetsAudioPlayer, _MusicControllerHook> {
   late final controller = AssetsAudioPlayer();
 
   @override
@@ -63,10 +66,6 @@ class _MusicControllerHookState extends HookState<AssetsAudioPlayer, _MusicContr
   @override
   void dispose() => controller.dispose();
 
-  void playMusic(){
-
-  }
-
   @override
-  String get debugLabel => 'useTabController';
+  String get debugLabel => 'useMusicController';
 }
