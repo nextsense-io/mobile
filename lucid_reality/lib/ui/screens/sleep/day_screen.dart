@@ -6,6 +6,7 @@ import 'package:lucid_reality/ui/components/solid_circle.dart';
 import 'package:lucid_reality/ui/components/svg_button.dart';
 import 'package:lucid_reality/ui/components/wait_widget.dart';
 import 'package:lucid_reality/ui/screens/sleep/day_screen_vm.dart';
+import 'package:lucid_reality/ui/screens/sleep/sleep_screen_vm.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:stacked/stacked.dart';
@@ -89,7 +90,29 @@ class DayScreen extends HookWidget {
         builder: (context, viewModel, child) {
           Widget body;
           if (viewModel.initialised) {
-            body = _body(context, viewModel);
+            if (viewModel.healthAppInstalled) {
+              if (viewModel.healthAppAuthorized) {
+                body = _body(context, viewModel);
+              } else {
+                body = Column(children: [
+                  Text("Health app not authorized"),
+                  ElevatedButton(
+                      onPressed: () {
+                        viewModel.authorizeHealthApp();
+                      },
+                      child: Text("Authorize"))
+                ]);
+              }
+            } else {
+              body = Column(children: [
+                Text("Health app not installed"),
+                ElevatedButton(
+                    onPressed: () {
+                      viewModel.checkHealthAppInstalled();
+                    },
+                    child: Text("Check again"))
+              ]);
+            }
           } else {
             body = WaitWidget(message: 'Loading sleep data...');
           }

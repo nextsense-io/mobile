@@ -67,8 +67,6 @@ protobuf {
     }
 }
 
-
-
 sonarqube {
     properties {
         property "sonar.projectName", "android_base_library"

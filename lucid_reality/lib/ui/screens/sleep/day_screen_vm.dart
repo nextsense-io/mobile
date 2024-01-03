@@ -1,5 +1,7 @@
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:health/health.dart';
+import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
 import 'package:lucid_reality/managers/health_connect_manager.dart';
@@ -7,14 +9,19 @@ import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/screens/sleep/sleep_screen_vm.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
 
-enum SleepResultType {
-  sleepTimeOnly,
-  sleepStaging,
-  noData
-}
-
 class DayScreenViewModel extends ViewModel {
+  static const List<LucidSleepStage> pieChartStages = [
+    LucidSleepStage.core,
+    LucidSleepStage.deep,
+    LucidSleepStage.rem,
+    LucidSleepStage.awake
+  ];
+
   final _healthConnectManager = getIt<HealthConnectManager>();
+  final _logger = getLogger("DayScreenViewModel");
+
+  bool? _healthAppInstalled;
+  bool? _healthAppAuthorized;
   List<HealthDataPoint>? _healthDataPoints;
   DateTime _currentDate = DateTime.now().dateNoTime;
   SleepResultType _sleepResultType = SleepResultType.noData;
@@ -23,6 +30,8 @@ class DayScreenViewModel extends ViewModel {
   DateTime? _sleepEndTime;
   List<SleepStage> _sleepStages = [];
 
+  bool get healthAppInstalled => _healthAppInstalled ?? false;
+  bool get healthAppAuthorized => _healthAppAuthorized ?? false;
   DateTime get currentDate => _currentDate;
   SleepResultType get sleepResultType => _sleepResultType;
   String get totalSleepTime => _totalSleepTime == Duration.zero ? "N/A" :
@@ -32,9 +41,24 @@ class DayScreenViewModel extends ViewModel {
   List<SleepStage> get sleepStages => _sleepStages;
 
   void init() async {
-    await _healthConnectManager.authorize();
-    await _getSleepInfo();
+    _healthAppInstalled = await _healthConnectManager.isAvailable();
+    if (_healthAppInstalled!) {
+      _healthAppAuthorized = await _healthConnectManager.authorize();
+      if (_healthAppAuthorized!) {
+        await _getSleepInfo();
+      }
+    }
     setInitialised(true);
+    notifyListeners();
+  }
+
+  Future checkHealthAppInstalled() async {
+    _healthAppInstalled = await _healthConnectManager.isAvailable();
+    notifyListeners();
+  }
+
+  Future authorizeHealthApp() async {
+    _healthAppAuthorized = await _healthConnectManager.authorize();
     notifyListeners();
   }
 
@@ -45,12 +69,12 @@ class DayScreenViewModel extends ViewModel {
   Future _getSleepInfo() async {
     _healthDataPoints = await _healthConnectManager.getSleepSessionData(
         startDate: currentDate, days: 1);
+    _sleepStages.clear();
     if (_healthDataPoints?.isEmpty ?? true) {
       _sleepResultType = SleepResultType.noData;
       _totalSleepTime = Duration.zero;
       _sleepStartTime = null;
       _sleepEndTime = null;
-      _sleepStages.clear();
     } else if (_healthDataPoints!.length == 1 && _healthDataPoints![0].type ==
         HealthDataType.SLEEP_SESSION && _healthDataPoints![0].unit == HealthDataUnit.MINUTE) {
       _sleepResultType = SleepResultType.sleepTimeOnly;
@@ -63,6 +87,45 @@ class DayScreenViewModel extends ViewModel {
     } else {
       // TODO: parse sleep staging data
       _sleepResultType = SleepResultType.sleepStaging;
+
+      // Get total duration for each sleep stage in that day.
+      Map<LucidSleepStage, Duration> sleepStageDurations = {};
+      for (LucidSleepStage lucidSleepStage in LucidSleepStage.values) {
+        sleepStageDurations[lucidSleepStage] = Duration.zero;
+      }
+      _sleepStartTime = null;
+      _sleepEndTime = null;
+      for (HealthDataPoint dataPoint in _healthDataPoints!) {
+        if (dataPoint.unit == HealthDataUnit.MINUTE) {
+          LucidSleepStage lucidSleepStage = getSleepStageFromHealthDataPoint(dataPoint);
+          sleepStageDurations[lucidSleepStage] = sleepStageDurations[lucidSleepStage]! +
+              Duration(minutes: int.parse(dataPoint.value.toString()));
+          if (pieChartStages.contains(lucidSleepStage)) {
+            if (_sleepStartTime == null || _sleepStartTime!.isAfter(dataPoint.dateFrom)) {
+              _sleepStartTime = dataPoint.dateFrom;
+            }
+            if (_sleepEndTime == null || _sleepEndTime!.isBefore(dataPoint.dateTo)) {
+              _sleepEndTime = dataPoint.dateTo;
+            }
+          }
+        } else {
+          _logger.log(Level.INFO, "Health data point ${dataPoint.type} unit is not minutes");
+        }
+      }
+
+      // Get total time for all sleep stages.
+      _totalSleepTime = Duration.zero;
+      for (LucidSleepStage lucidSleepStage in pieChartStages) {
+        _totalSleepTime += sleepStageDurations[lucidSleepStage]!;
+      }
+
+      // Get sleep stages for pie chart and details.
+      for (LucidSleepStage lucidSleepStage in pieChartStages) {
+        _sleepStages.add(SleepStage(lucidSleepStage.getLabel(),
+            (sleepStageDurations[lucidSleepStage]!.inMinutes /
+            _totalSleepTime.inMinutes * 100).round(),
+            sleepStageDurations[lucidSleepStage]!, lucidSleepStage.getColor()));
+      }
     }
   }
 
@@ -76,5 +139,28 @@ class DayScreenViewModel extends ViewModel {
     }
     await _getSleepInfo();
     notifyListeners();
+  }
+
+  LucidSleepStage getSleepStageFromHealthDataPoint(HealthDataPoint dataPoint) {
+    switch (dataPoint.type) {
+      case HealthDataType.SLEEP_IN_BED:
+        return LucidSleepStage.sleeping;
+      case HealthDataType.SLEEP_ASLEEP:
+        return LucidSleepStage.sleeping;
+      case HealthDataType.SLEEP_AWAKE:
+        return LucidSleepStage.awake;
+      case HealthDataType.SLEEP_DEEP:
+        return LucidSleepStage.deep;
+      case HealthDataType.SLEEP_LIGHT:
+        return LucidSleepStage.core;
+      case HealthDataType.SLEEP_REM:
+        return LucidSleepStage.rem;
+      case HealthDataType.SLEEP_OUT_OF_BED:
+        return LucidSleepStage.awake;
+      case HealthDataType.SLEEP_SESSION:
+        return LucidSleepStage.sleeping;
+      default:
+        return LucidSleepStage.awake;
+    }
   }
 }
