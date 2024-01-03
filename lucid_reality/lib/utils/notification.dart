@@ -54,18 +54,16 @@ Future<void> initializeNotification() async {
       [
         NotificationChannel(
           channelKey: realityCheckingTimeChannelKey,
-          channelName: 'Lucid reality time check notifications',
-          channelDescription:
-              'It\'s lucid reality time check notifications.',
+          channelName: 'Lucid Morning Notifications',
+          channelDescription: 'Lucid reality time check notifications.',
           defaultColor: NextSenseColors.royalPurple,
           importance: NotificationImportance.High,
           channelShowBadge: true,
         ),
         NotificationChannel(
           channelKey: realityCheckingBedTimeChannelKey,
-          channelName: 'Lucid reality bedtime check notifications',
-          channelDescription:
-              'It\'s lucid reality bedtime check notifications.',
+          channelName: 'Lucid Night Notifications',
+          channelDescription: 'Lucid reality bedtime check notifications.',
           defaultColor: NextSenseColors.royalPurple,
           importance: NotificationImportance.High,
           channelShowBadge: true,
