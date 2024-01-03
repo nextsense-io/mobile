@@ -7,7 +7,7 @@ import 'package:hand_signature/signature.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/dream_journal.dart';
-import 'package:lucid_reality/managers/firebase_storage_manager.dart';
+import 'package:lucid_reality/managers/lucid_firebase_storage_manager.dart';
 import 'package:lucid_reality/managers/storage_manager.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_base_vm.dart';
 import 'package:lucid_reality/utils/duration.dart';
@@ -17,7 +17,7 @@ import 'dream_journal_screen.dart';
 class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
   final _logger = CustomLogPrinter('RecordYourDreamViewModel');
   final StorageManager _storageManager = getIt<StorageManager>();
-  final FirebaseStorageManager _firebaseStorageManager = getIt<FirebaseStorageManager>();
+  final LucidFirebaseStorageManager _firebaseStorageManager = getIt<LucidFirebaseStorageManager>();
   final assetsAudioPlayer = AssetsAudioPlayer();
   File? recordingFile;
   final recordedDuration = ValueNotifier(0);
