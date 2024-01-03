@@ -7,16 +7,16 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 
 class LucidFirebaseStorageManager extends FirebaseStorageManager {
-  final CustomLogPrinter _logger = CustomLogPrinter('LucidFirebaseStorageManager');
+  final CustomLogPrinter _logger =
+      CustomLogPrinter('LucidFirebaseStorageManager');
   static const String _recordingNodeName = '/recordings';
   static const String _drawingNodeName = '/drawings';
-  late FirebaseStorage _storage;
   late Reference _recordingNode;
   late Reference _drawingNode;
 
   LucidFirebaseStorageManager() : super() {
-    _recordingNode = _storage.ref(_recordingNodeName);
-    _drawingNode = _storage.ref(_drawingNodeName);
+    _recordingNode = storage.ref(_recordingNodeName);
+    _drawingNode = storage.ref(_drawingNodeName);
   }
 
   Future<String?> uploadRecordingFile(File file) async {

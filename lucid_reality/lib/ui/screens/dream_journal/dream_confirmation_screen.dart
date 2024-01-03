@@ -5,7 +5,7 @@ import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
 import 'package:lucid_reality/ui/components/svg_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
-import 'package:lucid_reality/ui/screens/dream_journal/dream__confirmation_vm.dart';
+import 'package:lucid_reality/ui/screens/dream_journal/dream_confirmation_vm.dart';
 import 'package:stacked/stacked.dart';
 
 class DreamConfirmationScreen extends HookWidget {

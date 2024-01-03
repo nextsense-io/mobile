@@ -33,7 +33,8 @@ Future<void> scheduleNotification({
   required String sound,
 }) async {
   final notificationId = Random().nextInt(100); // Generate a unique ID
-  await AwesomeNotifications().cancelSchedulesByChannelKey(notificationType.notificationChannelKey);
+  await AwesomeNotifications()
+      .cancelSchedulesByChannelKey(notificationType.notificationChannelKey);
   await AwesomeNotifications().createNotification(
     content: NotificationContent(
       id: notificationId,
@@ -57,7 +58,7 @@ Future<void> initializeNotification() async {
         NotificationChannel(
           channelKey: realityCheckingTimeChannelKey,
           channelName: 'Lucid Morning Notifications',
-          channelDescription: 'It\'s lucid reality checking time notifications.',
+          channelDescription: 'Lucid reality time check notifications.',
           defaultColor: NextSenseColors.royalPurple,
           importance: NotificationImportance.High,
           channelShowBadge: true,
@@ -65,7 +66,7 @@ Future<void> initializeNotification() async {
         NotificationChannel(
           channelKey: realityCheckingBedTimeChannelKey,
           channelName: 'Lucid Night Notifications',
-          channelDescription: 'It\'s lucid reality check bedtime notifications.',
+          channelDescription: 'Lucid reality bedtime check notifications.',
           defaultColor: NextSenseColors.royalPurple,
           importance: NotificationImportance.High,
           channelShowBadge: true,
