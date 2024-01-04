@@ -9,8 +9,7 @@ import 'record_your_dream_screen.dart';
 
 class DreamJournalViewModel extends RealityCheckBaseViewModel {
   final List<DreamJournal> dreamJournalList = List.empty(growable: true);
-  final List<DreamJournalMenu> dreamJournalMenuItem =
-      List.empty(growable: true);
+  final List<DreamJournalMenu> dreamJournalMenuItem = List.empty(growable: true);
 
   @override
   void init() async {
@@ -62,6 +61,15 @@ class DreamJournalViewModel extends RealityCheckBaseViewModel {
       'ic_delete_coral.svg',
       foregroundColor: NextSenseColors.coral,
     ));
+  }
+
+  void navigateToRecordYourDreamScreen(DreamJournal dreamJournal) {
+    navigation.navigateTo(RecordYourDreamScreen.id, arguments: dreamJournal);
+  }
+
+  void deleteDreamJournal(DreamJournal dreamJournal) async {
+    await lucidManager.deleteDreamJournal(dreamJournal);
+    _fetchDreamJournals();
   }
 }
 

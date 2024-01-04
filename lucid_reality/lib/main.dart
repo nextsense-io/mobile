@@ -10,9 +10,8 @@ import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/auth/sign_in_screen.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
-import 'package:lucid_reality/utils/notification.dart';
-import 'package:nextsense_base/nextsense_base.dart';
 import 'package:lucid_reality/ui/screens/startup/startup_screen.dart';
+import 'package:lucid_reality/utils/notification.dart';
 import 'package:provider/provider.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:timezone/data/latest.dart' as tz;
@@ -20,7 +19,6 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'di.dart';
 import 'managers/auth_manager.dart';
 import 'managers/connectivity_manager.dart';
-import 'ui/screens/startup/startup_screen.dart';
 
 void _initLogging() {
   Logger.root.level = Level.ALL; // defaults to Level.INFO
@@ -81,10 +79,13 @@ class LucidRealityApp extends StatelessWidget {
           fontFamily: 'Montserrat',
           textTheme: const TextTheme(
             displaySmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
-            displayMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
+            displayMedium:
+                TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
             displayLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
-            headlineSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
-            headlineLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
+            headlineSmall:
+                TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
+            headlineLarge:
+                TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
             titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
             titleMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
             titleLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),

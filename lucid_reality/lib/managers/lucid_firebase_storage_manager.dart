@@ -7,8 +7,7 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 
 class LucidFirebaseStorageManager extends FirebaseStorageManager {
-  final CustomLogPrinter _logger =
-      CustomLogPrinter('LucidFirebaseStorageManager');
+  final CustomLogPrinter _logger = CustomLogPrinter('LucidFirebaseStorageManager');
   static const String _recordingNodeName = '/recordings';
   static const String _drawingNodeName = '/drawings';
   late Reference _recordingNode;
@@ -23,7 +22,7 @@ class LucidFirebaseStorageManager extends FirebaseStorageManager {
     Reference storageRef = _recordingNode.child(path.basename(file.path));
     try {
       await storageRef.putFile(file);
-      return storageRef.fullPath;
+      return await _getDownloadableUrl(storageRef.fullPath);
     } on FirebaseException catch (e) {
       _logger.log(
           Level.WARNING,
@@ -37,7 +36,7 @@ class LucidFirebaseStorageManager extends FirebaseStorageManager {
     Reference storageRef = _drawingNode.child(path.basename(file.path));
     try {
       await storageRef.putFile(file);
-      return storageRef.fullPath;
+      return await _getDownloadableUrl(storageRef.fullPath);
     } on FirebaseException catch (e) {
       _logger.log(
           Level.WARNING,
@@ -45,5 +44,9 @@ class LucidFirebaseStorageManager extends FirebaseStorageManager {
           ' Exception: ${e.message}');
       return null;
     }
+  }
+
+  Future<String?> _getDownloadableUrl(String gsUrl) async {
+    return await storage.ref(gsUrl).getDownloadURL();
   }
 }

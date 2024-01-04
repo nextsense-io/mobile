@@ -10,10 +10,17 @@ class NoteDescriptionPage extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textController = useTextEditingController();
+    final descriptionController = useTextEditingController();
+    final isDescriptionEditable = useState(true);
+    useEffect(() {
+      descriptionController.text = viewModel.dreamJournal?.getDescription() ?? '';
+      isDescriptionEditable.value = !descriptionController.text.isNotEmpty;
+      return null;
+    }, []);
     return TextField(
       textCapitalization: TextCapitalization.sentences,
       textAlign: TextAlign.start,
+      enabled: isDescriptionEditable.value,
       style: Theme.of(context).textTheme.bodySmall,
       decoration: InputDecoration(
         floatingLabelBehavior: FloatingLabelBehavior.never,
@@ -28,7 +35,7 @@ class NoteDescriptionPage extends HookWidget {
         ),
         labelStyle: Theme.of(context).textTheme.bodySmall,
       ),
-      controller: textController,
+      controller: descriptionController,
       keyboardType: TextInputType.multiline,
       maxLines: 14,
       onChanged: viewModel.descriptionValueListener,

@@ -123,4 +123,24 @@ class LucidManager {
       sortBy: SortBy.DESC,
     );
   }
+
+  Future<bool> deleteDreamJournal(DreamJournal dreamJournal) async {
+    return await firebaseRealTimeDb.deleteEntity(
+      DreamJournal.table
+          .where(firebaseRealTimeDb.getUserId() ?? '')
+          .and()
+          .where(dreamJournal.getId() ?? ''),
+    );
+  }
+
+  Future<void> updateDreamJournalRecord(DreamJournal dreamJournal) async {
+    await firebaseRealTimeDb.setEntity(
+      dreamJournal,
+      DreamJournal.table
+          .where(firebaseRealTimeDb.getUserId() ?? '')
+          .and()
+          .where(dreamJournal.getId() ?? ''),
+    );
+    newDreamJournalCreatedNotifier.value = dreamJournal.getId() ?? '';
+  }
 }

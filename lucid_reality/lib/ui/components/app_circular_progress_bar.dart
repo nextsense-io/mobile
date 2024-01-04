@@ -18,7 +18,7 @@ class AppCircularProgressBar extends StatelessWidget {
           child: CircularProgressIndicator(
             value: value,
             backgroundColor: NextSenseColors.royalPurple,
-            valueColor: AlwaysStoppedAnimation<Color>(NextSenseColors.translucent),
+            valueColor: AlwaysStoppedAnimation<Color>(NextSenseColors.deepGray),
             semanticsLabel: 'Circular progress indicator',
           ),
         ),

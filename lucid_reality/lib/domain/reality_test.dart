@@ -72,7 +72,6 @@ class RealityTest extends FirebaseRealtimeDBEntity<RealityTestKey> {
             data.entries.map((e) => MapEntry(e.key.toString(), e.value))));
       }
     } catch (e) {
-      print(e);
     }
     return realityTest;
   }
