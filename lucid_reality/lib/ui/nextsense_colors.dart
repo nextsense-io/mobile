@@ -24,4 +24,6 @@ class NextSenseColors {
   static const Color cardBackground = Color(0xCC10142C);
   static const Color transparentGray = Color(0x3F000000);
   static const purpleGradiantColors = [Color(0xE09E1FF6), Color(0x386D2F98)];
+  static const Color midnightBlue = Color(0xFF10142C);
+  static const Color deepGray = Color(0xFF0B0D1C);
 }

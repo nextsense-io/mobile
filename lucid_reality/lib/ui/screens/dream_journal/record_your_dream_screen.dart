@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
+import 'package:lucid_reality/domain/dream_journal.dart';
 import 'package:lucid_reality/ui/components/app_body.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
@@ -24,13 +25,32 @@ class RecordYourDreamScreen extends HookWidget {
     final selectedTabIndex = useState(0);
     final titleController = useTextEditingController();
     final tagsController = useTextEditingController();
-    final isLucid = useState(false);
+    final isLucid = useState<bool>(false);
+    final isTitleEditable = useState(true);
+    final isTagsEditable = useState(true);
+    final isEditMode = useRef(false);
     return ViewModelBuilder.reactive(
       viewModelBuilder: () => RecordYourDreamViewModel(),
       onViewModelReady: (viewModel) {
         viewModel.init();
         if (ModalRoute.of(context)?.settings.arguments is int) {
           viewModel.intentionMatchRating = ModalRoute.of(context)?.settings.arguments as int;
+        }
+        final dreamJournal = ModalRoute.of(context)?.settings.arguments;
+        if (dreamJournal is DreamJournal) {
+          Future.delayed(
+            Duration(milliseconds: 500),
+            () {
+              isEditMode.value = true;
+              viewModel.setDreamJournal(dreamJournal);
+              titleController.text = dreamJournal.getTitle() ?? '';
+              isTitleEditable.value = !titleController.text.isNotEmpty;
+              tagsController.text = dreamJournal.getTags() ?? '';
+              isTagsEditable.value = !titleController.text.isNotEmpty;
+              viewModel.tagValueListener(tagsController.text);
+              isLucid.value = dreamJournal.isLucid() ?? false;
+            },
+          );
         }
       },
       builder: (context, viewModel, child) {
@@ -110,6 +130,7 @@ class RecordYourDreamScreen extends HookWidget {
                       textAlign: TextAlign.start,
                       style: Theme.of(context).textTheme.bodySmall,
                       controller: titleController,
+                      enabled: isTitleEditable.value,
                       decoration: InputDecoration(
                         floatingLabelBehavior: FloatingLabelBehavior.never,
                         contentPadding: const EdgeInsets.all(16.00),
@@ -153,6 +174,7 @@ class RecordYourDreamScreen extends HookWidget {
                       textAlign: TextAlign.start,
                       style: Theme.of(context).textTheme.bodySmall,
                       controller: tagsController,
+                      enabled: isTagsEditable.value,
                       decoration: InputDecoration(
                         floatingLabelBehavior: FloatingLabelBehavior.never,
                         contentPadding: const EdgeInsets.all(16.00),
@@ -194,9 +216,13 @@ class RecordYourDreamScreen extends HookWidget {
                       alignment: Alignment.centerRight,
                       child: AppTextButton(
                         text: 'Save Entry',
-                        onPressed: viewModel.isValidForSavingData
+                        onPressed: viewModel.isValidForSavingData || isEditMode.value
                             ? () {
-                                viewModel.saveRecord(isLucid.value);
+                                if (isEditMode.value) {
+                                  viewModel.updateRecord(isLucid.value);
+                                } else {
+                                  viewModel.saveRecord(isLucid.value);
+                                }
                               }
                             : null,
                         backgroundImage: 'btn_save_entry.svg',

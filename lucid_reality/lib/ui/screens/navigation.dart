@@ -273,7 +273,7 @@ class Navigation {
         return MaterialPageRoute(builder: (context) => const RealityCheckCompletionScreen());
       case DreamJournalScreen.id:
         return MaterialPageRoute(
-          builder: (context) => const DreamJournalScreen(),
+          builder: (context) => DreamJournalScreen(),
           settings: settings,
         );
       case DreamConfirmationScreen.id:

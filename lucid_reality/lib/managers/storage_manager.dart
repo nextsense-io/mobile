@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
 class StorageManager {
@@ -43,5 +44,10 @@ class StorageManager {
     final buffer = data.buffer;
     return _getNewDrawingFile()
         .writeAsBytes(buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
+  }
+
+  Future<bool> isRecordingFileExist(String gsUrl) async {
+    _getRecordingDir().createSync(recursive: true);
+    return File('${_getRecordingDir().absolute.path}/${path.basename(gsUrl)}').existsSync();
   }
 }

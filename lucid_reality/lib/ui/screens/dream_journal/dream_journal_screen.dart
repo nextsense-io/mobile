@@ -6,6 +6,8 @@ import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/domain/dream_journal.dart';
 import 'package:lucid_reality/ui/components/app_body.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
+import 'package:lucid_reality/ui/components/svg_button.dart';
+import 'package:lucid_reality/ui/dialogs/app_dialogs.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/dream_journal_vm.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
@@ -17,7 +19,7 @@ import 'package:stacked/stacked.dart';
 class DreamJournalScreen extends HookWidget {
   static const String id = 'dream_journal_screen';
 
-  const DreamJournalScreen({super.key});
+  DreamJournalScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -97,6 +99,7 @@ class DreamJournalScreen extends HookWidget {
   }
 
   Widget rowDreamJournalListItem(BuildContext context, DreamJournal dreamJournal) {
+    final viewModel = context.watch<DreamJournalViewModel>();
     return Stack(
       children: [
         AppCard(
@@ -150,7 +153,29 @@ class DreamJournalScreen extends HookWidget {
         Positioned(
           top: 16,
           right: 16,
-          child: Image(image: Svg(imageBasePath.plus('btn_edit_menu.svg'))),
+          child: MenuAnchor(
+            style: MenuStyle(
+              backgroundColor: MaterialStateProperty.all(NextSenseColors.midnightBlue),
+            ),
+            alignmentOffset: Offset(50, 0),
+            anchorTapClosesMenu: true,
+            builder: (context, controller, child) {
+              return SvgButton(
+                padding: EdgeInsets.all(8),
+                imageName: 'btn_edit_menu.svg',
+                onPressed: () {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    controller.open();
+                  }
+                },
+              );
+            },
+            menuChildren: viewModel.dreamJournalMenuItem
+                .map((menuItem) => buildMenuChildren(context, menuItem, dreamJournal))
+                .toList(),
+          ),
         ),
       ],
     );
@@ -210,6 +235,38 @@ class DreamJournalScreen extends HookWidget {
             ),
           )
         ],
+      ),
+    );
+  }
+
+  Widget buildMenuChildren(
+      BuildContext context, DreamJournalMenu menuItem, DreamJournal dreamJournal) {
+    final viewModel = context.watch<DreamJournalViewModel>();
+    return MenuItemButton(
+      onPressed: () {
+        switch (menuItem.label) {
+          case 'Edit':
+            viewModel.navigateToRecordYourDreamScreen(dreamJournal);
+            break;
+          case 'Delete':
+            context.showConfirmationDialog(
+              title: 'Delete Dream Journal',
+              message: 'Are you sure you wanted to delete this dream journal record?',
+              onContinue: () {
+                viewModel.deleteDreamJournal(dreamJournal);
+              },
+            );
+            break;
+        }
+      },
+      trailingIcon: Image(image: Svg(imageBasePath.plus(menuItem.iconName))),
+      child: Container(
+        padding: EdgeInsets.all(13),
+        alignment: Alignment.centerLeft,
+        child: Text(
+          menuItem.label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: menuItem.foregroundColor),
+        ),
       ),
     );
   }

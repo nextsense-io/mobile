@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_common/di.dart';
 import 'package:flutter_common/managers/firebase_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
+import 'package:logging/logging.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 
 const String dbRootDBName = 'LucidReality';
@@ -99,5 +100,15 @@ class LucidUiFirebaseRealtimeDBManager {
     final databaseReference = _lucidDatabase.child('$reference/$userId').push();
     entity.entityId = databaseReference.key;
     await databaseReference.set(entity.toJson());
+  }
+
+  Future<bool> deleteEntity(String reference) async {
+    _logger.log(Level.INFO, "Deleting At=>$reference");
+    return await _lucidDatabase.child(reference).remove().then((_) => true).catchError(
+      (error) {
+        _logger.log(Level.WARNING, error);
+        return false;
+      },
+    );
   }
 }

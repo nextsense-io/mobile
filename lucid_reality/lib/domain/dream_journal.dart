@@ -37,7 +37,7 @@ class DreamJournal extends FirebaseRealtimeDBEntity<DreamJournalKey> {
     setValue(DreamJournalKey.createdAt, createAt);
   }
 
-  String? getRecordPath() {
+  String? getRecordingPath() {
     return getValue(DreamJournalKey.recordingPath);
   }
 
@@ -101,11 +101,11 @@ class DreamJournal extends FirebaseRealtimeDBEntity<DreamJournalKey> {
     setValue(DreamJournalKey.isLucid, isLucid);
   }
 
-  int? getRecordingDuration() {
+  String? getRecordingDuration() {
     return getValue(DreamJournalKey.recordingDuration);
   }
 
-  void setRecordingDuration(int recordingDuration) {
+  void setRecordingDuration(String recordingDuration) {
     setValue(DreamJournalKey.recordingDuration, recordingDuration);
   }
 
