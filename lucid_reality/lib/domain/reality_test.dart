@@ -1,3 +1,5 @@
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:logging/logging.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 
 enum RealityTestKey {
@@ -65,6 +67,7 @@ class RealityTest extends FirebaseRealtimeDBEntity<RealityTestKey> {
   }
 
   factory RealityTest.fromJson(Map<dynamic, dynamic> data) {
+    final CustomLogPrinter _logger = CustomLogPrinter('RealityTest Factory');
     RealityTest realityTest = RealityTest.instance;
     try {
       if (data.entries.isNotEmpty) {
@@ -72,6 +75,7 @@ class RealityTest extends FirebaseRealtimeDBEntity<RealityTestKey> {
             data.entries.map((e) => MapEntry(e.key.toString(), e.value))));
       }
     } catch (e) {
+      _logger.log(Level.INFO, e);
     }
     return realityTest;
   }

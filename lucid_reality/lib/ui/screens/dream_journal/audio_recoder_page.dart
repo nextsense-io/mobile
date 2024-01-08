@@ -44,16 +44,16 @@ class AudioRecorderPage extends HookWidget {
                   )
                 : viewModel.assetsAudioPlayer.builderCurrentPosition(
                     builder: (context, duration) {
-                      var value = 0.0;
+                      var progressBarPercentage = 0.0;
                       if (viewModel.assetsAudioPlayer.current.hasValue) {
-                        value = duration.inSeconds /
+                        progressBarPercentage = duration.inSeconds /
                             (viewModel.assetsAudioPlayer.current.value?.audio.duration.inSeconds ??
                                 1);
-                        value = 1 - value;
+                        progressBarPercentage = 1 - progressBarPercentage;
                       }
                       return AppCircularProgressBar(
                         size: Size(150, 150),
-                        value: value,
+                        value: progressBarPercentage,
                         text: formatDuration(duration),
                       );
                     },
