@@ -161,6 +161,7 @@ class DreamJournalScreen extends HookWidget {
             anchorTapClosesMenu: true,
             builder: (context, controller, child) {
               return SvgButton(
+                padding: EdgeInsets.all(8),
                 imageName: 'btn_edit_menu.svg',
                 onPressed: () {
                   if (controller.isOpen) {

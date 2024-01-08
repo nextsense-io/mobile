@@ -15,6 +15,7 @@ class NoteDescriptionPage extends HookWidget {
     useEffect(() {
       descriptionController.text = viewModel.dreamJournal?.getDescription() ?? '';
       isDescriptionEditable.value = !descriptionController.text.isNotEmpty;
+      viewModel.descriptionValueListener(descriptionController.text);
       return null;
     }, []);
     return TextField(

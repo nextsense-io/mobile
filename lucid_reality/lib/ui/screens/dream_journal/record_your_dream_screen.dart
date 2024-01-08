@@ -47,6 +47,7 @@ class RecordYourDreamScreen extends HookWidget {
               isTitleEditable.value = !titleController.text.isNotEmpty;
               tagsController.text = dreamJournal.getTags() ?? '';
               isTagsEditable.value = !titleController.text.isNotEmpty;
+              viewModel.tagValueListener(tagsController.text);
               isLucid.value = dreamJournal.isLucid() ?? false;
             },
           );
