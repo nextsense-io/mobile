@@ -6,8 +6,10 @@ import 'package:flutter_common/managers/disk_space_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
+import 'package:lucid_reality/domain/article.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/dream_journal_screen.dart';
+import 'package:lucid_reality/ui/screens/learn/article_details.dart';
 import 'package:lucid_reality/ui/screens/reality_check/lucid_reality_category_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
@@ -326,6 +328,10 @@ class Navigation {
       // Routes with arguments
       case RecordYourDreamScreen.id:
         return MaterialPageRoute(builder: (context) => RecordYourDreamScreen(), settings: settings);
+      case ArticleDetailsScreen.id:
+        return MaterialPageRoute(
+            builder: (context) => ArticleDetailsScreen(article: settings.arguments as Article),
+            settings: settings);
       // case SetPasswordScreen.id: return MaterialPageRoute(
       //     builder: (context) => SetPasswordScreen(isSignup: settings.arguments as bool));
       // case ProtocolScreen.id:
