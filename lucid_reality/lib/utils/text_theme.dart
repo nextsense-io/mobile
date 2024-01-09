@@ -21,6 +21,10 @@ extension LucidRealityTextTheme on TextTheme {
     return bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 12);
   }
 
+  TextStyle? get bodySmallWithFontWeight600FontSize13 {
+    return bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 13);
+  }
+
   TextStyle? get bodySmallWithFontWeight700FontSize12 {
     return bodySmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 12);
   }
