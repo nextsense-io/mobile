@@ -1,7 +1,7 @@
 import 'package:flutter_common/di.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:lucid_reality/domain/article.dart';
-import 'package:lucid_reality/managers/artical_manager.dart';
+import 'package:lucid_reality/managers/article_manager.dart';
 import 'package:lucid_reality/ui/screens/learn/article_details.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 
