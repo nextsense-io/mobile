@@ -6,110 +6,154 @@ import 'package:lucid_reality/ui/screens/lucid/lucid_screen_vm.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
+enum RealitySettingsViewType { home, lucid }
+
 class RealityCheckSettings extends HookWidget {
   final LucidScreenViewModel viewModel;
+  final RealitySettingsViewType viewType;
+  final Function()? onSetupSettings;
 
-  const RealityCheckSettings(this.viewModel, {super.key});
+  const RealityCheckSettings(
+    this.viewModel, {
+    super.key,
+    this.viewType = RealitySettingsViewType.lucid,
+    this.onSetupSettings,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'CURRENT SETTINGS',
-          style: Theme.of(context).textTheme.bodySmallWithFontWeight700FontSize12,
-        ),
-        const SizedBox(height: 5),
-        AppCard(
-          padding: EdgeInsets.only(left: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
+    if (viewType == RealitySettingsViewType.home && !viewModel.isRealitySettingsCompleted()) {
+      return InkWell(
+        onTap: onSetupSettings,
+        child: AppCard(
+          Stack(
             children: [
-              Expanded(
-                flex: 1,
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: Image.asset(imageBasePath.plus('lucid_icon.png')),
+              ),
+              Flexible(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    InkWell(
-                      onTap: () {
-                        viewModel.navigateToCategoryScreenForResult();
-                      },
-                      child: Text(
-                        viewModel.realityCheckTitle(),
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmallWithFontWeight700
-                            ?.copyWith(color: NextSenseColors.skyBlue),
-                      ),
+                    Text(
+                      'Start Lucid Dreaming',
+                      style: Theme.of(context).textTheme.bodyMediumWithFontWeight600,
                     ),
-                    SizedBox(height: 8),
-                    InkWell(
-                      onTap: () {
-                        viewModel.navigateToSetGoalScreenForResult();
-                      },
-                      child: Text(
-                        viewModel.realityCheckDescription(),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
+                    Text(
+                      'Set a goal and reality check alerts to help you get started with lucid dreaming.',
+                      style: Theme.of(context).textTheme.bodyCaption,
+                    )
                   ],
                 ),
-              ),
-              SizedBox(
-                height: 81,
-                child: Image.asset(imageBasePath.plus(viewModel.realityCheckImage())),
-              ),
+              )
             ],
           ),
         ),
-        const SizedBox(height: 5),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              flex: 1,
-              child: RealityCheckSettingsWidget(
-                title: 'Reality check time',
-                description:
-                    '5 times\n${viewModel.realityCheckingStartTime()}-${viewModel.realityCheckingEndTime()}',
-                titleColor: NextSenseColors.coral,
-                onPressed: () {
-                  viewModel.navigateToRealityCheckTimeScreenForResult();
-                },
-              ),
+      );
+    } else {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (viewType == RealitySettingsViewType.lucid) ...[
+            Text(
+              'CURRENT SETTINGS',
+              style: Theme.of(context).textTheme.bodySmallWithFontWeight700FontSize12,
             ),
-            SizedBox(width: 4),
-            Expanded(
-              flex: 1,
-              child: RealityCheckSettingsWidget(
-                title: 'Reality check Action',
-                description: '${viewModel.realityCheckActionName()}',
-                titleColor: NextSenseColors.royalPurple,
-                onPressed: () {
-                  viewModel.navigateToToneCategoryScreenForResult();
-                },
-              ),
-            ),
-            SizedBox(width: 4),
-            Expanded(
-              flex: 1,
-              child: RealityCheckSettingsWidget(
-                title: 'Bedtime',
-                description:
-                    '5 times from\n${viewModel.realityCheckingBedTime()}-${viewModel.realityCheckingWakeUpTime()}',
-                titleColor: NextSenseColors.royalBlue,
-                onPressed: () {
-                  viewModel.navigateToRealityCheckBedtimeScreenForResult();
-                },
-              ),
-            ),
+            const SizedBox(height: 5),
           ],
-        ),
-      ],
-    );
+          AppCard(
+            padding: EdgeInsets.only(left: 16),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          viewModel.navigateToCategoryScreenForResult();
+                        },
+                        child: Text(
+                          viewModel.realityCheckTitle(),
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmallWithFontWeight700
+                              ?.copyWith(color: NextSenseColors.skyBlue),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      InkWell(
+                        onTap: () {
+                          viewModel.navigateToSetGoalScreenForResult();
+                        },
+                        child: Text(
+                          viewModel.realityCheckDescription(),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 81,
+                  child: Image.asset(imageBasePath.plus(viewModel.realityCheckImage())),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 5),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                flex: 1,
+                child: RealityCheckSettingsWidget(
+                  title: 'Reality check time',
+                  description:
+                      '5 times\n${viewModel.realityCheckingStartTime()}-${viewModel.realityCheckingEndTime()}',
+                  titleColor: NextSenseColors.coral,
+                  onPressed: () {
+                    viewModel.navigateToRealityCheckTimeScreenForResult();
+                  },
+                ),
+              ),
+              SizedBox(width: 4),
+              Expanded(
+                flex: 1,
+                child: RealityCheckSettingsWidget(
+                  title: 'Reality check Action',
+                  description: '${viewModel.realityCheckActionName()}',
+                  titleColor: NextSenseColors.royalPurple,
+                  onPressed: () {
+                    viewModel.navigateToToneCategoryScreenForResult();
+                  },
+                ),
+              ),
+              SizedBox(width: 4),
+              Expanded(
+                flex: 1,
+                child: RealityCheckSettingsWidget(
+                  title: 'Bedtime',
+                  description:
+                      '5 times from\n${viewModel.realityCheckingBedTime()}-${viewModel.realityCheckingWakeUpTime()}',
+                  titleColor: NextSenseColors.royalBlue,
+                  onPressed: () {
+                    viewModel.navigateToRealityCheckBedtimeScreenForResult();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
   }
 }
 

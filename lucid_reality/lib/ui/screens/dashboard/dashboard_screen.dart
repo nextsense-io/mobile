@@ -14,22 +14,31 @@ import 'package:stacked/stacked.dart';
 
 class DashboardScreen extends HookWidget {
   static const String id = 'dashboard_screen';
+  final _pages = <Widget>[];
 
   DashboardScreen({super.key});
 
-  final _pages = <Widget>[
-    const HomeScreen(),
-    const LearnScreen(),
-    const PsychomotorVigilanceTestListScreen(),
-    const LucidScreen(),
-    SleepScreen()
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final viewModel = useRef(DashboardScreenViewModel());
     final activeTab = useState(2);
+    useEffect(() {
+      _pages.addAll([
+        HomeScreen(
+          viewModel: viewModel.value,
+        ),
+        const LearnScreen(),
+        const PsychomotorVigilanceTestListScreen(),
+        const LucidScreen(),
+        SleepScreen()
+      ]);
+      viewModel.value.changeTab = (tabIndex) {
+        activeTab.value = tabIndex;
+      };
+      return null;
+    }, []);
     return ViewModelBuilder.reactive(
-      viewModelBuilder: () => DashboardScreenViewModel(),
+      viewModelBuilder: () => viewModel.value,
       onViewModelReady: (viewModel) => viewModel.init(),
       builder: (context, viewModel, child) {
         return SafeArea(
