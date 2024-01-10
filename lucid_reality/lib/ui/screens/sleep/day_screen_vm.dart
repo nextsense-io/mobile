@@ -28,7 +28,7 @@ class DayScreenViewModel extends ViewModel {
   Duration _totalSleepTime = Duration.zero;
   DateTime? _sleepStartTime;
   DateTime? _sleepEndTime;
-  List<SleepStage> _sleepStages = [];
+  List<ChartSleepStage> _chartSleepStages = [];
 
   bool get healthAppInstalled => _healthAppInstalled ?? false;
   bool get healthAppAuthorized => _healthAppAuthorized ?? false;
@@ -38,7 +38,7 @@ class DayScreenViewModel extends ViewModel {
       "${_totalSleepTime.inHours}h ${_totalSleepTime.inMinutes.remainder(60)}m";
   String get sleepStartEndTime => _sleepStartTime == null ? "No sleep data" :
       "${_sleepStartTime!.hmma} - ${_sleepEndTime!.hmma}";
-  List<SleepStage> get sleepStages => _sleepStages;
+  List<ChartSleepStage> get chartSleepStages => _chartSleepStages;
 
   void init() async {
     _healthAppInstalled = await _healthConnectManager.isAvailable();
@@ -69,7 +69,7 @@ class DayScreenViewModel extends ViewModel {
   Future _getSleepInfo() async {
     _healthDataPoints = await _healthConnectManager.getSleepSessionData(
         startDate: currentDate, days: 1);
-    _sleepStages.clear();
+    _chartSleepStages.clear();
     if (_healthDataPoints?.isEmpty ?? true) {
       _sleepResultType = SleepResultType.noData;
       _totalSleepTime = Duration.zero;
@@ -81,11 +81,10 @@ class DayScreenViewModel extends ViewModel {
       _totalSleepTime = Duration(minutes: int.parse(_healthDataPoints![0].value.toString()));
       _sleepStartTime = _healthDataPoints![0].dateFrom;
       _sleepEndTime = _healthDataPoints![0].dateTo;
-      _sleepStages = [
-        SleepStage(LucidSleepStage.sleeping.getLabel(), 100, _totalSleepTime,
+      _chartSleepStages = [
+        ChartSleepStage(LucidSleepStage.sleeping.getLabel(), 100, _totalSleepTime,
             LucidSleepStage.sleeping.getColor())];
     } else {
-      // TODO: parse sleep staging data
       _sleepResultType = SleepResultType.sleepStaging;
 
       // Get total duration for each sleep stage in that day.
@@ -121,7 +120,7 @@ class DayScreenViewModel extends ViewModel {
 
       // Get sleep stages for pie chart and details.
       for (LucidSleepStage lucidSleepStage in pieChartStages) {
-        _sleepStages.add(SleepStage(lucidSleepStage.getLabel(),
+        _chartSleepStages.add(ChartSleepStage(lucidSleepStage.getLabel(),
             (sleepStageDurations[lucidSleepStage]!.inMinutes /
             _totalSleepTime.inMinutes * 100).round(),
             sleepStageDurations[lucidSleepStage]!, lucidSleepStage.getColor()));
@@ -139,28 +138,5 @@ class DayScreenViewModel extends ViewModel {
     }
     await _getSleepInfo();
     notifyListeners();
-  }
-
-  LucidSleepStage getSleepStageFromHealthDataPoint(HealthDataPoint dataPoint) {
-    switch (dataPoint.type) {
-      case HealthDataType.SLEEP_IN_BED:
-        return LucidSleepStage.sleeping;
-      case HealthDataType.SLEEP_ASLEEP:
-        return LucidSleepStage.sleeping;
-      case HealthDataType.SLEEP_AWAKE:
-        return LucidSleepStage.awake;
-      case HealthDataType.SLEEP_DEEP:
-        return LucidSleepStage.deep;
-      case HealthDataType.SLEEP_LIGHT:
-        return LucidSleepStage.core;
-      case HealthDataType.SLEEP_REM:
-        return LucidSleepStage.rem;
-      case HealthDataType.SLEEP_OUT_OF_BED:
-        return LucidSleepStage.awake;
-      case HealthDataType.SLEEP_SESSION:
-        return LucidSleepStage.sleeping;
-      default:
-        return LucidSleepStage.awake;
-    }
   }
 }

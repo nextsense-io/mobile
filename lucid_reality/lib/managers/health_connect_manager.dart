@@ -11,11 +11,11 @@ enum FitResult {
 class HealthConnectManager {
   static const types = [
     HealthDataType.SLEEP_SESSION,
-    HealthDataType.SLEEP_AWAKE,
-    HealthDataType.SLEEP_ASLEEP,
-    HealthDataType.SLEEP_DEEP,
-    HealthDataType.SLEEP_REM,
-    HealthDataType.SLEEP_LIGHT
+    // HealthDataType.SLEEP_AWAKE,
+    // HealthDataType.SLEEP_ASLEEP,
+    // HealthDataType.SLEEP_DEEP,
+    // HealthDataType.SLEEP_REM,
+    // HealthDataType.SLEEP_LIGHT
   ];
 
   static const String healthConnectSource = "com.google.android.apps.healthdata";

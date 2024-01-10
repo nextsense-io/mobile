@@ -1,5 +1,6 @@
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:health/health.dart';
+import 'package:quiver/time.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
 import 'package:lucid_reality/managers/health_connect_manager.dart';
@@ -8,24 +9,20 @@ import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/screens/sleep/sleep_screen_vm.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
 
-class WeekScreenViewModel extends ViewModel {
+class MonthScreenViewModel extends ViewModel {
 
   final _healthConnectManager = getIt<HealthConnectManager>();
   List<HealthDataPoint>? _healthDataPoints;
-  DateTime _currentDate = DateTime.now().dateNoTime;
-  DateTime _weekStartDate = DateTime.now().dateNoTime.subtract(Duration(days: 7));
+  DateTime _monthStartDate = DateTime(DateTime.now().year, DateTime.now().month, 1).dateNoTime;
   SleepResultType _sleepResultType = SleepResultType.noData;
   Map<DateTime, DaySleepStats> _dailySleepStats = {};
   Map<DateTime, List<ChartSleepStage>> _chartSleepStages = {};
   Map<LucidSleepStage, Duration> _sleepStageAverages = {};
   Map<LucidSleepStage, List<DaySleepStage>> _daySleepStages = {};
 
-  DateTime get currentDate => _currentDate;
-  String get weekDateRange  {
-    if (_weekStartDate.month == _currentDate.month) {
-      return "${_weekStartDate.monthDay}-${_currentDate.day}, ${_currentDate.year}";
-    }
-    return "${_weekStartDate.monthDay}-${_currentDate.monthDay}, ${_currentDate.year}";
+  DateTime get currentMonth => _monthStartDate;
+  String get monthYear  {
+    return "${_monthStartDate.monthString} ${_monthStartDate.year}";
   }
   SleepResultType get sleepResultType => _sleepResultType;
   Map<LucidSleepStage, Duration> get sleepStageAverages => _sleepStageAverages;
@@ -47,8 +44,9 @@ class WeekScreenViewModel extends ViewModel {
 
   Future _getSleepInfo() async {
     _sleepStageAverages.clear();
+    int daysInMonthInt = daysInMonth(_monthStartDate.year, _monthStartDate.month);
     _healthDataPoints = await _healthConnectManager.getSleepSessionData(
-        startDate: currentDate.subtract(Duration(days: 7)), days: 7);
+        startDate: currentMonth, days: daysInMonthInt);
     if (_healthDataPoints?.isEmpty ?? true) {
       _sleepResultType = SleepResultType.noData;
     } else {
@@ -77,34 +75,16 @@ class WeekScreenViewModel extends ViewModel {
             lucidSleepStage, _chartSleepStages);
       }
 
-      // Get sleep stages for each day for bar chart.
-      _daySleepStages.clear();
-      for (DateTime dateTime in _dailySleepStats.keys) {
-        if (_dailySleepStats[dateTime]!.resultType == SleepResultType.noData) {
-          continue;
-        }
-        for (LucidSleepStage lucidSleepStage in LucidSleepStage.values) {
-          if (_daySleepStages[lucidSleepStage] == null) {
-            _daySleepStages[lucidSleepStage] = [];
-          }
-          _daySleepStages[lucidSleepStage]!.add(DaySleepStage(
-              dayOfWeek: dateTime.dayOfWeek,
-              lucidSleepStage: lucidSleepStage.getLabel(),
-              durationMinutes: _dailySleepStats[dateTime]!.stageDurations[lucidSleepStage]!
-                  .inMinutes,
-              color: lucidSleepStage.getColor()));
-        }
-      }
+      // TODO: Calculate any needed stats for the UI.
     }
   }
 
   void changeDay(int relativeDayChange) async {
+    // TODO: Change to next/previous month.
     if (relativeDayChange > 0) {
-      _currentDate = _currentDate.add(Duration(days: relativeDayChange));
-      _weekStartDate = _weekStartDate.add(Duration(days: relativeDayChange));
+      _monthStartDate = _monthStartDate.add(Duration(days: relativeDayChange));
     } else if (relativeDayChange < 0) {
-      _currentDate = _currentDate.subtract(Duration(days: -relativeDayChange));
-      _weekStartDate = _weekStartDate.subtract(Duration(days: -relativeDayChange));
+      _monthStartDate = _monthStartDate.subtract(Duration(days: -relativeDayChange));
     } else {
       return;
     }

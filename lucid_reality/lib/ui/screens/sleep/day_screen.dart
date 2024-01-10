@@ -16,7 +16,7 @@ class DayScreen extends HookWidget {
 
   Widget _body(BuildContext context, DayScreenViewModel viewModel) {
     List<AppCard> sleepStageCards = [];
-    for (var sleepStage in viewModel.sleepStages) {
+    for (var sleepStage in viewModel.chartSleepStages) {
       sleepStageCards.add(AppCard(Row(mainAxisAlignment: MainAxisAlignment.start, children: [
         SolidCircle(color: sleepStage.color, size: 16),
         SizedBox(width: 8),
@@ -67,7 +67,7 @@ class DayScreen extends HookWidget {
                                     alignment: Alignment.center,
                                     child: Container(
                                         height: 250,
-                                        child: SleepPieChart.withData(viewModel.sleepStages))),
+                                        child: SleepPieChart.withData(viewModel.chartSleepStages))),
                               Align(
                                   alignment: Alignment.center,
                                   child: Text("${viewModel.sleepStartEndTime}")),
