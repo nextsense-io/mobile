@@ -12,11 +12,11 @@ extension TimeUtils on TimeOfDay {
 }
 
 extension DateUtils on DateTime {
-
   static final DateFormat _dateOnlyFormatter = new DateFormat('MMM d, yyyy');
   static final DateFormat _hhmmFormatter = new DateFormat('HH:mm');
   static final DateFormat _hmmFormatter = new DateFormat('h:mm');
   static final DateFormat _hmmaFormatter = new DateFormat('h:mma');
+  static final DateFormat _MonthDayFormatter = new DateFormat('MMM d');
   static final DateFormat _dateTimeStringFormatter = new DateFormat('yyyy_MM_dd_HH_mm_ss');
   static final DateFormat _dateTimeHumanizedFormatter = new DateFormat('d MMM, yyyy \'at\' H:mma');
 
@@ -51,6 +51,14 @@ extension DateUtils on DateTime {
   String get date {
     try {
       return _dateOnlyFormatter.format(this);
+    } catch (e) {
+      return "";
+    }
+  }
+
+  String get monthDay {
+    try {
+      return _MonthDayFormatter.format(this);
     } catch (e) {
       return "";
     }
@@ -92,6 +100,24 @@ extension DateUtils on DateTime {
 
   DateTime get dateNoTime {
     return DateTime(this.year, this.month, this.day);
+  }
+
+  String get dayOfWeek {
+    return DateFormat('E').format(this);
+  }
+
+  String get monthString {
+    return DateFormat('MMM').format(this);
+  }
+}
+
+extension TimeOfDayExtension on TimeOfDay {
+  int compareTo(TimeOfDay other) {
+    if (hour < other.hour) return -1;
+    if (hour > other.hour) return 1;
+    if (minute < other.minute) return -1;
+    if (minute > other.minute) return 1;
+    return 0;
   }
 }
 
