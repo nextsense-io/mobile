@@ -3,20 +3,27 @@ import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
 class SvgButton extends StatelessWidget {
-  final Function onTap;
-  final String svgPath;
+  final String imageName;
+  final VoidCallback? onPressed;
+  final Size? size;
+  final EdgeInsets? padding;
   final bool showBackground;
 
-  SvgButton({Key? key, required Function onTap, required String svgPath,
-    bool showBackground = false}) : onTap = onTap, svgPath = svgPath,
-        showBackground = showBackground, super(key: key);
+  const SvgButton({
+    super.key,
+    required this.imageName,
+    required this.onPressed,
+    this.size,
+    this.padding = EdgeInsets.zero
+    this.showBackground = false;
+  });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => onTap(),
+      onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: padding,
         decoration: this.showBackground ? BoxDecoration(
           image: DecorationImage(
             image: Svg(imageBasePath.plus('btn_background.svg')),
@@ -24,7 +31,9 @@ class SvgButton extends StatelessWidget {
           ),
         ) : null,
         child: Image(
-          image: Svg(imageBasePath.plus('backward_arrow.svg')),
+          image: Svg(imageBasePath.plus(imageName)),
+          height: size?.height,
+          width: size?.width,
           fit: BoxFit.fill,
         ),
       ),

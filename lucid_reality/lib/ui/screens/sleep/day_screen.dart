@@ -31,10 +31,10 @@ class DayScreen extends HookWidget {
         children: [
           AppCard(Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
             SvgButton(
-              onTap: () {
+              onPressed: () {
                 viewModel.changeDay(-1);
               },
-              svgPath: imageBasePath.plus('backward_arrow.svg'),
+              imageName: 'backward_arrow.svg',
             ),
             Text(
               viewModel.currentDate.date,
@@ -42,10 +42,10 @@ class DayScreen extends HookWidget {
             ),
             if (DateTime.now().dateNoTime.isAfter(viewModel.currentDate))
               SvgButton(
-                onTap: () {
+                onPressed: () {
                   viewModel.changeDay(1);
                 },
-                svgPath: imageBasePath.plus('forward_arrow.svg'),
+                imageName: 'forward_arrow.svg',
               )
             else
               SizedBox(width: 54),

@@ -1,9 +1,10 @@
-import 'package:flutter_common/utils/android_logger.dart';
-import 'package:logging/logging.dart';
-
 extension QueryBuilder on String {
   String where(String value) {
     return '$this/$value';
+  }
+
+  String and() {
+    return this;
   }
 }
 
@@ -17,6 +18,7 @@ class FirebaseRealtimeDBEntity<T extends Enum> {
 
   set entityId(String? value) {
     _entityId = value;
+    getValues()['id'] = value;
   }
 
   Map<String, dynamic> getValues() {

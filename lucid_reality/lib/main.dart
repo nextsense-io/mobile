@@ -11,6 +11,7 @@ import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/auth/sign_in_screen.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/ui/screens/startup/startup_screen.dart';
+import 'package:lucid_reality/utils/notification.dart';
 import 'package:provider/provider.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:timezone/data/latest.dart' as tz;
@@ -45,6 +46,7 @@ void main() async {
     tz.initializeTimeZones();
     await initDependencies();
     await _initPreferences();
+    await initializeNotification();
     runApp(LucidRealityApp());
   }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));
 }
@@ -54,7 +56,7 @@ class LucidRealityApp extends StatelessWidget {
   final AuthManager _authManager = getIt<AuthManager>();
   final intent.Intent? initialIntent;
 
-  LucidRealityApp({this.initialIntent});
+  LucidRealityApp({super.key, this.initialIntent});
 
   @override
   Widget build(BuildContext context) {
@@ -77,10 +79,13 @@ class LucidRealityApp extends StatelessWidget {
           fontFamily: 'Montserrat',
           textTheme: const TextTheme(
             displaySmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
-            displayMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
+            displayMedium:
+                TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
             displayLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
-            headlineSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
-            headlineLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
+            headlineSmall:
+                TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
+            headlineLarge:
+                TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),
             titleSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w400, color: Colors.white),
             titleMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.white),
             titleLarge: TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white),

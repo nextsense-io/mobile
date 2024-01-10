@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 extension TimeUtils on TimeOfDay {
-
   String get hmm {
     return '${hour.toString()}:${minute.toString().padLeft(2, '0')}';
   }
@@ -120,4 +119,8 @@ extension TimeOfDayExtension on TimeOfDay {
     if (minute > other.minute) return 1;
     return 0;
   }
+}
+
+extension IntToDate on int {
+  DateTime toDate() => DateTime.fromMillisecondsSinceEpoch(this);
 }

@@ -2,6 +2,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_common/di.dart';
 import 'package:flutter_common/managers/firebase_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
+import 'package:logging/logging.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 
 const String dbRootDBName = 'LucidReality';
@@ -52,11 +53,11 @@ class LucidUiFirebaseRealtimeDBManager {
   }
 
   Future<void> updateEntity<T extends FirebaseRealtimeDBEntity>(T entity, String reference) async {
-    return _lucidDatabase.child('$reference/$userId').update(entity.getValues());
+    return _lucidDatabase.child('$reference/$userId').update(entity.toJson());
   }
 
   Future<void> setEntity<T extends FirebaseRealtimeDBEntity>(T entity, String reference) async {
-    return _lucidDatabase.child(reference).set(entity.getValues());
+    return _lucidDatabase.child(reference).set(entity.toJson());
   }
 
   Future<T?> getEntity<T extends FirebaseRealtimeDBEntity>(T entity, String reference) async {
@@ -65,6 +66,19 @@ class LucidUiFirebaseRealtimeDBManager {
       Map<String, dynamic> snapshotValue = snapshot.toMap();
       entity.setValues(snapshotValue);
       return entity;
+    } else {
+      return null;
+    }
+  }
+
+  Future<T?> getEntityAs<T extends FirebaseRealtimeDBEntity>(
+    String reference,
+    T Function(Map<String, dynamic> data) fromMap,
+  ) async {
+    final snapshot = await _lucidDatabase.child(reference).get();
+    if (snapshot.exists) {
+      Map<String, dynamic> snapshotValue = snapshot.toMap();
+      return fromMap(snapshotValue);
     } else {
       return null;
     }
@@ -83,6 +97,18 @@ class LucidUiFirebaseRealtimeDBManager {
 
   Future<void> addAutoIdEntity<T extends FirebaseRealtimeDBEntity>(
       T entity, String reference) async {
-    _lucidDatabase.child('$reference/$userId').push().set(entity.toJson());
+    final databaseReference = _lucidDatabase.child('$reference/$userId').push();
+    entity.entityId = databaseReference.key;
+    await databaseReference.set(entity.toJson());
+  }
+
+  Future<bool> deleteEntity(String reference) async {
+    _logger.log(Level.INFO, "Deleting At=>$reference");
+    return await _lucidDatabase.child(reference).remove().then((_) => true).catchError(
+      (error) {
+        _logger.log(Level.WARNING, error);
+        return false;
+      },
+    );
   }
 }
