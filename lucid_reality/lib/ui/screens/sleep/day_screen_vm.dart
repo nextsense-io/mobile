@@ -97,8 +97,14 @@ class DayScreenViewModel extends ViewModel {
       for (HealthDataPoint dataPoint in _healthDataPoints!) {
         if (dataPoint.unit == HealthDataUnit.MINUTE) {
           LucidSleepStage lucidSleepStage = getSleepStageFromHealthDataPoint(dataPoint);
+          Duration sleepStageDuration;
+          if (dataPoint.value is int) {
+            sleepStageDuration = Duration(minutes: int.parse(dataPoint.value.toString()));
+          } else {
+            sleepStageDuration = Duration(minutes: double.parse(dataPoint.value.toString()).round());
+          }
           sleepStageDurations[lucidSleepStage] = sleepStageDurations[lucidSleepStage]! +
-              Duration(minutes: int.parse(dataPoint.value.toString()));
+              sleepStageDuration;
           if (pieChartStages.contains(lucidSleepStage)) {
             if (_sleepStartTime == null || _sleepStartTime!.isAfter(dataPoint.dateFrom)) {
               _sleepStartTime = dataPoint.dateFrom;

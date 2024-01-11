@@ -46,7 +46,11 @@ class WeekScreenViewModel extends ViewModel {
   }
 
   Future _getSleepInfo() async {
+    _dailySleepStats = {};
+    _chartSleepStages.clear();
     _sleepStageAverages.clear();
+    _daySleepStages.clear();
+
     _healthDataPoints = await _healthConnectManager.getSleepSessionData(
         startDate: currentDate.subtract(Duration(days: 7)), days: 7);
     if (_healthDataPoints?.isEmpty ?? true) {
@@ -56,7 +60,6 @@ class WeekScreenViewModel extends ViewModel {
       Map<DateTime, List<HealthDataPoint>?> datedHealthDataPoints =
       SleepScreenViewModel.getDatedHealthData(_healthDataPoints!);
 
-      _dailySleepStats = {};
       for (DateTime sleepDay in datedHealthDataPoints.keys) {
         _dailySleepStats[sleepDay] = SleepScreenViewModel.getDaySleepStats(
             datedHealthDataPoints[sleepDay]!);
@@ -78,21 +81,32 @@ class WeekScreenViewModel extends ViewModel {
       }
 
       // Get sleep stages for each day for bar chart.
-      _daySleepStages.clear();
       for (DateTime dateTime in _dailySleepStats.keys) {
         if (_dailySleepStats[dateTime]!.resultType == SleepResultType.noData) {
           continue;
-        }
-        for (LucidSleepStage lucidSleepStage in LucidSleepStage.values) {
-          if (_daySleepStages[lucidSleepStage] == null) {
-            _daySleepStages[lucidSleepStage] = [];
+        } else if (_dailySleepStats[dateTime]!.resultType == SleepResultType.sleepTimeOnly) {
+          if (_daySleepStages[LucidSleepStage.sleeping] == null) {
+            _daySleepStages[LucidSleepStage.sleeping] = [];
           }
-          _daySleepStages[lucidSleepStage]!.add(DaySleepStage(
+          _daySleepStages[LucidSleepStage.sleeping]!.add(DaySleepStage(
               dayOfWeek: dateTime.dayOfWeek,
-              lucidSleepStage: lucidSleepStage.getLabel(),
-              durationMinutes: _dailySleepStats[dateTime]!.stageDurations[lucidSleepStage]!
+              lucidSleepStage: LucidSleepStage.sleeping.getLabel(),
+              durationMinutes: _dailySleepStats[dateTime]!.stageDurations[LucidSleepStage.sleeping]!
                   .inMinutes,
-              color: lucidSleepStage.getColor()));
+              color: LucidSleepStage.sleeping.getColor()));
+          continue;
+        } else {
+          for (LucidSleepStage lucidSleepStage in chartedStages) {
+            if (_daySleepStages[lucidSleepStage] == null) {
+              _daySleepStages[lucidSleepStage] = [];
+            }
+            _daySleepStages[lucidSleepStage]!.add(DaySleepStage(
+                dayOfWeek: dateTime.dayOfWeek,
+                lucidSleepStage: lucidSleepStage.getLabel(),
+                durationMinutes: _dailySleepStats[dateTime]!.stageDurations[lucidSleepStage]!
+                    .inMinutes,
+                color: lucidSleepStage.getColor()));
+          }
         }
       }
     }
