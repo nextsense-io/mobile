@@ -21,7 +21,7 @@ class DashboardScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = useRef(DashboardScreenViewModel());
-    final activeTab = useState(2);
+    final activeTab = useState(DashboardTab.pvt);
     useEffect(() {
       _pages.addAll([
         HomeScreen(
@@ -32,8 +32,8 @@ class DashboardScreen extends HookWidget {
         const LucidScreen(),
         SleepScreen()
       ]);
-      viewModel.value.changeTab = (tabIndex) {
-        activeTab.value = tabIndex;
+      viewModel.value.changeTab = (tab) {
+        activeTab.value = tab;
       };
       return null;
     }, []);
@@ -43,51 +43,61 @@ class DashboardScreen extends HookWidget {
       builder: (context, viewModel, child) {
         return SafeArea(
           child: Scaffold(
-            body: AppBody(child: _pages.elementAt(activeTab.value)),
+            body: AppBody(child: _pages.elementAt(activeTab.value.tabIndex)),
             bottomNavigationBar: BottomNavigationBar(
-              currentIndex: activeTab.value,
+              currentIndex: activeTab.value.tabIndex,
               showSelectedLabels: false,
               showUnselectedLabels: false,
               selectedItemColor: Colors.white,
               unselectedItemColor: NextSenseColors.royalBlue,
               type: BottomNavigationBarType.fixed,
               onTap: (index) {
-                activeTab.value = index;
+                activeTab.value = DashboardTab.getByTabIndex(index);
               },
               items: [
                 BottomNavigationBarItem(
                   label: "Home",
                   icon: Image(
                     image: Svg(imageBasePath.plus('home.svg')),
-                    color: activeTab.value == 0 ? Colors.white : NextSenseColors.royalBlue,
+                    color: activeTab.value == DashboardTab.home
+                        ? Colors.white
+                        : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
                   label: "Learn",
                   icon: Image(
                     image: Svg(imageBasePath.plus('learn.svg')),
-                    color: activeTab.value == 1 ? Colors.white : NextSenseColors.royalBlue,
+                    color: activeTab.value == DashboardTab.learn
+                        ? Colors.white
+                        : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
-                  label: "Mind",
+                  label: "PVT",
                   icon: Image(
                     image: Svg(imageBasePath.plus('brain_check.svg')),
-                    color: activeTab.value == 2 ? Colors.white : NextSenseColors.royalBlue,
+                    color: activeTab.value == DashboardTab.pvt
+                        ? Colors.white
+                        : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
                   label: "Lucid",
                   icon: Image(
                     image: Svg(imageBasePath.plus('lucid.svg')),
-                    color: activeTab.value == 3 ? Colors.white : NextSenseColors.royalBlue,
+                    color: activeTab.value == DashboardTab.lucid
+                        ? Colors.white
+                        : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
                   label: "Sleep",
                   icon: Image(
                     image: Svg(imageBasePath.plus('sleep.svg')),
-                    color: activeTab.value == 4 ? Colors.white : NextSenseColors.royalBlue,
+                    color: activeTab.value == DashboardTab.sleep
+                        ? Colors.white
+                        : NextSenseColors.royalBlue,
                   ),
                 ),
               ],
@@ -96,5 +106,21 @@ class DashboardScreen extends HookWidget {
         );
       },
     );
+  }
+}
+
+enum DashboardTab {
+  home(0),
+  learn(1),
+  pvt(2),
+  lucid(3),
+  sleep(4);
+
+  const DashboardTab(this.tabIndex);
+
+  final int tabIndex;
+
+  static DashboardTab getByTabIndex(int i) {
+    return DashboardTab.values.firstWhere((x) => x.tabIndex == i);
   }
 }

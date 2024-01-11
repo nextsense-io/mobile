@@ -6,7 +6,7 @@ import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/components/wait_widget.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:lucid_reality/ui/screens/home/home_container.dart';
-import 'package:lucid_reality/ui/screens/learn/Insight_learn.dart';
+import 'package:lucid_reality/ui/screens/learn/insight_learn.dart';
 import 'package:lucid_reality/ui/screens/lucid/lucid_screen_vm.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_settings.dart';
 import 'package:lucid_reality/ui/screens/sleep/day_screen_vm.dart';
