@@ -14,71 +14,90 @@ import 'package:stacked/stacked.dart';
 
 class DashboardScreen extends HookWidget {
   static const String id = 'dashboard_screen';
+  final _pages = <Widget>[];
 
   DashboardScreen({super.key});
 
-  final _pages = <Widget>[
-    const HomeScreen(),
-    const LearnScreen(),
-    const PsychomotorVigilanceTestListScreen(),
-    const LucidScreen(),
-    SleepScreen()
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final activeTab = useState(2);
+    final viewModel = useRef(DashboardScreenViewModel());
+    final activeTab = useState(DashboardTab.pvt);
+    useEffect(() {
+      _pages.addAll([
+        HomeScreen(
+          viewModel: viewModel.value,
+        ),
+        const LearnScreen(),
+        const PsychomotorVigilanceTestListScreen(),
+        const LucidScreen(),
+        SleepScreen()
+      ]);
+      viewModel.value.changeTab = (tab) {
+        activeTab.value = tab;
+      };
+      return null;
+    }, []);
     return ViewModelBuilder.reactive(
-      viewModelBuilder: () => DashboardScreenViewModel(),
+      viewModelBuilder: () => viewModel.value,
       onViewModelReady: (viewModel) => viewModel.init(),
       builder: (context, viewModel, child) {
         return SafeArea(
           child: Scaffold(
-            body: AppBody(child: _pages.elementAt(activeTab.value)),
+            body: AppBody(child: _pages.elementAt(activeTab.value.tabIndex)),
             bottomNavigationBar: BottomNavigationBar(
-              currentIndex: activeTab.value,
+              currentIndex: activeTab.value.tabIndex,
               showSelectedLabels: false,
               showUnselectedLabels: false,
               selectedItemColor: Colors.white,
               unselectedItemColor: NextSenseColors.royalBlue,
               type: BottomNavigationBarType.fixed,
               onTap: (index) {
-                activeTab.value = index;
+                activeTab.value = DashboardTab.getByTabIndex(index);
               },
               items: [
                 BottomNavigationBarItem(
                   label: "Home",
                   icon: Image(
                     image: Svg(imageBasePath.plus('home.svg')),
-                    color: activeTab.value == 0 ? Colors.white : NextSenseColors.royalBlue,
+                    color: activeTab.value == DashboardTab.home
+                        ? Colors.white
+                        : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
                   label: "Learn",
                   icon: Image(
                     image: Svg(imageBasePath.plus('learn.svg')),
-                    color: activeTab.value == 1 ? Colors.white : NextSenseColors.royalBlue,
+                    color: activeTab.value == DashboardTab.learn
+                        ? Colors.white
+                        : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
-                  label: "Mind",
+                  label: "PVT",
                   icon: Image(
                     image: Svg(imageBasePath.plus('brain_check.svg')),
-                    color: activeTab.value == 2 ? Colors.white : NextSenseColors.royalBlue,
+                    color: activeTab.value == DashboardTab.pvt
+                        ? Colors.white
+                        : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
                   label: "Lucid",
                   icon: Image(
                     image: Svg(imageBasePath.plus('lucid.svg')),
-                    color: activeTab.value == 3 ? Colors.white : NextSenseColors.royalBlue,
+                    color: activeTab.value == DashboardTab.lucid
+                        ? Colors.white
+                        : NextSenseColors.royalBlue,
                   ),
                 ),
                 BottomNavigationBarItem(
                   label: "Sleep",
                   icon: Image(
                     image: Svg(imageBasePath.plus('sleep.svg')),
-                    color: activeTab.value == 4 ? Colors.white : NextSenseColors.royalBlue,
+                    color: activeTab.value == DashboardTab.sleep
+                        ? Colors.white
+                        : NextSenseColors.royalBlue,
                   ),
                 ),
               ],
@@ -87,5 +106,21 @@ class DashboardScreen extends HookWidget {
         );
       },
     );
+  }
+}
+
+enum DashboardTab {
+  home(0),
+  learn(1),
+  pvt(2),
+  lucid(3),
+  sleep(4);
+
+  const DashboardTab(this.tabIndex);
+
+  final int tabIndex;
+
+  static DashboardTab getByTabIndex(int i) {
+    return DashboardTab.values.firstWhere((x) => x.tabIndex == i);
   }
 }
