@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_common/managers/auth/auth_method.dart';
 import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/managers/auth/email_auth_manager.dart';
@@ -42,6 +42,8 @@ class AuthManager {
 
   String? get authUid => _firebaseAuth.currentUser?.uid;
 
+  Stream<User?> get firebaseUser => Stream.value(_firebaseAuth.currentUser);
+
   AuthManager() {
     for (AuthMethod authMethod in [AuthMethod.email_password, AuthMethod.google_auth]) {
       switch (authMethod) {
@@ -81,7 +83,6 @@ class AuthManager {
   Future<bool> ensureUserLoaded() async {
     _logger.log(Level.INFO, 'ensure user loaded');
     if (_user != null) {
-      firebaseRealTimeDb.setUserId(authUid!);
       // User already initialized
       return true;
     }
@@ -106,7 +107,6 @@ class AuthManager {
       _user = await _loadUser(authUid: authUid);
       if (_user != null) {
         _username = username;
-        firebaseRealTimeDb.setUserId(authUid);
         return true;
       }
     }
@@ -140,7 +140,7 @@ class AuthManager {
       return AuthenticationResult.user_fetch_failed;
     }
     _username = email;
-    firebaseRealTimeDb.setUserId(authUid);
+    syncUserIdWithDatabase(authUid);
     return AuthenticationResult.success;
   }
 
@@ -165,5 +165,9 @@ class AuthManager {
     user.setEmail(email);
     await firebaseRealTimeDb.setEntity(user, UserEntity.table.where(authUid));
     return user;
+  }
+
+  void syncUserIdWithDatabase(String userId) {
+    firebaseRealTimeDb.setUserId(userId);
   }
 }

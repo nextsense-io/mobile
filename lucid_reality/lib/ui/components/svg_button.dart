@@ -15,7 +15,7 @@ class SvgButton extends StatelessWidget {
     required this.onPressed,
     this.size,
     this.padding = EdgeInsets.zero,
-    this.showBackground = false
+    this.showBackground = false,
   });
 
   @override
@@ -24,12 +24,14 @@ class SvgButton extends StatelessWidget {
       onTap: onPressed,
       child: Container(
         padding: padding,
-        decoration: this.showBackground ? BoxDecoration(
-          image: DecorationImage(
-            image: Svg(imageBasePath.plus('btn_background.svg')),
-            fit: BoxFit.fill,
-          ),
-        ) : null,
+        decoration: this.showBackground
+            ? BoxDecoration(
+                image: DecorationImage(
+                  image: Svg(imageBasePath.plus('btn_background.svg')),
+                  fit: BoxFit.fill,
+                ),
+              )
+            : null,
         child: Image(
           image: Svg(imageBasePath.plus(imageName)),
           height: size?.height,

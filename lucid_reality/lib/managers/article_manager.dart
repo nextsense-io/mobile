@@ -1,7 +1,43 @@
 import 'package:lucid_reality/domain/article.dart';
+import 'package:lucid_reality/ui/nextsense_colors.dart';
 
 class ArticleManager {
   final List<Article> articles = List.empty(growable: true);
+
+  List<InsightLearnItem> getInsightLearnItems() {
+    return [
+      InsightLearnItem(
+        'Non-sleep deep rest',
+        'ic_rest.svg',
+        NextSenseColors.coral,
+        Article(
+          'Non-sleep deep rest',
+          _buildNonSleepDeepRestDescription(),
+          'ic_learn_3.png',
+        ),
+      ),
+      InsightLearnItem(
+        'Tips for better sleep',
+        'ic_tips.svg',
+        NextSenseColors.royalPurple,
+        Article(
+          'Adjust your mindset and get better sleep',
+          _buildTipsForBetterSleepDescription(),
+          'ic_learn_1.png',
+        ),
+      ),
+      InsightLearnItem(
+        'Top napping questions',
+        'ic_question_mark.svg',
+        NextSenseColors.skyBlue,
+        Article(
+          'Top Napping FAQs',
+          _buildTopNappingQuestionsDescription(),
+          'ic_learn_4.png',
+        ),
+      ),
+    ];
+  }
 
   Future prepareArticles() async {
     articles.add(
