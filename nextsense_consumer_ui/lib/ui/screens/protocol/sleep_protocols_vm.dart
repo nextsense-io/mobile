@@ -5,11 +5,12 @@ import 'package:nextsense_consumer_ui/managers/sleep_staging_manager.dart';
 import 'package:nextsense_consumer_ui/ui/components/sleep_pie_chart.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen_vm.dart';
 
-class NapProtocolScreenViewModel extends ProtocolScreenViewModel {
-  NapProtocolScreenViewModel(super.protocol);
+class SleepProtocolsViewModel extends ProtocolScreenViewModel {
 
   final SleepStagingManager _sleepStagingManager = getIt<SleepStagingManager>();
-  final _logger = Logger('NapProtocolScreenViewModel');
+  final _logger = Logger('SleepProtocolScreenViewModel');
+
+  SleepProtocolsViewModel(protocol) : super(protocol);
 
   @override
   Future<bool> startSession() async {

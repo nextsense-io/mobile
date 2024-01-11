@@ -9,22 +9,23 @@ import 'package:nextsense_consumer_ui/ui/components/sleep_pie_chart.dart';
 import 'package:nextsense_consumer_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen_vm.dart';
+import 'package:nextsense_consumer_ui/ui/screens/protocol/sleep_protocol_screen_vm.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/sleep_protocols_vm.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
-class NapProtocolScreen extends ProtocolScreen {
+class SleepProtocolScreen extends ProtocolScreen {
 
-  static const String id = 'nap_protocol_screen';
+  static const String id = 'sleep_protocol_screen';
 
-  NapProtocolScreen(Protocol protocol, {super.key}) :
+  SleepProtocolScreen(Protocol protocol, {super.key}) :
         super(protocol);
 
   @override
   Widget notRunningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
     final SleepStagingManager sleepStagingManager = context.watch<SleepStagingManager>();
-    final SleepProtocolsViewModel napProtocolScreenViewModel =
-        viewModel as SleepProtocolsViewModel;
+    final SleepProtocolScreenViewModel sleepProtocolScreenViewModel =
+        viewModel as SleepProtocolScreenViewModel;
     var statusMsg = '';
     if (viewModel.isError) {
       statusMsg = getRecordingCancelledMessage(viewModel);
@@ -42,7 +43,7 @@ class NapProtocolScreen extends ProtocolScreen {
       } else if (sleepStagingManager.sleepStagingLabels.isNotEmpty) {
         statusMsg += "\n";
         for (SleepStage sleepStage in viewModel.getSleepStages()) {
-          statusMsg += "\n${sleepStage.stage}: ${sleepStage.percent}";
+          statusMsg += "\n${sleepStage.stage}: ${sleepStage.percent}%";
         }
         finishButtonText = 'Finish';
       }
@@ -69,8 +70,8 @@ class NapProtocolScreen extends ProtocolScreen {
               const Spacer(),
               if (sleepStagingManager.sleepStagingLabels.isNotEmpty)
                 SizedBox(height: 250,
-                    child: SleepPieChart.withData(napProtocolScreenViewModel.getSleepStages())),
-                const Spacer(),
+                    child: SleepPieChart.withData(sleepProtocolScreenViewModel.getSleepStages())),
+              const Spacer(),
               Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 const Spacer(),
                 SimpleButton(

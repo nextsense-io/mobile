@@ -57,6 +57,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.4.2"
+  assets_audio_player:
+    dependency: transitive
+    description:
+      name: assets_audio_player
+      sha256: "9a87062cf39be0730ba8bb31ed4d148ca4e892e0ae607113f346d3c9a8da5df0"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.1"
+  assets_audio_player_web:
+    dependency: transitive
+    description:
+      name: assets_audio_player_web
+      sha256: "24cf82e72c7e7f9292d67e1b52d7945a182d9695ce8f903f60e5c6b379cbcaac"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.1"
   async:
     dependency: transitive
     description:
@@ -660,10 +676,18 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.6-dev"
+  hand_signature:
+    dependency: transitive
+    description:
+      name: hand_signature
+      sha256: a76d56edd2b31bffb3998937be1c6b1eba98696f6e8d817381260c41da415ede
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.2"
   health:
     dependency: transitive
     description:
-      path: "../../flutter-plugins/packages/health"
+      path: "../../flutter-plugins-fork/packages/health"
       relative: true
     source: path
     version: "8.0.0"
@@ -990,6 +1014,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.7.3"
+  progressive_time_picker:
+    dependency: transitive
+    description:
+      name: progressive_time_picker
+      sha256: "20b736b64d75a1463eb03316d18abeac710be7a9f0b033b70dcf962e486bede2"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.9"
   protobuf:
     dependency: transitive
     description:
@@ -1031,6 +1063,70 @@ packages:
       url: "https://github.com/eric-nextsense/receive_intent"
     source: git
     version: "0.2.4"
+  record:
+    dependency: transitive
+    description:
+      name: record
+      sha256: "5c8e12c692a4800b33f5f8b6c821ea083b12bfdbd031b36ba9322c40a4eeecc9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.4"
+  record_android:
+    dependency: transitive
+    description:
+      name: record_android
+      sha256: "805ecaa232a671aff2ee9ec4730ef6addb97c548d2db6b1fbd5197f1d4f47a5a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4"
+  record_darwin:
+    dependency: transitive
+    description:
+      name: record_darwin
+      sha256: ee8cb1bb1712d7ce38140ecabe70e5c286c02f05296d66043bee865ace7eb1b9
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
+  record_linux:
+    dependency: transitive
+    description:
+      name: record_linux
+      sha256: "7d0e70cd51635128fe9d37d89bafd6011d7cbba9af8dc323079ae60f23546aef"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.1"
+  record_platform_interface:
+    dependency: transitive
+    description:
+      name: record_platform_interface
+      sha256: "3a4b56e94ecd2a0b2b43eb1fa6f94c5b8484334f5d38ef43959c4bf97fb374cf"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
+  record_web:
+    dependency: transitive
+    description:
+      name: record_web
+      sha256: "687c843fb58a70c2735618163cd7b7ffbf845e7e75e1022c91156fc4877a2717"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.4"
+  record_windows:
+    dependency: transitive
+    description:
+      name: record_windows
+      sha256: "39998b3ea7d8d28b04159d82220e6e5e32a7c357c6fb2794f5736beea272f6c3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
+  rxdart:
+    dependency: transitive
+    description:
+      name: rxdart
+      sha256: "0c7c0cedd93788d996e33041ffecda924cc54389199cde4e6a34b440f50044cb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.27.7"
   scidart:
     dependency: transitive
     description:
