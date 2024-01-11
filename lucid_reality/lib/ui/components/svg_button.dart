@@ -14,8 +14,8 @@ class SvgButton extends StatelessWidget {
     required this.imageName,
     required this.onPressed,
     this.size,
-    this.padding = EdgeInsets.zero
-    this.showBackground = false;
+    this.padding = EdgeInsets.zero,
+    this.showBackground = false
   });
 
   @override

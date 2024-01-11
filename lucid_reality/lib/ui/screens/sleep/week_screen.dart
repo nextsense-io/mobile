@@ -59,10 +59,10 @@ class WeekScreen extends HookWidget {
         children: [
           AppCard(Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
             SvgButton(
-              onTap: () {
+              onPressed: () {
                 viewModel.changeDay(-7);
               },
-              svgPath: imageBasePath.plus('backward_arrow.svg'),
+              imageName: 'backward_arrow.svg',
             ),
             Text(
               viewModel.weekDateRange,
@@ -70,10 +70,10 @@ class WeekScreen extends HookWidget {
             ),
             if (DateTime.now().dateNoTime.isAfter(viewModel.currentDate))
               SvgButton(
-                onTap: () {
+                onPressed: () {
                   viewModel.changeDay(7);
                 },
-                svgPath: imageBasePath.plus('forward_arrow.svg'),
+                imageName: 'forward_arrow.svg',
               )
             else
               SizedBox(width: 54),
@@ -140,7 +140,7 @@ class WeekScreen extends HookWidget {
                 decoration: BoxDecoration(
                   image: DecorationImage(
                     image: AssetImage(
-                      imageBasePath.plus("onboarding_bg.png"),
+                      imageBasePath.plus("app_background.png"),
                     ),
                     fit: BoxFit.cover,
                   ),
