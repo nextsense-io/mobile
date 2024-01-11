@@ -42,7 +42,7 @@ class NapProtocolScreen extends ProtocolScreen {
       } else if (sleepStagingManager.sleepStagingLabels.isNotEmpty) {
         statusMsg += "\n";
         for (SleepStage sleepStage in viewModel.getSleepStages()) {
-          statusMsg += "\n${sleepStage.stage}: ${sleepStage.percent}";
+          statusMsg += "\n${sleepStage.stage}: ${sleepStage.percent}%";
         }
         finishButtonText = 'Finish';
       }
