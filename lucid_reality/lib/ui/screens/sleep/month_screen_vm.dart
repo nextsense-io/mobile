@@ -65,7 +65,7 @@ class MonthScreenViewModel extends ViewModel {
           _sleepResultType = SleepResultType.sleepStaging;
         }
         if (_dailySleepStats[dateTime]!.resultType != SleepResultType.noData) {
-          _chartSleepStages[dateTime] = SleepScreenViewModel.getSleepStagesFromDayStats(
+          _chartSleepStages[dateTime] = SleepScreenViewModel.getChartSleepStagesFromDayStats(
               _dailySleepStats[dateTime]!);
         }
       }

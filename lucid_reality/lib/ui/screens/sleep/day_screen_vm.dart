@@ -24,7 +24,7 @@ class DayScreenViewModel extends ViewModel {
   bool? _healthAppAuthorized;
   List<HealthDataPoint>? _healthDataPoints;
   DateTime _currentDate = DateTime.now().dateNoTime;
-  SleepResultType _sleepResultType = SleepResultType.noData;
+  DaySleepStats? _daySleepStats;
   Duration _totalSleepTime = Duration.zero;
   DateTime? _sleepStartTime;
   DateTime? _sleepEndTime;
@@ -33,12 +33,15 @@ class DayScreenViewModel extends ViewModel {
   bool get healthAppInstalled => _healthAppInstalled ?? false;
   bool get healthAppAuthorized => _healthAppAuthorized ?? false;
   DateTime get currentDate => _currentDate;
-  SleepResultType get sleepResultType => _sleepResultType;
-  String get totalSleepTime => _totalSleepTime == Duration.zero ? "N/A" :
-      "${_totalSleepTime.inHours}h ${_totalSleepTime.inMinutes.remainder(60)}m";
-  String get sleepStartEndTime => _sleepStartTime == null ? "No sleep data" :
-      "${_sleepStartTime!.hmma} - ${_sleepEndTime!.hmma}";
-  List<ChartSleepStage> get chartSleepStages => _chartSleepStages;
+  SleepResultType get sleepResultType => _daySleepStats?.resultType ?? SleepResultType.noData;
+  String get totalSleepTime => _totalSleepTime == Duration.zero ? "N/A"
+      : "${_totalSleepTime.hhmm}";
+  String get sleepStartEndTime => _sleepStartTime == null ? "No sleep data"
+      : "${_sleepStartTime!.hmma} - ${_sleepEndTime!.hmma}";
+  String get sleepLatency => _daySleepStats?.sleepLatency == null ? "N/A"
+      : "${_daySleepStats!.sleepLatency!.hhmm}";
+  List<ChartSleepStage> get chartSleepStages => _chartSleepStages.where(
+          (element) => element.stage.compareTo(LucidSleepStage.sleeping.getLabel()) != 0).toList();
 
   void init() async {
     _healthAppInstalled = await _healthConnectManager.isAvailable();
@@ -62,76 +65,23 @@ class DayScreenViewModel extends ViewModel {
     notifyListeners();
   }
 
-  String formatSleepDuration(Duration duration) {
-    return "${duration.inHours}h ${duration.inMinutes.remainder(60)}m";
-  }
-
   Future _getSleepInfo() async {
     _healthDataPoints = await _healthConnectManager.getSleepSessionData(
         startDate: currentDate, days: 1);
     _chartSleepStages.clear();
-    if (_healthDataPoints?.isEmpty ?? true) {
-      _sleepResultType = SleepResultType.noData;
-      _totalSleepTime = Duration.zero;
-      _sleepStartTime = null;
-      _sleepEndTime = null;
-    } else if (_healthDataPoints!.length == 1 && _healthDataPoints![0].type ==
-        HealthDataType.SLEEP_SESSION && _healthDataPoints![0].unit == HealthDataUnit.MINUTE) {
-      _sleepResultType = SleepResultType.sleepTimeOnly;
-      _totalSleepTime = Duration(minutes: int.parse(_healthDataPoints![0].value.toString()));
-      _sleepStartTime = _healthDataPoints![0].dateFrom;
-      _sleepEndTime = _healthDataPoints![0].dateTo;
-      _chartSleepStages = [
-        ChartSleepStage(LucidSleepStage.sleeping.getLabel(), 100, _totalSleepTime,
-            LucidSleepStage.sleeping.getColor())];
-    } else {
-      _sleepResultType = SleepResultType.sleepStaging;
+    _totalSleepTime = Duration.zero;
+    _sleepStartTime = null;
+    _sleepEndTime = null;
+    _daySleepStats = SleepScreenViewModel.getDaySleepStats(_healthDataPoints!);
 
-      // Get total duration for each sleep stage in that day.
-      Map<LucidSleepStage, Duration> sleepStageDurations = {};
-      for (LucidSleepStage lucidSleepStage in LucidSleepStage.values) {
-        sleepStageDurations[lucidSleepStage] = Duration.zero;
-      }
-      _sleepStartTime = null;
-      _sleepEndTime = null;
-      for (HealthDataPoint dataPoint in _healthDataPoints!) {
-        if (dataPoint.unit == HealthDataUnit.MINUTE) {
-          LucidSleepStage lucidSleepStage = getSleepStageFromHealthDataPoint(dataPoint);
-          Duration sleepStageDuration;
-          if (dataPoint.value is int) {
-            sleepStageDuration = Duration(minutes: int.parse(dataPoint.value.toString()));
-          } else {
-            sleepStageDuration = Duration(minutes: double.parse(dataPoint.value.toString()).round());
-          }
-          sleepStageDurations[lucidSleepStage] = sleepStageDurations[lucidSleepStage]! +
-              sleepStageDuration;
-          if (pieChartStages.contains(lucidSleepStage)) {
-            if (_sleepStartTime == null || _sleepStartTime!.isAfter(dataPoint.dateFrom)) {
-              _sleepStartTime = dataPoint.dateFrom;
-            }
-            if (_sleepEndTime == null || _sleepEndTime!.isBefore(dataPoint.dateTo)) {
-              _sleepEndTime = dataPoint.dateTo;
-            }
-          }
-        } else {
-          _logger.log(Level.INFO, "Health data point ${dataPoint.type} unit is not minutes");
-        }
-      }
-
-      // Get total time for all sleep stages.
-      _totalSleepTime = Duration.zero;
-      for (LucidSleepStage lucidSleepStage in pieChartStages) {
-        _totalSleepTime += sleepStageDurations[lucidSleepStage]!;
-      }
-
-      // Get sleep stages for pie chart and details.
-      for (LucidSleepStage lucidSleepStage in pieChartStages) {
-        _chartSleepStages.add(ChartSleepStage(lucidSleepStage.getLabel(),
-            (sleepStageDurations[lucidSleepStage]!.inMinutes /
-            _totalSleepTime.inMinutes * 100).round(),
-            sleepStageDurations[lucidSleepStage]!, lucidSleepStage.getColor()));
-      }
+    if (_daySleepStats!.resultType != SleepResultType.noData) {
+      _chartSleepStages = SleepScreenViewModel.getChartSleepStagesFromDayStats(_daySleepStats!);
     }
+
+    // Get total time for all sleep stages.
+    _totalSleepTime = _daySleepStats?.stageDurations[LucidSleepStage.sleeping] ?? Duration.zero;
+    _sleepStartTime = _daySleepStats?.startTime;
+    _sleepEndTime = _daySleepStats?.endTime;
   }
 
   void changeDay(int relativeDayChange) async {

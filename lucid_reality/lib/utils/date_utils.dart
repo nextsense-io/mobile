@@ -111,6 +111,20 @@ extension DateUtils on DateTime {
   }
 }
 
+extension DurationUtils on Duration {
+
+  String get hhmm {
+    try {
+      if (inHours == 0) {
+        return "${inMinutes.remainder(60)}m";
+      }
+      return "${inHours}h ${inMinutes.remainder(60)}m";
+    } catch (e) {
+      return "N/A";
+    }
+  }
+}
+
 extension TimeOfDayExtension on TimeOfDay {
   int compareTo(TimeOfDay other) {
     if (hour < other.hour) return -1;

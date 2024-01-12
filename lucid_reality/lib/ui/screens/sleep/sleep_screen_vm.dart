@@ -29,10 +29,11 @@ class DaySleepStats {
   final SleepResultType resultType;
   final DateTime? startTime;
   final DateTime? endTime;
+  final Duration? sleepLatency;
   final Map<LucidSleepStage, Duration> stageDurations;
 
   DaySleepStats({required this.resultType, required this.startTime, required this.endTime,
-    required this.stageDurations});
+    this.sleepLatency, required this.stageDurations});
 }
 
 class SleepScreenViewModel extends ViewModel {
@@ -87,8 +88,12 @@ class SleepScreenViewModel extends ViewModel {
     }
     DateTime? sleepStartTime;
     DateTime? sleepEndTime;
+    DateTime? firstSleepingTime;
+    Duration? sleepLatency;
 
     // Get total duration for each sleep stage in that sleep.
+    bool firstSleepStageReached = false;
+    dataPoints.sort((a, b) => a.dateFrom.compareTo(b.dateFrom));
     for (HealthDataPoint dataPoint in dataPoints) {
       if (dataPoint.unit == HealthDataUnit.MINUTE) {
         LucidSleepStage lucidSleepStage = getSleepStageFromHealthDataPoint(dataPoint);
@@ -106,6 +111,10 @@ class SleepScreenViewModel extends ViewModel {
           }
           if (sleepEndTime == null || sleepEndTime.isBefore(dataPoint.dateTo)) {
             sleepEndTime = dataPoint.dateTo;
+          }
+          if (!firstSleepStageReached && lucidSleepStage != LucidSleepStage.awake) {
+            firstSleepStageReached = true;
+            firstSleepingTime = dataPoint.dateFrom;
           }
         }
       } else {
@@ -125,8 +134,10 @@ class SleepScreenViewModel extends ViewModel {
       if (sleepStageDurations[LucidSleepStage.sleeping] != Duration.zero) {
         sleepResultType = SleepResultType.sleepTimeOnly;
       }
-    } else if (sleepStageDurations[LucidSleepStage.sleeping] == Duration.zero) {
-      // In case total sleep time is not present in the data.
+    }
+
+    // In case total sleep time is not present in the data.
+    if (sleepStageDurations[LucidSleepStage.sleeping] == Duration.zero) {
       Duration totalSleepTime = Duration.zero;
       for (LucidSleepStage lucidSleepStage in chartedStages) {
         totalSleepTime += sleepStageDurations[lucidSleepStage]!;
@@ -134,14 +145,18 @@ class SleepScreenViewModel extends ViewModel {
       sleepStageDurations[LucidSleepStage.sleeping] = totalSleepTime;
     }
 
+    // Calculate sleep latency.
+    if (firstSleepingTime != null) {
+      sleepLatency = firstSleepingTime.difference(sleepStartTime!);
+    }
     return DaySleepStats(resultType: sleepResultType, startTime: sleepStartTime,
-        endTime: sleepEndTime, stageDurations: sleepStageDurations);
+        endTime: sleepEndTime, sleepLatency: sleepLatency, stageDurations: sleepStageDurations);
   }
 
-  static List<ChartSleepStage> getSleepStagesFromDayStats(DaySleepStats sleepStats) {
+  static List<ChartSleepStage> getChartSleepStagesFromDayStats(DaySleepStats sleepStats) {
     List<ChartSleepStage> chartSleepStages = [];
     for (LucidSleepStage lucidSleepStage in LucidSleepStage.values) {
-      Duration totalSleepTime = sleepStats.stageDurations[lucidSleepStage]!;
+      Duration totalSleepTime = sleepStats.stageDurations[LucidSleepStage.sleeping]!;
       int percentage = 0;
       if (totalSleepTime != Duration.zero) {
         percentage = (sleepStats.stageDurations[lucidSleepStage]!.inMinutes /

@@ -19,6 +19,7 @@ class WeekScreenViewModel extends ViewModel {
   Map<DateTime, List<ChartSleepStage>> _chartSleepStages = {};
   Map<LucidSleepStage, Duration> _sleepStageAverages = {};
   Map<LucidSleepStage, List<DaySleepStage>> _daySleepStages = {};
+  Duration? _averageSleepLatency;
 
   DateTime get currentDate => _currentDate;
   String get weekDateRange  {
@@ -31,8 +32,8 @@ class WeekScreenViewModel extends ViewModel {
   Map<LucidSleepStage, Duration> get sleepStageAverages => _sleepStageAverages;
   Map<DateTime, List<ChartSleepStage>> get chartSleepStages => _chartSleepStages;
   List<DaySleepStage> get daySleepStages => _daySleepStages.values.expand((x) => x).toList();
-
-  Duration get averageSleepTime => _sleepStageAverages[LucidSleepStage.sleeping] ?? Duration.zero;
+  Duration? get averageSleepTime => _sleepStageAverages[LucidSleepStage.sleeping];
+  Duration? get averageSleepLatency => _averageSleepLatency;
 
   void init() async {
     await _healthConnectManager.authorize();
@@ -70,8 +71,17 @@ class WeekScreenViewModel extends ViewModel {
           _sleepResultType = SleepResultType.sleepStaging;
         }
         if (_dailySleepStats[dateTime]!.resultType != SleepResultType.noData) {
-          _chartSleepStages[dateTime] = SleepScreenViewModel.getSleepStagesFromDayStats(
+          _chartSleepStages[dateTime] = SleepScreenViewModel.getChartSleepStagesFromDayStats(
               _dailySleepStats[dateTime]!);
+        }
+        int totalSleepLatency = 0;
+        int sleepLatencyDays = 0;
+        if (_dailySleepStats[dateTime]!.sleepLatency != null) {
+          totalSleepLatency += _dailySleepStats[dateTime]!.sleepLatency!.inMinutes;
+          sleepLatencyDays++;
+        }
+        if (sleepLatencyDays != 0) {
+          _averageSleepLatency = Duration(minutes: totalSleepLatency ~/ sleepLatencyDays);
         }
       }
 

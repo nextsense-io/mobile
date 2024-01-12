@@ -60,7 +60,9 @@ dependencies:
   health:
     path: ../../flutter-plugins/packages/health
   iirjdart: ^0.1.0
-  installed_apps:  ^1.4.0
+  installed_apps:  # ^1.4.0
+    git:
+      url: https://github.com/eric-nextsense/installed_apps
   introduction_screen: # ^3.0.2
     path: ../../introduction_screen
   quiver: ^3.2.1
