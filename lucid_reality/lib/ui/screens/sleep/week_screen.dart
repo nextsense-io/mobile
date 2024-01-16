@@ -68,7 +68,7 @@ class WeekScreen extends HookWidget {
               viewModel.weekDateRange,
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            if (DateTime.now().dateNoTime.isAfter(viewModel.currentDate))
+            if (DateTime.now().dateNoTime.isAfter(viewModel.weekEndDate))
               SvgButton(
                 onPressed: () {
                   viewModel.changeDay(7);
@@ -79,7 +79,7 @@ class WeekScreen extends HookWidget {
               SizedBox(width: 54),
           ])),
           SizedBox(height: 8),
-          SingleChildScrollView(
+          Expanded(child: SingleChildScrollView(
               scrollDirection: Axis.vertical,
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -149,7 +149,7 @@ class WeekScreen extends HookWidget {
                                             fontWeight: FontWeight.bold))),
                               ])))
                         ])
-                      ]))
+                      ])))
         ]);
   }
 

@@ -91,8 +91,6 @@ class HealthConnectManager {
     _sleepSessions = healthData;
     if (healthData.isEmpty) {
       _logger.log(Level.INFO, "No health data points found");
-    } else {
-      _logger.log(Level.INFO, "Sleep data point value: ${healthData[0].value}");
     }
     return _sleepSessions;
   }

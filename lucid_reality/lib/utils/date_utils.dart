@@ -138,3 +138,8 @@ extension TimeOfDayExtension on TimeOfDay {
 extension IntToDate on int {
   DateTime toDate() => DateTime.fromMillisecondsSinceEpoch(this);
 }
+
+DateTime findFirstDateOfTheWeek(DateTime dateTime) {
+  int currentDay = dateTime.weekday;
+  return dateTime.subtract(Duration(days: currentDay));
+}
