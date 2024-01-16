@@ -8,12 +8,14 @@ class RealityCheckBottomBar extends StatelessWidget {
   final VoidCallback? onPressed;
   final ButtonType buttonType;
   final bool progressBarVisibility;
+  final double progressBarPercentage;
 
   const RealityCheckBottomBar(
       {super.key,
       required this.onPressed,
       this.buttonType = ButtonType.forwardArrow,
-      this.progressBarVisibility = true});
+      this.progressBarVisibility = true,
+      this.progressBarPercentage = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +28,7 @@ class RealityCheckBottomBar extends StatelessWidget {
           flex: 6,
           child: progressBarVisibility
               ? LinearProgressIndicator(
-                  value: 0.2,
+                  value: progressBarPercentage,
                   backgroundColor: NextSenseColors.royalBlue,
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 )

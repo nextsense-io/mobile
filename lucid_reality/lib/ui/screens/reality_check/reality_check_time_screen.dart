@@ -27,7 +27,7 @@ class RealityCheckTimeScreen extends HookWidget {
         ? ModalRoute.of(context)?.settings.arguments as bool
         : false);
     final numberOfReminders = useState(4);
-    final startTime = useRef(DateTime.now().copyWith(hour: 0, minute: 0, second: 0));
+    final startTime = useRef(DateTime.now().copyWith(hour: 9, minute: 0, second: 0));
     final endTime = useRef(startTime.value.add(const Duration(hours: 8)));
     return ViewModelBuilder.reactive(
       viewModelBuilder: () => RealityCheckTimeScreenViewModel(),
@@ -41,9 +41,14 @@ class RealityCheckTimeScreen extends HookWidget {
           endTime.value = DateTime.fromMillisecondsSinceEpoch(
               viewModel.lucidManager.realityCheck.getEndTime() ?? 0);
         }
-        // if (viewModel.lucidManager.realityCheck.getNumberOfReminders() > 0) {
-        //   numberOfReminders.value = viewModel.lucidManager.realityCheck.getNumberOfReminders();
-        // }
+        Future.delayed(
+          Duration(milliseconds: 500),
+          () {
+            if (viewModel.lucidManager.realityCheck.getNumberOfReminders() > 0) {
+              numberOfReminders.value = viewModel.lucidManager.realityCheck.getNumberOfReminders();
+            }
+          },
+        );
       },
       builder: (context, viewModel, child) {
         return SafeArea(
@@ -129,6 +134,7 @@ class RealityCheckTimeScreen extends HookWidget {
                     ),
                     const Spacer(flex: 1),
                     RealityCheckBottomBar(
+                      progressBarPercentage: 0.4,
                       progressBarVisibility: !isStartForResult,
                       onPressed: () async {
                         final isNotificationAllow = await notificationPermission(context);

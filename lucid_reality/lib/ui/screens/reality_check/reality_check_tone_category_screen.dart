@@ -75,6 +75,7 @@ class RealityCheckToneCategoryScreen extends HookWidget {
                       ),
                     ),
                     RealityCheckBottomBar(
+                      progressBarPercentage: 0.60,
                       progressBarVisibility: !isStartForResult,
                       onPressed: () async {
                         await viewModel.lucidManager.saveRealityTest(viewModel.toneCategories
@@ -98,6 +99,9 @@ class RealityCheckToneCategoryScreen extends HookWidget {
   }
 
   Widget roundItem(BuildContext context, ToneCategory toneCategory) {
+    final bool isStartForResult = (ModalRoute.of(context)?.settings.arguments is bool
+        ? ModalRoute.of(context)?.settings.arguments as bool
+        : false);
     final viewModel = context.watch<RealityCheckToneCategoryViewModel>();
     return Container(
       height: 186,
@@ -128,7 +132,7 @@ class RealityCheckToneCategoryScreen extends HookWidget {
           FittedBox(
             child: InkWell(
               onTap: () {
-                viewModel.navigateToToneSelectionScreen(toneCategory);
+                viewModel.navigateToToneSelectionScreen(toneCategory, isStartForResult);
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),

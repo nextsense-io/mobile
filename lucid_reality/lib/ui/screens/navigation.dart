@@ -270,7 +270,10 @@ class Navigation {
           settings: settings,
         );
       case RealityCheckToneSelectionScreen.id:
-        return MaterialPageRoute(builder: (context) => const RealityCheckToneSelectionScreen());
+        return MaterialPageRoute(
+          builder: (context) => const RealityCheckToneSelectionScreen(),
+          settings: settings,
+        );
       case RealityCheckCompletionScreen.id:
         return MaterialPageRoute(builder: (context) => const RealityCheckCompletionScreen());
       case DreamJournalScreen.id:
