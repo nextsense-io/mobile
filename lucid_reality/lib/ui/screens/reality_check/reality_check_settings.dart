@@ -176,7 +176,7 @@ class RealityCheckSettingsWidget extends StatelessWidget {
       onTap: onPressed,
       child: AppCard(
         SizedBox(
-          height: 56,
+          height: 64,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -188,9 +188,13 @@ class RealityCheckSettingsWidget extends StatelessWidget {
                     ?.copyWith(color: titleColor),
               ),
               const SizedBox(height: 16),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodySmallWithFontSize10,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  maxLines: 2,
+                  description,
+                  style: Theme.of(context).textTheme.bodySmallWithFontSize10,
+                ),
               ),
             ],
           ),

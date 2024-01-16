@@ -54,53 +54,35 @@ class DashboardScreen extends HookWidget {
               onTap: (index) {
                 activeTab.value = DashboardTab.getByTabIndex(index);
               },
-              items: [
-                BottomNavigationBarItem(
-                  label: "Home",
-                  icon: Image(
-                    image: Svg(imageBasePath.plus('home.svg')),
-                    color: activeTab.value == DashboardTab.home
-                        ? Colors.white
-                        : NextSenseColors.royalBlue,
-                  ),
-                ),
-                BottomNavigationBarItem(
-                  label: "Learn",
-                  icon: Image(
-                    image: Svg(imageBasePath.plus('learn.svg')),
-                    color: activeTab.value == DashboardTab.learn
-                        ? Colors.white
-                        : NextSenseColors.royalBlue,
-                  ),
-                ),
-                BottomNavigationBarItem(
-                  label: "PVT",
-                  icon: Image(
-                    image: Svg(imageBasePath.plus('brain_check.svg')),
-                    color: activeTab.value == DashboardTab.pvt
-                        ? Colors.white
-                        : NextSenseColors.royalBlue,
-                  ),
-                ),
-                BottomNavigationBarItem(
-                  label: "Lucid",
-                  icon: Image(
-                    image: Svg(imageBasePath.plus('lucid.svg')),
-                    color: activeTab.value == DashboardTab.lucid
-                        ? Colors.white
-                        : NextSenseColors.royalBlue,
-                  ),
-                ),
-                BottomNavigationBarItem(
-                  label: "Sleep",
-                  icon: Image(
-                    image: Svg(imageBasePath.plus('sleep.svg')),
-                    color: activeTab.value == DashboardTab.sleep
-                        ? Colors.white
-                        : NextSenseColors.royalBlue,
-                  ),
-                ),
-              ],
+              items: DashboardTab.values
+                  .map(
+                    (item) => BottomNavigationBarItem(
+                      label: item.label,
+                      icon: Image(
+                        image: Svg(
+                          imageBasePath.plus(item.icon),
+                        ),
+                        color: item.getSelectionColor(activeTab.value),
+                      ),
+                      activeIcon: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Image(
+                            image: Svg(
+                              imageBasePath.plus('ic_dashboard_tab_selected.svg'),
+                            ),
+                          ),
+                          Image(
+                            image: Svg(
+                              imageBasePath.plus(item.icon),
+                            ),
+                            color: item.getSelectionColor(activeTab.value),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         );
@@ -110,17 +92,24 @@ class DashboardScreen extends HookWidget {
 }
 
 enum DashboardTab {
-  home(0),
-  learn(1),
-  pvt(2),
-  lucid(3),
-  sleep(4);
+  home(0, 'Home', 'home.svg'),
+  learn(1, 'Learn', 'learn.svg'),
+  pvt(2, 'PVT', 'brain_check.svg'),
+  lucid(3, 'Lucid', 'lucid.svg'),
+  sleep(4, 'Sleep', 'sleep.svg');
 
-  const DashboardTab(this.tabIndex);
+  const DashboardTab(this.tabIndex, this.label, this.icon);
 
   final int tabIndex;
+  final String label;
+  final String icon;
 
   static DashboardTab getByTabIndex(int i) {
     return DashboardTab.values.firstWhere((x) => x.tabIndex == i);
   }
+}
+
+extension DashboardTabSelection on DashboardTab {
+  Color getSelectionColor(DashboardTab dashboardTab) =>
+      dashboardTab == this ? NextSenseColors.royalBlue : NextSenseColors.white;
 }

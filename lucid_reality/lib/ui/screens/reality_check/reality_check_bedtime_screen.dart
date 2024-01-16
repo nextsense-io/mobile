@@ -84,6 +84,7 @@ class RealityCheckBedtimeScreen extends HookWidget {
                     ),
                     const Spacer(flex: 1),
                     RealityCheckBottomBar(
+                      progressBarPercentage: 1.0,
                       progressBarVisibility: !isStartForResult,
                       onPressed: () async {
                         final isNotificationAllow = await notificationPermission(context);

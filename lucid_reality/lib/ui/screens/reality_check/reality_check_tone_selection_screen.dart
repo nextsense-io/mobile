@@ -7,6 +7,7 @@ import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
 import 'package:lucid_reality/ui/components/reality_check_bottom_bar.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
+import 'package:lucid_reality/ui/screens/reality_check/reality_check_tone_category_vm.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:stacked/stacked.dart';
 
@@ -20,9 +21,23 @@ class RealityCheckToneSelectionScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final selectedIndex = useState(0);
+    final isStartForResult = useState(false);
     return ViewModelBuilder.reactive(
       viewModelBuilder: () => RealityCheckToneSelectionViewModel(),
-      onViewModelReady: (viewModel) => viewModel.init(),
+      onViewModelReady: (viewModel) {
+        viewModel.init();
+        Future.delayed(Duration(milliseconds: 100), () {
+          var dataSet = ModalRoute.of(context)?.settings.arguments;
+          if (dataSet is Map) {
+            var totemSound = dataSet[totemSoundKey];
+            var index = viewModel.toneList.indexWhere((element) => element.tone == totemSound);
+            if (index != -1) {
+              selectedIndex.value = index;
+            }
+            isStartForResult.value = dataSet[isStartForResultKey];
+          }
+        });
+      },
       builder: (context, viewModel, child) {
         return SafeArea(
           child: Scaffold(
@@ -80,6 +95,8 @@ class RealityCheckToneSelectionScreen extends HookWidget {
                     ),
                     const SizedBox(height: 30),
                     RealityCheckBottomBar(
+                      progressBarVisibility: !isStartForResult.value,
+                      progressBarPercentage: 0.80,
                       onPressed: () {
                         viewModel.goBack();
                       },
