@@ -2,13 +2,14 @@ import 'package:community_charts_flutter/community_charts_flutter.dart' as chart
 import 'package:flutter/material.dart';
 
 class DaySleepStage {
+  final int dayOfWeekIndex;
   final String dayOfWeek;
   final String lucidSleepStage;
   final int durationMinutes;
   final Color color;
 
-  DaySleepStage({required this.dayOfWeek, required this.lucidSleepStage,
-    required this.durationMinutes, required this.color});
+  DaySleepStage({required this.dayOfWeekIndex, required this.dayOfWeek,
+    required this.lucidSleepStage, required this.durationMinutes, required this.color});
 }
 
 class SleepBarChart extends StatelessWidget {
@@ -31,7 +32,7 @@ class SleepBarChart extends StatelessWidget {
       animate: animate,
       // Configure a stroke width to enable borders on the bars.
       defaultRenderer: new charts.BarRendererConfig(
-          groupingType: charts.BarGroupingType.stacked, strokeWidthPx: 2.0, maxBarWidthPx: 40,
+          groupingType: charts.BarGroupingType.stacked, strokeWidthPx: 2.0, maxBarWidthPx: 16,
           cornerStrategy: const charts.ConstCornerStrategy(50)),
     );
   }

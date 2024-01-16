@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/components/solid_circle.dart';
@@ -16,13 +17,14 @@ class DayScreen extends HookWidget {
 
   Widget _body(BuildContext context, DayScreenViewModel viewModel) {
     List<AppCard> sleepStageCards = [];
-    for (var sleepStage in viewModel.chartSleepStages) {
+    for (var sleepStage in viewModel.chartSleepStages.where(
+            (element) => element.stage.compareTo(LucidSleepStage.sleeping.getLabel()) != 0)) {
       sleepStageCards.add(AppCard(Row(mainAxisAlignment: MainAxisAlignment.start, children: [
         SolidCircle(color: sleepStage.color, size: 16),
         SizedBox(width: 8),
         Text(sleepStage.stage),
         Spacer(),
-        Text(textAlign: TextAlign.right, "${viewModel.formatSleepDuration(sleepStage.duration)}"),
+        Text(textAlign: TextAlign.right, "${sleepStage.duration.hhmm}"),
       ])));
     }
     return Column(
@@ -73,7 +75,8 @@ class DayScreen extends HookWidget {
                                   child: Text("${viewModel.sleepStartEndTime}")),
                               Align(
                                   alignment: Alignment.topRight,
-                                  child: Text(textAlign: TextAlign.right, "Time to sleep\nN/A")),
+                                  child: Text(textAlign: TextAlign.right,
+                                      "Time to sleep\n${viewModel.sleepLatency}")),
                             ]))),
                         SizedBox(height: 16)
                       ] +
