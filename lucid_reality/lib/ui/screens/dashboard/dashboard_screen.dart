@@ -21,7 +21,7 @@ class DashboardScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = useRef(DashboardScreenViewModel());
-    final activeTab = useState(DashboardTab.pvt);
+    final activeTab = useState(DashboardTab.home);
     useEffect(() {
       _pages.addAll([
         HomeScreen(
