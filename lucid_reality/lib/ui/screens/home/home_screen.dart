@@ -81,11 +81,15 @@ class HomeScreen extends HookWidget {
                                   height: 250,
                                   child: SleepPieChart.withData(viewModel.chartSleepStages))),
                         Align(
-                            alignment: Alignment.center,
-                            child: Text("${viewModel.sleepStartEndTime}")),
+                          alignment: Alignment.center,
+                          child: Text(
+                            "${viewModel.sleepStartEndTime}",
+                            style: Theme.of(context).textTheme.bodyCaption,
+                          ),
+                        ),
                         Align(
                             alignment: Alignment.topRight,
-                            child: Text(textAlign: TextAlign.right, "Time to sleep\nN/A")),
+                            child: Text(textAlign: TextAlign.right, "Time to sleep\n${viewModel.sleepLatency}")),
                       ],
                     ),
                   ),
