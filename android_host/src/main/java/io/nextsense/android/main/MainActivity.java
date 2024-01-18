@@ -20,6 +20,7 @@ import io.flutter.embedding.android.FlutterFragmentActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
 
+import io.nextsense.android.ApplicationType;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.service.ForegroundService;
 
@@ -61,6 +62,8 @@ public class MainActivity extends AppCompatActivity {
   private ForegroundService nextSenseService;
   private boolean nextSenseServiceBound = false;
   private Intent initialIntent;
+  private ApplicationType applicationType;
+  private boolean started = false;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -82,35 +85,48 @@ public class MainActivity extends AppCompatActivity {
     editor.putString(FLUTTER_PREF_PREFIX + FLAVOR_PREF_KEY, BuildConfig.FLAVOR);
     editor.apply();
 
-    foregroundServiceIntent = new Intent(getApplicationContext(), ForegroundService.class);
-    foregroundServiceIntent.putExtra(ForegroundService.EXTRA_APPLICATION_TYPE,
-        ((NextSenseApplication) getApplication()).getApplicationType().name());
-    foregroundServiceIntent.putExtra(ForegroundService.EXTRA_UI_CLASS, MainActivity.class);
-    foregroundServiceIntent.putExtra(ForegroundService.EXTRA_ALLOW_DATA_VIA_CELLULAR,
-        sharedPref.getBoolean(FLUTTER_PREF_PREFIX + ALLOW_DATA_VIA_CELLULAR_KEY, false));
-    // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
-    getApplicationContext().startService(foregroundServiceIntent);
+    applicationType = ((NextSenseApplication) getApplication()).getApplicationType();
+    if (applicationType == ApplicationType.CONSUMER || applicationType == ApplicationType.MEDICAL) {
+      foregroundServiceIntent = new Intent(getApplicationContext(), ForegroundService.class);
+      foregroundServiceIntent.putExtra(ForegroundService.EXTRA_APPLICATION_TYPE,
+          applicationType.name());
+      foregroundServiceIntent.putExtra(ForegroundService.EXTRA_UI_CLASS, MainActivity.class);
+      foregroundServiceIntent.putExtra(ForegroundService.EXTRA_ALLOW_DATA_VIA_CELLULAR,
+          sharedPref.getBoolean(FLUTTER_PREF_PREFIX + ALLOW_DATA_VIA_CELLULAR_KEY, false));
+      // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
+      getApplicationContext().startService(foregroundServiceIntent);
+    } else if (!started) {
+      startFlutter(initialIntent);
+      initialIntent = null;
+    }
     RotatingFileLogger.get().logd(TAG, "started");
   }
 
   @Override
   protected void onStart() {
     super.onStart();
-    if (!nextSenseServiceBound) {
-      bindService(foregroundServiceIntent, nextSenseConnection, Context.BIND_IMPORTANT);
-    } else {
-      RotatingFileLogger.get().logi(TAG, "service bound. Flutter active: " +
-          nextSenseService.isFlutterActivityActive());
-      if (AUTOSTART_FLUTTER) {
-        if (nextSenseService.isFlutterActivityActive()) {
-          startFlutter(initialIntent);
-          initialIntent = null;
-        } else {
-          stopService();
-          finish();
+    if (applicationType == ApplicationType.CONSUMER || applicationType == ApplicationType.MEDICAL) {
+      if (!nextSenseServiceBound) {
+        bindService(foregroundServiceIntent, nextSenseConnection, Context.BIND_IMPORTANT);
+      } else {
+        RotatingFileLogger.get().logi(TAG, "service bound. Flutter active: " +
+            nextSenseService.isFlutterActivityActive());
+        if (AUTOSTART_FLUTTER) {
+          if (nextSenseService.isFlutterActivityActive()) {
+            startFlutter(initialIntent);
+            initialIntent = null;
+          } else {
+            stopService();
+            finish();
+          }
         }
       }
     }
+    if (applicationType == ApplicationType.LUCID_REALITY && started) {
+      started = false;
+      finish();
+    }
+    started = true;
   }
 
   @Override
@@ -162,8 +178,13 @@ public class MainActivity extends AppCompatActivity {
   @Override
   public void onBackPressed() {
     // Should add a confirmation prompt here in a non-test app.
-    stopService();
+    if (nextSenseServiceBound) {
+      stopService();
+    }
     super.onBackPressed();
+    if (applicationType == ApplicationType.LUCID_REALITY) {
+      finish();
+    }
   }
 
   @Override
