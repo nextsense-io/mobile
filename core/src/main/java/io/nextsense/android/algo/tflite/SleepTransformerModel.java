@@ -95,8 +95,9 @@ public class SleepTransformerModel extends BaseModel {
     // Filter the signal and resample to the model input frequency.
     double[] resampledData = Sampling.resample(preprocessingData, samplingRate, FILTER_ORDER,
         MODEL_INPUT_FREQUENCY);
-    resampledData = Filters.applyBandPass(resampledData, MODEL_INPUT_FREQUENCY, FILTER_ORDER,
-        MODEL_LOW_CUTOFF_FREQUENCY, MODEL_HIGH_CUTOFF_FREQUENCY);
+    // Redundant, can remove later after testing.
+    // resampledData = Filters.applyBandPass(resampledData, MODEL_INPUT_FREQUENCY, FILTER_ORDER,
+    //     MODEL_LOW_CUTOFF_FREQUENCY, MODEL_HIGH_CUTOFF_FREQUENCY);
 
     // The model need float input.
     float[] resampledDataFloat = new float[resampledData.length];
