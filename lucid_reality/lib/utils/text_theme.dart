@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucid_reality/ui/nextsense_colors.dart';
 
 extension LucidRealityTextTheme on TextTheme {
   TextStyle? get labelLargeWithFontWeight600 {
@@ -51,5 +52,9 @@ extension LucidRealityTextTheme on TextTheme {
 
   TextStyle? get titleMediumWithFontWeight500 {
     return titleMedium?.copyWith(fontWeight: FontWeight.w500);
+  }
+
+  TextStyle? get bodySmallWithTextColorRoyalBlue {
+    return bodySmall?.copyWith(color: NextSenseColors.royalBlue);
   }
 }

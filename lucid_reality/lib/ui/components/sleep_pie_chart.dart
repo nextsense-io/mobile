@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 class SleepPieChart extends StatelessWidget {
   final List<charts.Series<ChartSleepStage, Object>> seriesList;
   final bool animate;
+  final charts.LayoutConfig? layoutConfig;
+  final int arcWidth;
 
-  const SleepPieChart(this.seriesList, {super.key, required this.animate});
+  const SleepPieChart(this.seriesList,
+      {super.key, required this.animate, this.arcWidth = 15, this.layoutConfig});
 
   factory SleepPieChart.withData(List<ChartSleepStage> data) {
     return SleepPieChart(
@@ -14,14 +17,31 @@ class SleepPieChart extends StatelessWidget {
     );
   }
 
+  factory SleepPieChart.withDataAndChartConfig(
+      {required List<ChartSleepStage> data, required int arcWidth, required int margin}) {
+    return SleepPieChart(
+      _createData(data),
+      animate: false,
+      arcWidth: arcWidth,
+      layoutConfig: charts.LayoutConfig(
+        leftMarginSpec: charts.MarginSpec.fixedPixel(margin),
+        topMarginSpec: charts.MarginSpec.fixedPixel(margin),
+        rightMarginSpec: charts.MarginSpec.fixedPixel(margin),
+        bottomMarginSpec: charts.MarginSpec.fixedPixel(margin),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return charts.PieChart<Object>(seriesList,
-        animate: animate,
+    return charts.PieChart<Object>(
+      seriesList,
+      animate: animate,
+      layoutConfig: layoutConfig,
       defaultRenderer: charts.ArcRendererConfig<Object>(
-          arcWidth: 15,
-          // arcRendererDecorators: [charts.ArcLabelDecorator(
-          //     labelPosition: charts.ArcLabelPosition.outside,)]
+        arcWidth: arcWidth,
+        // arcRendererDecorators: [charts.ArcLabelDecorator(
+        //     labelPosition: charts.ArcLabelPosition.outside,)]
       ),
     );
   }
@@ -34,13 +54,13 @@ class SleepPieChart extends StatelessWidget {
         domainFn: (ChartSleepStage chartSleepStage, _) => chartSleepStage.stage,
         measureFn: (ChartSleepStage chartSleepStage, _) => chartSleepStage.percent,
         data: chartSleepStages,
-        colorFn: (ChartSleepStage chartSleepStage, __) => charts.ColorUtil.fromDartColor(
-            chartSleepStage.color),
+        colorFn: (ChartSleepStage chartSleepStage, __) =>
+            charts.ColorUtil.fromDartColor(chartSleepStage.color),
         labelAccessorFn: (ChartSleepStage chartSleepStage, _) => chartSleepStage.stage.toString(),
         outsideLabelStyleAccessorFn: (_, __) => const charts.TextStyleSpec(
-            fontSize: 16,
-            color: charts.MaterialPalette.white,
-            // fontFamily: 'MyFont'
+          fontSize: 16,
+          color: charts.MaterialPalette.white,
+          // fontFamily: 'MyFont'
         ),
       )
     ];
