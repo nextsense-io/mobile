@@ -100,7 +100,7 @@ class MonthScreen extends HookWidget {
                       children: [
                             AppCard(
                               CalendarCarousel(
-                                height: 300,
+                                height: 330,
                                 customDayBuilder: (
                                   isSelectable,
                                   index,
