@@ -82,20 +82,12 @@ extension DateUtils on DateTime {
 
   // Compare only day part of datetime, omitting hours, minutes etc.
   bool isSameDay(DateTime other) {
-    return year == other.year && month == other.month
-        && day == other.day;
+    return year == other.year && month == other.month && day == other.day;
   }
 
   // Returns closest future midnight to desired date
   DateTime get closestFutureMidnight {
-    return DateTime(
-      this.year,
-      this.month,
-      this.day,
-      23,
-      59,
-      59
-    );
+    return DateTime(this.year, this.month, this.day, 23, 59, 59);
   }
 
   DateTime get dateNoTime {
@@ -109,10 +101,17 @@ extension DateUtils on DateTime {
   String get monthString {
     return DateFormat('MMM').format(this);
   }
+
+  DateTime addMonths(int months) {
+    return DateTime(year, month + months, day);
+  }
+
+  DateTime subtractMonths(int months) {
+    return DateTime(year, month + months, day);
+  }
 }
 
 extension DurationUtils on Duration {
-
   String get hhmm {
     try {
       if (inHours == 0) {

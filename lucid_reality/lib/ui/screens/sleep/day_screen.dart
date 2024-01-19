@@ -17,15 +17,17 @@ class DayScreen extends HookWidget {
 
   Widget _body(BuildContext context, DayScreenViewModel viewModel) {
     List<AppCard> sleepStageCards = [];
-    for (var sleepStage in viewModel.chartSleepStages.where(
-            (element) => element.stage.compareTo(LucidSleepStage.sleeping.getLabel()) != 0)) {
-      sleepStageCards.add(AppCard(Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-        SolidCircle(color: sleepStage.color, size: 16),
-        SizedBox(width: 8),
-        Text(sleepStage.stage),
-        Spacer(),
-        Text(textAlign: TextAlign.right, "${sleepStage.duration.hhmm}"),
-      ])));
+    for (var sleepStage in viewModel.chartSleepStages
+        .where((element) => element.stage.compareTo(LucidSleepStage.sleeping.getLabel()) != 0)) {
+      sleepStageCards.add(
+        AppCard(Row(mainAxisAlignment: MainAxisAlignment.start, children: [
+          SolidCircle(color: sleepStage.color, size: 16),
+          SizedBox(width: 8),
+          Text(sleepStage.stage),
+          Spacer(),
+          Text(textAlign: TextAlign.right, "${sleepStage.duration.hhmm}"),
+        ])),
+      );
     }
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,35 +55,51 @@ class DayScreen extends HookWidget {
               SizedBox(width: 54),
           ])),
           SizedBox(height: 16),
-          SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                        AppCard(Container(
-                            height: 250,
-                            child: Stack(children: [
-                              Align(
-                                  alignment: Alignment.topLeft,
-                                  child: Text("Total time\n${viewModel.totalSleepTime}")),
-                              if (viewModel.sleepResultType != SleepResultType.noData)
+          Expanded(
+            child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                          AppCard(Container(
+                              height: 250,
+                              child: Stack(children: [
+                                Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Text("Total time\n${viewModel.totalSleepTime}")),
+                                if (viewModel.sleepResultType != SleepResultType.noData)
+                                  Align(
+                                      alignment: Alignment.center,
+                                      child: Container(
+                                          height: 250,
+                                          child: SleepPieChart.withData(viewModel.chartSleepStages))),
                                 Align(
                                     alignment: Alignment.center,
-                                    child: Container(
-                                        height: 250,
-                                        child: SleepPieChart.withData(viewModel.chartSleepStages))),
-                              Align(
-                                  alignment: Alignment.center,
-                                  child: Text("${viewModel.sleepStartEndTime}")),
-                              Align(
-                                  alignment: Alignment.topRight,
-                                  child: Text(textAlign: TextAlign.right,
-                                      "Time to sleep\n${viewModel.sleepLatency}")),
-                            ]))),
-                        SizedBox(height: 16)
-                      ] +
-                      sleepStageCards +
-                      []))
+                                    child: Text("${viewModel.sleepStartEndTime}")),
+                                Align(
+                                    alignment: Alignment.topRight,
+                                    child: Text(
+                                        textAlign: TextAlign.right,
+                                        "Time to sleep\n${viewModel.sleepLatency}")),
+                              ]))),
+                          SizedBox(height: 16)
+                        ] +
+                        List.generate(
+                          sleepStageCards.length * 2 - 1,
+                          (index) {
+                            if (index.isOdd) {
+                              return Divider(
+                                height: 8,
+                                color: Colors.transparent, // Adjust color as needed
+                              );
+                            } else {
+                              final itemIndex = index ~/ 2;
+                              return sleepStageCards[itemIndex];
+                            }
+                          },
+                        ) +
+                        [])),
+          )
         ]);
   }
 

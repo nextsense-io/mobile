@@ -1,6 +1,5 @@
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:health/health.dart';
-import 'package:quiver/time.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
 import 'package:lucid_reality/managers/health_connect_manager.dart';
@@ -8,9 +7,10 @@ import 'package:lucid_reality/ui/components/sleep_bar_chart.dart';
 import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/screens/sleep/sleep_screen_vm.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
+import 'package:lucid_reality/utils/utils.dart';
+import 'package:quiver/time.dart';
 
 class MonthScreenViewModel extends ViewModel {
-
   final _healthConnectManager = getIt<HealthConnectManager>();
   List<HealthDataPoint>? _healthDataPoints;
   DateTime _monthStartDate = DateTime(DateTime.now().year, DateTime.now().month, 1).dateNoTime;
@@ -19,17 +19,25 @@ class MonthScreenViewModel extends ViewModel {
   Map<DateTime, List<ChartSleepStage>> _chartSleepStages = {};
   Map<LucidSleepStage, Duration> _sleepStageAverages = {};
   Map<LucidSleepStage, List<DaySleepStage>> _daySleepStages = {};
+  Duration? _averageSleepLatency;
 
   DateTime get currentMonth => _monthStartDate;
-  String get monthYear  {
+
+  String get monthYear {
     return "${_monthStartDate.monthString} ${_monthStartDate.year}";
   }
+
   SleepResultType get sleepResultType => _sleepResultType;
+
   Map<LucidSleepStage, Duration> get sleepStageAverages => _sleepStageAverages;
+
   Map<DateTime, List<ChartSleepStage>> get chartSleepStages => _chartSleepStages;
+
   List<DaySleepStage> get daySleepStages => _daySleepStages.values.expand((x) => x).toList();
 
   Duration get averageSleepTime => _sleepStageAverages[LucidSleepStage.sleeping] ?? Duration.zero;
+
+  Duration? get averageSleepLatency => _averageSleepLatency;
 
   void init() async {
     await _healthConnectManager.authorize();
@@ -52,12 +60,12 @@ class MonthScreenViewModel extends ViewModel {
     } else {
       _sleepResultType = SleepResultType.sleepTimeOnly;
       Map<DateTime, List<HealthDataPoint>?> datedHealthDataPoints =
-      SleepScreenViewModel.getDatedHealthData(_healthDataPoints!);
+          SleepScreenViewModel.getDatedHealthData(_healthDataPoints!);
 
       _dailySleepStats = {};
       for (DateTime sleepDay in datedHealthDataPoints.keys) {
-        _dailySleepStats[sleepDay] = SleepScreenViewModel.getDaySleepStats(
-            datedHealthDataPoints[sleepDay]!);
+        _dailySleepStats[sleepDay] =
+            SleepScreenViewModel.getDaySleepStats(datedHealthDataPoints[sleepDay]!);
       }
 
       for (DateTime dateTime in _dailySleepStats.keys) {
@@ -65,29 +73,38 @@ class MonthScreenViewModel extends ViewModel {
           _sleepResultType = SleepResultType.sleepStaging;
         }
         if (_dailySleepStats[dateTime]!.resultType != SleepResultType.noData) {
-          _chartSleepStages[dateTime] = SleepScreenViewModel.getChartSleepStagesFromDayStats(
-              _dailySleepStats[dateTime]!);
+          _chartSleepStages[dateTime] =
+              SleepScreenViewModel.getChartSleepStagesFromDayStats(_dailySleepStats[dateTime]!);
+        }
+        int totalSleepLatency = 0;
+        int sleepLatencyDays = 0;
+        if (_dailySleepStats[dateTime]!.sleepLatency != null) {
+          totalSleepLatency += _dailySleepStats[dateTime]!.sleepLatency!.inMinutes;
+          sleepLatencyDays++;
+        }
+        if (sleepLatencyDays != 0) {
+          _averageSleepLatency = Duration(minutes: totalSleepLatency ~/ sleepLatencyDays);
         }
       }
 
       for (LucidSleepStage lucidSleepStage in LucidSleepStage.values) {
-        _sleepStageAverages[lucidSleepStage] = SleepScreenViewModel.getAverageForStage(
-            lucidSleepStage, _chartSleepStages);
+        _sleepStageAverages[lucidSleepStage] =
+            SleepScreenViewModel.getAverageForStage(lucidSleepStage, _chartSleepStages);
       }
-
       // TODO: Calculate any needed stats for the UI.
     }
   }
 
-  void changeDay(int relativeDayChange) async {
+  void changeMonth(int relativeMonthChange) async {
     // TODO: Change to next/previous month.
-    if (relativeDayChange > 0) {
-      _monthStartDate = _monthStartDate.add(Duration(days: relativeDayChange));
-    } else if (relativeDayChange < 0) {
-      _monthStartDate = _monthStartDate.subtract(Duration(days: -relativeDayChange));
+    if (relativeMonthChange > 0) {
+      _monthStartDate = _monthStartDate.addMonths(relativeMonthChange);
+    } else if (relativeMonthChange < 0) {
+      _monthStartDate = _monthStartDate.subtractMonths(relativeMonthChange);
     } else {
       return;
     }
+    print('current month=>${_monthStartDate.getDate()}');
     await _getSleepInfo();
     notifyListeners();
   }
