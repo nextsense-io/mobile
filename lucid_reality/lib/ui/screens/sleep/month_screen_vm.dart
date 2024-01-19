@@ -12,6 +12,7 @@ import 'package:quiver/time.dart';
 
 class MonthScreenViewModel extends ViewModel {
   final _healthConnectManager = getIt<HealthConnectManager>();
+
   List<HealthDataPoint>? _healthDataPoints;
   DateTime _monthStartDate = DateTime(DateTime.now().year, DateTime.now().month, 1).dateNoTime;
   SleepResultType _sleepResultType = SleepResultType.noData;
@@ -20,23 +21,15 @@ class MonthScreenViewModel extends ViewModel {
   Map<LucidSleepStage, Duration> _sleepStageAverages = {};
   Map<LucidSleepStage, List<DaySleepStage>> _daySleepStages = {};
   Duration? _averageSleepLatency;
-
   DateTime get currentMonth => _monthStartDate;
-
   String get monthYear {
     return "${_monthStartDate.monthString} ${_monthStartDate.year}";
   }
-
   SleepResultType get sleepResultType => _sleepResultType;
-
   Map<LucidSleepStage, Duration> get sleepStageAverages => _sleepStageAverages;
-
   Map<DateTime, List<ChartSleepStage>> get chartSleepStages => _chartSleepStages;
-
   List<DaySleepStage> get daySleepStages => _daySleepStages.values.expand((x) => x).toList();
-
   Duration get averageSleepTime => _sleepStageAverages[LucidSleepStage.sleeping] ?? Duration.zero;
-
   Duration? get averageSleepLatency => _averageSleepLatency;
 
   void init() async {

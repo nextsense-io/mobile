@@ -72,7 +72,8 @@ class DayScreen extends HookWidget {
                                       alignment: Alignment.center,
                                       child: Container(
                                           height: 250,
-                                          child: SleepPieChart.withData(viewModel.chartSleepStages))),
+                                          child:
+                                              SleepPieChart.withData(viewModel.chartSleepStages))),
                                 Align(
                                     alignment: Alignment.center,
                                     child: Text("${viewModel.sleepStartEndTime}")),
@@ -97,8 +98,7 @@ class DayScreen extends HookWidget {
                               return sleepStageCards[itemIndex];
                             }
                           },
-                        ) +
-                        [])),
+                        ))),
           )
         ]);
   }
