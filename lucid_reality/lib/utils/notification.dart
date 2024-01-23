@@ -33,19 +33,22 @@ Future<void> scheduleNotification({
   required String sound,
 }) async {
   final notificationId = Random().nextInt(100); // Generate a unique ID
-  await AwesomeNotifications()
-      .cancelSchedulesByChannelKey(notificationType.notificationChannelKey);
   await AwesomeNotifications().createNotification(
     content: NotificationContent(
       id: notificationId,
       channelKey: notificationType.notificationChannelKey,
       title: title,
       body: message,
+      criticalAlert: true,
+      wakeUpScreen: true,
       customSound: customSoundPath.plus(sound),
     ),
-    schedule: NotificationCalendar.fromDate(
-      date: date,
+    schedule: NotificationCalendar(
+      hour: date.hour,
+      minute: date.minute,
+      second: date.second,
       repeats: true,
+      preciseAlarm: true,
       allowWhileIdle: true,
     ),
   );
@@ -53,26 +56,29 @@ Future<void> scheduleNotification({
 
 Future<void> initializeNotification() async {
   AwesomeNotifications().initialize(
-      'resource://drawable/res_notification_app_icon',
-      [
-        NotificationChannel(
-          channelKey: realityCheckingTimeChannelKey,
-          channelName: 'Lucid Morning Notifications',
-          channelDescription: 'Lucid reality time check notifications.',
-          defaultColor: NextSenseColors.royalPurple,
-          importance: NotificationImportance.High,
-          channelShowBadge: true,
-        ),
-        NotificationChannel(
-          channelKey: realityCheckingBedTimeChannelKey,
-          channelName: 'Lucid Night Notifications',
-          channelDescription: 'Lucid reality bedtime check notifications.',
-          defaultColor: NextSenseColors.royalPurple,
-          importance: NotificationImportance.High,
-          channelShowBadge: true,
-        ),
-      ],
-      debug: true);
+    'resource://drawable/android12splash',
+    [
+      NotificationChannel(
+        channelKey: realityCheckingTimeChannelKey,
+        channelName: 'Lucid Morning Notifications',
+        channelDescription: 'Lucid reality time check notifications.',
+        defaultColor: NextSenseColors.royalPurple,
+        ledColor: NextSenseColors.royalPurple,
+        importance: NotificationImportance.High,
+        channelShowBadge: true,
+      ),
+      NotificationChannel(
+        channelKey: realityCheckingBedTimeChannelKey,
+        channelName: 'Lucid Night Notifications',
+        channelDescription: 'Lucid reality bedtime check notifications.',
+        defaultColor: NextSenseColors.royalPurple,
+        ledColor: NextSenseColors.royalPurple,
+        importance: NotificationImportance.High,
+        channelShowBadge: true,
+      ),
+    ],
+    debug: true,
+  );
 }
 
 Future<bool> notificationPermission(BuildContext context) async {

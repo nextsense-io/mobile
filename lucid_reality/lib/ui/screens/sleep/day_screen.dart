@@ -57,35 +57,36 @@ class DayScreen extends HookWidget {
           SizedBox(height: 16),
           Expanded(
             child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                          AppCard(Container(
-                              height: 250,
-                              child: Stack(children: [
-                                Align(
-                                    alignment: Alignment.topLeft,
-                                    child: Text("Total time\n${viewModel.totalSleepTime}")),
-                                if (viewModel.sleepResultType != SleepResultType.noData)
-                                  Align(
-                                      alignment: Alignment.center,
-                                      child: Container(
-                                          height: 250,
-                                          child:
-                                              SleepPieChart.withData(viewModel.chartSleepStages))),
-                                Align(
-                                    alignment: Alignment.center,
-                                    child: Text("${viewModel.sleepStartEndTime}")),
-                                Align(
-                                    alignment: Alignment.topRight,
-                                    child: Text(
-                                        textAlign: TextAlign.right,
-                                        "Time to sleep\n${viewModel.sleepLatency}")),
-                              ]))),
-                          SizedBox(height: 16)
-                        ] +
-                        List.generate(
+              scrollDirection: Axis.vertical,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                      AppCard(Container(
+                          height: 250,
+                          child: Stack(children: [
+                            Align(
+                                alignment: Alignment.topLeft,
+                                child: Text("Total time\n${viewModel.totalSleepTime}")),
+                            if (viewModel.sleepResultType != SleepResultType.noData)
+                              Align(
+                                  alignment: Alignment.center,
+                                  child: Container(
+                                      height: 250,
+                                      child: SleepPieChart.withData(viewModel.chartSleepStages))),
+                            Align(
+                                alignment: Alignment.center,
+                                child: Text("${viewModel.sleepStartEndTime}")),
+                            Align(
+                                alignment: Alignment.topRight,
+                                child: Text(
+                                    textAlign: TextAlign.right,
+                                    "Time to sleep\n${viewModel.sleepLatency}")),
+                          ]))),
+                      SizedBox(height: 16)
+                    ] +
+                    [
+                      if (sleepStageCards.isNotEmpty)
+                        ...List.generate(
                           sleepStageCards.length * 2 - 1,
                           (index) {
                             if (index.isOdd) {
@@ -98,7 +99,10 @@ class DayScreen extends HookWidget {
                               return sleepStageCards[itemIndex];
                             }
                           },
-                        ))),
+                        )
+                    ],
+              ),
+            ),
           )
         ]);
   }
