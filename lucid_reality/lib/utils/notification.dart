@@ -60,7 +60,7 @@ Future<void> initializeNotification() async {
     [
       NotificationChannel(
         channelKey: realityCheckingTimeChannelKey,
-        channelName: 'Lucid Morning Notifications',
+        channelName: 'Lucid Daytime Notifications',
         channelDescription: 'Lucid reality time check notifications.',
         defaultColor: NextSenseColors.royalPurple,
         ledColor: NextSenseColors.royalPurple,

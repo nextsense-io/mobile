@@ -62,11 +62,8 @@ class MonthScreenViewModel extends ViewModel {
     _sleepStageAverages.clear();
     _averageSleepLatency = null;
     int daysInMonthInt = daysInMonth(_monthStartDate.year, _monthStartDate.month);
-    _logger.log(Level.INFO, 'startDate=>${currentMonth.getDate()} inDays=>$daysInMonthInt');
-    // daysInMonthInt - 1 to get end if month
     _healthDataPoints = await _healthConnectManager.getSleepSessionData(
         startDate: currentMonth, days: daysInMonthInt - 1);
-    _logger.log(Level.INFO, 'Health Data=>$_healthDataPoints');
     if (_healthDataPoints?.isEmpty ?? true) {
       _sleepResultType = SleepResultType.noData;
     } else {
