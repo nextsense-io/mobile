@@ -100,7 +100,7 @@ class MonthScreen extends HookWidget {
                       children: [
                             AppCard(
                               CalendarCarousel(
-                                height: 330,
+                                height: 341,
                                 customDayBuilder: (
                                   isSelectable,
                                   index,
@@ -138,11 +138,8 @@ class MonthScreen extends HookWidget {
                                     return null;
                                   }
                                 },
-                                onLeftArrowPressed: () {
-                                  viewModel.changeMonth(-1);
-                                },
-                                onRightArrowPressed: () {
-                                  viewModel.changeMonth(1);
+                                onCalendarChanged: (dateTime) {
+                                  viewModel.onCalendarChanged.value = dateTime;
                                 },
                                 iconColor: NextSenseColors.white,
                                 headerTextStyle: Theme.of(context).textTheme.bodyMedium,

@@ -1,3 +1,4 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:logging/logging.dart';
@@ -52,6 +53,8 @@ class RealityCheckBaseViewModel extends ViewModel {
           seconds:
               Duration(hours: totalTime.h, minutes: totalTime.m).inSeconds ~/ numberOfReminders);
       var initialTime = startTime;
+      //Before scheduling new notifications we have to cancelled all previous scheduled notifications.
+      await AwesomeNotifications().cancelSchedulesByChannelKey(notificationType.notificationChannelKey);
       for (int i = 0; i < numberOfReminders; i++) {
         // Schedule each notification with calculated interval
         _logger.log(Level.INFO, "Time:${initialTime.hour}:${initialTime.minute}, Sound:$sound");

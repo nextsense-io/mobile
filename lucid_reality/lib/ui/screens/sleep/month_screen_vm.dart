@@ -1,5 +1,8 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:health/health.dart';
+import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
 import 'package:lucid_reality/managers/health_connect_manager.dart';
@@ -11,7 +14,9 @@ import 'package:lucid_reality/utils/utils.dart';
 import 'package:quiver/time.dart';
 
 class MonthScreenViewModel extends ViewModel {
+  final _logger = CustomLogPrinter('MonthScreenViewModel');
   final _healthConnectManager = getIt<HealthConnectManager>();
+  final ValueNotifier<DateTime?> onCalendarChanged = ValueNotifier(null);
 
   List<HealthDataPoint>? _healthDataPoints;
   DateTime _monthStartDate = DateTime(DateTime.now().year, DateTime.now().month, 1).dateNoTime;
@@ -37,6 +42,16 @@ class MonthScreenViewModel extends ViewModel {
     await _getSleepInfo();
     setInitialised(true);
     notifyListeners();
+    onCalendarChanged.addListener(
+      () async {
+        var dateTime = onCalendarChanged.value;
+        if (dateTime != null) {
+          _monthStartDate = DateTime(dateTime.year, dateTime.month, 1).dateNoTime;
+          await _getSleepInfo();
+          notifyListeners();
+        }
+      },
+    );
   }
 
   String formatSleepDuration(Duration duration) {
@@ -45,9 +60,10 @@ class MonthScreenViewModel extends ViewModel {
 
   Future _getSleepInfo() async {
     _sleepStageAverages.clear();
+    _averageSleepLatency = null;
     int daysInMonthInt = daysInMonth(_monthStartDate.year, _monthStartDate.month);
     _healthDataPoints = await _healthConnectManager.getSleepSessionData(
-        startDate: currentMonth, days: daysInMonthInt);
+        startDate: currentMonth, days: daysInMonthInt - 1);
     if (_healthDataPoints?.isEmpty ?? true) {
       _sleepResultType = SleepResultType.noData;
     } else {
@@ -84,21 +100,6 @@ class MonthScreenViewModel extends ViewModel {
         _sleepStageAverages[lucidSleepStage] =
             SleepScreenViewModel.getAverageForStage(lucidSleepStage, _chartSleepStages);
       }
-      // TODO: Calculate any needed stats for the UI.
     }
-  }
-
-  void changeMonth(int relativeMonthChange) async {
-    // TODO: Change to next/previous month.
-    if (relativeMonthChange > 0) {
-      _monthStartDate = _monthStartDate.addMonths(relativeMonthChange);
-    } else if (relativeMonthChange < 0) {
-      _monthStartDate = _monthStartDate.subtractMonths(relativeMonthChange);
-    } else {
-      return;
-    }
-    print('current month=>${_monthStartDate.getDate()}');
-    await _getSleepInfo();
-    notifyListeners();
   }
 }
