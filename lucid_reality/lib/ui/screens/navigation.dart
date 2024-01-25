@@ -1,18 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_common/managers/device_manager.dart';
-import 'package:flutter_common/managers/disk_space_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
-import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/article.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/dream_journal_screen.dart';
 import 'package:lucid_reality/ui/screens/learn/article_details.dart';
 import 'package:lucid_reality/ui/screens/reality_check/lucid_reality_category_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen.dart';
+import 'package:lucid_reality/ui/screens/sleep/no_sleep_data_screen.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 
 import 'auth/sign_in_screen.dart';
@@ -53,8 +50,6 @@ class Navigation {
   //     'Link is expired or was used already. A new one was sent to your email.';
 
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-  final DeviceManager _deviceManager = getIt<DeviceManager>();
-  final DiskSpaceManager _diskSpaceManager = getIt<DiskSpaceManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('Navigation');
 
   NavigationRoute? _nextNavigationRoute;
@@ -159,6 +154,11 @@ class Navigation {
       case DreamConfirmationScreen.id:
         return MaterialPageRoute(
           builder: (context) => const DreamConfirmationScreen(),
+          settings: settings,
+        );
+      case NoSleepDataScreen.id:
+        return MaterialPageRoute(
+          builder: (context) => const NoSleepDataScreen(),
           settings: settings,
         );
 

@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
+import 'package:lucid_reality/ui/components/oval_button.dart';
 import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/components/solid_circle.dart';
 import 'package:lucid_reality/ui/components/svg_button.dart';
 import 'package:lucid_reality/ui/components/wait_widget.dart';
+import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/ui/screens/sleep/day_screen_vm.dart';
+import 'package:lucid_reality/ui/screens/sleep/no_sleep_data_screen.dart';
 import 'package:lucid_reality/ui/screens/sleep/sleep_screen_vm.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
 import 'package:lucid_reality/utils/utils.dart';
@@ -16,6 +20,7 @@ class DayScreen extends HookWidget {
   const DayScreen({super.key});
 
   Widget _body(BuildContext context, DayScreenViewModel viewModel) {
+    final Navigation _navigation = getIt<Navigation>();
     List<AppCard> sleepStageCards = [];
     for (var sleepStage in viewModel.chartSleepStages
         .where((element) => element.stage.compareTo(LucidSleepStage.sleeping.getLabel()) != 0)) {
@@ -29,6 +34,19 @@ class DayScreen extends HookWidget {
         ])),
       );
     }
+
+    if (viewModel.sleepResultType == SleepResultType.noData && viewModel.askToConnectHealthApps) {
+      sleepStageCards.add(AppCard(Column(children: [
+        Text("You need to connect to your sleep tracking app to see your sleep data."),
+        SizedBox(height: 16),
+        OvalButton(
+            onTap: () {
+              _navigation.navigateTo(NoSleepDataScreen.id);
+            },
+            text: "Connect", showBackground: true),
+      ])));
+    }
+
     return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -120,22 +138,25 @@ class DayScreen extends HookWidget {
                 body = _body(context, viewModel);
               } else {
                 body = Column(children: [
-                  Text("Health app not authorized"),
-                  ElevatedButton(
-                      onPressed: () {
+                  Text("Lucid Reality is not authorized to read sleep data from Health Connect."),
+                  SizedBox(height: 16),
+                  OvalButton(
+                      onTap: () {
                         viewModel.authorizeHealthApp();
                       },
-                      child: Text("Authorize"))
+                      text: "Authorize", showBackground: true)
                 ]);
               }
             } else {
               body = Column(children: [
-                Text("Health app not installed"),
-                ElevatedButton(
-                    onPressed: () {
-                      viewModel.checkHealthAppInstalled();
+                Text("Health Connect app not installed. It needs to be installed for sleep "
+                    "tracking applications to sync their data with Lucid Reality."),
+                SizedBox(height: 16),
+                OvalButton(
+                    onTap: () {
+                      viewModel.installHealthConnect();
                     },
-                    child: Text("Check again"))
+                    text: "Install", showBackground: true)
               ]);
             }
           } else {

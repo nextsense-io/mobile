@@ -1,6 +1,11 @@
+import 'package:flutter_common/di.dart';
 import 'package:health/health.dart';
 import 'package:installed_apps/installed_apps.dart';
 import 'package:logging/logging.dart';
+import 'package:lucid_reality/domain/user_entity.dart';
+import 'package:lucid_reality/managers/auth_manager.dart';
+import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 enum FitResult {
   SUCCESS,
@@ -17,9 +22,13 @@ class HealthConnectManager {
     HealthDataType.SLEEP_LIGHT
   ];
 
-  static const String healthConnectSource = "com.google.android.apps.healthdata";
-  static const String fitnessSource = "com.google.android.apps.fitness";
+  static const String healthConnectPackage = "com.google.android.apps.healthdata";
+  static const String fitnessPackage = "com.google.android.apps.fitness";
+  static const String fitbitPackage = "com.fitbit.FitbitMobile";
+  static const String samsungHealthPackage = "com.sec.android.app.shealth";
 
+  final _firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
+  final _authManager = getIt<AuthManager>();
   final _health = HealthFactory(useHealthConnectIfAvailable: true);
   final _logger = Logger('GoogleFitManager');
 
@@ -29,9 +38,9 @@ class HealthConnectManager {
   List<HealthDataPoint>? _sleepSessions;
 
   Future<bool> isAvailable() async {
-    _available = await InstalledApps.isAppInstalled(healthConnectSource) ?? false;
+    _available = await InstalledApps.isAppInstalled(healthConnectPackage) ?? false;
     if (!_available) {
-      _available = await InstalledApps.isAppInstalled(fitnessSource) ?? false;
+      _available = await InstalledApps.isAppInstalled(fitnessPackage) ?? false;
     }
     _availableTypes = [];
     for (HealthDataType type in types) {
@@ -44,6 +53,23 @@ class HealthConnectManager {
       return false;
     }
     return _available;
+  }
+
+  installHealthConnect() async {
+    final healthConnectUrl = Uri.parse("market://details?id=$healthConnectPackage");
+    launchUrl(healthConnectUrl, mode: LaunchMode.externalApplication);
+  }
+
+  openFitbitApp() {
+    InstalledApps.startApp(fitbitPackage);
+  }
+
+  openSamsungHealthApp() {
+    InstalledApps.startApp(samsungHealthPackage);
+  }
+
+  openGoogleFitApp() {
+    InstalledApps.startApp(fitnessPackage);
   }
 
   /// Requests authorization to access health data.
@@ -89,7 +115,12 @@ class HealthConnectManager {
         startDate, endDate, _availableTypes);
     _logger.log(Level.INFO, "Received ${healthData.length} health data points");
     _sleepSessions = healthData;
-    if (healthData.isEmpty) {
+    if (healthData.isNotEmpty) {
+      if ((_authManager.user?.getReadSleepData() ?? false) == false) {
+        _authManager.user?.setReadSleepData(true);
+        await _firebaseRealTimeDb.updateEntity(_authManager.user!, UserEntity.table);
+      }
+    } else {
       _logger.log(Level.INFO, "No health data points found");
     }
     return _sleepSessions;
