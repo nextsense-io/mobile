@@ -154,6 +154,7 @@ class MonthScreen extends HookWidget {
                                     Theme.of(context).textTheme.bodySmallWithTextColorRoyalBlue,
                                 todayBorderColor: Colors.transparent,
                                 todayButtonColor: Colors.transparent,
+                                maxSelectedDate: DateTime.now(),
                               ),
                             ),
                             SizedBox(height: 8),
@@ -189,7 +190,7 @@ class MonthScreen extends HookWidget {
                                           SizedBox(height: 16),
                                           Align(
                                               alignment: Alignment.centerLeft,
-                                              child: Text(viewModel.averageSleepTime?.hhmm ?? "N/A",
+                                              child: Text(viewModel.averageSleepTime.hhmm,
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .bodyMedium!

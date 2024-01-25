@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:health/health.dart';
-import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
 import 'package:lucid_reality/managers/health_connect_manager.dart';
@@ -10,11 +8,9 @@ import 'package:lucid_reality/ui/components/sleep_bar_chart.dart';
 import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/screens/sleep/sleep_screen_vm.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
-import 'package:lucid_reality/utils/utils.dart';
 import 'package:quiver/time.dart';
 
 class MonthScreenViewModel extends ViewModel {
-  final _logger = CustomLogPrinter('MonthScreenViewModel');
   final _healthConnectManager = getIt<HealthConnectManager>();
   final ValueNotifier<DateTime?> onCalendarChanged = ValueNotifier(null);
 
@@ -26,10 +22,8 @@ class MonthScreenViewModel extends ViewModel {
   Map<LucidSleepStage, Duration> _sleepStageAverages = {};
   Map<LucidSleepStage, List<DaySleepStage>> _daySleepStages = {};
   Duration? _averageSleepLatency;
+
   DateTime get currentMonth => _monthStartDate;
-  String get monthYear {
-    return "${_monthStartDate.monthString} ${_monthStartDate.year}";
-  }
   SleepResultType get sleepResultType => _sleepResultType;
   Map<LucidSleepStage, Duration> get sleepStageAverages => _sleepStageAverages;
   Map<DateTime, List<ChartSleepStage>> get chartSleepStages => _chartSleepStages;
@@ -60,7 +54,11 @@ class MonthScreenViewModel extends ViewModel {
 
   Future _getSleepInfo() async {
     _sleepStageAverages.clear();
+    _dailySleepStats.clear();
     _averageSleepLatency = null;
+    _chartSleepStages.clear();
+    _averageSleepLatency = null;
+
     int daysInMonthInt = daysInMonth(_monthStartDate.year, _monthStartDate.month);
     _healthDataPoints = await _healthConnectManager.getSleepSessionData(
         startDate: currentMonth, days: daysInMonthInt - 1);
@@ -71,12 +69,13 @@ class MonthScreenViewModel extends ViewModel {
       Map<DateTime, List<HealthDataPoint>?> datedHealthDataPoints =
           SleepScreenViewModel.getDatedHealthData(_healthDataPoints!);
 
-      _dailySleepStats = {};
       for (DateTime sleepDay in datedHealthDataPoints.keys) {
         _dailySleepStats[sleepDay] =
             SleepScreenViewModel.getDaySleepStats(datedHealthDataPoints[sleepDay]!);
       }
 
+      int totalSleepLatency = 0;
+      int sleepLatencyDays = 0;
       for (DateTime dateTime in _dailySleepStats.keys) {
         if (_dailySleepStats[dateTime]!.resultType == SleepResultType.sleepStaging) {
           _sleepResultType = SleepResultType.sleepStaging;
@@ -85,15 +84,13 @@ class MonthScreenViewModel extends ViewModel {
           _chartSleepStages[dateTime] =
               SleepScreenViewModel.getChartSleepStagesFromDayStats(_dailySleepStats[dateTime]!);
         }
-        int totalSleepLatency = 0;
-        int sleepLatencyDays = 0;
         if (_dailySleepStats[dateTime]!.sleepLatency != null) {
           totalSleepLatency += _dailySleepStats[dateTime]!.sleepLatency!.inMinutes;
           sleepLatencyDays++;
         }
-        if (sleepLatencyDays != 0) {
-          _averageSleepLatency = Duration(minutes: totalSleepLatency ~/ sleepLatencyDays);
-        }
+      }
+      if (sleepLatencyDays != 0) {
+        _averageSleepLatency = Duration(minutes: totalSleepLatency ~/ sleepLatencyDays);
       }
 
       for (LucidSleepStage lucidSleepStage in LucidSleepStage.values) {
