@@ -9,15 +9,11 @@ import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/user_entity.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
-import 'package:lucid_reality/preferences.dart';
-import 'package:uuid/uuid.dart';
 
 class AuthManager {
   static const minimumPasswordLength = 8;
-  static const Uuid _uuid = Uuid();
 
   final _logger = CustomLogPrinter('AuthManager');
-  final _preferences = getIt<Preferences>();
   final _firebaseAuth = FirebaseAuth.instance;
   final firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
 
@@ -68,7 +64,6 @@ class AuthManager {
   }
 
   Future<AuthenticationResult> signInGoogle() async {
-    // return AuthenticationResult.success;
     AuthenticationResult authResult = await _googleAuthManager!.handleSignIn();
     if (authResult != AuthenticationResult.success) {
       return authResult;
@@ -94,6 +89,9 @@ class AuthManager {
       switch (_signedInAuthMethod) {
         case AuthMethod.google_auth:
           username = _firebaseAuth.currentUser!.email!;
+          if (_googleAuthManager!.authUid.isEmpty) {
+            await signInGoogle();
+          }
           authUid = _googleAuthManager!.authUid;
           break;
         case AuthMethod.email_password:
@@ -103,6 +101,10 @@ class AuthManager {
         default:
           _logger.log(Level.WARNING, 'Unknown auth method.');
           return false;
+      }
+      if (authUid.isEmpty) {
+        _logger.log(Level.WARNING, 'Auth uid is empty.');
+        return false;
       }
       _user = await _loadUser(authUid: authUid);
       if (_user != null) {
