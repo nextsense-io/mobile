@@ -22,10 +22,11 @@ class RealityCheckSettings extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (viewType == RealitySettingsViewType.home && !viewModel.isRealitySettingsCompleted()) {
+    if (!viewModel.isRealitySettingsCompleted()) {
       return InkWell(
         onTap: onSetupSettings,
         child: AppCard(
+          padding: EdgeInsets.zero,
           Stack(
             children: [
               Positioned(
@@ -35,18 +36,22 @@ class RealityCheckSettings extends HookWidget {
                 child: Image.asset(imageBasePath.plus('lucid_icon.png')),
               ),
               Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Start Lucid Dreaming',
-                      style: Theme.of(context).textTheme.bodyMediumWithFontWeight600,
-                    ),
-                    Text(
-                      'Set a goal and reality check alerts to help you get started with lucid dreaming.',
-                      style: Theme.of(context).textTheme.bodyCaption,
-                    )
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 80, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Start Lucid Dreaming',
+                        style: Theme.of(context).textTheme.bodyMediumWithFontWeight600,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Set a goal and reality check alerts to help you get started with lucid dreaming.',
+                        style: Theme.of(context).textTheme.bodyCaption,
+                      )
+                    ],
+                  ),
                 ),
               )
             ],

@@ -101,6 +101,7 @@ class MonthScreen extends HookWidget {
                             AppCard(
                               CalendarCarousel(
                                 height: 380,
+                                maxSelectedDate: DateTime.now().getEndOfMonth(),
                                 customDayBuilder: (
                                   isSelectable,
                                   index,
@@ -141,6 +142,10 @@ class MonthScreen extends HookWidget {
                                 onCalendarChanged: (dateTime) {
                                   viewModel.onCalendarChanged.value = dateTime;
                                 },
+                                rightButtonIcon:
+                                    DateTime.now().isSameMonth(viewModel.onCalendarChanged.value)
+                                        ? SizedBox.shrink()
+                                        : null,
                                 iconColor: NextSenseColors.white,
                                 headerTextStyle: Theme.of(context).textTheme.bodyMedium,
                                 customGridViewPhysics: NeverScrollableScrollPhysics(),
@@ -153,8 +158,7 @@ class MonthScreen extends HookWidget {
                                 nextDaysTextStyle:
                                     Theme.of(context).textTheme.bodySmallWithTextColorRoyalBlue,
                                 todayBorderColor: Colors.transparent,
-                                todayButtonColor: Colors.transparent,
-                                maxSelectedDate: DateTime.now()
+                                todayButtonColor: Colors.transparent
                               ),
                             ),
                             SizedBox(height: 8),

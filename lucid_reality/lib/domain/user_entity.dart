@@ -19,7 +19,7 @@ class UserEntity extends FirebaseRealtimeDBEntity<UserKey> {
     setValue(UserKey.email, email);
   }
 
-  void setUserName(String userName) {
+  void setUserName(String? userName) {
     setValue(UserKey.name, userName);
   }
 

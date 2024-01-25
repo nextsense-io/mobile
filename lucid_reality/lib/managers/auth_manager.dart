@@ -38,6 +38,8 @@ class AuthManager {
 
   String? get authUid => _firebaseAuth.currentUser?.uid;
 
+  String get userName => _firebaseAuth.currentUser?.displayName ?? '';
+
   Stream<User?> get firebaseUser => Stream.value(_firebaseAuth.currentUser);
 
   AuthManager() {
@@ -165,6 +167,7 @@ class AuthManager {
   Future<UserEntity> _createNewUser({required String email, required String authUid}) async {
     final user = UserEntity.instance;
     user.setEmail(email);
+    user.setUserName(userName);
     await firebaseRealTimeDb.setEntity(user, UserEntity.table.where(authUid));
     return user;
   }

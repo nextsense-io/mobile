@@ -7,6 +7,7 @@ import 'package:lucid_reality/domain/article.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/dream_journal_screen.dart';
 import 'package:lucid_reality/ui/screens/learn/article_details.dart';
+import 'package:lucid_reality/ui/screens/pvt_onboarding/pvt_onboarding_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/lucid_reality_category_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen.dart';
 import 'package:lucid_reality/ui/screens/sleep/no_sleep_data_screen.dart';
@@ -161,7 +162,12 @@ class Navigation {
           builder: (context) => const NoSleepDataScreen(),
           settings: settings,
         );
-
+      case PVTOnboardingScreen.id:
+        return MaterialPageRoute(
+          builder: (context) => const PVTOnboardingScreen(),
+          settings: settings,
+        );
+      
       // Routes with arguments
       case RecordYourDreamScreen.id:
         return MaterialPageRoute(builder: (context) => RecordYourDreamScreen(), settings: settings);

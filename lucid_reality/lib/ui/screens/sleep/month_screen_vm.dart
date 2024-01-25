@@ -12,7 +12,7 @@ import 'package:quiver/time.dart';
 
 class MonthScreenViewModel extends ViewModel {
   final _healthConnectManager = getIt<HealthConnectManager>();
-  final ValueNotifier<DateTime?> onCalendarChanged = ValueNotifier(null);
+  final ValueNotifier<DateTime> onCalendarChanged = ValueNotifier(DateTime.now());
 
   List<HealthDataPoint>? _healthDataPoints;
   DateTime _monthStartDate = DateTime(DateTime.now().year, DateTime.now().month, 1).dateNoTime;
@@ -39,11 +39,9 @@ class MonthScreenViewModel extends ViewModel {
     onCalendarChanged.addListener(
       () async {
         var dateTime = onCalendarChanged.value;
-        if (dateTime != null) {
-          _monthStartDate = DateTime(dateTime.year, dateTime.month, 1).dateNoTime;
-          await _getSleepInfo();
-          notifyListeners();
-        }
+        _monthStartDate = DateTime(dateTime.year, dateTime.month, 1).dateNoTime;
+        await _getSleepInfo();
+        notifyListeners();
       },
     );
   }
