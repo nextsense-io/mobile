@@ -20,6 +20,7 @@ enum PreferenceKey {
   displayPowerLineFreq,
   displayEegTimeWindowSeconds,
   displayAccTimeWindowSeconds,
+  isPVTOnboardingCompleted,
 }
 
 class Preferences {

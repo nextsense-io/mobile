@@ -31,7 +31,9 @@ class HomeScreen extends HookWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Hello!',
+            'Hello ${viewModel.getUserName()},',
+            maxLines: 1,
+            overflow: TextOverflow.fade,
             style: Theme.of(context).textTheme.titleMedium,
           ),
           SizedBox(
@@ -89,7 +91,9 @@ class HomeScreen extends HookWidget {
                         ),
                         Align(
                             alignment: Alignment.topRight,
-                            child: Text(textAlign: TextAlign.right, "Time to sleep\n${viewModel.sleepLatency}")),
+                            child: Text(
+                                textAlign: TextAlign.right,
+                                "Time to sleep\n${viewModel.sleepLatency}")),
                       ],
                     ),
                   ),

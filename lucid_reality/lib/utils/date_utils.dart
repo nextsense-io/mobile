@@ -109,6 +109,13 @@ extension DateUtils on DateTime {
   DateTime subtractMonths(int months) {
     return DateTime(year, month + months, day);
   }
+
+  DateTime getEndOfMonth() => DateTime(year, month + 1).subtract(Duration(days: 1));
+
+  // Compare only day part of datetime, omitting hours, minutes etc.
+  bool isSameMonth(DateTime other) {
+    return month == other.month;
+  }
 }
 
 extension DurationUtils on Duration {
