@@ -53,6 +53,9 @@ class DashboardScreen extends HookWidget {
               type: BottomNavigationBarType.fixed,
               onTap: (index) {
                 activeTab.value = DashboardTab.getByTabIndex(index);
+                if (!viewModel.isPVTOnboardingCompleted && index == DashboardTab.pvt.index) {
+                  viewModel.navigateToPVTOnboardingScreen();
+                }
               },
               items: DashboardTab.values
                   .map(

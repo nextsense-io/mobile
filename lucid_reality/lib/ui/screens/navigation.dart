@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_common/managers/device_manager.dart';
 import 'package:flutter_common/managers/disk_space_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
@@ -11,6 +10,7 @@ import 'package:lucid_reality/domain/article.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/dream_journal_screen.dart';
 import 'package:lucid_reality/ui/screens/learn/article_details.dart';
+import 'package:lucid_reality/ui/screens/pvt_onboarding/pvt_onboarding_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/lucid_reality_category_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
@@ -161,7 +161,11 @@ class Navigation {
           builder: (context) => const DreamConfirmationScreen(),
           settings: settings,
         );
-
+      case PVTOnboardingScreen.id:
+        return MaterialPageRoute(
+          builder: (context) => const PVTOnboardingScreen(),
+          settings: settings,
+        );
       // Routes with arguments
       case RecordYourDreamScreen.id:
         return MaterialPageRoute(builder: (context) => RecordYourDreamScreen(), settings: settings);

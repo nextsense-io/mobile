@@ -27,6 +27,7 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
     final userLoaded = await _authManager.ensureUserLoaded();
     if (userLoaded) {
       await pvtManager.fetchPVTResults();
+      setInitialised(true);
       notifyListeners();
     }
   }
