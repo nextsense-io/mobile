@@ -100,7 +100,7 @@ class MonthScreen extends HookWidget {
                       children: [
                             AppCard(
                               CalendarCarousel(
-                                height: 341,
+                                height: 380,
                                 maxSelectedDate: DateTime.now().getEndOfMonth(),
                                 customDayBuilder: (
                                   isSelectable,
@@ -158,7 +158,7 @@ class MonthScreen extends HookWidget {
                                 nextDaysTextStyle:
                                     Theme.of(context).textTheme.bodySmallWithTextColorRoyalBlue,
                                 todayBorderColor: Colors.transparent,
-                                todayButtonColor: Colors.transparent,
+                                todayButtonColor: Colors.transparent
                               ),
                             ),
                             SizedBox(height: 8),
@@ -194,7 +194,7 @@ class MonthScreen extends HookWidget {
                                           SizedBox(height: 16),
                                           Align(
                                               alignment: Alignment.centerLeft,
-                                              child: Text(viewModel.averageSleepTime?.hhmm ?? "N/A",
+                                              child: Text(viewModel.averageSleepTime.hhmm,
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .bodyMedium!

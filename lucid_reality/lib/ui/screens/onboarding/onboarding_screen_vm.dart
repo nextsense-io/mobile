@@ -10,7 +10,7 @@ import 'package:lucid_reality/ui/screens/navigation.dart';
 class OnboardingScreenViewModel extends ViewModel {
   final Navigation _navigation = getIt<Navigation>();
   final AuthManager _authManager = getIt<AuthManager>();
-  final firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
+  final _firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
 
   void redirectToDashboard() {
     _navigation.navigateTo(DashboardScreen.id, replace: true);
@@ -20,7 +20,7 @@ class OnboardingScreenViewModel extends ViewModel {
     final userLoaded = await _authManager.ensureUserLoaded();
     if (userLoaded) {
       _authManager.user?.setGoal(goal.tag);
-      await firebaseRealTimeDb.updateEntity(_authManager.user!, UserEntity.table);
+      await _firebaseRealTimeDb.updateEntity(_authManager.user!, UserEntity.table);
     }
   }
 }

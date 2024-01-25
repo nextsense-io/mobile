@@ -113,7 +113,9 @@ class LucidRealityApp extends StatelessWidget {
           stream: _authManager.firebaseUser,
           builder: (context, snapshot) {
             if (snapshot.hasData || initialIntent != null) {
-              if (snapshot.hasData) _authManager.syncUserIdWithDatabase(snapshot.data!.uid);
+              if (snapshot.hasData) {
+                _authManager.syncUserIdWithDatabase(snapshot.data!.uid);
+              }
               return StartupScreen(initialIntent: initialIntent);
             } else {
               return SignInScreen();

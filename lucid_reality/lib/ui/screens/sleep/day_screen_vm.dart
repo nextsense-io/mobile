@@ -1,9 +1,8 @@
-import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:health/health.dart';
-import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
+import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/health_connect_manager.dart';
 import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/screens/sleep/sleep_screen_vm.dart';
@@ -18,7 +17,7 @@ class DayScreenViewModel extends ViewModel {
   ];
 
   final _healthConnectManager = getIt<HealthConnectManager>();
-  final _logger = getLogger("DayScreenViewModel");
+  final _authManager = getIt<AuthManager>();
 
   bool? _healthAppInstalled;
   bool? _healthAppAuthorized;
@@ -32,6 +31,7 @@ class DayScreenViewModel extends ViewModel {
 
   bool get healthAppInstalled => _healthAppInstalled ?? false;
   bool get healthAppAuthorized => _healthAppAuthorized ?? false;
+  bool get askToConnectHealthApps => !(_authManager.user?.getReadSleepData() ?? false);
   DateTime get currentDate => _currentDate;
   SleepResultType get sleepResultType => _daySleepStats?.resultType ?? SleepResultType.noData;
   String get totalSleepTime => _totalSleepTime == Duration.zero ? "N/A"
@@ -55,14 +55,13 @@ class DayScreenViewModel extends ViewModel {
     notifyListeners();
   }
 
-  Future checkHealthAppInstalled() async {
-    _healthAppInstalled = await _healthConnectManager.isAvailable();
-    notifyListeners();
-  }
-
   Future authorizeHealthApp() async {
     _healthAppAuthorized = await _healthConnectManager.authorize();
     notifyListeners();
+  }
+
+  installHealthConnect() async {
+    await _healthConnectManager.installHealthConnect();
   }
 
   Future _getSleepInfo() async {

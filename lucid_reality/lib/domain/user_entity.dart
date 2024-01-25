@@ -1,6 +1,6 @@
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 
-enum UserKey { email, name, goal }
+enum UserKey { email, name, goal, readSleepData }
 
 class UserEntity extends FirebaseRealtimeDBEntity<UserKey> {
   static const String table = 'users';
@@ -33,5 +33,13 @@ class UserEntity extends FirebaseRealtimeDBEntity<UserKey> {
 
   String? getGoal() {
     return getValue(UserKey.goal);
+  }
+
+  void setReadSleepData(bool readSleepData) {
+    setValue(UserKey.readSleepData, readSleepData);
+  }
+
+  bool? getReadSleepData() {
+    return getValue(UserKey.readSleepData);
   }
 }

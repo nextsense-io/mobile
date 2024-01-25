@@ -48,7 +48,7 @@ class PermissionsManager {
 
   late List<PermissionRequest> permissionsNeeded;
 
-  PermissionsManager({permissionsNeeded = basicPermissionsNeeded});
+  PermissionsManager({this.permissionsNeeded = basicPermissionsNeeded});
 
   Future<bool> allPermissionsGranted() async {
     bool granted = true;

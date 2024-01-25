@@ -80,6 +80,8 @@ class WeekScreenViewModel extends ViewModel {
             datedHealthDataPoints[sleepDay]!);
       }
 
+      int totalSleepLatency = 0;
+      int sleepLatencyDays = 0;
       for (DateTime dateTime in _dailySleepStats.keys) {
         if (_dailySleepStats[dateTime]!.resultType == SleepResultType.sleepStaging) {
           _sleepResultType = SleepResultType.sleepStaging;
@@ -88,15 +90,13 @@ class WeekScreenViewModel extends ViewModel {
           _chartSleepStages[dateTime] = SleepScreenViewModel.getChartSleepStagesFromDayStats(
               _dailySleepStats[dateTime]!);
         }
-        int totalSleepLatency = 0;
-        int sleepLatencyDays = 0;
         if (_dailySleepStats[dateTime]!.sleepLatency != null) {
           totalSleepLatency += _dailySleepStats[dateTime]!.sleepLatency!.inMinutes;
           sleepLatencyDays++;
         }
-        if (sleepLatencyDays != 0) {
-          _averageSleepLatency = Duration(minutes: totalSleepLatency ~/ sleepLatencyDays);
-        }
+      }
+      if (sleepLatencyDays != 0) {
+        _averageSleepLatency = Duration(minutes: totalSleepLatency ~/ sleepLatencyDays);
       }
 
       for (LucidSleepStage lucidSleepStage in LucidSleepStage.values) {
