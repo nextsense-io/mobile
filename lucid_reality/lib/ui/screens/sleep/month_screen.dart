@@ -100,7 +100,7 @@ class MonthScreen extends HookWidget {
                       children: [
                             AppCard(
                               CalendarCarousel(
-                                height: 341,
+                                height: 380,
                                 customDayBuilder: (
                                   isSelectable,
                                   index,
@@ -154,7 +154,7 @@ class MonthScreen extends HookWidget {
                                     Theme.of(context).textTheme.bodySmallWithTextColorRoyalBlue,
                                 todayBorderColor: Colors.transparent,
                                 todayButtonColor: Colors.transparent,
-                                maxSelectedDate: DateTime.now(),
+                                maxSelectedDate: DateTime.now()
                               ),
                             ),
                             SizedBox(height: 8),
