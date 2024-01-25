@@ -11,7 +11,6 @@ import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/auth/sign_in_screen.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
-import 'package:lucid_reality/ui/screens/pvt_onboarding/pvt_onboarding_screen.dart';
 import 'package:lucid_reality/ui/screens/startup/startup_screen.dart';
 import 'package:lucid_reality/utils/notification.dart';
 import 'package:provider/provider.dart';
