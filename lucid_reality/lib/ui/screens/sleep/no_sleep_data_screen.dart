@@ -57,7 +57,7 @@ class NoSleepDataScreen extends HookWidget {
             },
             text: "Launch Fitbit", showBackground: true),
         SizedBox(height: 16),
-        Text("google Fit", style: Theme.of(context).textTheme.bodyLarge),
+        Text("Google Fit", style: Theme.of(context).textTheme.bodyLarge),
         SizedBox(height: 16),
         Text("Go to the profile tab using the bottom menu",
             style: Theme.of(context).textTheme.bodyLarge),
