@@ -72,13 +72,17 @@ class HealthConnectManager {
     InstalledApps.startApp(fitnessPackage);
   }
 
+  Future<bool?> isAuthorized() async {
+    return await _health.hasPermissions(_availableTypes);
+  }
+
   /// Requests authorization to access health data.
   Future<bool> authorize() async {
     if (_authorized) {
       return true;
     }
     try {
-      if (await _health.hasPermissions(_availableTypes) ?? false) {
+      if (await isAuthorized() ?? false) {
         _authorized = true;
         return true;
       }

@@ -46,7 +46,7 @@ class DayScreenViewModel extends ViewModel {
   void init() async {
     _healthAppInstalled = await _healthConnectManager.isAvailable();
     if (_healthAppInstalled!) {
-      _healthAppAuthorized = await _healthConnectManager.authorize();
+      _healthAppAuthorized = await _healthConnectManager.isAuthorized();
       if (_healthAppAuthorized!) {
         await _getSleepInfo();
       }

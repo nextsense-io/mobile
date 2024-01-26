@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- Needed for HealthConnect -->
     <uses-permission android:name="android.permission.health.READ_SLEEP"/>
-    <application android:name=".NextSenseApplication">
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+
+    <application android:name=".NextSenseApplication"
+        android:icon="@drawable/launcher_lucid" tools:replace="icon">
         <activity android:name=".MainActivity" android:exported="true">
             <meta-data android:name="health_permissions" android:resource="@array/health_permissions" />
 
