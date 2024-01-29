@@ -47,8 +47,8 @@ class SleepScreenViewModel extends ViewModel {
     Map<DateTime, List<HealthDataPoint>?> datedHealthData = {};
     for (HealthDataPoint dataPoint in healthData) {
       DateTime sleepSessionDate = dataPoint.dateFrom;
-      if (TimeOfDay.fromDateTime(dataPoint.dateFrom).compareTo(_sleepCutoffTime) < 0) {
-        sleepSessionDate = dataPoint.dateFrom.subtract(Duration(days: 1));
+      if (TimeOfDay.fromDateTime(dataPoint.dateFrom).compareTo(_sleepCutoffTime) > 0) {
+        sleepSessionDate = dataPoint.dateFrom.add(Duration(days: 1));
       }
       if (datedHealthData[sleepSessionDate.dateNoTime] == null) {
         datedHealthData[sleepSessionDate.dateNoTime] = [];
@@ -80,7 +80,11 @@ class SleepScreenViewModel extends ViewModel {
     return Duration(minutes: totalStageTime ~/ stageDays);
   }
 
-  static DaySleepStats getDaySleepStats(List<HealthDataPoint> dataPoints) {
+  static DaySleepStats getDaySleepStats(List<HealthDataPoint>? dataPoints) {
+    if (dataPoints == null) {
+      return DaySleepStats(resultType: SleepResultType.noData, startTime: null, endTime: null,
+          sleepLatency: null, stageDurations: {});
+    }
     SleepResultType sleepResultType = SleepResultType.noData;
     Map<LucidSleepStage, Duration> sleepStageDurations = {};
     for (LucidSleepStage lucidSleepStage in LucidSleepStage.values) {

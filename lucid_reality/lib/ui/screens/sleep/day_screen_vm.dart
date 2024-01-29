@@ -65,14 +65,21 @@ class DayScreenViewModel extends ViewModel {
   }
 
   Future _getSleepInfo() async {
-    _healthDataPoints = await _healthConnectManager.getSleepSessionData(
-        startDate: currentDate, days: 1);
     _chartSleepStages.clear();
     _totalSleepTime = Duration.zero;
     _sleepStartTime = null;
     _sleepEndTime = null;
-    _daySleepStats = SleepScreenViewModel.getDaySleepStats(_healthDataPoints!);
 
+    // Go 2 days in the past to make sure you get all the data then use the last day only.
+    List<HealthDataPoint>? healthDataPoints = await _healthConnectManager.getSleepSessionData(
+        startDate: currentDate, days: 2);
+    if (healthDataPoints?.isNotEmpty ?? false) {
+      Map<DateTime, List<HealthDataPoint>?> datedHealthDataPoints =
+          SleepScreenViewModel.getDatedHealthData(healthDataPoints!);
+      _healthDataPoints = datedHealthDataPoints[currentDate.dateNoTime];
+    }
+
+    _daySleepStats = SleepScreenViewModel.getDaySleepStats(_healthDataPoints);
     if (_daySleepStats!.resultType != SleepResultType.noData) {
       _chartSleepStages = SleepScreenViewModel.getChartSleepStagesFromDayStats(_daySleepStats!);
     }

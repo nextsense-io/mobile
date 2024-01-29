@@ -73,7 +73,8 @@ class HealthConnectManager {
   }
 
   Future<bool?> isAuthorized() async {
-    return await _health.hasPermissions(_availableTypes);
+    _authorized = await _health.hasPermissions(_availableTypes) ?? false;
+    return _authorized;
   }
 
   /// Requests authorization to access health data.
