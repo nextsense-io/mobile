@@ -1,5 +1,5 @@
 import 'package:flutter_common/domain/earbuds_config.dart';
-import 'package:nextsense_trial_ui/utils/algorithms.dart';
+import 'package:flutter_common/utils/algorithms.dart';
 
 class ImpedanceData implements Comparable<ImpedanceData> {
   Map<EarLocation, double> impedances = {};
@@ -14,7 +14,7 @@ class ImpedanceData implements Comparable<ImpedanceData> {
 }
 
 class ImpedanceSeries {
-  List<ImpedanceData> _impedanceDataList = [];
+  final List<ImpedanceData> _impedanceDataList = [];
 
   void addImpedanceData(ImpedanceData impedanceData) {
     _impedanceDataList.add(impedanceData);
@@ -42,7 +42,7 @@ class ImpedanceSeries {
     }
     DateTime startTime = endTime != null ? endTime.subtract(time) : DateTime.now().subtract(time);
     int startIndex = Algorithms.lowerBound(
-        _impedanceDataList, new ImpedanceData(impedances: {}, timestamp: startTime));
+        _impedanceDataList, ImpedanceData(impedances: {}, timestamp: startTime));
     if (startIndex == 0) {
       // First element, wait until there is more data than the time period before a calculation can
       // be done.

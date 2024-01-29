@@ -28,7 +28,8 @@ class DashboardHomeView extends StatelessWidget {
     menuCards.add(MenuCard(
         title: 'Protocols',
         image:
-            SvgPicture.asset('packages/nextsense_trial_ui/assets/images/tasks.svg', semanticsLabel: 'Protocols', height: 75),
+            SvgPicture.asset('packages/nextsense_trial_ui/assets/images/tasks.svg',
+                semanticsLabel: 'Protocols', height: 75),
         onTap: () async =>
             {await showDialog(context: context, builder: (_) => StartAdhocProtocolDialog())}));
 
@@ -78,7 +79,7 @@ class DashboardHomeView extends StatelessWidget {
 }
 
 class MenuCard extends StatelessWidget {
-  final Function onTap;
+  final VoidCallback? onTap;
   final String title;
   final Widget image;
 

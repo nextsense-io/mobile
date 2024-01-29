@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 class ClickableZone extends StatelessWidget {
   final Widget child;
-  final Function onTap;
+  final VoidCallback? onTap;
 
   const ClickableZone(
       {super.key, required this.child,
@@ -12,7 +12,7 @@ class ClickableZone extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => onTap.call(),
+      onTap: onTap,
         child: child,
     );
   }

@@ -2,15 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_common/domain/earbuds_config.dart';
 import 'package:flutter_common/managers/device_manager.dart';
+import 'package:flutter_common/managers/impedance_series.dart';
 import 'package:flutter_common/managers/xenon_impedance_calculator.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/di.dart';
-import 'package:flutter_common/managers/impedance_series.dart';
-import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
+import 'package:nextsense_consumer_ui/di.dart';
+import 'package:nextsense_consumer_ui/ui/navigation.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 enum EarFitRunState {
@@ -52,21 +51,20 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
 
   final CustomLogPrinter _logger = CustomLogPrinter('EarFitScreenViewModel');
   final DeviceManager _deviceManager = getIt<DeviceManager>();
-  final StudyManager _studyManager = getIt<StudyManager>();
   final Navigation _navigation = getIt<Navigation>();
+  final ImpedanceSeries _impedanceSeries = ImpedanceSeries();
+  final Map<EarLocationName, EarLocationResultState> _earFitResults = {};
 
   EarFitRunState _earFitRunState = EarFitRunState.NOT_STARTED;
   EarFitResultState _earFitResultState = EarFitResultState.NO_RESULTS;
   XenonImpedanceCalculator? _impedanceCalculator;
   Map<String, dynamic>? _deviceSettings;
   EarbudsConfig? _earbudsConfig;
-  Map<EarLocationName, EarLocationResultState> _earFitResults = {};
   bool _calculatingImpedance = false;
   Timer? _screenRefreshTimer;
   int _testStage = _testStages.last;
   Iterator<int> _testStageIterator = _testStages.iterator;
   bool _deviceConnected = true;
-  ImpedanceSeries _impedanceSeries = ImpedanceSeries();
   DateTime? _earFitStartTime;
 
   EarFitRunState get earFitRunState => _earFitRunState;
@@ -82,13 +80,13 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
 
     WakelockPlus.enable();
 
-    _earbudsConfig = EarbudsConfigs.getConfig(_studyManager.currentStudy!.getEarbudsConfig());
+    _earbudsConfig = EarbudsConfigs.getConfig(EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase());
     _initEarFitResults();
     Device? connectedDevice = _deviceManager.getConnectedDevice();
     if (connectedDevice != null) {
       String macAddress = connectedDevice.macAddress;
       _deviceSettings = await NextsenseBase.getDeviceSettings(macAddress);
-      _impedanceCalculator = new XenonImpedanceCalculator(
+      _impedanceCalculator = XenonImpedanceCalculator(
           samplesSize: _impedanceSampleSize, deviceSettingsValues: _deviceSettings!);
     }
   }
@@ -161,7 +159,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
       return;
     }
     _earFitStartTime = DateTime.now();
-    _screenRefreshTimer = new Timer.periodic(_refreshInterval, _runEarFitTest);
+    _screenRefreshTimer = Timer.periodic(_refreshInterval, _runEarFitTest);
   }
 
   Future _stopEarFitTest() async {

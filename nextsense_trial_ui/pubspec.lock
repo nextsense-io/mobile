@@ -661,7 +661,7 @@ packages:
     source: hosted
     version: "4.0.2"
   iirjdart:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: iirjdart
       sha256: "5bd8aa6af6ee67473fbf7fbbfc7b992d0bb95768a16aaa62e70613389e564df8"
@@ -980,7 +980,7 @@ packages:
     source: git
     version: "0.2.4"
   scidart:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: scidart
       sha256: af816eed552cadb6a9a324c594515b0cdff41617839345c382047927bd8dc02d

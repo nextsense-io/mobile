@@ -5,11 +5,11 @@ import 'package:flutter_common/domain/acceleration_data.dart';
 import 'package:flutter_common/domain/device_settings.dart';
 import 'package:flutter_common/domain/plot_data_point.dart';
 import 'package:flutter_common/managers/device_manager.dart';
-import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/preferences.dart';
 import 'package:flutter_common/utils/algorithms.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
+import 'package:nextsense_consumer_ui/di.dart';
+import 'package:nextsense_consumer_ui/preferences.dart';
 
 enum DataType {
   eeg,
@@ -101,7 +101,7 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
         selectedChannel = eegChannelList[0];
       }
       await _deviceManager.startStreaming();
-      _screenRefreshTimer = new Timer.periodic(_refreshInterval, _updateScreen);
+      _screenRefreshTimer = Timer.periodic(_refreshInterval, _updateScreen);
     }
     setBusy(false);
     setInitialised(true);
@@ -181,7 +181,7 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
     // Load an array with the data indexed by relative seconds.
     List<PlotDataPoint> eegData = [];
     for (int i = 0; i < currentEegData.length; ++i) {
-      eegData.add(new PlotDataPoint(i * samplesToTimeRatio, currentEegData[i]));
+      eegData.add(PlotDataPoint(i * samplesToTimeRatio, currentEegData[i]));
     }
     this.eegData = eegData;
   }
@@ -225,7 +225,6 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   DataType get dataType => _dataType;
 
   set dataType(DataType? value) {
-    print("data type: $value");
     if (value == null) {
       return;
     }

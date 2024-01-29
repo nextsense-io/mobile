@@ -4,18 +4,18 @@ import 'package:collection/collection.dart';
 import 'package:flutter_common/domain/device_settings.dart';
 import 'package:flutter_common/domain/earbuds_config.dart';
 import 'package:flutter_common/managers/device_manager.dart';
+import 'package:flutter_common/utils/signal_utils.dart';
 import 'package:get_it/get_it.dart';
 import 'package:gson/values.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:flutter_common/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/utils/signal_utils.dart';
 import 'package:scidart/numdart.dart';
 import 'package:scidart/scidart.dart';
 
 class XenonImpedanceCalculator {
-  static const double IMPEDANCE_NOT_ENOUGH_DATA = -1.0;
-  static const double IMPEDANCE_FLAT_SIGNAL = -2.0;
+  static const double impedanceNotEnoughData = -1.0;
+  static const double impedanceFlatSignal = -2.0;
 
   static const int _defaultTargetFrequency = 10;
 
@@ -139,7 +139,7 @@ class XenonImpedanceCalculator {
       double eegFrequency, double impedanceConstant) async {
     String? macAddress = _deviceManager.getConnectedDevice()?.macAddress;
     if (macAddress == null || _localSessionId == null) {
-      return IMPEDANCE_NOT_ENOUGH_DATA;
+      return impedanceNotEnoughData;
     }
     _logger.log(Level.INFO, "Starting impedance calculation for $impedanceConfig.");
     Map<int, List<double>> eegArrays = new HashMap();
@@ -161,19 +161,19 @@ class XenonImpedanceCalculator {
       }
       // Make sure there are enough samples to calculate a valid value.
       if (eegArray.length < samplesSize) {
-        return IMPEDANCE_NOT_ENOUGH_DATA;
+        return impedanceNotEnoughData;
       }
       // Make sure all values are valid, there can be dummy 0 values if the
       // channel was disabled before.
       for (double eegValue in eegArray) {
         if (eegValue == 0.0) {
-          return IMPEDANCE_NOT_ENOUGH_DATA;
+          return impedanceNotEnoughData;
         }
       }
       // Check if the signal is railed or not.
       if (SignalUtils.isSignalFlat(signal: eegArray, maxValue: _signalMaxValue,
           thresholdPercent: _flatSignalThresholdPercent)) {
-        return IMPEDANCE_FLAT_SIGNAL;
+        return impedanceFlatSignal;
       }
       // Remove the average from every sample to account for DC drift.
       double eegArrayAverage = eegArray.average;
@@ -207,7 +207,7 @@ class XenonImpedanceCalculator {
   }
 
   Future<Map<int, double>> calculateExternalChannelsImpedance(EarbudsConfig earbudsConfig) async {
-    HashMap<int, double> impedanceData = new HashMap();
+    HashMap<int, double> impedanceData = HashMap();
     await startExternalCurrentImpedance(_eegChannelList!.first.toSimple());
     for (Integer channel in _eegChannelList!) {
       if (channel.toSimple() != _eegChannelList!.first.toSimple()) {
@@ -223,7 +223,7 @@ class XenonImpedanceCalculator {
   }
 
   Future<Map<EarLocation, double>> calculate1299AcImpedance(EarbudsConfig earbudsConfig) async {
-    HashMap<EarLocation, double> impedanceData = new HashMap();
+    HashMap<EarLocation, double> impedanceData = HashMap();
     for (EarLocation earLocation in earbudsConfig.earLocations.values) {
       if (earLocation.impedanceConfig != null) {
         impedanceData[earLocation] = await _calculateImpedance(earLocation.impedanceConfig!,

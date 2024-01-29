@@ -41,9 +41,22 @@ class SleepProtocolScreen extends ProtocolScreen {
       if (sleepStagingManager.sleepCalculationState == SleepCalculationState.calculating) {
         statusMsg += "\n\nCalculating sleep staging results...";
       } else if (sleepStagingManager.sleepStagingLabels.isNotEmpty) {
-        statusMsg += "\n";
+        Duration dataDuration = Duration.zero;
         for (SleepStage sleepStage in viewModel.getSleepStages()) {
-          statusMsg += "\n${sleepStage.stage}: ${sleepStage.percent}%";
+          dataDuration += sleepStage.duration;
+        }
+        statusMsg += "\n";
+        Duration sessionDuration = Duration(milliseconds: viewModel.milliSecondsElapsed);
+        // Remove extra seconds to nearest 30 seconds.
+        sessionDuration = Duration(seconds: sessionDuration.inSeconds -
+            sessionDuration.inSeconds.remainder(30));
+        double dataLossPercent = 100 - (dataDuration.inSeconds / sessionDuration.inSeconds) * 100;
+        statusMsg += "\nTotal nap time: ${viewModel.formatDuration(sessionDuration)}";
+        statusMsg += "\nTotal data time: ${viewModel.formatDuration(dataDuration)}";
+        statusMsg += "\nBLE data loss: ${dataLossPercent.toStringAsPrecision(2)}%\n";
+        for (SleepStage sleepStage in viewModel.getSleepStages()) {
+          statusMsg += "\n${sleepStage.stage}: ${sleepStage.percent}% "
+              "(${viewModel.formatDuration(sleepStage.duration)})";
         }
         finishButtonText = 'Finish';
       }

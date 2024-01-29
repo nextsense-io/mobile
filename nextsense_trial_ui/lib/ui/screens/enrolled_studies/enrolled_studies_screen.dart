@@ -19,7 +19,7 @@ class EnrolledStudiesScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<EnrolledStudiesScreenViewModel>.reactive(
         viewModelBuilder: () => EnrolledStudiesScreenViewModel(),
-        onModelReady: (viewModel) => viewModel.init(),
+        onViewModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) {
           return WillPopScope(
             onWillPop: () => _onBackButtonPressed(context, viewModel),
@@ -111,7 +111,7 @@ class _EnrolledStudiesSelector extends StatelessWidget {
 
 class _StudySelectionItem extends StatelessWidget {
   final Widget label;
-  final Function onPressed;
+  final VoidCallback? onPressed;
 
   const _StudySelectionItem({Key? key,
     required this.label,

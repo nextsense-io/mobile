@@ -6,7 +6,7 @@ import 'package:nextsense_consumer_ui/ui/nextsense_colors.dart';
 class UnderlinedTextButton extends StatelessWidget {
 
   final String text;
-  final Function onTap;
+  final VoidCallback? onTap;
 
   const UnderlinedTextButton({super.key, required this.text, required this.onTap});
 
