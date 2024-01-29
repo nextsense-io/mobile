@@ -3,6 +3,7 @@ import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
+import 'package:lucid_reality/domain/reality_test.dart';
 import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/lucid_manager.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
@@ -36,6 +37,10 @@ class RealityCheckBaseViewModel extends ViewModel {
     navigation.popWithResult(result);
   }
 
+  Future<void> saveRealityTest(RealityTest realityTest) async {
+    await lucidManager.saveRealityTest(realityTest);
+  }
+
   Future<void> scheduleRealityCheckNotification(
       {required NotificationType notificationType,
       required DateTime startTime,
@@ -54,7 +59,8 @@ class RealityCheckBaseViewModel extends ViewModel {
               Duration(hours: totalTime.h, minutes: totalTime.m).inSeconds ~/ numberOfReminders);
       var initialTime = startTime;
       //Before scheduling new notifications we have to cancelled all previous scheduled notifications.
-      await AwesomeNotifications().cancelSchedulesByChannelKey(notificationType.notificationChannelKey);
+      await AwesomeNotifications()
+          .cancelSchedulesByChannelKey(notificationType.notificationChannelKey);
       for (int i = 0; i < numberOfReminders; i++) {
         // Schedule each notification with calculated interval
         _logger.log(Level.INFO, "Time:${initialTime.hour}:${initialTime.minute}, Sound:$sound");

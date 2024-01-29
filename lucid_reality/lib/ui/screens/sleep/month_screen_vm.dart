@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:health/health.dart';
 import 'package:lucid_reality/di.dart';
@@ -22,7 +23,6 @@ class MonthScreenViewModel extends ViewModel {
   Map<LucidSleepStage, Duration> _sleepStageAverages = {};
   Map<LucidSleepStage, List<DaySleepStage>> _daySleepStages = {};
   Duration? _averageSleepLatency;
-
   DateTime get currentMonth => _monthStartDate;
   SleepResultType get sleepResultType => _sleepResultType;
   Map<LucidSleepStage, Duration> get sleepStageAverages => _sleepStageAverages;
@@ -53,7 +53,6 @@ class MonthScreenViewModel extends ViewModel {
   Future _getSleepInfo() async {
     _sleepStageAverages.clear();
     _dailySleepStats.clear();
-    _averageSleepLatency = null;
     _chartSleepStages.clear();
     _averageSleepLatency = null;
 

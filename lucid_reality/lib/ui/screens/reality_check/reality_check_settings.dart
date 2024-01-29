@@ -122,7 +122,7 @@ class RealityCheckSettings extends HookWidget {
                 child: RealityCheckSettingsWidget(
                   title: 'Reality check time',
                   description:
-                      '5 times\n${viewModel.realityCheckingStartTime()}-${viewModel.realityCheckingEndTime()}',
+                      '${viewModel.getNumberOfReminders()} times\n${viewModel.realityCheckingStartTime()}-${viewModel.realityCheckingEndTime()}',
                   titleColor: NextSenseColors.coral,
                   onPressed: () {
                     viewModel.navigateToRealityCheckTimeScreenForResult();
@@ -147,7 +147,7 @@ class RealityCheckSettings extends HookWidget {
                 child: RealityCheckSettingsWidget(
                   title: 'Bedtime',
                   description:
-                      '5 times from\n${viewModel.realityCheckingBedTime()}-${viewModel.realityCheckingWakeUpTime()}',
+                      '${viewModel.getNumberOfReminders()} times from\n${viewModel.realityCheckingBedTime()}-${viewModel.realityCheckingWakeUpTime()}',
                   titleColor: NextSenseColors.royalBlue,
                   onPressed: () {
                     viewModel.navigateToRealityCheckBedtimeScreenForResult();

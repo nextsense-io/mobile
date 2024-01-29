@@ -5,6 +5,7 @@ import 'package:lucid_reality/utils/utils.dart';
 
 class RealityCheckToneSelectionViewModel extends RealityCheckBaseViewModel {
   final List<Tone> toneList = List.empty(growable: true);
+  ToneCategory? toneCategory;
 
   @override
   void init() async {
@@ -63,7 +64,13 @@ class RealityCheckToneSelectionViewModel extends RealityCheckBaseViewModel {
   }
 
   @override
-  void goBack() {
+  void goBack() async {
+    var tone = toneList.firstWhere((element) => element.isSelected);
+    if (toneCategory != null) {
+      toneCategory!.totemSound = tone.tone;
+      toneCategory!.type = tone.getFileExtension();
+      await saveRealityTest(toneCategory!.toRealityTest());
+    }
     navigation.popWithResult(toneList.firstWhere((element) => element.isSelected));
   }
 }
