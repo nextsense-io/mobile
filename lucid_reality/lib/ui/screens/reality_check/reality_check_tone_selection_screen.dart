@@ -35,6 +35,7 @@ class RealityCheckToneSelectionScreen extends HookWidget {
               selectedIndex.value = index;
             }
             isStartForResult.value = dataSet[isStartForResultKey];
+            viewModel.toneCategory = dataSet[toneCategoryKey];
           }
         });
       },

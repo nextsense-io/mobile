@@ -23,10 +23,17 @@ class RealityCheckTimeScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isStartForResult = (ModalRoute.of(context)?.settings.arguments is bool
-        ? ModalRoute.of(context)?.settings.arguments as bool
+    final bool isStartForResult = (ModalRoute
+        .of(context)
+        ?.settings
+        .arguments is bool
+        ? ModalRoute
+        .of(context)
+        ?.settings
+        .arguments as bool
         : false);
     final numberOfReminders = useState(4);
+    final previousNumberOfReminders = useState(4);
     final startTime = useRef(DateTime.now().copyWith(hour: 9, minute: 0, second: 0));
     final endTime = useRef(startTime.value.add(const Duration(hours: 8)));
     return ViewModelBuilder.reactive(
@@ -43,9 +50,11 @@ class RealityCheckTimeScreen extends HookWidget {
         }
         Future.delayed(
           Duration(milliseconds: 500),
-          () {
+              () {
             if (viewModel.lucidManager.realityCheck.getNumberOfReminders() > 0) {
               numberOfReminders.value = viewModel.lucidManager.realityCheck.getNumberOfReminders();
+              previousNumberOfReminders.value =
+                  viewModel.lucidManager.realityCheck.getNumberOfReminders();
             }
           },
         );
@@ -70,12 +79,18 @@ class RealityCheckTimeScreen extends HookWidget {
                     ),
                     Text(
                       'Reality Check',
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .titleMedium,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'A reality check is a method of deducing whether one is in a dream or in real life. Totem sounds will play during this interval to help you practice reality checks.',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .bodySmall,
                     ),
                     const SizedBox(height: 27),
                     Flexible(
@@ -88,7 +103,8 @@ class RealityCheckTimeScreen extends HookWidget {
                               startTime.value.copyWith(hour: start.h, minute: start.m);
                           endTime.value = endTime.value.copyWith(hour: end.h, minute: end.m);
                           _logger.log(Level.INFO,
-                              'startTime=>${startTime.value.getTime()} endTime=>${endTime.value.getTime()}');
+                              'startTime=>${startTime.value.getTime()} endTime=>${endTime.value
+                                  .getTime()}');
                         },
                       ),
                     ),
@@ -100,7 +116,10 @@ class RealityCheckTimeScreen extends HookWidget {
                         children: [
                           Text(
                             '# Daily checks',
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            style: Theme
+                                .of(context)
+                                .textTheme
+                                .bodyMedium,
                           ),
                           const Spacer(flex: 1),
                           IconButton(
@@ -117,7 +136,10 @@ class RealityCheckTimeScreen extends HookWidget {
                           ),
                           Text(
                             '${numberOfReminders.value}',
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            style: Theme
+                                .of(context)
+                                .textTheme
+                                .bodyMedium,
                           ),
                           IconButton(
                             onPressed: () {
@@ -142,7 +164,9 @@ class RealityCheckTimeScreen extends HookWidget {
                           await viewModel.saveNumberOfReminders(
                               startTime: startTime.value,
                               endTime: endTime.value,
-                              numberOfReminders: numberOfReminders.value);
+                              numberOfReminders: numberOfReminders.value,
+                              reminderCountChanged: isStartForResult && numberOfReminders.value != previousNumberOfReminders.value
+                          );
                           if (isStartForResult) {
                             viewModel.goBackWithResult('success');
                           } else {

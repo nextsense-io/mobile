@@ -78,7 +78,7 @@ class RealityCheckToneCategoryScreen extends HookWidget {
                       progressBarPercentage: 0.60,
                       progressBarVisibility: !isStartForResult,
                       onPressed: () async {
-                        await viewModel.lucidManager.saveRealityTest(viewModel.toneCategories
+                        await viewModel.saveRealityTest(viewModel.toneCategories
                             .firstWhere((element) => element.isSelected)
                             .toRealityTest());
                         if (isStartForResult) {

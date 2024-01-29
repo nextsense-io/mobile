@@ -6,6 +6,7 @@ import 'reality_check_bedtime_screen.dart';
 
 const totemSoundKey = 'totemSound';
 const isStartForResultKey = 'isStartForResult';
+const toneCategoryKey = 'toneCategoryKey';
 
 class RealityCheckToneCategoryViewModel extends RealityCheckBaseViewModel {
   final List<ToneCategory> toneCategories = List.empty(growable: true);
@@ -22,7 +23,8 @@ class RealityCheckToneCategoryViewModel extends RealityCheckBaseViewModel {
       RealityCheckToneSelectionScreen.id,
       arguments: Map.fromEntries([
         MapEntry(totemSoundKey, toneCategory.totemSound),
-        MapEntry(isStartForResultKey, isStartForResult)
+        MapEntry(isStartForResultKey, isStartForResult),
+        MapEntry(toneCategoryKey, toneCategory),
       ]),
     );
     if (result is Tone) {

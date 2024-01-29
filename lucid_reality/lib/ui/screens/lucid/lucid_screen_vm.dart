@@ -81,6 +81,8 @@ class LucidScreenViewModel extends ViewModel {
 
   String realityCheckActionName() => _lucidManager.realityCheck.getRealityTest()?.getName() ?? '';
 
+  int getNumberOfReminders() => _lucidManager.realityCheck.getNumberOfReminders() ?? 0;
+
   void navigateToSetGoalScreenForResult() async {
     final result = await _navigation.navigateTo(SetGoalScreen.id, arguments: true);
     if (result is String) {
