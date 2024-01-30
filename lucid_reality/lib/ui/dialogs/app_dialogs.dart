@@ -91,9 +91,9 @@ extension AppDialogs on BuildContext {
       return Future.value(BatteryOptimizationState.isDisabled);
     } else {
       var onContinue = await showConfirmationDialogWithResult(
-          title: 'Your device has additional battery optimization',
+          title: 'Disable battery optimization',
           message:
-              "Follow these steps to disable optimizations and enable scheduled notifications for this app.");
+              "This application needs to disable battery optimizations to be able to send you lucid reality tests at the right times throughout the day and night.");
       if (onContinue) {
         await DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
       }
