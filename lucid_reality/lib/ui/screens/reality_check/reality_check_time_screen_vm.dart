@@ -19,6 +19,7 @@ class RealityCheckTimeScreenViewModel extends RealityCheckBaseViewModel {
     bool reminderCountChanged = false,
   }) async {
     try {
+      setBusy(true);
       await lucidManager.saveNumberOfReminders(
           startTime: startTime.millisecondsSinceEpoch,
           endTime: endTime.millisecondsSinceEpoch,
@@ -43,6 +44,8 @@ class RealityCheckTimeScreenViewModel extends RealityCheckBaseViewModel {
       }
     } catch (e) {
       _logger.log(Level.WARNING, e);
+    } finally {
+      setBusy(false);
     }
   }
 }
