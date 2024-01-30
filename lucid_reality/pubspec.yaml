@@ -35,6 +35,7 @@ dependencies:
   circular_countdown_timer: ^0.2.1
   connectivity_plus: ^5.0.2
   dropdown_button2: ^1.5.2
+  disable_battery_optimization: ^1.1.1
   file: ^6.1.4
   email_validator: ^2.1.16
   firebase_auth: ^4.10.1
