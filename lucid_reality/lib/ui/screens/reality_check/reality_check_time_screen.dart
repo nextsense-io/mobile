@@ -14,7 +14,6 @@ import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen
 import 'package:lucid_reality/utils/notification.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:progressive_time_picker/progressive_time_picker.dart';
-import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
 class RealityCheckTimeScreen extends HookWidget {

@@ -59,7 +59,7 @@ class RealityCheckBaseViewModel extends ViewModel {
       );
       // Scheduling Bedtime notification
       final DateTime bedtime =
-          DateTime.fromMillisecondsSinceEpoch(lucidManager.realityCheck.getEndTime() ?? 0);
+          DateTime.fromMillisecondsSinceEpoch(lucidManager.realityCheck.getBedTime() ?? 0);
       final DateTime wakeUpTime =
           DateTime.fromMillisecondsSinceEpoch(lucidManager.realityCheck.getWakeTime() ?? 0);
       await scheduleRealityCheckNotification(
@@ -95,8 +95,12 @@ class RealityCheckBaseViewModel extends ViewModel {
       for (int i = 0; i < numberOfReminders; i++) {
         // Schedule each notification with calculated interval
         _logger.log(Level.INFO, "Time:${initialTime.hour}:${initialTime.minute}, Sound:$sound");
+        int notificationId = i + 1;
+        if (notificationType == NotificationType.realityCheckingBedtimeNotification) {
+          notificationId += 100;
+        }
         await scheduleNotifications(
-          notificationId: numberOfReminders + 1,
+          notificationId: notificationId,
           notificationType: notificationType,
           date: initialTime,
           title: realityTest.getName() ?? '',

@@ -70,7 +70,7 @@ class RealityCheckToneSelectionViewModel extends RealityCheckBaseViewModel {
       toneCategory!.totemSound = tone.tone;
       toneCategory!.type = tone.getFileExtension();
       await saveRealityTest(toneCategory!.toRealityTest());
-      scheduleNewToneNotifications(tone.tone);
+      await scheduleNewToneNotifications(tone.tone);
     }
     navigation.popWithResult(toneList.firstWhere((element) => element.isSelected));
   }
