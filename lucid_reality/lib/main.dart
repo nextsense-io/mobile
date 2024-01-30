@@ -47,7 +47,7 @@ void main() async {
     tz.initializeTimeZones();
     await initDependencies();
     await _initPreferences();
-    await initializeNotification();
+    await initializeNotifications();
     runApp(LucidRealityApp());
   }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));
 }
