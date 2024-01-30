@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
+import 'package:lucid_reality/domain/reality_test.dart';
 import 'package:lucid_reality/domain/tone_category.dart';
 import 'package:lucid_reality/ui/components/app_body.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
@@ -78,9 +79,11 @@ class RealityCheckToneCategoryScreen extends HookWidget {
                       progressBarPercentage: 0.60,
                       progressBarVisibility: !isStartForResult,
                       onPressed: () async {
-                        await viewModel.saveRealityTest(viewModel.toneCategories
+                        final RealityTest realityTest = viewModel.toneCategories
                             .firstWhere((element) => element.isSelected)
-                            .toRealityTest());
+                            .toRealityTest();
+                        await viewModel.saveRealityTest(realityTest);
+                        await viewModel.scheduleNewToneNotifications(realityTest.getTotemSound()!);
                         if (isStartForResult) {
                           viewModel.goBackWithResult('success');
                         } else {

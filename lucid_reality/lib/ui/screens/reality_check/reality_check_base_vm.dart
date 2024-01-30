@@ -8,7 +8,6 @@ import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/lucid_manager.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/utils/notification.dart';
-import 'package:lucid_reality/utils/utils.dart';
 import 'package:progressive_time_picker/progressive_time_picker.dart';
 
 class RealityCheckBaseViewModel extends ViewModel {
@@ -41,6 +40,27 @@ class RealityCheckBaseViewModel extends ViewModel {
     await lucidManager.saveRealityTest(realityTest);
   }
 
+  Future<void> scheduleNewToneNotifications(String sound) async {
+    try {
+      await clearNotifications();
+      // Create a notification channel with the current sound if it did not exist.
+      final formattedSound = sound.replaceAll(" ", '_').toLowerCase();
+      await updateNotificationsSound(sound: formattedSound);
+      _logger.log(Level.INFO, "Scheduling new notifications with $formattedSound sound.");
+      final numberOfReminders = lucidManager.realityCheck.getNumberOfReminders();
+      final int? startTime = lucidManager.realityCheck.getStartTime();
+      final int? endTime = lucidManager.realityCheck.getEndTime();
+      await scheduleRealityCheckNotification(
+        notificationType: NotificationType.realityCheckingBedtimeNotification,
+        startTime: DateTime.fromMillisecondsSinceEpoch(startTime!),
+        endTime: DateTime.fromMillisecondsSinceEpoch(endTime!),
+        numberOfReminders: numberOfReminders,
+      );
+    } catch (e) {
+      _logger.log(Level.WARNING, e);
+    }
+  }
+
   Future<void> scheduleRealityCheckNotification(
       {required NotificationType notificationType,
       required DateTime startTime,
@@ -48,8 +68,7 @@ class RealityCheckBaseViewModel extends ViewModel {
       required int numberOfReminders}) async {
     final realityTest = lucidManager.realityCheck.getRealityTest();
     if (realityTest != null) {
-      final sound =
-          '${realityTest.getTotemSound()}'.replaceAll(" ", '_').plus('.${realityTest.getType()}');
+      final String sound = realityTest.getTotemSound()?.replaceAll(" ", '_').toLowerCase() ?? 'air';
       final totalTime = formatIntervalTime(
           init: PickedTime(h: startTime.hour, m: startTime.minute),
           end: PickedTime(h: endTime.hour, m: endTime.hour));
@@ -64,7 +83,7 @@ class RealityCheckBaseViewModel extends ViewModel {
       for (int i = 0; i < numberOfReminders; i++) {
         // Schedule each notification with calculated interval
         _logger.log(Level.INFO, "Time:${initialTime.hour}:${initialTime.minute}, Sound:$sound");
-        await scheduleNotification(
+        await scheduleNotifications(
           notificationType: notificationType,
           date: initialTime,
           title: realityTest.getName() ?? '',

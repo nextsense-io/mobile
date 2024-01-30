@@ -75,7 +75,7 @@ class RealityCheckToneSelectionScreen extends HookWidget {
                           thumbVisibility: true,
                           child: ListView.separated(
                             itemBuilder: (context, index) {
-                              final tone = viewModel.toneList[index];
+                              final Tone tone = viewModel.toneList[index];
                               tone.isSelected = selectedIndex.value == index;
                               return InkWell(
                                 onTap: () {
