@@ -47,13 +47,25 @@ class RealityCheckBaseViewModel extends ViewModel {
       final formattedSound = sound.replaceAll(" ", '_').toLowerCase();
       await updateNotificationsSound(sound: formattedSound);
       _logger.log(Level.INFO, "Scheduling new notifications with $formattedSound sound.");
+      // Scheduling Daytime notification
       final numberOfReminders = lucidManager.realityCheck.getNumberOfReminders();
       final int? startTime = lucidManager.realityCheck.getStartTime();
       final int? endTime = lucidManager.realityCheck.getEndTime();
       await scheduleRealityCheckNotification(
-        notificationType: NotificationType.realityCheckingBedtimeNotification,
+        notificationType: NotificationType.realityCheckingTimeNotification,
         startTime: DateTime.fromMillisecondsSinceEpoch(startTime!),
         endTime: DateTime.fromMillisecondsSinceEpoch(endTime!),
+        numberOfReminders: numberOfReminders,
+      );
+      // Scheduling Bedtime notification
+      final DateTime bedtime =
+          DateTime.fromMillisecondsSinceEpoch(lucidManager.realityCheck.getEndTime() ?? 0);
+      final DateTime wakeUpTime =
+          DateTime.fromMillisecondsSinceEpoch(lucidManager.realityCheck.getWakeTime() ?? 0);
+      await scheduleRealityCheckNotification(
+        notificationType: NotificationType.realityCheckingBedtimeNotification,
+        startTime: bedtime,
+        endTime: wakeUpTime,
         numberOfReminders: numberOfReminders,
       );
     } catch (e) {
@@ -84,6 +96,7 @@ class RealityCheckBaseViewModel extends ViewModel {
         // Schedule each notification with calculated interval
         _logger.log(Level.INFO, "Time:${initialTime.hour}:${initialTime.minute}, Sound:$sound");
         await scheduleNotifications(
+          notificationId: numberOfReminders + 1,
           notificationType: notificationType,
           date: initialTime,
           title: realityTest.getName() ?? '',

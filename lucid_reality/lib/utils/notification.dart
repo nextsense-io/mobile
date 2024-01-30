@@ -25,13 +25,13 @@ extension NotificationTypeExtension on NotificationType {
 }
 
 Future<void> scheduleNotifications({
+  required int notificationId,
   required NotificationType notificationType,
   required String title,
   required String message,
   required DateTime date,
   required String sound,
 }) async {
-  final notificationId = Random().nextInt(100); // Generate a unique ID
 
   await AwesomeNotifications().createNotification(
     content: NotificationContent(
