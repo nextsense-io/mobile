@@ -119,7 +119,7 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/sounds/totem_sounds/
+#    - assets/sounds/totem_sounds/
     # Note that .env file path not working, had to rename it to env
     - env
 

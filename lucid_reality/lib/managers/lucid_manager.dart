@@ -119,11 +119,16 @@ class LucidManager {
   }
 
   Future<List<DreamJournal>> fetchDreamJournals() async {
-    return await firebaseRealTimeDb.getEntities(
+    List<DreamJournal> dreamJournals = await firebaseRealTimeDb.getEntities(
       DreamJournal.table,
       DreamJournal.fromJson,
-      sortBy: SortBy.DESC,
     );
+    dreamJournals.sort((a, b) {
+      int aDate = a.getCreatedAt() ?? 0;
+      int bDate = b.getCreatedAt() ?? 0;
+      return bDate.compareTo(aDate);
+    });
+    return dreamJournals;
   }
 
   Future<bool> deleteDreamJournal(DreamJournal dreamJournal) async {

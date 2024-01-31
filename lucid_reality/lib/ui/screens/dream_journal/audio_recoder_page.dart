@@ -29,7 +29,7 @@ class AudioRecorderPage extends HookWidget {
     }
     return AppCard(
       Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Container(
             width: double.maxFinite,
@@ -45,7 +45,7 @@ class AudioRecorderPage extends HookWidget {
               : viewModel.assetsAudioPlayer.builderCurrentPosition(
                   builder: (context, duration) {
                     var progressBarPercentage = 0.0;
-                    var isSameAudio = viewModel.isCurrentRecordingPlaying();
+                    var isSameAudio = viewModel.isCurrentRecordingPlaying() || isEditMode.value;
                     if (viewModel.assetsAudioPlayer.current.hasValue && isSameAudio) {
                       progressBarPercentage = duration.inSeconds /
                           (viewModel.assetsAudioPlayer.current.value?.audio.duration.inSeconds ??
@@ -59,75 +59,71 @@ class AudioRecorderPage extends HookWidget {
                     );
                   },
                 ),
-          SizedBox(height: 16),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: isEditMode.value
-                ? viewModel.assetsAudioPlayer.builderIsPlaying(
-                    builder: (context, isPlaying) {
-                      return Container(
-                        alignment: Alignment.center,
-                        child: SvgButton(
-                          imageName: isPlaying ? 'ic_pause.svg' : 'ic_play.svg',
-                          onPressed: () {
-                            viewModel.playOrPauseFromUrl(
-                                '${viewModel.dreamJournal?.getRecordingPath()}');
-                          },
-                        ),
-                      );
-                    },
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Visibility(
-                        visible: !isRecording.value && viewModel.recordingFile != null,
-                        child: SvgButton(
-                          imageName: 'ic_delete.svg',
-                          onPressed: () {
-                            viewModel.deleteRecordingOnExist();
-                          },
-                        ),
-                      ),
-                      SvgButton(
-                        size: Size(50, 50),
-                        imageName: isRecording.value ? 'ic_pause.svg' : 'ic_recording.svg',
-                        onPressed: () async {
-                          // Check and request permission if needed
-                          if (isRecording.value) {
-                            if (await recorder.isRecording()) {
-                              await recorder.stop();
-                            }
-                            isRecording.value = false;
-                            viewModel.validateSaveEntryButton();
-                          } else {
-                            //Delete recorded file if exist
-                            viewModel.deleteRecordingOnExist();
-                            if (await recorder.hasPermission()) {
-                              // Start recording to file
-                              await recorder.start(const RecordConfig(),
-                                  path: viewModel.getNewRecordingFilePath());
-                              isRecording.value = true;
-                            }
-                          }
+          isEditMode.value
+              ? viewModel.assetsAudioPlayer.builderIsPlaying(
+                  builder: (context, isPlaying) {
+                    return Container(
+                      alignment: Alignment.center,
+                      child: SvgButton(
+                        imageName: isPlaying ? 'ic_pause.svg' : 'ic_play.svg',
+                        onPressed: () {
+                          viewModel.playOrPauseFromUrl(
+                              '${viewModel.dreamJournal?.getRecordingPath()}');
                         },
                       ),
-                      Visibility(
-                        visible: !isRecording.value && viewModel.recordingFile != null,
-                        child: viewModel.assetsAudioPlayer.builderIsPlaying(
-                          builder: (context, isPlaying) {
-                            return SvgButton(
-                              imageName: isPlaying ? 'ic_pause.svg' : 'ic_play.svg',
-                              onPressed: () {
-                                viewModel.playOrPause();
-                              },
-                            );
-                          },
-                        ),
+                    );
+                  },
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Visibility(
+                      visible: !isRecording.value && viewModel.recordingFile != null,
+                      child: SvgButton(
+                        imageName: 'ic_delete.svg',
+                        onPressed: () {
+                          viewModel.deleteRecordingOnExist();
+                        },
                       ),
-                    ],
-                  ),
-          )
+                    ),
+                    SvgButton(
+                      size: Size(50, 50),
+                      imageName: isRecording.value ? 'ic_pause.svg' : 'ic_recording.svg',
+                      onPressed: () async {
+                        // Check and request permission if needed
+                        if (isRecording.value) {
+                          if (await recorder.isRecording()) {
+                            await recorder.stop();
+                          }
+                          isRecording.value = false;
+                          viewModel.validateSaveEntryButton();
+                        } else {
+                          //Delete recorded file if exist
+                          viewModel.deleteRecordingOnExist();
+                          if (await recorder.hasPermission()) {
+                            // Start recording to file
+                            await recorder.start(const RecordConfig(),
+                                path: viewModel.getNewRecordingFilePath());
+                            isRecording.value = true;
+                          }
+                        }
+                      },
+                    ),
+                    Visibility(
+                      visible: !isRecording.value && viewModel.recordingFile != null,
+                      child: viewModel.assetsAudioPlayer.builderIsPlaying(
+                        builder: (context, isPlaying) {
+                          return SvgButton(
+                            imageName: isPlaying ? 'ic_pause.svg' : 'ic_play.svg',
+                            onPressed: () {
+                              viewModel.playOrPause();
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                )
         ],
       ),
     );
