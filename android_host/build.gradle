@@ -27,7 +27,7 @@ android {
         minSdkVersion 28
         targetSdkVersion 34
         versionCode 40
-        versionName "0.6.4"
+        versionName "0.6.5"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -98,12 +98,16 @@ android {
             setRoot 'src/consumer/dev'
         }
 
-        lucid {
+        consumerProd {
+            setRoot 'src/consumer/prod'
+        }
+
+        lucidDev {
             setRoot 'src/lucid/dev'
         }
 
-        consumerProd {
-            setRoot 'src/consumer/prod'
+        lucidProd {
+            setRoot 'src/lucid/prod'
         }
     }
 
