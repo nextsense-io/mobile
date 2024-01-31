@@ -1,5 +1,6 @@
 package io.nextsense.android.main;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.ComponentName;
@@ -9,6 +10,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
@@ -63,11 +65,12 @@ public class MainActivity extends AppCompatActivity {
   private boolean nextSenseServiceBound = false;
   private Intent initialIntent;
   private ApplicationType applicationType;
-  private boolean started = false;
+  private boolean receivedLaunchIntent = false;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    RotatingFileLogger.get().logi(TAG, "Creating activity.");
 
     RotatingFileLogger.get().logi(TAG, "Start intent received: " + getIntent().toString());
     if (getIntent().getExtras() != null) {
@@ -76,6 +79,10 @@ public class MainActivity extends AppCompatActivity {
       RotatingFileLogger.get().logi(TAG, "Start intent received json: " +
               getIntent().getExtras().getString(EXTRA_NOTIFICATION_JSON));
       initialIntent = getIntent();
+      if (initialIntent.hasCategory(Intent.CATEGORY_LAUNCHER)) {
+        RotatingFileLogger.get().logi(TAG, "New intent received from launcher.");
+        receivedLaunchIntent = true;
+      }
     }
 
     setContentView(R.layout.activity_main);
@@ -95,15 +102,31 @@ public class MainActivity extends AppCompatActivity {
           sharedPref.getBoolean(FLUTTER_PREF_PREFIX + ALLOW_DATA_VIA_CELLULAR_KEY, false));
       // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
       getApplicationContext().startService(foregroundServiceIntent);
-    } else if (!started) {
+    } else {
       startFlutter(initialIntent);
       initialIntent = null;
     }
+
+    getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+      @Override
+      public void handleOnBackPressed() {
+        RotatingFileLogger.get().logi(TAG, "Back pressed.");
+        // Should add a confirmation prompt here in a non-test app.
+        if (nextSenseServiceBound) {
+          stopService();
+        }
+        if (applicationType == ApplicationType.LUCID_REALITY) {
+          finish();
+        }
+      }
+    });
+
     RotatingFileLogger.get().logd(TAG, "started");
   }
 
   @Override
   protected void onStart() {
+    RotatingFileLogger.get().logi(TAG, "Starting activity.");
     super.onStart();
     if (applicationType == ApplicationType.CONSUMER || applicationType == ApplicationType.MEDICAL) {
       if (!nextSenseServiceBound) {
@@ -122,11 +145,6 @@ public class MainActivity extends AppCompatActivity {
         }
       }
     }
-    if (applicationType == ApplicationType.LUCID_REALITY && started) {
-      started = false;
-      finish();
-    }
-    started = true;
   }
 
   @Override
@@ -134,6 +152,10 @@ public class MainActivity extends AppCompatActivity {
   protected void onNewIntent(Intent intent) {
     super.onNewIntent(intent);
     RotatingFileLogger.get().logi(TAG, "New intent received: " + intent.toString());
+    if (intent.hasCategory(Intent.CATEGORY_LAUNCHER)) {
+      RotatingFileLogger.get().logi(TAG, "New intent received from launcher.");
+      receivedLaunchIntent = true;
+    }
     boolean validTarget = false;
     if (intent.getExtras() != null) {
       RotatingFileLogger.get().logi(TAG, "New intent received extras: " +
@@ -168,28 +190,23 @@ public class MainActivity extends AppCompatActivity {
 
   @Override
   protected void onStop() {
+    RotatingFileLogger.get().logi(TAG, "Stopping activity.");
     if (nextSenseServiceBound) {
       unbindService(nextSenseConnection);
       nextSenseServiceBound = false;
     }
     super.onStop();
-  }
-
-  @Override
-  public void onBackPressed() {
-    // Should add a confirmation prompt here in a non-test app.
-    if (nextSenseServiceBound) {
-      stopService();
-    }
-    super.onBackPressed();
-    if (applicationType == ApplicationType.LUCID_REALITY) {
+    if (applicationType == ApplicationType.LUCID_REALITY && !receivedLaunchIntent) {
+      RotatingFileLogger.get().logi(TAG, "App finishing.");
       finish();
     }
+    receivedLaunchIntent = false;
   }
 
   @Override
   public void onDestroy() {
     // The flutter engine would survive the application.
+    RotatingFileLogger.get().logi(TAG, "Destroying activity.");
     FlutterEngine flutterEngine =
             FlutterEngineCache.getInstance().get(NextSenseApplication.FLUTTER_ENGINE_NAME);
     if (flutterEngine != null) {
