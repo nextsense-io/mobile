@@ -60,7 +60,6 @@ class ArticleDetailsScreen extends HookWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              overflow: TextOverflow.ellipsis,
                               article.headline,
                               style: Theme.of(context)
                                   .textTheme
@@ -70,7 +69,7 @@ class ArticleDetailsScreen extends HookWidget {
                             SizedBox(height: 8),
                             Text(
                               article.content,
-                              style: Theme.of(context).textTheme.bodySmall,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.12),
                             )
                           ],
                         ),

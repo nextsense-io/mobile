@@ -101,7 +101,10 @@ class LearnScreen extends HookWidget {
                 Text(
                   overflow: TextOverflow.ellipsis,
                   article.content,
-                  style: Theme.of(context).textTheme.bodySmallWithFontWeight600FontSize13,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmallWithFontSize13
+                      ?.copyWith(height: 1.11),
                   maxLines: 5,
                 )
               ],

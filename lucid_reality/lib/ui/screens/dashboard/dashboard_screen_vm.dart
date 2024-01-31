@@ -28,7 +28,6 @@ class DashboardScreenViewModel extends ViewModel {
   }
 
   void navigateToCategoryScreen() {
-    changeTab?.call(DashboardTab.lucid);
     _navigation.navigateTo(LucidRealityCategoryScreen.id);
   }
 

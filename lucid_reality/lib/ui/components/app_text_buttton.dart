@@ -23,7 +23,7 @@ class AppTextButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.transparent,
         padding: EdgeInsets.zero,
-        elevation: 0,
+        elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       child: Container(

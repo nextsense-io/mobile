@@ -245,7 +245,7 @@ class DreamJournalScreen extends HookWidget {
     return MenuItemButton(
       onPressed: () {
         switch (menuItem.label) {
-          case 'Edit':
+          case 'View':
             viewModel.navigateToRecordYourDreamScreen(dreamJournal);
             break;
           case 'Delete':

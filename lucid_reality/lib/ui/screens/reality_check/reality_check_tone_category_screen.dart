@@ -79,11 +79,13 @@ class RealityCheckToneCategoryScreen extends HookWidget {
                       progressBarPercentage: 0.60,
                       progressBarVisibility: !isStartForResult,
                       onPressed: () async {
+                        viewModel.setBusy(true);
                         final RealityTest realityTest = viewModel.toneCategories
                             .firstWhere((element) => element.isSelected)
                             .toRealityTest();
                         await viewModel.saveRealityTest(realityTest);
                         await viewModel.scheduleNewToneNotifications(realityTest.getTotemSound()!);
+                        viewModel.setBusy(false);
                         if (isStartForResult) {
                           viewModel.goBackWithResult('success');
                         } else {

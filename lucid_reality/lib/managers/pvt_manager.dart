@@ -53,7 +53,7 @@ class PVTManager {
         .add(PsychomotorVigilanceTestReport('Fastest response', fastest, NextSenseColors.skyBlue));
     _results
         .add(PsychomotorVigilanceTestReport('Slowest response', slowest, NextSenseColors.coral));
-    final missed = psychomotorVigilanceTest.taps.where((element) => element == 0).length;
+    final missed = psychomotorVigilanceTest.missedResponses;
     _results
         .add(PsychomotorVigilanceTestReport('Missed Responses', missed, NextSenseColors.royalBlue));
     if (psychomotorVigilanceTest.title.isEmpty) {

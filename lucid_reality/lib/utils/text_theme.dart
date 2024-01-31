@@ -46,6 +46,10 @@ extension LucidRealityTextTheme on TextTheme {
     return bodySmall?.copyWith(fontSize: 10);
   }
 
+  TextStyle? get bodySmallWithFontSize13 {
+    return bodySmall?.copyWith(fontSize: 13);
+  }
+
   TextStyle? get bodyCaption {
     return bodySmall?.copyWith(fontSize: 12);
   }

@@ -65,6 +65,7 @@ class RealityCheckToneSelectionViewModel extends RealityCheckBaseViewModel {
 
   @override
   void goBack() async {
+    setBusy(true);
     var tone = toneList.firstWhere((element) => element.isSelected);
     if (toneCategory != null) {
       toneCategory!.totemSound = tone.tone;
@@ -72,6 +73,7 @@ class RealityCheckToneSelectionViewModel extends RealityCheckBaseViewModel {
       await saveRealityTest(toneCategory!.toRealityTest());
       await scheduleNewToneNotifications(tone.tone);
     }
+    setBusy(false);
     navigation.popWithResult(toneList.firstWhere((element) => element.isSelected));
   }
 }

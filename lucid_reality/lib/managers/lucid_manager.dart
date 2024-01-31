@@ -15,6 +15,7 @@ class LucidManager {
   final IntentEntity intentEntity = IntentEntity.instance;
   final RealityCheckEntity realityCheck = RealityCheckEntity.instance;
   final ValueNotifier<String> newDreamJournalCreatedNotifier = ValueNotifier('');
+  final ValueNotifier<int> realityCheckingNotifier = ValueNotifier(0);
 
   Future<void> fetchIntent() async {
     await firebaseRealTimeDb.getEntityAs<IntentEntity>(
@@ -77,6 +78,7 @@ class LucidManager {
     realityCheck.setBedTime(bedtime);
     realityCheck.setWakeTime(wakeUpTime);
     await _saveRealityCheck();
+    realityCheckingNotifier.value = DateTime.now().millisecondsSinceEpoch;
   }
 
   Future<void> saveRealityTest(RealityTest realityTest) async {

@@ -40,6 +40,7 @@ extension GeneratePVTResultData on int {
 class PsychomotorVigilanceTest {
   String _title = '';
   int _averageTapLatencyMs = 0;
+  int _missedResponses = 0;
   final DateTime _creationDate;
   final List<int> _taps = <int>[];
   Alertness _alertnessLevel = Alertness.alert;
@@ -47,6 +48,8 @@ class PsychomotorVigilanceTest {
   String get title => _title;
 
   int get averageTapLatencyMs => _averageTapLatencyMs;
+
+  int get missedResponses => _missedResponses;
 
   DateTime get creationDate => _creationDate;
 
@@ -87,6 +90,14 @@ class PsychomotorVigilanceTest {
     return taps.isEmpty ? '' : '${taps.last}ms';
   }
 
+  set missedResponses(int value) {
+    _missedResponses = value;
+  }
+
+  void addMissedResponses() {
+    _missedResponses += 1;
+  }
+
   PVTResult toPVTResult() {
     final PVTResult pvtResult = PVTResult();
     pvtResult.setAverageTapLatencyMs(average);
@@ -94,6 +105,7 @@ class PsychomotorVigilanceTest {
     if (_taps.isNotEmpty) {
       pvtResult.setReactions(_taps);
     }
+    pvtResult.setMissedResponses(_missedResponses);
     return pvtResult;
   }
 
@@ -102,6 +114,7 @@ class PsychomotorVigilanceTest {
         DateTime.fromMillisecondsSinceEpoch(pvtResult.getTimeInterval() ?? 0));
     instance.taps.addAll(pvtResult.getReactions());
     pvtResult.getAverageTapLatencyMs().generatePVTResultData(instance);
+    instance.missedResponses = pvtResult.getMissedResponses();
     return instance;
   }
 }
