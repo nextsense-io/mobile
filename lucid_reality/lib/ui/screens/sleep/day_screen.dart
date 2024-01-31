@@ -94,11 +94,11 @@ class DayScreen extends HookWidget {
                             Align(
                                 alignment: Alignment.center,
                                 child: Text("${viewModel.sleepStartEndTime}")),
-                            Align(
-                                alignment: Alignment.topRight,
-                                child: Text(
-                                    textAlign: TextAlign.right,
-                                    "Time to sleep\n${viewModel.sleepLatency}")),
+                            // Align(
+                            //     alignment: Alignment.topRight,
+                            //     child: Text(
+                            //         textAlign: TextAlign.right,
+                            //         "Time to sleep\n${viewModel.sleepLatency}")),
                           ]))),
                       SizedBox(height: 16)
                     ] +

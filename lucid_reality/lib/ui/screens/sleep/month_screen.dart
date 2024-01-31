@@ -205,45 +205,45 @@ class MonthScreen extends HookWidget {
                                         ]))),
                               )
                             ]),
-                            Row(children: [
-                              Expanded(
-                                child: Padding(
-                                    padding: EdgeInsets.only(bottom: 8),
-                                    child: AppCard(Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text("Time to sleep",
-                                                  textAlign: TextAlign.left,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall!
-                                                      .copyWith(
-                                                          color: LucidSleepStage.awake.getColor(),
-                                                          fontWeight: FontWeight.bold))),
-                                          SizedBox(height: 8),
-                                          Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text("Your average time to sleep this month.",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium!
-                                                      .copyWith(color: Colors.white))),
-                                          SizedBox(height: 16),
-                                          Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(
-                                                  viewModel.averageSleepLatency?.hhmm ?? "N/A",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium!
-                                                      .copyWith(
-                                                          color: LucidSleepStage.awake.getColor(),
-                                                          fontWeight: FontWeight.bold))),
-                                        ]))),
-                              )
-                            ])
+                            // Row(children: [
+                            //   Expanded(
+                            //     child: Padding(
+                            //         padding: EdgeInsets.only(bottom: 8),
+                            //         child: AppCard(Column(
+                            //             crossAxisAlignment: CrossAxisAlignment.start,
+                            //             children: [
+                            //               Align(
+                            //                   alignment: Alignment.centerLeft,
+                            //                   child: Text("Time to sleep",
+                            //                       textAlign: TextAlign.left,
+                            //                       style: Theme.of(context)
+                            //                           .textTheme
+                            //                           .bodySmall!
+                            //                           .copyWith(
+                            //                               color: LucidSleepStage.awake.getColor(),
+                            //                               fontWeight: FontWeight.bold))),
+                            //               SizedBox(height: 8),
+                            //               Align(
+                            //                   alignment: Alignment.centerLeft,
+                            //                   child: Text("Your average time to sleep this month.",
+                            //                       style: Theme.of(context)
+                            //                           .textTheme
+                            //                           .bodyMedium!
+                            //                           .copyWith(color: Colors.white))),
+                            //               SizedBox(height: 16),
+                            //               Align(
+                            //                   alignment: Alignment.centerLeft,
+                            //                   child: Text(
+                            //                       viewModel.averageSleepLatency?.hhmm ?? "N/A",
+                            //                       style: Theme.of(context)
+                            //                           .textTheme
+                            //                           .bodyMedium!
+                            //                           .copyWith(
+                            //                               color: LucidSleepStage.awake.getColor(),
+                            //                               fontWeight: FontWeight.bold))),
+                            //             ]))),
+                            //   )
+                            // ])
                           ])))
         ]);
   }
