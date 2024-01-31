@@ -203,9 +203,13 @@ class RecordYourDreamScreen extends HookWidget {
                           ),
                           Switch.adaptive(
                             activeColor: NextSenseColors.royalPurple,
-                            value: isLucid.value,
+                            value: isEditMode.value ? (isLucid.value && isLucid.value) : isLucid.value,
                             onChanged: (value) {
-                              isLucid.value = value;
+                              if (isEditMode.value && !isLucid.value) {
+                                isLucid.value = value;
+                              } else {
+                                isLucid.value = value;
+                              }
                             },
                           )
                         ],

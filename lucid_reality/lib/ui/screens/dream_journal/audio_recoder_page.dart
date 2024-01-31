@@ -18,7 +18,7 @@ class AudioRecorderPage extends HookWidget {
   Widget build(BuildContext context) {
     final recorder = useAudioController();
     final isRecording = useState(false);
-    final isEditMode = useRef(viewModel.dreamJournal?.getRecordingPath() != null);
+    final isEditMode = useRef(viewModel.dreamJournal?.hasRecording() == true);
     if (isRecording.value) {
       useInterval(
         () {
@@ -28,43 +28,42 @@ class AudioRecorderPage extends HookWidget {
       );
     }
     return AppCard(
-      Stack(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Positioned(
-            top: 60,
-            bottom: 100,
-            left: 0,
-            right: 0,
-            child: isRecording.value
-                ? AppCircularProgressBar(
-                    size: Size(150, 150),
-                    text: isEditMode.value
-                        ? viewModel.dreamJournal?.getRecordingDuration() ?? '00:00'
-                        : formatDuration(Duration(seconds: viewModel.recordedDuration.value)),
-                  )
-                : viewModel.assetsAudioPlayer.builderCurrentPosition(
-                    builder: (context, duration) {
-                      var progressBarPercentage = 0.0;
-                      if (viewModel.assetsAudioPlayer.current.hasValue) {
-                        progressBarPercentage = duration.inSeconds /
-                            (viewModel.assetsAudioPlayer.current.value?.audio.duration.inSeconds ??
-                                1);
-                        progressBarPercentage = 1 - progressBarPercentage;
-                      }
-                      return AppCircularProgressBar(
-                        size: Size(150, 150),
-                        value: progressBarPercentage,
-                        text: formatDuration(duration),
-                      );
-                    },
-                  ),
+          Container(
+            width: double.maxFinite,
+            height: 16,
           ),
-          isEditMode.value
-              ? Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: viewModel.assetsAudioPlayer.builderIsPlaying(
+          isRecording.value
+              ? AppCircularProgressBar(
+                  size: Size(120, 120),
+                  text: isEditMode.value
+                      ? viewModel.dreamJournal?.getRecordingDuration() ?? '00:00'
+                      : formatDuration(Duration(seconds: viewModel.recordedDuration.value)),
+                )
+              : viewModel.assetsAudioPlayer.builderCurrentPosition(
+                  builder: (context, duration) {
+                    var progressBarPercentage = 0.0;
+                    var isSameAudio = viewModel.isCurrentRecordingPlaying();
+                    if (viewModel.assetsAudioPlayer.current.hasValue && isSameAudio) {
+                      progressBarPercentage = duration.inSeconds /
+                          (viewModel.assetsAudioPlayer.current.value?.audio.duration.inSeconds ??
+                              1);
+                      progressBarPercentage = 1 - progressBarPercentage;
+                    }
+                    return AppCircularProgressBar(
+                      size: Size(120, 120),
+                      value: progressBarPercentage,
+                      text: isSameAudio ? formatDuration(duration) : '00.00',
+                    );
+                  },
+                ),
+          SizedBox(height: 16),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: isEditMode.value
+                ? viewModel.assetsAudioPlayer.builderIsPlaying(
                     builder: (context, isPlaying) {
                       return Container(
                         alignment: Alignment.center,
@@ -77,13 +76,8 @@ class AudioRecorderPage extends HookWidget {
                         ),
                       );
                     },
-                  ),
-                )
-              : Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Row(
+                  )
+                : Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Visibility(
@@ -133,7 +127,7 @@ class AudioRecorderPage extends HookWidget {
                       ),
                     ],
                   ),
-                )
+          )
         ],
       ),
     );
