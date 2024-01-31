@@ -8,7 +8,9 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 
     <application android:name=".NextSenseApplication"
-        android:icon="@drawable/launcher_lucid" tools:replace="icon">
+            android:icon="@mipmap/launcher_lucid_round"
+            android:roundIcon="@mipmap/launcher_lucid"
+            tools:replace="icon, roundIcon">
         <activity android:name=".MainActivity" android:exported="true">
             <meta-data android:name="health_permissions" android:resource="@array/health_permissions" />
 
