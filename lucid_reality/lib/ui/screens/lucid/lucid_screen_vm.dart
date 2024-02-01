@@ -33,6 +33,11 @@ class LucidScreenViewModel extends ViewModel {
       }
     }
     setBusy(false);
+    _lucidManager.realityCheckingNotifier.addListener(
+      () {
+        notifyListeners();
+      },
+    );
   }
 
   void navigateToCategoryScreen() {

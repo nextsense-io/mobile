@@ -73,4 +73,8 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
     psychomotorVigilanceTest?.taps.add(tapTime?.getTapLatency() ?? 0);
     scheduleButtonVisibility();
   }
+
+  void addMissedResponses() {
+    psychomotorVigilanceTest?.addMissedResponses();
+  }
 }

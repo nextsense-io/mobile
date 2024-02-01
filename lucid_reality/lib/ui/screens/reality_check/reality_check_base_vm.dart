@@ -1,3 +1,4 @@
+import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
@@ -8,6 +9,7 @@ import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/lucid_manager.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/utils/notification.dart';
+import 'package:lucid_reality/utils/utils.dart';
 import 'package:progressive_time_picker/progressive_time_picker.dart';
 
 class RealityCheckBaseViewModel extends ViewModel {
@@ -109,6 +111,16 @@ class RealityCheckBaseViewModel extends ViewModel {
         );
         initialTime = initialTime.add(timeOffset);
       }
+    }
+  }
+
+  void playMusic(String musicFile) async {
+    try {
+      AssetsAudioPlayer.playAndForget(
+        Audio(soundBasePath.plus(musicFile)),
+      );
+    } catch (t) {
+      //mp3 unreachable
     }
   }
 }

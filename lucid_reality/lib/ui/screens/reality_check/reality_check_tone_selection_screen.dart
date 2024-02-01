@@ -43,6 +43,7 @@ class RealityCheckToneSelectionScreen extends HookWidget {
         return SafeArea(
           child: Scaffold(
             body: AppBody(
+              isLoading: viewModel.isBusy,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(

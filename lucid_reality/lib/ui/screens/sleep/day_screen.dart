@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
+import 'package:lucid_reality/ui/components/app_text_buttton.dart';
 import 'package:lucid_reality/ui/components/oval_button.dart';
 import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/components/solid_circle.dart';
@@ -43,7 +44,8 @@ class DayScreen extends HookWidget {
             onTap: () {
               _navigation.navigateTo(NoSleepDataScreen.id);
             },
-            text: "Connect", showBackground: true),
+            text: "Connect",
+            showBackground: true),
       ])));
     }
 
@@ -140,11 +142,14 @@ class DayScreen extends HookWidget {
                 body = Column(children: [
                   Text("Lucid Reality is not authorized to read sleep data from Health Connect."),
                   SizedBox(height: 16),
-                  OvalButton(
-                      onTap: () {
-                        viewModel.authorizeHealthApp();
-                      },
-                      text: "Authorize", showBackground: true)
+                  AppTextButton(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    backgroundImage: 'btn_authorize.svg',
+                    onPressed: () {
+                      viewModel.authorizeHealthApp();
+                    },
+                    text: "Authorize",
+                  )
                 ]);
               }
             } else {
@@ -156,7 +161,8 @@ class DayScreen extends HookWidget {
                     onTap: () {
                       viewModel.installHealthConnect();
                     },
-                    text: "Install", showBackground: true)
+                    text: "Install",
+                    showBackground: true)
               ]);
             }
           } else {

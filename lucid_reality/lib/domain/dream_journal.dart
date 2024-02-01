@@ -125,6 +125,10 @@ class DreamJournal extends FirebaseRealtimeDBEntity<DreamJournalKey> {
     setValue(DreamJournalKey.sketchPath, sketchPath);
   }
 
+  bool hasRecording() {
+    return Uri.tryParse(getRecordingPath() ?? '')?.hasAbsolutePath ?? false;
+  }
+
   factory DreamJournal.fromJson(MapEntry<String, dynamic> e) {
     DreamJournal dreamJournal = DreamJournal();
     dreamJournal.entityId = e.key;

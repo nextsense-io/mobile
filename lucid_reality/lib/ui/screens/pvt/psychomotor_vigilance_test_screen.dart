@@ -54,38 +54,43 @@ class PsychomotorVigilanceTestScreen extends HookWidget {
           ),
           const SizedBox(height: 10),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: ShapeDecoration(
-                color: NextSenseColors.cardBackground,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              onTap: () {
+                viewModel.addMissedResponses();
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: ShapeDecoration(
+                  color: NextSenseColors.cardBackground,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                 ),
-              ),
-              alignment: Alignment.center,
-              child: btnVisibility.value
-                  ? InkWell(
-                      onTapDown: (details) {
-                        viewModel.rescheduleButtonVisibility();
-                      },
-                      child: Container(
-                        width: 131,
-                        height: 131,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: Svg(imageBasePath.plus('btn_brain_check.svg')),
-                            fit: BoxFit.fill,
+                alignment: Alignment.center,
+                child: btnVisibility.value
+                    ? InkWell(
+                        onTapDown: (details) {
+                          viewModel.rescheduleButtonVisibility();
+                        },
+                        child: Container(
+                          width: 131,
+                          height: 131,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: Svg(imageBasePath.plus('btn_brain_check.svg')),
+                              fit: BoxFit.fill,
+                            ),
                           ),
+                          alignment: Alignment.center,
+                          child: const MyCountdown(Duration(milliseconds: 10)),
                         ),
-                        alignment: Alignment.center,
-                        child: const MyCountdown(Duration(milliseconds: 10)),
+                      )
+                    : Text(
+                        viewModel.psychomotorVigilanceTest?.lastClickSpendTime ?? '',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                    )
-                  : Text(
-                      viewModel.psychomotorVigilanceTest?.lastClickSpendTime ?? '',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+              ),
             ),
           ),
           const SizedBox(height: 30),

@@ -204,9 +204,13 @@ class RecordYourDreamScreen extends HookWidget {
                           Switch.adaptive(
                             activeColor: NextSenseColors.royalPurple,
                             value: isLucid.value,
-                            onChanged: (value) {
-                              isLucid.value = value;
-                            },
+                            onChanged: isEditMode.value
+                                ? (value) {
+                                    if (viewModel.dreamJournal?.isLucid() == false) {
+                                      isLucid.value = value;
+                                    }
+                                  }
+                                : (value) => isLucid.value = value,
                           )
                         ],
                       ),

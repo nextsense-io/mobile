@@ -66,11 +66,17 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
           assetsAudioPlayer.playOrPause();
         }
       }
-      recordedDuration.value = assetsAudioPlayer.current.value!.audio.duration.inSeconds;
       notifyListeners();
     } catch (e) {
       _logger.log(Level.WARNING, e);
     }
+  }
+
+  bool isCurrentRecordingPlaying() {
+    return assetsAudioPlayer.current.hasValue &&
+        assetsAudioPlayer.current.value?.audio.assetAudioPath
+                .compareTo(recordingFile?.path ?? '') ==
+            0;
   }
 
   void playOrPauseFromUrl(String musicUrl) async {
@@ -79,14 +85,17 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
       if (!assetsAudioPlayer.current.hasValue) {
         assetsAudioPlayer.open(Audio.network(musicUrl));
       } else {
-        if (assetsAudioPlayer.current.value?.audio.assetAudioPath.compareTo(musicUrl) !=
-            0) {
+        if (assetsAudioPlayer.current.value?.audio.assetAudioPath.compareTo(musicUrl) != 0) {
           assetsAudioPlayer.open(Audio.network(musicUrl));
         } else {
           assetsAudioPlayer.playOrPause();
         }
       }
-      recordedDuration.value = assetsAudioPlayer.current.value!.audio.duration.inSeconds;
+      try {
+        recordedDuration.value = assetsAudioPlayer.current.value!.audio.duration.inSeconds;
+      } catch (e) {
+        _logger.log(Level.WARNING, e);
+      }
       notifyListeners();
     } catch (e) {
       _logger.log(Level.WARNING, e);
@@ -94,8 +103,12 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
   }
 
   void pauseMusic() {
-    if (assetsAudioPlayer.isPlaying.value) {
-      assetsAudioPlayer.pause();
+    try {
+      if (assetsAudioPlayer.isPlaying.value) {
+        assetsAudioPlayer.pause();
+      }
+    } catch (e) {
+      _logger.log(Level.WARNING, e);
     }
   }
 
@@ -116,8 +129,8 @@ class RecordYourDreamViewModel extends RealityCheckBaseViewModel {
         recordingFile?.delete();
         recordingFile = null;
         pauseMusic();
-        if (assetsAudioPlayer.current.value?.audio != null) {
-          assetsAudioPlayer.playlist?.remove(assetsAudioPlayer.current.value?.audio as Audio);
+        if (assetsAudioPlayer.current.hasValue) {
+          assetsAudioPlayer.playlist?.audios.clear();
         }
         recordedDuration.value = 0;
         validateSaveEntryButton();

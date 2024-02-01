@@ -13,7 +13,7 @@ class AppTextButton extends StatelessWidget {
     required this.text,
     required this.onPressed,
     this.backgroundImage = 'btn_background.svg',
-    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
   });
 
   @override
@@ -23,7 +23,7 @@ class AppTextButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.transparent,
         padding: EdgeInsets.zero,
-        elevation: 0,
+        elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       child: Container(

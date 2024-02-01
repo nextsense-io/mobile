@@ -37,7 +37,8 @@ class RealityCheckBottomBar extends StatelessWidget {
         const SizedBox(width: 16),
         Flexible(
           flex: 2,
-          child: Align(
+          child: Container(
+            height: 48,
             alignment: Alignment.centerRight,
             child: buttonType == ButtonType.forwardArrow
                 ? IconButton(
@@ -48,7 +49,7 @@ class RealityCheckBottomBar extends StatelessWidget {
                       ),
                     ),
                   )
-                : AppTextButton(text: "Save", onPressed: onPressed),
+                : AppTextButton(text: "Save", onPressed: onPressed, padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16)),
           ),
         )
       ],
