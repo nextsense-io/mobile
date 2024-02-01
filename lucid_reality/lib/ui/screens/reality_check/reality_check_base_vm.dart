@@ -85,11 +85,13 @@ class RealityCheckBaseViewModel extends ViewModel {
       final String sound = realityTest.getTotemSound()?.replaceAll(" ", '_').toLowerCase() ?? 'air';
       final totalTime = formatIntervalTime(
           init: PickedTime(h: startTime.hour, m: startTime.minute),
-          end: PickedTime(h: endTime.hour, m: endTime.hour));
+          end: PickedTime(h: endTime.hour, m: endTime.minute));
+      _logger.log(Level.INFO, 'Total Time=>${totalTime.h}:${totalTime.m}');
       // Calculate interval offset
       final timeOffset = Duration(
           seconds:
               Duration(hours: totalTime.h, minutes: totalTime.m).inSeconds ~/ numberOfReminders);
+      _logger.log(Level.INFO, 'TimeOffset=>${timeOffset.inMinutes}, ${timeOffset.inSeconds}');
       var initialTime = startTime;
       //Before scheduling new notifications we have to cancelled all previous scheduled notifications.
       await AwesomeNotifications()
@@ -101,6 +103,7 @@ class RealityCheckBaseViewModel extends ViewModel {
         if (notificationType == NotificationType.realityCheckingBedtimeNotification) {
           notificationId += 100;
         }
+        _logger.log(Level.INFO, 'scheduleNotifications=>$notificationId, "Time:${initialTime.hour}:${initialTime.minute}');
         await scheduleNotifications(
           notificationId: notificationId,
           notificationType: notificationType,

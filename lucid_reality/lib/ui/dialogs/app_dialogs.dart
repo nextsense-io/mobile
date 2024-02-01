@@ -84,6 +84,9 @@ extension AppDialogs on BuildContext {
     );
   }
 
+  /// *
+  /// Checking battery optimization is enabled or disabled. If it is enabled, we will ask the user to disable it, and then immediately return 'isInProgress' for further checking. Otherwise, return the status 'disable'.
+  ///
   Future<BatteryOptimizationState> isBatteryOptimizationDisabled() async {
     final bool isBatteryOptimizationDisabled =
         await DisableBatteryOptimization.isBatteryOptimizationDisabled ?? true;

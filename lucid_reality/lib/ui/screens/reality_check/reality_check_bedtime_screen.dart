@@ -35,6 +35,7 @@ class RealityCheckBedtimeScreen extends HookWidget {
       final viewModel = viewModelRef.value;
       final isNotificationAllow = await notificationPermission(context);
       if (isNotificationAllow) {
+        /// Checking battery optimization is enabled or disabled. If it is enabled, we will ask the user to disable it, and then immediately return 'isInProgress' for further checking. Otherwise, return the status 'disable'.
         batteryOptimizationState.value = await context.isBatteryOptimizationDisabled();
         if (batteryOptimizationState.value == BatteryOptimizationState.isDisabled) {
           await viewModel.saveBedtime(bedtime: bedtime.value, wakeUpTime: wakeUpTime.value);

@@ -38,15 +38,15 @@ class RealityCheckTimeScreen extends HookWidget {
       final viewModel = viewModelRef.value;
       final isNotificationAllow = await notificationPermission(context);
       if (isNotificationAllow) {
-        batteryOptimizationState.value =
-        await context.isBatteryOptimizationDisabled();
+        /// Checking battery optimization is enabled or disabled. If it is enabled, we will ask the user to disable it, and then immediately return 'isInProgress' for further checking. Otherwise, return the status 'disable'.
+        batteryOptimizationState.value = await context.isBatteryOptimizationDisabled();
         if (batteryOptimizationState.value == BatteryOptimizationState.isDisabled) {
           await viewModel.saveNumberOfReminders(
               startTime: startTime.value,
               endTime: endTime.value,
               numberOfReminders: numberOfReminders.value,
-              reminderCountChanged: isStartForResult &&
-                  numberOfReminders.value != previousNumberOfReminders.value);
+              reminderCountChanged:
+                  isStartForResult && numberOfReminders.value != previousNumberOfReminders.value);
           if (isStartForResult) {
             viewModel.goBackWithResult('success');
           } else {
