@@ -165,6 +165,10 @@ class HomeScreen extends HookWidget {
       ),
       HomeContainer(
         title: 'LUCID DREAMING',
+        showForwardButton: true,
+        onForwardButtonPressed: () {
+          this.viewModel.navigateToCategoryScreen();
+        },
         child: ViewModelBuilder.reactive(
           viewModelBuilder: () => LucidScreenViewModel(),
           onViewModelReady: (viewModel) => viewModel.init(),

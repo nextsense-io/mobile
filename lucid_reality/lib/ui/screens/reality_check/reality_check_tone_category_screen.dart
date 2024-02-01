@@ -69,6 +69,7 @@ class RealityCheckToneCategoryScreen extends HookWidget {
                           return InkWell(
                             onTap: () {
                               viewModel.onCategoryIndexChanged(index);
+                              viewModel.playMusic(toneCategory.getMusicFile());
                             },
                             child: roundItem(context, toneCategory),
                           );

@@ -54,6 +54,8 @@ class ToneCategory {
     _isSelected = value;
   }
 
+  String getMusicFile() => '${_totemSound.replaceAll(" ", '_').toLowerCase()}.mp3';
+
   RealityTest toRealityTest() {
     final instance = RealityTest.instance;
     instance.setName(name);
