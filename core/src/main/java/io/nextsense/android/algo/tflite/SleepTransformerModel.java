@@ -42,17 +42,17 @@ public class SleepTransformerModel extends BaseModel {
   }
 
   @Override
-  public void loadModel() throws IOException {
-    super.loadModel();
+  public void loadModel(boolean useGpu) throws IOException {
+    super.loadModel(useGpu);
     if (preprocessorTflite != null) {
       RotatingFileLogger.get().logi(TAG, "Preprocessor model already loaded.");
     } else {
-      preprocessorTflite = loadModelAsset(PREPROCESSOR_NAME);
+      preprocessorTflite = loadModelAsset(PREPROCESSOR_NAME, /*useGpu=*/false);
     }
     if (postprocessorTflite != null) {
       RotatingFileLogger.get().logi(TAG, "Postprocessor model already loaded.");
     } else {
-      postprocessorTflite = loadModelAsset(POSTPROCESSOR_NAME);
+      postprocessorTflite = loadModelAsset(POSTPROCESSOR_NAME, /*useGpu=*/false);
     }
   }
 

@@ -239,7 +239,7 @@ public class ForegroundService extends Service {
     if (applicationType == ApplicationType.CONSUMER) {
       sleepTransformerModel = new SleepTransformerModel(getApplicationContext());
       try {
-        sleepTransformerModel.loadModel();
+        sleepTransformerModel.loadModel(/*useGpu=*/false);
         RotatingFileLogger.get().logi(TAG, "Initialized sleep transformer model.");
       } catch (IOException e) {
         RotatingFileLogger.get().loge(TAG, "Failed to load sleep transformer model: " +
