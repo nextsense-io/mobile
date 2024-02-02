@@ -188,13 +188,13 @@ class PsychomotorVigilanceTestResultsScreen extends HookWidget {
               labelAnchor: AnnotationLabelAnchor.start,
             ),
             LineAnnotationSegment(
-              300,
+              500,
               RangeAnnotationAxisType.measure,
               color: ColorUtil.fromDartColor(NextSenseColors.royalPurple),
               dashPattern: [4, 4],
             ),
             LineAnnotationSegment(
-              1200,
+              900,
               RangeAnnotationAxisType.measure,
               color: ColorUtil.fromDartColor(NextSenseColors.royalPurple),
               labelAnchor: AnnotationLabelAnchor.start,
