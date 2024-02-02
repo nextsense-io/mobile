@@ -99,10 +99,9 @@ class RealityCheckBaseViewModel extends ViewModel {
       for (int i = 0; i < numberOfReminders; i++) {
         // Schedule each notification with calculated interval
         _logger.log(Level.INFO, "Time:${initialTime.hour}:${initialTime.minute}, Sound:$sound");
-        int notificationId = i + 1;
-        if (notificationType == NotificationType.realityCheckingBedtimeNotification) {
-          notificationId += 100;
-        }
+        int notificationId = notificationType == NotificationType.realityCheckingBedtimeNotification
+            ? realityCheckingTimeNotificationId
+            : realityCheckingBedtimeNotificationId;
         _logger.log(Level.INFO, 'scheduleNotifications=>$notificationId, "Time:${initialTime.hour}:${initialTime.minute}');
         await scheduleNotifications(
           notificationId: notificationId,

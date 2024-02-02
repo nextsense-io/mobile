@@ -1,12 +1,12 @@
 // Function to schedule a notification at a specific time
-import 'dart:math';
-
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 
 const String _realityCheckingTimeChannelKey = 'realityCheckingTimeChannel';
 const String _realityCheckingBedTimeChannelKey = 'realityCheckingBedTimeChannel';
+const int realityCheckingTimeNotificationId = 101;
+const int realityCheckingBedtimeNotificationId = 102;
 
 enum NotificationType {
   realityCheckingTimeNotification,
@@ -24,6 +24,27 @@ extension NotificationTypeExtension on NotificationType {
   }
 }
 
+Future<bool> isDoNotDisturbOverriddenForChannel(
+    {required NotificationType notificationType, required String sound}) async {
+  List<NotificationPermission> permissionsAllowed = await AwesomeNotifications()
+      .checkPermissionList(
+      channelKey: '${notificationType.notificationChannelKey}$sound',
+      permissions: [NotificationPermission.CriticalAlert]
+  );
+  if (permissionsAllowed.isNotEmpty) {
+    return permissionsAllowed.first == NotificationPermission.CriticalAlert;
+  }
+  return false;
+}
+
+Future requestDoNotDisturbOverride(
+    {required NotificationType notificationType, required String sound}) async {
+  await AwesomeNotifications().requestPermissionToSendNotifications(
+      channelKey: '${notificationType.notificationChannelKey}$sound',
+      permissions: [NotificationPermission.CriticalAlert]
+  );
+}
+
 Future<void> scheduleNotifications({
   required int notificationId,
   required NotificationType notificationType,
@@ -32,8 +53,7 @@ Future<void> scheduleNotifications({
   required DateTime date,
   required String sound,
 }) async {
-
-  await AwesomeNotifications().createNotification(
+    await AwesomeNotifications().createNotification(
     content: NotificationContent(
       id: notificationId,
       channelKey: '${notificationType.notificationChannelKey}$sound',

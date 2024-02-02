@@ -5,7 +5,6 @@ import 'package:health/health.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
 import 'package:lucid_reality/managers/health_connect_manager.dart';
-import 'package:lucid_reality/ui/components/sleep_bar_chart.dart';
 import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/screens/sleep/sleep_screen_vm.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
@@ -21,13 +20,9 @@ class MonthScreenViewModel extends ViewModel {
   Map<DateTime, DaySleepStats> _dailySleepStats = {};
   Map<DateTime, List<ChartSleepStage>> _chartSleepStages = {};
   Map<LucidSleepStage, Duration> _sleepStageAverages = {};
-  Map<LucidSleepStage, List<DaySleepStage>> _daySleepStages = {};
   Duration? _averageSleepLatency;
-  DateTime get currentMonth => _monthStartDate;
-  SleepResultType get sleepResultType => _sleepResultType;
   Map<LucidSleepStage, Duration> get sleepStageAverages => _sleepStageAverages;
   Map<DateTime, List<ChartSleepStage>> get chartSleepStages => _chartSleepStages;
-  List<DaySleepStage> get daySleepStages => _daySleepStages.values.expand((x) => x).toList();
   Duration get averageSleepTime => _sleepStageAverages[LucidSleepStage.sleeping] ?? Duration.zero;
   Duration? get averageSleepLatency => _averageSleepLatency;
 
@@ -58,7 +53,7 @@ class MonthScreenViewModel extends ViewModel {
 
     int daysInMonthInt = daysInMonth(_monthStartDate.year, _monthStartDate.month);
     _healthDataPoints = await _healthConnectManager.getSleepSessionData(
-        startDate: currentMonth, days: daysInMonthInt - 1);
+        startDate: _monthStartDate.subtract(Duration(days: 1)), days: daysInMonthInt + 1);
     if (_healthDataPoints?.isEmpty ?? true) {
       _sleepResultType = SleepResultType.noData;
     } else {

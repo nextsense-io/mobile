@@ -72,7 +72,7 @@ class DayScreenViewModel extends ViewModel {
 
     // Go 2 days in the past to make sure you get all the data then use the last day only.
     List<HealthDataPoint>? healthDataPoints = await _healthConnectManager.getSleepSessionData(
-        startDate: currentDate, days: 2);
+        startDate: currentDate.subtract(Duration(days: 1)), days: 2);
     if (healthDataPoints?.isNotEmpty ?? false) {
       Map<DateTime, List<HealthDataPoint>?> datedHealthDataPoints =
           SleepScreenViewModel.getDatedHealthData(healthDataPoints!);
