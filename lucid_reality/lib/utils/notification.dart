@@ -116,7 +116,7 @@ Future<void> updateNotificationsSound({required String sound}) async {
 Future<void> initializeNotifications() async {
   // Create the notification channels with air sound as a default one.
   AwesomeNotifications().initialize(
-    'resource://drawable/android12splash',
+    'resource://drawable/ic_stat_onesignal_default',
     [
       getDaytimeNotificationChannel('air'),
       getBedtimeNotificationChannel('air'),
