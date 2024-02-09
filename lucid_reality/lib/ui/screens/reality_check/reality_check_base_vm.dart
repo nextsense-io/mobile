@@ -93,7 +93,8 @@ class RealityCheckBaseViewModel extends ViewModel {
               Duration(hours: totalTime.h, minutes: totalTime.m).inSeconds ~/ numberOfReminders);
       _logger.log(Level.INFO, 'TimeOffset=>${timeOffset.inMinutes}, ${timeOffset.inSeconds}');
       var initialTime = startTime;
-      //Before scheduling new notifications we have to cancelled all previous scheduled notifications.
+      // Before scheduling new notifications we have to cancel all previously scheduled
+      // notifications.
       await AwesomeNotifications()
           .cancelSchedulesByChannelKey(notificationType.notificationChannelKey);
       for (int i = 0; i < numberOfReminders; i++) {
@@ -102,6 +103,7 @@ class RealityCheckBaseViewModel extends ViewModel {
         int notificationId = notificationType == NotificationType.realityCheckingBedtimeNotification
             ? realityCheckingTimeNotificationId
             : realityCheckingBedtimeNotificationId;
+        notificationId += i;
         _logger.log(Level.INFO, 'scheduleNotifications=>$notificationId, "Time:${initialTime.hour}:${initialTime.minute}');
         await scheduleNotifications(
           notificationId: notificationId,

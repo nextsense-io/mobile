@@ -5,8 +5,8 @@ import 'package:lucid_reality/ui/nextsense_colors.dart';
 
 const String _realityCheckingTimeChannelKey = 'realityCheckingTimeChannel';
 const String _realityCheckingBedTimeChannelKey = 'realityCheckingBedTimeChannel';
-const int realityCheckingTimeNotificationId = 101;
-const int realityCheckingBedtimeNotificationId = 102;
+const int realityCheckingTimeNotificationId = 100;
+const int realityCheckingBedtimeNotificationId = 200;
 
 enum NotificationType {
   realityCheckingTimeNotification,
