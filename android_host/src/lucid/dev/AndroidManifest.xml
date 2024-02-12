@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY"/>
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" tools:node="remove" />
 
     <application android:name=".NextSenseApplication"
             android:icon="@mipmap/launcher_lucid_round"
@@ -18,7 +20,7 @@
                 <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
             </intent-filter>
         </activity>
-        <!-- TODO: Process intent in MainActivity to show privacy/rawtionale -->
+        <!-- TODO: Process intent in MainActivity to show privacy/rationale -->
         <activity-alias
             android:name="AndroidURationaleActivity"
             android:exported="true"
@@ -42,6 +44,7 @@
     </application>
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
+        <package android:name="com.google.android.apps.fitness" />
         <intent>
             <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
         </intent>

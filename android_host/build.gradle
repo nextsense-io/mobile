@@ -19,14 +19,14 @@ android {
             keyPassword RELEASE_KEY_PASSWORD
         }
     }
-    compileSdkVersion 34
+    compileSdk 34
     namespace "io.nextsense.android.main"
 
     defaultConfig {
         applicationId "io.nextsense.android.main"
         minSdkVersion 28
         targetSdkVersion 34
-        versionCode 40
+        versionCode 42
         versionName "0.6.7"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -139,15 +139,15 @@ android {
 }
 
 dependencies {
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.2'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     implementation project(path: ':core')
     implementation project(path: ':flutter')
     implementation project(path: ':service')
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.gms:play-services-auth:20.4.1'
-    implementation 'com.google.android.material:material:1.8.0'
-    implementation 'com.google.code.gson:gson:2.9.1'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'com.google.code.gson:gson:2.10'
     // Import the BoM for the Firebase platform
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
     implementation 'com.google.firebase:firebase-appcheck-debug'
