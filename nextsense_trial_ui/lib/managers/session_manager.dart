@@ -1,18 +1,19 @@
+import 'package:flutter_common/domain/device_settings.dart';
+import 'package:flutter_common/domain/earbuds_config.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/data_session.dart';
-import 'package:nextsense_trial_ui/domain/device_settings.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 enum Modality {
@@ -20,7 +21,7 @@ enum Modality {
 }
 
 class SessionManager {
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
@@ -62,14 +63,27 @@ class SessionManager {
     _currentSession = Session(sessionEntity);
     DateTime startTime = DateTime.now();
 
+    String? earbudsConfig;
+    switch (device.type) {
+      case DeviceType.kauai:
+        earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+        break;
+      case DeviceType.nitro:
+        earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
+        break;
+      default:
+        earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig() ??
+            EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase();
+        break;
+    }
+
     _currentSession!..setValue(SessionKey.start_datetime, startTime)
                     ..setValue(SessionKey.scheduled_session_id, scheduledSessionId)
                     ..setValue(SessionKey.planned_session_id, plannedSessionId)
                     ..setValue(SessionKey.user_id, user.id)
                     ..setValue(SessionKey.device_id, device.name)
                     ..setValue(SessionKey.device_mac_address, device.macAddress)
-                    ..setValue(SessionKey.earbud_config,
-                        _studyManager.currentStudy?.getEarbudsConfig() ?? null)
+                    ..setValue(SessionKey.earbud_config, earbudsConfig)
                     ..setValue(SessionKey.study_id, studyId)
                     ..setValue(SessionKey.mobile_app_version, _appVersion)
                     ..setValue(SessionKey.protocol_name, protocolName)
@@ -119,9 +133,16 @@ class SessionManager {
         _logger.log(Level.SEVERE, "Failed to set impedance config. Cannot start streaming.");
         return false;
       }
+      String? earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig() ?? null;
+      if (device.type == DeviceType.kauai) {
+        earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+      } else if (device.type == DeviceType.nitro) {
+        earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
+      }
+
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,
           bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: _currentSession!.id,
-          earbudsConfig: _studyManager.currentStudy?.getEarbudsConfig() ?? null);
+          earbudsConfig: earbudsConfig);
       _logger.log(Level.INFO, "Started streaming with local session: $_currentLocalSession");
       await NextsenseBase.changeNotificationContent("NextSense recording in progress",
           "Press to access the application");
@@ -168,7 +189,11 @@ class SessionManager {
       _logger.log(Level.WARNING, 'Tried to stop a session while none was running.');
       return;
     }
-    _deviceManager.stopStreaming();
+    try {
+      _deviceManager.stopStreaming();
+    } catch (exception) {
+      _logger.log(Level.SEVERE, 'Failed to stop streaming. Message: $exception');
+    }
     DateTime stopTime = DateTime.now();
     _currentSession!.setValue(SessionKey.end_datetime, stopTime);
     await _currentSession!.save();

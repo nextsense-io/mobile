@@ -18,10 +18,12 @@ import com.welie.blessed.WriteType;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
+import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.utils.RotatingFileLogger;
@@ -111,6 +113,11 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
+  public List<String> getEegChannelNames() {
+    return Arrays.asList("1", "3", "6", "7", "8");
+  }
+
+  @Override
   public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral) {
     this.peripheral = peripheral;
     initializeCharacteristics();
@@ -164,6 +171,11 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
     deviceModeFuture = SettableFuture.create();
     writeCharacteristic(writeDataCharacteristic, new StopStreamingCommand().getCommand());
     return deviceModeFuture;
+  }
+
+  @Override
+  public DeviceInfo getDeviceInfo() {
+    return null;
   }
 
   @Override

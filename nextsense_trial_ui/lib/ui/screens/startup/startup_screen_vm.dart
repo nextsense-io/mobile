@@ -1,14 +1,15 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter_common/managers/auth/authentication_result.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
+import 'package:flutter_common/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/di.dart';
+import 'package:flutter_common/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/managers/auth/email_auth_link.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/prepare_device_screen.dart';
@@ -21,8 +22,8 @@ import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_mapping.dart';
 import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 
@@ -103,7 +104,13 @@ class StartupScreenViewModel extends ViewModel {
     if (!_dataManager.userLoaded) {
       bool success = false;
       try {
-        success = await _dataManager.loadUser();
+        final authResult = await _authManager.signInGoogle();
+        _logger.log(Level.INFO, 'Automatic authResult: $authResult');
+        if (authResult == AuthenticationResult.success) {
+          success = await _dataManager.loadUserStudyData();
+        } else {
+          success = false;
+        }
       } catch (e, stacktrace) {
         _logger.log(Level.SEVERE,
             'load user failed with exception: ${e.toString()}, ${stacktrace.toString()}');
@@ -169,8 +176,9 @@ class StartupScreenViewModel extends ViewModel {
     // device before, then navigate directly to dashboard. Note: we have same logic in sign in
     // screen.
     String screen = PrepareDeviceScreen.id;
-    if (_deviceManager.hadPairedDevice) {
-      bool connected = await _deviceManager.connectToLastPairedDevice();
+    if (_authManager.getLastPairedMacAddress() != null) {
+      bool connected = await _deviceManager.connectToLastPairedDevice(
+          _authManager.getLastPairedMacAddress());
       RunnableProtocol? runnableProtocol = await _authManager.user!.getRunningProtocol(
           _studyManager.currentStudyStartDate, _studyManager.currentStudyEndDate);
       if (runnableProtocol != null) {
@@ -180,7 +188,8 @@ class StartupScreenViewModel extends ViewModel {
           setBusy(false);
           _navigation.navigateTo(DashboardScreen.id, replace: true);
           _navigation.navigateTo(
-              ProtocolScreenMapping.getProtocolScreenId(runnableProtocol.protocol.type),
+              ProtocolScreenMapping.getProtocolScreenId(
+                  protocolTypeFromString(runnableProtocol.protocol.type)),
               arguments: runnableProtocol);
           return;
         } else {

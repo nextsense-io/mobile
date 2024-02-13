@@ -6,7 +6,7 @@ import 'package:introduction_screen/introduction_screen.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/nextsense_button.dart';
@@ -15,7 +15,7 @@ import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/ui_utils.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:provider/src/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -84,8 +84,7 @@ class SurveyScreen extends HookWidget {
     }
 
     for (String questionKey in viewModel.formValues?.keys ?? []) {
-      _formKey.currentState?.setInternalFieldValue(questionKey, viewModel.formValues?[questionKey],
-          isSetState: false);
+      _formKey.currentState?.setInternalFieldValue(questionKey, viewModel.formValues?[questionKey]);
     }
     bool showQuestionsProgress = viewModel.survey.getQuestions()!.length > 1;
     return PageScaffold(
@@ -351,14 +350,14 @@ class _SurveyQuestionWidget extends StatelessWidget {
   }
 
   // Generate choices
-  List<FormBuilderFieldOption> _generateChoices() {
-    List<FormBuilderFieldOption> result = [];
+  List<FormBuilderChipOption> _generateChoices() {
+    List<FormBuilderChipOption> result = [];
     switch (question.type) {
       case SurveyQuestionType.yesno:
-        result.add(FormBuilderFieldOption(
+        result.add(FormBuilderChipOption(
             value: SurveyYesNoChoices.no.name,
             child: WideChoiceChip('No')));
-        result.add(FormBuilderFieldOption(
+        result.add(FormBuilderChipOption(
             value: SurveyYesNoChoices.yes.name,
             child: WideChoiceChip('Yes')));
         break;
@@ -368,7 +367,7 @@ class _SurveyQuestionWidget extends StatelessWidget {
           for (SurveyQuestionChoice choice in question.choices) {
             Widget choiceChip = question.choices.length > maxVerticalChoiceChips
                 ? SmallChoiceChip(choice.text) : WideChoiceChip(choice.text);
-            result.add(FormBuilderFieldOption(
+            result.add(FormBuilderChipOption(
                 value: choice.value,
                 child: choiceChip));
           }

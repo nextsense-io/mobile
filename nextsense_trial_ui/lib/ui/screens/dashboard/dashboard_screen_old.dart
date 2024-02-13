@@ -145,7 +145,7 @@
 //     ].map((element) => Container(
 //       decoration: BoxDecoration(
 //         image: DecorationImage(
-//           image: AssetImage("assets/images/dashboard_background.png"),
+//           image: AssetImage("packages/nextsense_trial_ui/assets/images/dashboard_background.png"),
 //           fit: BoxFit.cover,
 //         ),
 //       ),

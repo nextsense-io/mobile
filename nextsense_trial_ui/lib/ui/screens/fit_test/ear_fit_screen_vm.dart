@@ -1,17 +1,17 @@
 import 'dart:async';
 
+import 'package:flutter_common/domain/earbuds_config.dart';
+import 'package:flutter_common/managers/device_manager.dart';
+import 'package:flutter_common/managers/xenon_impedance_calculator.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/impedance_series.dart';
+import 'package:flutter_common/managers/impedance_series.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 enum EarFitRunState {
   NOT_STARTED,
@@ -80,7 +80,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
     _logger.log(Level.INFO, 'Initializing state.');
     super.init();
 
-    Wakelock.enable();
+    WakelockPlus.enable();
 
     _earbudsConfig = EarbudsConfigs.getConfig(_studyManager.currentStudy!.getEarbudsConfig());
     _initEarFitResults();
@@ -172,7 +172,7 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
     _calculatingImpedance = false;
     _earFitRunState = EarFitRunState.FINISHED;
     notifyListeners();
-    Wakelock.disable();
+    WakelockPlus.disable();
   }
 
   Future _runEarFitTest(Timer timer) async {
@@ -198,9 +198,9 @@ class EarFitScreenViewModel extends DeviceStateViewModel {
     EarLocationResultState rightResult = EarLocationResultState.NO_RESULT;
     bool flatSignal = false;
     for (MapEntry<EarLocation, double> result in impedanceData.impedances.entries) {
-      if (result.value == XenonImpedanceCalculator.IMPEDANCE_NOT_ENOUGH_DATA) {
+      if (result.value == XenonImpedanceCalculator.impedanceNotEnoughData) {
         _earFitResults[result.key.name] = EarLocationResultState.NO_RESULT;
-      } else if (result.value == XenonImpedanceCalculator.IMPEDANCE_FLAT_SIGNAL) {
+      } else if (result.value == XenonImpedanceCalculator.impedanceFlatSignal) {
         flatSignal = true;
         _earFitResults[result.key.name] = EarLocationResultState.POOR_FIT;
       } else {

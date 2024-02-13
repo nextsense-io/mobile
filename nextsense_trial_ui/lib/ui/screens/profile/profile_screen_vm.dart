@@ -1,16 +1,17 @@
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
+import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/survey/adhoc_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class ProfileScreenViewModel extends DeviceStateViewModel {
@@ -40,8 +41,8 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
     List<PlannedSession> allowedProtocols = _studyManager.allowedAdhocProtocols;
 
     return allowedProtocols.map((allowedProtocol) => AdhocSession(
-        allowedProtocol.protocol!.type, allowedProtocol.id, _studyManager.currentStudyId!))
-        .toList();
+        protocolTypeFromString(allowedProtocol.protocol!.type), allowedProtocol.id,
+        _studyManager.currentStudyId!)).toList();
   }
 
   Map<PlannedSurvey, Survey> getAdhocSurveys() {
@@ -66,6 +67,7 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
 
   Future disconnectDevice() async {
     await _deviceManager.manualDisconnect();
+    await _authManager.user!..setLastPairedDeviceMacAddress(null)..save();
     notifyListeners();
   }
 

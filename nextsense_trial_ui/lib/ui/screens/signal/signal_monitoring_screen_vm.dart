@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter_common/domain/acceleration_data.dart';
+import 'package:flutter_common/domain/device_settings.dart';
+import 'package:flutter_common/domain/plot_data_point.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/device_settings.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
-import 'package:nextsense_trial_ui/utils/algorithms.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:flutter_common/utils/algorithms.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
 
 enum DataType {
   eeg,
@@ -35,52 +37,6 @@ enum SignalProcessing {
     }
     return values.firstWhere((element) => element.name == value, orElse: () => unknown);
   }
-}
-
-/* Acceleration data class. */
-class AccelerationData implements Comparable<AccelerationData> {
-  final int x;
-  final int y;
-  final int z;
-  final DateTime timestamp;
-
-  AccelerationData({required this.x, required this.y, required this.z, required this.timestamp});
-
-  int getX() {
-    return x;
-  }
-
-  int getY() {
-    return y;
-  }
-
-  int getZ() {
-    return z;
-  }
-
-  int getTimestampMs() {
-    return timestamp.millisecondsSinceEpoch;
-  }
-
-  List<int> asList() {
-    return [x, y, z];
-  }
-
-  List<int> asListWithTimestamp() {
-    return [x, y, z, timestamp.millisecondsSinceEpoch];
-  }
-
-  @override
-  int compareTo(AccelerationData other) {
-    return timestamp.difference(other.timestamp).inMilliseconds;
-  }
-}
-
-class PlotDataPoint {
-  final double index;
-  final double value;
-
-  PlotDataPoint(this.index, this.value);
 }
 
 class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
@@ -137,8 +93,13 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
       _deviceSettings = DeviceSettings(await NextsenseBase.getDeviceSettings(device!.macAddress));
       dataType = DataType.create(_preferences.getString(PreferenceKey.displayDataType));
       eegChannelList = _deviceSettings!.enabledChannels;
-      selectedChannel = _preferences.getString(PreferenceKey.displaySelectedChannel) ??
+      String userSelectedChannel = _preferences.getString(PreferenceKey.displaySelectedChannel) ??
           eegChannelList[0];
+      if (eegChannelList.contains(userSelectedChannel)) {
+        selectedChannel = userSelectedChannel;
+      } else {
+        selectedChannel = eegChannelList[0];
+      }
       await _deviceManager.startStreaming();
       _screenRefreshTimer = new Timer.periodic(_refreshInterval, _updateScreen);
     }
@@ -178,6 +139,9 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
         channelName: 'z', duration: graphTimeWindow, fromDatabase: false);
     List<AccelerationData> accelerations = [];
     for (int i = 0; i < timestamps.length; ++i) {
+      if (accXData.length <= i || accYData.length <= i || accZData.length <= i) {
+        break;
+      }
       accelerations.add(AccelerationData(x: accXData[i].toInt(), y: accYData[i].toInt(),
           z: accZData[i].toInt(), timestamp:
           DateTime.fromMillisecondsSinceEpoch(timestamps[i].toInt())));

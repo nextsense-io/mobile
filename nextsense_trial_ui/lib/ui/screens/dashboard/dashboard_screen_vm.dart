@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/medication/planned_medication.dart';
@@ -12,12 +13,11 @@ import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/medication_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
 
 class DashboardScreenViewModel extends DeviceStateViewModel {
 

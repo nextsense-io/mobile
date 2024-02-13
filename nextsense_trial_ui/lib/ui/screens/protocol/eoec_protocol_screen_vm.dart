@@ -6,18 +6,18 @@ import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/managers/audio_manager.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
-  static final String _eoecTransitionSound = "assets/sounds/eoec_transition.wav";
+  static const String _eoecTransitionSound = "packages/nextsense_trial_ui/assets/sounds/eoec_transition.wav";
   static const Map<EOECState, String> _protocolPartsText = {
     EOECState.EO: 'Eyes Open',
     EOECState.EC: 'Eyes Closed'
   };
   static const Map<EOECState, ImageProvider> _protocolPartsImage = {
-    EOECState.EO: Svg('assets/images/eye_open.svg'),
-    EOECState.EC: Svg('assets/images/eye_closed.svg')
+    EOECState.EO: Svg('packages/nextsense_trial_ui/assets/images/eye_open.svg'),
+    EOECState.EC: Svg('packages/nextsense_trial_ui/assets/images/eye_closed.svg')
   };
 
   final AudioManager _audioManager = getIt<AudioManager>();
@@ -40,14 +40,14 @@ class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
   @override
   void onTimerStart() {
-    Wakelock.enable();
+    WakelockPlus.enable();
     super.onTimerStart();
   }
 
   @override
   void onTimerFinished() {
     super.onTimerFinished();
-    Wakelock.disable();
+    WakelockPlus.disable();
   }
 
   @override

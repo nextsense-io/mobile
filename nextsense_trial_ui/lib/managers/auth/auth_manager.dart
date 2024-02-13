@@ -1,43 +1,27 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'package:flutter_common/managers/auth/auth_method.dart';
+import 'package:flutter_common/managers/auth/authentication_result.dart';
+import 'package:flutter_common/managers/auth/email_auth_manager.dart';
+import 'package:flutter_common/managers/auth/google_auth_manager.dart';
+import 'package:flutter_common/managers/auth/password_change_result.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
-import 'package:nextsense_trial_ui/managers/auth/email_auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/auth/google_auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/nextsense_auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:uuid/uuid.dart';
-
-enum AuthenticationResult {
-  success,
-  invalid_user_setup,  // Invalid user configuration in Firestore
-  invalid_username_or_password,
-  need_reauthentication,
-  user_fetch_failed,  // Failed to load user entity
-  connection_error,
-  expired_link,  // When using a sign-in link
-  error  // Some other errors
-}
-
-enum PasswordChangeResult {
-  success,
-  invalid_password,
-  need_reauthentication,
-  connection_error,
-  error // Some other errors
-}
 
 class AuthManager {
   static const minimumPasswordLength = 8;
 
   final _logger = CustomLogPrinter('AuthManager');
   final _preferences = getIt<Preferences>();
-  final _firestoreManager = getIt<FirestoreManager>();
+  final _firestoreManager = getIt<TrialUiFirestoreManager>();
   final _firebaseAuth = FirebaseAuth.instance;
   final _flavor = getIt<Flavor>();
 
@@ -186,6 +170,11 @@ class AuthManager {
             'Cannot send a signup email for $_signedInAuthMethod users.');
         return false;
     }
+  }
+
+
+  String? getLastPairedMacAddress() {
+    return user?.getLastPairedDeviceMacAddress();
   }
 
   // Make sure the user data is loaded from Firestore before doing any authorized operations.

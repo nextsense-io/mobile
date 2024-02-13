@@ -149,7 +149,7 @@ public class XenonDataParser {
         /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), receptionTimestamp,
         null, samplingTime);
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
-        null, samplingTime, SampleFlags.create(valuesBuffer.get()));
+        null, samplingTime, XenonSampleFlags.create(valuesBuffer.get()));
     return Optional.of(Sample.create(eegSample, acceleration));
   }
 

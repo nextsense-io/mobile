@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 /// Each entry corresponds to a field name in the database instance.
 enum StudyKey {
@@ -73,7 +73,7 @@ class Study extends FirebaseEntity<StudyKey> {
   final CustomLogPrinter _logger = CustomLogPrinter('Study');
 
   Study(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot());
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   String getName() {
     return getValue(StudyKey.name) as String;

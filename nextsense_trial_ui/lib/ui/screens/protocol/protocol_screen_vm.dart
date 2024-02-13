@@ -2,13 +2,15 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+import 'package:flutter_common/domain/device_internal_state_event.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/event.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
+import 'package:flutter_common/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
@@ -16,17 +18,17 @@ import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
 
 enum ProtocolCancelReason {
-  none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord, deviceNotConnected }
+  none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord, deviceNotConnected,
+  storageFull, devicePoweredOff}
 
 // Protocol part scheduled in time in the protocol. The schedule can be repeated many times until
 // the protocol time is complete.
@@ -34,9 +36,7 @@ class ScheduledProtocolPart {
   ProtocolPart protocolPart;
   int relativeMilliseconds;
 
-  ScheduledProtocolPart({required ProtocolPart protocolPart, required int relativeMilliseconds}) :
-        this.protocolPart = protocolPart,
-        this.relativeMilliseconds = relativeMilliseconds;
+  ScheduledProtocolPart({required this.protocolPart, required this.relativeMilliseconds});
 
   factory ScheduledProtocolPart.clone(ScheduledProtocolPart part) {
     return ScheduledProtocolPart(protocolPart: part.protocolPart,
@@ -49,15 +49,15 @@ List<ScheduledProtocolPart> deepCopy(List<ScheduledProtocolPart> source) {
 }
 
 class ProtocolScreenViewModel extends DeviceStateViewModel {
-  static const Duration _dataReceivedTimeout = const Duration(seconds: 15);
-  static const Duration _timerTickInterval = const Duration(milliseconds: 50);
+  static const Duration _dataReceivedTimeout = Duration(seconds: 60);
+  static const Duration _timerTickInterval = Duration(milliseconds: 50);
 
   final StudyManager _studyManager = getIt<StudyManager>();
   final SurveyManager _surveyManager = getIt<SurveyManager>();
   final EventTypesManager _eventTypesManager = getIt<EventTypesManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final RunnableProtocol runnableProtocol;
   final bool useCountDownTimer;
@@ -87,7 +87,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   DateTime? _lastEventEnd;
   String? _currentEventMarker;
   int _currentProtocolPart = 0;
-  Duration _repetitionTime = Duration(seconds: 0);
+  Duration _repetitionTime = const Duration(seconds: 0);
   Timer? _dataReceivedTimer;
   CancelListening? _currentSessionDataReceivedListener;
   Duration? _currentVariableDuration;
@@ -452,6 +452,14 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           _restartProtocol();
         }
         break;
+      case DeviceInternalStateEventType.uSdFull:
+        protocolCancelReason = ProtocolCancelReason.storageFull;
+        _stopProtocol();
+        break;
+      case DeviceInternalStateEventType.poweringOff:
+        protocolCancelReason = ProtocolCancelReason.devicePoweredOff;
+        _stopProtocol();
+        break;
       case DeviceInternalStateEventType.unknown:
         _logger.log(Level.WARNING, 'Unknown device internal state received.');
         break;
@@ -499,7 +507,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.INFO, 'Stopping session.');
       await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
     } catch (e) {
-      _logger.log(Level.WARNING, "Failed to stop streaming");
+      _logger.log(Level.WARNING, "Failed to stop streaming: $e");
     }
     try {
       await runnableProtocol.update(

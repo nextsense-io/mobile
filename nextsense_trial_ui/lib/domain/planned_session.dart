@@ -1,9 +1,10 @@
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
+import 'package:flutter_common/domain/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 enum PlannedSessionKey {
   allowed_early_start_time_minutes,  // How many minutes the protocol can be started before the time
@@ -55,7 +56,7 @@ class PlannedSession extends FirebaseEntity<PlannedSessionKey> {
       getValue(PlannedSessionKey.triggers_conditional_survey_id);
 
   PlannedSession(FirebaseEntity firebaseEntity, DateTime studyStartDate, DateTime? studyEndDate) :
-      super(firebaseEntity.getDocumentSnapshot()) {
+      super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager()) {
     if (scheduleType == ScheduleType.scheduled) {
       if (_dayNumber == null || !(_dayNumber is int)) {
         throw("'day' is not set or not number in planned session");
@@ -88,7 +89,7 @@ class PlannedSession extends FirebaseEntity<PlannedSessionKey> {
       );
 
       // Create protocol assigned to current planned session
-      protocol = Protocol(
+      protocol = TrialProtocol(
           protocolType,
           startTime: startTime,
           minDuration: minDurationOverride,

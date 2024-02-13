@@ -1,7 +1,7 @@
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/side_effect.dart';
 import 'package:nextsense_trial_ui/managers/side_effects_manager.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 class SideEffectsScreenViewModel extends ViewModel {
   final SideEffectsManager _sideEffectsManager = getIt<SideEffectsManager>();

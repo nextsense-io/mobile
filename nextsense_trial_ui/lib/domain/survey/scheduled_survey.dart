@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/survey/planned_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 enum ScheduledSurveyKey {
   survey_id,  // Reference to doc from 'surveys' collection
@@ -66,7 +66,8 @@ class ScheduledSurvey extends FirebaseEntity<ScheduledSurveyKey> implements Task
   }
 
   ScheduledSurvey(FirebaseEntity firebaseEntity, {required this.survey, this.day,
-    PlannedSurvey? plannedSurvey}) : super(firebaseEntity.getDocumentSnapshot()) {
+    PlannedSurvey? plannedSurvey}) : super(firebaseEntity.getDocumentSnapshot(),
+      firebaseEntity.getFirestoreManager()) {
 
     int _daysToComplete = getValue(ScheduledSurveyKey.days_to_complete) ?? 1;
     // Initialize from planned survey.

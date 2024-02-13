@@ -168,6 +168,18 @@ public class ObjectBoxDatabase implements Database {
     });
   }
 
+  public List<Float> getChannelData(long localSessionId, String channelName, long offset,
+                                    long count) {
+    return runWithExceptionLog(() -> {
+      List<EegSample> eegSamples = getEegSamples(localSessionId, Math.max(0, offset), count);
+      List<Float> channelSamples = new ArrayList<>(eegSamples.size());
+      for (EegSample eegSample : eegSamples) {
+        channelSamples.add(eegSample.getEegSamples().get(Integer.valueOf(channelName)));
+      }
+      return channelSamples;
+    });
+  }
+
   public List<Float> getLastChannelData(int localSessionId, String channelName, Duration duration) {
     return runWithExceptionLog(() -> {
       LocalSession localSession = getLocalSession(localSessionId);

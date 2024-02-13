@@ -1,6 +1,6 @@
+import 'package:flutter_common/domain/earbuds_config.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
-import 'package:nextsense_trial_ui/managers/impedance_series.dart';
+import 'package:flutter_common/managers/impedance_series.dart';
 
 void main() {
   final EarbudsConfig earBudConfig = EarbudsConfigs.getConfig('xenon_b_config');

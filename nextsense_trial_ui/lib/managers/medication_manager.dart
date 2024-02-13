@@ -2,21 +2,21 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:collection/collection.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/medication/planned_medication.dart';
 import 'package:nextsense_trial_ui/domain/medication/scheduled_medication.dart';
 import 'package:nextsense_trial_ui/domain/medication/medication.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 class MedicationManager {
 
   final CustomLogPrinter _logger = CustomLogPrinter('MedicationManager');
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
   final Preferences _preferences = getIt<Preferences>();

@@ -3,8 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/config.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 class ApiResponse {
   final Map<String, dynamic> data;
@@ -29,7 +28,7 @@ class NextsenseApi {
   static final Duration _timeout = Duration(seconds: 10);
   static final int _maxRetries = 3;
 
-  final String _baseUrl = Config.nextsenseApiUrl;
+  final String _baseUrl;
   final _client = http.Client();
   final CustomLogPrinter _logger = CustomLogPrinter('NextsenseApi');
 
@@ -37,7 +36,7 @@ class NextsenseApi {
   Uri get _endpointChangePassword => Uri.parse('$_baseUrl/change_password');
   Uri get _endpointSendSignInEmail => Uri.parse('$_baseUrl/send_signin_email');
 
-  NextsenseApi();
+  NextsenseApi(String baseUrl) : _baseUrl = baseUrl;
 
   Future<ApiResponse> _callApi({required Map<String, dynamic> data, required Uri endpoint,
       required String defaultErrorMsg}) async {
@@ -93,11 +92,11 @@ class NextsenseApi {
   }
 
   // Changes the user password.
-  Future<ApiResponse> changePassword(String token, String username, String new_password) async {
+  Future<ApiResponse> changePassword(String? token, String username, String newPassword) async {
     var data = {
       'token': token,
       'username': username,
-      'new_password': new_password
+      'new_password': newPassword
     };
     return _callApi(endpoint: _endpointChangePassword, data: data,
         defaultErrorMsg: "Password change request failed");

@@ -1,7 +1,7 @@
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 class StudyIntroScreenViewModel extends ViewModel {
 

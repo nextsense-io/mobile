@@ -35,8 +35,10 @@ import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
+import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDevice;
-import io.nextsense.android.base.devices.xenon.StartStreamingCommand;
+import io.nextsense.android.base.devices.StreamingStartMode;
+import io.nextsense.android.base.devices.kauai.KauaiDevice;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
@@ -45,14 +47,13 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
  * in the NextSenseDevice interface which needs to be given at construction time.
  */
 public class BleDevice extends Device {
-
   public static final Duration RECONNECTION_ATTEMPTS_INTERVAL = Duration.ofSeconds(30);
   private static final String TAG = BleDevice.class.getSimpleName();
 
   private final NextSenseDevice nextSenseDevice;
   private final BluetoothPeripheral btPeripheral;
   private final BleCentralManagerProxy centralManagerProxy;
-  private final DeviceInfo deviceInfo = new DeviceInfo();
+  private final MemoryCache memoryCache;
   private final BlePeripheralCallbackProxy callbackProxy = new BlePeripheralCallbackProxy();
   private final ReconnectionManager reconnectionManager;
   private final ListeningExecutorService executorService =
@@ -66,13 +67,17 @@ public class BleDevice extends Device {
 
   public BleDevice(BleCentralManagerProxy centralProxy, BluetoothStateManager bluetoothStateManager,
                    NextSenseDevice nextSenseDevice, BluetoothPeripheral btPeripheral,
-                   ReconnectionManager reconnectionManager) {
+                   ReconnectionManager reconnectionManager, MemoryCache memoryCache) {
     this.centralManagerProxy = centralProxy;
     this.nextSenseDevice = nextSenseDevice;
     this.btPeripheral = btPeripheral;
+    this.memoryCache = memoryCache;
     centralProxy.addPeripheralListener(bluetoothCentralManagerCallback, btPeripheral.getAddress());
     callbackProxy.addPeripheralCallbackListener(peripheralCallback);
     this.reconnectionManager = reconnectionManager;
+    if (nextSenseDevice instanceof KauaiDevice) {
+      ((KauaiDevice) nextSenseDevice).startListening();
+    }
   }
 
   @Override
@@ -104,6 +109,18 @@ public class BleDevice extends Device {
   }
 
   @Override
+  public void addOnDeviceInternalStateChangeListener(
+      NextSenseDevice.DeviceInternalStateChangeListener listener) {
+    nextSenseDevice.addOnDeviceInternalStateChangeListener(listener);
+  }
+
+  @Override
+  public void removeOnDeviceInternalStateChangeListener(
+      NextSenseDevice.DeviceInternalStateChangeListener listener) {
+    nextSenseDevice.removeOnDeviceInternalStateChangeListener(listener);
+  }
+
+  @Override
   public ListenableFuture<Boolean> startStreaming(
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
       @Nullable String earbudsConfig) {
@@ -116,10 +133,10 @@ public class BleDevice extends Device {
     //             sets.
     if (uploadToCloud) {
       parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
-          StartStreamingCommand.StartMode.WITH_LOGGING);
+          StreamingStartMode.WITH_LOGGING);
     } else {
       parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
-          StartStreamingCommand.StartMode.NO_LOGGING);
+          StreamingStartMode.NO_LOGGING);
     }
     return executorService.submit(() ->
         nextSenseDevice.startStreaming(uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig,
@@ -253,7 +270,7 @@ public class BleDevice extends Device {
    */
   @Override
   public DeviceInfo getInfo() {
-    return deviceInfo;
+    return nextSenseDevice.getDeviceInfo();
   }
 
   /**
@@ -276,13 +293,15 @@ public class BleDevice extends Device {
     if (deviceState != DeviceState.READY && deviceState != DeviceState.CONNECTED) {
       return Futures.immediateFuture(false);
     }
-    return executorService.submit(() -> {
-      boolean applied = nextSenseDevice.applyDeviceSettings(newDeviceSettings).get();
-      if (applied) {
-        this.deviceSettings = newDeviceSettings;
-      }
-      return applied;
-    });
+    return Futures.immediateFuture(true);
+    // TODO(eric): Enable when device support it.
+//    return executorService.submit(() -> {
+//      boolean applied = nextSenseDevice.applyDeviceSettings(newDeviceSettings).get();
+//      if (applied) {
+//        this.deviceSettings = newDeviceSettings;
+//      }
+//      return applied;
+//    });
   }
 
   /**
@@ -300,6 +319,8 @@ public class BleDevice extends Device {
         nextSenseDevice.connect(peripheral,
             disconnectionStatus == DisconnectionStatus.HARD).get();
         deviceSettings = new DeviceSettings(nextSenseDevice.loadDeviceSettings().get());
+        memoryCache.init(nextSenseDevice.getEegChannelNames(),
+            nextSenseDevice.GetAccChannelNames());
         deviceState = DeviceState.READY;
         deviceConnectionFuture.set(deviceState);
         notifyDeviceStateChangeListeners(DeviceState.READY);

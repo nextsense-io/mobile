@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 
 class ProtocolStepCard extends StatelessWidget {

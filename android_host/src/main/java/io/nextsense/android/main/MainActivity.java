@@ -16,7 +16,7 @@ import com.google.gson.GsonBuilder;
 
 import java.util.Map;
 
-import io.flutter.embedding.android.FlutterActivity;
+import io.flutter.embedding.android.FlutterFragmentActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.FlutterEngineCache;
 
@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
   // Awesome notifications Json payload constants.
   private static final String EXTRA_NOTIFICATION_JSON = "notificationJson";
+  // Initial route which determines which Flutter module will run.
   private static final String JSON_KEY_CONTENT = "content";
   private static final String JSON_KEY_PAYLOAD = "payload";
 
@@ -67,7 +68,8 @@ public class MainActivity extends AppCompatActivity {
 
     RotatingFileLogger.get().logi(TAG, "Start intent received: " + getIntent().toString());
     if (getIntent().getExtras() != null) {
-      RotatingFileLogger.get().logi(TAG, "Start intent received extras: " + getIntent().getExtras().toString());
+      RotatingFileLogger.get().logi(TAG, "Start intent received extras: " +
+          getIntent().getExtras().toString());
       RotatingFileLogger.get().logi(TAG, "Start intent received json: " +
               getIntent().getExtras().getString(EXTRA_NOTIFICATION_JSON));
       initialIntent = getIntent();
@@ -81,12 +83,13 @@ public class MainActivity extends AppCompatActivity {
     editor.apply();
 
     foregroundServiceIntent = new Intent(getApplicationContext(), ForegroundService.class);
+    foregroundServiceIntent.putExtra(ForegroundService.EXTRA_APPLICATION_TYPE,
+        ((NextSenseApplication) getApplication()).getApplicationType().name());
     foregroundServiceIntent.putExtra(ForegroundService.EXTRA_UI_CLASS, MainActivity.class);
     foregroundServiceIntent.putExtra(ForegroundService.EXTRA_ALLOW_DATA_VIA_CELLULAR,
         sharedPref.getBoolean(FLUTTER_PREF_PREFIX + ALLOW_DATA_VIA_CELLULAR_KEY, false));
     // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
     getApplicationContext().startService(foregroundServiceIntent);
-
     RotatingFileLogger.get().logd(TAG, "started");
   }
 
@@ -117,7 +120,8 @@ public class MainActivity extends AppCompatActivity {
     RotatingFileLogger.get().logi(TAG, "New intent received: " + intent.toString());
     boolean validTarget = false;
     if (intent.getExtras() != null) {
-      RotatingFileLogger.get().logi(TAG, "New intent received extras: " + intent.getExtras().toString());
+      RotatingFileLogger.get().logi(TAG, "New intent received extras: " +
+          intent.getExtras().toString());
       String jsonData = intent.getExtras().getString(EXTRA_NOTIFICATION_JSON);
       if (jsonData != null) {
         Map notificationData = gson.fromJson(jsonData, Map.class);
@@ -190,7 +194,7 @@ public class MainActivity extends AppCompatActivity {
   }
 
   private Intent getFlutterIntent(@Nullable Intent androidIntent) {
-    Intent flutterIntent = FlutterActivity.withCachedEngine(
+    Intent flutterIntent = FlutterFragmentActivity.withCachedEngine(
             NextSenseApplication.FLUTTER_ENGINE_NAME).build(this);
     // Confirm the link is a sign-in with email link.
     if (androidIntent != null && androidIntent.getData() != null &&
@@ -199,7 +203,8 @@ public class MainActivity extends AppCompatActivity {
       flutterIntent.setData(androidIntent.getData());
     }
     if (androidIntent != null && androidIntent.getExtras() != null) {
-      RotatingFileLogger.get().logi(TAG, "New intent received extras: " + androidIntent.getExtras().toString());
+      RotatingFileLogger.get().logi(TAG, "New intent received extras: " +
+          androidIntent.getExtras().toString());
       String jsonData = androidIntent.getExtras().getString(EXTRA_NOTIFICATION_JSON);
       if (jsonData != null) {
         RotatingFileLogger.get().logi(TAG, "New intent received json: " +
@@ -207,8 +212,10 @@ public class MainActivity extends AppCompatActivity {
         Map notificationData = gson.fromJson(jsonData, Map.class);
         Map<String, String> payloadMap = (Map<String, String>)
                 ((Map) notificationData.get(JSON_KEY_CONTENT)).get(JSON_KEY_PAYLOAD);
-        for (Map.Entry<String, String> entry : payloadMap.entrySet()) {
-          flutterIntent.putExtra(entry.getKey(), entry.getValue());
+        if (payloadMap != null) {
+          for (Map.Entry<String, String> entry : payloadMap.entrySet()) {
+            flutterIntent.putExtra(entry.getKey(), entry.getValue());
+          }
         }
       }
     }

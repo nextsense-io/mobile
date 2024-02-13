@@ -8,6 +8,7 @@ import io.nextsense.android.base.ble.BleDeviceManager;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.emulated.EmulatedDeviceManager;
 
@@ -48,11 +49,13 @@ public interface DeviceManager {
                               LocalSessionManager localSessionManager,
                               BleCentralManagerProxy centralManagerProxy,
                               BluetoothStateManager bluetoothStateManager,
-                              NextSenseDeviceManager nextSenseDeviceManager) {
+                              NextSenseDeviceManager nextSenseDeviceManager,
+                              MemoryCache memoryCache) {
     if (Config.USE_EMULATED_BLE)
       return new EmulatedDeviceManager(deviceScanner, localSessionManager);
 
     return new BleDeviceManager(
-        deviceScanner, centralManagerProxy, bluetoothStateManager, nextSenseDeviceManager);
+        deviceScanner, centralManagerProxy, bluetoothStateManager, nextSenseDeviceManager,
+        memoryCache);
   }
 }

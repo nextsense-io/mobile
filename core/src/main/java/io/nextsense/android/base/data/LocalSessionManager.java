@@ -95,11 +95,16 @@ public class LocalSessionManager {
           return;
         }
       }
-      activeLocalSession.setStatus(LocalSession.Status.FINISHED);
+      if (!activeLocalSession.isUploadNeeded() || !activeLocalSession.isReceivedData()) {
+        activeLocalSession.setStatus(LocalSession.Status.COMPLETED);
+      } else {
+        activeLocalSession.setStatus(LocalSession.Status.FINISHED);
+      }
       activeLocalSession.setEndTime(Instant.now());
       objectBoxDatabase.putLocalSession(activeLocalSession);
-      RotatingFileLogger.get().logi(TAG, "Local session " + activeLocalSession.id +
-          " finished. Cloud data session id: " + activeLocalSession.getCloudDataSessionId() + ".");
+      RotatingFileLogger.get().logi(TAG, "Local session " + activeLocalSession.id + " " +
+          activeLocalSession.getStatus().name() + " . Cloud data session id: " +
+          activeLocalSession.getCloudDataSessionId() + ".");
     });
     lastActiveSessionEnd = Instant.now();
     lastActiveSession = activeLocalSession;

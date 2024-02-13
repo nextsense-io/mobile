@@ -2,20 +2,20 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_common/domain/earbuds_config.dart';
+import 'package:flutter_common/managers/device_manager.dart';
+import 'package:flutter_common/managers/xenon_impedance_calculator.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/earbud_configs.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
-import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:flutter_common/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:wakelock/wakelock.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 enum ImpedanceRunState {
   STOPPED,
@@ -85,9 +85,9 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
       String resultsText = '';
       for (MapEntry<EarLocation, double> mapEntry in impedanceData.entries) {
         String valueText = '';
-        if (mapEntry.value == XenonImpedanceCalculator.IMPEDANCE_NOT_ENOUGH_DATA) {
+        if (mapEntry.value == XenonImpedanceCalculator.impedanceNotEnoughData) {
           valueText = 'Not enough data';
-        } else if (mapEntry.value == XenonImpedanceCalculator.IMPEDANCE_FLAT_SIGNAL) {
+        } else if (mapEntry.value == XenonImpedanceCalculator.impedanceFlatSignal) {
           valueText = 'Saturated or flat signal';
         } else {
           valueText = _spaceInt(mapEntry.value.round());
@@ -114,7 +114,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
   Future _stopCalculating() async {
     _screenRefreshTimer?.cancel();
     await _impedanceCalculator?.stopCalculatingImpedance();
-    await Wakelock.disable();
+    await WakelockPlus.disable();
     _impedanceRunState = ImpedanceRunState.STOPPED;
     if (mounted) {
       setState(() {});
@@ -181,7 +181,7 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
                         });
                         return;
                       }
-                      Wakelock.enable();
+                      WakelockPlus.enable();
                       _screenRefreshTimer =
                           new Timer.periodic(_refreshInterval, _calculateImpedance);
                       setState(() {

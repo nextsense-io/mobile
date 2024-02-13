@@ -1,10 +1,10 @@
 import 'dart:core';
 
 import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 enum PlannedMedicationKey {
   allowed_early_start_time_minutes,  // How many minutes the medication can be taken before the time
@@ -43,10 +43,9 @@ class PlannedMedication extends FirebaseEntity<PlannedMedicationKey> {
   ScheduleType get scheduleType =>
       ScheduleType.fromString(getValue(PlannedMedicationKey.schedule_type));
 
-
   PlannedMedication(FirebaseEntity firebaseEntity,
       {required DateTime studyStartDate, required DateTime studyEndDate}) :
-      super(firebaseEntity.getDocumentSnapshot()) {
+      super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager()) {
     if (scheduleType == ScheduleType.scheduled) {
       if (_dayNumber == null || !(_dayNumber is int)) {
         throw("'day' is not set or not number in planned session");

@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+import 'package:flutter_common/managers/auth/auth_method.dart';
+import 'package:flutter_common/managers/auth/authentication_result.dart';
+import 'package:flutter_common/managers/auth/email_auth_manager.dart';
+import 'package:flutter_common/managers/permissions_manager.dart';
+import 'package:flutter_common/ui/components/scrollable_column.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/flavors.dart';
-import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/auth/email_auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
-import 'package:nextsense_trial_ui/ui/components/scrollable_column.dart';
-import 'package:nextsense_trial_ui/ui/components/session_pop_scope.dart';
-import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/session_pop_scope.dart';
+import 'package:flutter_common/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/components/small_text.dart';
 import 'package:nextsense_trial_ui/ui/components/underlined_text_button.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -29,7 +28,7 @@ import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/intro/study_intro_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/src/provider.dart';
+import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
 class SignInScreen extends HookWidget {
@@ -42,7 +41,7 @@ class SignInScreen extends HookWidget {
   String? initialErrorMessage;
   bool authenticating = false;
 
-  SignInScreen({this.initialErrorMessage});
+  SignInScreen({super.key, this.initialErrorMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -57,10 +56,11 @@ class SignInScreen extends HookWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.max,
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [Spacer(), HeaderText(text: 'Get started'), SizedBox(height: 20)] +
+                    children: [const Spacer(), HeaderText(text: 'Get started'),
+                      const SizedBox(height: 20)] +
                         _buildBody(context) +
                         [
-                          Spacer(),
+                          const Spacer(),
                           SmallText(text:
                               'By creating a new account, you are agreeing to our Terms of Service '
                               'and Privacy Policy.'),
@@ -84,11 +84,11 @@ class SignInScreen extends HookWidget {
           // helperText: 'Contact NextSense to reset your password',
         )
       ])),
-      SizedBox(height: 20),
+      const SizedBox(height: 20),
       AbsorbPointer(absorbing: authenticating, child:
         SimpleButton(
             fullWidth: true,
-            text: MediumText(
+            text: const MediumText(
               text: 'Login',
               color: NextSenseColors.purple,
               textAlign: TextAlign.center,
@@ -96,7 +96,7 @@ class SignInScreen extends HookWidget {
             onTap: authenticating ? () => {} :
                 () => _signIn(context, AuthMethod.email_password))
       ),
-      SizedBox(height: 20),
+      const SizedBox(height: 20),
       Align(
           alignment: Alignment.center,
           child: AbsorbPointer(absorbing: authenticating, child: UnderlinedTextButton(
@@ -122,10 +122,10 @@ class SignInScreen extends HookWidget {
                 labelText: 'Password',
                 helperText: 'Contact NextSense to reset your password'),
           ])),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           AbsorbPointer(absorbing: authenticating, child:
             SimpleButton(
-                text: MediumText(text: 'Login', color: NextSenseColors.darkBlue),
+                text: const MediumText(text: 'Login', color: NextSenseColors.darkBlue),
                 onTap: authenticating ? () => {} :
                     () => _signIn(context, AuthMethod.user_code))
           )
@@ -150,35 +150,35 @@ class SignInScreen extends HookWidget {
   List<Widget> _buildBody(BuildContext context) {
     final viewModel = context.watch<SignInScreenViewModel>();
 
-    List<Widget> _signInWidgets = [];
+    List<Widget> signInWidgets = [];
 
     for (AuthMethod authMethod in viewModel.authMethods) {
       switch (authMethod) {
         case AuthMethod.email_password:
-          _signInWidgets.addAll(_buildEmailPasswordAuth(context, viewModel));
+          signInWidgets.addAll(_buildEmailPasswordAuth(context, viewModel));
           break;
         case AuthMethod.user_code:
-          _signInWidgets.add(_buildNextSenseAuth(context, viewModel));
+          signInWidgets.add(_buildNextSenseAuth(context, viewModel));
           break;
         case AuthMethod.google_auth:
-          _signInWidgets.add(_buildGoogleAuth(context, viewModel));
+          signInWidgets.add(_buildGoogleAuth(context, viewModel));
           break;
       }
     }
 
-    _signInWidgets.addAll([
+    signInWidgets.addAll([
       Visibility(
           visible: viewModel.errorMsg.isNotEmpty,
           child: Center(
               child: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: EmphasizedText(
                 text: viewModel.errorMsg, color: NextSenseColors.red, textAlign: TextAlign.center),
           ))),
-      SizedBox(height: 20),
+      const SizedBox(height: 20),
       Visibility(
         visible: viewModel.isBusy,
-        child: CircularProgressIndicator(
+        child: const CircularProgressIndicator(
           color: Colors.white,
         ),
       ),
@@ -196,7 +196,7 @@ class SignInScreen extends HookWidget {
       });
     }
 
-    return _signInWidgets;
+    return signInWidgets;
   }
 
   Future _signIn(BuildContext context, AuthMethod authMethod) async {
@@ -206,7 +206,7 @@ class SignInScreen extends HookWidget {
 
     if (authResult != AuthenticationResult.success) {
       authenticating = false;
-      var dialogTitle, dialogContent;
+      String dialogTitle, dialogContent;
       switch (authResult) {
         case AuthenticationResult.user_fetch_failed:
         case AuthenticationResult.invalid_user_setup:
@@ -306,7 +306,7 @@ class _UserPasswordSignInInputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: EdgeInsets.all(10.0),
+        padding: const EdgeInsets.all(10.0),
         child: TextFormField(
           cursorColor: TextSelectionTheme.of(context).cursorColor,
           initialValue: field.value,
@@ -316,7 +316,7 @@ class _UserPasswordSignInInputField extends StatelessWidget {
           decoration: InputDecoration(
             label: HeaderText(text: labelText, color: NextSenseColors.darkBlue),
             helperText: helperText,
-            enabledBorder: UnderlineInputBorder(
+            enabledBorder: const UnderlineInputBorder(
               borderSide: BorderSide(color: Color(0xFF6200EE)),
             ),
           ),

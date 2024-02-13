@@ -1,6 +1,6 @@
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 class RequestPasswordResetScreenViewModel extends ViewModel {
 

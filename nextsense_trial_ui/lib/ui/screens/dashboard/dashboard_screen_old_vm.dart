@@ -3,7 +3,7 @@
 // import 'package:logging/logging.dart';
 // import 'package:nextsense_trial_ui/di.dart';
 // import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
-// import 'package:nextsense_trial_ui/domain/session/protocol.dart';
+// import 'package:flutter_common/domain/protocol.dart';
 // import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 // import 'package:nextsense_trial_ui/domain/study.dart';
 // import 'package:nextsense_trial_ui/domain/study_day.dart';
@@ -13,7 +13,7 @@
 // import 'package:nextsense_trial_ui/managers/device_manager.dart';
 // import 'package:nextsense_trial_ui/managers/study_manager.dart';
 // import 'package:nextsense_trial_ui/managers/survey_manager.dart';
-// import 'package:nextsense_trial_ui/utils/android_logger.dart';
+// import 'package:flutter_common/utils/android_logger.dart';
 // import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
 //
 // class DashboardScreenOldViewModel extends DeviceStateViewModel {

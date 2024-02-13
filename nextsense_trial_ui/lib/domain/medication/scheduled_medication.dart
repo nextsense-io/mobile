@@ -4,10 +4,10 @@ import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/domain/medication/medication.dart';
 import 'package:nextsense_trial_ui/domain/medication/planned_medication.dart';
 import 'package:nextsense_trial_ui/domain/planned_activity.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/study_day.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
 /// Each entry corresponds to a field name in the database instance.
@@ -62,7 +62,7 @@ class ScheduledMedication extends FirebaseEntity<ScheduledMedicationKey> impleme
   }
 
   ScheduledMedication(FirebaseEntity firebaseEntity, PlannedMedication plannedMedication) :
-        super(firebaseEntity.getDocumentSnapshot()) {
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager()) {
     super.setValues(firebaseEntity.getValues());
     _plannedMedication = plannedMedication;
     setValue(ScheduledMedicationKey.planned_medication_id, plannedMedication.id);

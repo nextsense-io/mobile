@@ -65,7 +65,7 @@ class VisualizationSettingsScreen extends HookWidget {
         child: ListView(
           padding: EdgeInsets.all(10),
           children: <Widget>[
-            HeaderText(text: "EEG Signal Processing:"),
+            HeaderText(text: "EEG Signal Processing"),
             signalProcessingRadio(viewModel),
             MediumText(text: "Bandpass Filter"),
             Row(children: <Widget>[

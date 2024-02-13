@@ -10,8 +10,8 @@ class SmallText extends StatelessWidget {
   final double marginRight;
   final double marginLeft;
   final double marginBottom;
-  SmallText(
-      {required this.text,
+  const SmallText(
+      {super.key, required this.text,
         this.color = NextSenseColors.darkBlue,
         this.textAlign = TextAlign.start,
         this.marginTop = 0,

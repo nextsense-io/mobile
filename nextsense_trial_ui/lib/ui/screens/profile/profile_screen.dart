@@ -5,11 +5,11 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
-import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:flutter_common/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/components/small_emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_protocol_dialog.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_survey_dialog.dart';
@@ -223,7 +223,7 @@ class _MainMenuItem extends StatelessWidget {
                     MediumText(text: label, color: NextSenseColors.darkBlue),
                     if (details != null) MediumText(text: details!)
                   ]),
-                  Image(image: Svg('assets/images/arrow_right.svg'), height: 14)
+                  Image(image: Svg('packages/nextsense_trial_ui/assets/images/arrow_right.svg'), height: 14)
                 ],
               )),
         ),

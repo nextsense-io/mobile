@@ -18,6 +18,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.StandardMethodCodec;
 import io.nextsense.android.Config;
 import io.nextsense.android.base.Device;
+import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceScanner;
@@ -48,6 +50,7 @@ import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
+import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.emulated.EmulatedDeviceManager;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.service.ForegroundService;
@@ -71,6 +74,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String STOP_IMPEDANCE_COMMAND = "stop_impedance";
   public static final String SET_IMPEDANCE_CONFIG_COMMAND = "set_impedance_config";
   public static final String GET_CONNECTED_DEVICES_COMMAND = "get_connected_devices";
+  public static final String GET_DEVICE_INFO_COMMAND = "get_device_info";
   public static final String GET_DEVICE_STATE_COMMAND = "get_device_state";
   public static final String GET_DEVICE_SETTINGS_COMMAND = "get_device_settings";
   public static final String GET_CHANNEL_DATA_COMMAND = "get_channel_data";
@@ -87,6 +91,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String GET_TIMEZONE_ID_COMMAND = "get_timezone_id";
 
   public static final String GET_NATIVE_LOGS_COMMAND = "get_native_logs";
+  public static final String RUN_SLEEP_STAGING_COMMAND = "run_sleep_staging";
   public static final String EMULATOR_COMMAND = "emulator_command";
   public static final String IS_BLUETOOTH_ENABLED_ARGUMENT = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
@@ -103,6 +108,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String FREQUENCY_DIVIDER_ARGUMENT = "frequency_divider";
   public static final String MIN_CONNECTION_TYPE_ARGUMENT = "min_connection_type";
   public static final String NOTIFICATION_TITLE_ARGUMENT = "notification_title";
+  public static final String START_DATE_TIME_EPOCH_MS_ARGUMENT = "start_date_time_epoch_ms";
   public static final String NOTIFICATION_TEXT_ARGUMENT = "notification_text";
   public static final String ERROR_SERVICE_NOT_AVAILABLE = "service_not_available";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
@@ -121,6 +127,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       "io.nextsense.flutter.base.nextsense_base/device_state_channel";
   private static final String DEVICE_INTERNAL_STATE_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/device_internal_state_channel";
+
+  private static final String DEVICE_EVENT_CHANNEL_NAME =
+      "io.nextsense.flutter.base.nextsense_base/device_events_channel";
+
   private static final String CURRENT_SESSION_DATA_RECEIVED_CHANNEL_NAME =
       "io.nextsense.flutter.base.nextsense_base/current_session_data_received_channel";
 
@@ -129,6 +139,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private final Gson gson;
   private final Map<String, Device.DeviceStateChangeListener> deviceStateListeners =
       Maps.newConcurrentMap();
+
+  private final Map<String, NextSenseDevice.DeviceInternalStateChangeListener>
+      deviceInternalStateListeners = Maps.newConcurrentMap();
   private LocalSessionManager.OnFirstDataReceivedListener onCurrentSessionDataReceivedListener;
   /// The MethodChannel that will the communication between Flutter and native Android
   ///
@@ -137,6 +150,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private MethodChannel methodChannel;
   private EventChannel deviceScanChannel;
   private EventChannel deviceStateChannel;
+  private EventChannel deviceEventChannel;
   private EventChannel deviceInternalStateChannel;
   private EventChannel currentSessionDataReceivedChannel;
   private Context applicationContext;
@@ -144,6 +158,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   private ForegroundService nextSenseService;
   private boolean nextSenseServiceBound = false;
   private DeviceManager.DeviceScanListener deviceScanListener;
+  private AndroidScheduler deviceEventChannelSubscriptionScheduler;
   private AndroidScheduler deviceInternalStateSubscriptionScheduler;
   private DataSubscription deviceInternalStateSubscription;
 
@@ -163,6 +178,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     methodChannel.setMethodCallHandler(this);
     RotatingFileLogger.get().logi(TAG, "Getting context.");
     applicationContext = flutterPluginBinding.getApplicationContext();
+
     deviceScanChannel =
         new EventChannel(flutterPluginBinding.getBinaryMessenger(), DEVICE_SCAN_CHANNEL_NAME);
     deviceScanChannel.setStreamHandler(new EventChannel.StreamHandler() {
@@ -176,6 +192,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         stopScanning();
       }
     });
+
     deviceStateChannel =
         new EventChannel(flutterPluginBinding.getBinaryMessenger(), DEVICE_STATE_CHANNEL_NAME);
     deviceStateChannel.setStreamHandler(new EventChannel.StreamHandler() {
@@ -196,6 +213,27 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         stopListeningToDeviceState((String) argumentList.get(1));
       }
     });
+
+    deviceEventChannelSubscriptionScheduler =
+        new AndroidScheduler(applicationContext.getMainLooper());
+    deviceEventChannel =
+        new EventChannel(flutterPluginBinding.getBinaryMessenger(), DEVICE_EVENT_CHANNEL_NAME);
+    deviceEventChannel.setStreamHandler(new EventChannel.StreamHandler() {
+      @Override
+      @SuppressWarnings("unchecked")
+      public void onListen(Object arguments, EventChannel.EventSink eventSink) {
+        RotatingFileLogger.get().logi(TAG, "Starting to listen to device events...");
+        List<Object> argumentList = (ArrayList<Object>) arguments;
+        startListeningToDeviceEvents(eventSink, (String) argumentList.get(1));
+      }
+      @Override
+      @SuppressWarnings("unchecked")
+      public void onCancel(Object arguments) {
+        List<Object> argumentList = (ArrayList<Object>) arguments;
+        stopListeningToDeviceEvents((String) argumentList.get(1));
+      }
+    });
+
     deviceInternalStateSubscriptionScheduler =
         new AndroidScheduler(applicationContext.getMainLooper());
     deviceInternalStateChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(),
@@ -325,6 +363,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case GET_CONNECTED_DEVICES_COMMAND:
         getConnectedDevices(result);
         break;
+      case GET_DEVICE_INFO_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        getDeviceInfo(result, macAddress);
+        break;
       case GET_DEVICE_STATE_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
         getDeviceState(result, macAddress);
@@ -383,6 +425,17 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       case GET_NATIVE_LOGS_COMMAND:
         getNativeLogs(result);
         break;
+      case RUN_SLEEP_STAGING_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
+        channelName = call.argument(CHANNEL_NUMBER_ARGUMENT);
+        Instant startDateTime =
+            Instant.ofEpochMilli(call.argument(START_DATE_TIME_EPOCH_MS_ARGUMENT));
+        durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
+        fromDatabase= call.argument(FROM_DATABASE_ARGUMENT);
+        runSleepStaging(result, macAddress, localSessionId, channelName, startDateTime,
+            durationMillis, fromDatabase);
+        break;
       case EMULATOR_COMMAND:
         String command = call.argument("command");
         Map<String, Object> params = call.argument("params");
@@ -432,7 +485,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     if (applicationContext != null) {
       try {
         Class<?> uiClass = Class.forName(
-            "io.flutter.embedding.android.FlutterActivity");
+            "io.flutter.embedding.android.FlutterFragmentActivity");
         RotatingFileLogger.get().logi(TAG, "Creating intent.");
         foregroundServiceIntent = new Intent(applicationContext, ForegroundService.class);
         foregroundServiceIntent.putExtra("ui_class", uiClass);
@@ -462,13 +515,24 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
+  private DeviceAttributes getDeviceAttributesFromDevice(Device device) {
+    return new DeviceAttributes(device.getAddress(), device.getName(),
+        device.getInfo().getType().name(), device.getInfo().getRevision(),
+        device.getInfo().getSerialNumber(), device.getInfo().getFirmwareVersionMajor(),
+        device.getInfo().getFirmwareVersionMinor(),
+        device.getInfo().getFirmwareVersionBuildNumber(),
+        device.getInfo().getEarbudsType(), device.getInfo().getEarbudsRevision(),
+        device.getInfo().getEarbudsSerialNumber(), device.getInfo().getEarbudsVersionMajor(),
+        device.getInfo().getEarbudsVersionMinor(), device.getInfo().getEarbudsVersionBuildNumber());
+  }
+
   private void getConnectedDevices(Result result) {
     List<String> connectedDevicesJson = new ArrayList<>();
     if (nextSenseServiceBound) {
       List<Device> connectedDevices = nextSenseService.getDeviceManager().getConnectedDevices();
       for (Device device : connectedDevices) {
         connectedDevicesJson.add(
-            gson.toJson(new DeviceAttributes(device.getAddress(), device.getName())));
+            gson.toJson(getDeviceAttributesFromDevice(device)));
       }
     }
     result.success(connectedDevicesJson);
@@ -490,8 +554,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         @Override
         public void onNewDevice(Device device) {
           RotatingFileLogger.get().logi(TAG, "Found a device in Android scan: " + device.getName());
-          DeviceAttributes deviceAttributes =
-              new DeviceAttributes(device.getAddress(), device.getName());
+          DeviceAttributes deviceAttributes = getDeviceAttributesFromDevice(device);
           uiThreadHandler.post(() -> eventSink.success(gson.toJson(deviceAttributes)));
         }
 
@@ -549,6 +612,49 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       }
     } else {
       RotatingFileLogger.get().logw(TAG, "Service not connected, cannot start monitoring device state.");
+    }
+  }
+
+  // TODO(eric): fill out device events methods.
+  private void startListeningToDeviceEvents(EventChannel.EventSink eventSink, String macAddress) {
+    if (nextSenseServiceBound) {
+      Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+      if (!device.isPresent()) {
+        RotatingFileLogger.get().logw(TAG, "Cannot find the device " + macAddress +
+            " when trying to start listening to its events.");
+        uiThreadHandler.post(() ->
+            eventSink.error(ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+                /*errorDetails=*/null));
+        return;
+      }
+      deviceInternalStateListeners.put(macAddress, newDeviceInternalState ->
+          uiThreadHandler.post(() -> eventSink.success(newDeviceInternalState)));
+      device.get().addOnDeviceInternalStateChangeListener(
+          deviceInternalStateListeners.get(macAddress));
+    } else {
+      RotatingFileLogger.get().logw(TAG,
+          "Service not connected, cannot start monitoring internal device state.");
+    }
+  }
+
+  private void stopListeningToDeviceEvents(String macAddress) {
+    if (nextSenseServiceBound) {
+      Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+      if (!device.isPresent()) {
+        RotatingFileLogger.get().logw(TAG, "Cannot find the device " + macAddress +
+            " when trying to stop listening to its events.");
+        return;
+      }
+      NextSenseDevice.DeviceInternalStateChangeListener deviceInternalStateListener =
+          deviceInternalStateListeners.get(macAddress);
+      if (deviceInternalStateListener != null) {
+        device.get().removeOnDeviceInternalStateChangeListener(deviceInternalStateListener);
+        RotatingFileLogger.get().logi(TAG, "Stopped listening to Android device events for " +
+            macAddress);
+      }
+    } else {
+      RotatingFileLogger.get().logw(TAG,
+          "Service not connected, cannot stop monitoring device events.");
     }
   }
 
@@ -820,6 +926,17 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
+  private void getDeviceInfo(Result result, String macAddress) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
+      returnError(result, GET_DEVICE_INFO_COMMAND, ERROR_DEVICE_NOT_FOUND,
+          /*errorMessage=*/null, /*errorDetails=*/null);
+      return;
+    }
+    DeviceInfo deviceInfo = device.get().getInfo();
+    result.success(gson.toJson(deviceInfo));
+  }
+
   private void getDeviceSettings(Result result, String macAddress) {
     Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
     if (!device.isPresent()) {
@@ -883,6 +1000,42 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         (float) durationMillis / Math.round(1000f /
             device.get().getSettings().getEegStreamingRate())));
     result.success(nextSenseService.getMemoryCache().getLastTimestamps(numberOfSamples));
+  }
+
+  private void runSleepStaging(
+      Result result, String macAddress, Integer localSessionId, String channelName,
+      Instant startDateTime, Integer durationMillis, Boolean fromDatabase) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
+      returnError(result, GET_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    List<Float> data;
+    float eegSamplingRate = device.get().getSettings().getEegStreamingRate();
+    if (fromDatabase != null && fromDatabase) {
+      LocalSession localSession = nextSenseService.getObjectBoxDatabase().getLocalSession(
+          localSessionId);
+      int eegOffset = (int) Math.round(Math.ceil(
+          (float) (startDateTime.toEpochMilli() - localSession.getStartTime().toEpochMilli()) /
+              Math.round(1000f / eegSamplingRate)));
+      long relativeEegOffset = eegOffset - localSession.getEegSamplesDeleted();
+      data = nextSenseService.getObjectBoxDatabase().getChannelData(
+          localSessionId, channelName, relativeEegOffset,
+          durationMillis / Math.round(1000f / eegSamplingRate));
+    } else {
+      int numberOfSamples = (int) Math.round(Math.ceil(
+          (float) durationMillis / Math.round(1000f / eegSamplingRate)));
+      data = nextSenseService.getMemoryCache().getLastEegChannelData(
+          channelName, numberOfSamples);
+    }
+    if (data != null && !data.isEmpty()) {
+      Map<Integer, Object> results = nextSenseService.getSleepTransformerModel().doInference(data,
+          device.get().getSettings().getEegStreamingRate());
+      result.success(gson.toJson(results));
+    } else {
+      result.success(null);
+    }
   }
 
   private void getDeviceInternalStateData(

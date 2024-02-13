@@ -6,8 +6,8 @@ import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey_result.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 class SurveyScreenViewModel extends ViewModel {
 

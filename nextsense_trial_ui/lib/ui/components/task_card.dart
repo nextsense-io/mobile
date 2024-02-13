@@ -4,18 +4,18 @@ import 'package:nextsense_trial_ui/domain/medication/scheduled_medication.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/ui/components/cancel_button.dart';
 import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
-import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_button.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
   final bool showTime;
-  final Function onTap;
+  final VoidCallback? onTap;
   final String title;
   final String intro;
   final Duration? duration;
@@ -23,7 +23,7 @@ class TaskCard extends StatelessWidget {
   final TimeOfDay? windowEndTime;
   final bool completed;
 
-  TaskCard(Task task, bool showTime, Function onTap)
+  TaskCard(Task task, bool showTime, VoidCallback? onTap)
       : this.task = task,
         this.showTime = showTime,
         this.title = task.title,
@@ -76,7 +76,7 @@ class TaskCard extends StatelessWidget {
     Widget? icon;
     if (completed) {
       icon = Expanded(
-          child: SvgPicture.asset('assets/images/circle_checked.svg',
+          child: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/circle_checked.svg',
               semanticsLabel: 'completed', height: 20));
     } else if (task.skipped) {
       icon = Padding(padding: EdgeInsets.only(top: 6, left: 1), child: Container(
@@ -89,7 +89,7 @@ class TaskCard extends StatelessWidget {
       ));
     } else {
       icon = Expanded(
-          child: SvgPicture.asset('assets/images/circle.svg',
+          child: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/circle.svg',
               semanticsLabel: 'not completed', height: 20));
     }
     return Row(
@@ -113,7 +113,7 @@ class TaskCard extends StatelessWidget {
                   Flexible(child: CardTitleText(text: title)),
                   SizedBox(width: 5),
                   if (showClock && duration != null)
-                    SvgPicture.asset('assets/images/clock.svg',
+                    SvgPicture.asset('packages/nextsense_trial_ui/assets/images/clock.svg',
                         semanticsLabel: 'specific time', width: 16),
                   SizedBox(height: 5),
                   Align(

@@ -4,12 +4,12 @@ import 'package:nextsense_trial_ui/domain/enrolled_study.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/medication_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 
 class DataManager {
 
@@ -21,7 +21,7 @@ class DataManager {
   final SurveyManager _surveyManager = getIt<SurveyManager>();
   final MedicationManager _medicationManager = getIt<MedicationManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
 
   bool userLoaded = false;
   bool userStudyDataLoaded = false;

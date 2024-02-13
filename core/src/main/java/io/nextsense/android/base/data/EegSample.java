@@ -6,7 +6,8 @@ import java.time.Instant;
 import java.util.HashMap;
 
 import io.nextsense.android.base.db.objectbox.Converters;
-import io.nextsense.android.base.devices.xenon.SampleFlags;
+import io.nextsense.android.base.devices.SampleFlags;
+import io.nextsense.android.base.devices.xenon.XenonSampleFlags;
 import io.objectbox.annotation.Convert;
 import io.objectbox.annotation.Entity;
 import io.objectbox.annotation.Index;
@@ -36,14 +37,20 @@ public class EegSample extends BaseRecord {
   @Index
   @Nullable
   private Instant absoluteSamplingTimestamp;
-  private boolean sync;
-  private boolean trigOut;
-  private boolean trigIn;
-  private boolean zMod;
-  private boolean marker;
-  private boolean tbd6;
-  private boolean tbd7;
-  private boolean button;
+  @Nullable
+  private Boolean sync;
+  @Nullable
+  private Boolean trigOut;
+  @Nullable
+  private Boolean trigIn;
+  @Nullable
+  private Boolean zMod;
+  @Nullable
+  private Boolean marker;
+  @Nullable
+  private Boolean button;
+  @Nullable
+  private Boolean hdmiPresent;
 
   // Needs to be public for ObjectBox performance.
   private EegSample(long localSessionId, HashMap<Integer, Float> eegData,
@@ -90,7 +97,7 @@ public class EegSample extends BaseRecord {
   // Needs to be public for ObjectBox performance.
   public EegSample(long id, long localSessionId, HashMap<Integer, Float> eegData,
                     Instant receptionTimestamp, @Nullable Integer relativeSamplingTimestamp,
-                    @Nullable Instant absoluteSamplingTimestamp, @Nullable SampleFlags flags) {
+                    @Nullable Instant absoluteSamplingTimestamp, @Nullable XenonSampleFlags flags) {
     super(id);
     this.localSession = new ToOne<>(this, EegSample_.localSession);
     this.localSession.setTargetId(localSessionId);
@@ -111,9 +118,8 @@ public class EegSample extends BaseRecord {
       this.trigIn = flags.isTrigIn();
       this.zMod = flags.iszMod();
       this.marker = flags.isMarker();
-      this.tbd6 = flags.isTbd6();
-      this.tbd7 = flags.isTbd7();
       this.button = flags.isButton();
+      this.hdmiPresent = flags.isHdmiPresent();
     }
   }
 
@@ -137,35 +143,38 @@ public class EegSample extends BaseRecord {
     return absoluteSamplingTimestamp != null;
   }
 
-  public boolean getSync() {
+  @Nullable
+  public Boolean getSync() {
     return sync;
   }
 
-  public boolean getTrigOut() {
+  @Nullable
+  public Boolean getTrigOut() {
     return trigOut;
   }
 
-  public boolean getTrigIn() {
+  @Nullable
+  public Boolean getTrigIn() {
     return trigIn;
   }
 
-  public boolean getZMod() {
+  @Nullable
+  public Boolean getZMod() {
     return zMod;
   }
 
-  public boolean getMarker() {
+  @Nullable
+  public Boolean getMarker() {
     return marker;
   }
 
-  public boolean getTbd6() {
-    return tbd6;
-  }
-
-  public boolean getTbd7() {
-    return tbd7;
-  }
-
-  public boolean getButton() {
+  @Nullable
+  public Boolean getButton() {
     return button;
+  }
+
+  @Nullable
+  public Boolean getHdmiPresent() {
+    return hdmiPresent;
   }
 }

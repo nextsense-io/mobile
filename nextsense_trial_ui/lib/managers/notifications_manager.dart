@@ -1,13 +1,19 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
 const int _notificationMessageId = 999;
+const int connectionLostNotificationId = 2;
+const String connectionLostTitle = 'Connection lost';
+const String connectionLostBody = 'The connection with your NextSense device was lost. '
+    'Please make sure it was not turned off by accident and make sure your phone is not more '
+    'than a few meters away. It should reconnect automatically.';
 
 Future showAlertNotification(
     int id, String title, String body, {Map<String, String>? payload}) async {
@@ -49,50 +55,51 @@ class NotificationController {
 
   static final CustomLogPrinter _logger = CustomLogPrinter('NotificationsManager');
 
-  /// Use this method to detect when a new notification or a schedule is created
-  @pragma("vm:entry-point")
-  static Future <void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
-    // Your code goes here
-  }
-
-  /// Use this method to detect every time that a new notification is displayed
-  @pragma("vm:entry-point")
-  static Future <void> onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {
-    // Your code goes here
-  }
-
-  /// Use this method to detect if the user dismissed a notification
-  @pragma("vm:entry-point")
-  static Future <void> onDismissActionReceivedMethod(ReceivedAction receivedAction) async {
-    // Your code goes here
-  }
+  // /// Use this method to detect when a new notification or a schedule is created
+  // @pragma("vm:entry-point")
+  // static Future <void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
+  //   // Your code goes here
+  // }
+  //
+  // /// Use this method to detect every time that a new notification is displayed
+  // @pragma("vm:entry-point")
+  // static Future <void> onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {
+  //   // Your code goes here
+  // }
+  //
+  // /// Use this method to detect if the user dismissed a notification
+  // @pragma("vm:entry-point")
+  // static Future <void> onDismissActionReceivedMethod(ReceivedAction receivedAction) async {
+  //   // Your code goes here
+  // }
 
   /// Use this method to detect when the user taps on a notification or action button
-  @pragma("vm:entry-point")
-  static Future <void> onActionReceivedMethod(ReceivedAction receivedAction) async {
-    // Your code goes here
-
-    _logger.log(Level.INFO, "User clicked on a notification.");
-    _logger.log(Level.INFO, "User clicked on a notification going to "
-        "${receivedAction.payload?[TargetType.protocol.name] ?? "dashboard."}");
-    // Navigator.of(context).pushNamed(
-    //     '/NotificationPage',
-    //     arguments: {
-    //       // your page params. I recommend you to pass the
-    //       // entire *receivedNotification* object
-    //       id: receivedNotification.id
-    //     }
-    // );
-  }
+  // @pragma("vm:entry-point")
+  // static Future <void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+  //   // Your code goes here
+  //
+  //   _logger.log(Level.INFO, "User clicked on a notification.");
+  //   _logger.log(Level.INFO, "User clicked on a notification going to "
+  //       "${receivedAction.payload?[TargetType.protocol.name] ?? "dashboard."}");
+  //   // Navigator.of(context).pushNamed(
+  //   //     '/NotificationPage',
+  //   //     arguments: {
+  //   //       // your page params. I recommend you to pass the
+  //   //       // entire *receivedNotification* object
+  //   //       id: receivedNotification.id
+  //   //     }
+  //   // );
+  // }
 }
 
 class NotificationsManager {
   // TODO(alex): discuss notification types that can be replaced and fix
   // _notificationMessageId depends on notification entity type
 
+  final _deviceManager = getIt<DeviceManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('NotificationsManager');
   
-  NotificationManager() {}
+  NotificationsManager();
 
   Future init() async {
     _logger.log(Level.INFO, 'initializing');
@@ -136,6 +143,17 @@ class NotificationsManager {
     var messaging = FirebaseMessaging.instance;
     messaging.getToken().then((token)=> _onFcmTokenUpdated(token!));
     messaging.onTokenRefresh.listen(_onFcmTokenUpdated);
+
+    _deviceManager.deviceState.addListener(() {
+      if (_deviceManager.deviceState.value == DeviceState.connected ||
+          (_deviceManager.deviceState.value == DeviceState.disconnected &&
+              _deviceManager.getConnectedDevice() != null)) {
+        hideAlertNotification(connectionLostNotificationId);
+      } else if (_deviceManager.deviceState.value == DeviceState.disconnected &&
+          _deviceManager.getConnectedDevice() == null) {
+        showAlertNotification(connectionLostNotificationId, connectionLostTitle, connectionLostBody);
+      }
+    });
 
     _logger.log(Level.INFO, 'initialized');
   }

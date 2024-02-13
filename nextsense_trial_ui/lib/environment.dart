@@ -17,7 +17,6 @@ Future initEnvironmentFile() async {
     await dotenv.load(fileName: environmentFileName);
   } catch (e) {
     print('dotenv init failed. Check path "$environmentFileName" exist');
-    rethrow;
   }
 }
 
