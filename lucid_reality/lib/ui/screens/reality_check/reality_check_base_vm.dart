@@ -1,7 +1,10 @@
+import 'package:assets_audio_player/assets_audio_player.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
+import 'package:lucid_reality/domain/reality_test.dart';
 import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/lucid_manager.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
@@ -35,6 +38,43 @@ class RealityCheckBaseViewModel extends ViewModel {
     navigation.popWithResult(result);
   }
 
+  Future<void> saveRealityTest(RealityTest realityTest) async {
+    await lucidManager.saveRealityTest(realityTest);
+  }
+
+  Future<void> scheduleNewToneNotifications(String sound) async {
+    try {
+      await clearNotifications();
+      // Create a notification channel with the current sound if it did not exist.
+      final formattedSound = sound.replaceAll(" ", '_').toLowerCase();
+      await updateNotificationsSound(sound: formattedSound);
+      _logger.log(Level.INFO, "Scheduling new notifications with $formattedSound sound.");
+      // Scheduling Daytime notification
+      final numberOfReminders = lucidManager.realityCheck.getNumberOfReminders();
+      final int? startTime = lucidManager.realityCheck.getStartTime();
+      final int? endTime = lucidManager.realityCheck.getEndTime();
+      await scheduleRealityCheckNotification(
+        notificationType: NotificationType.realityCheckingTimeNotification,
+        startTime: DateTime.fromMillisecondsSinceEpoch(startTime!),
+        endTime: DateTime.fromMillisecondsSinceEpoch(endTime!),
+        numberOfReminders: numberOfReminders,
+      );
+      // Scheduling Bedtime notification
+      final DateTime bedtime =
+          DateTime.fromMillisecondsSinceEpoch(lucidManager.realityCheck.getBedTime() ?? 0);
+      final DateTime wakeUpTime =
+          DateTime.fromMillisecondsSinceEpoch(lucidManager.realityCheck.getWakeTime() ?? 0);
+      await scheduleRealityCheckNotification(
+        notificationType: NotificationType.realityCheckingBedtimeNotification,
+        startTime: bedtime,
+        endTime: wakeUpTime,
+        numberOfReminders: numberOfReminders,
+      );
+    } catch (e) {
+      _logger.log(Level.WARNING, e);
+    }
+  }
+
   Future<void> scheduleRealityCheckNotification(
       {required NotificationType notificationType,
       required DateTime startTime,
@@ -42,20 +82,31 @@ class RealityCheckBaseViewModel extends ViewModel {
       required int numberOfReminders}) async {
     final realityTest = lucidManager.realityCheck.getRealityTest();
     if (realityTest != null) {
-      final sound =
-          '${realityTest.getTotemSound()}'.replaceAll(" ", '_').plus('.${realityTest.getType()}');
+      final String sound = realityTest.getTotemSound()?.replaceAll(" ", '_').toLowerCase() ?? 'air';
       final totalTime = formatIntervalTime(
           init: PickedTime(h: startTime.hour, m: startTime.minute),
-          end: PickedTime(h: endTime.hour, m: endTime.hour));
+          end: PickedTime(h: endTime.hour, m: endTime.minute));
+      _logger.log(Level.INFO, 'Total Time=>${totalTime.h}:${totalTime.m}');
       // Calculate interval offset
       final timeOffset = Duration(
           seconds:
               Duration(hours: totalTime.h, minutes: totalTime.m).inSeconds ~/ numberOfReminders);
+      _logger.log(Level.INFO, 'TimeOffset=>${timeOffset.inMinutes}, ${timeOffset.inSeconds}');
       var initialTime = startTime;
+      // Before scheduling new notifications we have to cancel all previously scheduled
+      // notifications.
+      await AwesomeNotifications()
+          .cancelSchedulesByChannelKey(notificationType.notificationChannelKey);
       for (int i = 0; i < numberOfReminders; i++) {
         // Schedule each notification with calculated interval
         _logger.log(Level.INFO, "Time:${initialTime.hour}:${initialTime.minute}, Sound:$sound");
-        await scheduleNotification(
+        int notificationId = notificationType == NotificationType.realityCheckingBedtimeNotification
+            ? realityCheckingTimeNotificationId
+            : realityCheckingBedtimeNotificationId;
+        notificationId += i;
+        _logger.log(Level.INFO, 'scheduleNotifications=>$notificationId, "Time:${initialTime.hour}:${initialTime.minute}');
+        await scheduleNotifications(
+          notificationId: notificationId,
           notificationType: notificationType,
           date: initialTime,
           title: realityTest.getName() ?? '',
@@ -64,6 +115,16 @@ class RealityCheckBaseViewModel extends ViewModel {
         );
         initialTime = initialTime.add(timeOffset);
       }
+    }
+  }
+
+  void playMusic(String musicFile) async {
+    try {
+      AssetsAudioPlayer.playAndForget(
+        Audio(soundBasePath.plus(musicFile)),
+      );
+    } catch (t) {
+      //mp3 unreachable
     }
   }
 }

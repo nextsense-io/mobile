@@ -5,6 +5,8 @@ apply plugin: 'maven-publish'
 apply plugin: 'org.sonarqube'
 
 android {
+    namespace 'io.nextsense.android.base'
+
     compileSdkVersion 33
 
     defaultConfig {
@@ -22,8 +24,8 @@ android {
         // Flag to enable support for the new language APIs.
         coreLibraryDesugaringEnabled true
         // Sets Java compatibility to Java 11.
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildTypes {
@@ -32,7 +34,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
 
     sourceSets {
         main {
@@ -45,7 +46,6 @@ android {
         }
     }
 
-    namespace 'io.nextsense.android.base'
     androidResources {
         noCompress 'tflite'
     }
@@ -65,8 +65,6 @@ protobuf {
         }
     }
 }
-
-
 
 sonarqube {
     properties {
@@ -102,8 +100,8 @@ dependencies {
     implementation 'com.google.protobuf:protoc:3.13.0'
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'org.greenrobot:eventbus:3.3.1'
-    implementation 'org.tensorflow:tensorflow-lite:2.14.0'
-    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0'
+    compileOnly 'org.tensorflow:tensorflow-lite:2.14.0'
+    compileOnly 'org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0'
     implementation group: 'uk.me.berndporr', name:'iirj', version: '1.5'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.9'

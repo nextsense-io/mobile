@@ -100,84 +100,89 @@ class DreamJournalScreen extends HookWidget {
 
   Widget rowDreamJournalListItem(BuildContext context, DreamJournal dreamJournal) {
     final viewModel = context.watch<DreamJournalViewModel>();
-    return Stack(
-      children: [
-        AppCard(
-          Row(
-            children: [
-              Container(
-                width: 80,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border(
-                    right: BorderSide(width: 1, color: NextSenseColors.royalBlue),
+    return InkWell(
+      onTap: () {
+        viewModel.navigateToRecordYourDreamScreen(dreamJournal);
+      },
+      child: Stack(
+        children: [
+          AppCard(
+            Row(
+              children: [
+                Container(
+                  width: 80,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      right: BorderSide(width: 1, color: NextSenseColors.royalBlue),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        dreamJournal.getCreatedAt()?.toDate().getDate() ?? '',
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMediumWithFontWeight600
+                            ?.copyWith(color: NextSenseColors.skyBlue),
+                      ),
+                      SizedBox(height: 12),
+                      Image(image: Svg(imageBasePath.plus('lucid.svg'))),
+                    ],
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      dreamJournal.getCreatedAt()?.toDate().getDate() ?? '',
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMediumWithFontWeight600
-                          ?.copyWith(color: NextSenseColors.skyBlue),
-                    ),
-                    SizedBox(height: 12),
-                    Image(image: Svg(imageBasePath.plus('lucid.svg'))),
-                  ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        overflow: TextOverflow.ellipsis,
+                        dreamJournal.getTitle() ?? '',
+                        style: Theme.of(context).textTheme.bodySmallWithFontWeight600,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        overflow: TextOverflow.ellipsis,
+                        dreamJournal.getDescription() ?? '',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      )
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      overflow: TextOverflow.ellipsis,
-                      dreamJournal.getTitle() ?? '',
-                      style: Theme.of(context).textTheme.bodySmallWithFontWeight600,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      overflow: TextOverflow.ellipsis,
-                      dreamJournal.getDescription() ?? '',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    )
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        Positioned(
-          top: 16,
-          right: 16,
-          child: MenuAnchor(
-            style: MenuStyle(
-              backgroundColor: MaterialStateProperty.all(NextSenseColors.midnightBlue),
+              ],
             ),
-            alignmentOffset: Offset(50, 0),
-            anchorTapClosesMenu: true,
-            builder: (context, controller, child) {
-              return SvgButton(
-                padding: EdgeInsets.all(8),
-                imageName: 'btn_edit_menu.svg',
-                onPressed: () {
-                  if (controller.isOpen) {
-                    controller.close();
-                  } else {
-                    controller.open();
-                  }
-                },
-              );
-            },
-            menuChildren: viewModel.dreamJournalMenuItem
-                .map((menuItem) => buildMenuChildren(context, menuItem, dreamJournal))
-                .toList(),
           ),
-        ),
-      ],
+          Positioned(
+            top: 16,
+            right: 16,
+            child: MenuAnchor(
+              style: MenuStyle(
+                backgroundColor: MaterialStateProperty.all(NextSenseColors.midnightBlue),
+              ),
+              alignmentOffset: Offset(50, 0),
+              anchorTapClosesMenu: true,
+              builder: (context, controller, child) {
+                return SvgButton(
+                  padding: EdgeInsets.all(8),
+                  imageName: 'btn_edit_menu.svg',
+                  onPressed: () {
+                    if (controller.isOpen) {
+                      controller.close();
+                    } else {
+                      controller.open();
+                    }
+                  },
+                );
+              },
+              menuChildren: viewModel.dreamJournalMenuItem
+                  .map((menuItem) => buildMenuChildren(context, menuItem, dreamJournal))
+                  .toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -245,7 +250,7 @@ class DreamJournalScreen extends HookWidget {
     return MenuItemButton(
       onPressed: () {
         switch (menuItem.label) {
-          case 'Edit':
+          case 'View':
             viewModel.navigateToRecordYourDreamScreen(dreamJournal);
             break;
           case 'Delete':

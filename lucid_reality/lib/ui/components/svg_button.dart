@@ -7,13 +7,15 @@ class SvgButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final Size? size;
   final EdgeInsets? padding;
+  final bool showBackground;
 
   const SvgButton({
     super.key,
     required this.imageName,
     required this.onPressed,
     this.size,
-    this.padding = EdgeInsets.zero
+    this.padding = EdgeInsets.zero,
+    this.showBackground = false,
   });
 
   @override
@@ -22,6 +24,14 @@ class SvgButton extends StatelessWidget {
       onTap: onPressed,
       child: Container(
         padding: padding,
+        decoration: this.showBackground
+            ? BoxDecoration(
+                image: DecorationImage(
+                  image: Svg(imageBasePath.plus('btn_background.svg')),
+                  fit: BoxFit.fill,
+                ),
+              )
+            : null,
         child: Image(
           image: Svg(imageBasePath.plus(imageName)),
           height: size?.height,

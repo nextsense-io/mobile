@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,7 +47,7 @@ void main() async {
     tz.initializeTimeZones();
     await initDependencies();
     await _initPreferences();
-    await initializeNotification();
+    await initializeNotifications();
     runApp(LucidRealityApp());
   }, (error, stack) => FirebaseCrashlytics.instance.recordError(error, stack));
 }
@@ -108,9 +109,19 @@ class LucidRealityApp extends StatelessWidget {
           ),
           scaffoldBackgroundColor: NextSenseColors.backgroundColor,
         ),
-        home: _authManager.isAuthenticated || initialIntent != null
-            ? StartupScreen(initialIntent: initialIntent)
-            : SignInScreen(),
+        home: StreamBuilder<User?>(
+          stream: _authManager.firebaseUser,
+          builder: (context, snapshot) {
+            if (snapshot.hasData || initialIntent != null) {
+              if (snapshot.hasData) {
+                _authManager.syncUserIdWithDatabase(snapshot.data!.uid);
+              }
+              return StartupScreen(initialIntent: initialIntent);
+            } else {
+              return SignInScreen();
+            }
+          },
+        ),
         navigatorKey: _navigation.navigatorKey,
         onGenerateRoute: _navigation.onGenerateRoute,
       ),

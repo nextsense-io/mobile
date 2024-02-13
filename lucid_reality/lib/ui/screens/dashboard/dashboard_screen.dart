@@ -14,78 +14,105 @@ import 'package:stacked/stacked.dart';
 
 class DashboardScreen extends HookWidget {
   static const String id = 'dashboard_screen';
+  final _pages = <Widget>[];
 
   DashboardScreen({super.key});
 
-  final _pages = <Widget>[
-    const HomeScreen(),
-    const LearnScreen(),
-    const PsychomotorVigilanceTestListScreen(),
-    const LucidScreen(),
-    SleepScreen()
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final activeTab = useState(2);
+    final viewModel = useRef(DashboardScreenViewModel());
+    final activeTab = useState(DashboardTab.home);
+    useEffect(() {
+      _pages.addAll([
+        HomeScreen(
+          viewModel: viewModel.value,
+        ),
+        const LearnScreen(),
+        const PsychomotorVigilanceTestListScreen(),
+        const LucidScreen(),
+        SleepScreen()
+      ]);
+      viewModel.value.changeTab = (tab) {
+        activeTab.value = tab;
+      };
+      return null;
+    }, []);
     return ViewModelBuilder.reactive(
-      viewModelBuilder: () => DashboardScreenViewModel(),
+      viewModelBuilder: () => viewModel.value,
       onViewModelReady: (viewModel) => viewModel.init(),
       builder: (context, viewModel, child) {
         return SafeArea(
           child: Scaffold(
-            body: AppBody(child: _pages.elementAt(activeTab.value)),
+            body: AppBody(child: _pages.elementAt(activeTab.value.tabIndex)),
             bottomNavigationBar: BottomNavigationBar(
-              currentIndex: activeTab.value,
+              currentIndex: activeTab.value.tabIndex,
               showSelectedLabels: false,
               showUnselectedLabels: false,
               selectedItemColor: Colors.white,
               unselectedItemColor: NextSenseColors.royalBlue,
               type: BottomNavigationBarType.fixed,
               onTap: (index) {
-                activeTab.value = index;
+                activeTab.value = DashboardTab.getByTabIndex(index);
+                if (!viewModel.isPVTOnboardingCompleted && index == DashboardTab.pvt.index) {
+                  viewModel.navigateToPVTOnboardingScreen();
+                }
               },
-              items: [
-                BottomNavigationBarItem(
-                  label: "Home",
-                  icon: Image(
-                    image: Svg(imageBasePath.plus('home.svg')),
-                    color: activeTab.value == 0 ? Colors.white : NextSenseColors.royalBlue,
-                  ),
-                ),
-                BottomNavigationBarItem(
-                  label: "Learn",
-                  icon: Image(
-                    image: Svg(imageBasePath.plus('learn.svg')),
-                    color: activeTab.value == 1 ? Colors.white : NextSenseColors.royalBlue,
-                  ),
-                ),
-                BottomNavigationBarItem(
-                  label: "Mind",
-                  icon: Image(
-                    image: Svg(imageBasePath.plus('brain_check.svg')),
-                    color: activeTab.value == 2 ? Colors.white : NextSenseColors.royalBlue,
-                  ),
-                ),
-                BottomNavigationBarItem(
-                  label: "Lucid",
-                  icon: Image(
-                    image: Svg(imageBasePath.plus('lucid.svg')),
-                    color: activeTab.value == 3 ? Colors.white : NextSenseColors.royalBlue,
-                  ),
-                ),
-                BottomNavigationBarItem(
-                  label: "Sleep",
-                  icon: Image(
-                    image: Svg(imageBasePath.plus('sleep.svg')),
-                    color: activeTab.value == 4 ? Colors.white : NextSenseColors.royalBlue,
-                  ),
-                ),
-              ],
+              items: DashboardTab.values
+                  .map(
+                    (item) => BottomNavigationBarItem(
+                      label: item.label,
+                      icon: Image(
+                        image: Svg(
+                          imageBasePath.plus(item.icon),
+                        ),
+                        color: item.getSelectionColor(activeTab.value),
+                      ),
+                      activeIcon: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Image(
+                            image: Svg(
+                              imageBasePath.plus('ic_dashboard_tab_selected.svg'),
+                            ),
+                          ),
+                          Image(
+                            image: Svg(
+                              imageBasePath.plus(item.icon),
+                            ),
+                            color: item.getSelectionColor(activeTab.value),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         );
       },
     );
   }
+}
+
+enum DashboardTab {
+  home(0, 'Home', 'home.svg'),
+  learn(1, 'Learn', 'learn.svg'),
+  pvt(2, 'PVT', 'brain_check.svg'),
+  lucid(3, 'Lucid', 'lucid.svg'),
+  sleep(4, 'Sleep', 'sleep.svg');
+
+  const DashboardTab(this.tabIndex, this.label, this.icon);
+
+  final int tabIndex;
+  final String label;
+  final String icon;
+
+  static DashboardTab getByTabIndex(int i) {
+    return DashboardTab.values.firstWhere((x) => x.tabIndex == i);
+  }
+}
+
+extension DashboardTabSelection on DashboardTab {
+  Color getSelectionColor(DashboardTab dashboardTab) =>
+      dashboardTab == this ? NextSenseColors.royalBlue : NextSenseColors.white;
 }

@@ -3,5 +3,5 @@ enum LucidSleepStage {
   deep,  // n3
   rem,
   awake,
-  sleeping,  // core + deep + rem
+  sleeping;  // core + deep + rem
 }

@@ -51,7 +51,7 @@ class DreamJournalViewModel extends RealityCheckBaseViewModel {
   void prepareDreamJournalMenuItem() {
     dreamJournalMenuItem.add(
       DreamJournalMenu(
-        'Edit',
+        'View',
         'ic_edit.svg',
         routeName: RecordYourDreamScreen.id,
       ),

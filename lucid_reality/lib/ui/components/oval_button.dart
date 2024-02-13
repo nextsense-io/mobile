@@ -37,5 +37,4 @@ class OvalButton extends StatelessWidget {
       ),
     );
   }
-
 }

@@ -66,6 +66,7 @@ class SetGoalScreen extends HookWidget {
                     const SizedBox(height: 8),
                     TextField(
                       textCapitalization: TextCapitalization.sentences,
+                      autofocus: true,
                       textAlign: TextAlign.start,
                       style: Theme.of(context).textTheme.bodySmall,
                       decoration: InputDecoration(
@@ -87,6 +88,7 @@ class SetGoalScreen extends HookWidget {
                     ),
                     const Spacer(flex: 1),
                     RealityCheckBottomBar(
+                      progressBarPercentage: 0.20,
                       progressBarVisibility: !isStartForResult,
                       onPressed: () async {
                         await viewModel.lucidManager.updateDescription(textController.text.trim());

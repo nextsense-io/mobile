@@ -4,6 +4,7 @@ import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/ui/components/alert.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:lucid_reality/ui/components/app_circular_progress_indicator.dart';
 import 'package:lucid_reality/ui/screens/auth/sign_in_screeen_vm.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
@@ -58,6 +59,8 @@ class SignInScreen extends HookWidget {
                   "Enhancing human potential",
                   style: Theme.of(context).textTheme.bodyMediumWithFontWeight300,
                 ),
+                SizedBox(height: 16),
+                if (viewModel.isBusy) AppCircleProgressIndicator(),
                 const Spacer(
                   flex: 2,
                 ),

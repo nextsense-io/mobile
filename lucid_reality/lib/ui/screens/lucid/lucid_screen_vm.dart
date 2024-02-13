@@ -11,6 +11,7 @@ import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_tone_category_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/set_goal_screen.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
+import 'package:lucid_reality/utils/notification.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
 class LucidScreenViewModel extends ViewModel {
@@ -18,6 +19,9 @@ class LucidScreenViewModel extends ViewModel {
   final AuthManager _authManager = getIt<AuthManager>();
   final LucidManager _lucidManager = getIt<LucidManager>();
   LucidRealityCategoryEnum? _category;
+  bool _isDoNotDisturbOverridden = false;
+
+  bool get isDoNotDisturbOverridden => _isDoNotDisturbOverridden;
 
   @override
   void init() async {
@@ -31,8 +35,38 @@ class LucidScreenViewModel extends ViewModel {
       if (category != null) {
         _category = LucidRealityCategoryExtension.fromTag(category);
       }
+      _isDoNotDisturbOverridden = await _checkIsDoNotDisturbOverridden();
     }
+    notifyListeners();
     setBusy(false);
+    _lucidManager.realityCheckingNotifier.addListener(
+      () {
+        notifyListeners();
+      },
+    );
+  }
+
+  String getRealityCheckSound() {
+    return _lucidManager.realityCheck.getRealityTest()?.getTotemSound()
+        ?.replaceAll(' ', '_').toLowerCase() ?? 'air';
+  }
+
+  Future<bool> _checkIsDoNotDisturbOverridden() async {
+    return await isDoNotDisturbOverriddenForChannel(
+          notificationType: NotificationType.realityCheckingBedtimeNotification,
+          sound: getRealityCheckSound());
+  }
+
+  void openChannelSettings() async {
+    if (!await isDoNotDisturbOverriddenForChannel(
+        notificationType: NotificationType.realityCheckingBedtimeNotification,
+        sound: getRealityCheckSound())) {
+      await requestDoNotDisturbOverride(
+          notificationType: NotificationType.realityCheckingBedtimeNotification,
+          sound: getRealityCheckSound());
+    }
+    _isDoNotDisturbOverridden = await _checkIsDoNotDisturbOverridden();
+    notifyListeners();
   }
 
   void navigateToCategoryScreen() {
@@ -80,6 +114,8 @@ class LucidScreenViewModel extends ViewModel {
       _lucidManager.realityCheck.getWakeTime()?.toDate().getTime() ?? '';
 
   String realityCheckActionName() => _lucidManager.realityCheck.getRealityTest()?.getName() ?? '';
+
+  int getNumberOfReminders() => _lucidManager.realityCheck.getNumberOfReminders();
 
   void navigateToSetGoalScreenForResult() async {
     final result = await _navigation.navigateTo(SetGoalScreen.id, arguments: true);

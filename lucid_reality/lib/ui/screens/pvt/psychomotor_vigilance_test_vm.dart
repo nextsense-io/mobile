@@ -27,6 +27,7 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
     final userLoaded = await _authManager.ensureUserLoaded();
     if (userLoaded) {
       await pvtManager.fetchPVTResults();
+      setInitialised(true);
       notifyListeners();
     }
   }
@@ -71,5 +72,9 @@ class PsychomotorVigilanceTestViewModule extends ViewModel {
     tapTime?.endTime = DateTime.now();
     psychomotorVigilanceTest?.taps.add(tapTime?.getTapLatency() ?? 0);
     scheduleButtonVisibility();
+  }
+
+  void addMissedResponses() {
+    psychomotorVigilanceTest?.addMissedResponses();
   }
 }

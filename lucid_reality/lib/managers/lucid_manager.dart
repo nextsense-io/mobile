@@ -15,6 +15,7 @@ class LucidManager {
   final IntentEntity intentEntity = IntentEntity.instance;
   final RealityCheckEntity realityCheck = RealityCheckEntity.instance;
   final ValueNotifier<String> newDreamJournalCreatedNotifier = ValueNotifier('');
+  final ValueNotifier<int> realityCheckingNotifier = ValueNotifier(0);
 
   Future<void> fetchIntent() async {
     await firebaseRealTimeDb.getEntityAs<IntentEntity>(
@@ -77,6 +78,7 @@ class LucidManager {
     realityCheck.setBedTime(bedtime);
     realityCheck.setWakeTime(wakeUpTime);
     await _saveRealityCheck();
+    realityCheckingNotifier.value = DateTime.now().millisecondsSinceEpoch;
   }
 
   Future<void> saveRealityTest(RealityTest realityTest) async {
@@ -117,11 +119,16 @@ class LucidManager {
   }
 
   Future<List<DreamJournal>> fetchDreamJournals() async {
-    return await firebaseRealTimeDb.getEntities(
+    List<DreamJournal> dreamJournals = await firebaseRealTimeDb.getEntities(
       DreamJournal.table,
       DreamJournal.fromJson,
-      sortBy: SortBy.DESC,
     );
+    dreamJournals.sort((a, b) {
+      int aDate = a.getCreatedAt() ?? 0;
+      int bDate = b.getCreatedAt() ?? 0;
+      return bDate.compareTo(aDate);
+    });
+    return dreamJournals;
   }
 
   Future<bool> deleteDreamJournal(DreamJournal dreamJournal) async {

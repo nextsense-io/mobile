@@ -5,6 +5,7 @@ enum PVTResultKey {
   timeInterval,
   reactions,
   avg,
+  missedResponses,
 }
 
 class PVTResult extends FirebaseRealtimeDBEntity<PVTResultKey> {
@@ -34,6 +35,14 @@ class PVTResult extends FirebaseRealtimeDBEntity<PVTResultKey> {
 
   void setAverageTapLatencyMs(int averageTapLatencyMs) {
     setValue(PVTResultKey.avg, averageTapLatencyMs);
+  }
+
+  int getMissedResponses() {
+    return getValue(PVTResultKey.missedResponses) ?? 0;
+  }
+
+  void setMissedResponses(int missedResponses) {
+    setValue(PVTResultKey.missedResponses, missedResponses);
   }
 
   List<int> getReactions() {

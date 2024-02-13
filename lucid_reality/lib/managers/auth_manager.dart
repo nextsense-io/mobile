@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_common/managers/auth/auth_method.dart';
 import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/managers/auth/email_auth_manager.dart';
@@ -9,15 +9,11 @@ import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/user_entity.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
-import 'package:lucid_reality/preferences.dart';
-import 'package:uuid/uuid.dart';
 
 class AuthManager {
   static const minimumPasswordLength = 8;
-  static const Uuid _uuid = Uuid();
 
   final _logger = CustomLogPrinter('AuthManager');
-  final _preferences = getIt<Preferences>();
   final _firebaseAuth = FirebaseAuth.instance;
   final firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
 
@@ -41,6 +37,10 @@ class AuthManager {
   String? get email => _email;
 
   String? get authUid => _firebaseAuth.currentUser?.uid;
+
+  String get userName => _firebaseAuth.currentUser?.displayName ?? '';
+
+  Stream<User?> get firebaseUser => Stream.value(_firebaseAuth.currentUser);
 
   AuthManager() {
     for (AuthMethod authMethod in [AuthMethod.email_password, AuthMethod.google_auth]) {
@@ -66,7 +66,6 @@ class AuthManager {
   }
 
   Future<AuthenticationResult> signInGoogle() async {
-    // return AuthenticationResult.success;
     AuthenticationResult authResult = await _googleAuthManager!.handleSignIn();
     if (authResult != AuthenticationResult.success) {
       return authResult;
@@ -81,7 +80,6 @@ class AuthManager {
   Future<bool> ensureUserLoaded() async {
     _logger.log(Level.INFO, 'ensure user loaded');
     if (_user != null) {
-      firebaseRealTimeDb.setUserId(authUid!);
       // User already initialized
       return true;
     }
@@ -93,6 +91,9 @@ class AuthManager {
       switch (_signedInAuthMethod) {
         case AuthMethod.google_auth:
           username = _firebaseAuth.currentUser!.email!;
+          if (_googleAuthManager!.authUid.isEmpty) {
+            await signInGoogle();
+          }
           authUid = _googleAuthManager!.authUid;
           break;
         case AuthMethod.email_password:
@@ -103,10 +104,13 @@ class AuthManager {
           _logger.log(Level.WARNING, 'Unknown auth method.');
           return false;
       }
+      if (authUid.isEmpty) {
+        _logger.log(Level.WARNING, 'Auth uid is empty.');
+        return false;
+      }
       _user = await _loadUser(authUid: authUid);
       if (_user != null) {
         _username = username;
-        firebaseRealTimeDb.setUserId(authUid);
         return true;
       }
     }
@@ -140,7 +144,7 @@ class AuthManager {
       return AuthenticationResult.user_fetch_failed;
     }
     _username = email;
-    firebaseRealTimeDb.setUserId(authUid);
+    syncUserIdWithDatabase(authUid);
     return AuthenticationResult.success;
   }
 
@@ -163,7 +167,12 @@ class AuthManager {
   Future<UserEntity> _createNewUser({required String email, required String authUid}) async {
     final user = UserEntity.instance;
     user.setEmail(email);
+    user.setUserName(userName);
     await firebaseRealTimeDb.setEntity(user, UserEntity.table.where(authUid));
     return user;
+  }
+
+  void syncUserIdWithDatabase(String userId) {
+    firebaseRealTimeDb.setUserId(userId);
   }
 }

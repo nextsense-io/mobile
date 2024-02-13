@@ -54,3 +54,8 @@ android {
 flutter {
     source '../..'
 }
+
+afterEvaluate {
+    bundleDebugLocalLintAar.dependsOn "copyFlutterAssetsDebug"
+    bundleReleaseLocalLintAar.dependsOn "copyFlutterAssetsRelease"
+}

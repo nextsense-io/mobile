@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
+import 'package:lucid_reality/domain/reality_test.dart';
 import 'package:lucid_reality/domain/tone_category.dart';
 import 'package:lucid_reality/ui/components/app_body.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
@@ -68,6 +69,7 @@ class RealityCheckToneCategoryScreen extends HookWidget {
                           return InkWell(
                             onTap: () {
                               viewModel.onCategoryIndexChanged(index);
+                              viewModel.playMusic(toneCategory.getMusicFile());
                             },
                             child: roundItem(context, toneCategory),
                           );
@@ -75,11 +77,16 @@ class RealityCheckToneCategoryScreen extends HookWidget {
                       ),
                     ),
                     RealityCheckBottomBar(
+                      progressBarPercentage: 0.60,
                       progressBarVisibility: !isStartForResult,
                       onPressed: () async {
-                        await viewModel.lucidManager.saveRealityTest(viewModel.toneCategories
+                        viewModel.setBusy(true);
+                        final RealityTest realityTest = viewModel.toneCategories
                             .firstWhere((element) => element.isSelected)
-                            .toRealityTest());
+                            .toRealityTest();
+                        await viewModel.saveRealityTest(realityTest);
+                        await viewModel.scheduleNewToneNotifications(realityTest.getTotemSound()!);
+                        viewModel.setBusy(false);
                         if (isStartForResult) {
                           viewModel.goBackWithResult('success');
                         } else {
@@ -98,6 +105,9 @@ class RealityCheckToneCategoryScreen extends HookWidget {
   }
 
   Widget roundItem(BuildContext context, ToneCategory toneCategory) {
+    final bool isStartForResult = (ModalRoute.of(context)?.settings.arguments is bool
+        ? ModalRoute.of(context)?.settings.arguments as bool
+        : false);
     final viewModel = context.watch<RealityCheckToneCategoryViewModel>();
     return Container(
       height: 186,
@@ -128,7 +138,7 @@ class RealityCheckToneCategoryScreen extends HookWidget {
           FittedBox(
             child: InkWell(
               onTap: () {
-                viewModel.navigateToToneSelectionScreen(toneCategory);
+                viewModel.navigateToToneSelectionScreen(toneCategory, isStartForResult);
               },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),

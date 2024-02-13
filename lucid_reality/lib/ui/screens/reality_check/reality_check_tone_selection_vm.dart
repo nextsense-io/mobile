@@ -1,10 +1,9 @@
-import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:lucid_reality/domain/tone_category.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_base_vm.dart';
-import 'package:lucid_reality/utils/utils.dart';
 
 class RealityCheckToneSelectionViewModel extends RealityCheckBaseViewModel {
   final List<Tone> toneList = List.empty(growable: true);
+  ToneCategory? toneCategory;
 
   @override
   void init() async {
@@ -13,57 +12,56 @@ class RealityCheckToneSelectionViewModel extends RealityCheckBaseViewModel {
   }
 
   void prepareToneList() {
-    toneList.add(Tone('AIR', 'AIR.m4r'));
-    toneList.add(Tone('AWAKENING', 'AWAKENING.m4r'));
-    toneList.add(Tone('BRUSH', 'BRUSH.m4r'));
-    toneList.add(Tone('CUTE', 'CUTE.m4r'));
-    toneList.add(Tone('DEW', 'DEW.m4r'));
-    toneList.add(Tone('FADE', 'FADE.m4r'));
-    toneList.add(Tone('GINZA', 'GINZA.m4r'));
-    toneList.add(Tone('GOLD', 'GOLD.m4r'));
-    toneList.add(Tone('GOZAIMASU', 'GOZAIMASU.m4r'));
-    toneList.add(Tone('GOZAIMASUL', 'GOZAIMASUL.m4r'));
-    toneList.add(Tone('HARAJUKU', 'HARAJUKU.m4r'));
-    toneList.add(Tone('HELLO', 'HELLO.m4r'));
-    toneList.add(Tone('JFK', 'JFK.m4r'));
-    toneList.add(Tone('JFKL', 'JFKL.m4r'));
-    toneList.add(Tone('KYOTO', 'KYOTO.m4r'));
-    toneList.add(Tone('MALLET', 'MALLET.m4r'));
-    toneList.add(Tone('NARITA', 'NARITA.m4r'));
-    toneList.add(Tone('NIGHT', 'NIGHT.m4r'));
-    toneList.add(Tone('PEBBLE', 'PEBBLE.m4r'));
-    toneList.add(Tone('POND', 'POND.m4r'));
-    toneList.add(Tone('PRIME', 'PRIME.m4r'));
-    toneList.add(Tone('REQUEST', 'REQUEST.m4r'));
-    toneList.add(Tone('SANSKRIT', 'SANSKRIT.m4r'));
-    toneList.add(Tone('SAVANNA', 'SAVANNA.m4r'));
-    toneList.add(Tone('SHINJUKU', 'SHINJUKU.m4r'));
-    toneList.add(Tone('SHRINE', 'SHRINE.m4r'));
-    toneList.add(Tone('SILVER', 'SILVER.m4r'));
-    toneList.add(Tone('SUNDIAL', 'SUNDIAL.m4r'));
-    toneList.add(Tone('TEMPLE', 'TEMPLE.m4r'));
-    toneList.add(Tone('TIMBUKTU', 'TIMBUKTU.m4r'));
-    toneList.add(Tone('TOKYO HI', 'TOKYO_HI.m4r'));
-    toneList.add(Tone('TOKYO LO', 'TOKYO_LO.m4r'));
-    toneList.add(Tone('TOTEM', 'TOTEM.m4r'));
-    toneList.add(Tone('TWIGS', 'TWIGS.m4r'));
-    toneList.add(Tone('WOOD', 'WOOD.m4r'));
-    toneList.add(Tone('ZEN', 'ZEN.m4r'));
-    toneList.add(Tone('ZEN LO', 'ZEN_LO.m4r'));
-  }
-
-  void playMusic(String musicFile) async {
-    try {
-      AssetsAudioPlayer.playAndForget(
-        Audio(soundBasePath.plus(musicFile)),
-      );
-    } catch (t) {
-      //mp3 unreachable
-    }
+    toneList.add(Tone('AIR', 'air.mp3'));
+    toneList.add(Tone('AWAKENING', 'awakening.mp3'));
+    toneList.add(Tone('BRUSH', 'brush.mp3'));
+    toneList.add(Tone('CUTE', 'cute.mp3'));
+    toneList.add(Tone('DEW', 'dew.mp3'));
+    toneList.add(Tone('FADE', 'fade.mp3'));
+    toneList.add(Tone('GINZA', 'ginza.mp3'));
+    toneList.add(Tone('GOLD', 'gold.mp3'));
+    toneList.add(Tone('GOZAIMASU', 'gozaimasu.mp3'));
+    toneList.add(Tone('GOZAIMASUL', 'gozaimasul.mp3'));
+    toneList.add(Tone('HARAJUKU', 'harajuku.mp3'));
+    toneList.add(Tone('HELLO', 'hello.mp3'));
+    toneList.add(Tone('JFK', 'jfk.mp3'));
+    toneList.add(Tone('JFKL', 'jfkl.mp3'));
+    toneList.add(Tone('KYOTO', 'kyoto.mp3'));
+    toneList.add(Tone('MALLET', 'mallet.mp3'));
+    toneList.add(Tone('NARITA', 'narita.mp3'));
+    toneList.add(Tone('NIGHT', 'night.mp3'));
+    toneList.add(Tone('PEBBLE', 'pebble.mp3'));
+    toneList.add(Tone('POND', 'pond.mp3'));
+    toneList.add(Tone('PRIME', 'prime.mp3'));
+    toneList.add(Tone('REQUEST', 'request.mp3'));
+    toneList.add(Tone('SANSKRIT', 'sanskrit.mp3'));
+    toneList.add(Tone('SAVANNA', 'savanna.mp3'));
+    toneList.add(Tone('SHINJUKU', 'shinjuku.mp3'));
+    toneList.add(Tone('SHRINE', 'shrine.mp3'));
+    toneList.add(Tone('SILVER', 'silver.mp3'));
+    toneList.add(Tone('SUNDIAL', 'sundial.mp3'));
+    toneList.add(Tone('TEMPLE', 'temple.mp3'));
+    toneList.add(Tone('TIMBUKTU', 'timbuktu.mp3'));
+    toneList.add(Tone('TOKYO HI', 'tokyo_hi.mp3'));
+    toneList.add(Tone('TOKYO LO', 'tokyo_lo.mp3'));
+    toneList.add(Tone('TOTEM', 'totem.mp3'));
+    toneList.add(Tone('TWIGS', 'twigs.mp3'));
+    toneList.add(Tone('WOOD', 'wood.mp3'));
+    toneList.add(Tone('ZEN', 'zen.mp3'));
+    toneList.add(Tone('ZEN LO', 'zen_lo.mp3'));
   }
 
   @override
-  void goBack() {
+  void goBack() async {
+    setBusy(true);
+    var tone = toneList.firstWhere((element) => element.isSelected);
+    if (toneCategory != null) {
+      toneCategory!.totemSound = tone.tone;
+      toneCategory!.type = tone.getFileExtension();
+      await saveRealityTest(toneCategory!.toRealityTest());
+      await scheduleNewToneNotifications(tone.tone);
+    }
+    setBusy(false);
     navigation.popWithResult(toneList.firstWhere((element) => element.isSelected));
   }
 }

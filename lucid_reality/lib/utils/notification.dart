@@ -1,13 +1,12 @@
 // Function to schedule a notification at a specific time
-import 'dart:math';
-
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
-import 'package:lucid_reality/utils/utils.dart';
 
-const String realityCheckingTimeChannelKey = 'realityCheckingTimeChannel';
-const String realityCheckingBedTimeChannelKey = 'realityCheckingBedTimeChannel';
+const String _realityCheckingTimeChannelKey = 'realityCheckingTimeChannel';
+const String _realityCheckingBedTimeChannelKey = 'realityCheckingBedTimeChannel';
+const int realityCheckingTimeNotificationId = 100;
+const int realityCheckingBedtimeNotificationId = 200;
 
 enum NotificationType {
   realityCheckingTimeNotification,
@@ -18,61 +17,112 @@ extension NotificationTypeExtension on NotificationType {
   String get notificationChannelKey {
     switch (this) {
       case NotificationType.realityCheckingTimeNotification:
-        return realityCheckingTimeChannelKey;
+        return _realityCheckingTimeChannelKey;
       case NotificationType.realityCheckingBedtimeNotification:
-        return realityCheckingBedTimeChannelKey;
+        return _realityCheckingBedTimeChannelKey;
     }
   }
 }
 
-Future<void> scheduleNotification({
+Future<bool> isDoNotDisturbOverriddenForChannel(
+    {required NotificationType notificationType, required String sound}) async {
+  List<NotificationPermission> permissionsAllowed = await AwesomeNotifications()
+      .checkPermissionList(
+      channelKey: '${notificationType.notificationChannelKey}$sound',
+      permissions: [NotificationPermission.CriticalAlert]
+  );
+  if (permissionsAllowed.isNotEmpty) {
+    return permissionsAllowed.first == NotificationPermission.CriticalAlert;
+  }
+  return false;
+}
+
+Future requestDoNotDisturbOverride(
+    {required NotificationType notificationType, required String sound}) async {
+  await AwesomeNotifications().requestPermissionToSendNotifications(
+      channelKey: '${notificationType.notificationChannelKey}$sound',
+      permissions: [NotificationPermission.CriticalAlert]
+  );
+}
+
+Future<void> scheduleNotifications({
+  required int notificationId,
   required NotificationType notificationType,
   required String title,
   required String message,
   required DateTime date,
   required String sound,
 }) async {
-  final notificationId = Random().nextInt(100); // Generate a unique ID
-  await AwesomeNotifications()
-      .cancelSchedulesByChannelKey(notificationType.notificationChannelKey);
-  await AwesomeNotifications().createNotification(
+    await AwesomeNotifications().createNotification(
     content: NotificationContent(
       id: notificationId,
-      channelKey: notificationType.notificationChannelKey,
+      channelKey: '${notificationType.notificationChannelKey}$sound',
       title: title,
       body: message,
-      customSound: customSoundPath.plus(sound),
+      criticalAlert: true,
+      wakeUpScreen: true,
+      customSound: 'resource://raw/$sound',
     ),
-    schedule: NotificationCalendar.fromDate(
-      date: date,
+    schedule: NotificationCalendar(
+      hour: date.hour,
+      minute: date.minute,
+      second: date.second,
       repeats: true,
+      preciseAlarm: true,
       allowWhileIdle: true,
     ),
   );
 }
 
-Future<void> initializeNotification() async {
+Future<void> clearNotifications() async {
+  await AwesomeNotifications().cancelAll();
+}
+
+NotificationChannel getDaytimeNotificationChannel(String sound) {
+  return NotificationChannel(
+      channelKey: '$_realityCheckingTimeChannelKey$sound',
+      channelName: 'Lucid Daytime Notifications $sound',
+      channelDescription: 'Lucid reality time check notifications with $sound sound.',
+      defaultColor: NextSenseColors.royalPurple,
+      ledColor: NextSenseColors.royalPurple,
+      importance: NotificationImportance.High,
+      channelShowBadge: true,
+      playSound: true,
+      // This is the only path that is accepted by AwesomeNotifications.
+      soundSource: 'resource://raw/$sound'
+  );
+}
+
+NotificationChannel getBedtimeNotificationChannel(String sound) {
+  return NotificationChannel(
+      channelKey: '$_realityCheckingBedTimeChannelKey$sound',
+      channelName: 'Lucid Night Notifications $sound',
+      channelDescription: 'Lucid reality bedtime check notifications with $sound sound.',
+      defaultColor: NextSenseColors.royalPurple,
+      ledColor: NextSenseColors.royalPurple,
+      importance: NotificationImportance.High,
+      channelShowBadge: true,
+      playSound: true,
+      // This is the only path that is accepted by AwesomeNotifications.
+      soundSource: 'resource://raw/$sound'
+  );
+}
+
+Future<void> updateNotificationsSound({required String sound}) async {
+  await AwesomeNotifications().setChannel(getDaytimeNotificationChannel(sound));
+  await AwesomeNotifications().setChannel(getBedtimeNotificationChannel(sound));
+}
+
+Future<void> initializeNotifications() async {
+  // Create the notification channels with air sound as a default one.
   AwesomeNotifications().initialize(
-      'resource://drawable/res_notification_app_icon',
-      [
-        NotificationChannel(
-          channelKey: realityCheckingTimeChannelKey,
-          channelName: 'Lucid Morning Notifications',
-          channelDescription: 'Lucid reality time check notifications.',
-          defaultColor: NextSenseColors.royalPurple,
-          importance: NotificationImportance.High,
-          channelShowBadge: true,
-        ),
-        NotificationChannel(
-          channelKey: realityCheckingBedTimeChannelKey,
-          channelName: 'Lucid Night Notifications',
-          channelDescription: 'Lucid reality bedtime check notifications.',
-          defaultColor: NextSenseColors.royalPurple,
-          importance: NotificationImportance.High,
-          channelShowBadge: true,
-        ),
-      ],
-      debug: true);
+    'resource://drawable/ic_stat_onesignal_default',
+    [
+      getDaytimeNotificationChannel('air'),
+      getBedtimeNotificationChannel('air'),
+    ],
+    debug: true,
+  );
 }
 
 Future<bool> notificationPermission(BuildContext context) async {
