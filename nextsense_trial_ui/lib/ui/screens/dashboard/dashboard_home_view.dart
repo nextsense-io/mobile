@@ -152,7 +152,7 @@ class DashboardHomeView extends StatelessWidget {
 }
 
 class MenuCard extends StatelessWidget {
-  final Function onTap;
+  final VoidCallback? onTap;
   final String title;
   final Widget image;
 

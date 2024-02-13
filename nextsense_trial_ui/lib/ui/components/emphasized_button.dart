@@ -6,7 +6,7 @@ import 'package:flutter_common/ui/components/rounded_background.dart';
 class EmphasizedButton extends StatelessWidget {
 
   final Widget text;
-  final Function onTap;
+  final VoidCallback? onTap;
   final bool enabled;
 
   EmphasizedButton({required this.text, required this.onTap, this.enabled = true});

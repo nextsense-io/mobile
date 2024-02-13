@@ -5,7 +5,7 @@ import 'package:nextsense_trial_ui/ui/components/task_card.dart';
 
 class TaskWithTap {
   final Task task;
-  final Function onTap;
+  final VoidCallback? onTap;
 
   TaskWithTap(this.task, this.onTap);
 }

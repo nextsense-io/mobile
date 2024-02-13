@@ -15,7 +15,7 @@ import 'package:nextsense_trial_ui/utils/date_utils.dart';
 class TaskCard extends StatelessWidget {
   final Task task;
   final bool showTime;
-  final Function onTap;
+  final VoidCallback? onTap;
   final String title;
   final String intro;
   final Duration? duration;
@@ -23,7 +23,7 @@ class TaskCard extends StatelessWidget {
   final TimeOfDay? windowEndTime;
   final bool completed;
 
-  TaskCard(Task task, bool showTime, Function onTap)
+  TaskCard(Task task, bool showTime, VoidCallback? onTap)
       : this.task = task,
         this.showTime = showTime,
         this.title = task.title,

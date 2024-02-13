@@ -42,6 +42,7 @@ class SleepPieChart extends StatelessWidget {
 class SleepStage {
   final String stage;
   final int percent;
+  final Duration duration;
 
-  SleepStage(this.stage, this.percent);
+  SleepStage(this.stage, this.percent, this.duration);
 }

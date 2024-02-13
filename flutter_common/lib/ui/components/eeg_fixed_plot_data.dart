@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:community_charts_flutter/community_charts_flutter.dart' as charts;
-import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen_vm.dart';
+import 'package:flutter_common/domain/plot_data_point.dart';
 
 /* A view to display live plot for eeg signal. */
 class EegFixedPlotData extends StatelessWidget {

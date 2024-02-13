@@ -12,8 +12,8 @@ import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 
 class MedicationCard {
   final Task task;
-  final Function onTakenTap;
-  final Function onNotTakenTap;
+  final VoidCallback? onTakenTap;
+  final VoidCallback? onNotTakenTap;
   final String title;
   final String intro;
   final Duration? duration;
@@ -22,7 +22,7 @@ class MedicationCard {
   final bool completed;
 
   MedicationCard(
-      {required Task task, required Function onTakenTap, required Function onNotTakenTap})
+      {required Task task, required VoidCallback? onTakenTap, required VoidCallback? onNotTakenTap})
       : this.task = task,
         this.title = task.title,
         this.intro = task.intro,

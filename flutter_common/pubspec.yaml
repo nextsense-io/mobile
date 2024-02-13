@@ -14,19 +14,23 @@ dependencies:
   nextsense_base:
     path: ../nextsense_base
   cloud_firestore: ^4.3.1
+  community_charts_flutter: ^1.0.1
   device_info_plus: ^9.0.0
   email_validator: ^2.1.16
   firebase_app_check: ^0.1.1+12
   firebase_auth: ^4.10.1
   firebase_core: ^2.4.1
   firebase_storage: ^11.0.10
+  flutter_hooks: ^0.18.2+1
   get_it: ^7.6.4
   google_sign_in: ^5.1.0
   http: ^1.1.0
+  iirjdart: ^0.1.0
   intl: ^0.18.0
   logging: ^1.0.2
   path_provider: ^2.0.8
   permission_handler: ^10.4.5
+  scidart: ^0.0.2-dev.9
   shared_preferences: ^2.0.13
   stacked: ^3.4.1+1
 
