@@ -13,4 +13,4 @@ include ':nextsense_consumer_ui'  // Flutter module with main UI
 include ':nextsense_trial_ui'  // Flutter module with main UI
 include ':lucid_reality' // Flutter module with main UI
 include ':android_host'  // Android application, entry point for the service and the flutter module
-
+include ':lucidwatchapp'
