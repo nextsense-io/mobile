@@ -75,7 +75,7 @@ class AuthManager {
     if (authResult != AuthenticationResult.success) {
       return authResult;
     }
-    authResult = await _signIn(username: username, authUid: username);
+    authResult = await _signIn(username: username, authUid: _nextSenseAuthManager!.authUid!);
     return authResult;
   }
 
@@ -136,7 +136,7 @@ class AuthManager {
         return result;
       case AuthMethod.user_code:
     return await _nextSenseAuthManager!.changePassword(
-        username: username!, newPassword: newPassword);
+        username: _nextSenseAuthManager!.authUid!, newPassword: newPassword);
       default:
         return PasswordChangeResult.error;
     }
@@ -194,7 +194,7 @@ class AuthManager {
       switch (_signedInAuthMethod) {
         case AuthMethod.user_code:
           username = _firebaseAuth.currentUser!.uid;
-          authUid = username;
+          authUid = _nextSenseAuthManager!.authUid!;
           break;
         case AuthMethod.google_auth:
           username = _firebaseAuth.currentUser!.email!;

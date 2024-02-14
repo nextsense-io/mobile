@@ -12,6 +12,10 @@ class NextSenseAuthManager {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final _logger = CustomLogPrinter('NextSenseAuthManager');
 
+  String? _authUid;  // Firestore user id key.
+
+  String? get authUid => _authUid;
+
   Future<AuthenticationResult> handleSignIn(String username, String password) async {
     ApiResponse resp = await _nextsenseApi.auth(username, password);
 
@@ -34,6 +38,7 @@ class NextSenseAuthManager {
       _logger.log(Level.SEVERE, e);
       return AuthenticationResult.error;
     }
+    _authUid = resp.data['auth_uid'];
 
     return AuthenticationResult.success;
   }
