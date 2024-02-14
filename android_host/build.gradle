@@ -133,16 +133,21 @@ android {
         // Flag to enable support for the new language APIs.
         coreLibraryDesugaringEnabled true
         // Sets Java compatibility to Java 11.
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
+    buildFeatures {
+        buildConfig true
+    }
+
 }
 
 dependencies {
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.2'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     implementation project(path: ':core')
     implementation project(path: ':flutter')
     implementation project(path: ':service')
+    wearApp(project(":lucidwatchapp"))
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.android.gms:play-services-auth:20.4.1'
