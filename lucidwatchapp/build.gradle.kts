@@ -1,12 +1,11 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.kapt")
 }
-
 android {
     namespace = "io.nextsense.android.main.lucid.dev"
     compileSdk = 34
-
     defaultConfig {
         applicationId = "io.nextsense.android.main.lucid.dev"
         minSdk = 30
@@ -18,7 +17,6 @@ android {
         }
 
     }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -46,9 +44,7 @@ android {
         }
     }
 }
-
 dependencies {
-
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
     implementation(platform("androidx.compose:compose-bom:2023.08.00"))
     implementation("androidx.compose.ui:ui")
@@ -70,6 +66,11 @@ dependencies {
     implementation("androidx.wear:wear-remote-interactions:1.0.0")
     implementation("androidx.wear:wear-phone-interactions:1.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    // To use Kotlin annotation processing tool (kapt)
+    kapt("androidx.room:room-compiler:$roomVersion")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")

@@ -8,7 +8,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import androidx.wear.phone.interactions.PhoneTypeHelper
 import androidx.wear.remote.interactions.RemoteActivityHelper
@@ -31,23 +30,26 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
     private lateinit var capabilityClient: CapabilityClient
     private lateinit var remoteActivityHelper: RemoteActivityHelper
     private var androidPhoneNodeWithApp = mutableStateOf<Node?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        val healthServicesRepository = (application as MainApplication).healthServicesRepository
+        val myApp = application as MainApplication
         capabilityClient = Wearable.getCapabilityClient(this)
         remoteActivityHelper = RemoteActivityHelper(this)
         setContent {
             if (androidPhoneNodeWithApp.value != null) {
                 Log.d(TAG, "Installed")
-                LucidWatchApp(healthServicesRepository = healthServicesRepository)
+                LucidWatchApp(
+                    healthServicesRepository = myApp.healthServicesRepository,
+                    localDatabaseManager = myApp.localDatabaseManager,
+                )
             } else {
                 Log.d(TAG, "Missing")
                 PhoneAppCheckingScreen(onInstallAppClick = { openAppInStoreOnPhone() })
             }
         }
     }
-
 
     override fun onPause() {
         super.onPause()
@@ -142,11 +144,9 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
         private const val CAPABILITY_PHONE_APP = "verify_remote_lucid_phone_app"
 
         // Links to install mobile app for both Android (Play Store) and iOS.
-        // TODO: Replace with your links/packages.
         private const val ANDROID_MARKET_APP_URI =
             "market://details?id=io.nextsense.android.main.lucid.dev"
 
-        // TODO: Replace with your links/packages.
         private const val APP_STORE_APP_URI =
             "https://itunes.apple.com/us/app/android-wear/id986496028?mt=8"
     }

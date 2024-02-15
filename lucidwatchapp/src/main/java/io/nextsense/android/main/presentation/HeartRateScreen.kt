@@ -35,19 +35,15 @@ fun HeartRateScreen(
         verticalArrangement = Arrangement.Center
     ) {
         HrLabel(
-            hr = hr,
-            availability = availability
+            hr = hr, availability = availability
         )
-        Button(
-            modifier = Modifier.fillMaxWidth(0.5f),
-            onClick = {
-                if (permissionState.status.isGranted) {
-                    onButtonClick()
-                } else {
-                    permissionState.launchPermissionRequest()
-                }
+        Button(modifier = Modifier.fillMaxWidth(0.5f), onClick = {
+            if (permissionState.status.isGranted) {
+                onButtonClick()
+            } else {
+                permissionState.launchPermissionRequest()
             }
-        ) {
+        }) {
             val buttonTextId = if (enabled) {
                 R.string.stop
             } else {
@@ -60,9 +56,7 @@ fun HeartRateScreen(
 
 @ExperimentalPermissionsApi
 @Preview(
-    device = Devices.WEAR_OS_SMALL_ROUND,
-    showBackground = false,
-    showSystemUi = true
+    device = Devices.WEAR_OS_SMALL_ROUND, showBackground = false, showSystemUi = true
 )
 @Composable
 fun HeartRateScreenPreview() {
