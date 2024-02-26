@@ -105,7 +105,11 @@ class SleepStagingManager extends ChangeNotifier {
             .bestSignalChannel.toString();
         break;
       case DeviceType.kauai:
-        channelName = EarbudsConfigs.getConfig(EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase())
+        channelName = EarbudsConfigs.getConfig(EarbudsConfigNames.XENON_P02_CONFIG.name.toLowerCase())
+            .bestSignalChannel.toString();
+        break;
+      case DeviceType.kauai_medical:
+        channelName = EarbudsConfigs.getConfig(EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.toLowerCase())
             .bestSignalChannel.toString();
         break;
       default:

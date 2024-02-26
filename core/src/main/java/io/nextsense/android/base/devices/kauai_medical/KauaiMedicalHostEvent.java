@@ -1,13 +1,13 @@
-package io.nextsense.android.base.devices.kauai;
+package io.nextsense.android.base.devices.kauai_medical;
 
 
 import io.nextsense.android.base.KauaiFirmwareMessageProto;
 
 // Container for the Kauai HostMessage that corresponds to events sent from the device.
-public class KauaiHostEvent {
+public class KauaiMedicalHostEvent {
   private final KauaiFirmwareMessageProto.HostMessage hostMessage;
 
-  public KauaiHostEvent(KauaiFirmwareMessageProto.HostMessage hostMessage) {
+  public KauaiMedicalHostEvent(KauaiFirmwareMessageProto.HostMessage hostMessage) {
     this.hostMessage = hostMessage;
   }
 
