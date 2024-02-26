@@ -13,7 +13,8 @@ enum DeviceType {
   h1,
   nitro,
   xenon,
-  kauai
+  kauai,
+  kauai_medical
 }
 
 enum DeviceAttributesFields {

@@ -1,9 +1,9 @@
-package io.nextsense.android.base.devices.kauai;
+package io.nextsense.android.base.devices.kauai_medical;
 
 import io.nextsense.android.base.KauaiFirmwareMessageProto;
 import com.google.protobuf.ByteString;
 
-public class SetRecordingSettingsCommand extends KauaiFirmwareMessage {
+public class SetRecordingSettingsCommand extends KauaiMedicalFirmwareMessage {
 
   public SetRecordingSettingsCommand(int id, byte[] ads1299RegistersConfig) {
     super(KauaiFirmwareMessageProto.MessageType.SET_RECORDING_SETTINGS, id);

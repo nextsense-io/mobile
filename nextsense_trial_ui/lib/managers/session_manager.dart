@@ -65,8 +65,8 @@ class SessionManager {
 
     String? earbudsConfig;
     switch (device.type) {
-      case DeviceType.kauai:
-        earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+      case DeviceType.kauai_medical:
+        earbudsConfig = EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.toLowerCase();
         break;
       case DeviceType.nitro:
         earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
@@ -134,8 +134,8 @@ class SessionManager {
         return false;
       }
       String? earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig() ?? null;
-      if (device.type == DeviceType.kauai) {
-        earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+      if (device.type == DeviceType.kauai_medical) {
+        earbudsConfig = EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.toLowerCase();
       } else if (device.type == DeviceType.nitro) {
         earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
       }

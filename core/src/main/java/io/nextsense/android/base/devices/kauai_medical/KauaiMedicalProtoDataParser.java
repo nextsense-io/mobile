@@ -1,4 +1,4 @@
-package io.nextsense.android.base.devices.kauai;
+package io.nextsense.android.base.devices.kauai_medical;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -10,14 +10,14 @@ import io.nextsense.android.base.KauaiFirmwareMessageProto;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
-public class KauaiProtoDataParser {
+public class KauaiMedicalProtoDataParser {
 
-  private static final String TAG = KauaiProtoDataParser.class.getSimpleName();
+  private static final String TAG = KauaiMedicalProtoDataParser.class.getSimpleName();
 
-  private KauaiProtoDataParser() {}
+  private KauaiMedicalProtoDataParser() {}
 
-  public static KauaiProtoDataParser create() {
-    return new KauaiProtoDataParser();
+  public static KauaiMedicalProtoDataParser create() {
+    return new KauaiMedicalProtoDataParser();
   }
 
   enum IncomingMessageType {
@@ -31,7 +31,7 @@ public class KauaiProtoDataParser {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device proto data.");
     }
     ByteBuffer valuesBuffer = ByteBuffer.wrap(values);
-    valuesBuffer.order(KauaiDevice.BYTE_ORDER);
+    valuesBuffer.order(KauaiMedicalDevice.BYTE_ORDER);
     long protoLength = valuesBuffer.getInt() & 0xffffffffL;
     if (protoLength > values.length - 4) {
       throw new FirmwareMessageParsingException("Proto length of " + protoLength +
@@ -88,10 +88,10 @@ public class KauaiProtoDataParser {
       }
       switch (incomingMessageType) {
         case RESPONSE:
-          EventBus.getDefault().post(new KauaiHostResponse(hostMessage));
+          EventBus.getDefault().post(new KauaiMedicalHostResponse(hostMessage));
           break;
         case EVENT:
-          EventBus.getDefault().post(new KauaiHostEvent(hostMessage));
+          EventBus.getDefault().post(new KauaiMedicalHostEvent(hostMessage));
           break;
         default:
           RotatingFileLogger.get().logw(TAG, "Invalid message type: " +

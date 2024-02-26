@@ -1,4 +1,4 @@
-package io.nextsense.android.base.devices.kauai;
+package io.nextsense.android.base.devices.kauai_medical;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 
 import io.nextsense.android.base.KauaiFirmwareMessageProto;
 
-public class SetDateTimeCommand extends KauaiFirmwareMessage {
+public class SetDateTimeCommand extends KauaiMedicalFirmwareMessage {
 
   private static final DateTimeFormatter formatter = DateTimeFormatter
       .ofPattern("yyyy-MM-dd'T'hh:mm:ss").withZone(ZoneId.from(ZoneOffset.UTC));

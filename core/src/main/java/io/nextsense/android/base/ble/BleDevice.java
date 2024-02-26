@@ -38,7 +38,7 @@ import io.nextsense.android.base.communication.ble.ReconnectionManager;
 import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.StreamingStartMode;
-import io.nextsense.android.base.devices.kauai.KauaiDevice;
+import io.nextsense.android.base.devices.kauai_medical.KauaiMedicalDevice;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
@@ -75,8 +75,8 @@ public class BleDevice extends Device {
     centralProxy.addPeripheralListener(bluetoothCentralManagerCallback, btPeripheral.getAddress());
     callbackProxy.addPeripheralCallbackListener(peripheralCallback);
     this.reconnectionManager = reconnectionManager;
-    if (nextSenseDevice instanceof KauaiDevice) {
-      ((KauaiDevice) nextSenseDevice).startListening();
+    if (nextSenseDevice instanceof KauaiMedicalDevice) {
+      ((KauaiMedicalDevice) nextSenseDevice).startListening();
     }
   }
 
@@ -245,14 +245,7 @@ public class BleDevice extends Device {
     switch (deviceState) {
       case DISCONNECTED:
         return Futures.immediateFuture(DeviceState.DISCONNECTED);
-      case IN_ERROR:
-        // fallthrough
-      case CONNECTING:
-        // fallthrough
-      case CONNECTED:
-        // fallthrough
-      case READY:
-        // fallthrough
+      case IN_ERROR, CONNECTING, CONNECTED, READY:
         disconnectionStatus = DisconnectionStatus.BY_REQUEST;
         this.deviceDisconnectionFuture = SettableFuture.create();
         nextSenseDevice.disconnect(btPeripheral);
