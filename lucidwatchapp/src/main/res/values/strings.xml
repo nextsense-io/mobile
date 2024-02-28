@@ -15,4 +15,6 @@
 
     <string name="message_missing">Welcome to our Wear app!\n\nYou are missing the required phone app, please click on the button below to install it on your phone.</string>
     <string name="install_app">Install Mobile App</string>
+    <string name="channel_name">Lucid Night Notifications</string>
+    <string name="channel_description">Lucid reality bedtime check notifications</string>
 </resources>

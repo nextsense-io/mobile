@@ -38,15 +38,15 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
         capabilityClient = Wearable.getCapabilityClient(this)
         remoteActivityHelper = RemoteActivityHelper(this)
         setContent {
-            if (androidPhoneNodeWithApp.value != null) {
+            if (androidPhoneNodeWithApp.value == null) {
+                Log.d(TAG, "Missing")
+                PhoneAppCheckingScreen(onInstallAppClick = { openAppInStoreOnPhone() })
+            } else {
                 Log.d(TAG, "Installed")
                 LucidWatchApp(
                     healthServicesRepository = myApp.healthServicesRepository,
                     localDatabaseManager = myApp.localDatabaseManager,
                 )
-            } else {
-                Log.d(TAG, "Missing")
-                PhoneAppCheckingScreen(onInstallAppClick = { openAppInStoreOnPhone() })
             }
         }
     }

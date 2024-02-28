@@ -14,9 +14,8 @@ import androidx.health.services.client.data.DataTypeAvailability
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Text
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
-import com.google.accompanist.permissions.PermissionStatus
-import com.google.accompanist.permissions.isGranted
 import io.nextsense.android.main.lucid.dev.R
 import io.nextsense.android.main.theme.LucidWatchTheme
 
@@ -27,7 +26,7 @@ fun HeartRateScreen(
     availability: DataTypeAvailability,
     enabled: Boolean,
     onButtonClick: () -> Unit,
-    permissionState: PermissionState
+    multiPermissionsState: MultiplePermissionsState
 ) {
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -38,10 +37,10 @@ fun HeartRateScreen(
             hr = hr, availability = availability
         )
         Button(modifier = Modifier.fillMaxWidth(0.5f), onClick = {
-            if (permissionState.status.isGranted) {
+            if (multiPermissionsState.allPermissionsGranted) {
                 onButtonClick()
             } else {
-                permissionState.launchPermissionRequest()
+                multiPermissionsState.launchMultiplePermissionRequest()
             }
         }) {
             val buttonTextId = if (enabled) {
@@ -60,10 +59,18 @@ fun HeartRateScreen(
 )
 @Composable
 fun HeartRateScreenPreview() {
-    val permissionState = object : PermissionState {
-        override val permission = "android.permission.ACTIVITY_RECOGNITION"
-        override val status: PermissionStatus = PermissionStatus.Granted
-        override fun launchPermissionRequest() {}
+    val multiPermissionsState = object : MultiplePermissionsState {
+        override val allPermissionsGranted: Boolean
+            get() = false
+        override val permissions: List<PermissionState>
+            get() = listOf()
+        override val revokedPermissions: List<PermissionState>
+            get() = listOf()
+        override val shouldShowRationale: Boolean
+            get() = false
+
+        override fun launchMultiplePermissionRequest() {
+        }
     }
     LucidWatchTheme {
         HeartRateScreen(
@@ -71,7 +78,7 @@ fun HeartRateScreenPreview() {
             availability = DataTypeAvailability.AVAILABLE,
             enabled = false,
             onButtonClick = {},
-            permissionState = permissionState
+            multiPermissionsState = multiPermissionsState
         )
     }
 }

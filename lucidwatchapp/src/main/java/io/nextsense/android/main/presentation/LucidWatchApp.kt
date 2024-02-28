@@ -1,5 +1,6 @@
 package io.nextsense.android.main.presentation
 
+import android.app.Application
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -15,11 +16,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.TimeText
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
-import io.nextsense.android.main.PERMISSION
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import io.nextsense.android.main.PERMISSIONS
 import io.nextsense.android.main.data.HealthServicesRepository
 import io.nextsense.android.main.data.LocalDatabaseManager
 import io.nextsense.android.main.theme.LucidWatchTheme
+
+const val MILLISECONDS_PER_SECOND = 1000
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -31,6 +34,7 @@ fun LucidWatchApp(
         Scaffold(modifier = Modifier.fillMaxSize(), timeText = { TimeText() }) {
             val viewModel: HeartRateViewModel = viewModel(
                 factory = MeasureDataViewModelFactory(
+                    application = LocalContext.current.applicationContext as Application,
                     healthServicesRepository = healthServicesRepository,
                     localDatabaseManager = localDatabaseManager
                 )
@@ -39,15 +43,16 @@ fun LucidWatchApp(
             val hr by viewModel.hr
             val availability by viewModel.availability
             val uiState by viewModel.uiState
-
+            val context = LocalContext.current
             if (uiState == UiState.Supported) {
-                val permissionState = rememberPermissionState(
-                    permission = PERMISSION,
-                    onPermissionResult = { granted ->
+                val multiPermissionsState = rememberMultiplePermissionsState(
+                    permissions = PERMISSIONS,
+                    onPermissionsResult = { result ->
+                        val granted = result.all { it.value }
                         if (granted) viewModel.toggleEnabled()
-                    })
+                    },
+                )
                 if (enabled) {
-                    val context = LocalContext.current
                     DisposableEffect(
                         key1 = Unit,
                         effect = {
@@ -61,7 +66,8 @@ fun LucidWatchApp(
                                         if (it.sensor == accelerometer) {
                                             val timestamp = System.currentTimeMillis()
                                             // Check if enough time has passed since the last saved data or it's the first data
-                                            if (timestamp - lastSavedTimestamp >= 1000 * 60 || lastSavedTimestamp == 0L) {
+                                            if (timestamp - lastSavedTimestamp >= MILLISECONDS_PER_SECOND || lastSavedTimestamp == 0L
+                                            ) {
                                                 val x = (it.values?.getOrNull(0) ?: 0).toDouble()
                                                 val y = (it.values?.getOrNull(1) ?: 0).toDouble()
                                                 val z = (it.values?.getOrNull(2) ?: 0f).toDouble()
@@ -89,8 +95,10 @@ fun LucidWatchApp(
                     hr = hr,
                     availability = availability,
                     enabled = enabled,
-                    onButtonClick = { viewModel.toggleEnabled() },
-                    permissionState = permissionState
+                    onButtonClick = {
+                        viewModel.toggleEnabled()
+                    },
+                    multiPermissionsState = multiPermissionsState
                 )
             } else if (uiState == UiState.NotSupported) {
                 NotSupportedScreen()

@@ -24,7 +24,7 @@ interface HeartRateDao {
     fun loadAllByIds(uid: IntArray): List<HeartRateEntity>
 
     @Query("SELECT * FROM HeartRateEntity WHERE createAt >= (:startTime) AND createAt <= (:endTime)")
-    fun findByDateRange(startTime: Long, endTime: Long): HeartRateEntity
+    fun findByDateRange(startTime: Long, endTime: Long): List<HeartRateEntity>
 
     @Insert
     fun insertAll(vararg heartRateEntity: HeartRateEntity)
