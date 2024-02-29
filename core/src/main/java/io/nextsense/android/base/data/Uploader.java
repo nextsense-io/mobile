@@ -1,7 +1,11 @@
 package io.nextsense.android.base.data;
 
-import android.os.Environment;
+import android.content.ContentValues;
+import android.content.Context;
+import android.net.Uri;
 import android.os.HandlerThread;
+import android.provider.MediaStore;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -9,8 +13,8 @@ import com.google.protobuf.Timestamp;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -53,6 +57,7 @@ public class Uploader {
 
   // Should be 1 second of data to be simple to import in BigTable.
   private final Duration uploadChunkSize;
+  private final Context context;
   private final ObjectBoxDatabase objectBoxDatabase;
   private final DatabaseSink databaseSink;
   private final CloudFunctions firebaseFunctions;
@@ -79,9 +84,10 @@ public class Uploader {
   // Used to generate test data manually, should always be false in production.
   private boolean saveData = false;
 
-  private Uploader(ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
+  private Uploader(Context context, ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
                    Connectivity connectivity, Duration uploadChunkSize, int minRecordsToKeep,
                    Duration minDurationToKeep) {
+    this.context = context;
     this.objectBoxDatabase = objectBoxDatabase;
     this.databaseSink = databaseSink;
     this.connectivity = connectivity;
@@ -92,9 +98,10 @@ public class Uploader {
   }
 
   public static Uploader create(
-      ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink, Connectivity connectivity,
-      Duration uploadChunkSize, int minRecordsToKeep, Duration minDurationToKeep) {
-    return new Uploader(objectBoxDatabase, databaseSink, connectivity, uploadChunkSize,
+      Context context, ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
+      Connectivity connectivity, Duration uploadChunkSize, int minRecordsToKeep,
+      Duration minDurationToKeep) {
+    return new Uploader(context, objectBoxDatabase, databaseSink, connectivity, uploadChunkSize,
         minRecordsToKeep, minDurationToKeep);
   }
 
@@ -465,9 +472,26 @@ public class Uploader {
   private void saveData(DataSamplesProto.DataSamples dataSamplesProto) {
     saveData = false;
     try {
-      FileOutputStream output = new FileOutputStream(
-              Environment.getExternalStorageDirectory().getPath() + "/test_proto.txt");
-      dataSamplesProto.writeTo(output);
+      String collection = "content://media/external/file"; // One can even write to micro SD card
+      String relativePath = "Documents/NextSense";
+
+      Uri collectionUri = Uri.parse(collection);
+
+      ContentValues contentValues = new ContentValues();
+
+      contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "test_proto.txt");
+      contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "txt/plain");
+      contentValues.put(MediaStore.MediaColumns.SIZE, dataSamplesProto.getSerializedSize());
+      contentValues.put(MediaStore.MediaColumns.DATE_MODIFIED, Instant.now().getEpochSecond());
+      contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath);
+      contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0);
+
+      Uri fileUri = context.getContentResolver().insert(collectionUri, contentValues);
+
+      OutputStream outputStream = context.getContentResolver().openOutputStream(fileUri);
+      Log.w(TAG, "Writing to file: " + fileUri.getPath() + "/test_proto.txt");
+      dataSamplesProto.writeTo(outputStream);
+      outputStream.close();
     } catch (FileNotFoundException e) {
       RotatingFileLogger.get().logw(TAG, "file not found: " + e.getMessage());
     } catch (IOException e) {
