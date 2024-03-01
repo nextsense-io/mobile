@@ -18,6 +18,7 @@ import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
@@ -80,6 +81,30 @@ class SessionControlButton extends StatelessWidget {
   }
 }
 
+class SignalMonitoringButton extends StatelessWidget {
+
+  SignalMonitoringButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SimpleButton(
+      text: Center(child: MediumText(text: "Monitor Signal", color: NextSenseColors.purple,
+          marginLeft: 40, marginRight: 40)),
+      border: Border.all(width: 2, color: NextSenseColors.purple),
+      onTap: () async {
+        await showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+                contentPadding: const EdgeInsets.all(0.0),
+                insetPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                content: SignalMonitoringScreen(),
+                actions: []
+            ));
+      },
+    );
+  }
+}
+
 class ProtocolScreen extends HookWidget {
 
   static const String id = 'protocol_screen';
@@ -96,7 +121,7 @@ class ProtocolScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<ProtocolScreenViewModel>.reactive(
         viewModelBuilder: () => ProtocolScreenViewModel(runnableProtocol),
-        onModelReady: (viewModel) => viewModel.init(),
+        onViewModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) => WillPopScope(
           onWillPop: () => onBackButtonPressed(context, viewModel),
           child: body(context, viewModel),
@@ -202,6 +227,15 @@ class ProtocolScreen extends HookWidget {
                       deviceInactiveOverlay(context, viewModel),
                   ]),
               Spacer(),
+              if (viewModel.isResearcher)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SignalMonitoringButton(),
+                  ],
+                ),
+              if (viewModel.isResearcher)
+                SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

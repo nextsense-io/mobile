@@ -13,7 +13,6 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:stacked/stacked.dart';
 
 class ProtocolPartScrollView extends StatelessWidget {
-
   final ItemScrollController itemScrollController = ItemScrollController();
 
   @override
@@ -50,25 +49,34 @@ class BioCalibrationProtocolScreen extends ProtocolScreen {
         showBackButton: false,
         showCancelButton: true,
         backButtonCallback: () async => {
-          if (await onBackButtonPressed(context, viewModel)) {
-            Navigator.of(context).pop()
-          }
-        },
+              if (await onBackButtonPressed(context, viewModel)) {Navigator.of(context).pop()}
+            },
         child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              LightHeaderText(text: protocol.description + ' EEG Recording'),
-              SizedBox(height: 10),
-              Stack(children: [
-                Center(child: CountDownTimer(duration: protocol.minDuration, reverse: true)),
-                if (!viewModel.deviceCanRecord) deviceInactiveOverlay(context, viewModel),
-              ]),
-              SizedBox(height: 10),
-              Expanded(child: ProtocolPartScrollView())
-            ] +
-                [SizedBox(height: 20),
-                  SessionControlButton(stopSession)]));
+                  LightHeaderText(text: protocol.description + ' EEG Recording'),
+                  SizedBox(height: 10),
+                  Stack(children: [
+                    Center(child: CountDownTimer(duration: protocol.minDuration, reverse: true)),
+                    if (!viewModel.deviceCanRecord) deviceInactiveOverlay(context, viewModel),
+                  ]),
+                  SizedBox(height: 10),
+                  Expanded(child: ProtocolPartScrollView())
+                ] +
+                [
+                  if (viewModel.isResearcher)
+                    SizedBox(height: 20),
+                  if (viewModel.isResearcher)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SignalMonitoringButton(),
+                      ],
+                    ),
+                  SizedBox(height: 20),
+                  SessionControlButton(stopSession)
+                ]));
   }
 
   @override
@@ -82,8 +90,8 @@ class BioCalibrationProtocolScreen extends ProtocolScreen {
             viewModelBuilder: () => viewModel,
             onModelReady: (viewModel) => {},
             builder: (context, viewModel, child) => WillPopScope(
-              onWillPop: () => onBackButtonPressed(context, viewModel),
-              child: body(context, viewModel),
-            )));
+                  onWillPop: () => onBackButtonPressed(context, viewModel),
+                  child: body(context, viewModel),
+                )));
   }
 }
