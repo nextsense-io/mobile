@@ -13,7 +13,7 @@ class SessionPopScope extends StatelessWidget {
   Widget build(BuildContext context) {
     return WillPopScope(
         onWillPop: () async {
-          _deviceManager.disconnectDevice();
+          await _deviceManager.disconnectDevice();
           _deviceManager.dispose();
           NextsenseBase.setFlutterActivityActive(false);
           return true;
