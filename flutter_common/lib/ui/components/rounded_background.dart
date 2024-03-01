@@ -35,7 +35,7 @@ class RoundedBackground extends StatelessWidget {
         padding: EdgeInsets.all(paddingPixels),
         decoration: BoxDecoration(
           color: transparent ? Colors.transparent : Colors.white,
-          border: border ?? Border.all(width: 0, color: Colors.black12),
+          border: border ?? Border.all(width: 0, color: Colors.transparent),
           gradient: gradient
         ),
         child: child,

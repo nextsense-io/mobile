@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_common/managers/auth/auth_method.dart';
 import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/managers/device_manager.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
@@ -123,5 +125,11 @@ class SignInScreenViewModel extends ViewModel {
 
   Future<bool> markCurrentStudyShown() async {
     return await _studyManager.markEnrolledStudyShown();
+  }
+
+  void exit() {
+    _deviceManager.dispose();
+    NextsenseBase.setFlutterActivityActive(false);
+    SystemNavigator.pop();
   }
 }
