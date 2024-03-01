@@ -6,7 +6,6 @@ import 'package:flutter_common/managers/device_manager.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/config.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:flutter_common/utils/android_logger.dart';
@@ -101,7 +100,7 @@ class DeviceScanScreenViewModel extends ViewModel {
       scanningState = ScanningState.SCANNING_WITH_RESULTS;
 
       // Connect to device automatically
-      if (Config.autoConnectAfterScan || _authManager.getLastPairedMacAddress() == macAddress) {
+      if (_authManager.getLastPairedMacAddress() == macAddress) {
         connectToDevice(deviceAttributes);
       }
       notifyListeners();
