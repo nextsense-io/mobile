@@ -21,12 +21,20 @@ Future initEnvironmentFile() async {
 }
 
 String envGet(EnvironmentKey key, {String? fallback}) {
-  return dotenv.get(key.name, fallback: fallback ?? "");
+  try {
+    return dotenv.get(key.name, fallback: fallback ?? "");
+  } catch (e) {
+    return fallback ?? "";
+  }
 }
 
 bool envGetBool(EnvironmentKey key, bool fallback) {
-  return envGet(key, fallback: fallback ? "true" : "false")
-      .toLowerCase() == "true";
+  try {
+    return envGet(key, fallback: fallback ? "true" : "false")
+        .toLowerCase() == "true";
+  } catch (e) {
+    return fallback;
+  }
 }
 
 abstract class Environment {
