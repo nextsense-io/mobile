@@ -8,8 +8,7 @@ const scratchEnvName = "Scratch";
 enum EnvironmentKey {
   USERNAME,
   PASSWORD,
-  USE_EMULATED_BLE,
-  AUTO_CONNECT_AFTER_SCAN
+  USE_EMULATED_BLE
 }
 
 Future initEnvironmentFile() async {
