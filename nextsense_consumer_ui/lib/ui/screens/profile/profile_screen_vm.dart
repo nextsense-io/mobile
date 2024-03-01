@@ -1,5 +1,7 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_common/managers/device_manager.dart';
 import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_consumer_ui/di.dart';
 import 'package:nextsense_consumer_ui/managers/auth_manager.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -14,6 +16,7 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
 
   @override
   void init() async {
+    super.init();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     version = packageInfo.version;
     setInitialised(true);
@@ -26,9 +29,16 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
     notifyListeners();
   }
 
-  void logout() {
-    _deviceManager.disconnectDevice();
-    _authManager.signOut();
+  Future logout() async {
+    await _deviceManager.disconnectDevice();
+    await _authManager.signOut();
+  }
+
+  Future exit() async {
+    await _deviceManager.disconnectDevice();
+    _deviceManager.dispose();
+    NextsenseBase.setFlutterActivityActive(false);
+    SystemNavigator.pop();
   }
 
   void refresh() {
@@ -37,11 +47,11 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
 
   @override
   void onDeviceDisconnected() {
-    // TODO(eric): implement onDeviceDisconnected
+    notifyListeners();
   }
 
   @override
   void onDeviceReconnected() {
-    // TODO(eric): implement onDeviceReconnected
+    notifyListeners();
   }
 }

@@ -54,6 +54,11 @@ class SignInScreen extends HookWidget {
                         _buildBody(context) +
                         [
                           const Spacer(),
+                          SimpleButton(
+                            text: const MediumText(text: 'Exit', color: NextSenseColors.purple),
+                            onTap: () => viewModel.exit(),
+                          ),
+                          const SizedBox(height: 20),
                           const SmallText(text:
                           'By creating a new account, you are agreeing to our Terms of Service '
                               'and Privacy Policy.'),
