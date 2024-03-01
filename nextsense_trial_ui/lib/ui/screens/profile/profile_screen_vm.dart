@@ -33,6 +33,7 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
 
   @override
   void init() async {
+    super.init();
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     version = packageInfo.version;
     setInitialised(true);
@@ -91,11 +92,11 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
 
   @override
   void onDeviceDisconnected() {
-    // TODO(eric): implement onDeviceDisconnected
+    notifyListeners();
   }
 
   @override
   void onDeviceReconnected() {
-    // TODO(eric): implement onDeviceReconnected
+    notifyListeners();
   }
 }
