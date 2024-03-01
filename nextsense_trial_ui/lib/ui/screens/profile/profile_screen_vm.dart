@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
@@ -74,13 +76,13 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
     notifyListeners();
   }
 
-  void logout() {
-    _deviceManager.disconnectDevice();
-    _authManager.signOut();
+  Future logout() async {
+    await _deviceManager.disconnectDevice();
+    await _authManager.signOut();
   }
 
-  void exit() {
-    logout();
+  Future exit() async {
+    await _deviceManager.disconnectDevice();
     _deviceManager.dispose();
     NextsenseBase.setFlutterActivityActive(false);
     SystemNavigator.pop();
