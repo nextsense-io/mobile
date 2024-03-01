@@ -47,7 +47,7 @@ class SignInScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<SignInScreenViewModel>.reactive(
         viewModelBuilder: () => SignInScreenViewModel(initialErrorMessage: initialErrorMessage),
-        onModelReady: (viewModel) => viewModel.init(),
+        onViewModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) => SessionPopScope(
             child: PageScaffold(
                 showBackButton: false,
@@ -61,7 +61,12 @@ class SignInScreen extends HookWidget {
                         _buildBody(context) +
                         [
                           const Spacer(),
-                          SmallText(text:
+                          SimpleButton(
+                            text: MediumText(text: 'Exit', color: NextSenseColors.purple),
+                            onTap: () => viewModel.exit(),
+                          ),
+                          const SizedBox(height: 20),
+                          const SmallText(text:
                               'By creating a new account, you are agreeing to our Terms of Service '
                               'and Privacy Policy.'),
                         ]))));
