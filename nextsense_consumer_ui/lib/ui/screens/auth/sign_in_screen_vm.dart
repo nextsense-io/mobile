@@ -1,8 +1,10 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_common/managers/auth/auth_method.dart';
 import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/managers/device_manager.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_consumer_ui/di.dart';
 import 'package:nextsense_consumer_ui/managers/auth_manager.dart';
 import 'package:nextsense_consumer_ui/managers/connectivity_manager.dart';
@@ -95,5 +97,11 @@ class SignInScreenViewModel extends ViewModel {
         _authManager.getLastPairedMacAddress());
     setBusy(false);
     return connected;
+  }
+
+  void exit() {
+    _deviceManager.dispose();
+    NextsenseBase.setFlutterActivityActive(false);
+    SystemNavigator.pop();
   }
 }
