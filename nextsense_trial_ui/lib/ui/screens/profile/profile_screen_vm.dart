@@ -1,5 +1,7 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/planned_session.dart';
 import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
@@ -74,6 +76,13 @@ class ProfileScreenViewModel extends DeviceStateViewModel {
   void logout() {
     _deviceManager.disconnectDevice();
     _authManager.signOut();
+  }
+
+  void exit() {
+    logout();
+    _deviceManager.dispose();
+    NextsenseBase.setFlutterActivityActive(false);
+    SystemNavigator.pop();
   }
 
   void refresh() {

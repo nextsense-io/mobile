@@ -149,6 +149,11 @@ class ProfileScreen extends HookWidget {
                             _navigation.signOut();
                           }),
                       _MainMenuItem(
+                          label: 'Exit',
+                          onPressed: () {
+                            viewModel.exit();
+                          }),
+                      _MainMenuItem(
                           label: 'Settings',
                           onPressed: () {
                             _navigation.navigateTo(SettingsScreen.id);
