@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.kapt")
+    id("com.google.dagger.hilt.android")
 }
 android {
     namespace = "io.nextsense.android.main.lucid.dev"
@@ -43,6 +44,9 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    androidResources {
+        noCompress += "tflite"
+    }
 }
 dependencies {
     implementation("com.google.android.gms:play-services-wearable:18.1.0")
@@ -57,6 +61,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     // Health Services
     implementation("androidx.health:health-services-client:1.1.0-alpha02")
+    implementation("androidx.lifecycle:lifecycle-service:2.7.0")
     // Used for permissions
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     // Used to bridge between Futures and coroutines
@@ -66,11 +71,22 @@ dependencies {
     implementation("androidx.wear:wear-remote-interactions:1.0.0")
     implementation("androidx.wear:wear-phone-interactions:1.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
+    implementation("androidx.lifecycle:lifecycle-service:2.7.0")
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     // To use Kotlin annotation processing tool (kapt)
     kapt("androidx.room:room-compiler:$roomVersion")
+    //TFLite dependencies
+    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    implementation("org.tensorflow:tensorflow-lite-gpu:0.0.0-nightly")
+    implementation("org.tensorflow:tensorflow-lite-support:0.0.0-nightly")
+    //Wear on going
+    implementation("androidx.wear:wear-ongoing:1.0.0")
+    // Hilt
+    implementation("com.google.dagger:hilt-android:2.50")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    kapt("com.google.dagger:hilt-android-compiler:2.50")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")

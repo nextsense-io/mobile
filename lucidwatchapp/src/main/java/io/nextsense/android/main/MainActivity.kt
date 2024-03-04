@@ -16,6 +16,7 @@ import com.google.android.gms.wearable.CapabilityClient
 import com.google.android.gms.wearable.CapabilityInfo
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
+import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.main.presentation.LucidWatchApp
 import io.nextsense.android.main.presentation.PhoneAppCheckingScreen
 import kotlinx.coroutines.CancellationException
@@ -26,6 +27,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedListener {
     private lateinit var capabilityClient: CapabilityClient
     private lateinit var remoteActivityHelper: RemoteActivityHelper
@@ -34,19 +36,14 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
-        val myApp = application as MainApplication
         capabilityClient = Wearable.getCapabilityClient(this)
-        remoteActivityHelper = RemoteActivityHelper(this)
         setContent {
             if (androidPhoneNodeWithApp.value == null) {
                 Log.d(TAG, "Missing")
                 PhoneAppCheckingScreen(onInstallAppClick = { openAppInStoreOnPhone() })
             } else {
                 Log.d(TAG, "Installed")
-                LucidWatchApp(
-                    healthServicesRepository = myApp.healthServicesRepository,
-                    localDatabaseManager = myApp.localDatabaseManager,
-                )
+                LucidWatchApp()
             }
         }
     }

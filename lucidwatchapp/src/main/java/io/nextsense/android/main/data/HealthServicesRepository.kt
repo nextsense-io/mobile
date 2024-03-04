@@ -16,6 +16,10 @@
 package io.nextsense.android.main.data
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.util.Log
 import androidx.concurrent.futures.await
 import androidx.health.services.client.HealthServices
@@ -31,6 +35,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.runBlocking
+import java.time.Duration
 
 /**
  * Entry point for [HealthServicesClient] APIs. This also provides suspend functions around
@@ -55,8 +60,7 @@ class HealthServicesRepository(context: Context) {
     fun heartRateMeasureFlow() = callbackFlow {
         val callback = object : MeasureCallback {
             override fun onAvailabilityChanged(
-                dataType: DeltaDataType<*, *>,
-                availability: Availability
+                dataType: DeltaDataType<*, *>, availability: Availability
             ) {
                 // Only send back DataTypeAvailability (not LocationAvailability)
                 if (availability is DataTypeAvailability) {
@@ -72,12 +76,55 @@ class HealthServicesRepository(context: Context) {
 
         Log.d(TAG, "Registering for data")
         measureClient.registerMeasureCallback(DataType.HEART_RATE_BPM, callback)
-
         awaitClose {
             Log.d(TAG, "Unregistering for data")
             runBlocking {
                 measureClient.unregisterMeasureCallbackAsync(DataType.HEART_RATE_BPM, callback)
                     .await()
+            }
+        }
+    }
+
+    fun heartRateMeasureForegroundFlow(context: Context) = callbackFlow {
+        val sensorManager = context.getSystemService(SensorManager::class.java)
+        val heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
+        if (heartRateSensor == null) {
+            trySendBlocking(MeasureMessage.MeasureAvailability(DataTypeAvailability.UNAVAILABLE))
+        } else {
+            trySendBlocking(MeasureMessage.MeasureAvailability(DataTypeAvailability.AVAILABLE))
+        }
+        val sensorEvent = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                event?.let {
+                    if (it.sensor == heartRateSensor) {
+                        Log.i(TAG,"Heart rate data measurement")
+                        val mHeartRateFloat = event.values[0]
+                        trySendBlocking(
+                            MeasureMessage.MeasureData(
+                                listOf(
+                                    SampleDataPoint(
+                                        DataType.HEART_RATE_BPM,
+                                        mHeartRateFloat.toDouble(),
+                                        Duration.ofMillis(event.timestamp)
+                                    )
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+
+            override fun onAccuracyChanged(p0: Sensor?, p1: Int) {
+            }
+        }
+        Log.d(TAG, "Registering for data")
+        sensorManager?.registerListener(
+            sensorEvent, heartRateSensor, SensorManager.SENSOR_DELAY_FASTEST
+        )
+        awaitClose {
+            Log.d(TAG, "Unregistering for data")
+            runBlocking {
+                sensorManager?.unregisterListener(sensorEvent)
             }
         }
     }

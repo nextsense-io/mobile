@@ -8,11 +8,14 @@ import io.nextsense.android.main.db.HeartRateEntity
 import io.nextsense.android.main.db.getAngle
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-class SleepStagePredictionHelper private constructor() {
+class SleepStagePredictionHelper(val context: Context) {
     /// past 30 minutes
     private val heartRateSamplesNeeded: Int = 1800
 
@@ -20,19 +23,19 @@ class SleepStagePredictionHelper private constructor() {
     private val accelerometerSamplesNeeded: Int = 300
 
     fun prediction(
-        context: Context,
         workoutStartTime: Long,
-        inputData: List<HeartRateEntity>,
+        heartRateData: List<HeartRateEntity>,
         accelerometerData: List<AccelerometerEntity>
     ): SleepStagePredictionOutput? {
-        Log.i(TAG, "Input Data HR: $inputData")
+        val currentTime = System.currentTimeMillis().toString()
+        Log.i(TAG, "Input Data HR: $heartRateData")
         Log.i(
             TAG,
             "Input Data ACC: ${accelerometerData.map { "${it.createAt}, ${it.x}, ${it.y}, ${it.z}, ${it.getAngle()}" }}"
         )
 
         val interpolateHRData = interpolateHeartRate(
-            data = inputData,
+            data = heartRateData,
             workoutStartTime = workoutStartTime,
             samplesNeeded = heartRateSamplesNeeded
         )
@@ -203,10 +206,8 @@ class SleepStagePredictionHelper private constructor() {
     }
 
     companion object {
-        const val MODEL_FILE = "cnn_2100_og_1902.tflite"
-        val instance: SleepStagePredictionHelper by lazy { SleepStagePredictionHelper() }
+        const val MODEL_FILE = "cnn_2100_0103.tflite"
     }
-
 }
 
 sealed class SleepStagePredictionOutput(val value: Int) {
@@ -234,6 +235,12 @@ fun Array<FloatArray>.predictSleepStage(): SleepStagePredictionOutput {
         2 -> SleepStagePredictionOutput.WAKE
         else -> throw IllegalArgumentException("Invalid sleep stage prediction output")
     }
+}
+
+fun Long.toFormattedDateString(): String {
+    val dateFormat = SimpleDateFormat("dd/MM/yyyy hh:mm:ss a", Locale.getDefault())
+    val date = Date(this)
+    return dateFormat.format(date)
 }
 
 
