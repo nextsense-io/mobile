@@ -27,7 +27,6 @@ class SleepStagePredictionHelper(val context: Context) {
         heartRateData: List<HeartRateEntity>,
         accelerometerData: List<AccelerometerEntity>
     ): SleepStagePredictionOutput? {
-        val currentTime = System.currentTimeMillis().toString()
         Log.i(TAG, "Input Data HR: $heartRateData")
         Log.i(
             TAG,
