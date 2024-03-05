@@ -63,7 +63,7 @@ class HealthService : LifecycleService(), SensorEventListener {
     private var accelerometer: Sensor? = null
     private var lastSavedTimestamp = 0L
     private val dataCheckingPeriod: Long = MILLISECONDS_PER_SECOND * 30.toLong()
-    private val initialWaitingTime = minutesToMilliseconds(2)
+    private val initialWaitingTime = minutesToMilliseconds(15)
     private var schedulerStartTime = 0L
     private var initialWaitingTimeCompleted = false
     private val _heartRateFlow = MutableSharedFlow<MeasureMessage>()
