@@ -11,7 +11,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import io.nextsense.android.main.data.HealthServicesRepository
 import io.nextsense.android.main.data.MeasureMessage
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -33,23 +32,18 @@ class HeartRateViewModel @Inject constructor(
             } else {
                 UiState.NotSupported
             }
+            availability.value = healthServicesRepository.availability.value
         }
-        viewModelScope.launch {
-            enabled.collect {
-                if (it) {
-                    healthServicesRepository.heartRateMeasureFlow().takeWhile { enabled.value }
-                        .collect { measureMessage ->
-                            when (measureMessage) {
-                                is MeasureMessage.MeasureData -> {
-                                    hr.value = measureMessage.data.last().value
-                                }
+    }
 
-                                is MeasureMessage.MeasureAvailability -> {
-                                    availability.value = measureMessage.availability
-                                }
-                            }
-                        }
-                }
+    fun onMeasureMessage(measureMessage: MeasureMessage) {
+        when (measureMessage) {
+            is MeasureMessage.MeasureData -> {
+                hr.value = measureMessage.data.last().value
+            }
+
+            is MeasureMessage.MeasureAvailability -> {
+                availability.value = measureMessage.availability
             }
         }
     }

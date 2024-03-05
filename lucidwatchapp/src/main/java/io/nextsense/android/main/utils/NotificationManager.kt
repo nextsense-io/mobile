@@ -12,7 +12,7 @@ import androidx.core.content.ContextCompat.getString
 import io.nextsense.android.main.lucid.dev.R
 
 const val CHANNEL_ID = "realityCheckingBedTimeChannel"
-const val NOTIFICATION_ID = 101
+const val NOTIFICATION_ID = 102
 
 class NotificationManager(private val context: Context) {
 

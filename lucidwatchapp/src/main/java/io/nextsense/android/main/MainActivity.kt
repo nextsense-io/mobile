@@ -32,15 +32,21 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
     private lateinit var capabilityClient: CapabilityClient
     private lateinit var remoteActivityHelper: RemoteActivityHelper
     private var androidPhoneNodeWithApp = mutableStateOf<Node?>(null)
+    private var skipInstallation = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         capabilityClient = Wearable.getCapabilityClient(this)
         setContent {
-            if (androidPhoneNodeWithApp.value == null) {
+            if (androidPhoneNodeWithApp.value == null && !skipInstallation.value) {
                 Log.d(TAG, "Missing")
-                PhoneAppCheckingScreen(onInstallAppClick = { openAppInStoreOnPhone() })
+                PhoneAppCheckingScreen(
+                    onInstallAppClick = { openAppInStoreOnPhone() },
+                    onSkipInstallation = {
+                        skipInstallation.value = true
+                    },
+                )
             } else {
                 Log.d(TAG, "Installed")
                 LucidWatchApp()

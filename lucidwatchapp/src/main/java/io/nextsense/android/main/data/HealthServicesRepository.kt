@@ -21,6 +21,8 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.concurrent.futures.await
 import androidx.health.services.client.HealthServices
 import androidx.health.services.client.MeasureCallback
@@ -44,6 +46,8 @@ import java.time.Duration
 class HealthServicesRepository(context: Context) {
     private val healthServicesClient = HealthServices.getClient(context)
     private val measureClient = healthServicesClient.measureClient
+    val availability: MutableState<DataTypeAvailability> =
+        mutableStateOf(DataTypeAvailability.UNKNOWN)
 
     suspend fun hasHeartRateCapability(): Boolean {
         val capabilities = measureClient.getCapabilitiesAsync().await()
@@ -64,6 +68,7 @@ class HealthServicesRepository(context: Context) {
             ) {
                 // Only send back DataTypeAvailability (not LocationAvailability)
                 if (availability is DataTypeAvailability) {
+                    this@HealthServicesRepository.availability.value = availability
                     trySendBlocking(MeasureMessage.MeasureAvailability(availability))
                 }
             }
@@ -97,7 +102,7 @@ class HealthServicesRepository(context: Context) {
             override fun onSensorChanged(event: SensorEvent?) {
                 event?.let {
                     if (it.sensor == heartRateSensor) {
-                        Log.i(TAG,"Heart rate data measurement")
+                        Log.i(TAG, "Heart rate data measurement")
                         val mHeartRateFloat = event.values[0]
                         trySendBlocking(
                             MeasureMessage.MeasureData(

@@ -16,7 +16,7 @@ import androidx.wear.compose.material.Text
 import io.nextsense.android.main.lucid.dev.R
 
 @Composable
-fun PhoneAppCheckingScreen(onInstallAppClick: () -> Unit) {
+fun PhoneAppCheckingScreen(onInstallAppClick: () -> Unit, onSkipInstallation: () -> Unit) {
     ScalingLazyColumn(
         contentPadding = PaddingValues(top = 45.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -35,6 +35,14 @@ fun PhoneAppCheckingScreen(onInstallAppClick: () -> Unit) {
         item {
             Button(modifier = Modifier.fillMaxWidth(0.8f), onClick = onInstallAppClick) {
                 Text(stringResource(R.string.install_app))
+            }
+        }
+        item {
+            Spacer(modifier = Modifier.size(16.dp))
+        }
+        item {
+            Button(modifier = Modifier.fillMaxWidth(0.8f), onClick = onSkipInstallation) {
+                Text(stringResource(R.string.skip_installation))
             }
         }
     }

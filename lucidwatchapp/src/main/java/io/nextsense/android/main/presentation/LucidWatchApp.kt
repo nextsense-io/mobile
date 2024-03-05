@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -21,6 +22,8 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import io.nextsense.android.main.PERMISSIONS
 import io.nextsense.android.main.service.HealthService
 import io.nextsense.android.main.theme.LucidWatchTheme
+import kotlinx.coroutines.flow.takeWhile
+import kotlinx.coroutines.launch
 
 const val MILLISECONDS_PER_SECOND = 1000
 
@@ -36,6 +39,7 @@ fun LucidWatchApp(
             val availability by viewModel.availability
             val uiState by viewModel.uiState
             val context = LocalContext.current
+            val coroutineScope = rememberCoroutineScope()
             if (uiState == UiState.Supported) {
                 val multiPermissionsState = rememberMultiplePermissionsState(
                     permissions = PERMISSIONS,
@@ -49,12 +53,17 @@ fun LucidWatchApp(
                         val intent = Intent(context, HealthService::class.java)
                         val serviceConnection = object : ServiceConnection {
                             override fun onServiceConnected(
-                                name: ComponentName?,
-                                service: IBinder?
+                                name: ComponentName?, service: IBinder?
                             ) {
                                 val binder = service as HealthService.HealthServiceBinder
                                 val serviceRunning = binder.getService().serviceRunningInForeground
                                 viewModel.enabled.value = serviceRunning
+                                coroutineScope.launch {
+                                    binder.getService().heartRateFlow.takeWhile { enabled }
+                                        .collect {
+                                            viewModel.onMeasureMessage(it)
+                                        }
+                                }
                                 // Handle the service connection here, if needed
                             }
 
