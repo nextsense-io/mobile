@@ -21,6 +21,11 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import androidx.wear.ongoing.OngoingActivity
 import androidx.wear.ongoing.Status
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.main.MainActivity
 import io.nextsense.android.main.TAG
@@ -29,24 +34,20 @@ import io.nextsense.android.main.data.LocalDatabaseManager
 import io.nextsense.android.main.data.MeasureMessage
 import io.nextsense.android.main.db.AccelerometerEntity
 import io.nextsense.android.main.db.HeartRateEntity
-import io.nextsense.android.main.db.PredictionEntity
 import io.nextsense.android.main.lucid.dev.R
 import io.nextsense.android.main.presentation.MILLISECONDS_PER_SECOND
 import io.nextsense.android.main.utils.SleepStagePredictionHelper
-import io.nextsense.android.main.utils.SleepStagePredictionOutput
 import io.nextsense.android.main.utils.minutesToMilliseconds
 import io.nextsense.android.main.utils.toFormattedDateString
 import io.nextsense.android.main.utils.toSeconds
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class HealthService : LifecycleService(), SensorEventListener {
@@ -62,10 +63,7 @@ class HealthService : LifecycleService(), SensorEventListener {
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
     private var lastSavedTimestamp = 0L
-    private val dataCheckingPeriod: Long = MILLISECONDS_PER_SECOND * 30.toLong()
     private val initialWaitingTime = minutesToMilliseconds(15)
-    private var schedulerStartTime = 0L
-    private var initialWaitingTimeCompleted = false
     private val _heartRateFlow = MutableSharedFlow<MeasureMessage>()
     val heartRateFlow: SharedFlow<MeasureMessage> = _heartRateFlow
     private val binder = HealthServiceBinder()
@@ -108,64 +106,7 @@ class HealthService : LifecycleService(), SensorEventListener {
                     }
                 }
         }
-        lifecycleScope.launch(Dispatchers.IO) {
-            schedulerStartTime = System.currentTimeMillis()
-            while (true) {
-                Log.i(TAG, "Timer started")
-                if (initialWaitingTimeCompleted) {
-                    val context = application.applicationContext
-                    val heartRateDuration = Duration.ofMinutes(30)
-                    val accelerometerDuration = Duration.ofMinutes(5)
-                    val startTime = System.currentTimeMillis().toSeconds()
-                    val endTime = System.currentTimeMillis().toSeconds()
-                    val heartRateData = localDatabaseManager.fetchHeartRateDate(
-                        startTime = startTime - heartRateDuration.seconds, endTime = endTime
-                    )
-                    val accelerometerData = localDatabaseManager.fetchAccelerometerData(
-                        startTime = startTime - accelerometerDuration.seconds, endTime = endTime
-                    )
-                    val result = lifecycleScope.async {
-                        sleepStagePredictionHelper.prediction(
-                            heartRateData = heartRateData,
-                            accelerometerData = accelerometerData,
-                            workoutStartTime = System.currentTimeMillis().toSeconds()
-                        )
-                    }.await()
-                    when (result) {
-                        SleepStagePredictionOutput.REM -> {
-                            io.nextsense.android.main.utils.NotificationManager(context)
-                                .showNotification(
-                                    title = "REM", message = "This is lucid night notification."
-                                )
-                        }
-
-                        else -> {
-                            Log.i(TAG, "Model Result=>${result}")
-                        }
-                    }
-                    val predictionEntity = PredictionEntity(
-                        prediction = result?.value ?: 0,
-                        timeStamp = startTime,
-                        date = TimeUnit.SECONDS.toMillis(startTime).toFormattedDateString(),
-                        startDate = startTime,
-                        endDate = endTime
-                    )
-                    try {
-                        localDatabaseManager.savePrediction(
-                            predictionEntity
-                        )
-                    } catch (e: Exception) {
-                        Log.i(TAG, "Save prediction error=>${e}")
-                    }
-                } else {
-                    // Calculate the elapsed time in milliseconds
-                    val elapsedTime: Long = System.currentTimeMillis() - schedulerStartTime
-                    initialWaitingTimeCompleted = elapsedTime >= initialWaitingTime
-                }
-                delay(dataCheckingPeriod)
-                Log.i(TAG, "Timer end")
-            }
-        }
+        startPredicationWork(true)
         return START_STICKY
     }
 
@@ -232,7 +173,11 @@ class HealthService : LifecycleService(), SensorEventListener {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val accelerometerEntity = AccelerometerEntity(
-                    x = x, y = y, z = z, createAt = timestamp.toSeconds()
+                    x = x,
+                    y = y,
+                    z = z,
+                    createAt = timestamp.toSeconds(),
+                    date = timestamp.toFormattedDateString()
                 )
                 localDatabaseManager.accelerometerDao?.insertAll(accelerometerEntity)
             } catch (e: Exception) {
@@ -244,8 +189,11 @@ class HealthService : LifecycleService(), SensorEventListener {
     private fun saveHeartRateData(heartRate: Double) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
+                val timestamp = System.currentTimeMillis()
                 val heartRateEntity = HeartRateEntity(
-                    heartRate = heartRate, createAt = System.currentTimeMillis().toSeconds()
+                    heartRate = heartRate,
+                    createAt = timestamp.toSeconds(),
+                    date = timestamp.toFormattedDateString()
                 )
                 localDatabaseManager.heartRateDao?.insertAll(heartRateEntity)
             } catch (e: Exception) {
@@ -254,11 +202,27 @@ class HealthService : LifecycleService(), SensorEventListener {
         }
     }
 
+    private fun startPredicationWork(isServiceRunning: Boolean) {
+        val uploadRequest: OneTimeWorkRequest =
+            OneTimeWorkRequestBuilder<PredictionWork>().setInputData(
+                workDataOf(
+                    Pair(
+                        IS_SERVICE_RUNNING, isServiceRunning
+                    )
+                )
+            ).setInitialDelay(
+                if (isServiceRunning) initialWaitingTime.toLong() else 0L, TimeUnit.MILLISECONDS
+            ).build()
+        WorkManager.getInstance(this)
+            .enqueueUniqueWork(REM_PREDICTION_WORK, ExistingWorkPolicy.REPLACE, uploadRequest)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         try {
             sensorManager.unregisterListener(this)
             removeOngoingActivityNotification()
+            startPredicationWork(false)
         } catch (e: Exception) {
             Log.i(TAG, "${e.message}")
         }

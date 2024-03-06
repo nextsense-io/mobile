@@ -18,6 +18,7 @@ data class AccelerometerEntity(
     @ColumnInfo val y: Double?,
     @ColumnInfo val z: Double?,
     @ColumnInfo val createAt: Long,
+    @ColumnInfo val date: String? = null
 )
 
 @Dao

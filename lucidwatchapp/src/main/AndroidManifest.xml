@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Required for HR sensor -->
     <uses-permission android:name="android.permission.BODY_SENSORS" />
@@ -38,6 +39,13 @@
             android:name="io.nextsense.android.main.service.HealthService"
             android:exported="false"
             android:foregroundServiceType="health" />
+
+        <!-- Remove WorkManager default initialization -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
+
     </application>
 
 </manifest>

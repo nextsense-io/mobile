@@ -13,6 +13,7 @@ data class HeartRateEntity(
     @PrimaryKey(autoGenerate = true) val uid: Int? = null,
     @ColumnInfo val heartRate: Double?,
     @ColumnInfo val createAt: Long?,
+    @ColumnInfo val date: String? = null
 )
 
 @Dao

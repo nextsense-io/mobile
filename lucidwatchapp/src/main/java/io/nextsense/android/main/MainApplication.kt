@@ -1,7 +1,10 @@
 package io.nextsense.android.main
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 const val TAG = "Lucid Reality Application"
 val PERMISSIONS = listOf(
@@ -9,4 +12,13 @@ val PERMISSIONS = listOf(
 )
 
 @HiltAndroidApp
-class MainApplication : Application()
+class MainApplication : Application(), Configuration.Provider {
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
+}
+
