@@ -13,7 +13,7 @@
             android:icon="@mipmap/launcher_lucid_round"
             android:roundIcon="@mipmap/launcher_lucid"
             tools:replace="icon, roundIcon">
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity android:name=".LucidPermissionsRationaleActivity" android:exported="true">
             <meta-data android:name="health_permissions" android:resource="@array/health_permissions" />
 
             <intent-filter>
@@ -24,7 +24,7 @@
         <activity-alias
             android:name="AndroidURationaleActivity"
             android:exported="true"
-            android:targetActivity=".MainActivity"
+            android:targetActivity=".LucidPermissionsRationaleActivity"
             android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
@@ -34,7 +34,7 @@
         <activity-alias
             android:name="ViewPermissionUsageActivity"
             android:exported="true"
-            android:targetActivity=".MainActivity"
+            android:targetActivity=".LucidPermissionsRationaleActivity"
             android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
