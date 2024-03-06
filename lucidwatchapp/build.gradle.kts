@@ -72,6 +72,8 @@ dependencies {
     implementation("androidx.wear:wear-phone-interactions:1.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     implementation("androidx.lifecycle:lifecycle-service:2.7.0")
+    implementation("androidx.hilt:hilt-common:1.2.0")
+    implementation("androidx.hilt:hilt-work:1.2.0")
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
@@ -80,13 +82,17 @@ dependencies {
     //TFLite dependencies
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
     implementation("org.tensorflow:tensorflow-lite-gpu:0.0.0-nightly")
-    implementation("org.tensorflow:tensorflow-lite-support:0.0.0-nightly")
+    implementation("org.tensorflow:tensorflow-lite-support:0.3.1")
     //Wear on going
     implementation("androidx.wear:wear-ongoing:1.0.0")
     // Hilt
     implementation("com.google.dagger:hilt-android:2.50")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     kapt("com.google.dagger:hilt-android-compiler:2.50")
+    kapt("androidx.hilt:hilt-compiler:1.2.0")
+
+    // Work manager + Kotlin + coroutines
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
