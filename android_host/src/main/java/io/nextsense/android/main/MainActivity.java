@@ -93,7 +93,8 @@ public class MainActivity extends AppCompatActivity {
     editor.apply();
 
     applicationType = ((NextSenseApplication) getApplication()).getApplicationType();
-    if (applicationType == ApplicationType.CONSUMER || applicationType == ApplicationType.MEDICAL) {
+    if (applicationType == ApplicationType.CONSUMER || applicationType == ApplicationType.MEDICAL
+        || applicationType == ApplicationType.RESEARCH) {
       foregroundServiceIntent = new Intent(getApplicationContext(), ForegroundService.class);
       foregroundServiceIntent.putExtra(ForegroundService.EXTRA_APPLICATION_TYPE,
           applicationType.name());
@@ -128,7 +129,8 @@ public class MainActivity extends AppCompatActivity {
   protected void onStart() {
     RotatingFileLogger.get().logi(TAG, "Starting activity.");
     super.onStart();
-    if (applicationType == ApplicationType.CONSUMER || applicationType == ApplicationType.MEDICAL) {
+    if (applicationType == ApplicationType.CONSUMER || applicationType == ApplicationType.MEDICAL
+        || applicationType == ApplicationType.RESEARCH) {
       if (!nextSenseServiceBound) {
         bindService(foregroundServiceIntent, nextSenseConnection, Context.BIND_IMPORTANT);
       } else {
