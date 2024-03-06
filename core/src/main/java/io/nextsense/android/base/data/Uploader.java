@@ -34,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.nextsense.android.ApplicationType;
 import io.nextsense.android.base.DataSamplesProto;
 import io.nextsense.android.base.SessionProto;
 import io.nextsense.android.base.communication.firebase.CloudFunctions;
@@ -58,6 +59,7 @@ public class Uploader {
   // Should be 1 second of data to be simple to import in BigTable.
   private final Duration uploadChunkSize;
   private final Context context;
+  private final ApplicationType applicationType;
   private final ObjectBoxDatabase objectBoxDatabase;
   private final DatabaseSink databaseSink;
   private final CloudFunctions firebaseFunctions;
@@ -82,9 +84,10 @@ public class Uploader {
   private Connectivity.State minimumConnectivityState = Connectivity.State.FULL_CONNECTION;
   private Connectivity.State currentConnectivityState = Connectivity.State.NO_CONNECTION;
   // Used to generate test data manually, should always be false in production.
-  private boolean saveData = false;
+  private boolean saveData = true;
 
-  private Uploader(Context context, ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
+  private Uploader(Context context, ApplicationType applicationType,
+                   ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
                    Connectivity connectivity, Duration uploadChunkSize, int minRecordsToKeep,
                    Duration minDurationToKeep) {
     this.context = context;
@@ -95,14 +98,15 @@ public class Uploader {
     this.minRecordsToKeep = minRecordsToKeep;
     this.minDurationToKeep = minDurationToKeep;
     this.firebaseFunctions = CloudFunctions.create();
+    this.applicationType = applicationType;
   }
 
   public static Uploader create(
-      Context context, ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
-      Connectivity connectivity, Duration uploadChunkSize, int minRecordsToKeep,
-      Duration minDurationToKeep) {
-    return new Uploader(context, objectBoxDatabase, databaseSink, connectivity, uploadChunkSize,
-        minRecordsToKeep, minDurationToKeep);
+      Context context, ApplicationType applicationType, ObjectBoxDatabase objectBoxDatabase,
+      DatabaseSink databaseSink, Connectivity connectivity, Duration uploadChunkSize,
+      int minRecordsToKeep, Duration minDurationToKeep) {
+    return new Uploader(context, applicationType, objectBoxDatabase, databaseSink, connectivity,
+        uploadChunkSize, minRecordsToKeep, minDurationToKeep);
   }
 
   public void start() {
@@ -688,6 +692,11 @@ public class Uploader {
     }
     if (localSession.getEarbudsConfig() != null) {
       builder.setChannelConfig(localSession.getEarbudsConfig());
+    }
+    switch (applicationType) {
+      case CONSUMER -> builder.setUserType(SessionProto.UserType.USER_TYPE_CONSUMER);
+      case RESEARCH -> builder.setUserType(SessionProto.UserType.USER_TYPE_RESEARCHER);
+      case MEDICAL -> builder.setUserType(SessionProto.UserType.USER_TYPE_SUBJECT);
     }
     builder.setExpectedSamplesCount(localSession.getEegSamplesUploaded());
     return builder.build();
