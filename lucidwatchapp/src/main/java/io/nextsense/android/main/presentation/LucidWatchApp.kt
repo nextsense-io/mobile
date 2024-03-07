@@ -13,8 +13,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.TimeText
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -41,6 +44,7 @@ fun LucidWatchApp(
             val uiState by viewModel.uiState
             val context = LocalContext.current
             val coroutineScope = rememberCoroutineScope()
+            val lifecycle = LocalLifecycleOwner.current.lifecycle
             if (uiState == UiState.Supported) {
                 val multiPermissionsState = rememberMultiplePermissionsState(
                     permissions = PERMISSIONS,
@@ -57,16 +61,17 @@ fun LucidWatchApp(
                                 name: ComponentName?, service: IBinder?
                             ) {
                                 val binder = service as HealthService.HealthServiceBinder
-                                val serviceRunning = binder.getService().serviceRunningInForeground
+                                val healthService: HealthService = binder.getService()
+                                val serviceRunning = healthService.serviceRunningInForeground
                                 viewModel.enabled.value = serviceRunning
-                                viewModel.availability.value = binder.getService().healthServicesRepository.availability.value
+                                viewModel.availability.value = healthService.availability.value
                                 coroutineScope.launch {
-                                    binder.getService().heartRateFlow.takeWhile { enabled }
-                                        .collect {
-                                            viewModel.onMeasureMessage(it)
-                                        }
+                                    healthService.heartRateFlow.flowWithLifecycle(
+                                        lifecycle, Lifecycle.State.STARTED
+                                    ).takeWhile { enabled }.collect {
+                                        viewModel.onMeasureMessage(it)
+                                    }
                                 }
-                                // Handle the service connection here, if needed
                             }
 
                             override fun onServiceDisconnected(name: ComponentName?) {

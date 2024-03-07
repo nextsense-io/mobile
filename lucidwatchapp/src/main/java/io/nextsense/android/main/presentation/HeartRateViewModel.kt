@@ -41,6 +41,7 @@ class HeartRateViewModel @Inject constructor(
         when (measureMessage) {
             is MeasureMessage.MeasureData -> {
                 hr.value = measureMessage.data.last().value
+                logger.log("onMeasureMessage called")
             }
 
             is MeasureMessage.MeasureAvailability -> {

@@ -60,6 +60,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.6.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("com.google.android.horologist:horologist-compose-layout:0.6.3")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     // Health Services
     implementation("androidx.health:health-services-client:1.1.0-alpha02")
     implementation("androidx.lifecycle:lifecycle-service:2.7.0")
@@ -72,7 +73,6 @@ dependencies {
     implementation("androidx.wear:wear-remote-interactions:1.0.0")
     implementation("androidx.wear:wear-phone-interactions:1.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
-    implementation("androidx.lifecycle:lifecycle-service:2.7.0")
     implementation("androidx.hilt:hilt-common:1.2.0")
     implementation("androidx.hilt:hilt-work:1.2.0")
     val roomVersion = "2.6.1"

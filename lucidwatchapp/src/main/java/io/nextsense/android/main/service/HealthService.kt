@@ -16,6 +16,8 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
 import androidx.health.services.client.data.DataType
 import androidx.health.services.client.data.DataTypeAvailability
@@ -31,7 +33,6 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.main.MainActivity
-import io.nextsense.android.main.data.HealthServicesRepository
 import io.nextsense.android.main.data.LocalDatabaseManager
 import io.nextsense.android.main.data.MeasureMessage
 import io.nextsense.android.main.db.AccelerometerEntity
@@ -56,9 +57,6 @@ import javax.inject.Inject
 class HealthService : LifecycleService(), SensorEventListener {
 
     @Inject
-    lateinit var healthServicesRepository: HealthServicesRepository
-
-    @Inject
     lateinit var sleepStagePredictionHelper: SleepStagePredictionHelper
 
     @Inject
@@ -74,6 +72,8 @@ class HealthService : LifecycleService(), SensorEventListener {
     private var lastAccelerometerDataSavedTimestamp = 0L
     private var lastHeartRateDataSavedTimestamp = 0L
     private val initialWaitingTime = minutesToMilliseconds(15)
+    val availability: MutableState<DataTypeAvailability> =
+        mutableStateOf(DataTypeAvailability.UNKNOWN)
     private val _heartRateFlow = MutableSharedFlow<MeasureMessage>()
     val heartRateFlow: SharedFlow<MeasureMessage> = _heartRateFlow
     private val binder = HealthServiceBinder()
@@ -106,6 +106,7 @@ class HealthService : LifecycleService(), SensorEventListener {
                 this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL, maxReportLatencyUs
             )
             lifecycleScope.launch {
+                availability.value = DataTypeAvailability.AVAILABLE
                 _heartRateFlow.emit(MeasureMessage.MeasureAvailability(DataTypeAvailability.AVAILABLE))
             }
         }
