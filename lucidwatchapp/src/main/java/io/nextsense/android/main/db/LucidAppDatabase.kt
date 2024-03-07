@@ -5,7 +5,7 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [HeartRateEntity::class, AccelerometerEntity::class, PredictionEntity::class],
-    version = 1
+    version = 1,
 )
 abstract class LucidAppDatabase : RoomDatabase() {
     abstract fun heartRateDao(): HeartRateDao

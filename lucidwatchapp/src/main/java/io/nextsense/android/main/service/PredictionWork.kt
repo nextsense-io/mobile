@@ -9,8 +9,11 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.nextsense.android.main.data.LocalDatabaseManager
 import io.nextsense.android.main.db.PredictionEntity
+import io.nextsense.android.main.utils.Logger
+import io.nextsense.android.main.utils.NotificationManager
 import io.nextsense.android.main.utils.SleepStagePredictionHelper
 import io.nextsense.android.main.utils.SleepStagePredictionOutput
+import io.nextsense.android.main.utils.minutesToMilliseconds
 import io.nextsense.android.main.utils.toFormattedDateString
 import io.nextsense.android.main.utils.toSeconds
 import kotlinx.coroutines.Dispatchers
@@ -27,9 +30,13 @@ const val REM_PREDICTION_WORK = "remPredictionWork"
 class PredictionWork @AssistedInject constructor(
     private val localDatabaseManager: LocalDatabaseManager,
     private val sleepStagePredictionHelper: SleepStagePredictionHelper,
+    private val logger: Logger,
     @Assisted appContext: Context,
     @Assisted params: WorkerParameters
 ) : CoroutineWorker(appContext, params) {
+
+    //It should show up next notification after 20 minutes
+    private var lastNotificationShowUpTime = 0L
 
     override suspend fun doWork(): Result {
         // Get the get service status from the input data
@@ -38,7 +45,7 @@ class PredictionWork @AssistedInject constructor(
             val heartRateDuration = Duration.ofMinutes(30)
             val accelerometerDuration = Duration.ofMinutes(5)
             while (isServiceRunning) {
-                Log.d(TAG, "Timer task start")
+                logger.log( "Timer task start")
                 withContext(Dispatchers.IO) {
                     val startTime = System.currentTimeMillis().toSeconds()
                     val endTime = System.currentTimeMillis().toSeconds()
@@ -57,10 +64,15 @@ class PredictionWork @AssistedInject constructor(
                     }.await()
                     when (result) {
                         SleepStagePredictionOutput.REM -> {
-                            io.nextsense.android.main.utils.NotificationManager(applicationContext)
-                                .showNotification(
-                                    title = "REM", message = "This is lucid night notification."
+                            if (shouldShowNotification()) {
+                                NotificationManager(
+                                    applicationContext
+                                ).showNotification(
+                                    title = "REM",
+                                    message = "This is lucid night notification.",
                                 )
+                                lastNotificationShowUpTime = System.currentTimeMillis()
+                            }
                         }
 
                         else -> {
@@ -79,10 +91,10 @@ class PredictionWork @AssistedInject constructor(
                             predictionEntity
                         )
                     } catch (e: Exception) {
-                        Log.i(io.nextsense.android.main.TAG, "Save prediction error=>${e}")
+                        logger.log( "Save prediction error=>${e}")
                     }
                 }
-                Log.d(TAG, "Timer task end")
+                logger.log( "Timer task end")
                 delay(TimeUnit.SECONDS.toMillis(30))
             }
             Result.success()
@@ -90,6 +102,20 @@ class PredictionWork @AssistedInject constructor(
             Log.e(TAG, "Error PredictionWork", e)
             Result.failure()
         }
+    }
+
+    /**
+     * Checks the last 10 records with a prediction of 1 (REM) before showing a notification.
+     * Subsequent notifications are scheduled to appear 20 minutes after the first one.
+     */
+    private fun shouldShowNotification(): Boolean {
+        val isREMInRecentRecords =
+            localDatabaseManager.predictionDao?.isREMInRecentRecords() ?: false
+        // Calculate the elapsed time in milliseconds
+        val elapsedTime: Long = System.currentTimeMillis() - lastNotificationShowUpTime
+        return isREMInRecentRecords && (lastNotificationShowUpTime == 0L || elapsedTime >= minutesToMilliseconds(
+            20
+        ))
     }
 
     companion object {

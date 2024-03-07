@@ -19,6 +19,7 @@ import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.TimeText
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.google.android.horologist.compose.ambient.AmbientAware
 import io.nextsense.android.main.PERMISSIONS
 import io.nextsense.android.main.service.HealthService
 import io.nextsense.android.main.theme.LucidWatchTheme
@@ -58,6 +59,7 @@ fun LucidWatchApp(
                                 val binder = service as HealthService.HealthServiceBinder
                                 val serviceRunning = binder.getService().serviceRunningInForeground
                                 viewModel.enabled.value = serviceRunning
+                                viewModel.availability.value = binder.getService().healthServicesRepository.availability.value
                                 coroutineScope.launch {
                                     binder.getService().heartRateFlow.takeWhile { enabled }
                                         .collect {
@@ -82,17 +84,20 @@ fun LucidWatchApp(
                         }
                     }
                 }
-                HeartRateScreen(
-                    hr = hr, availability = availability, enabled = enabled, onButtonClick = {
-                        if (enabled) {
-                            viewModel.toggleEnabled()
-                            stopService(context)
-                        } else {
-                            viewModel.toggleEnabled()
-                            startService(context)
-                        }
-                    }, multiPermissionsState = multiPermissionsState
-                )
+                AmbientAware {
+                    HeartRateScreen(
+                        hr = hr, availability = availability, enabled = enabled, onButtonClick = {
+                            if (enabled) {
+                                viewModel.toggleEnabled()
+                                stopService(context)
+                            } else {
+                                viewModel.toggleEnabled()
+                                startService(context)
+                            }
+                        }, multiPermissionsState = multiPermissionsState
+                    )
+                }
+
             } else if (uiState == UiState.NotSupported) {
                 NotSupportedScreen()
             }

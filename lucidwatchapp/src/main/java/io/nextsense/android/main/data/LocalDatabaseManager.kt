@@ -8,6 +8,7 @@ import io.nextsense.android.main.db.LucidAppDatabase
 import io.nextsense.android.main.db.PredictionEntity
 
 class LocalDatabaseManager(context: Context) {
+
     private val db = try {
         Room.databaseBuilder(
             context, LucidAppDatabase::class.java, "lucidDB"

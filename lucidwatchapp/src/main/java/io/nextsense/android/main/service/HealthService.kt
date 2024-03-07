@@ -17,6 +17,9 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.health.services.client.data.DataType
+import androidx.health.services.client.data.DataTypeAvailability
+import androidx.health.services.client.data.SampleDataPoint
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import androidx.wear.ongoing.OngoingActivity
@@ -28,7 +31,6 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.main.MainActivity
-import io.nextsense.android.main.TAG
 import io.nextsense.android.main.data.HealthServicesRepository
 import io.nextsense.android.main.data.LocalDatabaseManager
 import io.nextsense.android.main.data.MeasureMessage
@@ -36,6 +38,7 @@ import io.nextsense.android.main.db.AccelerometerEntity
 import io.nextsense.android.main.db.HeartRateEntity
 import io.nextsense.android.main.lucid.dev.R
 import io.nextsense.android.main.presentation.MILLISECONDS_PER_SECOND
+import io.nextsense.android.main.utils.Logger
 import io.nextsense.android.main.utils.SleepStagePredictionHelper
 import io.nextsense.android.main.utils.minutesToMilliseconds
 import io.nextsense.android.main.utils.toFormattedDateString
@@ -43,8 +46,8 @@ import io.nextsense.android.main.utils.toSeconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -60,9 +63,16 @@ class HealthService : LifecycleService(), SensorEventListener {
 
     @Inject
     lateinit var localDatabaseManager: LocalDatabaseManager
+
+    @Inject
+    lateinit var logger: Logger
+
     private lateinit var sensorManager: SensorManager
     private var accelerometer: Sensor? = null
-    private var lastSavedTimestamp = 0L
+    private var heartRateSensor: Sensor? = null
+    private val maxReportLatencyUs = 1000000 // 1 second
+    private var lastAccelerometerDataSavedTimestamp = 0L
+    private var lastHeartRateDataSavedTimestamp = 0L
     private val initialWaitingTime = minutesToMilliseconds(15)
     private val _heartRateFlow = MutableSharedFlow<MeasureMessage>()
     val heartRateFlow: SharedFlow<MeasureMessage> = _heartRateFlow
@@ -87,24 +97,17 @@ class HealthService : LifecycleService(), SensorEventListener {
         startForeground(NOTIFICATION_ID, createNotification())
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        if (accelerometer != null) {
-            sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL)
-        }
-        lifecycleScope.launch(Dispatchers.IO) {
-            val supported = healthServicesRepository.hasHeartRateCapability()
-            healthServicesRepository.heartRateMeasureFlow().takeWhile { supported }
-                .collect { measureMessage ->
-                    _heartRateFlow.emit(measureMessage)
-                    when (measureMessage) {
-                        is MeasureMessage.MeasureData -> {
-                            val hr = measureMessage.data.last().value
-                            saveHeartRateData(hr)
-                            Log.i(TAG, "Heart Rate=>${hr}")
-                        }
-
-                        else -> {}
-                    }
-                }
+        heartRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE)
+        if (accelerometer != null && heartRateSensor != null) {
+            sensorManager.registerListener(
+                this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL, maxReportLatencyUs
+            )
+            sensorManager.registerListener(
+                this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL, maxReportLatencyUs
+            )
+            lifecycleScope.launch {
+                _heartRateFlow.emit(MeasureMessage.MeasureAvailability(DataTypeAvailability.AVAILABLE))
+            }
         }
         startPredicationWork(true)
         return START_STICKY
@@ -150,18 +153,44 @@ class HealthService : LifecycleService(), SensorEventListener {
 
     override fun onSensorChanged(event: SensorEvent?) {
         event?.let {
-            if (it.sensor == accelerometer) {
-                val timestamp = System.currentTimeMillis()
-                // Check if enough time has passed since the last saved data or it's the first data
-                if (timestamp - lastSavedTimestamp >= MILLISECONDS_PER_SECOND || lastSavedTimestamp == 0L) {
-                    val x = (it.values?.getOrNull(0) ?: 0).toDouble()
-                    val y = (it.values?.getOrNull(1) ?: 0).toDouble()
-                    val z = (it.values?.getOrNull(2) ?: 0f).toDouble()
-                    saveAccelerometerData(timestamp, x, y, z)
-                    // Update the last saved timestamp
-                    lastSavedTimestamp = timestamp
-                    Log.i(TAG, "Accelerometer=>X:${x}, y:${y}, z:${z}")
+            when (it.sensor) {
+                accelerometer -> {
+                    // Check if enough time has passed since the last saved data or it's the first data
+                    if (shouldSaveAccelerometerData()) {
+                        val timestamp = System.currentTimeMillis()
+                        val x = (it.values?.getOrNull(0) ?: 0).toDouble()
+                        val y = (it.values?.getOrNull(1) ?: 0).toDouble()
+                        val z = (it.values?.getOrNull(2) ?: 0f).toDouble()
+                        saveAccelerometerData(timestamp, x, y, z)
+                        // Update the last saved timestamp
+                        lastAccelerometerDataSavedTimestamp = timestamp
+                        logger.log("Accelerometer=>X:${x}, y:${y}, z:${z}")
+                    }
                 }
+
+                heartRateSensor -> {
+                    val mHeartRateFloat = event.values[0]
+                    val measureData = MeasureMessage.MeasureData(
+                        listOf(
+                            SampleDataPoint(
+                                DataType.HEART_RATE_BPM,
+                                mHeartRateFloat.toDouble(),
+                                Duration.ofMillis(event.timestamp)
+                            )
+                        )
+                    )
+                    val hr = measureData.data.last().value
+                    lifecycleScope.launch {
+                        _heartRateFlow.emit(measureData)
+                    }
+                    if (shouldSaveHeartRateData()) {
+                        saveHeartRateData(hr)
+                        lastHeartRateDataSavedTimestamp = System.currentTimeMillis()
+                    }
+                    logger.log("Heart Rate=>${hr}")
+                }
+
+                else -> {}
             }
         }
     }
@@ -181,9 +210,19 @@ class HealthService : LifecycleService(), SensorEventListener {
                 )
                 localDatabaseManager.accelerometerDao?.insertAll(accelerometerEntity)
             } catch (e: Exception) {
-                Log.i(TAG, "${e.message}")
+                logger.log("${e.message}")
             }
         }
+    }
+
+    private fun shouldSaveAccelerometerData(): Boolean {
+        val elapsedTime: Long = System.currentTimeMillis() - lastAccelerometerDataSavedTimestamp
+        return elapsedTime >= MILLISECONDS_PER_SECOND || lastAccelerometerDataSavedTimestamp == 0L
+    }
+
+    private fun shouldSaveHeartRateData(): Boolean {
+        val elapsedTime: Long = System.currentTimeMillis() - lastHeartRateDataSavedTimestamp
+        return elapsedTime >= MILLISECONDS_PER_SECOND || lastHeartRateDataSavedTimestamp == 0L
     }
 
     private fun saveHeartRateData(heartRate: Double) {
@@ -197,7 +236,7 @@ class HealthService : LifecycleService(), SensorEventListener {
                 )
                 localDatabaseManager.heartRateDao?.insertAll(heartRateEntity)
             } catch (e: Exception) {
-                Log.i(TAG, "${e.message}")
+                logger.log("${e.message}")
             }
         }
     }
@@ -224,7 +263,7 @@ class HealthService : LifecycleService(), SensorEventListener {
             removeOngoingActivityNotification()
             startPredicationWork(false)
         } catch (e: Exception) {
-            Log.i(TAG, "${e.message}")
+            logger.log("${e.message}")
         }
     }
 

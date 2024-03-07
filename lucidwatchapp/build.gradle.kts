@@ -59,6 +59,7 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("androidx.compose.material:material-icons-extended:1.6.1")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("com.google.android.horologist:horologist-compose-layout:0.6.3")
     // Health Services
     implementation("androidx.health:health-services-client:1.1.0-alpha02")
     implementation("androidx.lifecycle:lifecycle-service:2.7.0")

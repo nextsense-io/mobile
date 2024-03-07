@@ -7,7 +7,6 @@ import io.nextsense.android.main.db.AccelerometerEntity
 import io.nextsense.android.main.db.HeartRateEntity
 import io.nextsense.android.main.db.getAngle
 import org.tensorflow.lite.Interpreter
-import org.tensorflow.lite.support.common.FileUtil
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -15,7 +14,7 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-class SleepStagePredictionHelper(val context: Context) {
+class SleepStagePredictionHelper(val context: Context, private val tfliteModel: Interpreter?) {
     /// past 30 minutes
     private val heartRateSamplesNeeded: Int = 1800
 
@@ -63,18 +62,6 @@ class SleepStagePredictionHelper(val context: Context) {
         Log.i(TAG, "Normalized Data ACC Diff: ${normalizedDifference.take(200)}")
         val combineData =
             (normalizedHRData.asReversed() + normalizedDifference.asReversed()).toDoubleArray()
-
-        val tfliteModel: Interpreter? = try {
-            Interpreter(
-                FileUtil.loadMappedFile(
-                    context, MODEL_FILE
-                )
-            )
-        } catch (e: Exception) {
-            Log.i(TAG, "Failed to load core ml model: $e")
-            return null
-        }
-
         tfliteModel?.let { mlModel ->
             try {
                 val predictionData = combineData.map { it.toFloat() }.toTypedArray()
