@@ -384,7 +384,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     Event event = Event(firebaseEntity);
     event..setValue(EventKey.start_datetime, eventTime)
       ..setValue(EventKey.end_datetime, eventTime)
-      ..setValue(EventKey.marker, ERPAudioState.BUTTON_PRESS.name);
+      ..setValue(EventKey.marker, ERPAudioState.BUTTON_PRESS.name)
+      ..setValue(EventKey.type, _eventTypesManager.getEventType(ERPAudioState.BUTTON_PRESS.name)!.id);
     return await event.save();
   }
 
