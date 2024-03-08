@@ -37,7 +37,7 @@ interface PredictionDao {
     fun delete(prediction: PredictionEntity)
 
     @Query(
-        "SELECT CASE WHEN (SELECT COUNT(*) FROM PredictionEntity WHERE uid >= (SELECT MAX(uid) - :numberOfRecords + 1 FROM PredictionEntity) AND prediction = 1) = :numberOfRecords THEN 'true' ELSE 'false' END AS result;"
+        "SELECT CASE WHEN (SELECT COUNT(*) FROM PredictionEntity WHERE uid >= (SELECT MAX(uid) - :numberOfRecords + 1 FROM PredictionEntity) AND prediction = 1) = :numberOfRecords THEN 1 ELSE 0 END AS result;"
     )
     fun isREMInRecentRecords(numberOfRecords: Int = 10): Boolean
 }
