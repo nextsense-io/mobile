@@ -4,9 +4,25 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
     id("com.google.dagger.hilt.android")
 }
+
 android {
     namespace = "io.nextsense.android.main.lucid.dev"
     compileSdk = 34
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("../debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+        create("release") {
+            // Need to add these values to your local gradle.properties file.
+            storeFile = file(project.properties["RELEASE_STORE_FILE"].toString())
+            keyAlias = project.properties["RELEASE_KEY_ALIAS"].toString()
+            storePassword = project.properties["RELEASE_STORE_PASSWORD"].toString()
+            keyPassword = project.properties["RELEASE_KEY_PASSWORD"].toString()
+        }
+    }
     defaultConfig {
         applicationId = "io.nextsense.android.main.lucid.dev"
         minSdk = 30
@@ -19,8 +35,14 @@ android {
 
     }
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = true
+        }
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
+            isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
