@@ -50,7 +50,10 @@ fun LucidWatchApp(
                     permissions = PERMISSIONS,
                     onPermissionsResult = { result ->
                         val granted = result.all { it.value }
-                        if (granted) viewModel.toggleEnabled()
+                        if (granted) {
+                            viewModel.toggleEnabled()
+                            startService(context)
+                        }
                     },
                 )
                 if (!enabled) {

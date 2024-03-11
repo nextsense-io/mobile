@@ -16,8 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HeartRateViewModel @Inject constructor(
-    private val healthServicesRepository: HealthServicesRepository,
-    private val logger: Logger
+    private val healthServicesRepository: HealthServicesRepository, private val logger: Logger
 ) : ViewModel() {
     val enabled: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val hr: MutableState<Double> = mutableDoubleStateOf(0.0)
@@ -41,7 +40,6 @@ class HeartRateViewModel @Inject constructor(
         when (measureMessage) {
             is MeasureMessage.MeasureData -> {
                 hr.value = measureMessage.data.last().value
-                logger.log("onMeasureMessage called")
             }
 
             is MeasureMessage.MeasureAvailability -> {

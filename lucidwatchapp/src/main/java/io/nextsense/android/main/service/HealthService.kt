@@ -103,7 +103,7 @@ class HealthService : LifecycleService(), SensorEventListener {
                 this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL, maxReportLatencyUs
             )
             sensorManager.registerListener(
-                this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL, maxReportLatencyUs
+                this, heartRateSensor, SensorManager.SENSOR_DELAY_UI, maxReportLatencyUs
             )
             lifecycleScope.launch {
                 availability.value = DataTypeAvailability.AVAILABLE
@@ -170,25 +170,24 @@ class HealthService : LifecycleService(), SensorEventListener {
                 }
 
                 heartRateSensor -> {
-                    val mHeartRateFloat = event.values[0]
+                    val mHeartRateFloat = event.values[0].toDouble()
                     val measureData = MeasureMessage.MeasureData(
                         listOf(
                             SampleDataPoint(
                                 DataType.HEART_RATE_BPM,
-                                mHeartRateFloat.toDouble(),
+                                mHeartRateFloat,
                                 Duration.ofMillis(event.timestamp)
                             )
                         )
                     )
-                    val hr = measureData.data.last().value
                     lifecycleScope.launch {
                         _heartRateFlow.emit(measureData)
                     }
                     if (shouldSaveHeartRateData()) {
-                        saveHeartRateData(hr)
+                        saveHeartRateData(mHeartRateFloat)
                         lastHeartRateDataSavedTimestamp = System.currentTimeMillis()
                     }
-                    logger.log("Heart Rate=>${hr}")
+                    logger.log("Heart Rate=>${mHeartRateFloat}")
                 }
 
                 else -> {}

@@ -37,6 +37,7 @@ class PredictionWork @AssistedInject constructor(
 
     //It should show up next notification after 20 minutes
     private var lastNotificationShowUpTime = 0L
+    private val rescheduleTime = TimeUnit.MINUTES.toMillis(1)
 
     override suspend fun doWork(): Result {
         // Get the get service status from the input data
@@ -45,7 +46,7 @@ class PredictionWork @AssistedInject constructor(
             val heartRateDuration = Duration.ofMinutes(30)
             val accelerometerDuration = Duration.ofMinutes(5)
             while (isServiceRunning) {
-                logger.log( "Timer task start")
+                logger.log("Timer task start")
                 withContext(Dispatchers.IO) {
                     val startTime = System.currentTimeMillis().toSeconds()
                     val endTime = System.currentTimeMillis().toSeconds()
@@ -91,11 +92,11 @@ class PredictionWork @AssistedInject constructor(
                             predictionEntity
                         )
                     } catch (e: Exception) {
-                        logger.log( "Save prediction error=>${e}")
+                        logger.log("Save prediction error=>${e}")
                     }
                 }
-                logger.log( "Timer task end")
-                delay(TimeUnit.SECONDS.toMillis(30))
+                logger.log("Timer task end")
+                delay(rescheduleTime)
             }
             Result.success()
         } catch (e: Exception) {
