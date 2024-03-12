@@ -4,11 +4,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_common/domain/earbuds_config.dart';
 import 'package:flutter_common/managers/device_manager.dart';
+import 'package:flutter_common/managers/xenon_impedance_calculator.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/managers/xenon_impedance_calculator.dart';
 import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
@@ -85,9 +85,9 @@ class _ImpedanceCalculationScreenState extends State<ImpedanceCalculationScreen>
       String resultsText = '';
       for (MapEntry<EarLocation, double> mapEntry in impedanceData.entries) {
         String valueText = '';
-        if (mapEntry.value == XenonImpedanceCalculator.IMPEDANCE_NOT_ENOUGH_DATA) {
+        if (mapEntry.value == XenonImpedanceCalculator.impedanceNotEnoughData) {
           valueText = 'Not enough data';
-        } else if (mapEntry.value == XenonImpedanceCalculator.IMPEDANCE_FLAT_SIGNAL) {
+        } else if (mapEntry.value == XenonImpedanceCalculator.impedanceFlatSignal) {
           valueText = 'Saturated or flat signal';
         } else {
           valueText = _spaceInt(mapEntry.value.round());

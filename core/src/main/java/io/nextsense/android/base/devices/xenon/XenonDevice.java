@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceMode;
@@ -45,13 +46,11 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
  */
 public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice {
 
-  public static final String BLUETOOTH_PREFIX = "Xenon";
+  public static final String BLUETOOTH_PREFIX = "Xenon_P0.1";
   public static final String STREAM_START_MODE_KEY = "stream.start.mode";
-
   private static final String TAG = XenonDevice.class.getSimpleName();
   private static final int TARGET_MTU = 256;
   private static final int CHANNELS_NUMBER = 8;
-
   private static final UUID SERVICE_UUID = UUID.fromString("cb577fc4-7260-41f8-8216-3be734c7820a");
   private static final UUID DATA_UUID = UUID.fromString("59e33cfa-497d-4356-bb46-b87888419cb2");
   private static final DeviceInfo DEVICE_INFO = new DeviceInfo(
@@ -117,7 +116,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
 
   @Override
   public List<String> getEegChannelNames() {
-    return Arrays.asList("1", "3", "6", "7", "8");
+    return enabledChannels.stream().map(String::valueOf).collect(Collectors.toList());
   }
 
   @Override

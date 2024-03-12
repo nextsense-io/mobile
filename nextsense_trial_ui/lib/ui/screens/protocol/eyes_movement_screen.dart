@@ -13,7 +13,6 @@ import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:stacked/stacked.dart';
 
 class ProtocolPartScrollView extends StatelessWidget {
-
   final ItemScrollController itemScrollController = ItemScrollController();
 
   @override
@@ -50,10 +49,8 @@ class EyesMovementProtocolScreen extends ProtocolScreen {
         showBackButton: false,
         showCancelButton: true,
         backButtonCallback: () async => {
-          if (await onBackButtonPressed(context, viewModel)) {
-            Navigator.of(context).pop()
-          }
-        },
+              if (await onBackButtonPressed(context, viewModel)) {Navigator.of(context).pop()}
+            },
         child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -67,8 +64,19 @@ class EyesMovementProtocolScreen extends ProtocolScreen {
                   SizedBox(height: 10),
                   Expanded(child: ProtocolPartScrollView())
                 ] +
-                [SizedBox(height: 20),
-                  SessionControlButton(stopSession)]));
+                [
+                  if (viewModel.isResearcher)
+                    SizedBox(height: 20),
+                  if (viewModel.isResearcher)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SignalMonitoringButton(),
+                      ],
+                    ),
+                  SizedBox(height: 20),
+                  SessionControlButton(stopSession)
+                ]));
   }
 
   @override

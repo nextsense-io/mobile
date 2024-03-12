@@ -11,15 +11,12 @@ import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
 class EOECProtocolScreen extends ProtocolScreen {
-
   static const String id = 'eoec_protocol_screen';
 
-  EOECProtocolScreen(RunnableProtocol runnableProtocol) :
-        super(runnableProtocol);
+  EOECProtocolScreen(RunnableProtocol runnableProtocol) : super(runnableProtocol);
 
   @override
-  Widget runningStateBody(
-      BuildContext context, ProtocolScreenViewModel viewModel) {
+  Widget runningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
     final viewModel = context.watch<EOECProtocolScreenViewModel>();
 
     List<ScheduledProtocolPart> scheduledProtocolParts = viewModel.getScheduledProtocolParts();
@@ -42,27 +39,32 @@ class EOECProtocolScreen extends ProtocolScreen {
         showBackButton: false,
         showCancelButton: true,
         backButtonCallback: () async => {
-          if (await onBackButtonPressed(context, viewModel)) {
-            Navigator.of(context).pop()
-          }
-        },
+              if (await onBackButtonPressed(context, viewModel)) {Navigator.of(context).pop()}
+            },
         child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
                   LightHeaderText(text: protocol.description + ' EEG Recording'),
                   SizedBox(height: 10),
-                  Stack(
-                    children: [
-                      Center(child: CountDownTimer(duration: protocol.minDuration, reverse: true)),
-                      if (!viewModel.deviceCanRecord)
-                        deviceInactiveOverlay(context, viewModel),
-                    ]),
+                  Stack(children: [
+                    Center(child: CountDownTimer(duration: protocol.minDuration, reverse: true)),
+                    if (!viewModel.deviceCanRecord) deviceInactiveOverlay(context, viewModel),
+                  ]),
                   SizedBox(height: 10),
                 ] +
                 protocolStepCards +
                 [
-                  Spacer(),
+                  if (viewModel.isResearcher)
+                    SizedBox(height: 20),
+                  if (viewModel.isResearcher)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SignalMonitoringButton(),
+                      ],
+                    ),
+                  SizedBox(height: 20),
                   SessionControlButton(stopSession)
                 ]));
   }
@@ -74,13 +76,12 @@ class EOECProtocolScreen extends ProtocolScreen {
     return ViewModelBuilder<EOECProtocolScreenViewModel>.reactive(
         viewModelBuilder: () => EOECProtocolScreenViewModel(runnableProtocol),
         onModelReady: (protocolViewModel) => protocolViewModel.init(),
-        builder: (context, viewModel, child) =>
-            ViewModelBuilder<ProtocolScreenViewModel>.reactive(
-                viewModelBuilder: () => viewModel,
-                onModelReady: (viewModel) => {},
-                builder: (context, viewModel, child) => WillPopScope(
-                      onWillPop: () => onBackButtonPressed(context, viewModel),
-                      child: body(context, viewModel),
-                    )));
+        builder: (context, viewModel, child) => ViewModelBuilder<ProtocolScreenViewModel>.reactive(
+            viewModelBuilder: () => viewModel,
+            onModelReady: (viewModel) => {},
+            builder: (context, viewModel, child) => WillPopScope(
+                  onWillPop: () => onBackButtonPressed(context, viewModel),
+                  child: body(context, viewModel),
+                )));
   }
 }

@@ -8,8 +8,7 @@ const scratchEnvName = "Scratch";
 enum EnvironmentKey {
   USERNAME,
   PASSWORD,
-  USE_EMULATED_BLE,
-  AUTO_CONNECT_AFTER_SCAN
+  USE_EMULATED_BLE
 }
 
 Future initEnvironmentFile() async {
@@ -17,17 +16,24 @@ Future initEnvironmentFile() async {
     await dotenv.load(fileName: environmentFileName);
   } catch (e) {
     print('dotenv init failed. Check path "$environmentFileName" exist');
-    rethrow;
   }
 }
 
 String envGet(EnvironmentKey key, {String? fallback}) {
-  return dotenv.get(key.name, fallback: fallback ?? "");
+  try {
+    return dotenv.get(key.name, fallback: fallback ?? "");
+  } catch (e) {
+    return fallback ?? "";
+  }
 }
 
 bool envGetBool(EnvironmentKey key, bool fallback) {
-  return envGet(key, fallback: fallback ? "true" : "false")
-      .toLowerCase() == "true";
+  try {
+    return envGet(key, fallback: fallback ? "true" : "false")
+        .toLowerCase() == "true";
+  } catch (e) {
+    return fallback;
+  }
 }
 
 abstract class Environment {

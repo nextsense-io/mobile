@@ -40,7 +40,7 @@ class ProfileScreen extends HookWidget {
     final scrollController = ScrollController();
     return ViewModelBuilder<ProfileScreenViewModel>.reactive(
       viewModelBuilder: () => ProfileScreenViewModel(),
-      onModelReady: (viewModel) => viewModel.init(),
+      onViewModelReady: (viewModel) => viewModel.init(),
       builder: (context, ProfileScreenViewModel viewModel, child) => PageScaffold(
           showProfileButton: false,
           child: Scrollbar(
@@ -80,7 +80,8 @@ class ProfileScreen extends HookWidget {
                                   await _navigation.navigateTo(EnrolledStudiesScreen.id),
                                   viewModel.notifyListeners()
                                 }),
-                      if (_flavor.userType == UserType.subject)
+                      if (_flavor.userType == UserType.subject ||
+                          _flavor.userType == UserType.anonymous_subject)
                         _MainMenuItem(
                             label: 'Password',
                             details: 'Change Password',
@@ -146,6 +147,11 @@ class ProfileScreen extends HookWidget {
                           onPressed: () {
                             viewModel.logout();
                             _navigation.signOut();
+                          }),
+                      _MainMenuItem(
+                          label: 'Exit',
+                          onPressed: () {
+                            viewModel.exit();
                           }),
                       _MainMenuItem(
                           label: 'Settings',

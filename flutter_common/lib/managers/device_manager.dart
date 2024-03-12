@@ -44,7 +44,7 @@ DeviceState deviceStateFromString(String str) {
 class DeviceManager {
   // It takes a maximum of about 1 second to find the device if it is already powered up. 2 seconds
   // gives enough safety and is not too long to wait if the device is not powered on or is too far.
-  static final Duration _scanTimeout = Duration(seconds: 2);
+  static const Duration _scanTimeout = Duration(seconds: 2);
 
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceManager');
   final _deviceInternalStateChangeController =
@@ -91,7 +91,8 @@ class DeviceManager {
     } else {
       _connectedDevice = await getDeviceInfo(_connectedDevice!);
     }
-    if (_connectedDevice!.type == DeviceType.xenon) {
+    if (_connectedDevice!.type == DeviceType.xenon||
+        _connectedDevice!.type == DeviceType.kauai) {
       _listenToInternalState();
       NextsenseBase.requestDeviceStateUpdate(_connectedDevice!.macAddress);
       bool stateAvailable = await waitInternalStateAvailable(timeout);
@@ -100,11 +101,12 @@ class DeviceManager {
         await disconnectDevice();
         return false;
       }
-    } else if (_connectedDevice!.type == DeviceType.kauai) {
+    } else if (_connectedDevice!.type == DeviceType.kauai_medical) {
       _listenToEvents();
     }
 
-    if (_connectedDevice!.type == DeviceType.xenon) {
+    if (_connectedDevice!.type == DeviceType.xenon||
+        _connectedDevice!.type == DeviceType.kauai) {
       _requestStateChanges();
     }
     return true;
@@ -256,7 +258,8 @@ class DeviceManager {
       return true;
     }
     await NextsenseBase.stopStreaming(_connectedDevice!.macAddress);
-    if (_connectedDevice!.type == DeviceType.xenon) {
+    if (_connectedDevice!.type == DeviceType.xenon ||
+        _connectedDevice!.type == DeviceType.kauai) {
       _requestStateChanges();
     }
   }
@@ -457,7 +460,8 @@ class DeviceManager {
       _deviceReadyCompleter.complete(true);
     } else {
       _logger.log(Level.INFO, 'Reconnecting.');
-      if (_connectedDevice!.type == DeviceType.xenon) {
+      if (_connectedDevice!.type == DeviceType.xenon ||
+          _connectedDevice!.type == DeviceType.kauai) {
         _requestStateChanges();
       }
     }

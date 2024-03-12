@@ -62,8 +62,8 @@ class SessionManager {
     DateTime startTime = DateTime.now();
 
     String? earbudsConfig = EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase();
-    if (device.type == DeviceType.kauai) {
-      earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+    if (device.type == DeviceType.kauai_medical) {
+      earbudsConfig = EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.toLowerCase();
     }
 
     _currentSession!..setValue(SessionKey.start_datetime, startTime)

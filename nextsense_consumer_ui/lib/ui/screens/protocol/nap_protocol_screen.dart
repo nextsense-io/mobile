@@ -7,9 +7,9 @@ import 'package:nextsense_consumer_ui/ui/components/medium_text.dart';
 import 'package:nextsense_consumer_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_consumer_ui/ui/components/sleep_pie_chart.dart';
 import 'package:nextsense_consumer_ui/ui/nextsense_colors.dart';
-import 'package:nextsense_consumer_ui/ui/screens/protocol/nap_protocol_screen_vm.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen_vm.dart';
+import 'package:nextsense_consumer_ui/ui/screens/protocol/sleep_protocols_vm.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
@@ -23,8 +23,8 @@ class NapProtocolScreen extends ProtocolScreen {
   @override
   Widget notRunningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
     final SleepStagingManager sleepStagingManager = context.watch<SleepStagingManager>();
-    final NapProtocolScreenViewModel napProtocolScreenViewModel =
-        viewModel as NapProtocolScreenViewModel;
+    final SleepProtocolsViewModel napProtocolScreenViewModel =
+        viewModel as SleepProtocolsViewModel;
     var statusMsg = '';
     if (viewModel.isError) {
       statusMsg = getRecordingCancelledMessage(viewModel);
@@ -40,9 +40,22 @@ class NapProtocolScreen extends ProtocolScreen {
       if (sleepStagingManager.sleepCalculationState == SleepCalculationState.calculating) {
         statusMsg += "\n\nCalculating sleep staging results...";
       } else if (sleepStagingManager.sleepStagingLabels.isNotEmpty) {
-        statusMsg += "\n";
+        Duration dataDuration = Duration.zero;
         for (SleepStage sleepStage in viewModel.getSleepStages()) {
-          statusMsg += "\n${sleepStage.stage}: ${sleepStage.percent}";
+          dataDuration += sleepStage.duration;
+        }
+        statusMsg += "\n";
+        Duration sessionDuration = Duration(milliseconds: viewModel.milliSecondsElapsed);
+        // Remove extra seconds to nearest 30 seconds.
+        sessionDuration = Duration(seconds: sessionDuration.inSeconds - 
+            sessionDuration.inSeconds.remainder(30));
+        double dataLossPercent = 100 - (dataDuration.inSeconds / sessionDuration.inSeconds) * 100;
+        statusMsg += "\nTotal nap time: ${viewModel.formatDuration(sessionDuration)}";
+        statusMsg += "\nTotal data time: ${viewModel.formatDuration(dataDuration)}";
+        statusMsg += "\nBLE data loss: ${dataLossPercent.toStringAsPrecision(2)}%\n";
+        for (SleepStage sleepStage in viewModel.getSleepStages()) {
+          statusMsg += "\n${sleepStage.stage}: ${sleepStage.percent}% "
+              "(${viewModel.formatDuration(sleepStage.duration)})";
         }
         finishButtonText = 'Finish';
       }
@@ -88,8 +101,8 @@ class NapProtocolScreen extends ProtocolScreen {
   Widget build(BuildContext context) {
     // Needs to wrap the parent ViewModel as the check is done on direct class type without looking
     // at ancestry.
-    return ViewModelBuilder<NapProtocolScreenViewModel>.reactive(
-        viewModelBuilder: () => NapProtocolScreenViewModel(protocol),
+    return ViewModelBuilder<SleepProtocolsViewModel>.reactive(
+        viewModelBuilder: () => SleepProtocolsViewModel(protocol),
         onViewModelReady: (protocolViewModel) => protocolViewModel.init(),
         builder: (context, viewModel, child) => ViewModelBuilder<ProtocolScreenViewModel>
             .reactive(

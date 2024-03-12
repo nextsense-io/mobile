@@ -65,8 +65,8 @@ class SessionManager {
 
     String? earbudsConfig;
     switch (device.type) {
-      case DeviceType.kauai:
-        earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+      case DeviceType.kauai_medical:
+        earbudsConfig = EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.toLowerCase();
         break;
       case DeviceType.nitro:
         earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
@@ -133,11 +133,13 @@ class SessionManager {
         _logger.log(Level.SEVERE, "Failed to set impedance config. Cannot start streaming.");
         return false;
       }
-      String? earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig() ?? null;
-      if (device.type == DeviceType.kauai) {
-        earbudsConfig = EarbudsConfigNames.KAUAI_CONFIG.name.toLowerCase();
+      String? earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig();
+      if (device.type == DeviceType.kauai_medical) {
+        earbudsConfig = EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.toLowerCase();
       } else if (device.type == DeviceType.nitro) {
         earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
+      } else if (device.type == DeviceType.kauai) {
+        earbudsConfig = EarbudsConfigNames.XENON_P02_CONFIG.name.toLowerCase();
       }
 
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_common/ui/components/acceleration_plot_data.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/ui/components/acceleration_plot_data.dart';
 import 'package:nextsense_trial_ui/ui/components/drop_down_menu.dart';
-import 'package:nextsense_trial_ui/ui/components/eeg_fixed_plot_data.dart';
+import 'package:flutter_common/ui/components/eeg_fixed_plot_data.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen_vm.dart';
@@ -184,7 +184,7 @@ class SignalMonitoringScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<SignalMonitoringScreenViewModel>.reactive(
         viewModelBuilder: () => SignalMonitoringScreenViewModel(),
-        onModelReady: (viewModel) => viewModel.init(),
+        onViewModelReady: (viewModel) => viewModel.init(),
         builder: (context, SignalMonitoringScreenViewModel viewModel, child) =>
             PageScaffold(
                 showProfileButton: false,

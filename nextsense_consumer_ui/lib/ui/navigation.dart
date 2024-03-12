@@ -6,12 +6,16 @@ import 'package:nextsense_consumer_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/auth/wait_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/device_scan/device_scan_screen.dart';
+import 'package:nextsense_consumer_ui/ui/screens/fit_test/ear_fit_screen.dart';
+import 'package:nextsense_consumer_ui/ui/screens/impedance_calculation_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/insufficient_space_screen.dart';
-//import 'package:nextsense_consumer_ui/ui/screens/profile/profile_screen.dart';
+import 'package:nextsense_consumer_ui/ui/screens/profile/profile_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/nap_protocol_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/request_permission_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/settings/settings_screen.dart';
+import 'package:nextsense_consumer_ui/ui/screens/signal/signal_monitoring_screen.dart';
+import 'package:nextsense_consumer_ui/ui/screens/signal/visualization_settings_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/startup/startup_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/support/support_screen.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
@@ -233,8 +237,8 @@ class Navigation {
     switch (settings.name) {
       case StartupScreen.id: return MaterialPageRoute(
           builder: (context) => const StartupScreen());
-      // case ImpedanceCalculationScreen.id: return MaterialPageRoute(
-      //     builder: (context) => ImpedanceCalculationScreen());
+      case ImpedanceCalculationScreen.id: return MaterialPageRoute(
+          builder: (context) => const ImpedanceCalculationScreen());
       case DashboardScreen.id: return MaterialPageRoute(
           builder: (context) => DashboardScreen());
       // case PrepareDeviceScreen.id: return MaterialPageRoute(
@@ -253,24 +257,24 @@ class Navigation {
       //     builder: (context) => EnrolledStudiesScreen());
       // case StudyIntroScreen.id: return MaterialPageRoute(
       //     builder: (context) => StudyIntroScreen());
-      // case ProfileScreen.id: return MaterialPageRoute(
-      //     builder: (context) => ProfileScreen());
-      // case SignalMonitoringScreen.id: return MaterialPageRoute(
-      //     builder: (context) => SignalMonitoringScreen());
+      case ProfileScreen.id: return MaterialPageRoute(
+          builder: (context) => ProfileScreen());
+      case SignalMonitoringScreen.id: return MaterialPageRoute(
+          builder: (context) => SignalMonitoringScreen());
       // case SurveysScreen.id: return MaterialPageRoute(
       //     builder: (context) => SurveysScreen());
       // case RequestPasswordResetScreen.id: return MaterialPageRoute(
       //     builder: (context) => RequestPasswordResetScreen());
       // case ReAuthenticateScreen.id: return MaterialPageRoute(
       //     builder: (context) => ReAuthenticateScreen());
-      // case EarFitScreen.id: return MaterialPageRoute(
-      //     builder: (context) => EarFitScreen());
+      case EarFitScreen.id: return MaterialPageRoute(
+          builder: (context) => const EarFitScreen());
       // case EnterEmailScreen.id: return MaterialPageRoute(
       //     builder: (context) => EnterEmailScreen());
       case WaitScreen.id: return MaterialPageRoute(
           builder: (context) => const WaitScreen());
-      // case VisualizationSettingsScreen.id: return MaterialPageRoute(
-      //     builder: (context) => VisualizationSettingsScreen());
+      case VisualizationSettingsScreen.id: return MaterialPageRoute(
+          builder: (context) => const VisualizationSettingsScreen());
 
     // Routes with arguments
       case SignInScreen.id: return MaterialPageRoute(

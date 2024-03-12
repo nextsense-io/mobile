@@ -52,7 +52,7 @@ class FlavorFactory {
       case UserType.researcher:
         return ResearcherFlavor();
       case UserType.subject:
-        return SubjectFlavor();
+        return AnonymousSubjectFlavor();
       default:
         getLogger("Main").log(Level.INFO, "Unknown flavor: $flavor");
         throw("Unknown flavor: $flavor");

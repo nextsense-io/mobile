@@ -102,6 +102,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       currentRepetition * _scheduledProtocolParts.length + _currentProtocolPart;
   bool get isError => !protocolCompleted && protocolCancelReason != ProtocolCancelReason.none;
   int get currentProtocolPart => _currentProtocolPart;
+  bool get isResearcher => _authManager.user!.userType == UserType.researcher;
 
   ProtocolScreenViewModel(this.runnableProtocol, {this.useCountDownTimer = true}) {
     for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
@@ -383,7 +384,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     Event event = Event(firebaseEntity);
     event..setValue(EventKey.start_datetime, eventTime)
       ..setValue(EventKey.end_datetime, eventTime)
-      ..setValue(EventKey.marker, ERPAudioState.BUTTON_PRESS.name);
+      ..setValue(EventKey.marker, ERPAudioState.BUTTON_PRESS.name)
+      ..setValue(EventKey.type, _eventTypesManager.getEventType(ERPAudioState.BUTTON_PRESS.name)!.id);
     return await event.save();
   }
 

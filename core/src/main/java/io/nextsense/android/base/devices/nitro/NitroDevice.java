@@ -34,7 +34,6 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
 public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice {
 
   public static final String BLUETOOTH_PREFIX = "Softy";
-
   private static final String TAG = NitroDevice.class.getSimpleName();
   private static final UUID SERVICE_UUID = UUID.fromString("cb577fc4-7260-41f8-8216-3be734c7820a");
   private static final UUID DATA_UUID = UUID.fromString("59e33cfa-497d-4356-bb46-b87888419cb2");

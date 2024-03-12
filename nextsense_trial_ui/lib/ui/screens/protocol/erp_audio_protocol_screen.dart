@@ -11,6 +11,8 @@ import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
 
 class StopWatch extends StatefulWidget {
+  const StopWatch({super.key});
+
   @override
   _StopwatchState createState() => _StopwatchState();
 }
@@ -22,7 +24,7 @@ class _StopwatchState extends State<StopWatch> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    _ticker = this.createTicker((elapsed) {
+    _ticker = createTicker((elapsed) {
       setState(() {
         _elapsed = elapsed;
       });
@@ -63,35 +65,35 @@ class ERPAudioProtocolScreen extends ProtocolScreen {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              LightHeaderText(text: protocol.description + ' EEG Recording'),
-              Spacer(),
+              LightHeaderText(text: '${protocol.description} EEG Recording'),
+              const Spacer(),
               Stack(children: [
                 Center(
-                  child: new Container(
-                    decoration: BoxDecoration(
+                  child: Container(
+                    decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         color: NextSenseColors.purple,
                     ),
-                    child: new Material(
-                      child: new InkWell(
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
                         onTap: () {
                           viewModel.recordButtonPress();
                         },
-                        child: new Container(
+                        child: Container(
                           width: 100.0,
                           height: 100.0,
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                               shape: BoxShape.circle
                           ),
                         ),
                       ),
-                      color: Colors.transparent,
                     ),
                   ),
                 ),
                 if (!viewModel.deviceCanRecord) deviceInactiveOverlay(context, viewModel),
               ]),
-              Spacer(),
+              const Spacer(),
             ]));
   }
 
@@ -101,10 +103,10 @@ class ERPAudioProtocolScreen extends ProtocolScreen {
     // type without looking at ancestry.
     return ViewModelBuilder<ERPAudioProtocolScreenViewModel>.reactive(
         viewModelBuilder: () => ERPAudioProtocolScreenViewModel(runnableProtocol),
-        onModelReady: (protocolViewModel) => protocolViewModel.init(),
+        onViewModelReady: (protocolViewModel) => protocolViewModel.init(),
         builder: (context, viewModel, child) => ViewModelBuilder<ProtocolScreenViewModel>.reactive(
             viewModelBuilder: () => viewModel,
-            onModelReady: (viewModel) => {},
+            onViewModelReady: (viewModel) => {},
             builder: (context, viewModel, child) => WillPopScope(
                   onWillPop: () => onBackButtonPressed(context, viewModel),
                   child: body(context, viewModel),

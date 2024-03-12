@@ -7,7 +7,7 @@ class SimpleButton extends StatelessWidget {
 
   final Widget text;
   final Border? border;
-  final Function onTap;
+  final VoidCallback? onTap;
   final bool? fullWidth;
 
   const SimpleButton({super.key, required this.text, required this.onTap, this.border, this.fullWidth});
