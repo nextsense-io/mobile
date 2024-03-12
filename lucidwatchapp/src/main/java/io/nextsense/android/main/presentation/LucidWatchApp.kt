@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.os.Build
 import android.os.IBinder
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -24,6 +25,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.horologist.compose.ambient.AmbientAware
 import io.nextsense.android.main.PERMISSIONS
+import io.nextsense.android.main.PERMISSIONS_TIRAMISU
 import io.nextsense.android.main.service.HealthService
 import io.nextsense.android.main.theme.LucidWatchTheme
 import kotlinx.coroutines.flow.takeWhile
@@ -47,7 +49,7 @@ fun LucidWatchApp(
             val lifecycle = LocalLifecycleOwner.current.lifecycle
             if (uiState == UiState.Supported) {
                 val multiPermissionsState = rememberMultiplePermissionsState(
-                    permissions = PERMISSIONS,
+                    permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) PERMISSIONS_TIRAMISU else PERMISSIONS,
                     onPermissionsResult = { result ->
                         val granted = result.all { it.value }
                         if (granted) {

@@ -19,9 +19,6 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.app.NotificationCompat
-import androidx.health.services.client.data.DataType
-import androidx.health.services.client.data.DataTypeAvailability
-import androidx.health.services.client.data.SampleDataPoint
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import androidx.wear.ongoing.OngoingActivity
@@ -33,6 +30,8 @@ import androidx.work.WorkManager
 import androidx.work.workDataOf
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.main.MainActivity
+import io.nextsense.android.main.data.DataTypeAvailability
+import io.nextsense.android.main.data.HeartRate
 import io.nextsense.android.main.data.LocalDatabaseManager
 import io.nextsense.android.main.data.MeasureMessage
 import io.nextsense.android.main.db.AccelerometerEntity
@@ -48,7 +47,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
-import java.time.Duration
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -172,13 +170,7 @@ class HealthService : LifecycleService(), SensorEventListener {
                 heartRateSensor -> {
                     val mHeartRateFloat = event.values[0].toDouble()
                     val measureData = MeasureMessage.MeasureData(
-                        listOf(
-                            SampleDataPoint(
-                                DataType.HEART_RATE_BPM,
-                                mHeartRateFloat,
-                                Duration.ofMillis(event.timestamp)
-                            )
-                        )
+                        HeartRate(mHeartRateFloat)
                     )
                     lifecycleScope.launch {
                         _heartRateFlow.emit(measureData)

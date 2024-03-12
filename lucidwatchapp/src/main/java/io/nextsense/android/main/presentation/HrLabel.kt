@@ -15,11 +15,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.health.services.client.data.DataTypeAvailability
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import io.nextsense.android.main.data.DataTypeAvailability
 import io.nextsense.android.main.lucid.dev.R
 import io.nextsense.android.main.theme.LucidWatchTheme
 
@@ -33,7 +33,6 @@ fun HrLabel(
         DataTypeAvailability.ACQUIRING -> Icons.Default.MonitorHeart
         DataTypeAvailability.UNAVAILABLE,
         DataTypeAvailability.UNAVAILABLE_DEVICE_OFF_BODY -> Icons.Default.HeartBroken
-
         else -> Icons.Default.QuestionMark
     }
     val text = if (availability == DataTypeAvailability.AVAILABLE) {

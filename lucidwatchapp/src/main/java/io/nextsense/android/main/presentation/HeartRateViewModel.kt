@@ -3,10 +3,10 @@ package io.nextsense.android.main.presentation
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.health.services.client.data.DataTypeAvailability
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.main.data.DataTypeAvailability
 import io.nextsense.android.main.data.HealthServicesRepository
 import io.nextsense.android.main.data.MeasureMessage
 import io.nextsense.android.main.utils.Logger
@@ -32,14 +32,13 @@ class HeartRateViewModel @Inject constructor(
             } else {
                 UiState.NotSupported
             }
-            availability.value = healthServicesRepository.availability.value
         }
     }
 
     fun onMeasureMessage(measureMessage: MeasureMessage) {
         when (measureMessage) {
             is MeasureMessage.MeasureData -> {
-                hr.value = measureMessage.data.last().value
+                hr.value = measureMessage.data.heartRate
             }
 
             is MeasureMessage.MeasureAvailability -> {

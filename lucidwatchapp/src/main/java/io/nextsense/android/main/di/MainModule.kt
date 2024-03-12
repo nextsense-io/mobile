@@ -27,6 +27,7 @@ import io.nextsense.android.main.TAG
 import io.nextsense.android.main.data.HealthServicesRepository
 import io.nextsense.android.main.data.LocalDatabaseManager
 import io.nextsense.android.main.utils.Logger
+import io.nextsense.android.main.utils.SharedPreferencesHelper
 import io.nextsense.android.main.utils.SleepStagePredictionHelper
 import org.tensorflow.lite.Interpreter
 import org.tensorflow.lite.support.common.FileUtil
@@ -70,5 +71,10 @@ class MainModule {
     @Singleton
     @Provides
     fun provideLogger(): Logger = Logger()
+
+    @Singleton
+    @Provides
+    fun provideSharedPreferencesHelper(@ApplicationContext context: Context): SharedPreferencesHelper =
+        SharedPreferencesHelper(context)
 
 }

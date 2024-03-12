@@ -82,7 +82,7 @@ class PredictionWork @AssistedInject constructor(
                     }
                     val predictionEntity = PredictionEntity(
                         prediction = result?.value ?: 0,
-                        timeStamp = startTime,
+                        createAt = startTime,
                         date = TimeUnit.SECONDS.toMillis(startTime).toFormattedDateString(),
                         startDate = startTime,
                         endDate = endTime

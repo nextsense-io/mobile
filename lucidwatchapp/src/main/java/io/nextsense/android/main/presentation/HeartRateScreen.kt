@@ -10,12 +10,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.health.services.client.data.DataTypeAvailability
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Text
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
+import io.nextsense.android.main.data.DataTypeAvailability
 import io.nextsense.android.main.lucid.dev.R
 import io.nextsense.android.main.theme.LucidWatchTheme
 
