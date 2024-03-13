@@ -31,9 +31,7 @@ import androidx.work.workDataOf
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.main.MainActivity
 import io.nextsense.android.main.data.DataTypeAvailability
-import io.nextsense.android.main.data.HeartRate
 import io.nextsense.android.main.data.LocalDatabaseManager
-import io.nextsense.android.main.data.MeasureMessage
 import io.nextsense.android.main.db.AccelerometerEntity
 import io.nextsense.android.main.db.HeartRateEntity
 import io.nextsense.android.main.lucid.R
@@ -44,8 +42,6 @@ import io.nextsense.android.main.utils.minutesToMilliseconds
 import io.nextsense.android.main.utils.toFormattedDateString
 import io.nextsense.android.main.utils.toSeconds
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -72,8 +68,6 @@ class HealthService : LifecycleService(), SensorEventListener {
     private val initialWaitingTime = minutesToMilliseconds(15)
     val availability: MutableState<DataTypeAvailability> =
         mutableStateOf(DataTypeAvailability.UNKNOWN)
-    private val _heartRateFlow = MutableSharedFlow<MeasureMessage>()
-    val heartRateFlow: SharedFlow<MeasureMessage> = _heartRateFlow
     private val binder = HealthServiceBinder()
 
     val serviceRunningInForeground: Boolean
@@ -105,7 +99,6 @@ class HealthService : LifecycleService(), SensorEventListener {
             )
             lifecycleScope.launch {
                 availability.value = DataTypeAvailability.AVAILABLE
-                _heartRateFlow.emit(MeasureMessage.MeasureAvailability(DataTypeAvailability.AVAILABLE))
             }
         }
         startPredicationWork(true)
@@ -169,17 +162,11 @@ class HealthService : LifecycleService(), SensorEventListener {
 
                 heartRateSensor -> {
                     val mHeartRateFloat = event.values[0].toDouble()
-                    val measureData = MeasureMessage.MeasureData(
-                        HeartRate(mHeartRateFloat)
-                    )
-                    lifecycleScope.launch {
-                        _heartRateFlow.emit(measureData)
-                    }
                     if (shouldSaveHeartRateData()) {
                         saveHeartRateData(mHeartRateFloat)
                         lastHeartRateDataSavedTimestamp = System.currentTimeMillis()
+                        logger.log("Heart Rate=>${mHeartRateFloat}")
                     }
-                    logger.log("Heart Rate=>${mHeartRateFloat}")
                 }
 
                 else -> {}
