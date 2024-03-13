@@ -36,7 +36,7 @@ import io.nextsense.android.main.data.LocalDatabaseManager
 import io.nextsense.android.main.data.MeasureMessage
 import io.nextsense.android.main.db.AccelerometerEntity
 import io.nextsense.android.main.db.HeartRateEntity
-import io.nextsense.android.main.lucid.dev.R
+import io.nextsense.android.main.lucid.R
 import io.nextsense.android.main.presentation.MILLISECONDS_PER_SECOND
 import io.nextsense.android.main.utils.Logger
 import io.nextsense.android.main.utils.SleepStagePredictionHelper

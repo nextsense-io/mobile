@@ -20,7 +20,7 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import io.nextsense.android.main.data.DataTypeAvailability
-import io.nextsense.android.main.lucid.dev.R
+import io.nextsense.android.main.lucid.R
 import io.nextsense.android.main.theme.LucidWatchTheme
 
 @Composable

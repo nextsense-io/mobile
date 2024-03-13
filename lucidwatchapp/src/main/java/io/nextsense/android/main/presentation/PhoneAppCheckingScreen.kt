@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Text
-import io.nextsense.android.main.lucid.dev.R
+import io.nextsense.android.main.lucid.R
 
 @Composable
 fun PhoneAppCheckingScreen(onInstallAppClick: () -> Unit, onSkipInstallation: () -> Unit) {
