@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "io.nextsense.android.main.lucid.dev"
+    namespace = "io.nextsense.android.main.lucid"
     compileSdk = 34
     signingConfigs {
         getByName("debug") {
@@ -24,7 +24,7 @@ android {
         }
     }
     defaultConfig {
-        applicationId = "io.nextsense.android.main.lucid.dev"
+        applicationId = "io.nextsense.android.main.lucid"
         minSdk = 30
         targetSdk = 34
         versionCode = 1
@@ -46,6 +46,18 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
+        }
+    }
+    flavorDimensions("env")
+    productFlavors {
+        create("dev") {
+            dimension = "env"
+            applicationIdSuffix = ".dev"
+        }
+
+        create("prod") {
+            dimension = "env"
+            applicationIdSuffix = ".prod"
         }
     }
     compileOptions {

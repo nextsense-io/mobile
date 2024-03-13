@@ -9,7 +9,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat.getString
-import io.nextsense.android.main.lucid.dev.R
+import io.nextsense.android.main.lucid.R
 
 const val CHANNEL_ID = "realityCheckingBedTimeChannel"
 const val NOTIFICATION_ID = 102

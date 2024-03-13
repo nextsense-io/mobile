@@ -16,7 +16,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.MultiplePermissionsState
 import com.google.accompanist.permissions.PermissionState
 import io.nextsense.android.main.data.DataTypeAvailability
-import io.nextsense.android.main.lucid.dev.R
+import io.nextsense.android.main.lucid.R
 import io.nextsense.android.main.theme.LucidWatchTheme
 
 @OptIn(ExperimentalPermissionsApi::class)

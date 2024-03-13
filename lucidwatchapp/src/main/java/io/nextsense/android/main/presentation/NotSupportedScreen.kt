@@ -17,7 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.Text
-import io.nextsense.android.main.lucid.dev.R
+import io.nextsense.android.main.lucid.R
 import io.nextsense.android.main.theme.LucidWatchTheme
 
 @Composable
