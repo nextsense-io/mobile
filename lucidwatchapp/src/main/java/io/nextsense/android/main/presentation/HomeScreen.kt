@@ -74,8 +74,8 @@ fun HomeScreen(
         var showAlert by remember { mutableStateOf(false) }
         if (showAlert) {
             WearAlert(
-                title = "Please Ensure You Are Onboard the Lucid Phone App.",
-                message = "Please log in and configure your reality settings on the Lucid Phone App to begin dreaming.",
+                title = "Setup Required",
+                message = "You will need to configure notifications on phone app before you start dreaming.",
                 positiveText = "Dismiss",
                 onPositiveClick = { showAlert = false }
             )
