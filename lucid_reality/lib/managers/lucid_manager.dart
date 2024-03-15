@@ -9,8 +9,11 @@ import 'package:lucid_reality/domain/reality_test.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
 
+import '../utils/wear_os_connectivity.dart';
+
 class LucidManager {
   final _logger = CustomLogPrinter('LucidManager');
+  final LucidWearOsConnectivity _lucidWearOsConnectivity = getIt<LucidWearOsConnectivity>();
   final firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
   final IntentEntity intentEntity = IntentEntity.instance;
   final RealityCheckEntity realityCheck = RealityCheckEntity.instance;
@@ -83,6 +86,7 @@ class LucidManager {
 
   Future<void> saveRealityTest(RealityTest realityTest) async {
     realityCheck.setRealityTest(realityTest);
+    await _lucidWearOsConnectivity.syncToWearOSRealitySettings(realityTest: realityTest);
     await _saveRealityCheck();
   }
 

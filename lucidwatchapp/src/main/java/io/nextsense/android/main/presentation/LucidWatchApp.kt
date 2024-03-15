@@ -17,8 +17,6 @@ import com.ramcosta.composedestinations.navigation.dependency
 import io.nextsense.android.main.service.HealthService
 import io.nextsense.android.main.theme.LucidWatchTheme
 
-const val MILLISECONDS_PER_SECOND = 1000 * 4
-
 @Composable
 fun LucidWatchApp(
     homeViewModel: HomeScreenViewModel = hiltViewModel()

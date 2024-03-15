@@ -36,4 +36,12 @@ class LocalDatabaseManager(context: Context) {
     fun savePrediction(predictionEntity: PredictionEntity) {
         predictionDao?.insertAll(predictionEntity)
     }
+
+    fun clearAllTables() {
+        try {
+            db?.clearAllTables()
+        } catch (e: Exception) {
+            e.printStackTrace();
+        }
+    }
 }

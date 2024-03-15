@@ -34,8 +34,8 @@ import io.nextsense.android.main.data.DataTypeAvailability
 import io.nextsense.android.main.data.LocalDatabaseManager
 import io.nextsense.android.main.db.AccelerometerEntity
 import io.nextsense.android.main.db.HeartRateEntity
+import io.nextsense.android.main.lucid.BuildConfig
 import io.nextsense.android.main.lucid.R
-import io.nextsense.android.main.presentation.MILLISECONDS_PER_SECOND
 import io.nextsense.android.main.utils.Logger
 import io.nextsense.android.main.utils.SleepStagePredictionHelper
 import io.nextsense.android.main.utils.toFormattedDateString
@@ -93,7 +93,7 @@ class HealthService : LifecycleService(), SensorEventListener {
                 this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL, maxReportLatencyUs
             )
             sensorManager.registerListener(
-                this, heartRateSensor, SensorManager.SENSOR_DELAY_UI, maxReportLatencyUs
+                this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL, maxReportLatencyUs
             )
             lifecycleScope.launch {
                 availability.value = DataTypeAvailability.AVAILABLE
@@ -194,12 +194,12 @@ class HealthService : LifecycleService(), SensorEventListener {
 
     private fun shouldSaveAccelerometerData(): Boolean {
         val elapsedTime: Long = System.currentTimeMillis() - lastAccelerometerDataSavedTimestamp
-        return elapsedTime >= MILLISECONDS_PER_SECOND || lastAccelerometerDataSavedTimestamp == 0L
+        return elapsedTime >= PredictionConfig.SENSOR_FREQUENCY || lastAccelerometerDataSavedTimestamp == 0L
     }
 
     private fun shouldSaveHeartRateData(): Boolean {
         val elapsedTime: Long = System.currentTimeMillis() - lastHeartRateDataSavedTimestamp
-        return elapsedTime >= MILLISECONDS_PER_SECOND || lastHeartRateDataSavedTimestamp == 0L
+        return elapsedTime >= PredictionConfig.SENSOR_FREQUENCY || lastHeartRateDataSavedTimestamp == 0L
     }
 
     private fun saveHeartRateData(heartRate: Double) {
@@ -227,7 +227,8 @@ class HealthService : LifecycleService(), SensorEventListener {
                     )
                 )
             ).setInitialDelay(
-                if (isServiceRunning) PredictionConfig.initialWaitingTime.toLong() else 0L, TimeUnit.MILLISECONDS
+                if (isServiceRunning) PredictionConfig.initialWaitingTime.toLong() else 0L,
+                TimeUnit.MILLISECONDS
             ).build()
         WorkManager.getInstance(this)
             .enqueueUniqueWork(REM_PREDICTION_WORK, ExistingWorkPolicy.REPLACE, uploadRequest)
@@ -235,6 +236,10 @@ class HealthService : LifecycleService(), SensorEventListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        if (!BuildConfig.DEBUG) {
+            localDatabaseManager.clearAllTables()
+            logger.log("All tables have cleared")
+        }
         try {
             sensorManager.unregisterListener(this)
             removeOngoingActivityNotification()

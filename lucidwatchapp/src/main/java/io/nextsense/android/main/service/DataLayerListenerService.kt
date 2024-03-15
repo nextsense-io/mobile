@@ -1,7 +1,7 @@
 package io.nextsense.android.main.service
 
 import com.google.android.gms.wearable.DataEventBuffer
-import com.google.android.gms.wearable.DataMap
+import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.WearableListenerService
 import io.nextsense.android.main.utils.Logger
 import io.nextsense.android.main.utils.SharedPreferencesData
@@ -11,35 +11,43 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 
-class DataLayerListenerService @Inject constructor(
-    private val sharedPreferencesHelper: SharedPreferencesHelper, private val logger: Logger
-) : WearableListenerService() {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+class DataLayerListenerService : WearableListenerService() {
+    private val logger = Logger(tag = TAG)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         super.onDataChanged(dataEvents)
+        logger.log("onDataChanged is triggered")
+        val sharedPreferencesHelper = SharedPreferencesHelper(applicationContext)
         dataEvents.forEach { dataEvent ->
             val uri = dataEvent.dataItem.uri
+            val map = DataMapItem.fromDataItem(dataEvent.dataItem).dataMap
             when (uri.path) {
                 LUCID_NOTIFICATION_SETTINGS_PATH -> {
                     scope.launch {
                         try {
                             val nodeId = uri.host!!
-                            val payload = uri.toString().toByteArray()
-                            val map = DataMap.fromByteArray(payload)
-                            if (map.containsKey(SharedPreferencesData.LucidSettings.name)) {
+                            if (map.containsKey(SharedPreferencesData.LucidSettings.getKey())) {
                                 sharedPreferencesHelper.putString(
-                                    SharedPreferencesData.LucidSettings.name,
-                                    map.getString(SharedPreferencesData.LucidSettings.name, "")
+                                    key = SharedPreferencesData.LucidSettings.name,
+                                    value = map.getDataMap(SharedPreferencesData.LucidSettings.getKey())
+                                        .toString()
+                                )
+                                logger.log(
+                                    "Data read successfully from:${nodeId}, data=>${
+                                        map.getDataMap(
+                                            SharedPreferencesData.LucidSettings.getKey()
+                                        )
+                                    }"
                                 )
                             }
-                            logger.log("Data read successfully from:${nodeId}, data=>${map}")
                         } catch (cancellationException: CancellationException) {
                             throw cancellationException
                         } catch (exception: Exception) {
-                            logger.log("Data read failed")
+                            logger.log("Data read failed ${exception.message}")
                         }
                     }
                 }
@@ -48,19 +56,24 @@ class DataLayerListenerService @Inject constructor(
                     scope.launch {
                         try {
                             val nodeId = uri.host!!
-                            val payload = uri.toString().toByteArray()
-                            val map = DataMap.fromByteArray(payload)
-                            if (map.containsKey(SharedPreferencesData.isUserLogin.name)) {
+                            if (map.containsKey(SharedPreferencesData.isUserLogin.getKey())) {
                                 sharedPreferencesHelper.putBoolean(
-                                    SharedPreferencesData.isUserLogin.name,
-                                    map.getBoolean(SharedPreferencesData.isUserLogin.name, false)
+                                    SharedPreferencesData.isUserLogin.name, map.getBoolean(
+                                        SharedPreferencesData.isUserLogin.getKey(), false
+                                    )
+                                )
+                                logger.log(
+                                    "Data read successfully from:${nodeId}, data=>${
+                                        map.getBoolean(
+                                            SharedPreferencesData.isUserLogin.getKey(), false
+                                        )
+                                    }"
                                 )
                             }
-                            logger.log("Data read successfully from:${nodeId}, data=>${map}")
                         } catch (cancellationException: CancellationException) {
                             throw cancellationException
                         } catch (exception: Exception) {
-                            logger.log("Data read failed")
+                            logger.log("Data read failed ${exception.message}")
                         }
                     }
                 }

@@ -161,8 +161,8 @@ class PredictionWork @AssistedInject constructor(
         NotificationManager(
             applicationContext
         ).showNotification(
-            title = realityTest.name,
-            message = realityTest.description,
+            title = "Into the Dream Realm",
+            message = "You're in the realm of dreams now. Let your imagination soar.",
         )
         // Play the custom sound
         playNotificationSound(realityTest.totemSound)
@@ -171,7 +171,8 @@ class PredictionWork @AssistedInject constructor(
 }
 
 object PredictionConfig {
-    val initialWaitingTime = minutesToMilliseconds(2)
-    val rescheduleTime = TimeUnit.MINUTES.toMillis(2)
-    const val NUMBER_OF_RECORDS = 2
+    val initialWaitingTime = minutesToMilliseconds(15)
+    val rescheduleTime = TimeUnit.MINUTES.toMillis(1)
+    const val NUMBER_OF_RECORDS = 5
+    val SENSOR_FREQUENCY = TimeUnit.SECONDS.toMillis(1)
 }

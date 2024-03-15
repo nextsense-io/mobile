@@ -70,7 +70,7 @@ class MainModule {
 
     @Singleton
     @Provides
-    fun provideLogger(): Logger = Logger()
+    fun provideLogger(@ApplicationContext context: Context): Logger = Logger()
 
     @Singleton
     @Provides

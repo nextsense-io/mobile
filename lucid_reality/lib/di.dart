@@ -24,6 +24,7 @@ Future<void> initDependencies() async {
   // before.
   await common_di.initDependencies("/");
   getIt.registerSingleton<LucidUiFirebaseRealtimeDBManager>(LucidUiFirebaseRealtimeDBManager());
+  getIt.registerSingleton<LucidWearOsConnectivity>(LucidWearOsConnectivity());
   getIt.registerSingleton<Preferences>(Preferences());
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
   getIt.registerSingleton<AuthManager>(AuthManager());
@@ -33,5 +34,4 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<LucidManager>(LucidManager());
   getIt.registerSingleton<StorageManager>(StorageManager());
   getIt.registerSingleton<LucidFirebaseStorageManager>(LucidFirebaseStorageManager());
-  getIt.registerSingleton<LucidWearOsConnectivity>(LucidWearOsConnectivity());
 }

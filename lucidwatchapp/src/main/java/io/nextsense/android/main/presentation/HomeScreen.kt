@@ -22,6 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -65,6 +68,18 @@ fun HomeScreen(
         val enabled by viewModel.enabled.collectAsState()
         val uiState by viewModel.uiState
         val context = LocalContext.current
+        val isUserLogin by viewModel.isUserLogin.collectAsState()
+        val isRealitySettingCreated =
+            viewModel.isRealitySettingCreated.collectAsState().value.isNotBlank()
+        var showAlert by remember { mutableStateOf(false) }
+        if (showAlert) {
+            WearAlert(
+                title = "Please Ensure You Are Onboard the Lucid Phone App.",
+                message = "Please log in and configure your reality settings on the Lucid Phone App to begin dreaming.",
+                positiveText = "Dismiss",
+                onPositiveClick = { showAlert = false }
+            )
+        }
         if (uiState == UiState.Supported) {
             val multiPermissionsState = rememberMultiplePermissionsState(
                 permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) PERMISSIONS_TIRAMISU else PERMISSIONS,
@@ -114,8 +129,12 @@ fun HomeScreen(
                 } else {
                     StartDreaming(
                         onButtonClick = {
-                            viewModel.toggleEnabled()
-                            startService(context)
+                            if (isUserLogin && isRealitySettingCreated) {
+                                viewModel.toggleEnabled()
+                                startService(context)
+                            } else {
+                                showAlert = true
+                            }
                         },
                         multiPermissionsState = multiPermissionsState,
                     )
