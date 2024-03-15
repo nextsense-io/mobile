@@ -98,36 +98,71 @@ class LucidScreen extends HookWidget {
                         viewModel.navigateToCategoryScreen();
                       },
                     ),
+                    if (!viewModel.isDoNotDisturbOverridden) SizedBox(height: 16),
                     if (!viewModel.isDoNotDisturbOverridden)
-                      SizedBox(height: 16),
-                    if (!viewModel.isDoNotDisturbOverridden)
-                      AppCard(
-                        Column( children: [
-                          Text(
-                            'Override Do Not Disturb',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmallWithFontWeight600
-                                ?.copyWith(color: NextSenseColors.royalPurple),
+                      AppCard(Column(children: [
+                        Text(
+                          'Override Do Not Disturb',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmallWithFontWeight600
+                              ?.copyWith(color: NextSenseColors.royalPurple),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'This will allow the app to play sounds during your sleep while you '
+                          'put your phone in \'Do Not Disturb mode\'. This will ask you to '
+                          'override it on nighttime notifications.',
+                          style: Theme.of(context).textTheme.bodyCaption,
+                        ),
+                        const SizedBox(height: 16),
+                        AppTextButton(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          backgroundImage: 'btn_authorize.svg',
+                          onPressed: () {
+                            viewModel.openChannelSettings();
+                          },
+                          text: "Authorize",
+                        )
+                      ])),
+                    if (!viewModel.isREMDetectionOnboardingCompleted) ...[
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () {
+                          viewModel.navigateToREMDetectionOnboardingScreen();
+                        },
+                        child: Container(
+                          width: double.maxFinite,
+                          height: 66,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          decoration: ShapeDecoration(
+                            gradient: RadialGradient(
+                              center: Alignment(0.07, 0.78),
+                              radius: 0,
+                              colors: NextSenseColors.purpleGradiantColors,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              side: BorderSide(width: 2, color: NextSenseColors.royalPurple),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'This will allow the app to play sounds during your sleep while you '
-                            'put your phone in \'Do Not Disturb mode\'. This will ask you to '
-                            'override it on nighttime notifications.',
-                            style: Theme.of(context).textTheme.bodyCaption,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  'Set up REM detection for best results',
+                                  textAlign: TextAlign.center,
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                              )
+                            ],
                           ),
-                          const SizedBox(height: 16),
-                          AppTextButton(
-                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            backgroundImage: 'btn_authorize.svg',
-                            onPressed: () {
-                              viewModel.openChannelSettings();
-                            },
-                            text: "Authorize",
-                          )
-                        ])
-                      )
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               );

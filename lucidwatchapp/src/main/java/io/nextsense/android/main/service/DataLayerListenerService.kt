@@ -33,8 +33,10 @@ class DataLayerListenerService : WearableListenerService() {
                             if (map.containsKey(SharedPreferencesData.LucidSettings.getKey())) {
                                 sharedPreferencesHelper.putString(
                                     key = SharedPreferencesData.LucidSettings.name,
-                                    value = map.getDataMap(SharedPreferencesData.LucidSettings.getKey())
-                                        .toString()
+                                    value = map.getString(
+                                        SharedPreferencesData.LucidSettings.getKey(),
+                                        ""
+                                    )
                                 )
                                 logger.log(
                                     "Data read successfully from:${nodeId}, data=>${

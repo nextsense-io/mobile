@@ -22,6 +22,7 @@ import 'reality_check/reality_check_completion_screen.dart';
 import 'reality_check/reality_check_tone_category_screen.dart';
 import 'reality_check/reality_check_tone_selection_screen.dart';
 import 'reality_check/set_goal_screen.dart';
+import 'rem_detect_onboarding/rem_detect_onboarding.dart';
 import 'startup/startup_screen.dart';
 
 class NavigationRoute {
@@ -167,7 +168,12 @@ class Navigation {
           builder: (context) => const PVTOnboardingScreen(),
           settings: settings,
         );
-      
+      case REMDetectionOnboarding.id:
+        return MaterialPageRoute(
+          builder: (context) => const REMDetectionOnboarding(),
+          settings: settings,
+        );
+
       // Routes with arguments
       case RecordYourDreamScreen.id:
         return MaterialPageRoute(builder: (context) => RecordYourDreamScreen(), settings: settings);

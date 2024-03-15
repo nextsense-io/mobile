@@ -21,6 +21,7 @@ enum PreferenceKey {
   displayEegTimeWindowSeconds,
   displayAccTimeWindowSeconds,
   isPVTOnboardingCompleted,
+  isREMDetectionOnboardingCompleted
 }
 
 class Preferences {

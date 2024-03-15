@@ -1,8 +1,12 @@
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter_common/di.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:flutter_common/viewmodels/viewmodel.dart';
+import 'package:logging/logging.dart';
 import 'package:lucid_reality/domain/lucid_reality_category.dart';
 import 'package:lucid_reality/managers/auth_manager.dart';
 import 'package:lucid_reality/managers/lucid_manager.dart';
+import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/dream_journal_screen.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/ui/screens/reality_check/lucid_reality_category_screen.dart';
@@ -10,14 +14,20 @@ import 'package:lucid_reality/ui/screens/reality_check/reality_check_bedtime_scr
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_time_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_tone_category_screen.dart';
 import 'package:lucid_reality/ui/screens/reality_check/set_goal_screen.dart';
+import 'package:lucid_reality/ui/screens/rem_detect_onboarding/rem_detect_onboarding.dart';
 import 'package:lucid_reality/utils/date_utils.dart';
 import 'package:lucid_reality/utils/notification.dart';
 import 'package:lucid_reality/utils/utils.dart';
+import 'package:lucid_reality/utils/wear_os_connectivity.dart';
 
 class LucidScreenViewModel extends ViewModel {
+  final CustomLogPrinter _logger = CustomLogPrinter('LucidScreenViewModel');
   final Navigation _navigation = getIt<Navigation>();
   final AuthManager _authManager = getIt<AuthManager>();
   final LucidManager _lucidManager = getIt<LucidManager>();
+  final LucidWearOsConnectivity _lucidWearOsConnectivity = getIt<LucidWearOsConnectivity>();
+
+  final _preferences = getIt<Preferences>();
   LucidRealityCategoryEnum? _category;
   bool _isDoNotDisturbOverridden = false;
 
@@ -44,17 +54,22 @@ class LucidScreenViewModel extends ViewModel {
         notifyListeners();
       },
     );
+    cancelledBedtimeNotificationIfWearAppConnected();
   }
 
   String getRealityCheckSound() {
-    return _lucidManager.realityCheck.getRealityTest()?.getTotemSound()
-        ?.replaceAll(' ', '_').toLowerCase() ?? 'air';
+    return _lucidManager.realityCheck
+            .getRealityTest()
+            ?.getTotemSound()
+            ?.replaceAll(' ', '_')
+            .toLowerCase() ??
+        'air';
   }
 
   Future<bool> _checkIsDoNotDisturbOverridden() async {
     return await isDoNotDisturbOverriddenForChannel(
-          notificationType: NotificationType.realityCheckingBedtimeNotification,
-          sound: getRealityCheckSound());
+        notificationType: NotificationType.realityCheckingBedtimeNotification,
+        sound: getRealityCheckSound());
   }
 
   void openChannelSettings() async {
@@ -117,6 +132,9 @@ class LucidScreenViewModel extends ViewModel {
 
   int getNumberOfReminders() => _lucidManager.realityCheck.getNumberOfReminders();
 
+  bool get isREMDetectionOnboardingCompleted =>
+      _preferences.getBool(PreferenceKey.isREMDetectionOnboardingCompleted);
+
   void navigateToSetGoalScreenForResult() async {
     final result = await _navigation.navigateTo(SetGoalScreen.id, arguments: true);
     if (result is String) {
@@ -142,6 +160,21 @@ class LucidScreenViewModel extends ViewModel {
     final result = await _navigation.navigateTo(RealityCheckToneCategoryScreen.id, arguments: true);
     if (result is String) {
       notifyListeners();
+    }
+  }
+
+  void navigateToREMDetectionOnboardingScreen() {
+    _navigation.navigateTo(REMDetectionOnboarding.id);
+    _preferences.setBool(PreferenceKey.isREMDetectionOnboardingCompleted, true);
+    notifyListeners();
+  }
+
+  void cancelledBedtimeNotificationIfWearAppConnected() async {
+    final isCompanionAppInstalled = await _lucidWearOsConnectivity.isCompanionAppInstalled();
+    if (isCompanionAppInstalled) {
+      await AwesomeNotifications().cancelSchedulesByChannelKey(
+          NotificationType.realityCheckingBedtimeNotification.notificationChannelKey);
+      _logger.log(Level.WARNING, "Since the companion watch app has been installed, there's no need to schedule a local notification, so we return.");
     }
   }
 }
