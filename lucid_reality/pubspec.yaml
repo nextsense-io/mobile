@@ -66,7 +66,7 @@ dependencies:
       path: packages/health
       ref: health-connect-android-14-fix
   iirjdart: ^0.1.0
-  installed_apps:  # ^1.4.0
+  installed_apps: # ^1.4.0
     git:
       url: https://github.com/eric-nextsense/installed_apps
   intl: ^0.18.1
@@ -83,7 +83,7 @@ dependencies:
   provider: ^6.0.1
   # Applied https://github.com/daadu/receive_intent/pull/25 for AGP 8 compatibility and updated
   # kotlin version.
-  receive_intent:  # ^0.2.4
+  receive_intent: # ^0.2.4
     git:
       url: https://github.com/eric-nextsense/receive_intent
   record: ^5.0.4
@@ -93,7 +93,7 @@ dependencies:
   shared_preferences: ^2.0.13
   shimmer: ^2.0.0
   # Updated kotlin version for AGP 8 compatibility.
-  soundpool:  # ^2.4.1
+  soundpool: # ^2.4.1
     git:
       url: https://github.com/eric-nextsense/soundpool
       path: soundpool
@@ -102,7 +102,9 @@ dependencies:
   url_launcher: ^6.2.4
   uuid: ^3.0.5
   wakelock_plus: ^1.1.4
-  flutter_wear_os_connectivity: ^1.0.0
+  flutter_wear_os_connectivity: #^1.0.0
+    git:
+      url: https://github.com/nextsense-io/flutter_wear_os_connectivity
 
 
 dev_dependencies:
