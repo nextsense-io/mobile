@@ -13,6 +13,7 @@ import 'package:lucid_reality/ui/screens/auth/sign_in_screen.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/ui/screens/startup/startup_screen.dart';
 import 'package:lucid_reality/utils/notification.dart';
+import 'package:lucid_reality/utils/wear_os_connectivity.dart';
 import 'package:provider/provider.dart';
 import 'package:receive_intent/receive_intent.dart' as intent;
 import 'package:timezone/data/latest.dart' as tz;
@@ -55,6 +56,7 @@ void main() async {
 class LucidRealityApp extends StatelessWidget {
   final Navigation _navigation = getIt<Navigation>();
   final AuthManager _authManager = getIt<AuthManager>();
+  final LucidWearOsConnectivity _lucidWearOsConnectivity = getIt<LucidWearOsConnectivity>();
   final intent.Intent? initialIntent;
 
   LucidRealityApp({super.key, this.initialIntent});
@@ -115,9 +117,11 @@ class LucidRealityApp extends StatelessWidget {
             if (snapshot.hasData || initialIntent != null) {
               if (snapshot.hasData) {
                 _authManager.syncUserIdWithDatabase(snapshot.data!.uid);
+                _lucidWearOsConnectivity.syncToWearOSUserLoginStatus(isUserLogin: true);
               }
               return StartupScreen(initialIntent: initialIntent);
             } else {
+              _lucidWearOsConnectivity.syncToWearOSUserLoginStatus(isUserLogin: false);
               return SignInScreen();
             }
           },

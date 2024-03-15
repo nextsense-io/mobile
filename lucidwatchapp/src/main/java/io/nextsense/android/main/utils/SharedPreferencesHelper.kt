@@ -38,5 +38,5 @@ class SharedPreferencesHelper(context: Context) {
 }
 
 enum class SharedPreferencesData {
-    LucidSettings
+    LucidSettings, isUserLogin
 }

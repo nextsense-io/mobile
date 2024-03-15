@@ -1,6 +1,9 @@
 package io.nextsense.android.main.service
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.media.MediaPlayer
+import android.net.Uri
 import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -8,9 +11,13 @@ import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.nextsense.android.main.data.LocalDatabaseManager
+import io.nextsense.android.main.data.RealityTest
 import io.nextsense.android.main.db.PredictionEntity
+import io.nextsense.android.main.lucid.R
 import io.nextsense.android.main.utils.Logger
 import io.nextsense.android.main.utils.NotificationManager
+import io.nextsense.android.main.utils.SharedPreferencesData
+import io.nextsense.android.main.utils.SharedPreferencesHelper
 import io.nextsense.android.main.utils.SleepStagePredictionHelper
 import io.nextsense.android.main.utils.SleepStagePredictionOutput
 import io.nextsense.android.main.utils.minutesToMilliseconds
@@ -30,6 +37,7 @@ const val REM_PREDICTION_WORK = "remPredictionWork"
 class PredictionWork @AssistedInject constructor(
     private val localDatabaseManager: LocalDatabaseManager,
     private val sleepStagePredictionHelper: SleepStagePredictionHelper,
+    private val sharedPreferencesHelper: SharedPreferencesHelper,
     private val logger: Logger,
     @Assisted appContext: Context,
     @Assisted params: WorkerParameters
@@ -37,7 +45,7 @@ class PredictionWork @AssistedInject constructor(
 
     //It should show up next notification after 20 minutes
     private var lastNotificationShowUpTime = 0L
-    private val rescheduleTime = TimeUnit.MINUTES.toMillis(1)
+
 
     override suspend fun doWork(): Result {
         // Get the get service status from the input data
@@ -66,13 +74,7 @@ class PredictionWork @AssistedInject constructor(
                     when (result) {
                         SleepStagePredictionOutput.REM -> {
                             if (shouldShowNotification()) {
-                                NotificationManager(
-                                    applicationContext
-                                ).showNotification(
-                                    title = "REM",
-                                    message = "This is lucid night notification.",
-                                )
-                                lastNotificationShowUpTime = System.currentTimeMillis()
+                                showNotification()
                             }
                         }
 
@@ -96,11 +98,11 @@ class PredictionWork @AssistedInject constructor(
                     }
                 }
                 logger.log("Timer task end")
-                delay(rescheduleTime)
+                delay(PredictionConfig.rescheduleTime)
             }
             Result.success()
         } catch (e: Exception) {
-            Log.e(TAG, "Error PredictionWork", e)
+            logger.log("Error PredictionWork:$e")
             Result.failure()
         }
     }
@@ -111,7 +113,8 @@ class PredictionWork @AssistedInject constructor(
      */
     private fun shouldShowNotification(): Boolean {
         val isREMInRecentRecords =
-            localDatabaseManager.predictionDao?.isREMInRecentRecords() ?: false
+            localDatabaseManager.predictionDao?.isREMInRecentRecords(numberOfRecords = PredictionConfig.NUMBER_OF_RECORDS)
+                ?: false
         // Calculate the elapsed time in milliseconds
         val elapsedTime: Long = System.currentTimeMillis() - lastNotificationShowUpTime
         return isREMInRecentRecords && (lastNotificationShowUpTime == 0L || elapsedTime >= minutesToMilliseconds(
@@ -119,7 +122,56 @@ class PredictionWork @AssistedInject constructor(
         ))
     }
 
-    companion object {
-        const val TAG = "PredictionWork"
+    /**
+     * This function plays the specified sound file
+     */
+    private fun playNotificationSound(totemSound: String) {
+        val resourceId = getRawResourceIdByName(applicationContext, totemSound.lowercase())
+        val uri: Uri = if (resourceId != 0) {
+            // Resource found, you can use it now
+            Uri.parse("android.resource://" + applicationContext.packageName + "/" + resourceId)
+            // Now you can use this URI for playing the sound or any other operation
+        } else {
+            // Resource not found, handle the error accordingly
+            Uri.parse(
+                "android.resource://" + applicationContext.packageName + "/" + applicationContext.resources.getResourceName(
+                    R.raw.air
+                )
+            )
+        }
+        try {
+            val mediaPlayer = MediaPlayer.create(applicationContext, uri)
+            mediaPlayer.setOnCompletionListener { mediaPlayer.release() }
+            mediaPlayer.start()
+        } catch (e: Exception) {
+            logger.log("sound playing error:${e.message}")
+        }
     }
+
+    @SuppressLint("DiscouragedApi")
+    fun getRawResourceIdByName(context: Context, soundName: String): Int {
+        return context.resources.getIdentifier(soundName, "raw", context.packageName)
+    }
+
+    private fun showNotification() {
+        val soundSettings = sharedPreferencesHelper.getString(
+            SharedPreferencesData.LucidSettings.name, ""
+        )
+        val realityTest = RealityTest.fromJson(soundSettings)
+        NotificationManager(
+            applicationContext
+        ).showNotification(
+            title = realityTest.name,
+            message = realityTest.description,
+        )
+        // Play the custom sound
+        playNotificationSound(realityTest.totemSound)
+        lastNotificationShowUpTime = System.currentTimeMillis()
+    }
+}
+
+object PredictionConfig {
+    val initialWaitingTime = minutesToMilliseconds(2)
+    val rescheduleTime = TimeUnit.MINUTES.toMillis(2)
+    const val NUMBER_OF_RECORDS = 2
 }

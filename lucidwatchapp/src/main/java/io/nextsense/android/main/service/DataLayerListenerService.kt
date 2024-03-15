@@ -43,6 +43,27 @@ class DataLayerListenerService @Inject constructor(
                         }
                     }
                 }
+
+                LUCID_LOGIN_STATUS_PATH -> {
+                    scope.launch {
+                        try {
+                            val nodeId = uri.host!!
+                            val payload = uri.toString().toByteArray()
+                            val map = DataMap.fromByteArray(payload)
+                            if (map.containsKey(SharedPreferencesData.isUserLogin.name)) {
+                                sharedPreferencesHelper.putBoolean(
+                                    SharedPreferencesData.isUserLogin.name,
+                                    map.getBoolean(SharedPreferencesData.isUserLogin.name, false)
+                                )
+                            }
+                            logger.log("Data read successfully from:${nodeId}, data=>${map}")
+                        } catch (cancellationException: CancellationException) {
+                            throw cancellationException
+                        } catch (exception: Exception) {
+                            logger.log("Data read failed")
+                        }
+                    }
+                }
             }
         }
     }
@@ -55,5 +76,6 @@ class DataLayerListenerService @Inject constructor(
     companion object {
         private const val TAG = "DataLayerService"
         const val LUCID_NOTIFICATION_SETTINGS_PATH = "/LucidNotificationSettings"
+        const val LUCID_LOGIN_STATUS_PATH = "/LucidLoginStatus"
     }
 }

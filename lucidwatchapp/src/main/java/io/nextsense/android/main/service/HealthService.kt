@@ -38,7 +38,6 @@ import io.nextsense.android.main.lucid.R
 import io.nextsense.android.main.presentation.MILLISECONDS_PER_SECOND
 import io.nextsense.android.main.utils.Logger
 import io.nextsense.android.main.utils.SleepStagePredictionHelper
-import io.nextsense.android.main.utils.minutesToMilliseconds
 import io.nextsense.android.main.utils.toFormattedDateString
 import io.nextsense.android.main.utils.toSeconds
 import kotlinx.coroutines.Dispatchers
@@ -65,7 +64,6 @@ class HealthService : LifecycleService(), SensorEventListener {
     private val maxReportLatencyUs = 1000000 // 1 second
     private var lastAccelerometerDataSavedTimestamp = 0L
     private var lastHeartRateDataSavedTimestamp = 0L
-    private val initialWaitingTime = minutesToMilliseconds(15)
     val availability: MutableState<DataTypeAvailability> =
         mutableStateOf(DataTypeAvailability.UNKNOWN)
     private val binder = HealthServiceBinder()
@@ -229,7 +227,7 @@ class HealthService : LifecycleService(), SensorEventListener {
                     )
                 )
             ).setInitialDelay(
-                if (isServiceRunning) initialWaitingTime.toLong() else 0L, TimeUnit.MILLISECONDS
+                if (isServiceRunning) PredictionConfig.initialWaitingTime.toLong() else 0L, TimeUnit.MILLISECONDS
             ).build()
         WorkManager.getInstance(this)
             .enqueueUniqueWork(REM_PREDICTION_WORK, ExistingWorkPolicy.REPLACE, uploadRequest)

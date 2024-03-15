@@ -8,6 +8,7 @@ import 'package:lucid_reality/managers/pvt_manager.dart';
 import 'package:lucid_reality/managers/storage_manager.dart';
 import 'package:lucid_reality/preferences.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
+import 'package:lucid_reality/utils/wear_os_connectivity.dart';
 
 import 'managers/auth_manager.dart';
 import 'managers/connectivity_manager.dart';
@@ -32,4 +33,5 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<LucidManager>(LucidManager());
   getIt.registerSingleton<StorageManager>(StorageManager());
   getIt.registerSingleton<LucidFirebaseStorageManager>(LucidFirebaseStorageManager());
+  getIt.registerSingleton<LucidWearOsConnectivity>(LucidWearOsConnectivity());
 }

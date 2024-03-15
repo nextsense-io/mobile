@@ -21,12 +21,12 @@ class NotificationManager(private val context: Context) {
     }
 
     fun showNotification(title: String, message: String) {
-        val builder =
-            NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_stat_onesignal_default)
-                .setContentTitle(title).setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .extend(NotificationCompat.WearableExtender())
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_stat_onesignal_default)
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setSound(null)
         with(NotificationManagerCompat.from(context)) {
             if (ActivityCompat.checkSelfPermission(
                     context, Manifest.permission.POST_NOTIFICATIONS
@@ -48,6 +48,8 @@ class NotificationManager(private val context: Context) {
         val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
             description = descriptionText
         }
+        channel.enableVibration(true)
+        channel.vibrationPattern = longArrayOf(100, 200, 300, 400, 500)
         // Register the channel with the system.
         val notificationManager: NotificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

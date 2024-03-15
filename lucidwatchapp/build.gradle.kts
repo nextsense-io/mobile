@@ -49,7 +49,7 @@ android {
             )
         }
     }
-    flavorDimensions("env")
+    flavorDimensions += listOf("env")
     productFlavors {
         create("dev") {
             dimension = "env"
@@ -134,9 +134,11 @@ dependencies {
     kapt("androidx.hilt:hilt-compiler:1.2.0")
     // Work manager + Kotlin + coroutines
     implementation("androidx.work:work-runtime-ktx:2.9.0")
-
+    //destinations
     implementation("io.github.raamcosta.compose-destinations:core:1.9.63")
     ksp("io.github.raamcosta.compose-destinations:ksp:1.9.63")
+    //GSON
+    implementation("com.google.code.gson:gson:2.10")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
