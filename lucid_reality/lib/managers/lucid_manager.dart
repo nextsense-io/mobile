@@ -28,6 +28,17 @@ class LucidManager {
   Future<void> fetchRealityCheck() async {
     await firebaseRealTimeDb.getEntityAs<RealityCheckEntity>(
         RealityCheckEntity.table.where('${intentEntity.entityId}'), RealityCheckEntity.fromJson);
+    //Sync the existing reality settings to watch app
+    try {
+      var realityTest = realityCheck.getRealityTest();
+      if (realityTest != null) {
+        _logger.log(Level.INFO, "Sync the existing reality settings to watch app");
+        await _lucidWearOsConnectivity.syncToWearOSRealitySettings(realityTest: realityTest);
+      }
+    } catch (e) {
+      _logger.log(Level.WARNING,
+          "Something went wrong while sync the existing reality settings to watch app $e");
+    }
   }
 
   Future<void> _updateIntent() async {

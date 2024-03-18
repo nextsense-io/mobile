@@ -28,9 +28,8 @@ Future<bool> isDoNotDisturbOverriddenForChannel(
     {required NotificationType notificationType, required String sound}) async {
   List<NotificationPermission> permissionsAllowed = await AwesomeNotifications()
       .checkPermissionList(
-      channelKey: '${notificationType.notificationChannelKey}$sound',
-      permissions: [NotificationPermission.CriticalAlert]
-  );
+          channelKey: '${notificationType.notificationChannelKey}$sound',
+          permissions: [NotificationPermission.CriticalAlert]);
   if (permissionsAllowed.isNotEmpty) {
     return permissionsAllowed.first == NotificationPermission.CriticalAlert;
   }
@@ -41,8 +40,7 @@ Future requestDoNotDisturbOverride(
     {required NotificationType notificationType, required String sound}) async {
   await AwesomeNotifications().requestPermissionToSendNotifications(
       channelKey: '${notificationType.notificationChannelKey}$sound',
-      permissions: [NotificationPermission.CriticalAlert]
-  );
+      permissions: [NotificationPermission.CriticalAlert]);
 }
 
 Future<void> scheduleNotifications({
@@ -53,7 +51,7 @@ Future<void> scheduleNotifications({
   required DateTime date,
   required String sound,
 }) async {
-    await AwesomeNotifications().createNotification(
+  await AwesomeNotifications().createNotification(
     content: NotificationContent(
       id: notificationId,
       channelKey: '${notificationType.notificationChannelKey}$sound',
@@ -89,8 +87,7 @@ NotificationChannel getDaytimeNotificationChannel(String sound) {
       channelShowBadge: true,
       playSound: true,
       // This is the only path that is accepted by AwesomeNotifications.
-      soundSource: 'resource://raw/$sound'
-  );
+      soundSource: 'resource://raw/$sound');
 }
 
 NotificationChannel getBedtimeNotificationChannel(String sound) {
@@ -104,8 +101,7 @@ NotificationChannel getBedtimeNotificationChannel(String sound) {
       channelShowBadge: true,
       playSound: true,
       // This is the only path that is accepted by AwesomeNotifications.
-      soundSource: 'resource://raw/$sound'
-  );
+      soundSource: 'resource://raw/$sound');
 }
 
 Future<void> updateNotificationsSound({required String sound}) async {
@@ -165,4 +161,8 @@ Future<bool> notificationPermission(BuildContext context) async {
       }
     },
   );
+}
+
+Future<bool> isNotificationAllowed() async {
+  return AwesomeNotifications().isNotificationAllowed();
 }

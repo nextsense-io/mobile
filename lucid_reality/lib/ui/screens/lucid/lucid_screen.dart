@@ -4,7 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_circular_progress_indicator.dart';
-import 'package:lucid_reality/ui/components/app_text_buttton.dart';
+import 'package:lucid_reality/ui/components/app_text_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/lucid/lucid_screen_vm.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_settings.dart';
@@ -133,7 +133,6 @@ class LucidScreen extends HookWidget {
                         },
                         child: Container(
                           width: double.maxFinite,
-                          height: 66,
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           decoration: ShapeDecoration(
                             gradient: RadialGradient(

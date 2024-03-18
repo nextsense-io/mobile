@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_circular_progress_indicator.dart';
-import 'package:lucid_reality/ui/components/app_text_buttton.dart';
+import 'package:lucid_reality/ui/components/app_text_button.dart';
 import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/components/wait_widget.dart';
 import 'package:lucid_reality/ui/screens/dashboard/dashboard_screen_vm.dart';

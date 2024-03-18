@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/lucid_sleep_stages.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
-import 'package:lucid_reality/ui/components/app_text_buttton.dart';
+import 'package:lucid_reality/ui/components/app_text_button.dart';
 import 'package:lucid_reality/ui/components/oval_button.dart';
 import 'package:lucid_reality/ui/components/sleep_pie_chart.dart';
 import 'package:lucid_reality/ui/components/solid_circle.dart';

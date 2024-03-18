@@ -5,7 +5,7 @@ import 'package:lucid_reality/domain/dream_journal.dart';
 import 'package:lucid_reality/ui/components/app_body.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
-import 'package:lucid_reality/ui/components/app_text_buttton.dart';
+import 'package:lucid_reality/ui/components/app_text_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/audio_recoder_page.dart';
 import 'package:lucid_reality/ui/screens/dream_journal/note_discription_page.dart';

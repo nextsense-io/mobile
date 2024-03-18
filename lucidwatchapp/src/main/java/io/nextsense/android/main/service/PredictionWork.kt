@@ -172,7 +172,7 @@ class PredictionWork @AssistedInject constructor(
 
 object PredictionConfig {
     val initialWaitingTime = minutesToMilliseconds(15)
-    val rescheduleTime = TimeUnit.MINUTES.toMillis(1)
-    const val NUMBER_OF_RECORDS = 5
+    val rescheduleTime = TimeUnit.MINUTES.toMillis(2)
+    const val NUMBER_OF_RECORDS = 2
     val SENSOR_FREQUENCY = TimeUnit.SECONDS.toMillis(1)
 }

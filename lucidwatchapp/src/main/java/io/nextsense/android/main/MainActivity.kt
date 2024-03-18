@@ -19,16 +19,20 @@ import com.google.android.gms.wearable.Wearable
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.main.presentation.LucidWatchApp
 import io.nextsense.android.main.presentation.PhoneAppCheckingScreen
+import io.nextsense.android.main.utils.Logger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedListener {
+    @Inject
+    lateinit var logger: Logger
     private lateinit var capabilityClient: CapabilityClient
     private lateinit var remoteActivityHelper: RemoteActivityHelper
     private var androidPhoneNodeWithApp = mutableStateOf<Node?>(null)
@@ -38,6 +42,7 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
         installSplashScreen()
         super.onCreate(savedInstanceState)
         capabilityClient = Wearable.getCapabilityClient(this)
+        remoteActivityHelper = RemoteActivityHelper(this)
         setContent {
             if (androidPhoneNodeWithApp.value == null && !skipInstallation.value) {
                 Log.d(TAG, "Missing")
@@ -101,18 +106,16 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
 
     private fun openAppInStoreOnPhone() {
         Log.d(TAG, "openAppInStoreOnPhone()")
-
         val intent = when (PhoneTypeHelper.getPhoneDeviceType(applicationContext)) {
             PhoneTypeHelper.DEVICE_TYPE_ANDROID -> {
                 Log.d(TAG, "\tDEVICE_TYPE_ANDROID")
                 // Create Remote Intent to open Play Store listing of app on remote device.
                 Intent(Intent.ACTION_VIEW).addCategory(Intent.CATEGORY_BROWSABLE)
-                    .setData(Uri.parse(ANDROID_MARKET_APP_URI))
+                    .setData(Uri.parse(ANDROID_MARKET_APP_URI.plus(packageName)))
             }
 
             PhoneTypeHelper.DEVICE_TYPE_IOS -> {
                 Log.d(TAG, "\tDEVICE_TYPE_IOS")
-
                 // Create Remote Intent to open App Store listing of app on iPhone.
                 Intent(Intent.ACTION_VIEW).addCategory(Intent.CATEGORY_BROWSABLE)
                     .setData(Uri.parse(APP_STORE_APP_URI))
@@ -127,12 +130,13 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
         lifecycleScope.launch {
             try {
                 remoteActivityHelper.startRemoteActivity(intent).await()
-
                 ConfirmationOverlay().showOn(this@MainActivity)
+                logger.log("App installation :${intent.data}")
             } catch (cancellationException: CancellationException) {
                 // Request was cancelled normally
                 throw cancellationException
             } catch (throwable: Throwable) {
+                logger.log("App installation error:${throwable.message}")
                 ConfirmationOverlay().setType(ConfirmationOverlay.FAILURE_ANIMATION)
                     .showOn(this@MainActivity)
             }
@@ -147,8 +151,7 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
         private const val CAPABILITY_PHONE_APP = "verify_remote_lucid_phone_app"
 
         // Links to install mobile app for both Android (Play Store) and iOS.
-        private const val ANDROID_MARKET_APP_URI =
-            "market://details?id=io.nextsense.android.main.lucid.dev"
+        private const val ANDROID_MARKET_APP_URI = "market://details?id="
 
         private const val APP_STORE_APP_URI =
             "https://itunes.apple.com/us/app/android-wear/id986496028?mt=8"
