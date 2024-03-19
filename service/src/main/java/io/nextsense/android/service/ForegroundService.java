@@ -36,6 +36,7 @@ import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Uploader;
 import io.nextsense.android.base.db.CacheSink;
+import io.nextsense.android.base.db.CsvSink;
 import io.nextsense.android.base.db.DatabaseSink;
 import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
@@ -83,6 +84,7 @@ public class ForegroundService extends Service {
   private MemoryCache memoryCache;
   private DatabaseSink databaseSink;
   private CacheSink cacheSink;
+  private CsvSink csvSink;
   private LocalSessionManager localSessionManager;
   private Connectivity connectivity;
   private CloudFunctions cloudFunctions;
@@ -185,7 +187,10 @@ public class ForegroundService extends Service {
   private void initialize(boolean allowDataViaCellular) {
     objectBoxDatabase = new ObjectBoxDatabase();
     objectBoxDatabase.init(this);
-    localSessionManager = LocalSessionManager.create(objectBoxDatabase);
+    // Uncomment when the CSV sink is needed.
+    // csvSink = CsvSink.create(this, objectBoxDatabase);
+    // csvSink.startListening();
+    localSessionManager = LocalSessionManager.create(objectBoxDatabase, csvSink);
     bluetoothStateManager = BluetoothStateManager.create(getApplicationContext());
     centralManagerProxy = (!Config.USE_EMULATED_BLE) ?
             new BleCentralManagerProxy(getApplicationContext()) : null;
@@ -266,6 +271,10 @@ public class ForegroundService extends Service {
     }
     if (cacheSink != null) {
       cacheSink.stopListening();
+    }
+    if (csvSink != null) {
+      csvSink.stopListening();
+      csvSink.closeCsv(/*checkForCompletedSession=*/false);
     }
     memoryCache = null;
     if (databaseSink != null) {

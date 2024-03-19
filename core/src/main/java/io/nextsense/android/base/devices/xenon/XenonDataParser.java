@@ -55,9 +55,10 @@ public class XenonDataParser {
   private static final int BATTERY_LOW_FLAG_INDEX = 9;
   private static final int BINARY_USD_LOGGING_ENABLED_FLAG_INDEX = 8;
   private static final int INTERNAL_ERROR_FLAG_INDEX = 0;
+  private static final boolean SAVE_CSV_DATA = true;
 
   private final LocalSessionManager localSessionManager;
-  boolean printedDataPackerWarning = false;
+  boolean printedDataPacketWarning = false;
 
   private XenonDataParser(LocalSessionManager localSessionManager) {
     this.localSessionManager = localSessionManager;
@@ -93,13 +94,14 @@ public class XenonDataParser {
           parseDataPacket(valuesBuffer, activeChannels, receptionTimestamp);
       if (sampleOptional.isPresent()) {
         Sample sample = sampleOptional.get();
-        if (previousTimestamp != null &&
-            previousTimestamp.isAfter(sample.getEegSample().getAbsoluteSamplingTimestamp())) {
-          RotatingFileLogger.get().logw(TAG, "Received a sample that is before a previous sample, skipping sample. " +
-              "Previous timestamp: " + previousTimestamp + ", current timestamp: " +
-              sample.getEegSample().getAbsoluteSamplingTimestamp());
-          break;
-        }
+
+//        if (previousTimestamp != null &&
+//            previousTimestamp.isAfter(sample.getEegSample().getAbsoluteSamplingTimestamp())) {
+//          RotatingFileLogger.get().logw(TAG, "Received a sample that is before a previous " +
+//              "sample, skipping sample. Previous timestamp: " + previousTimestamp +
+//              ", current timestamp: " + sample.getEegSample().getAbsoluteSamplingTimestamp());
+//          break;
+//        }
         samples.addEegSample(sample.getEegSample());
         samples.addAcceleration(sample.getAcceleration());
         previousTimestamp = sample.getEegSample().getAbsoluteSamplingTimestamp();
@@ -123,9 +125,10 @@ public class XenonDataParser {
                                Instant receptionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
-      if (!printedDataPackerWarning) {
-        RotatingFileLogger.get().logw(TAG, "Received data packet without an active session, cannot record it.");
-        printedDataPackerWarning = true;
+      if (!printedDataPacketWarning) {
+        RotatingFileLogger.get().logw(TAG,
+            "Received data packet without an active session, cannot record it.");
+        printedDataPacketWarning = true;
       }
       return Optional.empty();
     }
