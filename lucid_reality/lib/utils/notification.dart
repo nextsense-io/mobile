@@ -26,12 +26,18 @@ extension NotificationTypeExtension on NotificationType {
 
 Future<bool> isDoNotDisturbOverriddenForChannel(
     {required NotificationType notificationType, required String sound}) async {
-  List<NotificationPermission> permissionsAllowed = await AwesomeNotifications()
-      .checkPermissionList(
-          channelKey: '${notificationType.notificationChannelKey}$sound',
-          permissions: [NotificationPermission.CriticalAlert]);
-  if (permissionsAllowed.isNotEmpty) {
-    return permissionsAllowed.first == NotificationPermission.CriticalAlert;
+  try {
+    List<NotificationPermission> permissionsAllowed = await AwesomeNotifications()
+        .checkPermissionList(
+        channelKey: '${notificationType.notificationChannelKey}$sound',
+        permissions: [NotificationPermission.CriticalAlert]);
+    if (permissionsAllowed.isNotEmpty) {
+      return permissionsAllowed.first == NotificationPermission.CriticalAlert;
+    }
+  } catch (e) {
+    // If the channel does not exist, create it.
+    getDaytimeNotificationChannel(sound);
+    getBedtimeNotificationChannel(sound);
   }
   return false;
 }
