@@ -12,6 +12,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import io.nextsense.android.main.data.LocalDatabaseManager
 import io.nextsense.android.main.data.RealityTest
+import io.nextsense.android.main.db.NotificationEntity
 import io.nextsense.android.main.db.PredictionEntity
 import io.nextsense.android.main.lucid.R
 import io.nextsense.android.main.utils.Logger
@@ -108,7 +109,7 @@ class PredictionWork @AssistedInject constructor(
     }
 
     /**
-     * Checks the last 10 records with a prediction of 1 (REM) before showing a notification.
+     * Checks the last 5 records with a prediction of 1 (REM) before showing a notification.
      * Subsequent notifications are scheduled to appear 20 minutes after the first one.
      */
     private fun shouldShowNotification(): Boolean {
@@ -167,12 +168,22 @@ class PredictionWork @AssistedInject constructor(
         // Play the custom sound
         playNotificationSound(realityTest.totemSound)
         lastNotificationShowUpTime = System.currentTimeMillis()
+        try {
+            localDatabaseManager.saveNotification(
+                NotificationEntity(
+                    createAt = lastNotificationShowUpTime.toSeconds(),
+                    date = lastNotificationShowUpTime.toFormattedDateString()
+                )
+            )
+        } catch (e: Exception) {
+            logger.log("Save notification error=>${e}")
+        }
     }
 }
 
 object PredictionConfig {
     val initialWaitingTime = minutesToMilliseconds(15)
-    val rescheduleTime = TimeUnit.MINUTES.toMillis(2)
-    const val NUMBER_OF_RECORDS = 2
+    val rescheduleTime = TimeUnit.MINUTES.toMillis(1)
+    const val NUMBER_OF_RECORDS = 5
     val SENSOR_FREQUENCY = TimeUnit.SECONDS.toMillis(1)
 }

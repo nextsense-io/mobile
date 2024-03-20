@@ -5,6 +5,7 @@ import androidx.room.Room
 import io.nextsense.android.main.db.AccelerometerEntity
 import io.nextsense.android.main.db.HeartRateEntity
 import io.nextsense.android.main.db.LucidAppDatabase
+import io.nextsense.android.main.db.NotificationEntity
 import io.nextsense.android.main.db.PredictionEntity
 
 class LocalDatabaseManager(context: Context) {
@@ -20,6 +21,8 @@ class LocalDatabaseManager(context: Context) {
     val heartRateDao = db?.heartRateDao()
     val accelerometerDao = db?.accelerometerEntity()
     val predictionDao = db?.predictionEntity()
+    val notificationDao = db?.notificationEntity()
+
 
     fun fetchHeartRateDate(startTime: Long, endTime: Long): List<HeartRateEntity> {
         return heartRateDao?.findByDateRange(
@@ -35,6 +38,10 @@ class LocalDatabaseManager(context: Context) {
 
     fun savePrediction(predictionEntity: PredictionEntity) {
         predictionDao?.insertAll(predictionEntity)
+    }
+
+    fun saveNotification(notificationEntity: NotificationEntity) {
+        notificationDao?.insert(notificationEntity)
     }
 
     fun clearAllTables() {

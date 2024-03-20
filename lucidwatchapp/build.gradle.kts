@@ -4,6 +4,7 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
+    id("androidx.room")
 }
 
 android {
@@ -27,7 +28,7 @@ android {
     defaultConfig {
         applicationId = "io.nextsense.android.main.lucid"
         minSdk = 30
-        targetSdk = 34
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
         vectorDrawables {
@@ -72,7 +73,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.3"
     }
     packaging {
         resources {
@@ -87,6 +88,10 @@ android {
         addJavaSourceFoldersToModel(
             File(buildDir, "generated/ksp/$name/kotlin")
         )
+    }
+
+    room {
+        schemaDirectory("$projectDir/scshemas/")
     }
 }
 
@@ -118,9 +123,11 @@ dependencies {
     implementation("androidx.hilt:hilt-work:1.2.0")
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
+    annotationProcessor("androidx.room:room-compiler:$roomVersion")
+//    kapt("androidx.room:room-compiler:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
     // To use Kotlin annotation processing tool (kapt)
-    kapt("androidx.room:room-compiler:$roomVersion")
     //TFLite dependencies
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
     implementation("org.tensorflow:tensorflow-lite-gpu:0.0.0-nightly")

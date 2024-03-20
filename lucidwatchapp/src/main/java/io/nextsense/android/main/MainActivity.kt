@@ -17,6 +17,7 @@ import com.google.android.gms.wearable.CapabilityInfo
 import com.google.android.gms.wearable.Node
 import com.google.android.gms.wearable.Wearable
 import dagger.hilt.android.AndroidEntryPoint
+import io.nextsense.android.main.presentation.CheckingPhoneAppScreen
 import io.nextsense.android.main.presentation.LucidWatchApp
 import io.nextsense.android.main.presentation.PhoneAppCheckingScreen
 import io.nextsense.android.main.utils.Logger
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
     private lateinit var remoteActivityHelper: RemoteActivityHelper
     private var androidPhoneNodeWithApp = mutableStateOf<Node?>(null)
     private var skipInstallation = mutableStateOf(false)
+    private var isCheckingPhone = mutableStateOf(true)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -46,12 +48,16 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
         setContent {
             if (androidPhoneNodeWithApp.value == null && !skipInstallation.value) {
                 Log.d(TAG, "Missing")
-                PhoneAppCheckingScreen(
-                    onInstallAppClick = { openAppInStoreOnPhone() },
-                    onSkipInstallation = {
-                        skipInstallation.value = true
-                    },
-                )
+                if (isCheckingPhone.value) {
+                    CheckingPhoneAppScreen()
+                } else {
+                    PhoneAppCheckingScreen(
+                        onInstallAppClick = { openAppInStoreOnPhone() },
+                        onSkipInstallation = {
+                            skipInstallation.value = true
+                        },
+                    )
+                }
             } else {
                 Log.d(TAG, "Installed")
                 LucidWatchApp()
@@ -101,6 +107,8 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
             // Request was cancelled normally
         } catch (throwable: Throwable) {
             Log.d(TAG, "Capability request failed to return any results.")
+        } finally {
+            isCheckingPhone.value = false
         }
     }
 

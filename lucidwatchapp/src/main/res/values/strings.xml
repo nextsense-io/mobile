@@ -18,4 +18,5 @@
     <string name="skip_installation">Skip Installation</string>
     <string name="channel_name">Lucid Night Notifications</string>
     <string name="channel_description">Lucid reality bedtime check notifications</string>
+    <string name="checking_phone">Checking lucid phone app installation.</string>
 </resources>
