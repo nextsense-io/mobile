@@ -48,7 +48,7 @@ public class CsvWriter {
     appendHeaderLine("accelerationStreamingRate", "250");
     appendHeaderLine("channelConfig", earbudsConfig);
     appendHeaderLine("========== Start Data ==========");
-    appendHeaderLine("SAMPLE_NUMBER,CH-1,CH-2,CH-3,CH-4,CH-5,CH-6,CH-7,CH-8,ACC_X,ACC_Y,ACC_Z, " +
+    appendHeaderLine("SAMPLE_NUMBER,CH-1,CH-2,CH-3,CH-4,CH-5,CH-6,CH-7,CH-8,ACC_X,ACC_Y,ACC_Z," +
         "SAMPLING_TIMESTAMP,RECEPTION_TIMESTAMP,IMPEDANCE_FLAG,SYNC,TRIG_OUT,TRIG_IN,ZMOD,MARKER," +
         "TBD6,TBD7,BUTTON");
     appendHeaderLine("Header version 1.0");
