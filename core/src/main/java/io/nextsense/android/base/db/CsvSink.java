@@ -74,7 +74,7 @@ public class CsvSink {
   }
 
   @Subscribe(threadMode = ThreadMode.ASYNC)
-  public void onSamples(Samples samples) {
+  public synchronized void onSamples(Samples samples) {
     if (samples.getEegSamples().size() != samples.getAccelerations().size()) {
       RotatingFileLogger.get().loge(TAG, "Number of EEG samples and accelerations does not match!");
       return;

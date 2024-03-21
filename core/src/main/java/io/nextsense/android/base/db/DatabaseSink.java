@@ -63,7 +63,7 @@ public class DatabaseSink {
   }
 
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
-  public void onSamples(Samples samples) {
+  public synchronized void onSamples(Samples samples) {
     localSessionManager.getActiveLocalSession().ifPresent(currentLocalSession -> {
       if (!currentLocalSession.isReceivedData()) {
         localSessionManager.notifyFirstDataReceived();
