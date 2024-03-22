@@ -18,6 +18,7 @@ import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
+import io.nextsense.android.base.db.CsvSink;
 import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
@@ -39,7 +40,8 @@ public class BleDeviceScanner implements DeviceScanner {
   private DeviceScanner.DeviceScanListener deviceScanListener;
   private DeviceScanner.PeripheralScanListener peripheralScanListener;
 
-  private MemoryCache memoryCache;
+  private final MemoryCache memoryCache;
+  private final CsvSink csvSink;
   private boolean scanning = false;
 
   private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback =
@@ -73,7 +75,7 @@ public class BleDeviceScanner implements DeviceScanner {
               BleDevice.RECONNECTION_ATTEMPTS_INTERVAL);
           Device device = Device.create(
               centralManagerProxy, bluetoothStateManager, nextSenseDevice, peripheral,
-              reconnectionManager, memoryCache);
+              reconnectionManager, memoryCache, csvSink);
           devices.add(device);
           deviceScanListener.onNewDevice(peripheral);
         }
@@ -117,11 +119,12 @@ public class BleDeviceScanner implements DeviceScanner {
   public BleDeviceScanner(NextSenseDeviceManager deviceManager,
                           BleCentralManagerProxy centralManagerProxy,
                           BluetoothStateManager bluetoothStateManager,
-                          MemoryCache memoryCache) {
+                          MemoryCache memoryCache, CsvSink csvSink) {
     this.deviceManager = deviceManager;
     this.centralManagerProxy = centralManagerProxy;
     this.bluetoothStateManager = bluetoothStateManager;
     this.memoryCache = memoryCache;
+    this.csvSink = csvSink;
     centralManagerProxy.addGlobalListener(bluetoothCentralManagerCallback);
     RotatingFileLogger.get().logd(TAG, "Initialized DeviceScanner");
   }

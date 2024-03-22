@@ -68,9 +68,11 @@ public class XenonDataParser {
     return new XenonDataParser(localSessionManager);
   }
 
-  public void parseDataBytes(byte[] values, int channelsCount) throws
+  public synchronized void parseDataBytes(byte[] values, int channelsCount) throws
       FirmwareMessageParsingException {
     Instant receptionTimestamp = Instant.now();
+    RotatingFileLogger.get().logw(TAG, "Received data bytes: " + receptionTimestamp.toEpochMilli() +
+        ", size: " + values.length);
     if (values.length < 1) {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device data.");
     }
@@ -95,13 +97,13 @@ public class XenonDataParser {
       if (sampleOptional.isPresent()) {
         Sample sample = sampleOptional.get();
 
-//        if (previousTimestamp != null &&
-//            previousTimestamp.isAfter(sample.getEegSample().getAbsoluteSamplingTimestamp())) {
-//          RotatingFileLogger.get().logw(TAG, "Received a sample that is before a previous " +
-//              "sample, skipping sample. Previous timestamp: " + previousTimestamp +
-//              ", current timestamp: " + sample.getEegSample().getAbsoluteSamplingTimestamp());
-//          break;
-//        }
+        if (previousTimestamp != null &&
+            previousTimestamp.isAfter(sample.getEegSample().getAbsoluteSamplingTimestamp())) {
+          RotatingFileLogger.get().logw(TAG, "Received a sample that is before a previous " +
+              "sample, skipping sample. Previous timestamp: " + previousTimestamp +
+              ", current timestamp: " + sample.getEegSample().getAbsoluteSamplingTimestamp());
+          // break;
+        }
         samples.addEegSample(sample.getEegSample());
         samples.addAcceleration(sample.getAcceleration());
         previousTimestamp = sample.getEegSample().getAbsoluteSamplingTimestamp();
@@ -111,9 +113,9 @@ public class XenonDataParser {
     EventBus.getDefault().post(samples);
     Instant parseEndTime = Instant.now();
     long parseTime = parseEndTime.toEpochMilli() - receptionTimestamp.toEpochMilli();
-    if (parseTime > 30) {
-      RotatingFileLogger.get().logd(TAG, "It took " + parseTime + " to parse xenon data.");
-    }
+//    if (parseTime > 30) {
+    RotatingFileLogger.get().logd(TAG, "It took " + parseTime + " to parse xenon data.");
+//    }
   }
 
   private static float convertToMicroVolts(int data) {
@@ -142,7 +144,8 @@ public class XenonDataParser {
       int eegValue = Util.bytesToInt24(
           new byte[]{valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get()}, 0,
           ByteOrder.LITTLE_ENDIAN);
-      eegData.put(activeChannel, convertToMicroVolts(eegValue));
+      // eegData.put(activeChannel, convertToMicroVolts(eegValue));
+      eegData.put(activeChannel, (float)eegValue);
     }
     long samplingTimestamp = Util.bytesToLong48(new byte[]{valuesBuffer.get(),
         valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get(),

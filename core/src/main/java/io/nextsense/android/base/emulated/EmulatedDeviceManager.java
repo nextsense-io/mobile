@@ -36,7 +36,7 @@ public class EmulatedDeviceManager implements DeviceManager {
     @Override
     public void findDevices(DeviceManager.DeviceScanListener deviceScanListener) {
         RotatingFileLogger.get().logw(TAG, "EmulatedDeviceManager::findDevices");
-        emulatedDevice = (EmulatedDevice) Device.create(null, null, null, null, null, null);
+        emulatedDevice = (EmulatedDevice) Device.create(null, null, null, null, null, null, null);
         // Have to pass localSessionManager to emulated device
         emulatedDevice.setLocalSessionManager(localSessionManager);
         devices.add(emulatedDevice);
