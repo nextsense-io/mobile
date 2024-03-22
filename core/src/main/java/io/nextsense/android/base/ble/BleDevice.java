@@ -35,6 +35,7 @@ import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
+import io.nextsense.android.base.db.CsvSink;
 import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.devices.StreamingStartMode;
@@ -56,6 +57,7 @@ public class BleDevice extends Device {
   private final MemoryCache memoryCache;
   private final BlePeripheralCallbackProxy callbackProxy = new BlePeripheralCallbackProxy();
   private final ReconnectionManager reconnectionManager;
+  private final CsvSink csvSink;
   private final ListeningExecutorService executorService =
       MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 
@@ -67,11 +69,13 @@ public class BleDevice extends Device {
 
   public BleDevice(BleCentralManagerProxy centralProxy, BluetoothStateManager bluetoothStateManager,
                    NextSenseDevice nextSenseDevice, BluetoothPeripheral btPeripheral,
-                   ReconnectionManager reconnectionManager, MemoryCache memoryCache) {
+                   ReconnectionManager reconnectionManager, MemoryCache memoryCache,
+                   CsvSink csvSink) {
     this.centralManagerProxy = centralProxy;
     this.nextSenseDevice = nextSenseDevice;
     this.btPeripheral = btPeripheral;
     this.memoryCache = memoryCache;
+    this.csvSink = csvSink;
     centralProxy.addPeripheralListener(bluetoothCentralManagerCallback, btPeripheral.getAddress());
     callbackProxy.addPeripheralCallbackListener(peripheralCallback);
     this.reconnectionManager = reconnectionManager;
@@ -306,6 +310,9 @@ public class BleDevice extends Device {
   }
 
   private void readyDevice(BluetoothPeripheral peripheral) {
+    if (csvSink != null) {
+      csvSink.setBluetoothPeripheralProxy(callbackProxy);
+    }
     nextSenseDevice.setBluetoothPeripheralProxy(callbackProxy);
     Executors.newSingleThreadExecutor().submit(() -> {
       try {

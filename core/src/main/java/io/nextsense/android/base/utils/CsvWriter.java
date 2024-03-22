@@ -27,7 +27,7 @@ public class CsvWriter {
     appDirectory = contextWrapper.getDir(context.getFilesDir().getName(), Context.MODE_PRIVATE);
   }
 
-  public synchronized void initCsvFile(String fileName, String earbudsConfig) {
+  public synchronized void initCsvFile(String fileName, String earbudsConfig, boolean haveRssi) {
     try {
       String fullFileName = fileName + ".csv";
       File csvFile = new File(appDirectory, fullFileName);
@@ -48,10 +48,13 @@ public class CsvWriter {
     appendHeaderLine("accelerationStreamingRate", "250");
     appendHeaderLine("channelConfig", earbudsConfig);
     appendHeaderLine("========== Start Data ==========");
-    appendHeaderLine("SAMPLE_NUMBER,CH-1,CH-2,CH-3,CH-4,CH-5,CH-6,CH-7,CH-8,ACC_X,ACC_Y,ACC_Z," +
+    String headerLine = "SAMPLE_NUMBER,CH-1,CH-2,CH-3,CH-4,CH-5,CH-6,CH-7,CH-8,ACC_X,ACC_Y,ACC_Z," +
         "SAMPLING_TIMESTAMP,RECEPTION_TIMESTAMP,IMPEDANCE_FLAG,SYNC,TRIG_OUT,TRIG_IN,ZMOD,MARKER," +
-        "TBD6,TBD7,BUTTON");
-    appendHeaderLine("Header version 1.0");
+        "TBD6,TBD7,BUTTON";
+    if (haveRssi) {
+      headerLine += ",RSSI";
+    }
+    appendHeaderLine(headerLine);
   }
 
   public synchronized void closeCsvFile() {
@@ -77,13 +80,16 @@ public class CsvWriter {
   public synchronized void appendData(
       List<Float> eegData, List<Float> accData, long samplingTimestamp, long receptionTimestamp,
       int impedanceFlag, int sync, int trigOut, int trigIn, int zmod, int marker, int tbd6,
-      int tbd7, int button) {
+      int tbd7, int button, Integer rssi) {
     String line = sampleNumber + "," + eegData.get(0) + "," + eegData.get(1) + "," +
         eegData.get(2) + "," + eegData.get(3) + "," + eegData.get(4) + "," + eegData.get(5) + "," +
         eegData.get(6) + "," + eegData.get(7) + "," + accData.get(0) + "," + accData.get(1) + "," +
         accData.get(2) + "," + samplingTimestamp + "," + receptionTimestamp + "," + impedanceFlag +
         "," + sync + "," + trigOut + "," + trigIn + "," + zmod + "," + marker + "," + tbd6 + "," +
         tbd7 + "," + button;
+    if (rssi != null) {
+      line += "," + rssi;
+    }
     appendLine(line);
     sampleNumber++;
   }

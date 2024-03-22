@@ -29,6 +29,7 @@ public class BlePeripheralCallbackProxy {
   private final Set<BluetoothPeripheralCallback> componentCallbacks = new ArraySet<>();
   private final Map<String, SettableFuture<byte[]>> writeFutures = new HashMap<>();
   private final Map<String, SettableFuture<byte[]>> readFutures = new HashMap<>();
+  private final Map<String, SettableFuture<Integer>> rssiFutures = new HashMap<>();
 
   /**
    * Gets the main device callback that should be set in the Bluetooth stack.
@@ -60,6 +61,25 @@ public class BlePeripheralCallbackProxy {
     readFutures.put(peripheral.getAddress(), readFuture);
     peripheral.readCharacteristic(characteristic);
     return readFuture;
+  }
+
+  /**
+   * Read RSSI of a peripheral and return a Future that will be completed when it is confirmed by
+   * the Android stack.
+   */
+  public synchronized ListenableFuture<Integer> readRSSI(BluetoothPeripheral peripheral) {
+    if (rssiFutures.get(peripheral.getAddress()) != null &&
+        !rssiFutures.get(peripheral.getAddress()).isDone()) {
+      // Should call this function one by one for a peripheral as it is sync.
+      return Futures.immediateCancelledFuture();
+    }
+    boolean rssiRead = peripheral.readRemoteRssi();
+    if (!rssiRead) {
+      return Futures.immediateFailedFuture(new BluetoothException("Failed to read RSSI"));
+    }
+    SettableFuture<Integer> rssiFuture = SettableFuture.create();
+    rssiFutures.put(peripheral.getAddress(), rssiFuture);
+    return rssiFuture;
   }
 
   public synchronized void cancelReadCharacteristic(
@@ -208,8 +228,19 @@ public class BlePeripheralCallbackProxy {
     @Override
     public void onReadRemoteRssi(
         @NonNull BluetoothPeripheral peripheral, int rssi, @NonNull GattStatus status) {
-      for (BluetoothPeripheralCallback callback : componentCallbacks) {
-        callback.onReadRemoteRssi(peripheral, rssi, status);
+      SettableFuture<Integer> rssiFuture = rssiFutures.get(peripheral.getAddress());
+      if (rssiFuture != null && !rssiFuture.isDone()) {
+        // Return a response on the future.
+        if (status == GattStatus.SUCCESS) {
+          rssiFuture.set(rssi);
+        } else {
+          rssiFuture.setException(
+              new BluetoothException("Failed to read RSSI with status " + status));
+        }
+      } else {
+        for (BluetoothPeripheralCallback callback : componentCallbacks) {
+          callback.onReadRemoteRssi(peripheral, rssi, status);
+        }
       }
     }
 

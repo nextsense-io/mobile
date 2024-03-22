@@ -187,20 +187,20 @@ public class ForegroundService extends Service {
   private void initialize(boolean allowDataViaCellular) {
     objectBoxDatabase = new ObjectBoxDatabase();
     objectBoxDatabase.init(this);
-    // Uncomment when the CSV sink is needed.
-    // csvSink = CsvSink.create(this, objectBoxDatabase);
-    // csvSink.startListening();
-    localSessionManager = LocalSessionManager.create(objectBoxDatabase, csvSink);
     bluetoothStateManager = BluetoothStateManager.create(getApplicationContext());
     centralManagerProxy = (!Config.USE_EMULATED_BLE) ?
             new BleCentralManagerProxy(getApplicationContext()) : null;
+    // Uncomment when the CSV sink is needed.
+    csvSink = CsvSink.create(this, objectBoxDatabase, centralManagerProxy);
+    csvSink.startListening();
+    localSessionManager = LocalSessionManager.create(objectBoxDatabase, csvSink);
     nextSenseDeviceManager = NextSenseDeviceManager.create(localSessionManager);
     memoryCache = MemoryCache.create();
     deviceScanner = DeviceScanner.create(
-        nextSenseDeviceManager, centralManagerProxy, bluetoothStateManager, memoryCache);
+        nextSenseDeviceManager, centralManagerProxy, bluetoothStateManager, memoryCache, csvSink);
     deviceManager = DeviceManager.create(
         deviceScanner, localSessionManager, centralManagerProxy, bluetoothStateManager,
-        nextSenseDeviceManager, memoryCache);
+        nextSenseDeviceManager, memoryCache, csvSink);
     databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
     databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);

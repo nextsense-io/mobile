@@ -2,13 +2,18 @@ package io.nextsense.android.base.db;
 
 import android.content.Context;
 
+import com.welie.blessed.BluetoothPeripheral;
+
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
+import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.Samples;
@@ -22,17 +27,27 @@ public class CsvSink {
   private static final String TAG = CsvSink.class.getSimpleName();
 
   private final ObjectBoxDatabase objectBoxDatabase;
+  private final BleCentralManagerProxy bleCentralManagerProxy;
   private final CsvWriter csvWriter;
+  private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
+  private BluetoothPeripheral currentPeripheral;
   private DataSubscription uploadedSessionSubscription;
   private Long currentSessionId;
 
-  private CsvSink(Context context, ObjectBoxDatabase objectBoxDatabase) {
+  private CsvSink(Context context, ObjectBoxDatabase objectBoxDatabase,
+                  BleCentralManagerProxy bleCentralManagerProxy) {
     this.objectBoxDatabase = objectBoxDatabase;
+    this.bleCentralManagerProxy = bleCentralManagerProxy;
     csvWriter = new CsvWriter(context);
   }
 
-  public static CsvSink create(Context context, ObjectBoxDatabase objectBoxDatabase) {
-    return new CsvSink(context, objectBoxDatabase);
+  public static CsvSink create(Context context, ObjectBoxDatabase objectBoxDatabase,
+                               BleCentralManagerProxy bleCentralManagerProxy) {
+    return new CsvSink(context, objectBoxDatabase, bleCentralManagerProxy);
+  }
+
+  public void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy) {
+    blePeripheralCallbackProxy = proxy;
   }
 
   public void startListening() {
@@ -53,8 +68,13 @@ public class CsvSink {
   }
 
   public void openCsv(String filename, String earbudsConfig, long localSessionId) {
-    csvWriter.initCsvFile(filename, earbudsConfig);
+    csvWriter.initCsvFile(filename, earbudsConfig, /*haveRssi=*/true);
     currentSessionId = localSessionId;
+    if (bleCentralManagerProxy.getCentralManager().getConnectedPeripherals().isEmpty()) {
+      RotatingFileLogger.get().logw(TAG, "No connected peripherals!");
+      return;
+    }
+    currentPeripheral = bleCentralManagerProxy.getCentralManager().getConnectedPeripherals().get(0);
   }
 
   public void closeCsv(boolean checkForUploadedSession) {
@@ -79,6 +99,15 @@ public class CsvSink {
       RotatingFileLogger.get().loge(TAG, "Number of EEG samples and accelerations does not match!");
       return;
     }
+    Integer rssi = null;
+    if (blePeripheralCallbackProxy != null && currentPeripheral != null) {
+      try {
+        rssi = blePeripheralCallbackProxy.readRSSI(currentPeripheral).get(20,
+            TimeUnit.MILLISECONDS);
+      } catch (Exception e) {
+        RotatingFileLogger.get().logw(TAG, "Failed to read RSSI: " + e.getMessage());
+      }
+    }
     for (int i = 0; i < samples.getEegSamples().size(); i++) {
       EegSample eegSample = samples.getEegSamples().get(i);
       List<Float> eegData = new ArrayList<>();
@@ -94,8 +123,8 @@ public class CsvSink {
           eegSample.getReceptionTimestamp().toEpochMilli(), /*impedance_flag=*/0,
           boolToInt(eegSample.getSync()), boolToInt(eegSample.getTrigOut()),
           boolToInt(eegSample.getTrigIn()), boolToInt(eegSample.getZMod()),
-          boolToInt(eegSample.getMarker()), /*tbd6=*/0, /*tbd7=*/0, boolToInt(eegSample.getButton())
-          );
+          boolToInt(eegSample.getMarker()), /*tbd6=*/0, /*tbd7=*/0,
+          boolToInt(eegSample.getButton()), rssi);
     }
   }
 
