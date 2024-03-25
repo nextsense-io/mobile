@@ -35,6 +35,7 @@ import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
+import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.db.CsvSink;
 import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDevice;
@@ -127,7 +128,7 @@ public class BleDevice extends Device {
   @Override
   public ListenableFuture<Boolean> startStreaming(
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
-      @Nullable String earbudsConfig) {
+      @Nullable String earbudsConfig, @Nullable Boolean saveToCsv) {
     if (deviceState != DeviceState.READY) {
       return Futures.immediateFailedFuture(new IllegalStateException(
           "Device needs to be in READY state to change its mode."));
@@ -141,6 +142,9 @@ public class BleDevice extends Device {
     } else {
       parametersBundle.putSerializable(XenonDevice.STREAM_START_MODE_KEY,
           StreamingStartMode.NO_LOGGING);
+    }
+    if (saveToCsv != null) {
+      parametersBundle.putBoolean(LocalSessionManager.SAVE_TO_CSV_KEY, saveToCsv);
     }
     return executorService.submit(() ->
         nextSenseDevice.startStreaming(uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig,
@@ -191,7 +195,7 @@ public class BleDevice extends Device {
           setImpedanceConfig(impedanceMode, channelNumber, frequencyDivider).get();
       if (settingsSet) {
         return startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null,
-            /*dataSessionId=*/null, /*earbudsConfig=*/null).get();
+            /*dataSessionId=*/null, /*earbudsConfig=*/null, /*saveToCsv=*/false).get();
       } else {
         return false;
       }

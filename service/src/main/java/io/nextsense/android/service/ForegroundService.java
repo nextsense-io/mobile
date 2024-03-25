@@ -192,7 +192,6 @@ public class ForegroundService extends Service {
             new BleCentralManagerProxy(getApplicationContext()) : null;
     // Uncomment when the CSV sink is needed.
     csvSink = CsvSink.create(this, objectBoxDatabase, centralManagerProxy);
-    csvSink.startListening();
     localSessionManager = LocalSessionManager.create(objectBoxDatabase, csvSink);
     nextSenseDeviceManager = NextSenseDeviceManager.create(localSessionManager);
     memoryCache = MemoryCache.create();

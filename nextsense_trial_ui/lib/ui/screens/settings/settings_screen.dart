@@ -26,6 +26,8 @@ class SettingsScreen extends HookWidget {
         useState<bool>(_preferences.getBool(PreferenceKey.allowDataTransmissionViaCellular));
     final continuousImpedance =
         useState<bool>(_preferences.getBool(PreferenceKey.continuousImpedance));
+    final saveBleDataToLocalCsv =
+        useState<bool>(_preferences.getBool(PreferenceKey.saveBleDataToLocalCsv));
     final medicationNotificationsEnabled =
         useState<bool>(_authManager.user!.isMedicationNotificationsEnabled());
     final surveyNotificationsEnabled =
@@ -102,6 +104,16 @@ class SettingsScreen extends HookWidget {
                   initialValue: continuousImpedance.value,
                   leading: Icon(Icons.electric_bolt),
                   title: MediumText(text: 'Continuous impedance mode',
+                      color: NextSenseColors.darkBlue),
+                ),
+                SettingsTile.switchTile(
+                  onToggle: (enabled) {
+                    saveBleDataToLocalCsv.value = enabled;
+                    _preferences.setBool(PreferenceKey.saveBleDataToLocalCsv, enabled);
+                  },
+                  initialValue: saveBleDataToLocalCsv.value,
+                  leading: Icon(Icons.save),
+                  title: MediumText(text: 'Save BLE data to local CSV',
                       color: NextSenseColors.darkBlue),
                 ),
               ],
