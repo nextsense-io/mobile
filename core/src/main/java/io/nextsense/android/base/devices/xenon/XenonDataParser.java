@@ -55,7 +55,6 @@ public class XenonDataParser {
   private static final int BATTERY_LOW_FLAG_INDEX = 9;
   private static final int BINARY_USD_LOGGING_ENABLED_FLAG_INDEX = 8;
   private static final int INTERNAL_ERROR_FLAG_INDEX = 0;
-  private static final boolean SAVE_CSV_DATA = true;
 
   private final LocalSessionManager localSessionManager;
   boolean printedDataPacketWarning = false;
@@ -102,7 +101,7 @@ public class XenonDataParser {
           RotatingFileLogger.get().logw(TAG, "Received a sample that is before a previous " +
               "sample, skipping sample. Previous timestamp: " + previousTimestamp +
               ", current timestamp: " + sample.getEegSample().getAbsoluteSamplingTimestamp());
-          // break;
+          break;
         }
         samples.addEegSample(sample.getEegSample());
         samples.addAcceleration(sample.getAcceleration());
@@ -113,9 +112,9 @@ public class XenonDataParser {
     EventBus.getDefault().post(samples);
     Instant parseEndTime = Instant.now();
     long parseTime = parseEndTime.toEpochMilli() - receptionTimestamp.toEpochMilli();
-//    if (parseTime > 30) {
-    RotatingFileLogger.get().logd(TAG, "It took " + parseTime + " to parse xenon data.");
-//    }
+    if (parseTime > 30) {
+      RotatingFileLogger.get().logd(TAG, "It took " + parseTime + " to parse xenon data.");
+    }
   }
 
   private static float convertToMicroVolts(int data) {
@@ -144,8 +143,7 @@ public class XenonDataParser {
       int eegValue = Util.bytesToInt24(
           new byte[]{valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get()}, 0,
           ByteOrder.LITTLE_ENDIAN);
-      // eegData.put(activeChannel, convertToMicroVolts(eegValue));
-      eegData.put(activeChannel, (float)eegValue);
+      eegData.put(activeChannel, convertToMicroVolts(eegValue));
     }
     long samplingTimestamp = Util.bytesToLong48(new byte[]{valuesBuffer.get(),
         valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get(),
@@ -188,6 +186,7 @@ public class XenonDataParser {
   }
 
   private void parseAuxStatePacket(ByteBuffer valuesBuffer) {
+    RotatingFileLogger.get().logd(TAG, "Parsing aux state packet.");
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     Long localSessionId = null;
     if (localSessionOptional.isPresent()) {
@@ -235,5 +234,6 @@ public class XenonDataParser {
         flagsMap.get(INTERNAL_ERROR_FLAG_INDEX), sampleCounter, bleFifoCounter, lostSamplesCounter,
         bleRssi, leadsOffPositive);
     EventBus.getDefault().post(deviceInternalState);
+    RotatingFileLogger.get().logd(TAG, "Finished parsing aux state packet.");
   }
 }

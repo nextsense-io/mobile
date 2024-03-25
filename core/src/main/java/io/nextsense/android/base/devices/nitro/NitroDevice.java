@@ -140,9 +140,13 @@ public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice 
       return Futures.immediateFailedFuture(
           new IllegalStateException("No characteristic to stream on."));
     }
+    boolean saveToCsv = false;
+    if (parameters != null && parameters.containsKey(LocalSessionManager.SAVE_TO_CSV_KEY)) {
+      saveToCsv = parameters.getBoolean(LocalSessionManager.SAVE_TO_CSV_KEY, false);
+    }
     long localSessionId = localSessionManager.startLocalSession(userBigTableKey, dataSessionId,
         earbudsConfig, uploadToCloud, deviceSettings.getEegStreamingRate(),
-        deviceSettings.getImuStreamingRate());
+        deviceSettings.getImuStreamingRate(), saveToCsv);
     if (localSessionId == -1) {
       // Previous session not finished, cannot start streaming.
       RotatingFileLogger.get().logw(TAG, "Previous session not finished, cannot start streaming.");
@@ -214,7 +218,7 @@ public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice 
           try {
             nitroDataParser.parseDataBytes(value);
           } catch (FirmwareMessageParsingException e) {
-            e.printStackTrace();
+            RotatingFileLogger.get().loge(TAG, "Failed to parse data bytes: " + e.getMessage());
           }
         }
      };

@@ -3,14 +3,18 @@ package io.nextsense.android.base.db;
 import android.content.Context;
 
 import com.welie.blessed.BluetoothPeripheral;
+import com.welie.blessed.BluetoothPeripheralCallback;
+import com.welie.blessed.GattStatus;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
@@ -25,6 +29,7 @@ import io.objectbox.reactive.DataSubscription;
 public class CsvSink {
 
   private static final String TAG = CsvSink.class.getSimpleName();
+  private static final Duration RSSI_CHECK_INTERVAL = Duration.ofSeconds(1);
 
   private final ObjectBoxDatabase objectBoxDatabase;
   private final BleCentralManagerProxy bleCentralManagerProxy;
@@ -33,6 +38,8 @@ public class CsvSink {
   private BluetoothPeripheral currentPeripheral;
   private DataSubscription uploadedSessionSubscription;
   private Long currentSessionId;
+  private int lastRssi = 0;
+  private Instant lastRssiCheck = Instant.now();
 
   private CsvSink(Context context, ObjectBoxDatabase objectBoxDatabase,
                   BleCentralManagerProxy bleCentralManagerProxy) {
@@ -48,6 +55,7 @@ public class CsvSink {
 
   public void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy) {
     blePeripheralCallbackProxy = proxy;
+    blePeripheralCallbackProxy.addPeripheralCallbackListener(bleCallbackListener);
   }
 
   public void startListening() {
@@ -99,14 +107,10 @@ public class CsvSink {
       RotatingFileLogger.get().loge(TAG, "Number of EEG samples and accelerations does not match!");
       return;
     }
-    Integer rssi = null;
-    if (blePeripheralCallbackProxy != null && currentPeripheral != null) {
-      try {
-        rssi = blePeripheralCallbackProxy.readRSSI(currentPeripheral).get(20,
-            TimeUnit.MILLISECONDS);
-      } catch (Exception e) {
-        RotatingFileLogger.get().logw(TAG, "Failed to read RSSI: " + e.getMessage());
-      }
+    if (blePeripheralCallbackProxy != null && currentPeripheral != null &&
+        lastRssiCheck.plus(RSSI_CHECK_INTERVAL).isBefore(Instant.now())) {
+      currentPeripheral.readRemoteRssi();
+      lastRssiCheck = Instant.now();
     }
     for (int i = 0; i < samples.getEegSamples().size(); i++) {
       EegSample eegSample = samples.getEegSamples().get(i);
@@ -124,7 +128,7 @@ public class CsvSink {
           boolToInt(eegSample.getSync()), boolToInt(eegSample.getTrigOut()),
           boolToInt(eegSample.getTrigIn()), boolToInt(eegSample.getZMod()),
           boolToInt(eegSample.getMarker()), /*tbd6=*/0, /*tbd7=*/0,
-          boolToInt(eegSample.getButton()), rssi);
+          boolToInt(eegSample.getButton()), lastRssi);
     }
   }
 
@@ -145,4 +149,12 @@ public class CsvSink {
   private int boolToInt(boolean b) {
     return b ? 1 : 0;
   }
+
+  private final BluetoothPeripheralCallback bleCallbackListener = new BluetoothPeripheralCallback() {
+    @Override
+    public void onReadRemoteRssi(@NotNull BluetoothPeripheral peripheral, int rssi,
+                                 @NotNull GattStatus status) {
+      lastRssi = rssi;
+    }
+  };
 }

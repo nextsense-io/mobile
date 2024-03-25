@@ -68,7 +68,7 @@ public abstract class Device {
 
   public abstract ListenableFuture<Boolean> startStreaming(
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
-      @Nullable String earbudsConfig);
+      @Nullable String earbudsConfig, @Nullable Boolean saveToCsv);
 
   public abstract ListenableFuture<Boolean> stopStreaming();
 

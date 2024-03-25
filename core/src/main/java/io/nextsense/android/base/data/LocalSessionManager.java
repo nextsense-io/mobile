@@ -22,6 +22,8 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
  */
 public class LocalSessionManager {
 
+  public static final String SAVE_TO_CSV_KEY = "save_to_csv";
+
   // Interface to listen to when the first data is received after a session is started.
   public interface OnFirstDataReceivedListener {
     void onFirstDataReceived();
@@ -74,13 +76,22 @@ public class LocalSessionManager {
       @Nullable String cloudDataSessionId, @Nullable String userBigTableKey,
       @Nullable String earbudsConfig, boolean uploadNeeded, float eegSampleRate,
       float accelerationSampleRate) {
+    return startLocalSession(cloudDataSessionId, userBigTableKey, earbudsConfig, uploadNeeded,
+        eegSampleRate, accelerationSampleRate, /*saveToCsv=*/false);
+  }
+
+  public synchronized long startLocalSession(
+      @Nullable String cloudDataSessionId, @Nullable String userBigTableKey,
+      @Nullable String earbudsConfig, boolean uploadNeeded, float eegSampleRate,
+      float accelerationSampleRate, boolean saveToCsv) {
     if (!canStartNewSession()) {
       RotatingFileLogger.get().logw(TAG, "Trying to start a session, but one is already active.");
       return -1;
     }
     activeLocalSession = LocalSession.create(userBigTableKey, cloudDataSessionId, earbudsConfig,
         uploadNeeded, /*receivedData=*/false, eegSampleRate, accelerationSampleRate, Instant.now());
-    if (csvSink != null) {
+    if (saveToCsv && csvSink != null) {
+      csvSink.startListening();
       String formattedDateTime =
           LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).format(csvFileNameFormatter);
       csvSink.openCsv(/*fileName=*/"data_recording_" + formattedDateTime, earbudsConfig,
@@ -92,6 +103,7 @@ public class LocalSessionManager {
   public synchronized void stopLocalSession() {
     if (csvSink != null) {
       csvSink.closeCsv(/*checkForCompletedSession=*/false);
+      csvSink.stopListening();
     }
     if (activeLocalSession == null) {
       RotatingFileLogger.get().logw(TAG, "Trying to stop the active session, but none is active.");

@@ -4,6 +4,7 @@ enum PreferenceKey {
   allowDataTransmissionViaCellular,
   authToken,
   continuousImpedance,
+  saveBleDataToLocalCsv,
   studyDataCached,
   fcmToken,
   eegSignalFilterType,

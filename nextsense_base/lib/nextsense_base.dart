@@ -145,6 +145,7 @@ class NextsenseBase {
   static const String _notificationTitleArg = 'notification_title';
   static const String _notificationTextArg = 'notification_text';
   static const String _startDateTimeEpochMsArg = 'start_date_time_epoch_ms';
+  static const String _saveToCsvArg = 'save_to_csv';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
@@ -288,11 +289,11 @@ class NextsenseBase {
   }
 
   static Future<int> startStreaming(String macAddress, bool uploadToCloud, String? userBigTableKey,
-      String? dataSessionId, String? earbudsConfig) async {
+      String? dataSessionId, String? earbudsConfig, bool? saveToCsv) async {
     return await _channel.invokeMethod(_startStreamingCommand,
         {_macAddressArg: macAddress, _uploadToCloudArg: uploadToCloud,
           _userBigTableKeyArg: userBigTableKey, _dataSessionIdArg: dataSessionId,
-          _earbudsConfigArg: earbudsConfig});
+          _earbudsConfigArg: earbudsConfig, _saveToCsvArg: saveToCsv ?? false});
   }
 
   static Future stopStreaming(String macAddress) async {
