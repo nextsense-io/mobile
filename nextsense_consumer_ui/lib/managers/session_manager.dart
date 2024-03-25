@@ -64,13 +64,16 @@ class SessionManager {
     String? earbudsConfig = EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase();
     if (device.type == DeviceType.kauai_medical) {
       earbudsConfig = EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.toLowerCase();
+    } else if (device.type == DeviceType.nitro) {
+      earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
+    } else if (device.type == DeviceType.kauai) {
+      earbudsConfig = EarbudsConfigNames.XENON_P02_CONFIG.name.toLowerCase();
     }
 
     _currentSession!..setValue(SessionKey.start_datetime, startTime)
       ..setValue(SessionKey.user_id, user.id)
       ..setValue(SessionKey.device_id, device.name)
       ..setValue(SessionKey.device_mac_address, device.macAddress)
-      // TODO(eric): Get this from the device?
       ..setValue(SessionKey.earbud_config, earbudsConfig)
       ..setValue(SessionKey.mobile_app_version, _appVersion)
       ..setValue(SessionKey.protocol_name, protocolName)
