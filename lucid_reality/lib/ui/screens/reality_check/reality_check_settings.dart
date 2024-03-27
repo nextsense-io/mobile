@@ -66,7 +66,7 @@ class RealityCheckSettings extends HookWidget {
                 bottom: 0,
                 child: Image.asset(imageBasePath.plus('lucid_icon.png')),
               ),
-              Flexible(
+              Container(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 80, 16),
                   child: Column(
