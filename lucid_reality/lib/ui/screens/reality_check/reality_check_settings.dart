@@ -91,18 +91,21 @@ class RealityCheckSettings extends HookWidget {
       );
     } else {
       if (isNotificationEnabled.value == false) {
-        return AppCard(
-          Column(
-            children: [
-              Text("Our app would like to send you notifications"),
-              SizedBox(height: 16),
-              AppTextButton(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                backgroundImage: 'btn_authorize.svg',
-                onPressed: onContinue,
-                text: "Allow Notifications",
-              )
-            ],
+        return Container(
+          width: double.maxFinite,
+          child: AppCard(
+            Column(
+              children: [
+                Text("Our app would like to send you notifications"),
+                SizedBox(height: 16),
+                AppTextButton(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  backgroundImage: 'btn_authorize.svg',
+                  onPressed: onContinue,
+                  text: "Allow Notifications",
+                )
+              ],
+            ),
           ),
         );
       }

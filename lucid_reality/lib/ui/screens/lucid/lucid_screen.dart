@@ -5,6 +5,7 @@ import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_circular_progress_indicator.dart';
 import 'package:lucid_reality/ui/components/app_text_button.dart';
+import 'package:lucid_reality/ui/components/rem_detection_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/lucid/lucid_screen_vm.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_settings.dart';
@@ -127,39 +128,10 @@ class LucidScreen extends HookWidget {
                       ])),
                     if (!viewModel.isREMDetectionOnboardingCompleted) ...[
                       const SizedBox(height: 16),
-                      InkWell(
-                        onTap: () {
+                      RemDetectionButton(
+                        onPressed: () {
                           viewModel.navigateToREMDetectionOnboardingScreen();
                         },
-                        child: Container(
-                          width: double.maxFinite,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          decoration: ShapeDecoration(
-                            gradient: RadialGradient(
-                              center: Alignment(0.07, 0.78),
-                              radius: 0,
-                              colors: NextSenseColors.purpleGradiantColors,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              side: BorderSide(width: 2, color: NextSenseColors.royalPurple),
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  'Set up REM detection for best results',
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodyLarge,
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
                       ),
                     ],
                   ],

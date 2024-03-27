@@ -124,10 +124,8 @@ dependencies {
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
-//    kapt("androidx.room:room-compiler:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
-    // To use Kotlin annotation processing tool (kapt)
     //TFLite dependencies
     implementation("org.tensorflow:tensorflow-lite:2.14.0")
     implementation("org.tensorflow:tensorflow-lite-gpu:0.0.0-nightly")
@@ -137,6 +135,7 @@ dependencies {
     // Hilt
     implementation("com.google.dagger:hilt-android:2.50")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+    // To use Kotlin annotation processing tool (kapt)
     kapt("com.google.dagger:hilt-android-compiler:2.50")
     kapt("androidx.hilt:hilt-compiler:1.2.0")
     // Work manager + Kotlin + coroutines
