@@ -29,7 +29,7 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
         Log.i(TAG, "Input Data HR: $heartRateData")
         Log.i(
             TAG,
-            "Input Data ACC: ${accelerometerData.map { "${it.createAt}, ${it.x}, ${it.y}, ${it.z}, ${it.getAngle()}" }}"
+            "Input Data ACC: ${accelerometerData.map { "${it.createdAt}, ${it.x}, ${it.y}, ${it.z}, ${it.getAngle()}" }}"
         )
 
         val interpolateHRData = interpolateHeartRate(
@@ -102,8 +102,8 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
     ): List<HeartRateEntity> {
         val interpolatedData = mutableListOf<HeartRateEntity>()
         for (i in 0 until data.size - 1) {
-            val startTime = data[i].createAt ?: 0
-            val endTime = data[i + 1].createAt ?: 0
+            val startTime = data[i].createdAt ?: 0
+            val endTime = data[i + 1].createdAt ?: 0
             val startRate = data[i].heartRate ?: 0.0
             val endRate = data[i + 1].heartRate ?: 0.0
             val timeDiff = endTime - startTime
@@ -114,7 +114,7 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
                     val interpolatedTime = workoutStartTime + j
                     interpolatedData.add(
                         HeartRateEntity(
-                            createAt = interpolatedTime, heartRate = startRate
+                            createdAt = interpolatedTime, heartRate = startRate
                         )
                     )
                 }
@@ -125,7 +125,7 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
                 val interpolatedRate = startRate + slope * j
                 interpolatedData.add(
                     HeartRateEntity(
-                        createAt = interpolatedTime,
+                        createdAt = interpolatedTime,
                         heartRate = interpolatedRate.roundToInt().toDouble()
                     )
                 )
@@ -140,11 +140,11 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
         val currentSamples = interpolatedData.size
         if (currentSamples < samplesNeeded) {
             interpolatedData.lastOrNull()?.let { lastData ->
-                val lastTime = lastData.createAt ?: 0
+                val lastTime = lastData.createdAt ?: 0
                 val lastValue = lastData.heartRate ?: 0.0
                 interpolatedData.addAll((1..samplesNeeded - currentSamples).map {
                     HeartRateEntity(
-                        createAt = lastTime + it, heartRate = lastValue.roundToInt().toDouble()
+                        createdAt = lastTime + it, heartRate = lastValue.roundToInt().toDouble()
                     )
                 })
             }
@@ -159,10 +159,10 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
         val resultArray = MutableList(samplesNeeded) { 0.0 }
 
         var currentIndex = 0
-        var lastTimestamp = data.firstOrNull()?.createAt ?: 0L
+        var lastTimestamp = data.firstOrNull()?.createdAt ?: 0L
 
         for (datum in data) {
-            val timeDiff = (datum.createAt - lastTimestamp).toInt()
+            val timeDiff = (datum.createdAt - lastTimestamp).toInt()
 
             // Check if there's a gap between current and last timestamp
             if (timeDiff > 1) {
@@ -179,7 +179,7 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
             } catch (_: Exception) {
             }
             currentIndex++
-            lastTimestamp = datum.createAt
+            lastTimestamp = datum.createdAt
         }
 
         // Fill the remaining slots with zero values if needed

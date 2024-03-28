@@ -34,14 +34,11 @@ class NotificationManager(private val context: Context) {
             ) {
                 return@with
             }
-            // notificationId is a unique int for each notification that you must define.
             notify(NOTIFICATION_ID, builder.build())
         }
     }
 
     private fun createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is not in the Support Library.
         val name = getString(context, R.string.channel_name)
         val descriptionText = getString(context, R.string.channel_description)
         val importance = NotificationManager.IMPORTANCE_DEFAULT

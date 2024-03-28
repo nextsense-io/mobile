@@ -19,9 +19,9 @@ class LocalDatabaseManager(context: Context) {
         null
     }
     val heartRateDao = db?.heartRateDao()
-    val accelerometerDao = db?.accelerometerEntity()
-    val predictionDao = db?.predictionEntity()
-    val notificationDao = db?.notificationEntity()
+    val accelerometerDao = db?.accelerometerDao()
+    val predictionDao = db?.predictionDao()
+    val notificationDao = db?.notificationDao()
 
 
     fun fetchHeartRateDate(startTime: Long, endTime: Long): List<HeartRateEntity> {

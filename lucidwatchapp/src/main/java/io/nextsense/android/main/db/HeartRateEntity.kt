@@ -12,7 +12,7 @@ import androidx.room.Query
 data class HeartRateEntity(
     @PrimaryKey(autoGenerate = true) val uid: Int? = null,
     @ColumnInfo val heartRate: Double?,
-    @ColumnInfo val createAt: Long?,
+    @ColumnInfo val createdAt: Long?,
     @ColumnInfo val date: String? = null
 )
 
@@ -24,7 +24,7 @@ interface HeartRateDao {
     @Query("SELECT * FROM HeartRateEntity WHERE uid IN (:uid)")
     fun loadAllByIds(uid: IntArray): List<HeartRateEntity>
 
-    @Query("SELECT * FROM HeartRateEntity WHERE createAt >= (:startTime) AND createAt <= (:endTime)")
+    @Query("SELECT * FROM HeartRateEntity WHERE createdAt >= (:startTime) AND createdAt <= (:endTime)")
     fun findByDateRange(startTime: Long, endTime: Long): List<HeartRateEntity>
 
     @Insert

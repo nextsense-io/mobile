@@ -85,7 +85,7 @@ class PredictionWork @AssistedInject constructor(
                     }
                     val predictionEntity = PredictionEntity(
                         prediction = result?.value ?: 0,
-                        createAt = startTime,
+                        createdAt = startTime,
                         date = TimeUnit.SECONDS.toMillis(startTime).toFormattedDateString(),
                         startDate = startTime,
                         endDate = endTime
@@ -171,7 +171,7 @@ class PredictionWork @AssistedInject constructor(
         try {
             localDatabaseManager.saveNotification(
                 NotificationEntity(
-                    createAt = lastNotificationShowUpTime.toSeconds(),
+                    createdAt = lastNotificationShowUpTime.toSeconds(),
                     date = lastNotificationShowUpTime.toFormattedDateString()
                 )
             )

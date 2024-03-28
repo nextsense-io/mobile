@@ -10,7 +10,7 @@ import androidx.room.PrimaryKey
 @Entity
 data class NotificationEntity(
     @PrimaryKey(autoGenerate = true) val uid: Int? = null,
-    @ColumnInfo val createAt: Long,
+    @ColumnInfo val createdAt: Long,
     @ColumnInfo val date: String
 )
 

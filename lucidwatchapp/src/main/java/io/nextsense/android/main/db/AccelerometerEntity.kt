@@ -17,7 +17,7 @@ data class AccelerometerEntity(
     @ColumnInfo val x: Double?,
     @ColumnInfo val y: Double?,
     @ColumnInfo val z: Double?,
-    @ColumnInfo val createAt: Long,
+    @ColumnInfo val createdAt: Long,
     @ColumnInfo val date: String? = null
 )
 
@@ -29,7 +29,7 @@ interface AccelerometerDao {
     @Query("SELECT * FROM AccelerometerEntity WHERE uid IN (:uid)")
     fun loadAllByIds(uid: IntArray): List<AccelerometerEntity>
 
-    @Query("SELECT * FROM AccelerometerEntity WHERE createAt >= (:startTime) AND createAt <= (:endTime)")
+    @Query("SELECT * FROM AccelerometerEntity WHERE createdAt >= (:startTime) AND createdAt <= (:endTime)")
     fun findByDateRange(startTime: Long, endTime: Long): List<AccelerometerEntity>
 
     @Insert

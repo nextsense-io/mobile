@@ -83,8 +83,6 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
      */
     override fun onCapabilityChanged(capabilityInfo: CapabilityInfo) {
         Log.d(TAG, "onCapabilityChanged(): $capabilityInfo")
-        // There should only ever be one phone in a node set (much less w/ the correct
-        // capability), so I am just grabbing the first one (which should be the only one).
         androidPhoneNodeWithApp.value = capabilityInfo.nodes.firstOrNull()
     }
 
@@ -95,16 +93,13 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
             val capabilityInfo =
                 capabilityClient.getCapability(CAPABILITY_PHONE_APP, CapabilityClient.FILTER_ALL)
                     .await()
-
             Log.d(TAG, "Capability request succeeded.")
-
             withContext(Dispatchers.Main) {
-                // There should only ever be one phone in a node set (much less w/ the correct
-                // capability), so I am just grabbing the first one (which should be the only one).
                 androidPhoneNodeWithApp.value = capabilityInfo.nodes.firstOrNull()
             }
         } catch (cancellationException: CancellationException) {
             // Request was cancelled normally
+            Log.d(TAG, "Request was cancelled normally.")
         } catch (throwable: Throwable) {
             Log.d(TAG, "Capability request failed to return any results.")
         } finally {
@@ -120,13 +115,6 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
                 // Create Remote Intent to open Play Store listing of app on remote device.
                 Intent(Intent.ACTION_VIEW).addCategory(Intent.CATEGORY_BROWSABLE)
                     .setData(Uri.parse(ANDROID_MARKET_APP_URI.plus(packageName)))
-            }
-
-            PhoneTypeHelper.DEVICE_TYPE_IOS -> {
-                Log.d(TAG, "\tDEVICE_TYPE_IOS")
-                // Create Remote Intent to open App Store listing of app on iPhone.
-                Intent(Intent.ACTION_VIEW).addCategory(Intent.CATEGORY_BROWSABLE)
-                    .setData(Uri.parse(APP_STORE_APP_URI))
             }
 
             else -> {
@@ -154,14 +142,10 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
     companion object {
         private const val TAG = "MainActivity"
 
-        // Name of capability listed in Phone app's wear.xml.
-        // IMPORTANT NOTE: This should be named differently than your Wear app's capability.
+        // Name of node listed in Phone app's wear.xml.
         private const val CAPABILITY_PHONE_APP = "verify_remote_lucid_phone_app"
 
-        // Links to install mobile app for both Android (Play Store) and iOS.
+        // Links to install mobile app for Android (Play Store).
         private const val ANDROID_MARKET_APP_URI = "market://details?id="
-
-        private const val APP_STORE_APP_URI =
-            "https://itunes.apple.com/us/app/android-wear/id986496028?mt=8"
     }
 }

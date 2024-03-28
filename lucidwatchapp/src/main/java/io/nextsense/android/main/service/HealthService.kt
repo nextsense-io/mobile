@@ -182,7 +182,7 @@ class HealthService : LifecycleService(), SensorEventListener {
                     x = x,
                     y = y,
                     z = z,
-                    createAt = timestamp.toSeconds(),
+                    createdAt = timestamp.toSeconds(),
                     date = timestamp.toFormattedDateString()
                 )
                 localDatabaseManager.accelerometerDao?.insertAll(accelerometerEntity)
@@ -208,7 +208,7 @@ class HealthService : LifecycleService(), SensorEventListener {
                 val timestamp = System.currentTimeMillis()
                 val heartRateEntity = HeartRateEntity(
                     heartRate = heartRate,
-                    createAt = timestamp.toSeconds(),
+                    createdAt = timestamp.toSeconds(),
                     date = timestamp.toFormattedDateString()
                 )
                 localDatabaseManager.heartRateDao?.insertAll(heartRateEntity)

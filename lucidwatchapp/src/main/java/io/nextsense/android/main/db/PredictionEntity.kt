@@ -12,7 +12,7 @@ import androidx.room.Query
 @Entity
 data class PredictionEntity(
     @PrimaryKey(autoGenerate = true) val uid: Int? = null,
-    @ColumnInfo val createAt: Long,
+    @ColumnInfo val createdAt: Long,
     @ColumnInfo val date: String,
     @ColumnInfo val prediction: Int,
     @ColumnInfo val startDate: Long,
@@ -27,7 +27,7 @@ interface PredictionDao {
     @Query("SELECT * FROM PredictionEntity WHERE uid IN (:uid)")
     fun loadAllByIds(uid: IntArray): List<PredictionEntity>
 
-    @Query("SELECT * FROM PredictionEntity WHERE createAt >= (:startTime) AND createAt <= (:endTime)")
+    @Query("SELECT * FROM PredictionEntity WHERE createdAt >= (:startTime) AND createdAt <= (:endTime)")
     fun findByDateRange(startTime: Long, endTime: Long): List<PredictionEntity>
 
     @Insert
