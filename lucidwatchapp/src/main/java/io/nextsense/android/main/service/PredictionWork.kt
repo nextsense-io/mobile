@@ -118,9 +118,7 @@ class PredictionWork @AssistedInject constructor(
                 ?: false
         // Calculate the elapsed time in milliseconds
         val elapsedTime: Long = System.currentTimeMillis() - lastNotificationShowUpTime
-        return isREMInRecentRecords && (lastNotificationShowUpTime == 0L || elapsedTime >= minutesToMilliseconds(
-            20
-        ))
+        return isREMInRecentRecords && (lastNotificationShowUpTime == 0L || elapsedTime >= PredictionConfig.notificationOffSetTime)
     }
 
     /**
@@ -184,6 +182,7 @@ class PredictionWork @AssistedInject constructor(
 object PredictionConfig {
     val initialWaitingTime = minutesToMilliseconds(15)
     val rescheduleTime = TimeUnit.MINUTES.toMillis(1)
-    const val NUMBER_OF_RECORDS = 5
     val SENSOR_FREQUENCY = TimeUnit.SECONDS.toMillis(1)
+    val notificationOffSetTime = minutesToMilliseconds(10)
+    const val NUMBER_OF_RECORDS = 5
 }
