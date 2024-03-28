@@ -20,7 +20,6 @@ class DataLayerListenerService : WearableListenerService() {
 
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         super.onDataChanged(dataEvents)
-        logger.log("onDataChanged is triggered")
         val sharedPreferencesHelper = SharedPreferencesHelper(applicationContext)
         dataEvents.forEach { dataEvent ->
             val uri = dataEvent.dataItem.uri
@@ -37,13 +36,6 @@ class DataLayerListenerService : WearableListenerService() {
                                         SharedPreferencesData.LucidSettings.getKey(),
                                         ""
                                     )
-                                )
-                                logger.log(
-                                    "Data read successfully from:${nodeId}, data=>${
-                                        map.getDataMap(
-                                            SharedPreferencesData.LucidSettings.getKey()
-                                        )
-                                    }"
                                 )
                             }
                         } catch (cancellationException: CancellationException) {
@@ -63,13 +55,6 @@ class DataLayerListenerService : WearableListenerService() {
                                     SharedPreferencesData.isUserLogin.name, map.getBoolean(
                                         SharedPreferencesData.isUserLogin.getKey(), false
                                     )
-                                )
-                                logger.log(
-                                    "Data read successfully from:${nodeId}, data=>${
-                                        map.getBoolean(
-                                            SharedPreferencesData.isUserLogin.getKey(), false
-                                        )
-                                    }"
                                 )
                             }
                         } catch (cancellationException: CancellationException) {

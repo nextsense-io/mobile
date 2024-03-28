@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.nextsense.android.main.data.DataTypeAvailability
 import io.nextsense.android.main.data.HealthServicesRepository
-import io.nextsense.android.main.utils.Logger
 import io.nextsense.android.main.utils.PreferenceType
 import io.nextsense.android.main.utils.SharedPreferencesData
 import io.nextsense.android.main.utils.SharedPreferencesHelper
@@ -21,7 +20,6 @@ import javax.inject.Inject
 class HomeScreenViewModel @Inject constructor(
     private val healthServicesRepository: HealthServicesRepository,
     private val sharedPreferencesHelper: SharedPreferencesHelper,
-    private val logger: Logger
 ) : ViewModel() {
     val enabled: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val availability: MutableState<DataTypeAvailability> =

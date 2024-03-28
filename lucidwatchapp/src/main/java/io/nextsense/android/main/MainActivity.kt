@@ -47,7 +47,6 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
         remoteActivityHelper = RemoteActivityHelper(this)
         setContent {
             if (androidPhoneNodeWithApp.value == null && !skipInstallation.value) {
-                Log.d(TAG, "Missing")
                 if (isCheckingPhone.value) {
                     CheckingPhoneAppScreen()
                 } else {
@@ -59,7 +58,6 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
                     )
                 }
             } else {
-                Log.d(TAG, "Installed")
                 LucidWatchApp()
             }
         }
@@ -82,18 +80,14 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
      * Updates UI when capabilities change (install/uninstall phone app).
      */
     override fun onCapabilityChanged(capabilityInfo: CapabilityInfo) {
-        Log.d(TAG, "onCapabilityChanged(): $capabilityInfo")
         androidPhoneNodeWithApp.value = capabilityInfo.nodes.firstOrNull()
     }
 
     private suspend fun checkIfPhoneHasApp() {
-        Log.d(TAG, "checkIfPhoneHasApp()")
-
         try {
             val capabilityInfo =
                 capabilityClient.getCapability(CAPABILITY_PHONE_APP, CapabilityClient.FILTER_ALL)
                     .await()
-            Log.d(TAG, "Capability request succeeded.")
             withContext(Dispatchers.Main) {
                 androidPhoneNodeWithApp.value = capabilityInfo.nodes.firstOrNull()
             }
@@ -108,10 +102,8 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
     }
 
     private fun openAppInStoreOnPhone() {
-        Log.d(TAG, "openAppInStoreOnPhone()")
         val intent = when (PhoneTypeHelper.getPhoneDeviceType(applicationContext)) {
             PhoneTypeHelper.DEVICE_TYPE_ANDROID -> {
-                Log.d(TAG, "\tDEVICE_TYPE_ANDROID")
                 // Create Remote Intent to open Play Store listing of app on remote device.
                 Intent(Intent.ACTION_VIEW).addCategory(Intent.CATEGORY_BROWSABLE)
                     .setData(Uri.parse(ANDROID_MARKET_APP_URI.plus(packageName)))
@@ -127,12 +119,10 @@ class MainActivity : ComponentActivity(), CapabilityClient.OnCapabilityChangedLi
             try {
                 remoteActivityHelper.startRemoteActivity(intent).await()
                 ConfirmationOverlay().showOn(this@MainActivity)
-                logger.log("App installation :${intent.data}")
             } catch (cancellationException: CancellationException) {
                 // Request was cancelled normally
                 throw cancellationException
             } catch (throwable: Throwable) {
-                logger.log("App installation error:${throwable.message}")
                 ConfirmationOverlay().setType(ConfirmationOverlay.FAILURE_ANIMATION)
                     .showOn(this@MainActivity)
             }

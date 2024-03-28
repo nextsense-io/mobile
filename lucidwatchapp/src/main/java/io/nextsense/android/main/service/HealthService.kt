@@ -154,7 +154,6 @@ class HealthService : LifecycleService(), SensorEventListener {
                         saveAccelerometerData(timestamp, x, y, z)
                         // Update the last saved timestamp
                         lastAccelerometerDataSavedTimestamp = timestamp
-                        logger.log("Accelerometer=>X:${x}, y:${y}, z:${z}")
                     }
                 }
 
@@ -163,7 +162,6 @@ class HealthService : LifecycleService(), SensorEventListener {
                     if (shouldSaveHeartRateData()) {
                         saveHeartRateData(mHeartRateFloat)
                         lastHeartRateDataSavedTimestamp = System.currentTimeMillis()
-                        logger.log("Heart Rate=>${mHeartRateFloat}")
                     }
                 }
 
@@ -238,7 +236,6 @@ class HealthService : LifecycleService(), SensorEventListener {
         super.onDestroy()
         if (!BuildConfig.DEBUG) {
             localDatabaseManager.clearAllTables()
-            logger.log("All tables have cleared")
         }
         try {
             sensorManager.unregisterListener(this)

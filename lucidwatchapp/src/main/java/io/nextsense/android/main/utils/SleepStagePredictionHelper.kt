@@ -26,12 +26,6 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
         heartRateData: List<HeartRateEntity>,
         accelerometerData: List<AccelerometerEntity>
     ): SleepStagePredictionOutput? {
-        Log.i(TAG, "Input Data HR: $heartRateData")
-        Log.i(
-            TAG,
-            "Input Data ACC: ${accelerometerData.map { "${it.createdAt}, ${it.x}, ${it.y}, ${it.z}, ${it.getAngle()}" }}"
-        )
-
         val interpolatedHRData = interpolateHeartRate(
             data = heartRateData,
             sessionStartTime = sessionStartTime,
@@ -39,27 +33,18 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
         )
         val normalizedHRData =
             normalizeDataUsingMeanAndStd(interpolatedHRData.map { it.heartRate ?: 0.0 })
-        Log.i(TAG, "Interpolate Data HR: ${interpolatedHRData.take(200)}")
-        Log.i(TAG, "Normalized Data HR: ${normalizedHRData.take(200)}")
-
         // Normalise accelerometer data here
         val interpolatedAccelerometerData = interpolateAccelerometerData(
             data = accelerometerData, samplesNeeded = accelerometerSamplesNeeded
         )
-
-        Log.i(TAG, "Interpolate Data ACC: ${interpolatedAccelerometerData.take(200)}")
-
         val absoluteAccelerometer =
             interpolatedAccelerometerData.zipWithNext { a, b -> kotlin.math.abs(a - b) }
-
         val differencesAccelerometerList = if (absoluteAccelerometer.size < 300) {
             listOf(0.0) + absoluteAccelerometer
         } else {
             absoluteAccelerometer
         }
-        Log.i(TAG, "Difference ACC: ${differencesAccelerometerList.take(200)}")
         val normalizedDifference = normalizeDataUsingMeanAndStd(differencesAccelerometerList)
-        Log.i(TAG, "Normalized Data ACC Diff: ${normalizedDifference.take(200)}")
         val combinedData =
             (normalizedHRData.asReversed() + normalizedDifference.asReversed()).toDoubleArray()
         tfliteModel?.let { mlModel ->
@@ -72,7 +57,6 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
                 }
                 val output = Array(1) { FloatArray(3) }
                 mlModel.run(inputDataArray, output)
-                Log.i(TAG, "Output=>${output[0][0]} ${output[0][1]} ${output[0][2]}")
                 return output.predictSleepStage()
             } catch (e: Exception) {
                 Log.i(TAG, "Error: $e")

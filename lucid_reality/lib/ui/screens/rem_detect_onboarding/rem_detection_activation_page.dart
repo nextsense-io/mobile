@@ -20,7 +20,7 @@ class REMDetectionActivationPage extends StatelessWidget {
                 ),
                 TextSpan(
                   text:
-                      '\n\n1. Open the Google Play Store app on your phone.\n\n2. Search for "Lucid Watch App" in the search bar at the top of the Play Store app.\n\n3. Tap the "Lucid Watch App" from the search results., tap "Install" next to it.',
+                      '\n\n1. Open the Google Play Store app on your phone.\n\n2. Search for "Lucid Watch App" in the search bar at the top of the Play Store app.\n\n3. Tap the "Lucid Watch App" from the search results, tap "Install" next to it.',
                   style: Theme.of(context).textTheme.labelLarge,
                 ),
               ],
