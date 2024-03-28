@@ -22,7 +22,7 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
     private val accelerometerSamplesNeeded: Int = 300
 
     fun prediction(
-        workoutStartTime: Long,
+        sessionStartTime: Long,
         heartRateData: List<HeartRateEntity>,
         accelerometerData: List<AccelerometerEntity>
     ): SleepStagePredictionOutput? {
@@ -32,39 +32,39 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
             "Input Data ACC: ${accelerometerData.map { "${it.createdAt}, ${it.x}, ${it.y}, ${it.z}, ${it.getAngle()}" }}"
         )
 
-        val interpolateHRData = interpolateHeartRate(
+        val interpolatedHRData = interpolateHeartRate(
             data = heartRateData,
-            workoutStartTime = workoutStartTime,
+            sessionStartTime = sessionStartTime,
             samplesNeeded = heartRateSamplesNeeded
         )
         val normalizedHRData =
-            normalizeDataUsingMeanAndStd(interpolateHRData.map { it.heartRate ?: 0.0 })
-        Log.i(TAG, "Interpolate Data HR: ${interpolateHRData.take(200)}")
+            normalizeDataUsingMeanAndStd(interpolatedHRData.map { it.heartRate ?: 0.0 })
+        Log.i(TAG, "Interpolate Data HR: ${interpolatedHRData.take(200)}")
         Log.i(TAG, "Normalized Data HR: ${normalizedHRData.take(200)}")
 
         // Normalise accelerometer data here
-        val interpolateAccelerometerData = interpolateAccelerometerData(
+        val interpolatedAccelerometerData = interpolateAccelerometerData(
             data = accelerometerData, samplesNeeded = accelerometerSamplesNeeded
         )
 
-        Log.i(TAG, "Interpolate Data ACC: ${interpolateAccelerometerData.take(200)}")
+        Log.i(TAG, "Interpolate Data ACC: ${interpolatedAccelerometerData.take(200)}")
 
-        val differencesAccelerometer =
-            interpolateAccelerometerData.zipWithNext { a, b -> kotlin.math.abs(a - b) }
+        val absoluteAccelerometer =
+            interpolatedAccelerometerData.zipWithNext { a, b -> kotlin.math.abs(a - b) }
 
-        val differencesAccelerometerList = if (differencesAccelerometer.size < 300) {
-            listOf(0.0) + differencesAccelerometer
+        val differencesAccelerometerList = if (absoluteAccelerometer.size < 300) {
+            listOf(0.0) + absoluteAccelerometer
         } else {
-            differencesAccelerometer
+            absoluteAccelerometer
         }
         Log.i(TAG, "Difference ACC: ${differencesAccelerometerList.take(200)}")
         val normalizedDifference = normalizeDataUsingMeanAndStd(differencesAccelerometerList)
         Log.i(TAG, "Normalized Data ACC Diff: ${normalizedDifference.take(200)}")
-        val combineData =
+        val combinedData =
             (normalizedHRData.asReversed() + normalizedDifference.asReversed()).toDoubleArray()
         tfliteModel?.let { mlModel ->
             try {
-                val predictionData = combineData.map { it.toFloat() }.toTypedArray()
+                val predictionData = combinedData.map { it.toFloat() }.toTypedArray()
                 val inputDataArray = Array(1) { Array(predictionData.size) { FloatArray(1) } }
                 // Fill the inputDataArray with data [[0],[index],[0]]
                 predictionData.forEachIndexed { index, floats ->
@@ -84,7 +84,7 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
 
     private fun normalizeDataUsingMeanAndStd(data: List<Double>): List<Double> {
         if (data.isEmpty()) {
-            // Handle the case where data is empty
+            // Handle the case where data is empty : TODO(Jayesh)
             return data
         }
         // Calculate mean
@@ -98,7 +98,7 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
     }
 
     private fun interpolateHeartRate(
-        data: List<HeartRateEntity>, workoutStartTime: Long, samplesNeeded: Int
+        data: List<HeartRateEntity>, sessionStartTime: Long, samplesNeeded: Int
     ): List<HeartRateEntity> {
         val interpolatedData = mutableListOf<HeartRateEntity>()
         for (i in 0 until data.size - 1) {
@@ -110,8 +110,8 @@ class SleepStagePredictionHelper(val context: Context, private val tfliteModel: 
             val rateDiff = endRate - startRate
             val slope = rateDiff / timeDiff
             if (i == 0) {
-                for (j in workoutStartTime until startTime) {
-                    val interpolatedTime = workoutStartTime + j
+                for (j in sessionStartTime until startTime) {
+                    val interpolatedTime = sessionStartTime + j
                     interpolatedData.add(
                         HeartRateEntity(
                             createdAt = interpolatedTime, heartRate = startRate
@@ -228,6 +228,3 @@ fun Long.toFormattedDateString(): String {
     val date = Date(this)
     return dateFormat.format(date)
 }
-
-
-

@@ -69,7 +69,7 @@ class PredictionWork @AssistedInject constructor(
                         sleepStagePredictionHelper.prediction(
                             heartRateData = heartRateData,
                             accelerometerData = accelerometerData,
-                            workoutStartTime = System.currentTimeMillis().toSeconds()
+                            sessionStartTime = System.currentTimeMillis().toSeconds()
                         )
                     }.await()
                     when (result) {
