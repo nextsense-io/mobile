@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
+import 'package:lucid_reality/ui/components/app_text_button.dart';
+import 'package:lucid_reality/ui/dialogs/app_dialogs.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/lucid/lucid_screen_vm.dart';
+import 'package:lucid_reality/utils/notification.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
 
@@ -22,6 +25,34 @@ class RealityCheckSettings extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isNotificationEnabled = useState(false);
+    final appLifecycleState = useAppLifecycleState();
+    final batteryOptimizationState = useState(BatteryOptimizationState.unknown);
+    final onContinue = () async {
+      final isNotificationAllow = await notificationPermission(context);
+      if (isNotificationAllow) {
+        /// Checking battery optimization is enabled or disabled. If it is enabled, we will ask the user to disable it, and then immediately return 'isInProgress' for further checking. Otherwise, return the status 'disable'.
+        batteryOptimizationState.value = await context.isBatteryOptimizationDisabled();
+        if (batteryOptimizationState.value == BatteryOptimizationState.isDisabled) {
+          isNotificationEnabled.value = true;
+        }
+      }
+    };
+    //Check for notification permission, user or system may revoked it.
+    useEffect(() {
+      if (appLifecycleState == AppLifecycleState.resumed) {
+        if (batteryOptimizationState.value == BatteryOptimizationState.isInProgress) {
+          batteryOptimizationState.value = BatteryOptimizationState.isCompleted;
+          onContinue.call();
+        }
+        Future.sync(
+          () async {
+            isNotificationEnabled.value = await isNotificationAllowed();
+          },
+        );
+      }
+      return null;
+    }, [appLifecycleState]);
     if (!viewModel.isRealitySettingsCompleted()) {
       return InkWell(
         onTap: onSetupSettings,
@@ -35,7 +66,7 @@ class RealityCheckSettings extends HookWidget {
                 bottom: 0,
                 child: Image.asset(imageBasePath.plus('lucid_icon.png')),
               ),
-              Flexible(
+              Container(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 80, 16),
                   child: Column(
@@ -59,6 +90,25 @@ class RealityCheckSettings extends HookWidget {
         ),
       );
     } else {
+      if (isNotificationEnabled.value == false) {
+        return Container(
+          width: double.maxFinite,
+          child: AppCard(
+            Column(
+              children: [
+                Text("Our app would like to send you notifications"),
+                SizedBox(height: 16),
+                AppTextButton(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  backgroundImage: 'btn_authorize.svg',
+                  onPressed: onContinue,
+                  text: "Allow Notifications",
+                )
+              ],
+            ),
+          ),
+        );
+      }
       return Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

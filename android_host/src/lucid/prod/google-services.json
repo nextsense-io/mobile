@@ -23,6 +23,14 @@
           }
         },
         {
+          "client_id": "863545530166-f03aefnpicofhecrfpr3gjb592fpgfbe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.lucid.prod",
+            "certificate_hash": "05a96ff56fe5a743c3ae042490ca4b5e3a00b873"
+          }
+        },
+        {
           "client_id": "863545530166-2ap7tl7cpntv0dhs95lqug5rn7tavgcj.apps.googleusercontent.com",
           "client_type": 3
         }

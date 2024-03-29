@@ -51,133 +51,96 @@ class WeekScreen extends HookWidget {
         Expanded(
           child: Padding(
             padding: EdgeInsets.only(bottom: 8, right: cardIndex % 2 == 0 ? 8 : 0),
-            child: Flexible(child: appCard),
+            child: Container(
+              child: appCard,
+            ),
           ),
         ),
       );
       cardIndex++;
     }
     sleepAverageRows.add(currentRow);
-
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          AppCard(Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        AppCard(Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+          SvgButton(
+            onPressed: () {
+              viewModel.changeDay(-7);
+            },
+            imageName: 'backward_arrow.svg',
+          ),
+          Text(
+            viewModel.weekDateRange,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          if (DateTime.now().dateNoTime.isAfter(viewModel.weekEndDate))
             SvgButton(
               onPressed: () {
-                viewModel.changeDay(-7);
+                viewModel.changeDay(7);
               },
-              imageName: 'backward_arrow.svg',
-            ),
-            Text(
-              viewModel.weekDateRange,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            if (DateTime.now().dateNoTime.isAfter(viewModel.weekEndDate))
-              SvgButton(
-                onPressed: () {
-                  viewModel.changeDay(7);
-                },
-                imageName: 'forward_arrow.svg',
-              )
-            else
-              SizedBox(width: 54),
-          ])),
-          SizedBox(height: 8),
-          Expanded(
-              child: SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                            AppCard(SizedBox(
-                                height: 150,
-                                child: SleepBarChart.withData(viewModel.daySleepStages))),
-                            SizedBox(height: 8),
-                          ] +
-                          sleepAverageRows +
-                          [
-                            Row(children: [
-                              Expanded(
-                                child: Padding(
-                                    padding: EdgeInsets.only(bottom: 8, right: 8),
-                                    child: AppCard(Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text("Sleep duration",
-                                                  textAlign: TextAlign.left,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodySmall!
-                                                      .copyWith(
-                                                          color: LucidSleepStage.sleeping.getColor(),
-                                                          fontWeight: FontWeight.bold))),
-                                          SizedBox(height: 8),
-                                          Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text("Your average sleep this week.",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium!
-                                                      .copyWith(color: Colors.white))),
-                                          SizedBox(height: 16),
-                                          Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(viewModel.averageSleepTime?.hhmm ?? "N/A",
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium!
-                                                      .copyWith(
-                                                          color: LucidSleepStage.sleeping.getColor(),
-                                                          fontWeight: FontWeight.bold))),
-                                        ]))),
-                              )
-                            ]),
-                            // Row(children: [
-                            //   Expanded(
-                            //     child: Padding(
-                            //         padding: EdgeInsets.only(bottom: 8, right: 8),
-                            //         child: AppCard(Column(
-                            //             crossAxisAlignment: CrossAxisAlignment.start,
-                            //             children: [
-                            //               Align(
-                            //                   alignment: Alignment.centerLeft,
-                            //                   child: Text("Time to sleep",
-                            //                       textAlign: TextAlign.left,
-                            //                       style: Theme.of(context)
-                            //                           .textTheme
-                            //                           .bodySmall!
-                            //                           .copyWith(
-                            //                               color: LucidSleepStage.awake.getColor(),
-                            //                               fontWeight: FontWeight.bold))),
-                            //               SizedBox(height: 8),
-                            //               Align(
-                            //                   alignment: Alignment.centerLeft,
-                            //                   child: Text("Your average time to sleep this week.",
-                            //                       style: Theme.of(context)
-                            //                           .textTheme
-                            //                           .bodyMedium!
-                            //                           .copyWith(color: Colors.white))),
-                            //               SizedBox(height: 16),
-                            //               Align(
-                            //                   alignment: Alignment.centerLeft,
-                            //                   child: Text(
-                            //                       viewModel.averageSleepLatency?.hhmm ?? "N/A",
-                            //                       style: Theme.of(context)
-                            //                           .textTheme
-                            //                           .bodyMedium!
-                            //                           .copyWith(
-                            //                               color: LucidSleepStage.awake.getColor(),
-                            //                               fontWeight: FontWeight.bold))),
-                            //             ]))),
-                            //   )
-                            // ])
-                          ])))
-        ]);
+              imageName: 'forward_arrow.svg',
+            )
+          else
+            SizedBox(width: 54),
+        ])),
+        SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+                  AppCard(SizedBox(
+                      height: 150, child: SleepBarChart.withData(viewModel.daySleepStages))),
+                  SizedBox(height: 8),
+                ] +
+                sleepAverageRows +
+                [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: EdgeInsets.only(bottom: 8, right: 8),
+                          child: AppCard(
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text("Sleep duration",
+                                        textAlign: TextAlign.left,
+                                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                                            color: LucidSleepStage.sleeping.getColor(),
+                                            fontWeight: FontWeight.bold))),
+                                SizedBox(height: 8),
+                                Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text("Your average sleep this week.",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium!
+                                            .copyWith(color: Colors.white))),
+                                SizedBox(height: 16),
+                                Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(viewModel.averageSleepTime?.hhmm ?? "N/A",
+                                        style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                                            color: LucidSleepStage.sleeping.getColor(),
+                                            fontWeight: FontWeight.bold))),
+                              ],
+                            ),
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ],
+          ),
+        )
+      ],
+    );
   }
 
   @override

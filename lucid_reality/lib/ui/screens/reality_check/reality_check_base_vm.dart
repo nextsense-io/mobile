@@ -10,6 +10,7 @@ import 'package:lucid_reality/managers/lucid_manager.dart';
 import 'package:lucid_reality/ui/screens/navigation.dart';
 import 'package:lucid_reality/utils/notification.dart';
 import 'package:lucid_reality/utils/utils.dart';
+import 'package:lucid_reality/utils/wear_os_connectivity.dart';
 import 'package:progressive_time_picker/progressive_time_picker.dart';
 
 class RealityCheckBaseViewModel extends ViewModel {
@@ -17,6 +18,7 @@ class RealityCheckBaseViewModel extends ViewModel {
   final Navigation navigation = getIt<Navigation>();
   final AuthManager _authManager = getIt<AuthManager>();
   final LucidManager lucidManager = getIt<LucidManager>();
+  final LucidWearOsConnectivity _lucidWearOsConnectivity = getIt<LucidWearOsConnectivity>();
 
   @override
   void init() async {
@@ -59,6 +61,13 @@ class RealityCheckBaseViewModel extends ViewModel {
         endTime: DateTime.fromMillisecondsSinceEpoch(endTime!),
         numberOfReminders: numberOfReminders,
       );
+      //Before scheduling
+      final isCompanionAppInstalled = await _lucidWearOsConnectivity.isCompanionAppInstalled();
+      if (isCompanionAppInstalled) {
+        //Since the companion watch app has been installed, there's no need to schedule a local notification, so we return.
+        _logger.log(Level.WARNING, "Since the companion watch app has been installed, there's no need to schedule a local notification, so we return.");
+        return;
+      }
       // Scheduling Bedtime notification
       final DateTime bedtime =
           DateTime.fromMillisecondsSinceEpoch(lucidManager.realityCheck.getBedTime() ?? 0);
@@ -104,7 +113,8 @@ class RealityCheckBaseViewModel extends ViewModel {
             ? realityCheckingTimeNotificationId
             : realityCheckingBedtimeNotificationId;
         notificationId += i;
-        _logger.log(Level.INFO, 'scheduleNotifications=>$notificationId, "Time:${initialTime.hour}:${initialTime.minute}');
+        _logger.log(Level.INFO,
+            'scheduleNotifications=>$notificationId, "Time:${initialTime.hour}:${initialTime.minute}');
         await scheduleNotifications(
           notificationId: notificationId,
           notificationType: notificationType,

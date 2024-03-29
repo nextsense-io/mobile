@@ -9,8 +9,11 @@ import 'package:lucid_reality/domain/reality_test.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
 
+import '../utils/wear_os_connectivity.dart';
+
 class LucidManager {
   final _logger = CustomLogPrinter('LucidManager');
+  final LucidWearOsConnectivity _lucidWearOsConnectivity = getIt<LucidWearOsConnectivity>();
   final firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
   final IntentEntity intentEntity = IntentEntity.instance;
   final RealityCheckEntity realityCheck = RealityCheckEntity.instance;
@@ -25,6 +28,17 @@ class LucidManager {
   Future<void> fetchRealityCheck() async {
     await firebaseRealTimeDb.getEntityAs<RealityCheckEntity>(
         RealityCheckEntity.table.where('${intentEntity.entityId}'), RealityCheckEntity.fromJson);
+    //Sync the existing reality settings to watch app
+    try {
+      var realityTest = realityCheck.getRealityTest();
+      if (realityTest != null) {
+        _logger.log(Level.INFO, "Sync the existing reality settings to watch app");
+        await _lucidWearOsConnectivity.syncToWearOSRealitySettings(realityTest: realityTest);
+      }
+    } catch (e) {
+      _logger.log(Level.WARNING,
+          "Something went wrong while sync the existing reality settings to watch app $e");
+    }
   }
 
   Future<void> _updateIntent() async {
@@ -83,6 +97,7 @@ class LucidManager {
 
   Future<void> saveRealityTest(RealityTest realityTest) async {
     realityCheck.setRealityTest(realityTest);
+    await _lucidWearOsConnectivity.syncToWearOSRealitySettings(realityTest: realityTest);
     await _saveRealityCheck();
   }
 

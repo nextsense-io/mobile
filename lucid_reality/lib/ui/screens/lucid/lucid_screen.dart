@@ -4,7 +4,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_circular_progress_indicator.dart';
-import 'package:lucid_reality/ui/components/app_text_buttton.dart';
+import 'package:lucid_reality/ui/components/app_text_button.dart';
+import 'package:lucid_reality/ui/components/rem_detection_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/ui/screens/lucid/lucid_screen_vm.dart';
 import 'package:lucid_reality/ui/screens/reality_check/reality_check_settings.dart';
@@ -98,36 +99,41 @@ class LucidScreen extends HookWidget {
                         viewModel.navigateToCategoryScreen();
                       },
                     ),
+                    if (!viewModel.isDoNotDisturbOverridden) SizedBox(height: 16),
                     if (!viewModel.isDoNotDisturbOverridden)
-                      SizedBox(height: 16),
-                    if (!viewModel.isDoNotDisturbOverridden)
-                      AppCard(
-                        Column( children: [
-                          Text(
-                            'Override Do Not Disturb',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmallWithFontWeight600
-                                ?.copyWith(color: NextSenseColors.royalPurple),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'This will allow the app to play sounds during your sleep while you '
-                            'put your phone in \'Do Not Disturb mode\'. This will ask you to '
-                            'override it on nighttime notifications.',
-                            style: Theme.of(context).textTheme.bodyCaption,
-                          ),
-                          const SizedBox(height: 16),
-                          AppTextButton(
-                            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            backgroundImage: 'btn_authorize.svg',
-                            onPressed: () {
-                              viewModel.openChannelSettings();
-                            },
-                            text: "Authorize",
-                          )
-                        ])
-                      )
+                      AppCard(Column(children: [
+                        Text(
+                          'Override Do Not Disturb',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmallWithFontWeight600
+                              ?.copyWith(color: NextSenseColors.royalPurple),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'This will allow the app to play sounds during your sleep while you '
+                          'put your phone in \'Do Not Disturb mode\'. This will ask you to '
+                          'override it on nighttime notifications.',
+                          style: Theme.of(context).textTheme.bodyCaption,
+                        ),
+                        const SizedBox(height: 16),
+                        AppTextButton(
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          backgroundImage: 'btn_authorize.svg',
+                          onPressed: () {
+                            viewModel.openChannelSettings();
+                          },
+                          text: "Authorize",
+                        )
+                      ])),
+                    if (!viewModel.isREMDetectionOnboardingCompleted) ...[
+                      const SizedBox(height: 16),
+                      RemDetectionButton(
+                        onPressed: () {
+                          viewModel.navigateToREMDetectionOnboardingScreen();
+                        },
+                      ),
+                    ],
                   ],
                 ),
               );

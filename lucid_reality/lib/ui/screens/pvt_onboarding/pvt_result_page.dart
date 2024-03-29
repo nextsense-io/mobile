@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucid_reality/domain/psychomotor_vigilance_test.dart';
 import 'package:lucid_reality/ui/components/app_card.dart';
 import 'package:lucid_reality/ui/components/app_close_button.dart';
-import 'package:lucid_reality/ui/components/app_text_buttton.dart';
+import 'package:lucid_reality/ui/components/app_text_button.dart';
 import 'package:lucid_reality/ui/nextsense_colors.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
