@@ -29,8 +29,8 @@ android {
         applicationId = "io.nextsense.android.main.lucid"
         minSdk = 30
         targetSdk = 33
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 6
+        versionName = "1.0.2"
         vectorDrawables {
             useSupportLibrary = true
         }
