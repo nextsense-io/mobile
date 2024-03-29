@@ -26,8 +26,8 @@ android {
         applicationId "io.nextsense.android.main"
         minSdkVersion 28
         targetSdkVersion 34
-        versionCode 50
-        versionName "0.7.5"
+        versionCode 54
+        versionName "0.7.6"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
