@@ -70,8 +70,8 @@ public class XenonDataParser {
   public synchronized void parseDataBytes(byte[] values, int channelsCount) throws
       FirmwareMessageParsingException {
     Instant receptionTimestamp = Instant.now();
-    RotatingFileLogger.get().logw(TAG, "Received data bytes: " + receptionTimestamp.toEpochMilli() +
-        ", size: " + values.length);
+    // RotatingFileLogger.get().logw(TAG, "Received data bytes: " + receptionTimestamp.toEpochMilli() +
+    //     ", size: " + values.length);
     if (values.length < 1) {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device data.");
     }
