@@ -31,7 +31,7 @@ fun LucidWatchApp(
                         navController = navController,
                         navGraph = NavGraphs.root,
                         startRoute = NavGraphs.root.startRoute,
-                        dependenciesContainerBuilder = { //this: DependenciesContainerBuilder<*>
+                        dependenciesContainerBuilder = {
                             dependency(homeViewModel)
                         },
                     )

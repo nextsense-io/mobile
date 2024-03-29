@@ -14,6 +14,12 @@ import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
+/**
+ * This class is used to manage ml prediction of REM detection with inout of heart rate and accelerometer data.
+ * Before prediction begins, we need to normalize our heart rate and accelerometer data.
+ *
+ *NOTE: The normalization logic was primarily developed by Devansh to ensure consistent prediction outputs on both Android and iOS apps.
+ * */
 class SleepStagePredictionHelper(val context: Context, private val tfliteModel: Interpreter?) {
     /// past 30 minutes
     private val heartRateSamplesNeeded: Int = 1800

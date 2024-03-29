@@ -44,7 +44,7 @@ class PredictionWork @AssistedInject constructor(
     @Assisted params: WorkerParameters
 ) : CoroutineWorker(appContext, params) {
 
-    //It should show up next notification after 20 minutes
+    //It should show up next notification after 10 minutes
     private var lastNotificationShowUpTime = 0L
 
 
@@ -110,7 +110,7 @@ class PredictionWork @AssistedInject constructor(
 
     /**
      * Checks the last 5 records with a prediction of 1 (REM) before showing a notification.
-     * Subsequent notifications are scheduled to appear 20 minutes after the first one.
+     * Subsequent notifications are scheduled to appear 10 minutes after the first one.
      */
     private fun shouldShowNotification(): Boolean {
         val isREMInRecentRecords =
