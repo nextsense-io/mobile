@@ -147,7 +147,7 @@ dependencies {
     implementation project(path: ':core')
     implementation project(path: ':flutter')
     implementation project(path: ':service')
-    wearApp(project(":lucidwatchapp"))
+    lucidWearApp(project(":lucidwatchapp"))
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
