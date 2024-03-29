@@ -53,8 +53,8 @@ public class KauaiMedicalDataParser {
     this.sessionStartTimestamp = sessionStartTimestamp;
   }
 
-  public void parseDataBytes(byte[] values, List<Integer> activeChannels, Instant startTimestamp,
-                             int samplingRate)
+  public synchronized void parseDataBytes(
+      byte[] values, List<Integer> activeChannels, Instant startTimestamp, int samplingRate)
       throws FirmwareMessageParsingException {
     Instant effectiveStartTimestamp;
     if (startTimestamp == null) {

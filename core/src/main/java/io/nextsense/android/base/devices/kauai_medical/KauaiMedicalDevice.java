@@ -211,6 +211,7 @@ public class KauaiMedicalDevice extends BaseNextSenseDevice implements NextSense
           new IllegalArgumentException("Need to provide the " + STREAM_START_MODE_KEY +
               " parameter."));
     }
+    boolean saveToCsv = parameters.getBoolean(LocalSessionManager.SAVE_TO_CSV_KEY, false);
     targetStartStreamingMode =
         (StreamingStartMode)parameters.getSerializable(STREAM_START_MODE_KEY);
     if (this.deviceMode == DeviceMode.STREAMING) {
@@ -223,7 +224,7 @@ public class KauaiMedicalDevice extends BaseNextSenseDevice implements NextSense
     }
     long localSessionId = localSessionManager.startLocalSession(userBigTableKey, dataSessionId,
         earbudsConfig, uploadToCloud, deviceSettings.getEegStreamingRate(),
-        deviceSettings.getImuStreamingRate());
+        deviceSettings.getImuStreamingRate(), saveToCsv);
     kauaiMedicalDataParser.setSessionStartTimestamp(null);
     if (localSessionId == -1) {
       // Previous session not finished, cannot start streaming.

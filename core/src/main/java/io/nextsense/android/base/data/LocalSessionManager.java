@@ -6,9 +6,14 @@ import com.google.common.collect.Sets;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.Set;
 
+import io.nextsense.android.base.db.CsvSink;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
@@ -16,6 +21,8 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
  * Manages the local sessions. The main rules is that only one session can be running at a time.
  */
 public class LocalSessionManager {
+
+  public static final String SAVE_TO_CSV_KEY = "save_to_csv";
 
   // Interface to listen to when the first data is received after a session is started.
   public interface OnFirstDataReceivedListener {
@@ -30,18 +37,23 @@ public class LocalSessionManager {
   private static final String TAG = LocalSessionManager.class.getSimpleName();
 
   private final ObjectBoxDatabase objectBoxDatabase;
+  private final CsvSink csvSink;
   private LocalSession activeLocalSession;
   private LocalSession lastActiveSession;
   private Instant lastActiveSessionEnd;
   private final Set<OnFirstDataReceivedListener> onFirstDataReceivedListeners =
       Sets.newConcurrentHashSet();
+  private final DateTimeFormatter csvFileNameFormatter = DateTimeFormatter
+      .ofPattern("yyyy-MM-dd_hh-mm-ss")
+      .withZone(ZoneId.systemDefault());
 
-  private LocalSessionManager(ObjectBoxDatabase objectBoxDatabase) {
+  private LocalSessionManager(ObjectBoxDatabase objectBoxDatabase, CsvSink csvSink) {
     this.objectBoxDatabase = objectBoxDatabase;
+    this.csvSink = csvSink;
   }
 
-  public static LocalSessionManager create(ObjectBoxDatabase objectBoxDatabase) {
-    return new LocalSessionManager(objectBoxDatabase);
+  public static LocalSessionManager create(ObjectBoxDatabase objectBoxDatabase, CsvSink csvSink) {
+    return new LocalSessionManager(objectBoxDatabase, csvSink);
   }
 
   public synchronized void init() {
@@ -64,16 +76,35 @@ public class LocalSessionManager {
       @Nullable String cloudDataSessionId, @Nullable String userBigTableKey,
       @Nullable String earbudsConfig, boolean uploadNeeded, float eegSampleRate,
       float accelerationSampleRate) {
+    return startLocalSession(cloudDataSessionId, userBigTableKey, earbudsConfig, uploadNeeded,
+        eegSampleRate, accelerationSampleRate, /*saveToCsv=*/false);
+  }
+
+  public synchronized long startLocalSession(
+      @Nullable String cloudDataSessionId, @Nullable String userBigTableKey,
+      @Nullable String earbudsConfig, boolean uploadNeeded, float eegSampleRate,
+      float accelerationSampleRate, boolean saveToCsv) {
     if (!canStartNewSession()) {
       RotatingFileLogger.get().logw(TAG, "Trying to start a session, but one is already active.");
       return -1;
     }
     activeLocalSession = LocalSession.create(userBigTableKey, cloudDataSessionId, earbudsConfig,
         uploadNeeded, /*receivedData=*/false, eegSampleRate, accelerationSampleRate, Instant.now());
+    if (saveToCsv && csvSink != null) {
+      csvSink.startListening();
+      String formattedDateTime =
+          LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).format(csvFileNameFormatter);
+      csvSink.openCsv(/*fileName=*/"data_recording_" + formattedDateTime, earbudsConfig,
+          activeLocalSession.id);
+    }
     return objectBoxDatabase.putLocalSession(activeLocalSession);
   }
 
   public synchronized void stopLocalSession() {
+    if (csvSink != null) {
+      csvSink.closeCsv(/*checkForCompletedSession=*/false);
+      csvSink.stopListening();
+    }
     if (activeLocalSession == null) {
       RotatingFileLogger.get().logw(TAG, "Trying to stop the active session, but none is active.");
       return;

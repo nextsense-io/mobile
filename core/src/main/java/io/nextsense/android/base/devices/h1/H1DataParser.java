@@ -48,7 +48,7 @@ public class H1DataParser {
     return new H1DataParser(localSessionManager);
   }
 
-  public void parseDataBytes(byte[] values, int channelsCount) throws
+  public synchronized void parseDataBytes(byte[] values, int channelsCount) throws
       FirmwareMessageParsingException {
     Instant receptionTimestamp = Instant.now();
     if (values.length < 1) {

@@ -43,7 +43,6 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
  * Update on the second generation prototype device that was built internally at NextSense.
  * Dual-ear device with cross-ear channels.
  * Provides device information queries, configuration of a few parameters and data streaming.
- *
  * Can also be referenced as "consumer" Kauai or Xenon P0.2.
  */
 public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice {
@@ -170,6 +169,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
           new IllegalArgumentException("Need to provide the " + STREAM_START_MODE_KEY +
               " parameter."));
     }
+    boolean saveToCsv = parameters.getBoolean(LocalSessionManager.SAVE_TO_CSV_KEY, false);
     targetStartStreamingMode =
         (StreamingStartMode)parameters.getSerializable(STREAM_START_MODE_KEY);
     if (this.deviceMode == DeviceMode.STREAMING) {
@@ -182,7 +182,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     }
     long localSessionId = localSessionManager.startLocalSession(userBigTableKey, dataSessionId,
         earbudsConfig, uploadToCloud, deviceSettings.getEegStreamingRate(),
-        deviceSettings.getImuStreamingRate());
+        deviceSettings.getImuStreamingRate(), saveToCsv);
     if (localSessionId == -1) {
       // Previous session not finished, cannot start streaming.
       RotatingFileLogger.get().logw(TAG, "Previous session not finished, cannot start streaming.");
@@ -356,7 +356,7 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
       try {
         kauaiDataParser.parseDataBytes(value, getChannelCount());
       } catch (FirmwareMessageParsingException e) {
-        e.printStackTrace();
+        RotatingFileLogger.get().loge(TAG, "Failed to parse data bytes: " + e.getMessage());
       }
     }
 

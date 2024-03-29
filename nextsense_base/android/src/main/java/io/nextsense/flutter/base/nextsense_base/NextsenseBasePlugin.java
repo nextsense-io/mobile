@@ -110,6 +110,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String NOTIFICATION_TITLE_ARGUMENT = "notification_title";
   public static final String START_DATE_TIME_EPOCH_MS_ARGUMENT = "start_date_time_epoch_ms";
   public static final String NOTIFICATION_TEXT_ARGUMENT = "notification_text";
+  public static final String SAVE_TO_CSV_KEY_ARGUMENT = "save_to_csv";
   public static final String ERROR_SERVICE_NOT_AVAILABLE = "service_not_available";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
   public static final String ERROR_SESSION_NOT_STARTED = "session_not_started";
@@ -332,7 +333,9 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         String userBtKey = call.argument(USER_BT_KEY_ARGUMENT);
         String dataSessionId = call.argument(DATA_SESSION_ID_ARGUMENT);
         String earbudsConfig = call.argument(EARBUDS_CONFIG_ARGUMENT);
-        startStreaming(result, macAddress, uploadToCloud, userBtKey, dataSessionId, earbudsConfig);
+        Boolean savetoCsv = call.argument(SAVE_TO_CSV_KEY_ARGUMENT);
+        startStreaming(result, macAddress, uploadToCloud, userBtKey, dataSessionId, earbudsConfig,
+            savetoCsv);
         break;
       case STOP_STREAMING_COMMAND:
         macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
@@ -767,7 +770,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   private void startStreaming(
       Result result, String macAddress, Boolean uploadToCloud, String userBigTableKey,
-      String dataSessionId, String earbudsConfig) {
+      String dataSessionId, String earbudsConfig, boolean saveToCsv) {
     Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
     if (!device.isPresent()) {
       returnError(result, START_STREAMING_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
@@ -778,7 +781,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       // Clear the memory cache from the previous recording data, if any.
       nextSenseService.getMemoryCache().clear();
       boolean started = device.get().startStreaming(
-          uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig).get();
+          uploadToCloud, userBigTableKey, dataSessionId, earbudsConfig, saveToCsv).get();
       if (!started) {
         returnError(result, START_STREAMING_COMMAND, ERROR_STREAMING_START_FAILED,
             /*errorMessage=*/null, /*errorDetails=*/null);

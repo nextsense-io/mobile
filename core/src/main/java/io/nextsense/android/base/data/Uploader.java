@@ -476,7 +476,7 @@ public class Uploader {
   private void saveData(DataSamplesProto.DataSamples dataSamplesProto) {
     saveData = false;
     try {
-      String collection = "content://media/external/file"; // One can even write to micro SD card
+      String collection = "content://media/external/file";
       String relativePath = "Documents/NextSense";
 
       Uri collectionUri = Uri.parse(collection);
