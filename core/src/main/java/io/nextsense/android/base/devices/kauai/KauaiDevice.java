@@ -125,10 +125,8 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     this.peripheral = peripheral;
     initializeCharacteristics();
     if (reconnecting) {
-      // If reconnecting, we do not want to reset the time and apply settings as there might be a
-      // recording in progress and this is not supported.
-      RotatingFileLogger.get().logi(TAG, "Reconnecting, no need to re-apply device settings.");
-      return Futures.immediateFuture(true);
+      // Cannot know if this was due to device powering off, so need to re-apply settings.
+      RotatingFileLogger.get().logi(TAG, "Reconnecting, re-applying device settings.");
     }
     return executorService.submit(() -> {
       try {

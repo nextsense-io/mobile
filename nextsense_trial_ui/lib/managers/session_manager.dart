@@ -63,6 +63,7 @@ class SessionManager {
     _currentSession = Session(sessionEntity);
     DateTime startTime = DateTime.now();
 
+    _logger.log(Level.INFO, "Starting session with device: ${device.name} of type: ${device.type}");
     String? earbudsConfig;
     switch (device.type) {
       case DeviceType.kauai_medical:
@@ -136,20 +137,13 @@ class SessionManager {
         _logger.log(Level.SEVERE, "Failed to set impedance config. Cannot start streaming.");
         return false;
       }
-      String? earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig();
-      if (device.type == DeviceType.kauai_medical) {
-        earbudsConfig = EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.toLowerCase();
-      } else if (device.type == DeviceType.nitro) {
-        earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
-      } else if (device.type == DeviceType.kauai) {
-        earbudsConfig = EarbudsConfigNames.XENON_P02_CONFIG.name.toLowerCase();
-      }
 
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,
           bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: _currentSession!.id,
           earbudsConfig: earbudsConfig,
           saveToCsv: _preferences.getBool(PreferenceKey.saveBleDataToLocalCsv));
-      _logger.log(Level.INFO, "Started streaming with local session: $_currentLocalSession");
+      _logger.log(Level.INFO, "Started streaming with local session: $_currentLocalSession and "
+          "earbuds config: $earbudsConfig");
       await NextsenseBase.changeNotificationContent("NextSense recording in progress",
           "Press to access the application");
       return true;
