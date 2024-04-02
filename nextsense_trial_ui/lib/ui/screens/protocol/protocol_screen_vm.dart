@@ -105,13 +105,23 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   bool get isResearcher => _authManager.user!.userType == UserType.researcher;
 
   ProtocolScreenViewModel(this.runnableProtocol, {this.useCountDownTimer = true}) {
-    for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
-      _scheduledProtocolParts.add(ScheduledProtocolPart(protocolPart: part,
-          relativeMilliseconds: _repetitionTime.inMilliseconds));
-      _repetitionTime += part.duration;
+    _scheduledProtocolParts = getProtocolParts();
+    for (ScheduledProtocolPart part in _scheduledProtocolParts) {
+      _repetitionTime += part.protocolPart.duration;
     }
     _initialScheduledProtocolParts = deepCopy(_scheduledProtocolParts);
     _blockEndMilliSeconds = _repetitionTime.inMilliseconds;
+  }
+
+  List<ScheduledProtocolPart> getProtocolParts() {
+    List<ScheduledProtocolPart> parts = [];
+    Duration repetitionTime = const Duration(seconds: 0);
+    for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
+      parts.add(ScheduledProtocolPart(protocolPart: part,
+          relativeMilliseconds: repetitionTime.inMilliseconds));
+      repetitionTime += part.duration;
+    }
+    return parts;
   }
 
   @override
@@ -286,8 +296,8 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       }
       _currentProtocolPart = 0;
       _logger.log(Level.FINE, "Advanced protocol to part 0.");
-      // _repetitionTime = _initialRepetitionTime;
-      _scheduledProtocolParts = deepCopy(_initialScheduledProtocolParts);
+      // _scheduledProtocolParts = deepCopy(_initialScheduledProtocolParts);
+      _scheduledProtocolParts = getProtocolParts();
       _blockStartMilliSeconds = millisecondsElapsed;
       _blockEndMilliSeconds = _blockStartMilliSeconds + _repetitionTime.inMilliseconds;
       _logger.log(Level.FINE, "Block End milliseconds: $_blockEndMilliSeconds");
