@@ -1,10 +1,64 @@
 {
   "project_info": {
     "project_number": "863545530166",
+    "firebase_url": "https://nextsense-prod-default-rtdb.firebaseio.com",
     "project_id": "nextsense-prod",
     "storage_bucket": "nextsense-prod.appspot.com"
   },
   "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863545530166:android:fce4b0a58cca0b47f30597",
+        "android_client_info": {
+          "package_name": "io.nextsense.android.main.lucid.prod"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "863545530166-3sr4ebrqjgk4sen15tpigiafeg30c6bb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.lucid.prod",
+            "certificate_hash": "147a2a2e5ebc4611bf66bd005109ad13a4866727"
+          }
+        },
+        {
+          "client_id": "863545530166-48krc4qs9p8egc3m7qfpl2cjiap1gpl1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.lucid.prod",
+            "certificate_hash": "396fcf39f66fe653150904858f74ebf9337d4f43"
+          }
+        },
+        {
+          "client_id": "863545530166-f03aefnpicofhecrfpr3gjb592fpgfbe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.lucid.prod",
+            "certificate_hash": "05a96ff56fe5a743c3ae042490ca4b5e3a00b873"
+          }
+        },
+        {
+          "client_id": "863545530166-2ap7tl7cpntv0dhs95lqug5rn7tavgcj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARZ9Wv-RVgZIfyd5sq-x5oHbZwLfH_ViQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "863545530166-2ap7tl7cpntv0dhs95lqug5rn7tavgcj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
     {
       "client_info": {
         "mobilesdk_app_id": "1:863545530166:android:eb42c7eab7355e41f30597",
@@ -13,6 +67,107 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "863545530166-4d47l0i23t8makm21j02rsra0tf5v7ha.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.prod",
+            "certificate_hash": "41737cd172ebd7cc5d99c9370d3e8f88479f439e"
+          }
+        },
+        {
+          "client_id": "863545530166-ik5v17hd4i4tsjmurepqr0jbsr4et5pj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.prod",
+            "certificate_hash": "396fcf39f66fe653150904858f74ebf9337d4f43"
+          }
+        },
+        {
+          "client_id": "863545530166-kurb9hleor0ias88641tvr9dh8t79u2o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.prod",
+            "certificate_hash": "b23cfb52e90ce46ac626a925caafa91d4a19727c"
+          }
+        },
+        {
+          "client_id": "863545530166-m96cs0leoiuv1mbsmhak9071jrvjv2eq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.prod",
+            "certificate_hash": "05a96ff56fe5a743c3ae042490ca4b5e3a00b873"
+          }
+        },
+        {
+          "client_id": "863545530166-n35lu3i72uosihhsqbjgv5kjp7o6ajvh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.research.prod",
+            "certificate_hash": "4b739e510ed3011d8c7b0396a142b19c39c2a59d"
+          }
+        },
+        {
+          "client_id": "863545530166-2ap7tl7cpntv0dhs95lqug5rn7tavgcj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARZ9Wv-RVgZIfyd5sq-x5oHbZwLfH_ViQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "863545530166-2ap7tl7cpntv0dhs95lqug5rn7tavgcj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863545530166:android:dffebc2108b291a7f30597",
+        "android_client_info": {
+          "package_name": "io.nextsense.android.main.study.prod"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "863545530166-etqlvh5p2n4ftvr9lqrfaop5mqru4b89.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.prod",
+            "certificate_hash": "a9a6c44cc89687f2f915924f27be4af22c6c4fde"
+          }
+        },
+        {
+          "client_id": "863545530166-j854ihfaasj7eg9uo6qa0ac1kg8eiupe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.prod",
+            "certificate_hash": "396fcf39f66fe653150904858f74ebf9337d4f43"
+          }
+        },
+        {
+          "client_id": "863545530166-mgvgcktr17vg9f6hu2u4gsblt63lb6vd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.prod",
+            "certificate_hash": "41737cd172ebd7cc5d99c9370d3e8f88479f439e"
+          }
+        },
+        {
+          "client_id": "863545530166-rllvhelbqmpdrri1u4ci60as445r177u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.nextsense.android.main.study.prod",
+            "certificate_hash": "05a96ff56fe5a743c3ae042490ca4b5e3a00b873"
+          }
+        },
         {
           "client_id": "863545530166-2ap7tl7cpntv0dhs95lqug5rn7tavgcj.apps.googleusercontent.com",
           "client_type": 3

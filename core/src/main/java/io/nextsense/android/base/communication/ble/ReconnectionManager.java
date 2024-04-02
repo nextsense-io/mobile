@@ -103,7 +103,8 @@ public class ReconnectionManager {
         }
       });
     } else {
-      RotatingFileLogger.get().logw(TAG, "Trying to reconnect when there is already a connected device.");
+      RotatingFileLogger.get().logw(TAG,
+          "Trying to reconnect when there is already a connected device.");
       stopReconnecting();
     }
   }

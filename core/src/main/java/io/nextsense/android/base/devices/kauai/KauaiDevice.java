@@ -362,8 +362,8 @@ public class KauaiDevice extends BaseNextSenseDevice implements NextSenseDevice 
     public void onCharacteristicWrite(
         @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
         @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-      RotatingFileLogger.get().logv(TAG, "Characteristic write completed with status " + status + " with value: " +
-          Arrays.toString(value));
+      RotatingFileLogger.get().logv(TAG, "Characteristic write completed with status " + status +
+          " with value: " + Arrays.toString(value));
       // Check mode change result.
       if (characteristic == dataCharacteristic &&
           value.length >= KauaiFirmwareCommand.COMMAND_SIZE) {
