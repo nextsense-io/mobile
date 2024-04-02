@@ -195,6 +195,7 @@ class EyesOpenEyesClosedProtocol extends TrialBaseProtocol {
 enum ERPAudioState {
   NORMAL_SOUND,
   ODD_SOUND,
+  PLAY_SOUND,
   RESPONSE_WINDOW,
   BREAK,
   BUTTON_PRESS
@@ -202,11 +203,16 @@ enum ERPAudioState {
 
 class ERPAudioProtocol extends TrialBaseProtocol {
 
-  static final ProtocolPart _normalSound = ProtocolPart(
+  // Placeholder to play a random sound. 4/5 is normal, 1/5 is odd.
+  static final ProtocolPart playSound = ProtocolPart(
+      state: ERPAudioState.PLAY_SOUND.name,
+      duration: const Duration(milliseconds: 100),
+      marker: ERPAudioState.PLAY_SOUND.name);
+  static final ProtocolPart normalSound = ProtocolPart(
       state: ERPAudioState.NORMAL_SOUND.name,
       duration: const Duration(milliseconds: 100),
       marker: ERPAudioState.NORMAL_SOUND.name);
-  static final ProtocolPart _oddSound = ProtocolPart(
+  static final ProtocolPart oddSound = ProtocolPart(
       state: ERPAudioState.ODD_SOUND.name,
       duration: const Duration(milliseconds: 100),
       marker: ERPAudioState.ODD_SOUND.name);
@@ -220,8 +226,8 @@ class ERPAudioProtocol extends TrialBaseProtocol {
       durationVariation: const Duration(milliseconds: 400),
       marker: ERPAudioState.BREAK.name);
   static final List<ProtocolPart> _protocolBlock = [
-    _normalSound, _responseWindow, _break, _normalSound, _responseWindow, _break, _normalSound,
-    _responseWindow,  _break, _normalSound, _responseWindow, _break, _oddSound, _responseWindow,
+    playSound, _responseWindow, _break, playSound, _responseWindow, _break, playSound,
+    _responseWindow,  _break, playSound, _responseWindow, _break, playSound, _responseWindow,
     _break
   ];
 
