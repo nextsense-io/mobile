@@ -41,6 +41,7 @@ public class ObjectBoxDatabase implements Database {
   private Box<DeviceInternalState> deviceInternalStateBox;
   private Query<LocalSession> activeSessionQuery;
   private Query<LocalSession> sessionFinishedQuery;
+  private Query<LocalSession> sessionUploadedQuery;
   private Query<EegSample> eegSamplesQuery;
   private Query<EegSample> eegSamplesTimestampIsLesserQuery;
   private Query<Acceleration> accelerationQuery;
@@ -58,6 +59,8 @@ public class ObjectBoxDatabase implements Database {
         LocalSession_.status, LocalSession.Status.RECORDING.id).build();
     sessionFinishedQuery = localSessionBox.query().equal(LocalSession_.id, 0)
         .equal(LocalSession_.status, LocalSession.Status.FINISHED.id).build();
+    sessionUploadedQuery = localSessionBox.query().equal(LocalSession_.id, 0)
+        .equal(LocalSession_.status, LocalSession.Status.UPLOADED.id).build();
     eegSampleBox = boxStore.boxFor(EegSample.class);
     eegSamplesQuery = eegSampleBox.query().equal(EegSample_.localSessionId, 0).build();
     eegSamplesTimestampIsLesserQuery = eegSampleBox.query().equal(EegSample_.localSessionId, 0)
@@ -96,6 +99,11 @@ public class ObjectBoxDatabase implements Database {
   public Query<LocalSession> getFinishedLocalSession(long localSessionId) {
     return runWithExceptionLog(() ->
         sessionFinishedQuery.setParameter(LocalSession_.id, localSessionId));
+  }
+
+  public Query<LocalSession> getUploadedLocalSession(long localSessionId) {
+    return runWithExceptionLog(() ->
+        sessionUploadedQuery.setParameter(LocalSession_.id, localSessionId));
   }
 
   public long putLocalSession(LocalSession localSession) {

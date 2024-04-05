@@ -57,7 +57,7 @@ public class XenonDataParser {
   private static final int INTERNAL_ERROR_FLAG_INDEX = 0;
 
   private final LocalSessionManager localSessionManager;
-  boolean printedDataPackerWarning = false;
+  boolean printedDataPacketWarning = false;
 
   private XenonDataParser(LocalSessionManager localSessionManager) {
     this.localSessionManager = localSessionManager;
@@ -67,9 +67,11 @@ public class XenonDataParser {
     return new XenonDataParser(localSessionManager);
   }
 
-  public void parseDataBytes(byte[] values, int channelsCount) throws
+  public synchronized void parseDataBytes(byte[] values, int channelsCount) throws
       FirmwareMessageParsingException {
     Instant receptionTimestamp = Instant.now();
+    // RotatingFileLogger.get().logw(TAG, "Received data bytes: " + receptionTimestamp.toEpochMilli() +
+    //     ", size: " + values.length);
     if (values.length < 1) {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device data.");
     }
@@ -93,11 +95,12 @@ public class XenonDataParser {
           parseDataPacket(valuesBuffer, activeChannels, receptionTimestamp);
       if (sampleOptional.isPresent()) {
         Sample sample = sampleOptional.get();
+
         if (previousTimestamp != null &&
             previousTimestamp.isAfter(sample.getEegSample().getAbsoluteSamplingTimestamp())) {
-          RotatingFileLogger.get().logw(TAG, "Received a sample that is before a previous sample, skipping sample. " +
-              "Previous timestamp: " + previousTimestamp + ", current timestamp: " +
-              sample.getEegSample().getAbsoluteSamplingTimestamp());
+          RotatingFileLogger.get().logw(TAG, "Received a sample that is before a previous " +
+              "sample, skipping sample. Previous timestamp: " + previousTimestamp +
+              ", current timestamp: " + sample.getEegSample().getAbsoluteSamplingTimestamp());
           break;
         }
         samples.addEegSample(sample.getEegSample());
@@ -123,9 +126,10 @@ public class XenonDataParser {
                                Instant receptionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
-      if (!printedDataPackerWarning) {
-        RotatingFileLogger.get().logw(TAG, "Received data packet without an active session, cannot record it.");
-        printedDataPackerWarning = true;
+      if (!printedDataPacketWarning) {
+        RotatingFileLogger.get().logw(TAG,
+            "Received data packet without an active session, cannot record it.");
+        printedDataPacketWarning = true;
       }
       return Optional.empty();
     }
@@ -182,6 +186,7 @@ public class XenonDataParser {
   }
 
   private void parseAuxStatePacket(ByteBuffer valuesBuffer) {
+    RotatingFileLogger.get().logd(TAG, "Parsing aux state packet.");
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     Long localSessionId = null;
     if (localSessionOptional.isPresent()) {
@@ -229,5 +234,6 @@ public class XenonDataParser {
         flagsMap.get(INTERNAL_ERROR_FLAG_INDEX), sampleCounter, bleFifoCounter, lostSamplesCounter,
         bleRssi, leadsOffPositive);
     EventBus.getDefault().post(deviceInternalState);
+    RotatingFileLogger.get().logd(TAG, "Finished parsing aux state packet.");
   }
 }

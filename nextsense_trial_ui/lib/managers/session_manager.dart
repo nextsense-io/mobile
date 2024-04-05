@@ -71,6 +71,9 @@ class SessionManager {
       case DeviceType.nitro:
         earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
         break;
+      case DeviceType.kauai:
+        earbudsConfig = EarbudsConfigNames.XENON_P02_CONFIG.name.toLowerCase();
+        break;
       default:
         earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig() ??
             EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase();
@@ -144,7 +147,8 @@ class SessionManager {
 
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,
           bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: _currentSession!.id,
-          earbudsConfig: earbudsConfig);
+          earbudsConfig: earbudsConfig,
+          saveToCsv: _preferences.getBool(PreferenceKey.saveBleDataToLocalCsv));
       _logger.log(Level.INFO, "Started streaming with local session: $_currentLocalSession");
       await NextsenseBase.changeNotificationContent("NextSense recording in progress",
           "Press to access the application");

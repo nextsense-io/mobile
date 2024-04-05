@@ -67,7 +67,7 @@ public class NitroDataParser {
     eegSampleCounter = 0;
   }
 
-  public void parseDataBytes(byte[] values) throws
+  public synchronized void parseDataBytes(byte[] values) throws
       FirmwareMessageParsingException {
     if (values.length < 1) {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device data.");

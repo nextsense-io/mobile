@@ -140,7 +140,7 @@ public class TestActivity extends AppCompatActivity {
       }
       ListenableFuture<Boolean> deviceModeFuture = lastDevice.startStreaming(
           /*uploadToCloud=*/false, /*userBigTableKey=*/null,
-          /*dataSessionId=*/null, /*earbudsConfig=*/null);
+          /*dataSessionId=*/null, /*earbudsConfig=*/null, /*saveToCsv=*/false);
       deviceModeFuture.addListener(() -> {
         try {
           Boolean streaming = deviceModeFuture.get();

@@ -241,12 +241,13 @@ class DeviceManager {
       {bool? uploadToCloud,
         String? bigTableKey,
         String? dataSessionCode,
-        String? earbudsConfig}) async {
+        String? earbudsConfig,
+        bool? saveToCsv}) async {
     if (_connectedDevice == null) {
       throw Exception('No connected device');
     }
     int localSession = await NextsenseBase.startStreaming(_connectedDevice!.macAddress,
-        uploadToCloud ?? false, bigTableKey, dataSessionCode, earbudsConfig);
+        uploadToCloud ?? false, bigTableKey, dataSessionCode, earbudsConfig, saveToCsv);
     _requestDeviceStateTimer?.cancel();
     _requestDeviceStateTimer = null;
     return localSession;

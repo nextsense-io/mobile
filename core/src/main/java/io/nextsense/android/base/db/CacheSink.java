@@ -42,7 +42,7 @@ public class CacheSink {
     }
 
     @Subscribe(threadMode = ThreadMode.ASYNC)
-    public void onSamples(Samples samples) {
+    public synchronized void onSamples(Samples samples) {
         Instant saveStartTime = Instant.now();
         memoryCache.addChannelData(samples);
         long saveTime = Instant.now().toEpochMilli() - saveStartTime.toEpochMilli();
