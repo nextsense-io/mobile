@@ -10,8 +10,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -24,9 +26,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.rotary.onRotaryScrollEvent
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -35,8 +40,13 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.wear.compose.foundation.ExperimentalWearFoundationApi
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.wear.compose.foundation.lazy.ScalingLazyListAnchorType
+import androidx.wear.compose.foundation.lazy.ScalingLazyListState
+import androidx.wear.compose.foundation.rememberActiveFocusRequester
 import androidx.wear.compose.material.MaterialTheme
+import androidx.wear.compose.material.PositionIndicator
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
@@ -56,6 +66,7 @@ import io.nextsense.android.main.service.HealthService
 import io.nextsense.android.main.theme.DEEP_LAVENDER
 import io.nextsense.android.main.theme.MIDNIGHT_BLUE
 import io.nextsense.android.main.utils.LucidNavGraph
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
 @LucidNavGraph(start = true)
@@ -77,7 +88,9 @@ fun HomeScreen(
                 title = "Setup Required",
                 message = "You will need to configure notifications on phone app before you start dreaming.",
                 positiveText = "Dismiss",
-                onPositiveClick = { showAlert = false }
+                onPositiveClick = {
+                    showAlert = false
+                },
             )
         }
         if (uiState == UiState.Supported) {
@@ -148,6 +161,7 @@ fun HomeScreen(
     }
 }
 
+@OptIn(ExperimentalWearFoundationApi::class)
 @Composable
 fun ExitDreaming(
     navigator: DestinationsNavigator,
@@ -159,30 +173,62 @@ fun ExitDreaming(
         onExit()
         viewModel.onExitEvent.value = UiState.Startup
     }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = MIDNIGHT_BLUE)
-            .padding(horizontal = 32.dp, vertical = 16.dp)
+    val scalingLazyState = remember { ScalingLazyListState(initialCenterItemIndex = 0) }
+    val focusRequester = rememberActiveFocusRequester()
+    val coroutineScope = rememberCoroutineScope()
+    Scaffold(
+        positionIndicator = {
+            PositionIndicator(scalingLazyListState = scalingLazyState)
+        },
     ) {
-        Spacer(modifier = Modifier.padding(16.dp))
-        Text(
-            text = "Lucid Reality is in dream mode", modifier = Modifier
-        )
-        Spacer(modifier = Modifier.padding(8.dp))
-        Text(
-            text = "EXIT",
+        ScalingLazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .border(
-                    width = 1.dp, DEEP_LAVENDER, shape = RoundedCornerShape(15.dp)
+                .fillMaxSize()
+                .background(color = MIDNIGHT_BLUE)
+                .padding(horizontal = 32.dp, vertical = 16.dp)
+                .onRotaryScrollEvent { event ->
+                    coroutineScope.launch {
+                        scalingLazyState.scrollBy(event.verticalScrollPixels)
+                        scalingLazyState.animateScrollBy(0f)
+                    }
+                    false
+                }
+                .focusRequester(focusRequester)
+                .focusable(),
+            anchorType = ScalingLazyListAnchorType.ItemStart,
+            state = scalingLazyState,
+            autoCentering = null,
+        ) {
+            item {
+                Spacer(modifier = Modifier.padding(8.dp))
+            }
+            item {
+                Text(
+                    text = "Lucid Reality is in dream mode", modifier = Modifier
                 )
-                .padding(16.dp)
-                .clickable {
-                    navigator.navigate(ExitConfirmationDestination)
-                },
-            textAlign = TextAlign.Center,
-        )
+            }
+            item {
+                Spacer(modifier = Modifier.padding(8.dp))
+            }
+            item {
+                Text(
+                    text = "EXIT",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.dp, DEEP_LAVENDER, shape = RoundedCornerShape(15.dp)
+                        )
+                        .padding(16.dp)
+                        .clickable {
+                            navigator.navigate(ExitConfirmationDestination)
+                        },
+                    textAlign = TextAlign.Center,
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.padding(8.dp))
+            }
+        }
     }
 }
 
@@ -256,57 +302,86 @@ private fun StartDreamingPreview() {
     )
 }
 
+@OptIn(ExperimentalWearFoundationApi::class)
 @Composable
 @Destination
 fun ExitConfirmation(
     viewModel: HomeScreenViewModel, navigator: DestinationsNavigator
 ) {
-    ScalingLazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = MaterialTheme.colors.primary)
-            .padding(horizontal = 24.dp, vertical = 20.dp)
+    val scalingLazyState = remember { ScalingLazyListState(initialCenterItemIndex = 0) }
+    val focusRequester = rememberActiveFocusRequester()
+    val coroutineScope = rememberCoroutineScope()
+    Scaffold(
+        positionIndicator = {
+            PositionIndicator(scalingLazyListState = scalingLazyState)
+        },
     ) {
-        item {
-            Text(
-                text = "Are you sure you want to exit dream mode?",
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        }
-        item {
-            Box(
-                modifier = Modifier
-                    .wrapContentHeight()
-                    .fillMaxWidth()
-                    .clickable {
-                        viewModel.onExit()
-                        navigator.navigateUp()
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.btn_start),
-                    contentDescription = null,
-                    contentScale = ContentScale.Fit
-                )
+        ScalingLazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = MaterialTheme.colors.primary)
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+                .onRotaryScrollEvent { event ->
+                    coroutineScope.launch {
+                        scalingLazyState.scrollBy(event.verticalScrollPixels)
+                        scalingLazyState.animateScrollBy(0f)
+                    }
+                    false
+                }
+                .focusRequester(focusRequester)
+                .focusable(),
+            anchorType = ScalingLazyListAnchorType.ItemStart,
+            state = scalingLazyState,
+            autoCentering = null,
+        ) {
+            item {
+                Spacer(modifier = Modifier.padding(8.dp))
+            }
+            item {
                 Text(
-                    text = "Yes, I'm \nawake".uppercase(), modifier = Modifier.padding(top = 4.dp)
+                    text = "Are you sure you want to exit dream mode?",
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
-        }
-        item {
-            Text(
-                text = "No, I want to keep dreaming".uppercase(),
-                modifier = Modifier
-                    .padding(top = 4.dp)
-                    .fillMaxWidth()
-                    .border(
-                        width = 1.dp, DEEP_LAVENDER, shape = RoundedCornerShape(15.dp)
+            item {
+                Box(
+                    modifier = Modifier
+                        .wrapContentHeight()
+                        .fillMaxWidth()
+                        .clickable {
+                            viewModel.onExit()
+                            navigator.navigateUp()
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.btn_start),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit
                     )
-                    .padding(16.dp)
-                    .clickable { navigator.navigateUp() },
-                textAlign = TextAlign.Center,
-            )
+                    Text(
+                        text = "Yes, I'm \nawake".uppercase(),
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+            }
+            item {
+                Text(
+                    text = "No, I want to keep dreaming".uppercase(),
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .fillMaxWidth()
+                        .border(
+                            width = 1.dp, DEEP_LAVENDER, shape = RoundedCornerShape(15.dp)
+                        )
+                        .padding(16.dp)
+                        .clickable { navigator.navigateUp() },
+                    textAlign = TextAlign.Center,
+                )
+            }
+            item {
+                Spacer(modifier = Modifier.padding(8.dp))
+            }
         }
     }
 }
