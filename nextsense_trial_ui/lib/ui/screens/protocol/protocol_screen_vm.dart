@@ -62,7 +62,6 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   final RunnableProtocol runnableProtocol;
   final bool useCountDownTimer;
   List<ScheduledProtocolPart> _scheduledProtocolParts = [];
-  List<ScheduledProtocolPart> _initialScheduledProtocolParts = [];
   final CountDownController countDownController = CountDownController();
   final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
 
@@ -103,13 +102,13 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   bool get isError => !protocolCompleted && protocolCancelReason != ProtocolCancelReason.none;
   int get currentProtocolPart => _currentProtocolPart;
   bool get isResearcher => _authManager.user!.userType == UserType.researcher;
+  bool get isPausedByUser => _timerPaused && deviceCanRecord;
 
   ProtocolScreenViewModel(this.runnableProtocol, {this.useCountDownTimer = true}) {
     _scheduledProtocolParts = getProtocolParts();
     for (ScheduledProtocolPart part in _scheduledProtocolParts) {
       _repetitionTime += part.protocolPart.duration;
     }
-    _initialScheduledProtocolParts = deepCopy(_scheduledProtocolParts);
     _blockEndMilliSeconds = _repetitionTime.inMilliseconds;
   }
 
@@ -257,7 +256,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     timer = Timer.periodic(
       _timerTickInterval,
           (_) {
-        if (_timerPaused) return;
+        if (_timerPaused) {
+          return;
+        }
 
         milliSecondsElapsed += _timerTickInterval.inMilliseconds;
         if (milliSecondsElapsed >= protocolMinTimeSeconds * 1000) {
@@ -296,23 +297,38 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       }
       _currentProtocolPart = 0;
       _logger.log(Level.FINE, "Advanced protocol to part 0.");
-      // _scheduledProtocolParts = deepCopy(_initialScheduledProtocolParts);
+      if (currentRepetition % protocol.blocksPerBreak! == 0) {
+        _logger.log(Level.FINE, "Pausing protocol for a break.");
+        pauseProtocol();
+        return;
+      }
       _scheduledProtocolParts = getProtocolParts();
       _blockStartMilliSeconds = millisecondsElapsed;
       _blockEndMilliSeconds = _blockStartMilliSeconds + _repetitionTime.inMilliseconds;
       _logger.log(Level.FINE, "Block End milliseconds: $_blockEndMilliSeconds");
     }
-    int blockMillisecondsElapsed = millisecondsElapsed - _blockStartMilliSeconds;
-    // Check if can advance the index to the next part.
-    if (_currentProtocolPart < _scheduledProtocolParts.length - 1) {
-      if (blockMillisecondsElapsed >=
-          _scheduledProtocolParts[_currentProtocolPart + 1].relativeMilliseconds) {
-        advanceProtocol = true;
-        if (_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
-          endEvent(DateTime.now());
+    if (millisecondsElapsed >= _blockEndMilliSeconds && _currentProtocolPart == 0) {
+      // Resuming after a user pause.
+      _logger.log(Level.FINE, "Resuming after a user pause.");
+      _scheduledProtocolParts = getProtocolParts();
+      _blockStartMilliSeconds = millisecondsElapsed;
+      _blockEndMilliSeconds = _blockStartMilliSeconds + _repetitionTime.inMilliseconds;
+      _logger.log(Level.FINE, "Block End milliseconds: $_blockEndMilliSeconds");
+      advanceProtocol = true;
+    } else {
+      // Normal tick processing.
+      int blockMillisecondsElapsed = millisecondsElapsed - _blockStartMilliSeconds;
+      // Check if can advance the index to the next part.
+      if (_currentProtocolPart < _scheduledProtocolParts.length - 1) {
+        if (blockMillisecondsElapsed >=
+            _scheduledProtocolParts[_currentProtocolPart + 1].relativeMilliseconds) {
+          advanceProtocol = true;
+          if (_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
+            endEvent(DateTime.now());
+          }
+          ++_currentProtocolPart;
+          _logger.log(Level.FINE, "Advanced protocol to part $_currentProtocolPart.");
         }
-        ++_currentProtocolPart;
-        _logger.log(Level.FINE, "Advanced protocol to part $_currentProtocolPart.");
       }
     }
     if (advanceProtocol) {
@@ -344,6 +360,16 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       countDownController.pause();
     }
     stopSession();
+  }
+
+  void pauseProtocol() {
+    _onProtocolPaused();
+    startEvent(userBreak.marker!, sequentialEvent: true);
+  }
+
+  void resumeProtocol() {
+    endEvent(DateTime.now());
+    _restartProtocol();
   }
 
   // Called when the protocol progresses to a new part.
@@ -401,7 +427,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   @override
   void onDeviceDisconnected() {
-    _pauseProtocol();
+    _pauseProtocolInvoluntary();
   }
 
   @override
@@ -415,11 +441,16 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     stopSession();
   }
 
-  void _pauseProtocol() {
+  void _onProtocolPaused() {
+    _logger.log(Level.INFO, '_onProtocolPaused');
     if (useCountDownTimer) {
       countDownController.pause();
     }
     _timerPaused = true;
+  }
+
+  void _pauseProtocolInvoluntary() {
+    _onProtocolPaused();
     disconnectTimeoutTimer?.cancel();
     // TODO(alex): get disconnect timeout from firebase
     disconnectTimeoutSecondsLeft = protocol.disconnectTimeoutDuration.inSeconds;
@@ -449,7 +480,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _logger.log(Level.INFO, 'onDeviceInternalStateChanged ${event.type.name}');
     switch (event.type) {
       case DeviceInternalStateEventType.hdmiCableDisconnected:
-        _pauseProtocol();
+        _pauseProtocolInvoluntary();
         break;
       case DeviceInternalStateEventType.hdmiCableConnected:
         if (_timerPaused) {
@@ -457,7 +488,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         }
         break;
       case DeviceInternalStateEventType.uSdDisconnected:
-        _pauseProtocol();
+        _pauseProtocolInvoluntary();
         break;
       case DeviceInternalStateEventType.uSdConnected:
         if (_timerPaused) {

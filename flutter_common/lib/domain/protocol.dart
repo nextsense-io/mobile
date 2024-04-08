@@ -20,6 +20,7 @@ abstract class Protocol {
   String get intro;
   String get name;
   String get nameForUser;
+  int? get blocksPerBreak;
   List<String> get postRecordingSurveys;
   List<ProtocolPart> get protocolBlock;
 }
@@ -58,6 +59,9 @@ abstract class BaseProtocol implements Protocol {
 
   @override
   List<String> get postRecordingSurveys => [];
+
+  @override
+  int? get blocksPerBreak => null;
 
   BaseProtocol();
 

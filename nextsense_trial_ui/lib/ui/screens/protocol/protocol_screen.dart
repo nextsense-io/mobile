@@ -225,6 +225,8 @@ class ProtocolScreen extends HookWidget {
                         secondsElapsed: (viewModel.milliSecondsElapsed / 1000).round())),
                     if (!viewModel.deviceCanRecord)
                       deviceInactiveOverlay(context, viewModel),
+                    if (viewModel.isPausedByUser)
+                      protocolPausedByUserOverlay(context, viewModel),
                   ]),
               Spacer(),
               if (viewModel.isResearcher)
@@ -360,6 +362,31 @@ class ProtocolScreen extends HookWidget {
       await viewModel.stopSession();
     }
     return confirm ?? false;
+  }
+
+  Widget protocolPausedByUserOverlay(BuildContext context, ProtocolScreenViewModel viewModel) {
+    return ErrorOverlay(
+      opacity: 1.0,
+      backgroundColor: Colors.white,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          BigText(
+            text: "Break time",
+          ),
+          SizedBox(height: 10),
+          LightHeaderText(text: "Press the button when you feel ready to continue"),
+          SizedBox(height: 10),
+          SimpleButton(
+              text: Center(child: MediumText(text: "Continue",
+                  color: NextSenseColors.purple)),
+              border: Border.all(width: 2, color: NextSenseColors.purple),
+              onTap: () async {
+                viewModel.resumeProtocol();
+              })
+        ],
+      ),
+    );
   }
 
   Widget deviceInactiveOverlay(BuildContext context, ProtocolScreenViewModel viewModel) {

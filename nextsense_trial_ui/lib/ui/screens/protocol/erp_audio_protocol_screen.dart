@@ -92,6 +92,7 @@ class ERPAudioProtocolScreen extends ProtocolScreen {
                   ),
                 ),
                 if (!viewModel.deviceCanRecord) deviceInactiveOverlay(context, viewModel),
+                if (viewModel.isPausedByUser) protocolPausedByUserOverlay(context, viewModel),
               ]),
               const Spacer(),
             ]));
