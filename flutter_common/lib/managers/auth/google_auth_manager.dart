@@ -3,9 +3,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_common/di.dart';
 import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/managers/firebase_manager.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logging/logging.dart';
-import 'package:flutter_common/utils/android_logger.dart';
 
 class GoogleAuthManager {
   final FirebaseApp _firebaseApp = getIt<FirebaseManager>().getFirebaseApp();
@@ -32,6 +32,9 @@ class GoogleAuthManager {
     try {
       googleSignInAccount = await _googleSignIn.signIn();
     } on FirebaseAuthException catch (e) {
+      _logger.log(Level.SEVERE, "Error when trying to sign in: $e");
+      return AuthenticationResult.error;
+    } on Exception catch (e) {
       _logger.log(Level.SEVERE, "Error when trying to sign in: $e");
       return AuthenticationResult.error;
     }
