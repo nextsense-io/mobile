@@ -258,6 +258,9 @@ class ERPAudioProtocol extends TrialBaseProtocol {
 
   @override
   List<ProtocolPart> get protocolBlock => _protocolBlock;
+
+  @override
+  int? get blocksPerBreak => 10;
 }
 
 enum EyesMovementState {
@@ -397,6 +400,15 @@ class BioCalibrationProtocol extends TrialBaseProtocol {
   @override
   List<ProtocolPart> get protocolBlock => _protocolBlock;
 }
+
+enum GenericStates {
+  USER_BREAK,
+}
+
+final ProtocolPart userBreak = ProtocolPart(
+    state: GenericStates.USER_BREAK.name,
+    duration: const Duration(seconds: 0),
+    marker: "USER_BREAK");
 
 ProtocolType protocolTypeFromString(String typeStr) {
   return ProtocolType.values.firstWhere((element) => element.name == typeStr,

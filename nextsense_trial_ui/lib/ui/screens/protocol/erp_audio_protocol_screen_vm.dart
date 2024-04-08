@@ -18,7 +18,6 @@ class ERPAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   final AudioManager _audioManager = getIt<AudioManager>();
   final Random _random = Random();
 
-
   int _normalSoundCachedId = -1;
   int _oddSoundCachedId = -1;
   int _oddSoundIndex = -1;
