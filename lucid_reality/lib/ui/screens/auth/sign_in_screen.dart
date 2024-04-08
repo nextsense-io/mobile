@@ -4,8 +4,10 @@ import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:flutter_common/ui/components/alert.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:lucid_reality/managers/connectivity_manager.dart';
 import 'package:lucid_reality/ui/components/app_circular_progress_indicator.dart';
 import 'package:lucid_reality/ui/screens/auth/sign_in_screeen_vm.dart';
+import 'package:lucid_reality/utils/connectivity_extension.dart';
 import 'package:lucid_reality/utils/text_theme.dart';
 import 'package:lucid_reality/utils/utils.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +22,7 @@ class SignInScreen extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
+    final connectivityManager = context.watch<ConnectivityManager>();
     return ViewModelBuilder.reactive(
       viewModelBuilder: () => SignInViewModel(),
       onViewModelReady: (viewModel) => viewModel.init(),
@@ -40,9 +43,20 @@ class SignInScreen extends HookWidget {
                   absorbing: authenticating,
                   child: SignInButton(
                     Buttons.Google,
-                    onPressed: () {
-                      if (!authenticating) {
-                        _signIn(context, AuthMethod.google_auth);
+                    onPressed: () async {
+                      final isConnectedToInternet =
+                          await connectivityManager.hasInternetConnection();
+                      if (isConnectedToInternet) {
+                        if (!authenticating) {
+                          _signIn(context, AuthMethod.google_auth);
+                        }
+                      } else {
+                        showDialog(
+                          context: context,
+                          builder: (_) => SimpleAlertDialog(
+                              title: "Internet Connection Required",
+                              content: "Please make sure you are connected to the internet."),
+                        );
                       }
                     },
                   ),

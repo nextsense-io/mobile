@@ -7,8 +7,10 @@ import 'package:flutter_common/utils/android_logger.dart';
 import 'package:logging/logging.dart';
 import 'package:lucid_reality/di.dart';
 import 'package:lucid_reality/domain/user_entity.dart';
+import 'package:lucid_reality/managers/connectivity_manager.dart';
 import 'package:lucid_reality/managers/firebase_realtime_db_entity.dart';
 import 'package:lucid_reality/managers/lucid_ui_firebase_realtime_db_manager.dart';
+import 'package:lucid_reality/utils/connectivity_extension.dart';
 
 class AuthManager {
   static const minimumPasswordLength = 8;
@@ -16,6 +18,7 @@ class AuthManager {
   final _logger = CustomLogPrinter('AuthManager');
   final _firebaseAuth = FirebaseAuth.instance;
   final firebaseRealTimeDb = getIt<LucidUiFirebaseRealtimeDBManager>();
+  final ConnectivityManager _connectivityManager = getIt<ConnectivityManager>();
 
   GoogleAuthManager? _googleAuthManager;
   EmailAuthManager? _emailAuthManager;
@@ -91,10 +94,15 @@ class AuthManager {
       switch (_signedInAuthMethod) {
         case AuthMethod.google_auth:
           username = _firebaseAuth.currentUser!.email!;
-          if (_googleAuthManager!.authUid.isEmpty) {
-            await signInGoogle();
+          final isConnectedToInternet = await _connectivityManager.hasInternetConnection();
+          if (isConnectedToInternet) {
+            if (_googleAuthManager!.authUid.isEmpty) {
+              await signInGoogle();
+            }
+            authUid = _googleAuthManager!.authUid;
+          } else {
+            authUid = _firebaseAuth.currentUser!.uid;
           }
-          authUid = _googleAuthManager!.authUid;
           break;
         case AuthMethod.email_password:
           username = _firebaseAuth.currentUser!.email!;
