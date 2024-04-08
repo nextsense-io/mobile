@@ -198,7 +198,9 @@ enum ERPAudioState {
   PLAY_SOUND,
   RESPONSE_WINDOW,
   BREAK,
-  BUTTON_PRESS
+  BUTTON_PRESS,
+  CORRECT_RESPONSE,
+  WRONG_RESPONSE
 }
 
 class ERPAudioProtocol extends TrialBaseProtocol {
