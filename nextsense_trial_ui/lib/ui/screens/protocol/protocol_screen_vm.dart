@@ -297,7 +297,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       }
       _currentProtocolPart = 0;
       _logger.log(Level.FINE, "Advanced protocol to part 0.");
-      if (currentRepetition % protocol.blocksPerBreak! == 0) {
+      if (protocol.blocksPerBreak != null && currentRepetition % protocol.blocksPerBreak! == 0) {
         _logger.log(Level.FINE, "Pausing protocol for a break.");
         pauseProtocol();
         return;
