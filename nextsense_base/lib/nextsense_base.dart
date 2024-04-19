@@ -130,6 +130,7 @@ class NextsenseBase {
   static const String _getNativeLogsCommand = 'get_native_logs';
   static const String _runSleepStagingCommand = 'run_sleep_staging';
   static const String _emulatorCommand = 'emulator_command';
+  static const String _getBandPowerCommand = 'get_band_power';
   static const String _macAddressArg = 'mac_address';
   static const String _uploadToCloudArg = 'upload_to_cloud';
   static const String _userBigTableKeyArg = 'user_bigtable_key';
@@ -145,6 +146,8 @@ class NextsenseBase {
   static const String _notificationTitleArg = 'notification_title';
   static const String _notificationTextArg = 'notification_text';
   static const String _startDateTimeEpochMsArg = 'start_date_time_epoch_ms';
+  static const String _bandStartArg = 'band_start';
+  static const String _bandEndArg = 'band_end';
   static const String _saveToCsvArg = 'save_to_csv';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
@@ -230,6 +233,18 @@ class NextsenseBase {
           _startDateTimeEpochMsArg: startDateTime.millisecondsSinceEpoch,
           _durationMillisArg: duration.inMilliseconds, _fromDatabaseArg: fromDatabase}));
     return channelData;
+  }
+
+  static Future<double> getBandPower({
+      required String macAddress, required String channelName, required DateTime startTime,
+      required Duration duration, required double bandStart, required double bandEnd,
+      required int localSessionId, bool fromDatabase = false}) async {
+    return await _channel.invokeMethod(_getBandPowerCommand,
+        {_macAddressArg: macAddress, _channelNumberArg: channelName,
+          _startDateTimeEpochMsArg: startTime.millisecondsSinceEpoch,
+          _durationMillisArg: duration.inMilliseconds, _bandStartArg: bandStart,
+          _bandEndArg: bandEnd, _localSessionIdArg: localSessionId,
+          _fromDatabaseArg: fromDatabase});
   }
 
   static Future deleteLocalSession(int localSessionId) async {

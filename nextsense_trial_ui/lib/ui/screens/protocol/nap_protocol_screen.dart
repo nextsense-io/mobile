@@ -17,11 +17,11 @@ class NapProtocolScreen extends ProtocolScreen {
     // type without looking at ancestry.
     return ViewModelBuilder<NapProtocolScreenViewModel>.reactive(
         viewModelBuilder: () => NapProtocolScreenViewModel(runnableProtocol),
-        onModelReady: (protocolViewModel) => protocolViewModel.init(),
+        onViewModelReady: (protocolViewModel) => protocolViewModel.init(),
         builder: (context, viewModel, child) => ViewModelBuilder<NapProtocolScreenViewModel>
             .reactive(
             viewModelBuilder: () => viewModel,
-            onModelReady: (viewModel) => {},
+            onViewModelReady: (viewModel) => {},
             builder: (context, viewModel, child) => WillPopScope(
               onWillPop: () => onBackButtonPressed(context, viewModel),
               child: body(context, viewModel),

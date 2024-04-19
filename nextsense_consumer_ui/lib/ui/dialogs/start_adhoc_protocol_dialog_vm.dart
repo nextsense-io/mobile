@@ -5,6 +5,6 @@ import 'package:nextsense_consumer_ui/domain/protocol.dart';
 class StartAdhocProtocolDialogViewModel extends ViewModel {
 
   List<Protocol> getProtocols() {
-    return [VariableDaytimeProtocol(), SleepProtocol(), NapProtocol()];
+    return [VariableDaytimeProtocol(), SleepProtocol(), NapProtocol(), MentalStateAudioProtocol()];
   }
 }

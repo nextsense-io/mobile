@@ -36,6 +36,8 @@ class SessionManager {
   String? _appName;
   String? _appVersion;
 
+  int? get currentLocalSession => _currentLocalSession;
+
   SessionManager() {
     _init();
   }

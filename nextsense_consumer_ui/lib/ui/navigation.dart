@@ -10,6 +10,7 @@ import 'package:nextsense_consumer_ui/ui/screens/fit_test/ear_fit_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/impedance_calculation_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/insufficient_space_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/profile/profile_screen.dart';
+import 'package:nextsense_consumer_ui/ui/screens/protocol/mental_state_audio_protocol_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/nap_protocol_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:nextsense_consumer_ui/ui/screens/request_permission_screen.dart';
@@ -296,6 +297,9 @@ class Navigation {
       // case BioCalibrationProtocolScreen.id:
       //   return MaterialPageRoute(builder: (context) =>
       //       BioCalibrationProtocolScreen(settings.arguments as RunnableProtocol));
+      case MentalStateAudioProtocolScreen.id:
+        return MaterialPageRoute(builder: (context) =>
+            MentalStateAudioProtocolScreen(settings.arguments as Protocol));
       // case SurveyScreen.id:
       //   return MaterialPageRoute(builder: (context) =>
       //       SurveyScreen(settings.arguments as RunnableSurvey));

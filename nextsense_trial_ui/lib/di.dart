@@ -1,5 +1,4 @@
 import 'package:flutter_common/di.dart' as common_di;
-import 'package:flutter_common/managers/disk_space_manager.dart';
 import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/config.dart';
 import 'package:nextsense_trial_ui/environment.dart';

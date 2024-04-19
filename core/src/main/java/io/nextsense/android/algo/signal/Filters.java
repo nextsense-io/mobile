@@ -9,14 +9,15 @@ public class Filters {
   /*
   * Applies low pass filter
   * signal -- signal to be filtered
-  * fs -- sampling frequency
+  * samplingRate -- sampling frequency
   * order -- filter order
-  * fc -- cutoff frequency
+  * cutoff -- cutoff frequency
   */
-  public static double[] applyLowPass(double[] signal, float fs, int order, float fc) {
+  public static double[] applyLowPass(
+      double[] signal, float samplingRate, int order, float cutoff) {
     double[] filteredSig = new double[signal.length];
     Butterworth butterworth = new Butterworth();
-    butterworth.lowPass(order, fs, fc);
+    butterworth.lowPass(order, samplingRate, cutoff);
     for (int i = 0; i < signal.length; i++) {
       filteredSig[i] = butterworth.filter(signal[i]);
     }
@@ -26,14 +27,15 @@ public class Filters {
   /*
   * Applies high pass filter
   * signal -- signal to be filtered
-  * fs -- sampling frequency
+  * samplingRate -- sampling frequency
   * order -- filter order
-  * fc -- cutoff frequency
+  * cutoff -- cutoff frequency
   */
-  public static double[] applyHighPass(double[] signal, float fs, int order, float fc) {
+  public static double[] applyHighPass(
+      double[] signal, float samplingRate, int order, float cutoff) {
     double[] filteredSig = new double[signal.length];
     Butterworth butterworth = new Butterworth();
-    butterworth.highPass(order, fs, fc);
+    butterworth.highPass(order, samplingRate, cutoff);
     for (int i = 0; i < signal.length; i++) {
       filteredSig[i] = butterworth.filter(signal[i]);
     }
@@ -43,15 +45,15 @@ public class Filters {
   /*
   * Applies band pass filter
   * signal -- signal to be filtered
-  * fs -- sampling frequency
+  * samplingRate -- sampling frequency
   * order -- filter order
-  * lowPass -- low pass cutoff frequency
-  * highPass -- high pass cutoff frequency
+  * lowCutoff -- low pass cutoff frequency
+  * highCutoff -- high pass cutoff frequency
   */
-  public static double[] applyBandPass(double[] signal, float fs, int order, float lowPass,
-                                        float highPass) {
-    double[] filtered_sig = applyLowPass(signal, order, (int) fs, highPass);
-    filtered_sig = applyHighPass(filtered_sig, order, (int) fs, lowPass);
-    return filtered_sig;
+  public static double[] applyBandPass(double[] signal, float samplingRate, int order,
+                                       float lowCutoff, float highCutoff) {
+    double[] filteredSignal = applyLowPass(signal, (int) samplingRate, order, highCutoff);
+    filteredSignal = applyHighPass(filteredSignal, (int) samplingRate, order, lowCutoff);
+    return filteredSignal;
   }
 }

@@ -324,14 +324,16 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.SEVERE, "Could not save event $currentMarker, no session id!");
       return false;
     }
-    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdEntity(
-        [Table.sessions, Table.events], [sessionId]);
-    Event event = Event(firebaseEntity);
-    event..setValue(EventKey.start_datetime, eventStart)
-        ..setValue(EventKey.end_datetime, endTime)
-        ..setValue(EventKey.marker, currentMarker)
-        ..setValue(EventKey.type, _eventTypesManager.getEventType(currentMarker!)!.id);
-    return await event.save();
+    if (_eventTypesManager.getEventType(currentMarker!) != null) {
+      FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdEntity(
+          [Table.sessions, Table.events], [sessionId]);
+      Event event = Event(firebaseEntity);
+      event..setValue(EventKey.start_datetime, eventStart)..setValue(
+          EventKey.end_datetime, endTime)..setValue(EventKey.marker, currentMarker)..setValue(
+          EventKey.type, _eventTypesManager.getEventType(currentMarker)!.id);
+      return await event.save();
+    }
+    return true;
   }
 
   Future<bool> recordSingleEvent(String markerName) async {

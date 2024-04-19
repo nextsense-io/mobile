@@ -39,6 +39,7 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.StandardMethodCodec;
 import io.nextsense.android.Config;
+import io.nextsense.android.algo.signal.BandPowerAnalysis;
 import io.nextsense.android.base.Device;
 import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceManager;
@@ -92,6 +93,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   public static final String GET_NATIVE_LOGS_COMMAND = "get_native_logs";
   public static final String RUN_SLEEP_STAGING_COMMAND = "run_sleep_staging";
+  public static final String GET_BAND_POWER_COMMAND = "get_band_power";
   public static final String EMULATOR_COMMAND = "emulator_command";
   public static final String IS_BLUETOOTH_ENABLED_ARGUMENT = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
@@ -111,6 +113,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String START_DATE_TIME_EPOCH_MS_ARGUMENT = "start_date_time_epoch_ms";
   public static final String NOTIFICATION_TEXT_ARGUMENT = "notification_text";
   public static final String SAVE_TO_CSV_KEY_ARGUMENT = "save_to_csv";
+  public static final String BAND_START_ARGUMENT = "band_start";
+  public static final String BAND_END_ARGUMENT = "band_end";
   public static final String ERROR_SERVICE_NOT_AVAILABLE = "service_not_available";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
   public static final String ERROR_SESSION_NOT_STARTED = "session_not_started";
@@ -439,6 +443,18 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         runSleepStaging(result, macAddress, localSessionId, channelName, startDateTime,
             durationMillis, fromDatabase);
         break;
+      case GET_BAND_POWER_COMMAND:
+        macAddress = call.argument(MAC_ADDRESS_ARGUMENT);
+        localSessionId = call.argument(LOCAL_SESSION_ID_ARGUMENT);
+        channelName = call.argument(CHANNEL_NUMBER_ARGUMENT);
+        startDateTime = Instant.ofEpochMilli(call.argument(START_DATE_TIME_EPOCH_MS_ARGUMENT));
+        durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
+        Double bandStart = call.argument(BAND_START_ARGUMENT);
+        Double bandEnd = call.argument(BAND_END_ARGUMENT);
+        fromDatabase= call.argument(FROM_DATABASE_ARGUMENT);
+        getBandPower(result, macAddress, localSessionId, channelName, startDateTime, durationMillis,
+            bandStart, bandEnd, fromDatabase);
+        break;
       case EMULATOR_COMMAND:
         String command = call.argument("command");
         Map<String, Object> params = call.argument("params");
@@ -764,7 +780,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
   }
 
-  private void canStartNewSession(Result result) {
+  private void  canStartNewSession(Result result) {
     result.success(nextSenseService.getLocalSessionManager().canStartNewSession());
   }
 
@@ -1036,6 +1052,42 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       Map<Integer, Object> results = nextSenseService.getSleepTransformerModel().doInference(data,
           device.get().getSettings().getEegStreamingRate());
       result.success(gson.toJson(results));
+    } else {
+      result.success(null);
+    }
+  }
+
+  private void getBandPower(Result result, String macAddress, Integer localSessionId,
+                            String channelName, Instant startDateTime, Integer durationMillis,
+                            Double bandStart, Double bandEnd, Boolean fromDatabase) {
+    Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
+    if (!device.isPresent()) {
+      returnError(result, GET_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
+          /*errorDetails=*/null);
+      return;
+    }
+    List<Float> data;
+    float eegSamplingRate = device.get().getSettings().getEegStreamingRate();
+    if (fromDatabase != null && fromDatabase) {
+      LocalSession localSession = nextSenseService.getObjectBoxDatabase().getLocalSession(
+          localSessionId);
+      int eegOffset = (int) Math.round(Math.ceil(
+          (float) (startDateTime.toEpochMilli() - localSession.getStartTime().toEpochMilli()) /
+              Math.round(1000f / eegSamplingRate)));
+      long relativeEegOffset = eegOffset - localSession.getEegSamplesDeleted();
+      data = nextSenseService.getObjectBoxDatabase().getChannelData(
+          localSessionId, channelName, relativeEegOffset,
+          durationMillis / Math.round(1000f / eegSamplingRate));
+    } else {
+      int numberOfSamples = (int) Math.round(Math.ceil(
+          (float) durationMillis / Math.round(1000f / eegSamplingRate)));
+      data = nextSenseService.getMemoryCache().getLastEegChannelData(
+          channelName, numberOfSamples);
+    }
+    if (data != null && !data.isEmpty()) {
+      double bandPower = BandPowerAnalysis.getBandPower(
+          data, (int)eegSamplingRate, /*bandStart=*/bandStart, /*bandEnd=*/bandEnd);
+      result.success(bandPower);
     } else {
       result.success(null);
     }

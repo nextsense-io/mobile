@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.nextsense.android.algo.signal.Filters;
 import io.nextsense.android.algo.signal.Sampling;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
@@ -31,8 +30,6 @@ public class SleepTransformerModel extends BaseModel {
   private static final int NUM_SLEEP_STAGING_CATEGORIES = 5;
   private static final int FILTER_ORDER = 100;
   private static final int MODEL_INPUT_FREQUENCY = 100;
-  private static final float MODEL_LOW_CUTOFF_FREQUENCY = 0.3f;
-  private static final float MODEL_HIGH_CUTOFF_FREQUENCY = 40.0f;
 
   private Interpreter preprocessorTflite;
   private Interpreter postprocessorTflite;
@@ -95,9 +92,6 @@ public class SleepTransformerModel extends BaseModel {
     // Filter the signal and resample to the model input frequency.
     double[] resampledData = Sampling.resample(preprocessingData, samplingRate, FILTER_ORDER,
         MODEL_INPUT_FREQUENCY);
-    // Redundant, can remove later after testing.
-    // resampledData = Filters.applyBandPass(resampledData, MODEL_INPUT_FREQUENCY, FILTER_ORDER,
-    //     MODEL_LOW_CUTOFF_FREQUENCY, MODEL_HIGH_CUTOFF_FREQUENCY);
 
     // The model need float input.
     float[] resampledDataFloat = new float[resampledData.length];

@@ -5,6 +5,7 @@ import 'package:nextsense_consumer_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_consumer_ui/managers/consumer_ui_firestore_manager.dart';
 import 'package:nextsense_consumer_ui/managers/data_manager.dart';
 import 'package:nextsense_consumer_ui/managers/event_types_manager.dart';
+import 'package:nextsense_consumer_ui/managers/mental_state_manager.dart';
 import 'package:nextsense_consumer_ui/managers/session_manager.dart';
 import 'package:nextsense_consumer_ui/managers/sleep_staging_manager.dart';
 import 'package:nextsense_consumer_ui/preferences.dart';
@@ -27,6 +28,7 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<AuthManager>(AuthManager());
   getIt.registerSingleton<SessionManager>(SessionManager());
   getIt.registerSingleton<DataManager>(DataManager());
+  getIt.registerSingleton<MentalStateManager>(MentalStateManager());
   getIt.registerSingleton<Navigation>(Navigation());
   getIt.registerSingleton<SleepStagingManager>(SleepStagingManager());
 }
