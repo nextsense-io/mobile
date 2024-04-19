@@ -220,7 +220,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       }
       // TODO(eric): Wait until device ble buffer is empty before closing the session, or accept
       //             late packets as long as packets timestamps are valid?
-      localSessionManager.stopLocalSession();
+      localSessionManager.stopActiveLocalSession();
       deviceMode = DeviceMode.IDLE;
       return true;
     });
@@ -324,7 +324,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           if (peripheral.isNotifying(characteristic)) {
             runStartStreamingCommand();
           } else {
-            localSessionManager.stopLocalSession();
+            localSessionManager.stopActiveLocalSession();
             deviceMode = DeviceMode.IDLE;
             changeStreamingStateFuture.set(true);
           }

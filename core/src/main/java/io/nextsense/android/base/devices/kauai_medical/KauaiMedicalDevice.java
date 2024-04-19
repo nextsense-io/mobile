@@ -274,7 +274,7 @@ public class KauaiMedicalDevice extends BaseNextSenseDevice implements NextSense
   @Override
   public ListenableFuture<Boolean> stopStreaming() {
     if (this.deviceMode == DeviceMode.IDLE) {
-      localSessionManager.stopLocalSession();
+      localSessionManager.stopActiveLocalSession();
       return Futures.immediateFuture(true);
     }
     return executorService.submit(() -> {
@@ -295,21 +295,21 @@ public class KauaiMedicalDevice extends BaseNextSenseDevice implements NextSense
 //          }
         } catch (CancellationException | ExecutionException e) {
           RotatingFileLogger.get().loge(TAG, "Failed to stop streaming: " + e.getMessage());
-          localSessionManager.stopLocalSession();
+          localSessionManager.stopActiveLocalSession();
           deviceMode = DeviceMode.IDLE;
           return false;
         } catch (InterruptedException e) {
           RotatingFileLogger.get().loge(TAG, "Interrupted when trying to stop streaming: " +
               e.getMessage());
           Thread.currentThread().interrupt();
-          localSessionManager.stopLocalSession();
+          localSessionManager.stopActiveLocalSession();
           deviceMode = DeviceMode.IDLE;
           return false;
         }
       }
       // TODO(eric): Wait until device ble buffer is empty before closing the session, or accept
       //             late packets as long as packets timestamps are valid?
-      localSessionManager.stopLocalSession();
+      localSessionManager.stopActiveLocalSession();
       deviceMode = DeviceMode.IDLE;
       return true;
     });
@@ -627,7 +627,7 @@ public class KauaiMedicalDevice extends BaseNextSenseDevice implements NextSense
                 if (peripheral.isNotifying(characteristic)) {
                   runStartStreamingCommand();
                 } else {
-                  localSessionManager.stopLocalSession();
+                  localSessionManager.stopActiveLocalSession();
                   deviceMode = DeviceMode.IDLE;
                   changeStreamingStateFuture.set(true);
                 }

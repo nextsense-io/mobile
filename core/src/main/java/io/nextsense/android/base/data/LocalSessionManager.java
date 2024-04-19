@@ -68,8 +68,15 @@ public class LocalSessionManager {
       return true;
     }
     lastLocalSession = objectBoxDatabase.getLocalSession(lastLocalSession.id);
-    return lastLocalSession.getStatus() != LocalSession.Status.RECORDING &&
+    boolean canStart = lastLocalSession.getStatus() != LocalSession.Status.RECORDING &&
         lastLocalSession.getStatus() != LocalSession.Status.FINISHED;
+    if (!canStart && lastLocalSession.getEndTime() == null) {
+      RotatingFileLogger.get().logw(TAG,
+          "Last session is not finished, but has no end time. Closing it.");
+      stopLocalSession(lastLocalSession);
+      canStart = true;
+    }
+    return canStart;
   }
 
   public synchronized long startLocalSession(
@@ -100,7 +107,20 @@ public class LocalSessionManager {
     return objectBoxDatabase.putLocalSession(activeLocalSession);
   }
 
-  public synchronized void stopLocalSession() {
+  public synchronized void stopLocalSession(LocalSession localSession) {
+    objectBoxDatabase.runInTx(() -> {
+      LocalSession dbLocalSession = objectBoxDatabase.getLocalSession(localSession.id);
+      if (!dbLocalSession.isUploadNeeded() || !dbLocalSession.isReceivedData()) {
+        dbLocalSession.setStatus(LocalSession.Status.COMPLETED);
+      } else {
+        dbLocalSession.setStatus(LocalSession.Status.FINISHED);
+      }
+      dbLocalSession.setEndTime(Instant.now());
+      objectBoxDatabase.putLocalSession(dbLocalSession);
+    });
+  }
+
+  public synchronized void stopActiveLocalSession() {
     if (csvSink != null) {
       csvSink.closeCsv(/*checkForCompletedSession=*/false);
       csvSink.stopListening();

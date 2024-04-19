@@ -261,7 +261,7 @@ public class H1Device extends BaseNextSenseDevice implements NextSenseDevice {
             writeCharacteristic(writeDataCharacteristic,
                 new StartStreamingCommand(/*writeToSdcard=*/true).getCommand());
           } else {
-            localSessionManager.stopLocalSession();
+            localSessionManager.stopActiveLocalSession();
             deviceMode = DeviceMode.IDLE;
             deviceModeFuture.set(true);
           }

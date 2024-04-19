@@ -147,7 +147,7 @@ public class EmulatedDevice extends Device {
     }
 
     if (localSessionManager != null) {
-      localSessionManager.stopLocalSession();
+      localSessionManager.stopActiveLocalSession();
     }
 
     currentMode = DeviceMode.IDLE;

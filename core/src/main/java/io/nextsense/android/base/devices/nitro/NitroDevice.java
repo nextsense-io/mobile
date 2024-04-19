@@ -166,7 +166,7 @@ public class NitroDevice extends BaseNextSenseDevice implements NextSenseDevice 
     if (this.deviceMode == DeviceMode.IDLE) {
       return Futures.immediateFuture(true);
     }
-    localSessionManager.stopLocalSession();
+    localSessionManager.stopActiveLocalSession();
     deviceMode = DeviceMode.IDLE;
     if (peripheral.isNotifying(dataCharacteristic)) {
       changeStreamingStateFuture = SettableFuture.create();
