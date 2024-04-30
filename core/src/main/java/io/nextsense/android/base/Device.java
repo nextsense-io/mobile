@@ -11,6 +11,8 @@ import io.nextsense.android.base.ble.BleDevice;
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BluetoothStateManager;
 import io.nextsense.android.base.communication.ble.ReconnectionManager;
+import io.nextsense.android.base.db.CsvSink;
+import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.devices.NextSenseDevice;
 import io.nextsense.android.base.emulated.EmulatedDevice;
 
@@ -24,24 +26,24 @@ import java.util.Set;
  */
 public abstract class Device {
 
-  protected Device() {}
-
-  public static Device create(
-      BleCentralManagerProxy centralProxy, BluetoothStateManager bluetoothStateManager,
-      NextSenseDevice nextSenseDevice, BluetoothPeripheral btPeripheral,
-      ReconnectionManager reconnectionManager) {
-    if (Config.USE_EMULATED_BLE)
-      return new EmulatedDevice();
-
-    return new BleDevice(centralProxy, bluetoothStateManager, nextSenseDevice, btPeripheral,
-        reconnectionManager);
-  }
-
   /**
    * Interface to be notified of device changes.
    */
   public interface DeviceStateChangeListener {
     void onDeviceStateChange(DeviceState deviceState);
+  }
+
+  protected Device() {}
+
+  public static Device create(
+      BleCentralManagerProxy centralProxy, BluetoothStateManager bluetoothStateManager,
+      NextSenseDevice nextSenseDevice, BluetoothPeripheral btPeripheral,
+      ReconnectionManager reconnectionManager, MemoryCache memoryCache, CsvSink csvSink) {
+    if (Config.USE_EMULATED_BLE)
+      return new EmulatedDevice();
+
+    return new BleDevice(centralProxy, bluetoothStateManager, nextSenseDevice, btPeripheral,
+        reconnectionManager, memoryCache, csvSink);
   }
 
   public enum DisconnectionStatus {
@@ -66,7 +68,7 @@ public abstract class Device {
 
   public abstract ListenableFuture<Boolean> startStreaming(
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
-      @Nullable String earbudsConfig);
+      @Nullable String earbudsConfig, @Nullable Boolean saveToCsv);
 
   public abstract ListenableFuture<Boolean> stopStreaming();
 
@@ -93,6 +95,12 @@ public abstract class Device {
       listener.onDeviceStateChange(deviceState);
     }
   }
+
+  public abstract void addOnDeviceInternalStateChangeListener(
+      NextSenseDevice.DeviceInternalStateChangeListener listener);
+
+  public abstract void removeOnDeviceInternalStateChangeListener(
+      NextSenseDevice.DeviceInternalStateChangeListener listener);
 
   /**
    * Tries to connect the device.

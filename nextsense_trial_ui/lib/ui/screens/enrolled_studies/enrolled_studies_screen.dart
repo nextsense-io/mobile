@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:nextsense_trial_ui/domain/enrolled_study.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
-import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:flutter_common/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_screen_vm.dart';
@@ -19,7 +19,7 @@ class EnrolledStudiesScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<EnrolledStudiesScreenViewModel>.reactive(
         viewModelBuilder: () => EnrolledStudiesScreenViewModel(),
-        onModelReady: (viewModel) => viewModel.init(),
+        onViewModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) {
           return WillPopScope(
             onWillPop: () => _onBackButtonPressed(context, viewModel),
@@ -81,13 +81,14 @@ class _EnrolledStudiesSelector extends StatelessWidget {
 
     List<Widget> studyElements = [];
     for (EnrolledStudy enrolledStudy in viewModel.enrolledStudies!) {
-      if (enrolledStudy.id == viewModel.currentStudyId) {
+      if (enrolledStudy.id == viewModel.currentStudyKey) {
         // Don't show the current study as a choice to switch to.
         continue;
       }
       studyElements.add(_StudySelectionItem(
           label: Padding(padding: EdgeInsets.all(10),
-              child: MediumText(text: enrolledStudy.id, color: NextSenseColors.darkBlue)),
+              child: MediumText(text: viewModel.getStudyName(enrolledStudy.id),
+                  color: NextSenseColors.darkBlue)),
               onPressed: () async {
                 bool studyChanged = await viewModel.changeCurrentStudy(enrolledStudy);
                 if (studyChanged) {
@@ -110,7 +111,7 @@ class _EnrolledStudiesSelector extends StatelessWidget {
 
 class _StudySelectionItem extends StatelessWidget {
   final Widget label;
-  final Function onPressed;
+  final VoidCallback? onPressed;
 
   const _StudySelectionItem({Key? key,
     required this.label,

@@ -5,11 +5,11 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
-import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:flutter_common/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/components/small_emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_protocol_dialog.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_survey_dialog.dart';
@@ -40,7 +40,7 @@ class ProfileScreen extends HookWidget {
     final scrollController = ScrollController();
     return ViewModelBuilder<ProfileScreenViewModel>.reactive(
       viewModelBuilder: () => ProfileScreenViewModel(),
-      onModelReady: (viewModel) => viewModel.init(),
+      onViewModelReady: (viewModel) => viewModel.init(),
       builder: (context, ProfileScreenViewModel viewModel, child) => PageScaffold(
           showProfileButton: false,
           child: Scrollbar(
@@ -80,7 +80,8 @@ class ProfileScreen extends HookWidget {
                                   await _navigation.navigateTo(EnrolledStudiesScreen.id),
                                   viewModel.notifyListeners()
                                 }),
-                      if (_flavor.userType == UserType.subject)
+                      if (_flavor.userType == UserType.subject ||
+                          _flavor.userType == UserType.anonymous_subject)
                         _MainMenuItem(
                             label: 'Password',
                             details: 'Change Password',
@@ -146,6 +147,11 @@ class ProfileScreen extends HookWidget {
                           onPressed: () {
                             viewModel.logout();
                             _navigation.signOut();
+                          }),
+                      _MainMenuItem(
+                          label: 'Exit',
+                          onPressed: () {
+                            viewModel.exit();
                           }),
                       _MainMenuItem(
                           label: 'Settings',
@@ -223,7 +229,7 @@ class _MainMenuItem extends StatelessWidget {
                     MediumText(text: label, color: NextSenseColors.darkBlue),
                     if (details != null) MediumText(text: details!)
                   ]),
-                  Image(image: Svg('assets/images/arrow_right.svg'), height: 14)
+                  Image(image: Svg('packages/nextsense_trial_ui/assets/images/arrow_right.svg'), height: 14)
                 ],
               )),
         ),

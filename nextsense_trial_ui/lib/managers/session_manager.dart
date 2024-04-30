@@ -1,18 +1,19 @@
+import 'package:flutter_common/domain/device_settings.dart';
+import 'package:flutter_common/domain/earbuds_config.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/data_session.dart';
-import 'package:nextsense_trial_ui/domain/device_settings.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/domain/session.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 enum Modality {
@@ -20,9 +21,7 @@ enum Modality {
 }
 
 class SessionManager {
-  static final int _firstSessionNumber = 1;
-
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final StudyManager _studyManager = getIt<StudyManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
@@ -37,6 +36,8 @@ class SessionManager {
   String? _appName;
   String? _appVersion;
 
+  int? get currentLocalSession => _currentLocalSession;
+
   SessionManager() {
     _init();
   }
@@ -47,11 +48,8 @@ class SessionManager {
     _appVersion = packageInfo.version;
   }
 
-  Future<bool> startSession(Device device, String studyId, String protocolName) async {
-    String? userCode = _authManager.userCode;
-    if (userCode == null) {
-      return false;
-    }
+  Future<bool> startSession({required Device device, required String studyId,
+      required plannedSessionId, required String protocolName, String? scheduledSessionId}) async {
     User? user = _authManager.user;
     if (user == null) {
       return false;
@@ -60,34 +58,54 @@ class SessionManager {
       _logger.log(Level.INFO, "Cannot start new session. Another session is already in progress.");
       return false;
     }
-    int? sessionNumber = user.getValue(UserKey.session_number);
-    int nextSessionNumber = sessionNumber == null ? _firstSessionNumber : sessionNumber + 1;
-    String sessionCode = userCode + '_sess_' + nextSessionNumber.toString();
 
     // Add the session.
-    FirebaseEntity sessionEntity = await _firestoreManager.addEntity(
-        [Table.sessions], [sessionCode]);
+    FirebaseEntity? sessionEntity =
+        await _firestoreManager.addAutoIdEntity([Table.sessions], []);
     _currentSession = Session(sessionEntity);
     DateTime startTime = DateTime.now();
 
+    _logger.log(Level.INFO, "Starting session with device: ${device.name} of type: ${device.type}");
+    String? earbudsConfig;
+    switch (device.type) {
+      case DeviceType.kauai_medical:
+        earbudsConfig = EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.toLowerCase();
+        break;
+      case DeviceType.nitro:
+        earbudsConfig = EarbudsConfigNames.NITRO_CONFIG.name.toLowerCase();
+        break;
+      case DeviceType.kauai:
+        earbudsConfig = EarbudsConfigNames.XENON_P02_CONFIG.name.toLowerCase();
+        break;
+      default:
+        earbudsConfig = _studyManager.currentStudy?.getEarbudsConfig() ??
+            EarbudsConfigNames.XENON_B_CONFIG.name.toLowerCase();
+        break;
+    }
+
     _currentSession!..setValue(SessionKey.start_datetime, startTime)
-                    ..setValue(SessionKey.user_id, userCode)
+                    ..setValue(SessionKey.scheduled_session_id, scheduledSessionId)
+                    ..setValue(SessionKey.planned_session_id, plannedSessionId)
+                    ..setValue(SessionKey.user_id, user.id)
                     ..setValue(SessionKey.device_id, device.name)
                     ..setValue(SessionKey.device_mac_address, device.macAddress)
+                    ..setValue(SessionKey.earbud_config, earbudsConfig)
                     ..setValue(SessionKey.study_id, studyId)
                     ..setValue(SessionKey.mobile_app_version, _appVersion)
-                    ..setValue(SessionKey.protocol, protocolName)
+                    ..setValue(SessionKey.protocol_name, protocolName)
                     ..setValue(SessionKey.timezone, user.getCurrentTimezone().name);
+
     bool success = await _currentSession!.save();
     if (!success) {
       return false;
     }
 
     // Add the data session.
-    FirebaseEntity dataSessionEntity = await _firestoreManager.addEntity(
+    FirebaseEntity? dataSessionEntity = await _firestoreManager.addAutoIdEntity(
         [Table.sessions, Table.data_sessions],
-        [_currentSession!.id, Modality.eeeg.name]);
+        [_currentSession!.id]);
     _currentDataSession = DataSession(dataSessionEntity);
+    _currentDataSession!.setValue(DataSessionKey.name, Modality.eeeg.name);
     _currentDataSession!.setValue(DataSessionKey.start_datetime, startTime);
     // TODO(eric): Add an API to get this from the connected device.
     DeviceSettings deviceSettings =
@@ -99,7 +117,7 @@ class SessionManager {
     }
 
     // Update the session number in the user entry.
-    user.setValue(UserKey.session_number, nextSessionNumber);
+    user.setValue(UserKey.session_number, user.getValue(UserKey.session_number) ?? 0 + 1);
     success = await user.save();
     if (!success) {
       return false;
@@ -107,7 +125,6 @@ class SessionManager {
 
     // TODO(eric): Start streaming should return the exact start time of the session, and then that
     //             should be persisted in the table?
-    String dataSessionCode = sessionCode + '_' + Modality.eeeg.name;
     try {
       _logger.log(Level.INFO, "Recording with continuous impedance: "
           "${_preferences.getBool(PreferenceKey.continuousImpedance)}");
@@ -122,10 +139,13 @@ class SessionManager {
         _logger.log(Level.SEVERE, "Failed to set impedance config. Cannot start streaming.");
         return false;
       }
+
       _currentLocalSession = await _deviceManager.startStreaming(uploadToCloud: true,
-          bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: dataSessionCode,
-          earbudsConfig: _studyManager.currentStudy?.getEarbudsConfig() ?? null);
-      _logger.log(Level.INFO, "Started streaming with local session: $_currentLocalSession");
+          bigTableKey: user.getValue(UserKey.bt_key), dataSessionCode: _currentSession!.id,
+          earbudsConfig: earbudsConfig,
+          saveToCsv: _preferences.getBool(PreferenceKey.saveBleDataToLocalCsv));
+      _logger.log(Level.INFO, "Started streaming with local session: $_currentLocalSession and "
+          "earbuds config: $earbudsConfig");
       await NextsenseBase.changeNotificationContent("NextSense recording in progress",
           "Press to access the application");
       return true;
@@ -171,7 +191,11 @@ class SessionManager {
       _logger.log(Level.WARNING, 'Tried to stop a session while none was running.');
       return;
     }
-    _deviceManager.stopStreaming();
+    try {
+      _deviceManager.stopStreaming();
+    } catch (exception) {
+      _logger.log(Level.SEVERE, 'Failed to stop streaming. Message: $exception');
+    }
     DateTime stopTime = DateTime.now();
     _currentSession!.setValue(SessionKey.end_datetime, stopTime);
     await _currentSession!.save();

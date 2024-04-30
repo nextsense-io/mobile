@@ -5,28 +5,35 @@ plugins {
 
 android {
     signingConfigs {
-        // Need to add these values to your local gradle.properties file.
+        debug {
+            storeFile file("../debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
         release {
+            // Need to add these values to your local gradle.properties file.
             storeFile file(RELEASE_STORE_FILE)
             keyAlias RELEASE_KEY_ALIAS
             storePassword RELEASE_STORE_PASSWORD
             keyPassword RELEASE_KEY_PASSWORD
         }
     }
-    compileSdkVersion 33
-    buildToolsVersion "30.0.3"
+    compileSdk 34
     namespace "io.nextsense.android.main"
 
     defaultConfig {
         applicationId "io.nextsense.android.main"
-        minSdkVersion 24
-        targetSdkVersion 33
-        versionCode 35
-        versionName "0.3.34"
+        minSdkVersion 28
+        targetSdkVersion 34
+        versionCode 54
+        versionName "0.7.9"
+        multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
             // Filter for architectures supported by Flutter.
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+            //noinspection ChromeOsAbiSupport
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
     }
 
@@ -39,13 +46,26 @@ android {
         }
 
         researcher {
-//            getIsDefault().set(true)
             dimension "target_user_type"
             applicationIdSuffix ".research"
         }
 
+        consumer {
+            dimension "target_user_type"
+            applicationIdSuffix ".consumer"
+        }
+
+        lucid {
+            dimension "target_user_type"
+            applicationIdSuffix ".lucid"
+        }
+
+        scratch {
+            dimension "env"
+            applicationIdSuffix ".scratch"
+        }
+
         dev {
-//            getIsDefault().set(true)
             dimension "env"
             applicationIdSuffix ".dev"
         }
@@ -73,6 +93,22 @@ android {
         subjectProd {
             setRoot 'src/subject/prod'
         }
+
+        consumerDev {
+            setRoot 'src/consumer/dev'
+        }
+
+        consumerProd {
+            setRoot 'src/consumer/prod'
+        }
+
+        lucidDev {
+            setRoot 'src/lucid/dev'
+        }
+
+        lucidProd {
+            setRoot 'src/lucid/prod'
+        }
     }
 
     buildTypes {
@@ -97,21 +133,26 @@ android {
         // Flag to enable support for the new language APIs.
         coreLibraryDesugaringEnabled true
         // Sets Java compatibility to Java 11.
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
+    buildFeatures {
+        buildConfig true
+    }
+
 }
 
 dependencies {
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.2'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     implementation project(path: ':core')
     implementation project(path: ':flutter')
     implementation project(path: ':service')
+    lucidWearApp(project(":lucidwatchapp"))
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.gms:play-services-auth:20.4.1'
-    implementation 'com.google.android.material:material:1.8.0'
-    implementation 'com.google.code.gson:gson:2.9.1'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'com.google.code.gson:gson:2.10'
     // Import the BoM for the Firebase platform
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
     implementation 'com.google.firebase:firebase-appcheck-debug'
@@ -123,6 +164,8 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    consumerImplementation 'org.tensorflow:tensorflow-lite:2.14.0'
+    consumerImplementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0'
 }
 
 apply plugin: 'com.google.gms.google-services'

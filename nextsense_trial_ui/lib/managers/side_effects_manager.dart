@@ -1,11 +1,11 @@
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/side_effect.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 
 class SideEffectsManager {
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
 
   Future<bool> addSideEffect(
@@ -14,7 +14,7 @@ class SideEffectsManager {
       required List<String> sideEffectTypes,
       required String userNotes}) async {
     FirebaseEntity sideEffectEntity = await _firestoreManager
-        .addAutoIdReference([Table.users, Table.side_effects], [_authManager.userCode!]);
+        .addAutoIdEntity([Table.users, Table.side_effects], [_authManager.user!.id]);
     return await _saveSideEffectEntity(
         sideEffectEntity: sideEffectEntity,
         startTime: startTime,
@@ -29,7 +29,7 @@ class SideEffectsManager {
       required List<String> sideEffectTypes,
       required String userNotes}) async {
     FirebaseEntity? sideEffectEntity = await _firestoreManager
-        .queryEntity([Table.users, Table.side_effects], [_authManager.userCode!, sideEffectId]);
+        .queryEntity([Table.users, Table.side_effects], [_authManager.user!.id, sideEffectId]);
     if (sideEffectEntity == null) {
       return false;
     }
@@ -65,7 +65,7 @@ class SideEffectsManager {
 
   Future<List<SideEffect>> getSideEffects() async {
     List<FirebaseEntity>? sideEffectEntities = await _firestoreManager
-        .queryEntities([Table.users, Table.side_effects], [_authManager.userCode!]);
+        .queryEntities([Table.users, Table.side_effects], [_authManager.user!.id]);
     if (sideEffectEntities == null) {
       return [];
     }

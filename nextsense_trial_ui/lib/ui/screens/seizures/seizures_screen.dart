@@ -6,7 +6,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/seizure.dart';
 import 'package:nextsense_trial_ui/domain/timed_entry.dart';
 import 'package:nextsense_trial_ui/ui/components/add_floating_button.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/round_background.dart';
@@ -66,7 +66,7 @@ class SeizuresScreen extends HookWidget {
                   onPressed: () => _getSeizureEditFunction(seizure),
                   child: Padding(
                       padding: EdgeInsets.all(12),
-                      child: Image(image: Svg('assets/images/pen.svg'), width: 25, height: 25)))),
+                      child: Image(image: Svg('packages/nextsense_trial_ui/assets/images/pen.svg'), width: 25, height: 25)))),
           CustomSlidableAction(
               backgroundColor: Colors.transparent,
               onPressed: (context) => _deleteSeizure(context, seizure),
@@ -79,7 +79,7 @@ class SeizuresScreen extends HookWidget {
                   child: Padding(
                       padding: EdgeInsets.all(12),
                       child: Image(
-                          image: Svg('assets/images/thrash_can.svg'), width: 25, height: 25)))),
+                          image: Svg('packages/nextsense_trial_ui/assets/images/thrash_can.svg'), width: 25, height: 25)))),
         ],
       ),
     ));
@@ -89,8 +89,8 @@ class SeizuresScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<SeizuresScreenViewModel>.reactive(
         viewModelBuilder: () => SeizuresScreenViewModel(),
-        onModelReady: (viewModel) => viewModel.init(),
-        createNewModelOnInsert: true,
+        onViewModelReady: (viewModel) => viewModel.init(),
+        // createNewModelOnInsert: true,
         builder: (context, SeizuresScreenViewModel viewModel, child) => PageScaffold(
             floatingActionButton: AddFloatingButton(
                 onPressed: () => _navigation.navigateTo(SeizureScreen.id, pop: true)),

@@ -30,10 +30,13 @@ group 'io.nextsense.android.main.nextsense_trial_ui'
 version '1.0'
 
 android {
+    // Conditional for compatibility with AGP <4.2.
+    if (project.android.hasProperty("namespace")) {
+        namespace 'io.nextsense.android.main.nextsense_trial_ui'
+    }
+
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
-
-    namespace = "io.nextsense.android.main.nextsense_trial_ui"
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

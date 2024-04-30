@@ -24,15 +24,19 @@ import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
+import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceSettings;
+import io.nextsense.android.base.DeviceType;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
 import io.nextsense.android.base.communication.ble.BluetoothException;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.BaseNextSenseDevice;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
 import io.nextsense.android.base.devices.NextSenseDevice;
+import io.nextsense.android.base.devices.StreamingStartMode;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
@@ -42,15 +46,26 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
  */
 public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice {
 
-  public static final String BLUETOOTH_PREFIX = "Xenon";
+  public static final String BLUETOOTH_PREFIX = "Xenon_P0.1";
   public static final String STREAM_START_MODE_KEY = "stream.start.mode";
-
   private static final String TAG = XenonDevice.class.getSimpleName();
   private static final int TARGET_MTU = 256;
   private static final int CHANNELS_NUMBER = 8;
-
   private static final UUID SERVICE_UUID = UUID.fromString("cb577fc4-7260-41f8-8216-3be734c7820a");
   private static final UUID DATA_UUID = UUID.fromString("59e33cfa-497d-4356-bb46-b87888419cb2");
+  private static final DeviceInfo DEVICE_INFO = new DeviceInfo(
+      DeviceType.XENON,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN,
+      DeviceInfo.UNKNOWN);
 
   private final ListeningExecutorService executorService =
       MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
@@ -63,7 +78,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   private SettableFuture<Boolean> changeNotificationStateFuture;
   private SettableFuture<Boolean> changeStreamingStateFuture;
   private DeviceSettings deviceSettings;
-  private StartStreamingCommand.StartMode targetStartStreamingMode;
+  private StreamingStartMode targetStartStreamingMode;
 
   // Needed for reflexion when created by Bluetooth device name.
   public XenonDevice() {}
@@ -100,14 +115,17 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
   }
 
   @Override
+  public List<String> getEegChannelNames() {
+    return enabledChannels.stream().map(String::valueOf).collect(Collectors.toList());
+  }
+
+  @Override
   public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral, boolean reconnecting) {
     this.peripheral = peripheral;
     initializeCharacteristics();
     if (reconnecting) {
-      // If reconnecting, we do not want to reset the time and apply settings as there might be a
-      // recording in progress and this is not supported.
-      RotatingFileLogger.get().logi(TAG, "Reconnecting, no need to re-apply device settings.");
-      return Futures.immediateFuture(true);
+      // Cannot know if this was due to device powering off, so need to re-apply settings.
+      RotatingFileLogger.get().logi(TAG, "Reconnecting, re-applying device settings.");
     }
     return executorService.submit(() -> {
       try {
@@ -148,8 +166,9 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           new IllegalArgumentException("Need to provide the " + STREAM_START_MODE_KEY +
               " parameter."));
     }
+    boolean saveToCsv = parameters.getBoolean(LocalSessionManager.SAVE_TO_CSV_KEY, false);
     targetStartStreamingMode =
-        (StartStreamingCommand.StartMode)parameters.getSerializable(STREAM_START_MODE_KEY);
+        (StreamingStartMode)parameters.getSerializable(STREAM_START_MODE_KEY);
     if (this.deviceMode == DeviceMode.STREAMING) {
       RotatingFileLogger.get().logw(TAG, "Device already streaming, nothing to do.");
       return Futures.immediateFuture(true);
@@ -160,9 +179,10 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
     }
     long localSessionId = localSessionManager.startLocalSession(userBigTableKey, dataSessionId,
         earbudsConfig, uploadToCloud, deviceSettings.getEegStreamingRate(),
-        deviceSettings.getImuStreamingRate());
+        deviceSettings.getImuStreamingRate(), saveToCsv);
     if (localSessionId == -1) {
       // Previous session not finished, cannot start streaming.
+      RotatingFileLogger.get().logw(TAG, "Previous session not finished, cannot start streaming.");
       return Futures.immediateFuture(false);
     }
     changeStreamingStateFuture = SettableFuture.create();
@@ -200,10 +220,15 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       }
       // TODO(eric): Wait until device ble buffer is empty before closing the session, or accept
       //             late packets as long as packets timestamps are valid?
-      localSessionManager.stopLocalSession();
+      localSessionManager.stopActiveLocalSession();
       deviceMode = DeviceMode.IDLE;
       return true;
     });
+  }
+
+  @Override
+  public DeviceInfo getDeviceInfo() {
+    return DEVICE_INFO;
   }
 
   @Override
@@ -299,7 +324,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
           if (peripheral.isNotifying(characteristic)) {
             runStartStreamingCommand();
           } else {
-            localSessionManager.stopLocalSession();
+            localSessionManager.stopActiveLocalSession();
             deviceMode = DeviceMode.IDLE;
             changeStreamingStateFuture.set(true);
           }
@@ -328,7 +353,7 @@ public class XenonDevice extends BaseNextSenseDevice implements NextSenseDevice 
       try {
         xenonDataParser.parseDataBytes(value, getChannelCount());
       } catch (FirmwareMessageParsingException e) {
-        e.printStackTrace();
+        RotatingFileLogger.get().loge(TAG, "Failed to parse data bytes: " + e.getMessage());
       }
     }
 

@@ -1,4 +1,4 @@
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 
 enum IssueState {
   creating,  // Issue is being created, logs getting uploaded etc...
@@ -24,5 +24,6 @@ enum IssueKey {
 
 class Issue extends FirebaseEntity<IssueKey> {
 
-  Issue(FirebaseEntity firebaseEntity) : super(firebaseEntity.getDocumentSnapshot());
+  Issue(FirebaseEntity firebaseEntity) :
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 }

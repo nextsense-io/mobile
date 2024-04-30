@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/domain/timed_entry.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 

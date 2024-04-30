@@ -1,17 +1,14 @@
+import 'package:nextsense_trial_ui/domain/planned_activity.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 
-enum RunnableSurveyType {
-  scheduled,
-  adhoc,
-  protocol
-}
-
-// Class to represents survey and track its state and data
+// Class to represents survey and track its state and data.
 abstract class RunnableSurvey {
   late Survey survey;
 
-  RunnableSurveyType get type;
+  ScheduleType get scheduleType;
+  String get plannedSurveyId;
+  String? get scheduledSurveyId;
+  String? get resultId;
 
-  Future<bool> update(
-      {required SurveyState state, Map<String, dynamic>? data, bool persist = true});
+  Future<bool> update({required SurveyState state, required String resultId});
 }

@@ -11,18 +11,18 @@ class RoundBackground extends StatelessWidget {
   final double width;
   final double height;
 
-  RoundBackground({required this.child, this.color = NextSenseColors.translucent,
+  const RoundBackground({super.key, required this.child, this.color = NextSenseColors.translucent,
     this.elevation = 0, this.onPressed, this.width = 40, this.height = 40,
     this.padding = EdgeInsets.zero});
 
   @override
   Widget build(BuildContext context) {
-    return Container(width: width, height: height, child: Card( // with Card
-      child: child,
+    return Container(width: width, height: height, child: Card(
       elevation: 3.0,
-      shape: CircleBorder(),
+      shape: const CircleBorder(),
       margin: padding,
       clipBehavior: Clip.antiAlias,
+      child: child,
     ));
   }
 }

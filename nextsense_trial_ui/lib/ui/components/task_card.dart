@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:nextsense_trial_ui/domain/medication/scheduled_medication.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
 import 'package:nextsense_trial_ui/ui/components/cancel_button.dart';
 import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
-import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_button.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/utils/date_utils.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
-  final Function onTap;
+  final bool showTime;
+  final VoidCallback? onTap;
   final String title;
   final String intro;
   final Duration? duration;
@@ -21,8 +23,9 @@ class TaskCard extends StatelessWidget {
   final TimeOfDay? windowEndTime;
   final bool completed;
 
-  TaskCard(Task task, Function onTap)
+  TaskCard(Task task, bool showTime, VoidCallback? onTap)
       : this.task = task,
+        this.showTime = showTime,
         this.title = task.title,
         this.intro = task.intro,
         this.duration = task.duration,
@@ -68,15 +71,27 @@ class TaskCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTaskHeadline(
-      {required bool showIcon, required bool showClock, required String whenText}) {
-    Widget icon = completed
-        ? Expanded(
-            child: SvgPicture.asset('assets/images/circle_checked.svg',
-                semanticsLabel: 'completed', height: 20))
-        : Expanded(
-            child: SvgPicture.asset('assets/images/circle.svg',
-                semanticsLabel: 'completed', height: 20));
+  Widget _buildTaskHeadline({required bool showIcon, required bool showClock,
+      required String whenText, String? description}) {
+    Widget? icon;
+    if (completed) {
+      icon = Expanded(
+          child: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/circle_checked.svg',
+              semanticsLabel: 'completed', height: 20));
+    } else if (task.skipped) {
+      icon = Padding(padding: EdgeInsets.only(top: 6, left: 1), child: Container(
+        width: 18,
+        decoration: BoxDecoration(
+            color: NextSenseColors.darkRed,
+            shape: BoxShape.circle
+        ),
+        child: MediumText(text: '!', color: Colors.white, textAlign: TextAlign.center),
+      ));
+    } else {
+      icon = Expanded(
+          child: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/circle.svg',
+              semanticsLabel: 'not completed', height: 20));
+    }
     return Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -92,15 +107,14 @@ class TaskCard extends StatelessWidget {
               child: Column(children: [
             Expanded(
                 child: Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                   Flexible(child: CardTitleText(text: title)),
                   SizedBox(width: 5),
-                  if (duration != null)
-                    if (showClock)
-                      SvgPicture.asset('assets/images/clock.svg',
-                          semanticsLabel: 'specific time', width: 16),
+                  if (showClock && duration != null)
+                    SvgPicture.asset('packages/nextsense_trial_ui/assets/images/clock.svg',
+                        semanticsLabel: 'specific time', width: 16),
                   SizedBox(height: 5),
                   Align(
                       alignment: Alignment.topRight,
@@ -110,6 +124,15 @@ class TaskCard extends StatelessWidget {
                         textAlign: TextAlign.right,
                       ))
                 ])),
+            if (description != null)
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Align(
+                        alignment: Alignment.bottomLeft,
+                        child: MediumText(text: description))
+                  ]),
             if (duration!.inMinutes > 0)
                 Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -125,26 +148,31 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String whenText;
+    String whenText = '';
     bool showClock = false;
-    if (windowEndTime == null) {
-      whenText = windowStartTime.hmma;
-      showClock = true;
-    } else if (windowStartTime.hmm == '0:00' && windowEndTime!.hmm == '23:59') {
-      whenText = '';
-    } else {
-      whenText = 'Between\n${windowStartTime.hmm}-${windowEndTime!.hmma}';
+    if (showTime) {
+      if (windowEndTime == null) {
+        whenText = windowStartTime.hmma;
+        showClock = true;
+      } else if (windowStartTime.hmm == '0:00' && windowEndTime!.hmm == '23:59') {
+        whenText = '';
+      } else {
+        whenText = 'Between\n${windowStartTime.hmm}-${windowEndTime!.hmma}';
+      }
     }
 
     return ClickableZone(
-        onTap: () => _showExpandedTaskDialog(context, showClock: showClock, whenText: whenText),
+        onTap: task.type == TaskType.medication ?
+        onTap : () => _showExpandedTaskDialog(context, showClock: showClock, whenText: whenText),
         child: Container(
             height: 115,
             child: Padding(
-              padding: const EdgeInsets.only(top: 10, bottom: 10, right: 20),
+              padding: const EdgeInsets.only(top: 10, bottom: 10, right: 10),
               child: RoundedBackground(
                   child:
-                      _buildTaskHeadline(showIcon: true, showClock: showClock, whenText: whenText)),
-            )));
+                      _buildTaskHeadline(showIcon: true, showClock: showClock, whenText: whenText,
+                      description: task.type == TaskType.medication ?
+                      (task as ScheduledMedication).indication : null),
+            ))));
   }
 }

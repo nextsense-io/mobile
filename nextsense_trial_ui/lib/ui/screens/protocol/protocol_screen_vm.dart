@@ -2,28 +2,33 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:circular_countdown_timer/circular_countdown_timer.dart';
+import 'package:flutter_common/domain/device_internal_state_event.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/device_internal_state_event.dart';
 import 'package:nextsense_trial_ui/domain/event.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/planned_session.dart';
+import 'package:flutter_common/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/study.dart';
-import 'package:nextsense_trial_ui/domain/survey/protocol_survey.dart';
-import 'package:nextsense_trial_ui/domain/survey/survey.dart';
+import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
 import 'package:nextsense_trial_ui/managers/session_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:nextsense_trial_ui/managers/survey_manager.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
 
 enum ProtocolCancelReason {
-  none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord, deviceNotConnected }
+  none, deviceDisconnectedTimeout, dataReceivedTimeout, deviceNotReadyToRecord, deviceNotConnected,
+  storageFull, devicePoweredOff}
 
 // Protocol part scheduled in time in the protocol. The schedule can be repeated many times until
 // the protocol time is complete.
@@ -31,9 +36,7 @@ class ScheduledProtocolPart {
   ProtocolPart protocolPart;
   int relativeMilliseconds;
 
-  ScheduledProtocolPart({required ProtocolPart protocolPart, required int relativeMilliseconds}) :
-        this.protocolPart = protocolPart,
-        this.relativeMilliseconds = relativeMilliseconds;
+  ScheduledProtocolPart({required this.protocolPart, required this.relativeMilliseconds});
 
   factory ScheduledProtocolPart.clone(ScheduledProtocolPart part) {
     return ScheduledProtocolPart(protocolPart: part.protocolPart,
@@ -46,18 +49,19 @@ List<ScheduledProtocolPart> deepCopy(List<ScheduledProtocolPart> source) {
 }
 
 class ProtocolScreenViewModel extends DeviceStateViewModel {
-  static const Duration _dataReceivedTimeout = const Duration(seconds: 15);
-  static const Duration _timerTickInterval = const Duration(milliseconds: 50);
+  static const Duration _dataReceivedTimeout = Duration(seconds: 60);
+  static const Duration _timerTickInterval = Duration(milliseconds: 50);
 
   final StudyManager _studyManager = getIt<StudyManager>();
+  final SurveyManager _surveyManager = getIt<SurveyManager>();
+  final EventTypesManager _eventTypesManager = getIt<EventTypesManager>();
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
   final RunnableProtocol runnableProtocol;
   final bool useCountDownTimer;
   List<ScheduledProtocolPart> _scheduledProtocolParts = [];
-  List<ScheduledProtocolPart> _initialScheduledProtocolParts = [];
   final CountDownController countDownController = CountDownController();
   final CustomLogPrinter _logger = CustomLogPrinter('ProtocolScreenViewModel');
 
@@ -70,17 +74,19 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   bool maxDurationPassed = false;
   Timer? timer;
   Timer? disconnectTimeoutTimer;
-  List<ProtocolSurvey> postRecordingSurveys = [];
-  bool _timerPaused = false;
+  ScheduledSurvey? postRecordingSurvey;
+  ScheduledSession? postRecordingProtocol;
   ProtocolCancelReason protocolCancelReason = ProtocolCancelReason.none;
   bool protocolCompletedHandlerExecuted = false;
+  int currentRepetition = 0;
+  bool dataReceived = false;
+
+  bool _timerPaused = false;
   DateTime? _currentEventStart;
   DateTime? _lastEventEnd;
   String? _currentEventMarker;
   int _currentProtocolPart = 0;
-  int currentRepetition = 0;
-  Duration _repetitionTime = Duration(seconds: 0);
-  bool dataReceived = false;
+  Duration _repetitionTime = const Duration(seconds: 0);
   Timer? _dataReceivedTimer;
   CancelListening? _currentSessionDataReceivedListener;
   Duration? _currentVariableDuration;
@@ -95,20 +101,51 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       currentRepetition * _scheduledProtocolParts.length + _currentProtocolPart;
   bool get isError => !protocolCompleted && protocolCancelReason != ProtocolCancelReason.none;
   int get currentProtocolPart => _currentProtocolPart;
+  bool get isResearcher => _authManager.user!.userType == UserType.researcher;
+  bool get isPausedByUser => _timerPaused && deviceCanRecord;
 
   ProtocolScreenViewModel(this.runnableProtocol, {this.useCountDownTimer = true}) {
-    for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
-      _scheduledProtocolParts.add(ScheduledProtocolPart(protocolPart: part,
-          relativeMilliseconds: _repetitionTime.inMilliseconds));
-      _repetitionTime += part.duration;
+    _scheduledProtocolParts = getProtocolParts();
+    for (ScheduledProtocolPart part in _scheduledProtocolParts) {
+      _repetitionTime += part.protocolPart.duration;
     }
-    _initialScheduledProtocolParts = deepCopy(_scheduledProtocolParts);
     _blockEndMilliSeconds = _repetitionTime.inMilliseconds;
+  }
+
+  List<ScheduledProtocolPart> getProtocolParts() {
+    List<ScheduledProtocolPart> parts = [];
+    Duration repetitionTime = const Duration(seconds: 0);
+    for (ProtocolPart part in runnableProtocol.protocol.protocolBlock) {
+      parts.add(ScheduledProtocolPart(protocolPart: part,
+          relativeMilliseconds: repetitionTime.inMilliseconds));
+      repetitionTime += part.duration;
+    }
+    return parts;
   }
 
   @override
   void init() async {
     super.init();
+    sessionIsActive = true;
+    PlannedSession? plannedSession = _studyManager.getPlannedSessionById(
+        runnableProtocol.plannedSessionId!);
+    if (plannedSession!.triggersConditionalSessionId != null &&
+        plannedSession.triggersConditionalSurveyId != null) {
+      _logger.log(Level.WARNING, 'Both conditional session and survey are set for the planned '
+          'session ${plannedSession.id}');
+    } else if (plannedSession.triggersConditionalSessionId != null) {
+      ScheduledSession? triggeredSession =
+          await _studyManager.scheduleSessionTrigger(plannedSession);
+      if (triggeredSession != null) {
+        postRecordingProtocol = triggeredSession;
+      }
+    } else if (plannedSession.triggersConditionalSurveyId != null) {
+      ScheduledSurvey? triggeredSurvey =
+          await _surveyManager.scheduleSurveyTrigger(plannedSession);
+      if (triggeredSurvey != null) {
+        postRecordingSurvey = triggeredSurvey;
+      }
+    }
     if (deviceCanRecord) {
       if (runnableProtocol.state == ProtocolState.not_started ||
           runnableProtocol.state == ProtocolState.cancelled) {
@@ -145,14 +182,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         startTimer(elapsedTime: elapsedTime);
       }
     } else {
+      sessionIsActive = false;
       protocolCancelReason = ProtocolCancelReason.deviceNotConnected;
       setError("Device not connected.");
-    }
-    if (runnableProtocol.type == RunnableProtocolType.scheduled ||
-        _authManager.user!.userType == UserType.researcher) {
-      for (Survey survey in runnableProtocol.postSurveys ?? []) {
-        postRecordingSurveys.add(ProtocolSurvey(survey, _sessionManager.currentSessionId!));
-      }
     }
   }
 
@@ -224,7 +256,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     timer = Timer.periodic(
       _timerTickInterval,
           (_) {
-        if (_timerPaused) return;
+        if (_timerPaused) {
+          return;
+        }
 
         milliSecondsElapsed += _timerTickInterval.inMilliseconds;
         if (milliSecondsElapsed >= protocolMinTimeSeconds * 1000) {
@@ -232,7 +266,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         }
         if (milliSecondsElapsed >= protocolMaxTimeSeconds * 1000) {
           _logger.log(Level.INFO,
-              'Protocol finished. $milliSecondsElapsed out of $protocolMaxTimeSeconds');
+              'Protocol finished. ${milliSecondsElapsed / 1000} out of $protocolMaxTimeSeconds');
           maxDurationPassed = true;
           timer?.cancel();
           onTimerFinished();
@@ -263,23 +297,38 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       }
       _currentProtocolPart = 0;
       _logger.log(Level.FINE, "Advanced protocol to part 0.");
-      // _repetitionTime = _initialRepetitionTime;
-      _scheduledProtocolParts = deepCopy(_initialScheduledProtocolParts);
+      if (protocol.blocksPerBreak != null && currentRepetition % protocol.blocksPerBreak! == 0) {
+        _logger.log(Level.FINE, "Pausing protocol for a break.");
+        pauseProtocol();
+        return;
+      }
+      _scheduledProtocolParts = getProtocolParts();
       _blockStartMilliSeconds = millisecondsElapsed;
       _blockEndMilliSeconds = _blockStartMilliSeconds + _repetitionTime.inMilliseconds;
       _logger.log(Level.FINE, "Block End milliseconds: $_blockEndMilliSeconds");
     }
-    int blockMillisecondsElapsed = millisecondsElapsed - _blockStartMilliSeconds;
-    // Check if can advance the index to the next part.
-    if (_currentProtocolPart < _scheduledProtocolParts.length - 1) {
-      if (blockMillisecondsElapsed >=
-          _scheduledProtocolParts[_currentProtocolPart + 1].relativeMilliseconds) {
-        advanceProtocol = true;
-        if (_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
-          endEvent(DateTime.now());
+    if (millisecondsElapsed >= _blockEndMilliSeconds && _currentProtocolPart == 0) {
+      // Resuming after a user pause.
+      _logger.log(Level.FINE, "Resuming after a user pause.");
+      _scheduledProtocolParts = getProtocolParts();
+      _blockStartMilliSeconds = millisecondsElapsed;
+      _blockEndMilliSeconds = _blockStartMilliSeconds + _repetitionTime.inMilliseconds;
+      _logger.log(Level.FINE, "Block End milliseconds: $_blockEndMilliSeconds");
+      advanceProtocol = true;
+    } else {
+      // Normal tick processing.
+      int blockMillisecondsElapsed = millisecondsElapsed - _blockStartMilliSeconds;
+      // Check if can advance the index to the next part.
+      if (_currentProtocolPart < _scheduledProtocolParts.length - 1) {
+        if (blockMillisecondsElapsed >=
+            _scheduledProtocolParts[_currentProtocolPart + 1].relativeMilliseconds) {
+          advanceProtocol = true;
+          if (_scheduledProtocolParts[_currentProtocolPart].protocolPart.marker != null) {
+            endEvent(DateTime.now());
+          }
+          ++_currentProtocolPart;
+          _logger.log(Level.FINE, "Advanced protocol to part $_currentProtocolPart.");
         }
-        ++_currentProtocolPart;
-        _logger.log(Level.FINE, "Advanced protocol to part $_currentProtocolPart.");
       }
     }
     if (advanceProtocol) {
@@ -313,6 +362,16 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     stopSession();
   }
 
+  void pauseProtocol() {
+    _onProtocolPaused();
+    startEvent(userBreak.marker!, sequentialEvent: true);
+  }
+
+  void resumeProtocol() {
+    endEvent(DateTime.now());
+    _restartProtocol();
+  }
+
   // Called when the protocol progresses to a new part.
   void onAdvanceProtocol() {}
 
@@ -338,12 +397,13 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.SEVERE, "Could not save event $currentMarker, no session id!");
       return false;
     }
-    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdReference(
+    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdEntity(
         [Table.sessions, Table.events], [sessionId]);
     Event event = Event(firebaseEntity);
-    event..setValue(EventKey.start_time, eventStart)
-        ..setValue(EventKey.end_time, endTime)
-        ..setValue(EventKey.marker, currentMarker);
+    event..setValue(EventKey.start_datetime, eventStart)
+        ..setValue(EventKey.end_datetime, endTime)
+        ..setValue(EventKey.marker, currentMarker)
+        ..setValue(EventKey.type, _eventTypesManager.getEventType(currentMarker!)!.id);
     return await event.save();
   }
 
@@ -355,18 +415,19 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           "Could not save event ${ERPAudioState.BUTTON_PRESS.name}, no session id!");
       return false;
     }
-    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdReference(
+    FirebaseEntity firebaseEntity = await _firestoreManager.addAutoIdEntity(
         [Table.sessions, Table.events], [sessionId]);
     Event event = Event(firebaseEntity);
-    event..setValue(EventKey.start_time, eventTime)
-      ..setValue(EventKey.end_time, eventTime)
-      ..setValue(EventKey.marker, ERPAudioState.BUTTON_PRESS.name);
+    event..setValue(EventKey.start_datetime, eventTime)
+      ..setValue(EventKey.end_datetime, eventTime)
+      ..setValue(EventKey.marker, ERPAudioState.BUTTON_PRESS.name)
+      ..setValue(EventKey.type, _eventTypesManager.getEventType(ERPAudioState.BUTTON_PRESS.name)!.id);
     return await event.save();
   }
 
   @override
   void onDeviceDisconnected() {
-    _pauseProtocol();
+    _pauseProtocolInvoluntary();
   }
 
   @override
@@ -380,11 +441,16 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     stopSession();
   }
 
-  void _pauseProtocol() {
+  void _onProtocolPaused() {
+    _logger.log(Level.INFO, '_onProtocolPaused');
     if (useCountDownTimer) {
       countDownController.pause();
     }
     _timerPaused = true;
+  }
+
+  void _pauseProtocolInvoluntary() {
+    _onProtocolPaused();
     disconnectTimeoutTimer?.cancel();
     // TODO(alex): get disconnect timeout from firebase
     disconnectTimeoutSecondsLeft = protocol.disconnectTimeoutDuration.inSeconds;
@@ -414,7 +480,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     _logger.log(Level.INFO, 'onDeviceInternalStateChanged ${event.type.name}');
     switch (event.type) {
       case DeviceInternalStateEventType.hdmiCableDisconnected:
-        _pauseProtocol();
+        _pauseProtocolInvoluntary();
         break;
       case DeviceInternalStateEventType.hdmiCableConnected:
         if (_timerPaused) {
@@ -422,12 +488,20 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
         }
         break;
       case DeviceInternalStateEventType.uSdDisconnected:
-        _pauseProtocol();
+        _pauseProtocolInvoluntary();
         break;
       case DeviceInternalStateEventType.uSdConnected:
         if (_timerPaused) {
           _restartProtocol();
         }
+        break;
+      case DeviceInternalStateEventType.uSdFull:
+        protocolCancelReason = ProtocolCancelReason.storageFull;
+        _stopProtocol();
+        break;
+      case DeviceInternalStateEventType.poweringOff:
+        protocolCancelReason = ProtocolCancelReason.devicePoweredOff;
+        _stopProtocol();
         break;
       case DeviceInternalStateEventType.unknown:
         _logger.log(Level.WARNING, 'Unknown device internal state received.');
@@ -439,9 +513,11 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
     if (_deviceManager.getConnectedDevice() != null) {
       _logger.log(Level.INFO, 'Starting ${protocol.name} protocol.');
       bool started = await _sessionManager.startSession(
-          _deviceManager.getConnectedDevice()!,
-          _studyManager.currentStudyId!,
-          protocol.name);
+          device: _deviceManager.getConnectedDevice()!,
+          studyId: _studyManager.currentStudyId!,
+          plannedSessionId: runnableProtocol.plannedSessionId,
+          scheduledSessionId: runnableProtocol.scheduledSessionId,
+          protocolName: protocol.name);
       if (!started) {
         setError("Failed to start streaming. Please try again and contact support if you need "
             "additional help.");
@@ -474,7 +550,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _logger.log(Level.INFO, 'Stopping session.');
       await _sessionManager.stopSession(_deviceManager.getConnectedDevice()!.macAddress);
     } catch (e) {
-      _logger.log(Level.WARNING, "Failed to stop streaming");
+      _logger.log(Level.WARNING, "Failed to stop streaming: $e");
     }
     try {
       await runnableProtocol.update(

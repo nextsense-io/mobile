@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Lucid Watch App</string>
+    <string name="not_available">Not available on this device</string>
+
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="icon">Icon</string>
+
+    <string name="no_hr_reading">--</string>
+
+    <string name="message_missing">Welcome to our Wear app!\n\nYou are missing the required phone app, please click on the button below to install it on your phone.</string>
+    <string name="install_app">Install Mobile App</string>
+    <string name="skip_installation">Skip Installation</string>
+    <string name="channel_name">Lucid Night Notifications</string>
+    <string name="channel_description">Lucid reality bedtime check notifications</string>
+    <string name="checking_phone">Checking lucid phone app installation.</string>
+</resources>

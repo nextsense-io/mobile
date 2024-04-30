@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:gson/gson.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/config.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 enum ScanningState {
   NO_BLUETOOTH,
@@ -25,6 +25,7 @@ class DeviceScanScreenViewModel extends ViewModel {
   static const Duration _scanTimeout = Duration(seconds: 30);
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
+  final AuthManager _authManager = getIt<AuthManager>();
   final bool autoConnect;
   final CustomLogPrinter _logger = CustomLogPrinter('DeviceScanScreen');
 
@@ -99,9 +100,7 @@ class DeviceScanScreenViewModel extends ViewModel {
       scanningState = ScanningState.SCANNING_WITH_RESULTS;
 
       // Connect to device automatically
-      if (Config.autoConnectAfterScan ||
-          (_deviceManager.hadPairedDevice &&
-              _deviceManager.getLastPairedDevice()!.macAddress == macAddress)) {
+      if (_authManager.getLastPairedMacAddress() == macAddress) {
         connectToDevice(deviceAttributes);
       }
       notifyListeners();
@@ -119,6 +118,9 @@ class DeviceScanScreenViewModel extends ViewModel {
     try {
       bool connected = await _deviceManager.connectDevice(device);
       if (connected) {
+        _authManager.user!
+          ..setLastPairedDeviceMacAddress(device.macAddress)
+          ..save();
         scanningState = ScanningState.CONNECTED;
         _logger.log(Level.INFO, 'Connected to device: ' + device.macAddress);
       } else {

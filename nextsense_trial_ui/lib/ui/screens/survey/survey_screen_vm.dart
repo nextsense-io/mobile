@@ -1,15 +1,20 @@
 import 'package:logging/logging.dart';
+import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/survey/condition.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:nextsense_trial_ui/domain/survey/survey_result.dart';
+import 'package:nextsense_trial_ui/managers/survey_manager.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 class SurveyScreenViewModel extends ViewModel {
 
+  final SurveyManager _surveyManager = getIt<SurveyManager>();
   final CustomLogPrinter _logger = CustomLogPrinter('SurveyScreenViewModel');
   final RunnableSurvey runnableSurvey;
+  SurveyResult? _surveyResult;
 
   Map<String, dynamic>? formValues;
   int currentPageNumber = 0;
@@ -20,16 +25,40 @@ class SurveyScreenViewModel extends ViewModel {
 
   @override
   void init() {
-    loadQuestionsIfNeeded();
+    startOrResumeSurvey();
   }
 
-  void loadQuestionsIfNeeded() {
+  void startOrResumeSurvey() async {
+    setBusy(true);
+    bool startSurvey = false;
     if (runnableSurvey is ScheduledSurvey) {
       ScheduledSurvey scheduledSurvey = runnableSurvey as ScheduledSurvey;
-      if (scheduledSurvey.state == SurveyState.partially_completed) {
-        formValues = Map.from(scheduledSurvey.getData());
+      if (scheduledSurvey.state == SurveyState.not_started) {
+        startSurvey = true;
+      } else if (scheduledSurvey.state == SurveyState.partially_completed &&
+          scheduledSurvey.resultId != null) {
+        _logger.log(Level.INFO, "Resuming survey: ${runnableSurvey.survey.name}");
+        SurveyResult? result = await _surveyManager.getSurveyResult(scheduledSurvey.resultId!);
+        if (result != null) {
+          _surveyResult = result;
+          formValues = Map.from(_surveyResult!.getData()!);
+        } else {
+          _logger.log(Level.WARNING,
+              "Survey result not found: ${scheduledSurvey.resultId}, restarting survey.");
+          startSurvey = true;
+        }
       }
+    } else {
+      // For Adhoc, no always start a new survey, if stopped before the end, it's marked as
+      // cancelled.
+      startSurvey = true;
     }
+    if (startSurvey) {
+      _logger.log(Level.INFO, "Starting survey: ${runnableSurvey.survey.name}");
+      _surveyResult = await _surveyManager.startSurvey(runnableSurvey);
+    }
+    setBusy(false);
+    setInitialised(true);
   }
 
   Future<bool> submit({required Map<String, dynamic> formData, required bool completed}) async {
@@ -46,10 +75,9 @@ class SurveyScreenViewModel extends ViewModel {
         valid = false;
       }
     }
-    bool updated = await runnableSurvey.update(
+    bool updated = await _surveyManager.stopSurvey(runnableSurvey: runnableSurvey,
         state: completed && valid ? SurveyState.completed : SurveyState.partially_completed,
-        data: formData
-    );
+        data: formData, surveyResultId: _surveyResult!.id);
     setBusy(false);
     return updated;
   }
@@ -64,9 +92,9 @@ class SurveyScreenViewModel extends ViewModel {
           questionVisible = false;
         } else {
           for (Condition condition in question.conditions) {
-            dynamic questionValue = formValues![condition.key];
+            dynamic questionValue = formValues![condition.questionId];
             _logger.log(Level.FINE,
-                "${question.id} showing if ${condition.toString()}: value: ${questionValue}");
+                "${question.id} showing if ${condition.toString()}: value: $questionValue");
             if (!condition.isTrue(questionValue)) {
               questionVisible = false;
               break;
@@ -85,6 +113,7 @@ class SurveyScreenViewModel extends ViewModel {
         }
       }
     }
+    visibleQuestions.sort((a, b) => a.position.compareTo(b.position));
     return visibleQuestions;
   }
 }

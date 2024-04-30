@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 
 import javax.annotation.concurrent.Immutable;
 
+import io.nextsense.android.base.devices.StreamingStartMode;
+
 /**
  * Starts streaming of Data from the Xenon Device. It also starts recording in the device's SDCARD
  * LOG file depending on the parameter.
@@ -11,22 +13,9 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public final class StartStreamingCommand extends XenonFirmwareCommand {
 
-  public enum StartMode {
-    NO_LOGGING((byte)0x00),
-    WITH_LOGGING((byte)0x01),
-    PREPARE_ONLY((byte)0x02),
-    LOGGING_AFTER_PREPARE((byte)0x03);
+  final StreamingStartMode startMode;
 
-    final byte value;
-
-    StartMode(byte value) {
-      this.value = value;
-    }
-  }
-
-  final StartMode startMode;
-
-  public StartStreamingCommand(StartMode startMode) {
+  public StartStreamingCommand(StreamingStartMode startMode) {
     super(XenonMessageType.START_STREAMING);
     this.startMode = startMode;
   }

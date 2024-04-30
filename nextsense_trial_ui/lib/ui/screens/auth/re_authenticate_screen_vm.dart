@@ -1,6 +1,7 @@
+import 'package:flutter_common/managers/auth/authentication_result.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 class ReAuthenticateScreenViewModel extends ViewModel {
 

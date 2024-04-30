@@ -4,17 +4,18 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
 import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
-import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
-import 'package:nextsense_trial_ui/ui/components/rounded_background.dart';
+import 'package:flutter_common/ui/components/rounded_background.dart';
 import 'package:nextsense_trial_ui/ui/components/thick_content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/dialogs/start_adhoc_protocol_dialog.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/surveys_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/medications/medications_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/seizures/seizures_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:provider/provider.dart';
@@ -68,11 +69,11 @@ class DashboardHomeView extends StatelessWidget {
     ]);
 
     List<Widget> menuCards = [];
-    if (_flavor.userType == UserType.researcher) {
+    if (_flavor.userType == UserType.researcher && dashboardViewModel.studyHasAdhocProtocols) {
       menuCards.add(MenuCard(
           title: 'Protocols',
           image:
-              SvgPicture.asset('assets/images/tasks.svg', semanticsLabel: 'Protocols', height: 75),
+              SvgPicture.asset('packages/nextsense_trial_ui/assets/images/tasks.svg', semanticsLabel: 'Protocols', height: 75),
           onTap: () async =>
               {await showDialog(context: context, builder: (_) => StartAdhocProtocolDialog())}));
     }
@@ -80,27 +81,27 @@ class DashboardHomeView extends StatelessWidget {
       menuCards.add(MenuCard(
           title: 'Seizures',
           image:
-              SvgPicture.asset('assets/images/brain.svg', semanticsLabel: 'Seizures', height: 75),
+              SvgPicture.asset('packages/nextsense_trial_ui/assets/images/brain.svg', semanticsLabel: 'Seizures', height: 75),
           onTap: () => _navigation.navigateTo(SeizuresScreen.id)));
     }
     if (dashboardViewModel.study.medicationTrackingEnabled) {
       menuCards.add(MenuCard(
           title: 'Medications',
           image:
-              SvgPicture.asset('assets/images/pill.svg', semanticsLabel: 'Medications', height: 75),
-          onTap: _dummy));
+              SvgPicture.asset('packages/nextsense_trial_ui/assets/images/pill.svg', semanticsLabel: 'Medications', height: 75),
+          onTap: () => _navigation.navigateTo(MedicationsScreen.id)));
     }
     if (dashboardViewModel.study.sideEffectsTrackingEnabled) {
       menuCards.add(MenuCard(
           title: 'Side Effects',
-          image: SvgPicture.asset('assets/images/head.svg',
+          image: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/head.svg',
               semanticsLabel: 'Side Effects', height: 75),
           onTap: () => _navigation.navigateTo(SideEffectsScreen.id)));
     }
-    if (dashboardViewModel.study.surveysEnabled) {
+    if (dashboardViewModel.scheduledSurveys.isNotEmpty) {
       menuCards.add(MenuCard(
           title: 'Surveys',
-          image: SvgPicture.asset('assets/images/tasks.svg', semanticsLabel: 'Surveys', height: 75),
+          image: SvgPicture.asset('packages/nextsense_trial_ui/assets/images/tasks.svg', semanticsLabel: 'Surveys', height: 75),
           onTap: () => _navigation.navigateTo(SurveysScreen.id)));
     }
 
@@ -148,13 +149,10 @@ class DashboardHomeView extends StatelessWidget {
     return PageScaffold(
         viewModel: dashboardViewModel, showBackButton: false, padBottom: false, child: elements);
   }
-
-  // remove when all cards targets are implemented.
-  void _dummy() {}
 }
 
 class MenuCard extends StatelessWidget {
-  final Function onTap;
+  final VoidCallback? onTap;
   final String title;
   final Widget image;
 

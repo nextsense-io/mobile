@@ -7,9 +7,31 @@ import 'package:gson/gson.dart';
 typedef void Listener(dynamic msg);
 typedef void CancelListening();
 
+// High-level type of the hardware device. This defines which API to use. A better way would be to
+// expose the API but it would be quite a lot of effort to do.
+enum DeviceType {
+  h1,
+  nitro,
+  xenon,
+  kauai,
+  kauai_medical
+}
+
 enum DeviceAttributesFields {
   macAddress,
-  name
+  name,
+  type,
+  revision,
+  serialNumber,
+  firmwareVersionMajor,
+  firmwareVersionMinor,
+  firmwareVersionBuildNumber,
+  earbudsType,
+  earbudsRevision,
+  earbudsSerialNumber,
+  earbudsVersionMajor,
+  earbudsVersionMinor,
+  earbudsVersionBuildNumber,
 }
 
 enum DeviceSettingsFields {
@@ -48,12 +70,31 @@ enum EmulatorCommand {
   INTERNAL_STATE_CHANGE
 }
 
+// String results from sleep staging will be one of those.
+enum SleepStagingResult {
+  n1,
+  n2,
+  n3,
+  rem,
+  wake;
+
+  factory SleepStagingResult.fromString(String result) {
+    return values.firstWhere((mode) => describeEnum(mode) == result.toLowerCase(),
+        orElse: () => throw ArgumentError('Invalid sleep staging result: $result'));
+  }
+}
+
+const int sleepResultsIndex = 0;
+const int sleepConfidencesIndex = 1;
+
 class NextsenseBase {
   static const MethodChannel _channel = const MethodChannel('nextsense_base');
   static const EventChannel _deviceScanStream = const EventChannel(
       'io.nextsense.flutter.base.nextsense_base/device_scan_channel');
   static const EventChannel _deviceStateStream = const EventChannel(
       'io.nextsense.flutter.base.nextsense_base/device_state_channel');
+  static const EventChannel _deviceEventsStream = const EventChannel(
+      'io.nextsense.flutter.base.nextsense_base/device_events_channel');
   static const EventChannel _deviceInternalStateStream = const EventChannel(
       'io.nextsense.flutter.base.nextsense_base/device_internal_state_channel');
   static const EventChannel _currentSessionDataReceivedStream = const EventChannel(
@@ -77,6 +118,7 @@ class NextsenseBase {
   static const String _getChannelDataCommand = 'get_channel_data';
   static const String _getAccChannelDataCommand = 'get_acc_channel_data';
   static const String _getTimestampsDataCommand = 'get_timestamps_data';
+  static const String _getDeviceInfoCommand = 'get_device_info';
   static const String _getDeviceSettingsCommand = 'get_device_settings';
   static const String _deleteLocalSessionCommand = 'delete_local_session';
   static const String _requestDeviceInternalStateUpdateCommand =
@@ -86,7 +128,9 @@ class NextsenseBase {
   static const String _getFreeDiskSpaceCommand = 'get_free_disk_space';
   static const String _getTimezoneIdCommand = 'get_timezone_id';
   static const String _getNativeLogsCommand = 'get_native_logs';
+  static const String _runSleepStagingCommand = 'run_sleep_staging';
   static const String _emulatorCommand = 'emulator_command';
+  static const String _getBandPowerCommand = 'get_band_power';
   static const String _macAddressArg = 'mac_address';
   static const String _uploadToCloudArg = 'upload_to_cloud';
   static const String _userBigTableKeyArg = 'user_bigtable_key';
@@ -101,6 +145,10 @@ class NextsenseBase {
   static const String _fromDatabaseArg = 'from_database';
   static const String _notificationTitleArg = 'notification_title';
   static const String _notificationTextArg = 'notification_text';
+  static const String _startDateTimeEpochMsArg = 'start_date_time_epoch_ms';
+  static const String _bandStartArg = 'band_start';
+  static const String _bandEndArg = 'band_end';
+  static const String _saveToCsvArg = 'save_to_csv';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
@@ -108,6 +156,7 @@ class NextsenseBase {
 
   static int _nextScanningListenerId = 1;
   static int _nextDeviceStateListenerId = 1;
+  static int _nextDeviceEventsListenerId = 1;
   static int _nextDeviceInternalStateListenerId = 1;
 
   static Future<String?> get platformVersion async {
@@ -168,29 +217,65 @@ class NextsenseBase {
     return channelData.cast<int>();
   }
 
+  /**
+   * Returns a map of of two lists: sleep results and sleep confidences.
+   * Each map can be obtained with the index from `sleepResultsIndex` and `sleepConfidencesIndex`.
+   * Sleep results will conform to the `SleepStagingResult` enum.
+   * Sleep confidences will be a list of doubles between 0 and 1.
+   */
+  static Future<Map<String, dynamic>> runSleepStaging({
+    required String macAddress, required String channelName, required DateTime startDateTime,
+    required Duration duration, required int localSessionId, bool fromDatabase = false}) async {
+    final Map<String, dynamic> channelData =
+        gson.decode(await _channel.invokeMethod(_runSleepStagingCommand,
+        {_macAddressArg: macAddress, _localSessionIdArg: localSessionId,
+          _channelNumberArg: channelName,
+          _startDateTimeEpochMsArg: startDateTime.millisecondsSinceEpoch,
+          _durationMillisArg: duration.inMilliseconds, _fromDatabaseArg: fromDatabase}));
+    return channelData;
+  }
+
+  static Future<double> getBandPower({
+      required String macAddress, required String channelName, required DateTime startTime,
+      required Duration duration, required double bandStart, required double bandEnd,
+      required int localSessionId, bool fromDatabase = false}) async {
+    return await _channel.invokeMethod(_getBandPowerCommand,
+        {_macAddressArg: macAddress, _channelNumberArg: channelName,
+          _startDateTimeEpochMsArg: startTime.millisecondsSinceEpoch,
+          _durationMillisArg: duration.inMilliseconds, _bandStartArg: bandStart,
+          _bandEndArg: bandEnd, _localSessionIdArg: localSessionId,
+          _fromDatabaseArg: fromDatabase});
+  }
+
   static Future deleteLocalSession(int localSessionId) async {
     await  _channel.invokeMethod(_deleteLocalSessionCommand,
         {_localSessionIdArg: localSessionId});
   }
 
   static CancelListening startScanning(Listener listener) {
-    var subscription = _deviceScanStream.receiveBroadcastStream(
-        _nextScanningListenerId++
-    ).listen(listener, cancelOnError: true);
+    var subscription = _deviceScanStream.receiveBroadcastStream(_nextScanningListenerId++)
+        .listen(listener, cancelOnError: true);
     return () {
       subscription.cancel();
     };
   }
 
   static Future<String> getDeviceState(String macAddress) async {
-    return await _channel.invokeMethod(_getDeviceStateCommand,
-        {_macAddressArg: macAddress});
+    return await _channel.invokeMethod(_getDeviceStateCommand, {_macAddressArg: macAddress});
   }
 
-  static CancelListening listenToDeviceState(Listener listener,
-      String deviceMacAddress) {
+  static CancelListening listenToDeviceState(Listener listener, String deviceMacAddress) {
     var subscription = _deviceStateStream.receiveBroadcastStream(
         [_nextDeviceStateListenerId++, deviceMacAddress]
+    ).listen(listener, cancelOnError: true);
+    return () {
+      subscription.cancel();
+    };
+  }
+
+  static CancelListening listenToDeviceEvents(Listener listener, String deviceMacAddress) {
+    var subscription = _deviceEventsStream.receiveBroadcastStream(
+        [_nextDeviceEventsListenerId++, deviceMacAddress]
     ).listen(listener, cancelOnError: true);
     return () {
       subscription.cancel();
@@ -219,11 +304,11 @@ class NextsenseBase {
   }
 
   static Future<int> startStreaming(String macAddress, bool uploadToCloud, String? userBigTableKey,
-      String? dataSessionId, String? earbudsConfig) async {
+      String? dataSessionId, String? earbudsConfig, bool? saveToCsv) async {
     return await _channel.invokeMethod(_startStreamingCommand,
         {_macAddressArg: macAddress, _uploadToCloudArg: uploadToCloud,
           _userBigTableKeyArg: userBigTableKey, _dataSessionIdArg: dataSessionId,
-          _earbudsConfigArg: earbudsConfig});
+          _earbudsConfigArg: earbudsConfig, _saveToCsvArg: saveToCsv ?? false});
   }
 
   static Future stopStreaming(String macAddress) async {
@@ -267,6 +352,13 @@ class NextsenseBase {
     return connectedDevices;
   }
 
+  static Future<Map<String, dynamic>> getDeviceInfo(String macAddress) async {
+    String deviceInfoJson = (await _channel.invokeMethod(_getDeviceInfoCommand,
+        {_macAddressArg: macAddress})) as String;
+    return gson.decode(deviceInfoJson);
+  }
+
+
   static Future<Map<String, dynamic>> getDeviceSettings(String macAddress) async {
     String deviceSettingsJson = (await _channel.invokeMethod(_getDeviceSettingsCommand,
         {_macAddressArg: macAddress})) as String;
@@ -302,6 +394,6 @@ class NextsenseBase {
   static Future<bool> sendEmulatorCommand(EmulatorCommand command,
       {Map<String, dynamic> params = const {}}) async {
     return await _channel.invokeMethod(_emulatorCommand,
-      {'command': command.name, 'params' : params });
+        {'command': command.name, 'params' : params });
   }
 }

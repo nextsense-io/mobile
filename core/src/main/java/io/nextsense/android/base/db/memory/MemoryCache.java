@@ -13,14 +13,18 @@ import io.nextsense.android.base.utils.EvictingArray;
  * Memory cache for recent data for performance.
  */
 public class MemoryCache {
-  // 250 samples per second times 60 seconds times 5 minutes.
-  private static final int DEFAULT_RETENTION_SAMPLES = 250 * 60 * 5;
+  // 250 samples per second times 60 seconds times 12 minutes.
+  private static final int DEFAULT_RETENTION_SAMPLES = 250 * 60 * 12;
 
   private final Map<String, EvictingArray<Float>> eegChannels = new HashMap<>();
   private final Map<String, EvictingArray<Integer>> accChannels = new HashMap<>();
   private final EvictingArray<Long> timestamps;
   private final Object eegLock = new Object();
   private final Object accLock = new Object();
+
+  private MemoryCache() {
+    timestamps = new EvictingArray<>(DEFAULT_RETENTION_SAMPLES);
+  }
 
   private MemoryCache(List<String> eegChannelNames, List<String> accChannelNames) {
     for (String eegChannelName : eegChannelNames) {
@@ -32,8 +36,23 @@ public class MemoryCache {
     timestamps = new EvictingArray<>(DEFAULT_RETENTION_SAMPLES);
   }
 
+  public static MemoryCache create() {
+    return new MemoryCache();
+  }
+
   public static MemoryCache create(List<String> eegChannelNames, List<String> accChannelNames) {
     return new MemoryCache(eegChannelNames, accChannelNames);
+  }
+  public void init(List<String> eegChannelNames, List<String> accChannelNames) {
+    eegChannels.clear();
+    for (String eegChannelName : eegChannelNames) {
+      eegChannels.put(eegChannelName, new EvictingArray<>(DEFAULT_RETENTION_SAMPLES));
+    }
+    accChannels.clear();
+    for (String accChannelName : accChannelNames) {
+      accChannels.put(accChannelName, new EvictingArray<>(DEFAULT_RETENTION_SAMPLES));
+    }
+    timestamps.clear();
   }
 
   public void addChannelData(Samples samples) {

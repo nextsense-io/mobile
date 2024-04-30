@@ -1,11 +1,7 @@
+import 'package:logging/logging.dart';
+import 'package:flutter_common/managers/auth/auth_method.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
-
-// Possible authentication methods.
-enum AuthMethod {
-  email_password,
-  user_code,
-  google_auth
-}
 
 abstract class Flavor {
   String get appTitle;
@@ -56,8 +52,9 @@ class FlavorFactory {
       case UserType.researcher:
         return ResearcherFlavor();
       case UserType.subject:
-        return SubjectFlavor();
+        return AnonymousSubjectFlavor();
       default:
+        getLogger("Main").log(Level.INFO, "Unknown flavor: $flavor");
         throw("Unknown flavor: $flavor");
     }
   }

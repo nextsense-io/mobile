@@ -1,43 +1,27 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
+import 'package:flutter_common/managers/auth/auth_method.dart';
+import 'package:flutter_common/managers/auth/authentication_result.dart';
+import 'package:flutter_common/managers/auth/email_auth_manager.dart';
+import 'package:flutter_common/managers/auth/google_auth_manager.dart';
+import 'package:flutter_common/managers/auth/password_change_result.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/user.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
-import 'package:nextsense_trial_ui/managers/auth/email_auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/auth/google_auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/nextsense_auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:uuid/uuid.dart';
-
-enum AuthenticationResult {
-  success,
-  invalid_user_setup,  // Invalid user configuration in Firestore
-  invalid_username_or_password,
-  need_reauthentication,
-  user_fetch_failed,  // Failed to load user entity
-  connection_error,
-  expired_link,  // When using a sign-in link
-  error  // Some other errors
-}
-
-enum PasswordChangeResult {
-  success,
-  invalid_password,
-  need_reauthentication,
-  connection_error,
-  error // Some other errors
-}
 
 class AuthManager {
   static const minimumPasswordLength = 8;
 
   final _logger = CustomLogPrinter('AuthManager');
   final _preferences = getIt<Preferences>();
-  final _firestoreManager = getIt<FirestoreManager>();
+  final _firestoreManager = getIt<TrialUiFirestoreManager>();
   final _firebaseAuth = FirebaseAuth.instance;
   final _flavor = getIt<Flavor>();
 
@@ -47,7 +31,7 @@ class AuthManager {
   GoogleAuthManager? _googleAuthManager;
   EmailAuthManager? _emailAuthManager;
   String? _email;
-  String? _userCode;
+  String? _username;
   User? _user;
   AuthMethod? _signedInAuthMethod;
 
@@ -60,7 +44,7 @@ class AuthManager {
   bool get isTempPassword => _user?.isTempPassword() ?? false;
 
   User? get user => _user;
-  String? get userCode => _userCode;
+  String? get username => _username;
   String? get email => _email;
 
   AuthManager() {
@@ -91,7 +75,7 @@ class AuthManager {
     if (authResult != AuthenticationResult.success) {
       return authResult;
     }
-    authResult = await _signIn(username: username, authUid: username);
+    authResult = await _signIn(username: username, authUid: _nextSenseAuthManager!.authUid!);
     return authResult;
   }
 
@@ -152,7 +136,7 @@ class AuthManager {
         return result;
       case AuthMethod.user_code:
     return await _nextSenseAuthManager!.changePassword(
-        username: userCode!, newPassword: newPassword);
+        username: _nextSenseAuthManager!.authUid!, newPassword: newPassword);
       default:
         return PasswordChangeResult.error;
     }
@@ -177,7 +161,7 @@ class AuthManager {
   Future<bool> requestSignUpEmail(String email) async {
     switch (_signedInAuthMethod) {
       case AuthMethod.email_password:
-        User? user = await _loadUser(username: email);
+        User? user = await _loadUser(authUid: email);
         user?.setTempPassword(true);
         user?.save();
         return await _emailAuthManager!.sendSignUpLinkEmail(email);
@@ -186,6 +170,11 @@ class AuthManager {
             'Cannot send a signup email for $_signedInAuthMethod users.');
         return false;
     }
+  }
+
+
+  String? getLastPairedMacAddress() {
+    return user?.getLastPairedDeviceMacAddress();
   }
 
   // Make sure the user data is loaded from Firestore before doing any authorized operations.
@@ -205,7 +194,7 @@ class AuthManager {
       switch (_signedInAuthMethod) {
         case AuthMethod.user_code:
           username = _firebaseAuth.currentUser!.uid;
-          authUid = username;
+          authUid = _nextSenseAuthManager!.authUid!;
           break;
         case AuthMethod.google_auth:
           username = _firebaseAuth.currentUser!.email!;
@@ -219,10 +208,10 @@ class AuthManager {
           _logger.log(Level.WARNING, 'Unknown auth method.');
           return false;
       }
-      _user = await _loadUser(username: username);
+      _user = await _loadUser(authUid: authUid);
       if (_user != null) {
-        _userCode = username;
-        await _updateUserDetails(user: _user!, authUid: authUid);
+        _username = username;
+        await _updateUserDetails(user: _user!);
         return true;
       }
     }
@@ -244,14 +233,14 @@ class AuthManager {
       default:
       // Nothing to do.
     }
-    _userCode = null;
+    _username = null;
     _user = null;
     _email = null;
   }
 
   Future<AuthenticationResult> _signIn({required String username, required String authUid}) async {
     _logger.log(Level.INFO, 'Starting NextSense user check.');
-    _user = await _loadUser(username: username);
+    _user = await _loadUser(authUid: authUid);
 
     if (_user == null) {
       await signOut();
@@ -265,20 +254,16 @@ class AuthManager {
       await signOut();
       return AuthenticationResult.invalid_user_setup;
     }
-    _updateUserDetails(user: _user!, authUid: authUid);
-    _userCode = username;
+    _updateUserDetails(user: _user!);
+    _username = username;
+    _firestoreManager.setUserId(_user!.id);
     return AuthenticationResult.success;
   }
 
-  Future _updateUserDetails({required User user, required String authUid}) async {
+  Future _updateUserDetails({required User user}) async {
     // Persist bt_key
     if (user.getValue(UserKey.bt_key) == null) {
       user.setValue(UserKey.bt_key, _uuid.v4());
-    }
-
-    // Persist UID on first login.
-    if (user.getValue(UserKey.auth_uid) == null || user.getValue(UserKey.auth_uid) == '') {
-      user.setValue(UserKey.auth_uid, authUid);
     }
 
     // Persist fcm token
@@ -295,8 +280,8 @@ class AuthManager {
   }
 
   // Load user from Firestore and update some data
-  Future<User?> _loadUser({required String username}) async {
-    final User? user = await _fetchUserFromFirestore(username);
+  Future<User?> _loadUser({required String authUid}) async {
+    final User? user = await _fetchUserFromFirestore(authUid);
 
     if (user == null) {
       _logger.log(Level.WARNING, 'Failed to fetch user from Firestore.');
@@ -305,8 +290,8 @@ class AuthManager {
     return user;
   }
 
-  Future<User?> _fetchUserFromFirestore(String code) async {
-    FirebaseEntity? userEntity = await _firestoreManager.queryEntity([Table.users], [code]);
+  Future<User?> _fetchUserFromFirestore(String authUid) async {
+    FirebaseEntity? userEntity = await _firestoreManager.queryEntity([Table.users], [authUid]);
     if (userEntity == null || !userEntity.getDocumentSnapshot().exists) {
       return null;
     }

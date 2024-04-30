@@ -1,5 +1,7 @@
 package io.nextsense.android.service;
 
+import static android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE;
+
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -13,14 +15,17 @@ import android.os.IBinder;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.io.IOException;
 import java.time.Duration;
-import java.util.Arrays;
 
+import io.nextsense.android.ApplicationType;
 import io.nextsense.android.Config;
+import io.nextsense.android.algo.tflite.SleepTransformerModel;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.SampleRateCalculator;
@@ -31,6 +36,7 @@ import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Uploader;
 import io.nextsense.android.base.db.CacheSink;
+import io.nextsense.android.base.db.CsvSink;
 import io.nextsense.android.base.db.DatabaseSink;
 import io.nextsense.android.base.db.memory.MemoryCache;
 import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
@@ -50,6 +56,8 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
  * to our device if that is something we want to do.
  */
 public class ForegroundService extends Service {
+  // Type of application from the `ApplicationType` class.
+  public static final String EXTRA_APPLICATION_TYPE = "applicationType";
   // Class reference to know what to launch when the service notification is pressed.
   public static final String EXTRA_UI_CLASS = "ui_class";
   // Allows data to be uploaded to the cloud via a cellular transmission.
@@ -64,6 +72,7 @@ public class ForegroundService extends Service {
   // Binder given to clients.
   private final IBinder binder = new LocalBinder();
 
+  private ApplicationType applicationType;
   private NotificationManager notificationManager;
   private FirebaseAuth firebaseAuth;
   private NextSenseDeviceManager nextSenseDeviceManager;
@@ -75,11 +84,13 @@ public class ForegroundService extends Service {
   private MemoryCache memoryCache;
   private DatabaseSink databaseSink;
   private CacheSink cacheSink;
+  private CsvSink csvSink;
   private LocalSessionManager localSessionManager;
   private Connectivity connectivity;
   private CloudFunctions cloudFunctions;
   private Uploader uploader;
   private SampleRateCalculator sampleRateCalculator;
+  private SleepTransformerModel sleepTransformerModel;
   private boolean initialized = false;
   // Starts true so the activity is launched on first start.
   private boolean flutterActivityActive = true;
@@ -99,7 +110,11 @@ public class ForegroundService extends Service {
     if (intent == null || intent.getExtras() == null) {
       return START_REDELIVER_INTENT;
     }
-
+    String applicationTypeExtra = intent.getStringExtra(EXTRA_APPLICATION_TYPE);
+    if (applicationTypeExtra == null) {
+      return START_REDELIVER_INTENT;
+    }
+    applicationType = ApplicationType.valueOf(applicationTypeExtra);
     Class<Activity> uiClass = (Class<Activity>) intent.getSerializableExtra(EXTRA_UI_CLASS);
     Intent notificationIntent = new Intent(this, uiClass);
     PendingIntent pendingIntent = PendingIntent.getActivity(this,
@@ -109,7 +124,8 @@ public class ForegroundService extends Service {
         .setContentText(getString(R.string.notif_content))
         .setSmallIcon(R.drawable.ic_stat_nextsense_n_icon)
         .setContentIntent(pendingIntent);
-    startForeground(NOTIFICATION_ID, notificationBuilder.build());
+    ServiceCompat.startForeground(this, NOTIFICATION_ID, notificationBuilder.build(),
+        FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
     initialize(intent.getBooleanExtra(EXTRA_ALLOW_DATA_VIA_CELLULAR, false));
     RotatingFileLogger.get().logd(TAG, "Service initialized.");
     return START_REDELIVER_INTENT;
@@ -150,6 +166,9 @@ public class ForegroundService extends Service {
   public Uploader getUploader() {
     return uploader;
   }
+  public SleepTransformerModel getSleepTransformerModel() {
+    return sleepTransformerModel;
+  }
 
   public boolean isFlutterActivityActive() {
     return flutterActivityActive;
@@ -168,31 +187,31 @@ public class ForegroundService extends Service {
   private void initialize(boolean allowDataViaCellular) {
     objectBoxDatabase = new ObjectBoxDatabase();
     objectBoxDatabase.init(this);
-    localSessionManager = LocalSessionManager.create(objectBoxDatabase);
     bluetoothStateManager = BluetoothStateManager.create(getApplicationContext());
     centralManagerProxy = (!Config.USE_EMULATED_BLE) ?
             new BleCentralManagerProxy(getApplicationContext()) : null;
+    // Uncomment when the CSV sink is needed.
+    csvSink = CsvSink.create(this, objectBoxDatabase, centralManagerProxy);
+    localSessionManager = LocalSessionManager.create(objectBoxDatabase, csvSink);
     nextSenseDeviceManager = NextSenseDeviceManager.create(localSessionManager);
+    memoryCache = MemoryCache.create();
     deviceScanner = DeviceScanner.create(
-        nextSenseDeviceManager, centralManagerProxy, bluetoothStateManager);
+        nextSenseDeviceManager, centralManagerProxy, bluetoothStateManager, memoryCache, csvSink);
     deviceManager = DeviceManager.create(
         deviceScanner, localSessionManager, centralManagerProxy, bluetoothStateManager,
-        nextSenseDeviceManager);
+        nextSenseDeviceManager, memoryCache, csvSink);
     databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
     databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);
     // sampleRateCalculator.startListening();
-    // TODO(eric) Get from device config.
-    memoryCache = MemoryCache.create(
-            Arrays.asList("1", "3", "6", "7", "8"), Arrays.asList("x", "y", "z"));
     cacheSink = CacheSink.create(memoryCache);
     cacheSink.startListening();
     connectivity = Connectivity.create(this);
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
-    // minRecordsToKeep is set at 5000 as ~4000 records is the upper limit we are considering for
-    // impedance calculation.
-    uploader = Uploader.create(objectBoxDatabase, databaseSink, connectivity, /*uploadChunk=*/1250,
-        /*minRecordsToKeep=*/5000, /*minDurationToKeep=*/Duration.ofMillis((5000 / 250) * 1000L));
+    // minRecordsToKeep is set at 12 minutes as we need 1 0minutes for sleep staging.
+    uploader = Uploader.create(this, applicationType, objectBoxDatabase, databaseSink, connectivity,
+        /*uploadChunk=*/Duration.ofSeconds(5), /*minRecordsToKeep=*/250 * 60 * 12,
+        /*minDurationToKeep=*/Duration.ofMinutes(12));
     uploader.setMinimumConnectivityState(allowDataViaCellular ?
         Connectivity.State.LIMITED_CONNECTION : Connectivity.State.FULL_CONNECTION);
     uploader.start();
@@ -208,21 +227,37 @@ public class ForegroundService extends Service {
               // Token refresh succeeded
               // Get new ID token
               String idToken = getTokenResult.getToken();
-              RotatingFileLogger.get().logi(TAG, "Refreshed Token: " + idToken);
+              RotatingFileLogger.get().logi(TAG, "Refreshed Firebase auth token.");
             })
-            .addOnFailureListener(e -> {
+            .addOnFailureListener(e ->
               // Token refresh failed
-              RotatingFileLogger.get().logw(TAG, "Failed ot refresh token.");
-            });
+              RotatingFileLogger.get().logw(TAG, "Failed to refresh Firebase auth token: " + e.getMessage())
+            );
       }
     });
-
+    initializeAlgorithms();
     initialized = true;
+  }
+
+  private void initializeAlgorithms() {
+    if (applicationType == ApplicationType.CONSUMER) {
+      sleepTransformerModel = new SleepTransformerModel(getApplicationContext());
+      try {
+        sleepTransformerModel.loadModel();
+        RotatingFileLogger.get().logi(TAG, "Initialized sleep transformer model.");
+      } catch (IOException e) {
+        RotatingFileLogger.get().loge(TAG, "Failed to load sleep transformer model: " +
+            e.getMessage());
+      }
+    }
   }
 
   private void destroy() {
     RotatingFileLogger.get().logi(TAG, "destroy started.");
     // sampleRateCalculator.stopListening();
+    if (sleepTransformerModel != null) {
+      sleepTransformerModel.closeModel();
+    }
     if (deviceScanner != null) {
       deviceScanner.stopFinding();
       deviceScanner.close();
@@ -235,6 +270,10 @@ public class ForegroundService extends Service {
     }
     if (cacheSink != null) {
       cacheSink.stopListening();
+    }
+    if (csvSink != null) {
+      csvSink.stopListening();
+      csvSink.closeCsv(/*checkForCompletedSession=*/false);
     }
     memoryCache = null;
     if (databaseSink != null) {

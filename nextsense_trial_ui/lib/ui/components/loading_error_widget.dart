@@ -6,20 +6,19 @@ class LoadingErrorWidget extends StatelessWidget {
   final String msg;
   final VoidCallback onTap;
 
-  LoadingErrorWidget(this.msg, {required this.onTap});
+  const LoadingErrorWidget(this.msg, {super.key, required this.onTap});
 
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(30),
-      child: Container(
+      child: SizedBox(
         height: 200,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-                child: Text(msg, textAlign: TextAlign.center)
-            ),
-            SizedBox(height: 30,),
+            Text(msg, textAlign: TextAlign.center),
+            const SizedBox(height: 30,),
             NextsenseButton.primary("Refresh", onPressed: onTap)
           ],
         ),

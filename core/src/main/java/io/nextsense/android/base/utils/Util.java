@@ -14,14 +14,39 @@ public class Util {
     return String.format(format, string).replace(' ', '0');
   }
 
+  public static String byteArrayToString(byte[] bytes) {
+    StringBuilder sb = new StringBuilder();
+    for (byte b : bytes) {
+      sb.append(String.format("%02X ", b));
+    }
+    return sb.toString();
+  }
+
   public static int bytesToInt24(byte[] buffer, int byteOffset, ByteOrder byteOrder) {
-    return byteOrder == ByteOrder.LITTLE_ENDIAN?
-        ((buffer[byteOffset] << 16) |  // Java handles the sign-bit
-        ((buffer[byteOffset + 1] & 0xFF) << 8) |  // Use unsigned value, ignore the sign-bit
-        (buffer[byteOffset + 2] & 0xFF)):
-        ((buffer[byteOffset + 2] << 16) |  // Java handles the sign-bit
-        ((buffer[byteOffset + 1] & 0xFF) << 8) |  // Use unsigned value, ignore the sign-bit
-        (buffer[byteOffset] & 0xFF));
+    return bytesToInt24(buffer, byteOffset, byteOrder, /*signed=*/true);
+  }
+
+  public static int bytesToInt24(byte[] buffer, int byteOffset, ByteOrder byteOrder,
+                                 boolean signed) {
+    int value;
+    if (signed) {
+       value = byteOrder == ByteOrder.LITTLE_ENDIAN?
+          ((buffer[byteOffset] << 16) |  // Java handles the sign-bit
+              ((buffer[byteOffset + 1] & 0xFF) << 8) |  // Use unsigned value, ignore the sign-bit
+              (buffer[byteOffset + 2] & 0xFF)):
+          ((buffer[byteOffset + 2] << 16) |  // Java handles the sign-bit
+              ((buffer[byteOffset + 1] & 0xFF) << 8) |  // Use unsigned value, ignore the sign-bit
+              (buffer[byteOffset] & 0xFF));
+    } else {
+      value = byteOrder == ByteOrder.LITTLE_ENDIAN?
+          (((buffer[byteOffset] & 0xFF) << 16) |  // Use unsigned value, ignore the sign-bit
+              ((buffer[byteOffset + 1] & 0xFF) << 8) |
+              (buffer[byteOffset + 2] & 0xFF)):
+          (((buffer[byteOffset + 2] & 0xFF) << 16) |  // Use unsigned value, ignore the sign-bit
+              ((buffer[byteOffset + 1] & 0xFF) << 8) |
+              (buffer[byteOffset] & 0xFF));
+    }
+    return value;
   }
 
   public static long bytesToLong48(byte[] buffer, int byteOffset, ByteOrder byteOrder) {

@@ -31,7 +31,6 @@ android {
         viewBinding true
     }
 
-    buildToolsVersion '30.0.3'
     compileSdkVersion 33
     namespace 'io.nextsense.android.service'
 }
@@ -41,6 +40,7 @@ dependencies {
     implementation project(path: ':core')
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
     implementation 'com.google.firebase:firebase-auth'
+    implementation 'androidx.core:core:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.navigation:navigation-fragment:2.5.3'

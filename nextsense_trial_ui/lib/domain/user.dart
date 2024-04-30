@@ -1,32 +1,34 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:nextsense_base/nextsense_base.dart';
-import 'package:nextsense_trial_ui/domain/assesment.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/adhoc_protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/domain/planned_session.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
+import 'package:nextsense_trial_ui/domain/session/adhoc_session.dart';
+import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 /// Each entry corresponds to a field name in the database instance.
 /// If any fields are added here, they need to be added to the User class in
 /// https://github.com/nextsense-io/mobile_backend/lib/models/user.py
 enum UserKey {
-  // UID used when authenticating
-  auth_uid,
+  // User's email address.
+  email,
   // BigTable key. Generated as a UUID.
   bt_key,
   // Currently selected study. Opens by default if there are more than one for
   // this user, which is possible for some user types.
-  current_study,
+  current_study_id,
   // FCM Token for push notifications
   fcm_token,
   // If the password is temporary (first login or reset by our support).
   is_temp_password,
   // Last login datetime. null if never logged on.
   last_login,
-  // MAC address of the last paired device.
-  last_paired_device,
-  // String containing the salt and hashed password.
+  // ID of the last paired device.
+  last_paired_device_id,
+  // Organization ID
+  organization_id,
+  // String containing the salted and hashed password.
   password,
   // Currently recording protocol
   running_protocol,
@@ -38,6 +40,12 @@ enum UserKey {
   type,
   // User name
   username,
+  // If medication notifications are enabled for this user.
+  medications_notifications_enabled,
+  // If survey notifications are enabled for this user.
+  survey_notifications_enabled,
+  // If recording notifications are enabled for this user.
+  recording_notifications_enabled
 }
 
 enum UserType {
@@ -58,19 +66,19 @@ class User extends FirebaseEntity<UserKey> {
   UserType get userType => getUserTypeFromString(getValue(UserKey.type));
 
   User(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot());
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
-  String? getCurrentStudy() {
-    return getValue(UserKey.current_study);
+  String? getCurrentStudyId() {
+    return getValue(UserKey.current_study_id);
   }
 
   String? getLastPairedDeviceMacAddress() {
-    final value = getValue(UserKey.last_paired_device);
+    final value = getValue(UserKey.last_paired_device_id);
     return value != null ? (value as String) : null;
   }
 
   void setLastPairedDeviceMacAddress(String? macAddress) {
-    setValue(UserKey.last_paired_device, macAddress);
+    setValue(UserKey.last_paired_device_id, macAddress);
   }
 
   void setFcmToken(String fcmToken) {
@@ -103,26 +111,60 @@ class User extends FirebaseEntity<UserKey> {
     setValue(UserKey.is_temp_password, tempPassword);
   }
 
+  String? getEmail() {
+    return getValue(UserKey.email);
+  }
+
+  String? getUsername() {
+    return getValue(UserKey.username);
+  }
+
+  bool isMedicationNotificationsEnabled() {
+    return getValue(UserKey.medications_notifications_enabled) ?? false;
+  }
+
+  bool isSurveyNotificationsEnabled() {
+    return getValue(UserKey.survey_notifications_enabled) ?? false;
+  }
+
+  bool isRecordingNotificationsEnabled() {
+    return getValue(UserKey.recording_notifications_enabled) ?? false;
+  }
+
+  void setMedicationNotificationsEnabled(bool enabled) {
+    setValue(UserKey.medications_notifications_enabled, enabled);
+  }
+
+  void setSurveyNotificationsEnabled(bool enabled) {
+    setValue(UserKey.survey_notifications_enabled, enabled);
+  }
+
+  void setRecordingNotificationsEnabled(bool enabled) {
+    setValue(UserKey.recording_notifications_enabled, enabled);
+  }
+
   Future<dynamic> getRunningProtocol(DateTime? studyStartDate, DateTime? studyEndDate) async {
     dynamic runningProtocolRef = getValue(UserKey.running_protocol);
     if (runningProtocolRef == null) {
       return null;
     }
     DocumentReference ref = runningProtocolRef as DocumentReference;
-    if (runningProtocolRef.parent.path.toString().endsWith(Table.adhoc_protocols.name())) {
-      return AdhocProtocol.fromRecord(
-          AdhocProtocolRecord(FirebaseEntity(await ref.get())), getCurrentStudy()!);
+    if (runningProtocolRef.parent.path.toString().endsWith(Table.adhoc_sessions.name())) {
+      return AdhocSession.fromRecord(
+          AdhocProtocolRecord(FirebaseEntity(await ref.get(), super.getFirestoreManager())),
+          getCurrentStudyId()!);
     } else {
       if (studyStartDate == null || studyEndDate == null) {
         throw Exception("Study start and end dates are required for scheduled protocols");
       }
-      FirebaseEntity scheduledProtocolEntity = FirebaseEntity(await ref.get());
+      FirebaseEntity scheduledProtocolEntity = FirebaseEntity(
+          await ref.get(), getFirestoreManager());
       FirebaseEntity plannedAssessmentEntity = FirebaseEntity(
-          await (scheduledProtocolEntity.getValue(ScheduledProtocolKey.protocol)
-          as DocumentReference).get());
-      PlannedAssessment plannedAssessment =
-          PlannedAssessment(plannedAssessmentEntity, studyStartDate, studyEndDate);
-      return ScheduledProtocol(scheduledProtocolEntity, plannedAssessment);
+          await (scheduledProtocolEntity.getValue(ScheduledSessionKey.planned_session_id)
+          as DocumentReference).get(), getFirestoreManager());
+      PlannedSession plannedAssessment =
+          PlannedSession(plannedAssessmentEntity, studyStartDate, studyEndDate);
+      return ScheduledSession(scheduledProtocolEntity, plannedAssessment);
     }
   }
 

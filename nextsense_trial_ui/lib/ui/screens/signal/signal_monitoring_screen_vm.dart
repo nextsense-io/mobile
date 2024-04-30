@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:flutter_common/domain/acceleration_data.dart';
+import 'package:flutter_common/domain/device_settings.dart';
+import 'package:flutter_common/domain/plot_data_point.dart';
+import 'package:flutter_common/managers/device_manager.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/device_settings.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
 import 'package:nextsense_trial_ui/preferences.dart';
-import 'package:nextsense_trial_ui/utils/algorithms.dart';
-import 'package:nextsense_trial_ui/viewmodels/device_state_viewmodel.dart';
+import 'package:flutter_common/utils/algorithms.dart';
+import 'package:flutter_common/viewmodels/device_state_viewmodel.dart';
 
 enum DataType {
   eeg,
@@ -37,52 +39,6 @@ enum SignalProcessing {
   }
 }
 
-/* Acceleration data class. */
-class AccelerationData implements Comparable<AccelerationData> {
-  final int x;
-  final int y;
-  final int z;
-  final DateTime timestamp;
-
-  AccelerationData({required this.x, required this.y, required this.z, required this.timestamp});
-
-  int getX() {
-    return x;
-  }
-
-  int getY() {
-    return y;
-  }
-
-  int getZ() {
-    return z;
-  }
-
-  int getTimestampMs() {
-    return timestamp.millisecondsSinceEpoch;
-  }
-
-  List<int> asList() {
-    return [x, y, z];
-  }
-
-  List<int> asListWithTimestamp() {
-    return [x, y, z, timestamp.millisecondsSinceEpoch];
-  }
-
-  @override
-  int compareTo(AccelerationData other) {
-    return timestamp.difference(other.timestamp).inMilliseconds;
-  }
-}
-
-class PlotDataPoint {
-  final double index;
-  final double value;
-
-  PlotDataPoint(this.index, this.value);
-}
-
 class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
 
   static const Duration _eegTimeWindowDefault = Duration(seconds: 5);
@@ -97,7 +53,7 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   static const double defaultMaxAmplitudeMicroVolts = 50;
   static const double _defaultLowPassFreq = 1;
   static const double _defaultHighPassFreq = 55;
-  static const int _defaultPowerLineFreq = 60;
+  static const double _defaultPowerLineFreq = 60;
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final _preferences = getIt<Preferences>();
@@ -107,6 +63,9 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
   String? _selectedChannel;
   DataType _dataType = DataType.eeg;
   SignalProcessing _eegSignalProcessing = SignalProcessing.filtered;
+  double _powerLineFrequency = _defaultPowerLineFreq;
+  double _lowCutFrequency = _defaultLowPassFreq;
+  double _highCutFrequency = _defaultHighPassFreq;
   Duration timeWindowMin = _eegTimeWindowMin;
   Duration timeWindowMax = _eegTimeWindowMax;
   Duration _graphTimeWindow = _eegTimeWindowDefault;
@@ -128,13 +87,19 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
     device = _deviceManager.getConnectedDevice();
     eegAmplitudeMicroVolts = _preferences.getDouble(PreferenceKey.displayMaxAmplitude) ??
         _defaultMaxAmplitudeMicroVolts;
+    updateFilterSettings();
     _updateTimeSlider();
     if (device != null && _deviceManager.deviceIsReady) {
       _deviceSettings = DeviceSettings(await NextsenseBase.getDeviceSettings(device!.macAddress));
       dataType = DataType.create(_preferences.getString(PreferenceKey.displayDataType));
       eegChannelList = _deviceSettings!.enabledChannels;
-      selectedChannel = _preferences.getString(PreferenceKey.displaySelectedChannel) ??
+      String userSelectedChannel = _preferences.getString(PreferenceKey.displaySelectedChannel) ??
           eegChannelList[0];
+      if (eegChannelList.contains(userSelectedChannel)) {
+        selectedChannel = userSelectedChannel;
+      } else {
+        selectedChannel = eegChannelList[0];
+      }
       await _deviceManager.startStreaming();
       _screenRefreshTimer = new Timer.periodic(_refreshInterval, _updateScreen);
     }
@@ -152,6 +117,17 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
     super.dispose();
   }
 
+  void updateFilterSettings() {
+    _eegSignalProcessing = SignalProcessing.create(
+        _preferences.getString(PreferenceKey.eegSignalFilterType));
+    _powerLineFrequency =
+        _preferences.getDouble(PreferenceKey.powerLineFrequency) ?? _defaultPowerLineFreq;
+    _lowCutFrequency = _preferences.getDouble(PreferenceKey.lowCutFrequency) ??
+        _defaultLowPassFreq;
+    _highCutFrequency = _preferences.getDouble(PreferenceKey.highCutFrequency) ??
+        _defaultHighPassFreq;
+  }
+
   Future _getAccData() async {
     List<int> timestamps = await NextsenseBase.getTimestampsData(
         macAddress: device!.macAddress, duration: graphTimeWindow);
@@ -163,6 +139,9 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
         channelName: 'z', duration: graphTimeWindow, fromDatabase: false);
     List<AccelerationData> accelerations = [];
     for (int i = 0; i < timestamps.length; ++i) {
+      if (accXData.length <= i || accYData.length <= i || accZData.length <= i) {
+        break;
+      }
       accelerations.add(AccelerationData(x: accXData[i].toInt(), y: accYData[i].toInt(),
           z: accZData[i].toInt(), timestamp:
           DateTime.fromMillisecondsSinceEpoch(timestamps[i].toInt())));
@@ -180,22 +159,21 @@ class SignalMonitoringScreenViewModel extends DeviceStateViewModel {
           fromDatabase: false);
       double samplingFrequencyHz = _deviceSettings!.eegSamplingRate!;
       // Make sure the high cut off is not higher than the actual signal.
-      double effectiveHighCutFreq = _defaultHighPassFreq;
-      if (samplingFrequencyHz / 2 < _defaultHighPassFreq) {
+      double effectiveHighCutFreq = _highCutFrequency;
+      if (samplingFrequencyHz / 2 < _highCutFrequency) {
         effectiveHighCutFreq = samplingFrequencyHz / 2 - 1;
       }
-      if (effectiveHighCutFreq > _defaultPowerLineFreq) {
-        currentEegData = Algorithms.filterNotch(
-            currentEegData, samplingFrequencyHz, _defaultPowerLineFreq, /*notchWidth=*/ 4, /*order=*/ 2);
-      }
+      currentEegData = Algorithms.filterNotch(
+          currentEegData, samplingFrequencyHz, _powerLineFrequency.round(), /*notchWidth=*/ 4,
+          /*order=*/ 2);
       currentEegData = Algorithms.filterBandpass(
-          currentEegData, samplingFrequencyHz, _defaultLowPassFreq, _defaultHighPassFreq, /*order=*/ 2);
+          currentEegData, samplingFrequencyHz,_lowCutFrequency, effectiveHighCutFreq, /*order=*/ 2);
       // Remove some part of the data to account for the filter settle time.
       currentEegData =
           currentEegData.sublist([0, currentEegData.length - samplesToShow].reduce(max));
     } else {
       currentEegData = await NextsenseBase.getChannelData(macAddress: device!.macAddress,
-          channelName: _selectedChannel!, duration: _graphTimeWindow + _filterSettleTime,
+          channelName: _selectedChannel!, duration: _graphTimeWindow,
           fromDatabase: false);
     }
     // Display the X axis in seconds.

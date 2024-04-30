@@ -5,20 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
-import 'package:nextsense_trial_ui/domain/survey/protocol_survey.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/domain/protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/big_text.dart';
-import 'package:nextsense_trial_ui/ui/components/error_overlay.dart';
+import 'package:flutter_common/ui/components/error_overlay.dart';
 import 'package:nextsense_trial_ui/ui/components/light_header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
-import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:flutter_common/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
+import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:stacked/stacked.dart';
@@ -81,6 +81,30 @@ class SessionControlButton extends StatelessWidget {
   }
 }
 
+class SignalMonitoringButton extends StatelessWidget {
+
+  SignalMonitoringButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SimpleButton(
+      text: Center(child: MediumText(text: "Monitor Signal", color: NextSenseColors.purple,
+          marginLeft: 40, marginRight: 40)),
+      border: Border.all(width: 2, color: NextSenseColors.purple),
+      onTap: () async {
+        await showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+                contentPadding: const EdgeInsets.all(0.0),
+                insetPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+                content: SignalMonitoringScreen(),
+                actions: []
+            ));
+      },
+    );
+  }
+}
+
 class ProtocolScreen extends HookWidget {
 
   static const String id = 'protocol_screen';
@@ -97,7 +121,7 @@ class ProtocolScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<ProtocolScreenViewModel>.reactive(
         viewModelBuilder: () => ProtocolScreenViewModel(runnableProtocol),
-        onModelReady: (viewModel) => viewModel.init(),
+        onViewModelReady: (viewModel) => viewModel.init(),
         builder: (context, viewModel, child) => WillPopScope(
           onWillPop: () => onBackButtonPressed(context, viewModel),
           child: body(context, viewModel),
@@ -118,8 +142,14 @@ class ProtocolScreen extends HookWidget {
       case ProtocolCancelReason.dataReceivedTimeout:
         return ' Recording stopped because the device failed to start recording.\n\n'
             'Please make sure that the device is fully charged, the earbuds are well-connected, the'
-            ' device storage is not full,  power it off and on again and try again. If it still did'
+            ' device storage is not full, power it off and on again and try again. If it still did'
             ' not work, please contact support.';
+      case ProtocolCancelReason.storageFull:
+        return ' Recording stopped because the device storage is full.\n\n'
+            'Please make sure that the device storage is not full, power it off and on again and'
+            ' try again. If it still did not work, please contact support.';
+      case ProtocolCancelReason.devicePoweredOff:
+        return ' Recording stopped because the device was powered off.';
       case ProtocolCancelReason.none:
         return '';
     }
@@ -192,11 +222,22 @@ class ProtocolScreen extends HookWidget {
               Stack(
                   children: [
                     Center(child: CountDownTimer(duration: protocol.maxDuration, reverse: false,
-                        secondsElapsed: viewModel.milliSecondsElapsed)),
+                        secondsElapsed: (viewModel.milliSecondsElapsed / 1000).round())),
                     if (!viewModel.deviceCanRecord)
                       deviceInactiveOverlay(context, viewModel),
+                    if (viewModel.isPausedByUser)
+                      protocolPausedByUserOverlay(context, viewModel),
                   ]),
               Spacer(),
+              if (viewModel.isResearcher)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SignalMonitoringButton(),
+                  ],
+                ),
+              if (viewModel.isResearcher)
+                SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -216,8 +257,16 @@ class ProtocolScreen extends HookWidget {
       statusMsg = ' Recording Cancelled';
     }
 
-    String finishButtonText = !viewModel.isError && viewModel.postRecordingSurveys.isNotEmpty
-        ? 'Fill Survey' : 'Go to Tasks';
+    String finishButtonText = 'Go to Tasks';
+
+    if (!viewModel.isError) {
+      if (viewModel.postRecordingSurvey != null) {
+        finishButtonText = 'Fill Survey';
+      }
+      if (viewModel.postRecordingProtocol != null) {
+        finishButtonText = 'Next Protocol';
+      }
+    }
 
     return PageScaffold(
         backgroundColor: NextSenseColors.lightGrey,
@@ -296,9 +345,12 @@ class ProtocolScreen extends HookWidget {
   }
 
   Future navigateOut(BuildContext context, ProtocolScreenViewModel viewModel) async {
-    if (viewModel.protocolCompleted && viewModel.postRecordingSurveys.isNotEmpty) {
-      for (ProtocolSurvey survey in viewModel.postRecordingSurveys) {
-        await _navigation.navigateTo(SurveyScreen.id, arguments: survey);
+    if (viewModel.protocolCompleted) {
+      if (viewModel.postRecordingSurvey != null) {
+        await _navigation.navigateTo(SurveyScreen.id, arguments: viewModel.postRecordingSurvey);
+      }
+      if (viewModel.postRecordingProtocol != null) {
+        await _navigation.navigateTo(ProtocolScreen.id, arguments: viewModel.postRecordingProtocol);
       }
     }
     Navigator.of(context).pop();
@@ -310,6 +362,31 @@ class ProtocolScreen extends HookWidget {
       await viewModel.stopSession();
     }
     return confirm ?? false;
+  }
+
+  Widget protocolPausedByUserOverlay(BuildContext context, ProtocolScreenViewModel viewModel) {
+    return ErrorOverlay(
+      opacity: 1.0,
+      backgroundColor: Colors.white,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          BigText(
+            text: "Break time",
+          ),
+          SizedBox(height: 10),
+          LightHeaderText(text: "Press the button when you feel ready to continue"),
+          SizedBox(height: 10),
+          SimpleButton(
+              text: Center(child: MediumText(text: "Continue",
+                  color: NextSenseColors.purple)),
+              border: Border.all(width: 2, color: NextSenseColors.purple),
+              onTap: () async {
+                viewModel.resumeProtocol();
+              })
+        ],
+      ),
+    );
   }
 
   Widget deviceInactiveOverlay(BuildContext context, ProtocolScreenViewModel viewModel) {

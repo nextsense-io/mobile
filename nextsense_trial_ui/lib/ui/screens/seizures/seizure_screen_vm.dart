@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/seizure.dart';
 import 'package:nextsense_trial_ui/managers/seizures_manager.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 
 class SeizureScreenViewModel extends ViewModel {
   final SeizuresManager _seizuresManager = getIt<SeizuresManager>();

@@ -72,8 +72,8 @@ public class BleCentralManagerProxy {
         @Override
         public void onConnectionFailed(@NonNull BluetoothPeripheral peripheral,
                                        @NonNull HciStatus status) {
-          RotatingFileLogger.get().logw(TAG, "Connection with device " + peripheral.getName() + " failed. HCI status: " +
-              status.toString());
+          RotatingFileLogger.get().logw(TAG, "Connection with device " + peripheral.getName() +
+              " failed. HCI status: " + status);
           for (BluetoothCentralManagerCallback callback : globalCallbacks) {
             callback.onConnectionFailed(peripheral, status);
           }

@@ -1,7 +1,11 @@
 package io.nextsense.android.base.data;
 
-import android.os.Environment;
+import android.content.ContentValues;
+import android.content.Context;
+import android.net.Uri;
 import android.os.HandlerThread;
+import android.provider.MediaStore;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -9,8 +13,8 @@ import com.google.protobuf.Timestamp;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -30,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.nextsense.android.ApplicationType;
 import io.nextsense.android.base.DataSamplesProto;
 import io.nextsense.android.base.SessionProto;
 import io.nextsense.android.base.communication.firebase.CloudFunctions;
@@ -51,13 +56,15 @@ public class Uploader {
   private static final String ACC_SAMPLES = "acc_samples";
   private static final String INT_STATE_SAMPLES = "device_internal_state_samples";
 
+  // Should be 1 second of data to be simple to import in BigTable.
+  private final Duration uploadChunkSize;
+  private final Context context;
+  private final ApplicationType applicationType;
   private final ObjectBoxDatabase objectBoxDatabase;
   private final DatabaseSink databaseSink;
   private final CloudFunctions firebaseFunctions;
   private final Connectivity connectivity;
   private final AtomicBoolean running = new AtomicBoolean(false);
-  // Should be 1 second of data to be simple to import in BigTable.
-  private final int uploadChunkSize;
   // How many recent records to keep in a session locally after upload.
   private final int minRecordsToKeep;
   // Minimum retention time for records, used to match timestamps in database.
@@ -77,11 +84,13 @@ public class Uploader {
   private Connectivity.State minimumConnectivityState = Connectivity.State.FULL_CONNECTION;
   private Connectivity.State currentConnectivityState = Connectivity.State.NO_CONNECTION;
   // Used to generate test data manually, should always be false in production.
-  private boolean saveData = false;
+  private boolean saveTestProtoData = false;
 
-  private Uploader(ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
-                   Connectivity connectivity, int uploadChunkSize, int minRecordsToKeep,
+  private Uploader(Context context, ApplicationType applicationType,
+                   ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
+                   Connectivity connectivity, Duration uploadChunkSize, int minRecordsToKeep,
                    Duration minDurationToKeep) {
+    this.context = context;
     this.objectBoxDatabase = objectBoxDatabase;
     this.databaseSink = databaseSink;
     this.connectivity = connectivity;
@@ -89,13 +98,15 @@ public class Uploader {
     this.minRecordsToKeep = minRecordsToKeep;
     this.minDurationToKeep = minDurationToKeep;
     this.firebaseFunctions = CloudFunctions.create();
+    this.applicationType = applicationType;
   }
 
   public static Uploader create(
-      ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink, Connectivity connectivity,
-      int uploadChunkSize, int minRecordsToKeep, Duration minDurationToKeep) {
-    return new Uploader(objectBoxDatabase, databaseSink, connectivity, uploadChunkSize,
-        minRecordsToKeep, minDurationToKeep);
+      Context context, ApplicationType applicationType, ObjectBoxDatabase objectBoxDatabase,
+      DatabaseSink databaseSink, Connectivity connectivity, Duration uploadChunkSize,
+      int minRecordsToKeep, Duration minDurationToKeep) {
+    return new Uploader(context, applicationType, objectBoxDatabase, databaseSink, connectivity,
+        uploadChunkSize, minRecordsToKeep, minDurationToKeep);
   }
 
   public void start() {
@@ -189,9 +200,14 @@ public class Uploader {
         localSession.getEegSamplesDeleted();
     long sessionEegSamplesCount = objectBoxDatabase.getEegSamplesCount(localSession.id) +
         localSession.getEegSamplesDeleted();
-    if (sessionEegSamplesCount - localSession.getEegSamplesUploaded() >= uploadChunkSize) {
-      eegSamplesToUpload.addAll(objectBoxDatabase.getEegSamples(
-          localSession.id, relativeEegStartOffset, uploadChunkSize));
+    if (sessionEegSamplesCount - localSession.getEegSamplesUploaded() >=
+        localSession.getEegSampleRate() * uploadChunkSize.getSeconds()) {
+      List<EegSample> eegSamples = objectBoxDatabase.getEegSamples(
+          localSession.id, relativeEegStartOffset,
+          (long)localSession.getEegSampleRate() * uploadChunkSize.getSeconds());
+      if (eegSamples != null && !eegSamples.isEmpty()) {
+        eegSamplesToUpload.addAll(eegSamples);
+      }
     } else {
       LocalSession refreshedLocalSession = objectBoxDatabase.getLocalSession(localSession.id);
       // If null, already deleted (Upload complete).
@@ -208,7 +224,8 @@ public class Uploader {
                   sessionEegSamplesCount - localSession.getEegSamplesUploaded()));
           if (eegSamplesToUpload.isEmpty()) {
             // Nothing to upload, marking it as UPLOADED.
-            RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + " upload is completed.");
+            RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + "" +
+                " upload is completed.");
             localSession.setStatus(LocalSession.Status.UPLOADED);
             completeSession(localSession);
             // This could be deleted at a later time in case the data needs to be analyzed or
@@ -222,12 +239,14 @@ public class Uploader {
 
     List<BaseRecord> accelerationsToUpload = new ArrayList<>();
     long relativeAccStartOffset = localSession.getAccelerationsUploaded() -
-        localSession.getEegSamplesDeleted();
+        localSession.getAccelerationsDeleted();
     long sessionAccSamplesCount = objectBoxDatabase.getAccelerationCount(localSession.id) +
         localSession.getAccelerationsDeleted();
-    if (sessionAccSamplesCount - localSession.getAccelerationsUploaded() >= uploadChunkSize) {
+    if (sessionAccSamplesCount - localSession.getAccelerationsUploaded() >=
+        localSession.getAccelerationSampleRate() * uploadChunkSize.getSeconds()) {
       accelerationsToUpload.addAll(objectBoxDatabase.getAccelerations(
-          localSession.id, relativeAccStartOffset, uploadChunkSize));
+          localSession.id, relativeAccStartOffset,
+          (long) localSession.getAccelerationSampleRate() * uploadChunkSize.getSeconds()));
     } else {
       LocalSession refreshedLocalSession = objectBoxDatabase.getLocalSession(localSession.id);
       if (refreshedLocalSession != null && (
@@ -246,7 +265,9 @@ public class Uploader {
       List<BaseRecord> deviceInternalStatesToUpload = new ArrayList<>(
               objectBoxDatabase.getSessionDeviceInternalStates(
               localSession.id, localSession.getDeviceInternalStateUploaded(),
-              deviceInternalStatesToUploadCount > uploadChunkSize ? uploadChunkSize :
+              deviceInternalStatesToUploadCount > localSession.getEegSampleRate() *
+                  uploadChunkSize.getSeconds() ?
+                  (long)localSession.getEegSampleRate() * uploadChunkSize.getSeconds() :
                       deviceInternalStatesToUploadCount));
       samplesToUpload.put(INT_STATE_SAMPLES, deviceInternalStatesToUpload);
     }
@@ -284,7 +305,8 @@ public class Uploader {
   private void uploadData() {
     while (running.get()) {
       List<LocalSession> localSessions = objectBoxDatabase.getLocalSessions();
-      RotatingFileLogger.get().logd(TAG, "There are " + localSessions.size() + " local sessions in the DB.");
+      RotatingFileLogger.get().logd(TAG, "There are " + localSessions.size() +
+          " local sessions in the DB.");
       for (LocalSession localSession : localSessions) {
         if (!localSession.isUploadNeeded() || (
             localSession.getStatus() != LocalSession.Status.RECORDING &&
@@ -292,25 +314,25 @@ public class Uploader {
             localSession.getStatus() != LocalSession.Status.FINISHED)) {
           continue;
         }
-        RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + " has " +
+         RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + " has " +
             localSession.getEegSamplesUploaded() + " uploaded.");
         Map<String, List<BaseRecord>> samplesToUpload = getSamplesToUpload(localSession);
 
         while (dataToUpload(samplesToUpload) && running.get()) {
           boolean uploaded = false;
           List<BaseRecord> eegSamplesToUpload = samplesToUpload.get(EEG_SAMPLES);
-          RotatingFileLogger.get().logv(TAG, "Session " + localSession.id + " has " + eegSamplesToUpload.size() +
-                  " eeg records to upload.");
+          RotatingFileLogger.get().logv(TAG, "Session " + localSession.id + " has " +
+              eegSamplesToUpload.size() + " eeg records to upload.");
           for (int eegSamplesIndex = 0; eegSamplesIndex < eegSamplesToUpload.size();
-              eegSamplesIndex += uploadChunkSize) {
+              eegSamplesIndex += localSession.getEegSampleRate() * uploadChunkSize.getSeconds()) {
             int eegSamplesEndIndex =
-                Math.min(eegSamplesToUpload.size(), eegSamplesIndex + uploadChunkSize);
+                Math.min(eegSamplesToUpload.size(), eegSamplesIndex +
+                    (int)(localSession.getEegSampleRate() * uploadChunkSize.getSeconds()));
             Map<String, List<BaseRecord>> samplesChunkToUpload = new HashMap<>();
             samplesChunkToUpload.put(EEG_SAMPLES,
                 eegSamplesToUpload.subList(eegSamplesIndex, eegSamplesEndIndex));
             if (samplesToUpload.containsKey(ACC_SAMPLES) &&
-                    samplesToUpload.get(ACC_SAMPLES).size() >=
-                            eegSamplesIndex + eegSamplesEndIndex) {
+                samplesToUpload.get(ACC_SAMPLES).size() >= eegSamplesIndex + eegSamplesEndIndex) {
               samplesChunkToUpload.put(ACC_SAMPLES,
                   samplesToUpload.get(ACC_SAMPLES).subList(eegSamplesIndex, eegSamplesEndIndex));
             }
@@ -319,7 +341,7 @@ public class Uploader {
             }
             DataSamplesProto.DataSamples dataSamplesProto =
                 serializeToProto(samplesChunkToUpload, localSession);
-            if (saveData) {
+            if (saveTestProtoData) {
               saveData(dataSamplesProto);
             }
             uploaded = uploadDataSamplesProto(dataSamplesProto);
@@ -399,8 +421,9 @@ public class Uploader {
       // Wait until there are new samples to upload.
       eegSampleSubscription =
           objectBoxDatabase.subscribe(EegSample.class, eegSample -> {
-            if (databaseSink.getEegRecordsCounter() > uploadChunkSize) {
-              RotatingFileLogger.get().logd(TAG, "waking up: " + databaseSink.getEegRecordsCounter());
+            if (databaseSink.getEegRecordsCounter() > databaseSink.getLastSessionEegFrequency()) {
+              RotatingFileLogger.get().logd(TAG, "waking up: " +
+                  databaseSink.getEegRecordsCounter());
               databaseSink.resetEegRecordsCounter();
               recordsToUpload.set(true);
               synchronized (syncToken) {
@@ -451,11 +474,29 @@ public class Uploader {
   }
 
   private void saveData(DataSamplesProto.DataSamples dataSamplesProto) {
-    saveData = false;
+    saveTestProtoData = false;
     try {
-      FileOutputStream output = new FileOutputStream(
-              Environment.getExternalStorageDirectory().getPath() + "/test_proto.txt");
-      dataSamplesProto.writeTo(output);
+      String collection = "content://media/external/file";
+      String relativePath = "Documents/NextSense";
+
+      Uri collectionUri = Uri.parse(collection);
+
+      ContentValues contentValues = new ContentValues();
+
+      contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME,
+          "test_proto_" + + System.currentTimeMillis() + ".txt");
+      contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "txt/plain");
+      contentValues.put(MediaStore.MediaColumns.SIZE, dataSamplesProto.getSerializedSize());
+      contentValues.put(MediaStore.MediaColumns.DATE_MODIFIED, Instant.now().getEpochSecond());
+      contentValues.put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath);
+      contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0);
+
+      Uri fileUri = context.getContentResolver().insert(collectionUri, contentValues);
+
+      OutputStream outputStream = context.getContentResolver().openOutputStream(fileUri);
+      Log.w(TAG, "Writing to file: " + fileUri.getPath() + "/test_proto.txt");
+      dataSamplesProto.writeTo(outputStream);
+      outputStream.close();
     } catch (FileNotFoundException e) {
       RotatingFileLogger.get().logw(TAG, "file not found: " + e.getMessage());
     } catch (IOException e) {
@@ -468,7 +509,8 @@ public class Uploader {
 
   private long deleteEegOldRecords(LocalSession localSession) {
     if (objectBoxDatabase.getEegSamplesCount(localSession.id) > minRecordsToKeep) {
-      RotatingFileLogger.get().logd(TAG, "Got " + objectBoxDatabase.getEegSamplesCount(localSession.id) +
+      RotatingFileLogger.get().logd(TAG, "Got " +
+          objectBoxDatabase.getEegSamplesCount(localSession.id) +
           " eeg records in db, need to delete " +
           (objectBoxDatabase.getEegSamplesCount(localSession.id) - minRecordsToKeep));
       Instant lastSampleTime = objectBoxDatabase.getEegSamples(
@@ -536,17 +578,18 @@ public class Uploader {
       accelerationsToUpload = new ArrayList<>();
     }
     RotatingFileLogger.get().logv(TAG, "Uploading " + eegSamplesToUpload.size() + " eeg samples.");
-    RotatingFileLogger.get().logv(TAG, "Uploading " + accelerationsToUpload.size() + " acc samples.");
+    RotatingFileLogger.get().logv(TAG, "Uploading " + accelerationsToUpload.size() +
+        " acc samples.");
     DataSamplesProto.EegDataSamples.Builder dataSamplesProtoBuilder =
         DataSamplesProto.EegDataSamples.newBuilder();
     dataSamplesProtoBuilder.setModality(DataSamplesProto.EegDataSamples.Modality.EAR_EEG);
     if (localSession.getEarbudsConfig() != null) {
       dataSamplesProtoBuilder.setEarbudsConfig(localSession.getEarbudsConfig());
     }
-    dataSamplesProtoBuilder.setFrequency(uploadChunkSize);
+    dataSamplesProtoBuilder.setFrequency((int)localSession.getEegSampleRate());
     dataSamplesProtoBuilder.setExpectedSamplesCount(eegSamplesToUpload.size());
     Instant expectedStartInstant = getExpectedFirstEegTimestamp(
-        localSession, (EegSample) eegSamplesToUpload.get(0), uploadChunkSize);
+        localSession, (EegSample) eegSamplesToUpload.get(0), (int)localSession.getEegSampleRate());
     Timestamp expectedStartTimestamp = Timestamp.newBuilder()
         .setSeconds(expectedStartInstant.getEpochSecond())
         .setNanos(expectedStartInstant.getNano()).build();
@@ -582,12 +625,24 @@ public class Uploader {
           }
         }
       }
-      dataSamplesProtoBuilder.addSync(eegSample.getSync());
-      dataSamplesProtoBuilder.addTrigOut(eegSample.getTrigOut());
-      dataSamplesProtoBuilder.addTrigIn(eegSample.getTrigIn());
-      dataSamplesProtoBuilder.addZMod(eegSample.getZMod());
-      dataSamplesProtoBuilder.addMarker(eegSample.getMarker());
-      dataSamplesProtoBuilder.addButton(eegSample.getButton());
+      if (eegSample.getSync() != null) {
+        dataSamplesProtoBuilder.addSync(eegSample.getSync());
+      }
+      if (eegSample.getTrigIn() != null) {
+        dataSamplesProtoBuilder.addTrigIn(eegSample.getTrigIn());
+      }
+      if (eegSample.getTrigOut() != null) {
+        dataSamplesProtoBuilder.addTrigOut(eegSample.getTrigOut());
+      }
+      if (eegSample.getZMod() != null) {
+        dataSamplesProtoBuilder.addZMod(eegSample.getZMod());
+      }
+      if (eegSample.getMarker() != null) {
+        dataSamplesProtoBuilder.addMarker(eegSample.getMarker());
+      }
+      if (eegSample.getButton() != null) {
+        dataSamplesProtoBuilder.addButton(eegSample.getButton());
+      }
     }
     for (DataSamplesProto.Channel.Builder channelBuilder : channelBuilders.values()) {
       dataSamplesProtoBuilder.addChannel(channelBuilder.build());
@@ -639,6 +694,11 @@ public class Uploader {
     if (localSession.getEarbudsConfig() != null) {
       builder.setChannelConfig(localSession.getEarbudsConfig());
     }
+    switch (applicationType) {
+      case CONSUMER -> builder.setUserType(SessionProto.UserType.USER_TYPE_CONSUMER);
+      case RESEARCH -> builder.setUserType(SessionProto.UserType.USER_TYPE_RESEARCHER);
+      case MEDICAL -> builder.setUserType(SessionProto.UserType.USER_TYPE_SUBJECT);
+    }
     builder.setExpectedSamplesCount(localSession.getEegSamplesUploaded());
     return builder.build();
   }
@@ -676,7 +736,8 @@ public class Uploader {
             RotatingFileLogger.get().logd(TAG, "No finished session, not waking up.");
             return;
           }
-          RotatingFileLogger.get().logd(TAG, "finished session, scheduling data upload finished timer.");
+          RotatingFileLogger.get().logd(TAG,
+              "finished session, scheduling data upload finished timer.");
           scheduleDataUploadFinishedTimer(localSessionId);
         });
   }

@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/medication/medication.dart';
+import 'package:nextsense_trial_ui/domain/medication/scheduled_medication.dart';
+import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/domain/survey/survey.dart';
 import 'package:nextsense_trial_ui/domain/task.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/components/hour_tasks_card.dart';
+import 'package:flutter_common/ui/components/alert.dart';
+import 'package:nextsense_trial_ui/ui/components/cancel_button.dart';
+import 'package:nextsense_trial_ui/ui/components/card_title_text.dart';
+import 'package:nextsense_trial_ui/ui/components/content_text.dart';
+import 'package:nextsense_trial_ui/ui/components/emphasized_button.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
+import 'package:nextsense_trial_ui/ui/components/medication_card.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_trial_ui/ui/components/task_card.dart';
+import 'package:nextsense_trial_ui/ui/components/themed_date_picker.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
 import 'package:nextsense_trial_ui/ui/nextsense_colors.dart';
@@ -20,15 +29,20 @@ import 'package:provider/src/provider.dart';
 
 class DashboardScheduleView extends StatelessWidget {
   final String scheduleType;
-  final bool surveysOnly;
+  final TaskType taskType;
+  final bool showHoursColumn;
 
-  DashboardScheduleView({Key? key, this.scheduleType = "Tasks", this.surveysOnly = false})
+  DashboardScheduleView(
+      {Key? key,
+      this.scheduleType = "Tasks",
+      this.taskType = TaskType.any,
+      this.showHoursColumn = false})
       : super(key: key);
 
   final Navigation _navigation = getIt<Navigation>();
 
-  _onProtocolClicked(BuildContext context, dynamic task) {
-    ScheduledProtocol scheduledProtocol = task as ScheduledProtocol;
+  Future _onProtocolClicked(BuildContext context, dynamic task) async {
+    ScheduledSession scheduledProtocol = task as ScheduledSession;
 
     if (scheduledProtocol.isCompleted) {
       showDialog(
@@ -54,15 +68,15 @@ class DashboardScheduleView extends StatelessWidget {
         builder: (_) => SimpleAlertDialog(
             title: 'Warning',
             content: 'This protocol can start after '
-                '${scheduledProtocol.allowedStartAfter.hhmm} and before '
-                '${scheduledProtocol.allowedStartBefore.hhmm}'),
+                '${scheduledProtocol.allowedStartAfter!.hhmm} and before '
+                '${scheduledProtocol.allowedStartBefore!.hhmm}'),
       );
       return;
     }
 
     // Remove task popup.
     _navigation.pop();
-    _navigation.navigateWithCapabilityChecking(context, ProtocolScreen.id,
+    await _navigation.navigateWithCapabilityChecking(context, ProtocolScreen.id,
         arguments: scheduledProtocol);
 
     // Refresh dashboard since protocol state can be changed
@@ -105,12 +119,129 @@ class DashboardScheduleView extends StatelessWidget {
     context.read<DashboardScreenViewModel>().notifyListeners();
   }
 
+  _onMedicationClicked(BuildContext context, dynamic task) async {
+    ScheduledMedication scheduledMedication = task as ScheduledMedication;
+
+    if (task.startDate!.isAfter(DateTime.now())) {
+      return;
+    }
+
+    if (scheduledMedication.completed) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleAlertDialog(
+          title: 'Medication already taken',
+          content: '',
+        ),
+      );
+      return;
+    }
+
+    if (scheduledMedication.skipped) {
+      showDialog(
+        context: context,
+        builder: (_) => SimpleAlertDialog(
+          title: 'Medication already skipped',
+          content: '',
+        ),
+      );
+      return;
+    }
+
+    MedicationCard medicationCard = MedicationCard(
+        task: task,
+        onTakenTap: () async {
+          TimeOfDay? takenTime = await showThemedTimePicker(
+            context: context,
+            initialTime: TimeOfDay.fromDateTime(DateTime.now()),
+          );
+          if (takenTime != null) {
+            DateTime takenDateTime = DateTime(
+              task.startDateTime!.year,
+              task.startDateTime!.month,
+              task.startDateTime!.day,
+              takenTime.hour,
+              takenTime.minute,
+            );
+            if (takenDateTime.isAfter(DateTime.now())) {
+              await showDialog(
+                context: context,
+                builder: (_) => SimpleAlertDialog(
+                    title: 'Error', content: 'Cannot select a time in the future'),
+              );
+              _navigation.pop();
+              return;
+            } else {
+              task.update(state: MedicationState.taken_on_time, takenDateTime: takenDateTime);
+            }
+          }
+          _navigation.pop();
+        },
+        onNotTakenTap: () async {
+          await showDialog<void>(
+            context: context,
+            barrierDismissible: true,
+            builder: (BuildContext context) {
+              return SimpleDialog(
+                children: [
+                  Align(
+                      alignment: Alignment.centerRight,
+                      child: Padding(
+                          padding: EdgeInsets.only(left: 20, right: 20),
+                          child: CancelButton(onPressed: () => Navigator.of(context).pop()))),
+                  Padding(
+                      padding: EdgeInsets.all(20),
+                      child: SingleChildScrollView(
+                          child: Column(children: [
+                        CardTitleText(text: 'Medication Not Taken?'),
+                        SizedBox(height: 15),
+                        ContentText(
+                            text: 'Are you sure you want to mark this medication as not taken?',
+                            color: NextSenseColors.darkBlue),
+                        SizedBox(height: 15),
+                        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+                          Expanded(
+                              child: EmphasizedButton(
+                                  text: MediumText(
+                                      text: 'Yes',
+                                      color: Colors.white,
+                                      textAlign: TextAlign.center),
+                                  enabled: true,
+                                  onTap: () {
+                                    Navigator.pop(context, true);
+                                    task.update(state: MedicationState.skipped);
+                                  })),
+                          SizedBox(width: 10),
+                          Expanded(
+                              child: EmphasizedButton(
+                                  text: MediumText(
+                                      text: 'No', color: Colors.white, textAlign: TextAlign.center),
+                                  enabled: true,
+                                  onTap: () => Navigator.pop(context, false))),
+                        ])
+                      ]))),
+                ],
+                shape:
+                    RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(20.0))),
+              );
+            },
+          );
+          _navigation.pop();
+        });
+    await medicationCard.showExpandedMedicationDialog(context, showClock: false, whenText: "");
+    // Refresh tasks since medication state can be changed.
+    context.read<DashboardScreenViewModel>().notifyListeners();
+  }
+
   _getOnTap(BuildContext context, Task task) {
     if (task is ScheduledSurvey) {
       return _onSurveyClicked(context, task);
     }
-    if (task is ScheduledProtocol) {
+    if (task is ScheduledSession) {
       return _onProtocolClicked(context, task);
+    }
+    if (task is ScheduledMedication) {
+      return _onMedicationClicked(context, task);
     }
     throw UnimplementedError('Task navigation not implemented!');
   }
@@ -121,7 +252,6 @@ class DashboardScheduleView extends StatelessWidget {
 
     if (viewModel.isBusy) {
       var loadingTextVisible = viewModel.studyInitialized != null && !viewModel.studyInitialized!;
-
       return WaitWidget(
           message: 'Your study is initializing.\nPlease wait...', textVisible: loadingTextVisible);
     }
@@ -135,7 +265,7 @@ class DashboardScheduleView extends StatelessWidget {
     } else if (viewModel.studyFinished) {
       noTasksText = 'Study finished';
     }
-    List<dynamic> todayTasks = viewModel.getTodayTasks(surveysOnly);
+    List<dynamic> todayTasks = viewModel.getTodayTasks(taskType);
     List<Widget> todayTasksWidgets;
     if (todayTasks.length == 0) {
       todayTasksWidgets = [
@@ -156,27 +286,69 @@ class DashboardScheduleView extends StatelessWidget {
             ))
       ];
     } else {
-      todayTasksWidgets = [
-        MediumText(text: 'Today', color: NextSenseColors.darkBlue),
-        Expanded(
-            child: Scrollbar(
-          thumbVisibility: true,
-          controller: todayScrollController,
-          child: ListView.builder(
-            scrollDirection: Axis.vertical,
+      if (showHoursColumn) {
+        Map<String, List<TaskWithTap>> timeTasksWithTap = {};
+        for (Task task in todayTasks) {
+          TaskWithTap taskWithTap = TaskWithTap(task, () => _getOnTap(context, task));
+          String time = task.windowStartTime.hmm;
+          if (!timeTasksWithTap.containsKey(time)) {
+            timeTasksWithTap[time] = [taskWithTap];
+          } else {
+            timeTasksWithTap[time]!.add(taskWithTap);
+          }
+        }
+        List<List<TaskWithTap>> hourTasks = timeTasksWithTap.values.toList();
+        hourTasks
+            .sort((a, b) => a[0].task.windowStartTime.hmm.compareTo(b[0].task.windowStartTime.hmm));
+        todayTasksWidgets = [
+          Row(children: [
+            Padding(
+                padding: EdgeInsets.only(left: 8),
+                child: MediumText(text: 'Time', color: NextSenseColors.darkBlue)),
+            Padding(
+                padding: EdgeInsets.only(left: 33),
+                child: MediumText(text: 'Medicine', color: NextSenseColors.darkBlue)),
+          ]),
+          Expanded(
+              child: Scrollbar(
+            thumbVisibility: true,
             controller: todayScrollController,
-            itemCount: todayTasks.length,
-            shrinkWrap: true,
-            itemBuilder: (BuildContext context, int index) {
-              Task task = todayTasks[index];
-              return TaskCard(task, () => _getOnTap(context, task));
-            },
-          ),
-        ))
-      ];
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              controller: todayScrollController,
+              itemCount: hourTasks.length,
+              shrinkWrap: true,
+              itemBuilder: (BuildContext context, int index) {
+                return HourTasksCard(
+                    time: hourTasks[index][0].task.windowStartTime.hmm, tasks: hourTasks[index]);
+              },
+            ),
+          ))
+        ];
+      } else {
+        todayTasksWidgets = [
+          if (taskType != TaskType.medication)
+            MediumText(text: 'Today', color: NextSenseColors.darkBlue),
+          Expanded(
+              child: Scrollbar(
+            thumbVisibility: true,
+            controller: todayScrollController,
+            child: ListView.builder(
+              scrollDirection: Axis.vertical,
+              controller: todayScrollController,
+              itemCount: todayTasks.length,
+              shrinkWrap: true,
+              itemBuilder: (BuildContext context, int index) {
+                Task task = todayTasks[index];
+                return TaskCard(task, !this.showHoursColumn, () => _getOnTap(context, task));
+              },
+            ),
+          ))
+        ];
+      }
     }
 
-    List<dynamic> weeklyTasks = viewModel.getWeeklyTasks(surveysOnly);
+    List<dynamic> weeklyTasks = viewModel.getWeeklyTasks(taskType);
     List<Widget> weeklyTasksWidgets = [];
     if (weeklyTasks.length != 0) {
       weeklyTasksWidgets = [
@@ -191,133 +363,28 @@ class DashboardScheduleView extends StatelessWidget {
               shrinkWrap: true,
               itemBuilder: (BuildContext context, int index) {
                 Task task = weeklyTasks[index];
-                return TaskCard(task, () => _getOnTap(context, task));
+                return TaskCard(task, true, () => _getOnTap(context, task));
               },
             )),
       ];
     }
 
-    List<Widget> contents = [
-      HeaderText(text: 'My $scheduleType'),
-      SizedBox(height: 15),
-    ];
+    List<Widget> contents = [];
+    if (taskType != TaskType.medication) {
+      contents.addAll([
+        HeaderText(text: 'My $scheduleType'),
+        SizedBox(height: 15),
+      ]);
+    }
     contents.addAll(todayTasksWidgets);
     contents.addAll(weeklyTasksWidgets);
 
+    if (taskType == TaskType.medication) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents);
+    }
     return PageScaffold(
         showBackButton: _navigation.canPop(),
         padBottom: _navigation.canPop(),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: contents));
   }
 }
-
-// class _TaskProtocolRow extends HookWidget {
-//
-//   final ScheduledProtocol scheduledProtocol;
-//
-//   _TaskProtocolRow(this.scheduledProtocol, {Key? key,}) : super(key: key);
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     Protocol protocol = scheduledProtocol.protocol;
-//     var protocolBackgroundColor = Color(0xFF6DC5D5);
-//     switch(protocol.type) {
-//       case ProtocolType.variable_daytime:
-//         protocolBackgroundColor = Color(0xFF82C3D3);
-//         break;
-//       case ProtocolType.sleep:
-//         protocolBackgroundColor = Color(0xFF984DF1);
-//         break;
-//       case ProtocolType.eoec:
-//       case ProtocolType.eyes_movement:
-//       case ProtocolType.unknown:
-//         protocolBackgroundColor = Color(0xFFE6AEA0);
-//         break;
-//     }
-//
-//     return Padding(
-//         padding: const EdgeInsets.all(10.0),
-//         child: Row(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             Container(
-//               width: 60,
-//               child: Visibility(
-//                   visible: true,
-//                   child: Text(protocol.startTime.hhmm,
-//                       style: TextStyle(color: Colors.black))),
-//             ),
-//             Expanded(
-//               child: Opacity(
-//                 opacity: scheduledProtocol.isCompleted
-//                     || scheduledProtocol.isSkipped
-//                     || scheduledProtocol.isCancelled ? 0.6 : 1.0,
-//                 child: Padding(
-//                   padding: const EdgeInsets.only(top: 12.0),
-//                   child: InkWell(
-//                     onTap: () {
-//                       _onProtocolClicked(context, scheduledProtocol);
-//                     },
-//                     child: Container(
-//                         padding: const EdgeInsets.all(16.0),
-//                         decoration: new BoxDecoration(
-//                             color: protocolBackgroundColor,
-//                             borderRadius: new BorderRadius.all(
-//                                 const Radius.circular(5.0))),
-//                         child: Row(
-//                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                           children: [
-//                             Column(
-//                               mainAxisAlignment:
-//                               MainAxisAlignment.spaceBetween,
-//                               crossAxisAlignment: CrossAxisAlignment.start,
-//                               children: [
-//                                 Text(protocol.description,
-//                                     style: TextStyle(
-//                                         color: Colors.white,
-//                                         fontSize: 18,
-//                                         fontWeight: FontWeight.bold)),
-//                                 SizedBox(
-//                                   height: 8,
-//                                 ),
-//                                 Text(humanizeDuration(protocol.minDuration),
-//                                     style: TextStyle(color: Colors.white))
-//                               ],
-//                             ),
-//                             _protocolState(scheduledProtocol)
-//                           ],
-//                         )),
-//                   ),
-//                 ),
-//               ),
-//             ),
-//             Container(
-//               width: 40,
-//             ),
-//           ],
-//         ));
-//   }
-//
-//   Widget _protocolState(ScheduledProtocol scheduledProtocol) {
-//     switch(scheduledProtocol.state) {
-//       case ProtocolState.skipped:
-//         return Column(
-//           children: [
-//             Icon(Icons.cancel, color: Colors.white),
-//             Text("Skipped", style: TextStyle(color: Colors.white),),
-//           ],
-//         );
-//       case ProtocolState.cancelled:
-//         return Column(
-//           children: [
-//             Icon(Icons.cancel, color: Colors.white),
-//             Text("Cancelled", style: TextStyle(color: Colors.white),),
-//           ],
-//         );
-//       case ProtocolState.completed:
-//         return Icon(Icons.check_circle, color: Colors.white);
-//       default: break;
-//     }
-//     return Container();
-//   }
-// }

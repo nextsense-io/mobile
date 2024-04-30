@@ -1,17 +1,17 @@
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/seizure.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 
 class SeizuresManager {
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final AuthManager _authManager = getIt<AuthManager>();
 
   Future<bool> addSeizure({required DateTime startTime, DateTime? endTime,
     required List<String> triggers, required String userNotes}) async {
-    FirebaseEntity seizureEntity = await _firestoreManager.addAutoIdReference(
-        [Table.users, Table.seizures], [_authManager.userCode!]);
+    FirebaseEntity seizureEntity = await _firestoreManager.addAutoIdEntity(
+        [Table.users, Table.seizures], [_authManager.user!.id]);
     return await _saveSeizureEntity(seizureEntity: seizureEntity, startTime: startTime,
         triggers: triggers, userNotes: userNotes);
   }
@@ -19,7 +19,7 @@ class SeizuresManager {
   Future<bool> updateSeizure({required seizureId, required DateTime startTime, DateTime? endTime,
     required List<String> triggers, required String userNotes}) async {
     FirebaseEntity? seizureEntity = await _firestoreManager.queryEntity(
-        [Table.users, Table.seizures], [_authManager.userCode!, seizureId]);
+        [Table.users, Table.seizures], [_authManager.user!.id, seizureId]);
     if (seizureEntity == null) {
       return false;
     }
@@ -49,7 +49,7 @@ class SeizuresManager {
 
   Future<List<Seizure>> getSeizures() async {
     List<FirebaseEntity>? seizureEntities = await _firestoreManager.queryEntities(
-        [Table.users, Table.seizures], [_authManager.userCode!]);
+        [Table.users, Table.seizures], [_authManager.user!.id]);
     if (seizureEntities == null) {
       return [];
     }

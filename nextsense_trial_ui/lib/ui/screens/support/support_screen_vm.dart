@@ -1,30 +1,36 @@
+import 'package:flutter_common/managers/device_manager.dart';
+import 'package:flutter_common/managers/firebase_storage_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
 import 'package:nextsense_trial_ui/domain/issue.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
-import 'package:nextsense_trial_ui/managers/firebase_storage_manager.dart';
-import 'package:nextsense_trial_ui/managers/firestore_manager.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
-import 'package:nextsense_trial_ui/viewmodels/viewmodel.dart';
+import 'package:flutter_common/utils/android_logger.dart';
+import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
+import 'package:flutter_common/viewmodels/viewmodel.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 class SupportScreenViewModel extends ViewModel {
-
   final CustomLogPrinter _logger = CustomLogPrinter('SupportScreenViewModel');
-  final FirestoreManager _firestoreManager = getIt<FirestoreManager>();
+  final TrialUiFirestoreManager _firestoreManager = getIt<TrialUiFirestoreManager>();
   final FirebaseStorageManager _firebaseStorageManager = getIt<FirebaseStorageManager>();
   final AuthManager _authManager = getIt<AuthManager>();
+  final DeviceManager _deviceManager = getIt<DeviceManager>();
 
   String? issueDescription;
   bool attachLog = false;
   String? version = '';
+  Device? connectedDevice;
+
 
   @override
   void init() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     version = packageInfo.version;
+    if (_deviceManager.deviceIsReady) {
+      connectedDevice = _deviceManager.getConnectedDevice();
+    }
     setInitialised(true);
     notifyListeners();
   }
@@ -33,8 +39,8 @@ class SupportScreenViewModel extends ViewModel {
     setBusy(true);
     notifyListeners();
     _logger.log(Level.INFO, 'Issue submitted by the user.');
-    FirebaseEntity issueEntity = await _firestoreManager.addAutoIdReference(
-        [Table.users, Table.issues], [_authManager.userCode!]);
+    FirebaseEntity issueEntity = await _firestoreManager.addAutoIdEntity(
+        [Table.users, Table.issues], [_authManager.user!.id]);
     Issue issue = Issue(issueEntity);
     issue
       ..setValue(IssueKey.description, issueDescription)
@@ -43,10 +49,10 @@ class SupportScreenViewModel extends ViewModel {
     String? logLinkNative;
     if (attachLog) {
       logLinkFlutter = await _firebaseStorageManager.uploadStringToFile(
-          '/users/${_authManager.userCode}/issues/${issueEntity.id}_flutter.txt',
+          '/users/${_authManager.username}/issues/${issueEntity.id}_flutter.txt',
           await _logger.getLogFileContent());
       logLinkNative = await _firebaseStorageManager.uploadStringToFile(
-          '/users/${_authManager.userCode}/issues/${issueEntity.id}_native.txt',
+          '/users/${_authManager.username}/issues/${issueEntity.id}_native.txt',
           await NextsenseBase.getNativeLogs());
       if (logLinkFlutter == null || logLinkNative == null) {
         return false;

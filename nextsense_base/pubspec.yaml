@@ -12,6 +12,8 @@ dependencies:
   flutter:
     sdk: flutter
   gson: ^0.1.6-dev
+  fixnum: ^1.1.0
+  protobuf: ^2.0.0
 
 dev_dependencies:
   flutter_test:

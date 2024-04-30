@@ -12,7 +12,7 @@ import static org.junit.Assert.*;
 public class NextSenseDeviceManagerTest {
 
   private final NextSenseDeviceManager deviceManager =
-      NextSenseDeviceManager.create(LocalSessionManager.create(new ObjectBoxDatabase()));
+      NextSenseDeviceManager.create(LocalSessionManager.create(new ObjectBoxDatabase(), null));
 
   @Test
   public void getValidPrefixes_notEmpty() {

@@ -26,13 +26,15 @@ import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceSettings;
 import io.nextsense.android.base.DeviceState;
+import io.nextsense.android.base.DeviceType;
 import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Sample;
-import io.nextsense.android.base.devices.xenon.SampleFlags;
+import io.nextsense.android.base.devices.NextSenseDevice;
+import io.nextsense.android.base.devices.xenon.XenonSampleFlags;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
 public class EmulatedDevice extends Device {
@@ -104,20 +106,21 @@ public class EmulatedDevice extends Device {
             null, samplingTime);
 
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
-            null, samplingTime, SampleFlags.create((byte)0));
+            null, samplingTime, XenonSampleFlags.create((byte)0));
     EventBus.getDefault().post(Sample.create(eegSample, acceleration));
   }
 
   @Override
   public ListenableFuture<Boolean> startStreaming(
       boolean uploadToCloud, @Nullable String userBigTableKey, @Nullable String dataSessionId,
-      @Nullable String earbudsConfig) {
+      @Nullable String earbudsConfig, @Nullable Boolean saveToCsv) {
 
     RotatingFileLogger.get().logd(TAG, "startStreaming");
 
     if (localSessionManager != null) {
       localSessionManager.startLocalSession(userBigTableKey, dataSessionId, earbudsConfig,
-          uploadToCloud, getSettings().getEegStreamingRate(), getSettings().getImuStreamingRate());
+          uploadToCloud, getSettings().getEegStreamingRate(), getSettings().getImuStreamingRate(),
+          Boolean.TRUE.equals(saveToCsv));
 
       final int fireEachMillis = Math.round(1000 / getSettings().getEegStreamingRate());
       sendSamplesTimer = new Timer();
@@ -144,7 +147,7 @@ public class EmulatedDevice extends Device {
     }
 
     if (localSessionManager != null) {
-      localSessionManager.stopLocalSession();
+      localSessionManager.stopActiveLocalSession();
     }
 
     currentMode = DeviceMode.IDLE;
@@ -170,6 +173,14 @@ public class EmulatedDevice extends Device {
       @Nullable Integer frequencyDivider) {
     return Futures.immediateFuture(false);
   }
+
+  @Override
+  public void addOnDeviceInternalStateChangeListener(
+      NextSenseDevice.DeviceInternalStateChangeListener listener) {}
+
+  @Override
+  public void removeOnDeviceInternalStateChangeListener(
+      NextSenseDevice.DeviceInternalStateChangeListener listener) {}
 
   @Override
   public ListenableFuture<DeviceState> connect(boolean autoReconnect) {
@@ -204,7 +215,21 @@ public class EmulatedDevice extends Device {
 
   @Override
   public DeviceInfo getInfo() {
-    return new DeviceInfo();
+    return new DeviceInfo(
+        DeviceType.XENON,
+        "1",
+        "EMULATED_1",
+        "1",
+        "2",
+        "3",
+        "EMULATED_EARBUDS",
+
+        "1",
+        "EMULATED_EARBUDS_1",
+        "1",
+        "2",
+        "3"
+    );
   }
 
   @Override

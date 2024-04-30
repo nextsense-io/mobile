@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/nap_protocol_screen_vm.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen.dart';
 import 'package:stacked/stacked.dart';
@@ -17,11 +17,11 @@ class NapProtocolScreen extends ProtocolScreen {
     // type without looking at ancestry.
     return ViewModelBuilder<NapProtocolScreenViewModel>.reactive(
         viewModelBuilder: () => NapProtocolScreenViewModel(runnableProtocol),
-        onModelReady: (protocolViewModel) => protocolViewModel.init(),
+        onViewModelReady: (protocolViewModel) => protocolViewModel.init(),
         builder: (context, viewModel, child) => ViewModelBuilder<NapProtocolScreenViewModel>
             .reactive(
             viewModelBuilder: () => viewModel,
-            onModelReady: (viewModel) => {},
+            onViewModelReady: (viewModel) => {},
             builder: (context, viewModel, child) => WillPopScope(
               onWillPop: () => onBackButtonPressed(context, viewModel),
               child: body(context, viewModel),

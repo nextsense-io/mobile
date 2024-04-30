@@ -3,16 +3,16 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:nextsense_trial_ui/domain/side_effect.dart';
-import 'package:nextsense_trial_ui/ui/components/alert.dart';
+import 'package:flutter_common/ui/components/alert.dart';
 import 'package:nextsense_trial_ui/ui/components/big_text.dart';
-import 'package:nextsense_trial_ui/ui/components/clickable_zone.dart';
+import 'package:flutter_common/ui/components/clickable_zone.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/ui/components/content_text.dart';
 import 'package:nextsense_trial_ui/ui/components/emphasized_text.dart';
 import 'package:nextsense_trial_ui/ui/components/header_text.dart';
 import 'package:nextsense_trial_ui/ui/components/medium_text.dart';
 import 'package:nextsense_trial_ui/ui/components/page_scaffold.dart';
-import 'package:nextsense_trial_ui/ui/components/simple_button.dart';
+import 'package:flutter_common/ui/components/simple_button.dart';
 import 'package:nextsense_trial_ui/ui/components/themed_date_picker.dart';
 import 'package:nextsense_trial_ui/ui/components/wait_widget.dart';
 import 'package:nextsense_trial_ui/ui/navigation.dart';
@@ -31,9 +31,9 @@ class SideEffectScreen extends HookWidget {
 
   SideEffectScreen(this.sideEffect);
 
-  List<FormBuilderFieldOption> _getSideEffectTypeOptions() {
+  List<FormBuilderChipOption> _getSideEffectTypeOptions() {
     return SideEffectType.values
-        .map((sideEffectType) => FormBuilderFieldOption(
+        .map((sideEffectType) => FormBuilderChipOption(
             value: sideEffectType.label,
             child: ContentText(text: sideEffectType.label, color: NextSenseColors.darkBlue)))
         .toList();
@@ -133,8 +133,8 @@ class SideEffectScreen extends HookWidget {
   Widget build(BuildContext context) {
     return ViewModelBuilder<SideEffectScreenViewModel>.reactive(
         viewModelBuilder: () => SideEffectScreenViewModel(),
-        onModelReady: (viewModel) => viewModel.initWithSideEffect(sideEffect),
-        createNewModelOnInsert: true,
+        onViewModelReady: (viewModel) => viewModel.initWithSideEffect(sideEffect),
+        // createNewModelOnInsert: true,
         builder: (context, SideEffectScreenViewModel viewModel, child) => WillPopScope(
             child: PageScaffold(
                 backgroundColor: NextSenseColors.lightGrey,
@@ -174,7 +174,7 @@ class SideEffectScreen extends HookWidget {
                             } else {
                               _navigation.navigateTo(EntryAddedScreen.id, replace: true,
                                   arguments: ['You have logged a side effect',
-                                    Image(image: AssetImage('assets/images/hand_pen.png'))]);
+                                    Image(image: AssetImage('packages/nextsense_trial_ui/assets/images/hand_pen.png'))]);
                             }
                           }),
                       dotsDecorator: const DotsDecorator(

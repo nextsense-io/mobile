@@ -1,25 +1,16 @@
 import 'dart:io';
 
-import 'package:logging/logging.dart';
-import 'package:nextsense_trial_ui/domain/firebase_entity.dart';
-import 'package:nextsense_trial_ui/domain/protocol/protocol.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
+import 'package:flutter_common/domain/firebase_entity.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 
-/**
- * Each entry corresponds to a field name in the database instance.
- */
+/// Each entry corresponds to a field name in the database instance.
 enum StudyKey {
-  // Determines if the study is currently active. If the study is inactive, new data cannot be added
-  // to it.
-  active,
-  // Array of allowed protocols that can be recorded in this study.
-  allowed_protocols,
-  // Array of allowed surveys that can be started in this study.
-  allowed_surveys,
   // Allow recording of adhoc protocols.
   adhoc_recording_allowed,
   // Allow adhoc surveys.
   adhoc_surveys_allowed,
+  // If new patients can be enrolled in this study.
+  can_enroll_patients,
   // Short study description to show in the home page.
   description,
   // Duration in days for a single subject.
@@ -45,9 +36,16 @@ enum StudyKey {
   sleep_tracking,
   // Link to an image that can be shown in the intro page to this study.
   // Downloaded and cached locally.
-  splash_page,
-  // organization id of the main sponsor to this study.
-  sponsor_id
+  splash_page_img_url,
+  // Determines if the study is currently active. If the study is inactive, new data cannot be added
+  // to it.
+  status,
+}
+
+enum StudyStatusKey {
+  not_started,
+  active,
+  finished
 }
 
 enum StudyIntroKey {
@@ -75,7 +73,7 @@ class Study extends FirebaseEntity<StudyKey> {
   final CustomLogPrinter _logger = CustomLogPrinter('Study');
 
   Study(FirebaseEntity firebaseEntity) :
-        super(firebaseEntity.getDocumentSnapshot());
+        super(firebaseEntity.getDocumentSnapshot(), firebaseEntity.getFirestoreManager());
 
   String getName() {
     return getValue(StudyKey.name) as String;
@@ -97,30 +95,6 @@ class Study extends FirebaseEntity<StudyKey> {
     return getValue(StudyKey.show_signal_screens) == true;
   }
 
-  List<ProtocolType> getAllowedProtocols() {
-    List<dynamic> protocolNames = getValue(StudyKey.allowed_protocols) ?? [];
-    List<ProtocolType> result = [];
-    for (String name in protocolNames) {
-      ProtocolType protocolType = protocolTypeFromString(name);
-      if (protocolType == ProtocolType.unknown) {
-        _logger.log(Level.WARNING, 'Unknown protocol "$name"');
-        continue;
-      }
-      result.add(protocolType);
-    }
-    return result;
-  }
-
-  // Returns list of survey ids that are allowed
-  List<String> getAllowedSurveys() {
-    List<dynamic> surveyIds = getValue(StudyKey.allowed_surveys) ?? [];
-    List<String> result = [];
-    for (String surveyId in surveyIds) {
-      result.add(surveyId);
-    }
-    return result;
-  }
-
   // Allow recording of adhoc protocols
   bool get adhocRecordingAllowed {
     return getValue(StudyKey.adhoc_recording_allowed) == true;
@@ -140,10 +114,6 @@ class Study extends FirebaseEntity<StudyKey> {
 
   bool get medicationTrackingEnabled {
     return getValue(StudyKey.medication_tracking) == true;
-  }
-
-  bool get surveysEnabled {
-    return getAllowedSurveys().isNotEmpty;
   }
 
   List<IntroPageContent> getIntroPageContents() {

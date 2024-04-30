@@ -5,6 +5,8 @@ apply plugin: 'maven-publish'
 apply plugin: 'org.sonarqube'
 
 android {
+    namespace 'io.nextsense.android.base'
+
     compileSdkVersion 33
 
     defaultConfig {
@@ -22,8 +24,8 @@ android {
         // Flag to enable support for the new language APIs.
         coreLibraryDesugaringEnabled true
         // Sets Java compatibility to Java 11.
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildTypes {
@@ -44,8 +46,12 @@ android {
         }
     }
 
-    buildToolsVersion '30.0.3'
-    namespace 'io.nextsense.android.base'
+    androidResources {
+        noCompress 'tflite'
+    }
+    buildFeatures {
+        buildConfig true
+    }
 }
 
 protobuf {
@@ -62,8 +68,6 @@ protobuf {
         }
     }
 }
-
-
 
 sonarqube {
     properties {
@@ -82,24 +86,26 @@ sonarqube {
 }
 
 dependencies {
-    // Getting an error when upgrading to 2.x.
-    // Failed to transform FakeDependency.jar to match attributes {artifactType=_internal-d8-desugar-methods, org.gradle.libraryelements=jar, org.gradle.usage=java-runtime}. Execution failed for D8BackportedMethodsGenerator
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.2'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.test:core:1.5.0'
-    implementation 'com.github.weliem:blessed-android:2.3.0'
+    implementation 'com.github.weliem:blessed-android:2.4.2'
     // implementation 'com.github.nextsense-io:blessed-android:2.0.11-nextsense'
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
     implementation 'com.google.firebase:firebase-appcheck-playintegrity'
     compileOnly "com.google.firebase:firebase-analytics"
     compileOnly "com.google.firebase:firebase-firestore"
     implementation "com.google.firebase:firebase-functions"
-    implementation 'com.google.code.gson:gson:2.9.1'
+    implementation 'com.google.code.gson:gson:2.10'
     implementation 'com.google.guava:guava:31.1-jre'
     implementation 'com.google.protobuf:protobuf-javalite:3.21.7'
     implementation 'com.google.protobuf:protoc:3.13.0'
+    implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'org.greenrobot:eventbus:3.3.1'
+    compileOnly 'org.tensorflow:tensorflow-lite:2.14.0'
+    compileOnly 'org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0'
+    implementation group: 'uk.me.berndporr', name:'iirj', version: '1.5'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.robolectric:robolectric:4.9'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

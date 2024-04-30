@@ -1,11 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_common/managers/auth/authentication_result.dart';
+import 'package:flutter_common/managers/device_manager.dart';
+import 'package:flutter_common/managers/disk_space_manager.dart';
+import 'package:flutter_common/managers/permissions_manager.dart';
+import 'package:flutter_common/utils/android_logger.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_trial_ui/di.dart';
-import 'package:nextsense_trial_ui/domain/protocol/runnable_protocol.dart';
-import 'package:nextsense_trial_ui/domain/protocol/scheduled_protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
+import 'package:nextsense_trial_ui/domain/session/scheduled_session.dart';
 import 'package:nextsense_trial_ui/domain/seizure.dart';
 import 'package:nextsense_trial_ui/domain/side_effect.dart';
 import 'package:nextsense_trial_ui/domain/survey/runnable_survey.dart';
@@ -13,10 +18,7 @@ import 'package:nextsense_trial_ui/domain/survey/scheduled_survey.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/email_auth_link.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
-import 'package:nextsense_trial_ui/managers/device_manager.dart';
-import 'package:nextsense_trial_ui/managers/disk_space_manager.dart';
 import 'package:nextsense_trial_ui/managers/notifications_manager.dart';
-import 'package:nextsense_trial_ui/managers/permissions_manager.dart';
 import 'package:nextsense_trial_ui/managers/study_manager.dart';
 import 'package:nextsense_trial_ui/managers/survey_manager.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/enter_email_screen.dart';
@@ -33,6 +35,7 @@ import 'package:nextsense_trial_ui/ui/screens/auth/sign_in_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/dashboard_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/dashboard/surveys_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/fit_test/ear_fit_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/medications/medications_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/profile/profile_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/enrolled_studies/enrolled_studies_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/info/about_screen.dart';
@@ -50,11 +53,11 @@ import 'package:nextsense_trial_ui/ui/screens/settings/settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effect_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/side_effects/side_effects_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/signal/signal_monitoring_screen.dart';
+import 'package:nextsense_trial_ui/ui/screens/signal/visualization_settings_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/startup/startup_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/support/support_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/survey/survey_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/auth/set_password_screen.dart';
-import 'package:nextsense_trial_ui/utils/android_logger.dart';
 import 'package:provider/provider.dart';
 
 import 'package:receive_intent/receive_intent.dart' as intent;
@@ -186,7 +189,7 @@ class Navigation {
       if (intent.extra!.containsKey(TargetType.protocol.name)) {
         String scheduledProtocolId = intent.extra![TargetType.protocol.name];
         _logger.log(Level.INFO, "Scheduled protocol id: $scheduledProtocolId");
-        ScheduledProtocol? scheduledProtocol =
+        ScheduledSession? scheduledProtocol =
             await _studyManager.queryScheduledProtocol(scheduledProtocolId);
         if (scheduledProtocol != null) {
           navigateWithCapabilityChecking(navigatorKey.currentState!.context, ProtocolScreen.id,
@@ -313,6 +316,10 @@ class Navigation {
           builder: (context) => EnterEmailScreen());
       case WaitScreen.id: return MaterialPageRoute(
           builder: (context) => WaitScreen());
+      case MedicationsScreen.id: return MaterialPageRoute(
+          builder: (context) => MedicationsScreen());
+      case VisualizationSettingsScreen.id: return MaterialPageRoute(
+          builder: (context) => VisualizationSettingsScreen());
 
       // Routes with arguments
       case SignInScreen.id: return MaterialPageRoute(
