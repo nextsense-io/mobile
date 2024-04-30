@@ -56,4 +56,23 @@ public class Filters {
     filteredSignal = applyHighPass(filteredSignal, (int) samplingRate, order, lowCutoff);
     return filteredSignal;
   }
+
+  /*
+   * Applies band stop filter
+   * signal -- signal to be filtered
+   * samplingRate -- sampling frequency
+   * order -- filter order
+   * centerFrequency -- center frequency
+   * widthFrequency -- width frequency
+   */
+  public static double[] applyBandStop(double[] signal, float samplingRate, int order,
+                                       float centerFrequency, float widthFrequency) {
+    Butterworth butterworth = new Butterworth();
+    butterworth.bandStop(order, samplingRate, centerFrequency, widthFrequency);
+    double[] filteredSig = new double[signal.length];
+    for (int i = 0; i < signal.length; i++) {
+      filteredSig[i] = butterworth.filter(signal[i]);
+    }
+    return filteredSig;
+  }
 }

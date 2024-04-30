@@ -143,7 +143,7 @@ class MentalStateAudioProtocol extends ConsumerBaseProtocol {
       duration: const Duration(milliseconds: 1000 * 10),
       marker: MentalStateAudioState.PLAYING_SOUND.name);
   static final List<ProtocolPart> _protocolBlock = [
-    playingSound, playingSound, playingSound
+    playingSound, playingSound, playingSound, playingSound, playingSound, playingSound
   ];
 
   @override

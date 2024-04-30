@@ -254,6 +254,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
       _blockStartMilliSeconds = millisecondsElapsed;
       _blockEndMilliSeconds = _blockStartMilliSeconds + _repetitionTime.inMilliseconds;
       _logger.log(Level.FINE, "Block End milliseconds: $_blockEndMilliSeconds");
+      onAdvanceProtocolBlock();
     }
     int blockMillisecondsElapsed = millisecondsElapsed - _blockStartMilliSeconds;
     // Check if can advance the index to the next part.
@@ -301,6 +302,9 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   // Called when the protocol progresses to a new part.
   void onAdvanceProtocol() {}
+
+  // Called when the protocol finishes a protocol block and advance to the next one.
+  void onAdvanceProtocolBlock() {}
 
   void cancelTimer() {
     timer?.cancel();

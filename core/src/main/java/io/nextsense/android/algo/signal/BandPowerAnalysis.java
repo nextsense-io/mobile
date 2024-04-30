@@ -14,7 +14,7 @@ public class BandPowerAnalysis {
     THETA(4.0, 8.0),
     ALPHA(8.0, 12.0),
     BETA(12.0, 30.0),
-    GAMMA(30.0, 100.0);
+    GAMMA(30.0, 49.0);
 
     private final double start;
     private final double end;
@@ -43,8 +43,8 @@ public class BandPowerAnalysis {
     double[] fftDataArray = new double[getNextPowerOfTwo(data.size())];
     Arrays.fill(fftDataArray, data.size(), fftDataArray.length, 0.0f);
     double[] dataArray = data.stream().mapToDouble(aFloat -> aFloat).toArray();
+    dataArray = Filters.applyBandStop(dataArray, samplingRate, 8, 50, 2);
     dataArray = Filters.applyBandPass(dataArray, samplingRate, 4, 0.1f, 50);
-    // applyHannWindow(dataArray);
     System.arraycopy(dataArray, 0, fftDataArray, 0, dataArray.length);
     Complex[] complexResult = transformer.transform(fftDataArray, TransformType.FORWARD);
     double[] powerSpectrum = new double[complexResult.length];
