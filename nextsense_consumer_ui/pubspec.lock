@@ -900,6 +900,39 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.99"
+  soundpool:
+    dependency: transitive
+    description:
+      path: soundpool
+      ref: HEAD
+      resolved-ref: "6a0c8cfaaf8ccff61f9f336fda4df838b0cf522c"
+      url: "https://github.com/eric-nextsense/soundpool"
+    source: git
+    version: "2.4.1"
+  soundpool_macos:
+    dependency: transitive
+    description:
+      name: soundpool_macos
+      sha256: e0440a19d4e8f344dace336923b369184e91eebbbd8348266f4434b675bd15db
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
+  soundpool_platform_interface:
+    dependency: transitive
+    description:
+      name: soundpool_platform_interface
+      sha256: "7c6666e19319151b2036c4fc9b6da3a83f2ebf4097989e6ba1c2b0bfe3612e9f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
+  soundpool_web:
+    dependency: transitive
+    description:
+      name: soundpool_web
+      sha256: "3d1eb8d6cceb8a0aec38ff9aec4fbd11a9a8101d27b27a6eb29305b83d46aee5"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.0"
   source_span:
     dependency: transitive
     description:
@@ -1102,4 +1135,4 @@ packages:
     version: "3.1.2"
 sdks:
   dart: ">=3.1.1 <4.0.0"
-  flutter: ">=3.7.0"
+  flutter: ">=3.10.0"

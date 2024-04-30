@@ -1,3 +1,4 @@
+import 'package:flutter_common/managers/audio_manager.dart';
 import 'package:flutter_common/managers/device_manager.dart';
 import 'package:flutter_common/managers/disk_space_manager.dart';
 import 'package:flutter_common/managers/firebase_manager.dart';
@@ -20,4 +21,5 @@ Future<void> initDependencies(String configBaseUrl) async {
   getIt.registerSingleton<DeviceManager>(DeviceManager());
   getIt.registerSingleton<FirebaseStorageManager>(FirebaseStorageManager());
   getIt.registerSingleton<DiskSpaceManager>(DiskSpaceManager());
+  getIt.registerSingleton<AudioManager>(AudioManager());
 }

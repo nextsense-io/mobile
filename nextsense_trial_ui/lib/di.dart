@@ -3,7 +3,6 @@ import 'package:get_it/get_it.dart';
 import 'package:nextsense_trial_ui/config.dart';
 import 'package:nextsense_trial_ui/environment.dart';
 import 'package:nextsense_trial_ui/flavors.dart';
-import 'package:nextsense_trial_ui/managers/audio_manager.dart';
 import 'package:nextsense_trial_ui/managers/auth/auth_manager.dart';
 import 'package:nextsense_trial_ui/managers/connectivity_manager.dart';
 import 'package:nextsense_trial_ui/managers/data_manager.dart';
@@ -53,6 +52,5 @@ Future<void> initDependencies() async {
   getIt.registerSingleton<SeizuresManager>(SeizuresManager());
   getIt.registerSingleton<SideEffectsManager>(SideEffectsManager());
   getIt.registerSingleton<ConnectivityManager>(ConnectivityManager());
-  getIt.registerSingleton<AudioManager>(AudioManager());
   getIt.registerSingleton<Navigation>(Navigation());
 }

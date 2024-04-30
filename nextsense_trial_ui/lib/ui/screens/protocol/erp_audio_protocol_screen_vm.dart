@@ -7,7 +7,7 @@ import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/event.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
-import 'package:nextsense_trial_ui/managers/audio_manager.dart';
+import 'package:flutter_common/managers/audio_manager.dart';
 import 'package:nextsense_trial_ui/managers/event_types_manager.dart';
 import 'package:nextsense_trial_ui/managers/trial_ui_firestore_manager.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';

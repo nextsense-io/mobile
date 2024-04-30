@@ -4,13 +4,14 @@ import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:nextsense_trial_ui/di.dart';
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
 import 'package:nextsense_trial_ui/domain/session/runnable_protocol.dart';
-import 'package:nextsense_trial_ui/managers/audio_manager.dart';
+import 'package:flutter_common/managers/audio_manager.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/protocol_screen_vm.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class EOECProtocolScreenViewModel extends ProtocolScreenViewModel {
 
-  static const String _eoecTransitionSound = "packages/nextsense_trial_ui/assets/sounds/eoec_transition.wav";
+  static const String _eoecTransitionSound =
+      "packages/nextsense_trial_ui/assets/sounds/eoec_transition.wav";
   static const Map<EOECState, String> _protocolPartsText = {
     EOECState.EO: 'Eyes Open',
     EOECState.EC: 'Eyes Closed'
