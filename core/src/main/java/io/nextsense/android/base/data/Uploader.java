@@ -84,7 +84,7 @@ public class Uploader {
   private Connectivity.State minimumConnectivityState = Connectivity.State.FULL_CONNECTION;
   private Connectivity.State currentConnectivityState = Connectivity.State.NO_CONNECTION;
   // Used to generate test data manually, should always be false in production.
-  private boolean saveData = true;
+  private boolean saveTestProtoData = false;
 
   private Uploader(Context context, ApplicationType applicationType,
                    ObjectBoxDatabase objectBoxDatabase, DatabaseSink databaseSink,
@@ -341,7 +341,7 @@ public class Uploader {
             }
             DataSamplesProto.DataSamples dataSamplesProto =
                 serializeToProto(samplesChunkToUpload, localSession);
-            if (saveData) {
+            if (saveTestProtoData) {
               saveData(dataSamplesProto);
             }
             uploaded = uploadDataSamplesProto(dataSamplesProto);
@@ -474,7 +474,7 @@ public class Uploader {
   }
 
   private void saveData(DataSamplesProto.DataSamples dataSamplesProto) {
-    saveData = false;
+    saveTestProtoData = false;
     try {
       String collection = "content://media/external/file";
       String relativePath = "Documents/NextSense";
@@ -483,7 +483,8 @@ public class Uploader {
 
       ContentValues contentValues = new ContentValues();
 
-      contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME, "test_proto.txt");
+      contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME,
+          "test_proto_" + + System.currentTimeMillis() + ".txt");
       contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "txt/plain");
       contentValues.put(MediaStore.MediaColumns.SIZE, dataSamplesProto.getSerializedSize());
       contentValues.put(MediaStore.MediaColumns.DATE_MODIFIED, Instant.now().getEpochSecond());
