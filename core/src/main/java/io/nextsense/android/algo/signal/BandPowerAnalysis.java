@@ -43,7 +43,8 @@ public class BandPowerAnalysis {
     double[] fftDataArray = new double[getNextPowerOfTwo(data.size())];
     Arrays.fill(fftDataArray, data.size(), fftDataArray.length, 0.0f);
     double[] dataArray = data.stream().mapToDouble(aFloat -> aFloat).toArray();
-    dataArray = Filters.applyBandStop(dataArray, samplingRate, 8, 50, 2);
+    // TODO(eric): Have a setting to be able to select 50 Hertz when not in the USA.
+    dataArray = Filters.applyBandStop(dataArray, samplingRate, 8, 60, 2);
     dataArray = Filters.applyBandPass(dataArray, samplingRate, 4, 0.1f, 50);
     System.arraycopy(dataArray, 0, fftDataArray, 0, dataArray.length);
     Complex[] complexResult = transformer.transform(fftDataArray, TransformType.FORWARD);
