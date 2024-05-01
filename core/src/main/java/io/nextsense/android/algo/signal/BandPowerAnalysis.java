@@ -68,13 +68,6 @@ public class BandPowerAnalysis {
     return bandPower / resultsSize;
   }
 
-  // Apply a Hann window to the data.
-  public static void applyHannWindow(double[] data) {
-    for (int i = 0; i < data.length; i++) {
-      data[i] *= 0.5 * (1 - Math.cos(2 * Math.PI * i / (data.length - 1)));
-    }
-  }
-
   private static int getNextPowerOfTwo(int n) {
     return (int) Math.pow(2, Math.ceil(Math.log(n) / Math.log(2)));
   }
