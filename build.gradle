@@ -1,5 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 buildscript {
-    ext.objectboxVersion = '3.5.0'
+    ext.kotlin_version = '1.9.10'
+    ext.objectboxVersion = '3.8.0'
     repositories {
         google()
         mavenCentral()
@@ -10,7 +14,8 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:8.2.2'
         classpath 'com.google.protobuf:protobuf-gradle-plugin:0.9.0'
-        classpath 'com.google.gms:google-services:4.4.0'
+        classpath 'com.google.gms:google-services:4.4.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "io.objectbox:objectbox-gradle-plugin:$objectboxVersion"
         classpath 'org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:4.4.1.3373'
         classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
@@ -35,13 +40,10 @@ allprojects {
     }
 }
 
-//task clean(type: Delete) {
-//    delete rootProject.buildDir
-//}
 allprojects {
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    tasks.withType(KotlinCompile).configureEach {
         compilerOptions {
-            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8
+            jvmTarget = JvmTarget.JVM_1_8
         }
     }
 }
