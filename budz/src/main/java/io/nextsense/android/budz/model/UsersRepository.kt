@@ -30,7 +30,19 @@ class UsersRepository @Inject constructor() {
         emit(State.failed(it.message.toString()))
     }.flowOn(Dispatchers.IO)
 
-    fun getUser(email: String) = flow<State<User?>> {
+    fun getUser(id: String) = flow<State<User?>> {
+        emit(State.loading())
+        val userSnapshot =
+            firestoreClient.usersRef.document(id).get().await()
+        if (userSnapshot.exists()) {
+            emit(State.success(null))
+        } else {
+            val user = userSnapshot.toObject(User::class.java)
+            emit(State.success(user))
+        }
+    }
+
+    fun getUserByEmail(email: String) = flow<State<User?>> {
         emit(State.loading())
         val userSnapshot =
             firestoreClient.usersRef.whereEqualTo(UserKeys.EMAIL.key(), email).get().await()

@@ -10,7 +10,7 @@ import javax.inject.Singleton
 class FirestoreClient @Inject constructor() {
 
     private enum class Table {
-        USER,
+        USERS,
         SESSION,
         DATA_SESSION,
         EVENT;
@@ -23,7 +23,7 @@ class FirestoreClient @Inject constructor() {
     private val db = Firebase.firestore
     private val rootRefPath = "consumer/v1/"
 
-    val usersRef = db.collection(rootRefPath + Table.USER.tableName())
+    val usersRef = db.collection(rootRefPath + Table.USERS.tableName())
 
     init {
         Log.d(tag, "FirestoreClient initialized.")
