@@ -11,6 +11,9 @@ import io.nextsense.android.budz.State
 import io.nextsense.android.budz.model.User
 import io.nextsense.android.budz.model.UserType
 import io.nextsense.android.budz.model.UsersRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.last
 
 import kotlinx.coroutines.tasks.await
@@ -28,40 +31,41 @@ class GoogleAuth @Inject constructor() {
         .requestEmail()
         .build()
 
-    var email: String? = null
-    var user: User? = null
+    private var email: String? = null
+    private var user: User? = null
     val isSignedIn: Boolean
         get() = firebaseAuth.currentUser != null
 
     private val firebaseAuth = FirebaseAuth.getInstance()
 
-    suspend fun signInFirebase(token: String) : Boolean {
+    suspend fun signInFirebase(token: String) = flow<State<User>> {
         val credential = GoogleAuthProvider.getCredential(token, null)
         val authResult: AuthResult = firebaseAuth.signInWithCredential(credential).await()
         if (authResult.user != null) {
             email = firebaseAuth.currentUser?.email
             val uid = authResult.user!!.uid
-            usersRepository.getUser(uid).last().let { userGetstate ->
-                if (userGetstate is State.Success) {
-                    if (userGetstate.data == null) {
-                        val newUser = User(email = email!!, type = UserType.CONSUMER,
-                            createdAt = Instant.now())
-                        usersRepository.addUser(newUser).last().let {userAddState ->
+            usersRepository.getUser(uid).last().let { userGetState ->
+                if (userGetState is State.Success) {
+                    if (userGetState.data == null) {
+                        val newUser = User(email = email!!, type = UserType.CONSUMER)
+                        usersRepository.addUser(newUser, uid).last().let {userAddState ->
                             if (userAddState is State.Success) {
                                 user = newUser
-                                return true
+                                emit(State.Success(newUser))
+                            } else {
+                                emit(State.failed(userAddState.toString()))
                             }
-                            return false
                         }
                     } else {
-                        user = userGetstate.data
-                        return true
+                        user = userGetState.data
+                        emit(State.Success(userGetState.data))
                     }
                 } else {
-                    return false
+                    emit(State.failed(userGetState.toString()))
                 }
             }
+        } else {
+            emit(State.failed("Failed to sign in with Firebase."))
         }
-        return false
-    }
+    }.flowOn(Dispatchers.IO)
 }

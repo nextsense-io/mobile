@@ -20,11 +20,11 @@ class UsersRepository @Inject constructor() {
      * Adds user [user] into the cloud firestore collection.
      * @return The Flow of [State] which will store state of current action.
      */
-    fun addUser(user: User) = flow<State<DocumentReference>> {
+    fun addUser(user: User, userId: String) = flow<State<DocumentReference>> {
         emit(State.loading())
-        val userRef = firestoreClient.usersRef.add(user).await()
+        val userRef = firestoreClient.usersRef.document(userId)
+        userRef.set(user).await()
         emit(State.success(userRef))
-
     }.catch {
         // If exception is thrown, emit failed state along with message.
         emit(State.failed(it.message.toString()))
@@ -40,7 +40,7 @@ class UsersRepository @Inject constructor() {
             val user = userSnapshot.toObject(User::class.java)
             emit(State.success(user))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     fun getUserByEmail(email: String) = flow<State<User?>> {
         emit(State.loading())
@@ -52,5 +52,5 @@ class UsersRepository @Inject constructor() {
             val user = userSnapshot.documents[0].toObject(User::class.java)
             emit(State.success(user))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 }

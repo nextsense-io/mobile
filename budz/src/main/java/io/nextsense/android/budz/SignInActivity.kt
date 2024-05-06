@@ -61,7 +61,6 @@ class SignInActivity : ComponentActivity() {
     }
 
     fun signInGoogle() {
-        val signInIntent: Intent = googleSignInClient.signInIntent
         ActivityCompat.startActivityForResult(this, googleSignInClient.signInIntent,
             googleSignInReqCode, null)
     }

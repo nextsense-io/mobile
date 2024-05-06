@@ -30,6 +30,7 @@ import io.nextsense.android.budz.manager.GoogleAuth
 import io.nextsense.android.budz.ui.theme.BudzTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -99,12 +100,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private suspend fun signIn(tokenId: String) {
-        val signedIn = googleAuth.signInFirebase(tokenId)
-        if (signedIn) {
-            Log.d(tag, "User signed in with Firebase.")
-            goToHomeActivity()
-        } else {
-            Log.d(tag, "User failed to sign in with Firebase.")
+        googleAuth.signInFirebase(tokenId).last().let { userSignInState ->
+            if (userSignInState is State.Success) {
+                Log.d(tag, "User signed in with Firebase.")
+                goToHomeActivity()
+            } else {
+                Log.d(tag, "User failed to sign in with Firebase: " +
+                        userSignInState.toString())
+            }
         }
     }
 

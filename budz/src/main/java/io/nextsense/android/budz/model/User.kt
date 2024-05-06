@@ -1,6 +1,8 @@
 package io.nextsense.android.budz.model
 
-import java.time.Instant
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.Exclude
+import com.google.firebase.firestore.ServerTimestamp
 
 enum class UserType {
     CONSUMER, ENGINEER
@@ -15,8 +17,11 @@ enum class UserKeys {
 data class User(
     val email: String?,
     val type: UserType?,
-    val createdAt: Instant?
+    @ServerTimestamp
+    val createdAt: Timestamp? = null
 ) {
+    @Exclude
     fun isConsumer() = type == UserType.CONSUMER
+    @Exclude
     fun isEngineer() = type == UserType.ENGINEER
 }
