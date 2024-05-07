@@ -38,6 +38,10 @@
             android:name=".HomeActivity"
             android:theme="@style/Theme.Budz">
         </activity>
+        <activity
+            android:name=".SelectSoundActivity"
+            android:theme="@style/Theme.Budz">
+        </activity>
     </application>
 
 </manifest>

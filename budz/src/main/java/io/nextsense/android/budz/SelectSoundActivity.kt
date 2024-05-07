@@ -1,20 +1,22 @@
 package io.nextsense.android.budz
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import io.nextsense.android.budz.ui.components.SimpleButton
+import io.nextsense.android.budz.manager.SoundsManager
+import io.nextsense.android.budz.ui.components.AudioSampleList
+import io.nextsense.android.budz.ui.components.Title
 import io.nextsense.android.budz.ui.theme.BudzTheme
 
-class HomeActivity : ComponentActivity() {
-
+class SelectSoundActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -25,14 +27,24 @@ class HomeActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column {
-                        Greeting("Home!")
-                        val context = LocalContext.current
-                        SimpleButton(name = "Change stay sleeping sound", onClick = {
-                            startActivity(Intent(context, SelectSoundActivity::class.java))
-                        })
+                        Title("Select sound to play when you fall asleep")
+                        Row {
+                            Spacer(modifier = Modifier.weight(1f))
+                            Column {
+                                AudioSampleList(context = LocalContext.current,
+                                    audioSamples = SoundsManager.stayAsleepSamples
+                                )
+                            }
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
                 }
             }
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        SoundsManager.stopAudioSample()
     }
 }
