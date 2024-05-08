@@ -22,21 +22,21 @@ public class BandPowerAnalysisTest {
 
   @Test
   public void testGetAlphaBandPower() {
-    List<Float> signal = createSinWaveBuffer(250, 1000, 10);
+    List<Float> signal = createSinWaveBuffer(250, 33000, 10);
     int samplingRate = 250;
     double alphaBandPower = BandPowerAnalysis.getBandPower(signal, samplingRate, BandPowerAnalysis.Band.ALPHA);
     double betaBandPower = BandPowerAnalysis.getBandPower(signal, samplingRate, BandPowerAnalysis.Band.BETA);
-    assertEquals(5122.71475, alphaBandPower, 0.001);
-    assertEquals(560.55061, betaBandPower, 0.001);
+    assertEquals(2.0915722400006592E7, alphaBandPower, 0.001);
+    assertEquals(5364.816782800217, betaBandPower, 0.001);
   }
 
   @Test
   public void testGetBetaBandPower() {
-    List<Float> signal = createSinWaveBuffer(250, 1000, 20);
+    List<Float> signal = createSinWaveBuffer(250, 33000, 20);
     int samplingRate = 250;
     double alphaBandPower = BandPowerAnalysis.getBandPower(signal, samplingRate, BandPowerAnalysis.Band.ALPHA);
     double betaBandPower = BandPowerAnalysis.getBandPower(signal, samplingRate, BandPowerAnalysis.Band.BETA);
-    assertEquals(318.59644, alphaBandPower, 0.001);
-    assertEquals(2190.10059, betaBandPower, 0.001);
+    assertEquals(1647.9509418388461, alphaBandPower, 0.001);
+    assertEquals(5502878.764851844, betaBandPower, 0.001);
   }
 }

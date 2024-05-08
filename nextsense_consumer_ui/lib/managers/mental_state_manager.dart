@@ -43,7 +43,7 @@ enum MentalChecksState {
 
 class MentalStateManager extends ChangeNotifier {
   static const Duration _calculationCheckInterval = Duration(seconds: 5);
-  static const Duration _calculationEpoch = Duration(seconds: 30);
+  static const Duration _calculationEpoch = Duration(seconds: 40);
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
