@@ -1,6 +1,7 @@
 package io.nextsense.android.budz.manager
 
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.Timestamp
 
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
@@ -17,7 +18,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.last
 
 import kotlinx.coroutines.tasks.await
-import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,8 +31,7 @@ class GoogleAuth @Inject constructor() {
         .requestEmail()
         .build()
 
-    private var email: String? = null
-    private var user: User? = null
+    lateinit var currentUserId: String
     val isSignedIn: Boolean
         get() = firebaseAuth.currentUser != null
 
@@ -42,22 +41,22 @@ class GoogleAuth @Inject constructor() {
         val credential = GoogleAuthProvider.getCredential(token, null)
         val authResult: AuthResult = firebaseAuth.signInWithCredential(credential).await()
         if (authResult.user != null) {
-            email = firebaseAuth.currentUser?.email
-            val uid = authResult.user!!.uid
-            usersRepository.getUser(uid).last().let { userGetState ->
+            currentUserId = authResult.user!!.uid
+            val email = firebaseAuth.currentUser?.email
+            val name = firebaseAuth.currentUser?.displayName
+            usersRepository.getUser(currentUserId).last().let { userGetState ->
                 if (userGetState is State.Success) {
                     if (userGetState.data == null) {
-                        val newUser = User(email = email!!, type = UserType.CONSUMER)
-                        usersRepository.addUser(newUser, uid).last().let {userAddState ->
+                        val newUser = User(email = email!!, name = name, type = UserType.CONSUMER,
+                            createdAt = Timestamp.now())
+                        usersRepository.addUser(newUser, currentUserId).last().let {userAddState ->
                             if (userAddState is State.Success) {
-                                user = newUser
                                 emit(State.Success(newUser))
                             } else {
                                 emit(State.failed(userAddState.toString()))
                             }
                         }
                     } else {
-                        user = userGetState.data
                         emit(State.Success(userGetState.data))
                     }
                 } else {
@@ -68,4 +67,8 @@ class GoogleAuth @Inject constructor() {
             emit(State.failed("Failed to sign in with Firebase."))
         }
     }.flowOn(Dispatchers.IO)
+
+    fun signOut() {
+        firebaseAuth.signOut()
+    }
 }

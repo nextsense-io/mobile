@@ -1,4 +1,4 @@
-package io.nextsense.android.budz
+package io.nextsense.android.budz.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import com.stevdzasan.onetap.OneTapSignInWithGoogle
 import com.stevdzasan.onetap.rememberOneTapSignInState
 import dagger.hilt.android.AndroidEntryPoint
+import io.nextsense.android.budz.R
+import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.GoogleAuth
 import io.nextsense.android.budz.ui.theme.BudzTheme
 import kotlinx.coroutines.CoroutineScope
@@ -51,17 +53,6 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column {
-//                        val state = rememberOneTapSignInState()
-//                        OneTapSignInWithGoogle(
-//                            state = state,
-//                            clientId = stringResource(R.string.web_client_id),
-//                            rememberAccount = true,
-//                            onTokenIdReceived = { tokenId -> goToHomeActivity(tokenId)},
-//                            onDialogDismissed = { message ->
-//                                Log.d("LOG", message)
-//                            }
-//                        )
-//                        state.open()
                         val state = rememberOneTapSignInState()
                         OneTapSignInWithGoogle(
                             state = state,
@@ -74,7 +65,6 @@ class MainActivity : ComponentActivity() {
                                 Log.d(tag, "User dismissed login dialog.")
                             }
                         )
-
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -91,7 +81,6 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
-                        state.open()
                         Greeting("Android")
                     }
                 }
@@ -107,6 +96,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 Log.d(tag, "User failed to sign in with Firebase: " +
                         userSignInState.toString())
+
             }
         }
     }

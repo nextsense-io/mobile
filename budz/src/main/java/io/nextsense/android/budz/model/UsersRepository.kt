@@ -1,6 +1,7 @@
 package io.nextsense.android.budz.model
 
 import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.SetOptions
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.FirestoreClient
 import kotlinx.coroutines.Dispatchers
@@ -30,18 +31,40 @@ class UsersRepository @Inject constructor() {
         emit(State.failed(it.message.toString()))
     }.flowOn(Dispatchers.IO)
 
+    /**
+     * Updates user [user] into the cloud firestore collection.
+     * @return The Flow of [State] which will store state of current action.
+     */
+    fun updateUser(user: User, userId: String) = flow<State<DocumentReference>> {
+        emit(State.loading())
+        val userRef = firestoreClient.usersRef.document(userId)
+        userRef.set(user, SetOptions.merge()).await()
+        emit(State.success(userRef))
+    }.catch {
+        // If exception is thrown, emit failed state along with message.
+        emit(State.failed(it.message.toString()))
+    }.flowOn(Dispatchers.IO)
+
+    /**
+     * Fetches user from the cloud firestore collection.
+     * @return The Flow of [State] which will store state of current action.
+     */
     fun getUser(id: String) = flow<State<User?>> {
         emit(State.loading())
         val userSnapshot =
             firestoreClient.usersRef.document(id).get().await()
         if (userSnapshot.exists()) {
-            emit(State.success(null))
-        } else {
             val user = userSnapshot.toObject(User::class.java)
             emit(State.success(user))
+        } else {
+            emit(State.success(null))
         }
     }.flowOn(Dispatchers.IO)
 
+    /**
+     * Fetches user from the cloud firestore collection by email.
+     * @return The Flow of [State] which will store state of current action.
+     */
     fun getUserByEmail(email: String) = flow<State<User?>> {
         emit(State.loading())
         val userSnapshot =

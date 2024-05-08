@@ -1,7 +1,8 @@
-package io.nextsense.android.budz
+package io.nextsense.android.budz.ui.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,15 +17,21 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.AndroidEntryPoint
+import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.GoogleAuth
 import io.nextsense.android.budz.ui.theme.BudzTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
 class SignInActivity : ComponentActivity() {
 
+    private val tag = SignInActivity::class.java.simpleName
+    private val uiScope = CoroutineScope(Dispatchers.Main)
     private val googleSignInReqCode = 10
 
     private lateinit var googleSignInClient: GoogleSignInClient
@@ -49,18 +56,18 @@ class SignInActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (GoogleSignIn.getLastSignedInAccount(this) != null) {
-            startActivity(
-                Intent(
-                    this, HomeActivity::class.java
-                )
-            )
-            finish()
-        }
+//        if (GoogleSignIn.getLastSignedInAccount(this) != null) {
+//            startActivity(
+//                Intent(
+//                    this, HomeActivity::class.java
+//                )
+//            )
+//            finish()
+//        }
         signInGoogle()
     }
 
-    fun signInGoogle() {
+    private fun signInGoogle() {
         ActivityCompat.startActivityForResult(this, googleSignInClient.signInIntent,
             googleSignInReqCode, null)
     }
@@ -86,14 +93,26 @@ class SignInActivity : ComponentActivity() {
 
     // this is where we update the UI after Google signin takes place
     private fun updateUI(account: GoogleSignInAccount) {
-        val credential = GoogleAuthProvider.getCredential(account.idToken, null)
-//        GoogleAuth.firebaseAuth.signInWithCredential(credential).addOnCompleteListener { task ->
-//            if (task.isSuccessful) {
-//                GoogleAuth.email = account.email.toString()
-//                val intent = Intent(this, HomeActivity::class.java)
-//                startActivity(intent)
-//                finish()
-//            }
-//        }
+        uiScope.launch {
+            signIn(account.idToken!!)
+        }
+    }
+
+    private fun goToHomeActivity() {
+        startActivity(Intent(this, HomeActivity::class.java))
+        finish()
+    }
+
+    private suspend fun signIn(tokenId: String) {
+        googleAuth.signInFirebase(tokenId).last().let { userSignInState ->
+            if (userSignInState is State.Success) {
+                Log.d(tag, "User signed in with Firebase.")
+                goToHomeActivity()
+            } else {
+                Log.d(tag, "User failed to sign in with Firebase: " +
+                        userSignInState.toString())
+
+            }
+        }
     }
 }

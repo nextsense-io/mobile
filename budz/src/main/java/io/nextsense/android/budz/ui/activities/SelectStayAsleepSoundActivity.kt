@@ -1,20 +1,18 @@
-package io.nextsense.android.budz
+package io.nextsense.android.budz.ui.activities
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import io.nextsense.android.budz.ui.components.SimpleButton
+import dagger.hilt.android.AndroidEntryPoint
+import io.nextsense.android.budz.ui.screens.SelectStayAsleepSoundScreen
 import io.nextsense.android.budz.ui.theme.BudzTheme
 
-class HomeActivity : ComponentActivity() {
-
+@AndroidEntryPoint
+class SelectStayAsleepSoundActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -24,13 +22,7 @@ class HomeActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Column {
-                        Greeting("Home!")
-                        val context = LocalContext.current
-                        SimpleButton(name = "Change stay sleeping sound", onClick = {
-                            startActivity(Intent(context, SelectSoundActivity::class.java))
-                        })
-                    }
+                    SelectStayAsleepSoundScreen()
                 }
             }
         }
