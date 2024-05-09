@@ -8,15 +8,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
-import io.nextsense.android.budz.ui.screens.HomeScreen
+import io.nextsense.android.budz.ui.screens.SelectFallAsleepSoundScreen
 import io.nextsense.android.budz.ui.theme.BudzTheme
 
 @AndroidEntryPoint
-class HomeActivity : ComponentActivity() {
-
+class SelectFallAsleepSoundActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContent {
             BudzTheme {
                 // A surface container using the 'background' color from the theme
@@ -24,7 +22,7 @@ class HomeActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    HomeScreen()
+                    SelectFallAsleepSoundScreen()
                 }
             }
         }

@@ -20,10 +20,12 @@ object SoundsManager {
         FAN_SOUND;
 
         fun key() = name.lowercase()
-        fun sample() = idToSampleMap[key()]!!
     }
 
-    val idToSampleMap = mapOf(
+    val defaultFallAsleepAudioSample = AudioSamples.FAN_SOUND
+    val defaultStayAsleepAudioSample = AudioSamples.BROWN_NOISE
+
+    private val _idToSampleMap = mapOf(
         AudioSamples.BROWN_NOISE.key() to
                 AudioSample(AudioSamples.BROWN_NOISE.key(),"Brown Noise", R.raw.brown_noise),
         AudioSamples.PINK_NOISE.key() to
@@ -35,32 +37,43 @@ object SoundsManager {
     )
 
     val fallAsleepSamples = listOf(
-        AudioSamples.BROWN_NOISE.sample(),
-        AudioSamples.PINK_NOISE.sample(),
-        AudioSamples.WHITE_NOISE.sample(),
-        AudioSamples.FAN_SOUND.sample()
+        idToSample(AudioSamples.BROWN_NOISE.key()),
+        idToSample(AudioSamples.PINK_NOISE.key()),
+        idToSample(AudioSamples.WHITE_NOISE.key()),
+        idToSample(AudioSamples.FAN_SOUND.key())
     )
 
     val stayAsleepSamples = listOf(
-        AudioSamples.BROWN_NOISE.sample(),
-        AudioSamples.PINK_NOISE.sample(),
-        AudioSamples.WHITE_NOISE.sample(),
-        AudioSamples.FAN_SOUND.sample()
+        idToSample(AudioSamples.BROWN_NOISE.key()),
+        idToSample(AudioSamples.PINK_NOISE.key()),
+        idToSample(AudioSamples.WHITE_NOISE.key()),
+        idToSample(AudioSamples.FAN_SOUND.key())
     )
 
     val focusSamples = listOf(
-        AudioSamples.BROWN_NOISE.sample(),
-        AudioSamples.PINK_NOISE.sample(),
-        AudioSamples.WHITE_NOISE.sample(),
-        AudioSamples.FAN_SOUND.sample()
+        idToSample(AudioSamples.BROWN_NOISE.key()),
+        idToSample(AudioSamples.PINK_NOISE.key()),
+        idToSample(AudioSamples.WHITE_NOISE.key()),
+        idToSample(AudioSamples.FAN_SOUND.key())
     )
 
-    private val mediaPlayer = MediaPlayer()
+    private val _mediaPlayer = MediaPlayer()
+
+    private fun idToSample(id: String) : AudioSample {
+        return _idToSampleMap[id]!!
+    }
+
+    fun idToSample(id: String?, default: AudioSamples) : AudioSample? {
+        if (id == null || !_idToSampleMap.containsKey(id)) {
+            return _idToSampleMap[default.key()]
+        }
+        return _idToSampleMap[id]
+    }
 
     fun playAudioSample(context: Context, resId: Int, onComplete: () -> Unit = {}) {
         val mediaPath =
             Uri.parse("android.resource://${context.packageName}/$resId")
-        mediaPlayer.apply {
+        _mediaPlayer.apply {
             reset()
             setDataSource(context, mediaPath)
             prepare()
@@ -70,6 +83,6 @@ object SoundsManager {
     }
 
     fun stopAudioSample() {
-        mediaPlayer.stop()
+        _mediaPlayer.stop()
     }
 }

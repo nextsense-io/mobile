@@ -18,22 +18,22 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class SelectStayAsleepSoundState(
+data class SelectFallAsleepSoundState(
     val audioSample: AudioSample? = null,
     val playing: Boolean = false,
     val loading: Boolean = false
 )
 
 @HiltViewModel
-class SelectStayAsleepSoundViewModel @Inject constructor(
-        private val usersRepository: UsersRepository,
-        private val googleAuth: GoogleAuth
-    ): ViewModel() {
+class SelectFallAsleepSoundViewModel @Inject constructor(
+    private val usersRepository: UsersRepository,
+    private val googleAuth: GoogleAuth
+): ViewModel() {
 
-    private val tag = SelectStayAsleepSoundViewModel::class.java.simpleName
-    private val _uiState = MutableStateFlow(SelectStayAsleepSoundState())
+    private val tag = SelectFallAsleepSoundViewModel::class.java.simpleName
+    private val _uiState = MutableStateFlow(SelectFallAsleepSoundState())
 
-    val uiState: StateFlow<SelectStayAsleepSoundState> = _uiState.asStateFlow()
+    val uiState: StateFlow<SelectFallAsleepSoundState> = _uiState.asStateFlow()
 
     init {
         _uiState.update { currentState ->
@@ -47,8 +47,8 @@ class SelectStayAsleepSoundViewModel @Inject constructor(
                     _uiState.update { currentState ->
                         currentState.copy(
                             audioSample = SoundsManager.idToSample(
-                                userState.data.stayAsleepSound,
-                                SoundsManager.defaultStayAsleepAudioSample)
+                                userState.data.fallAsleepSound,
+                                SoundsManager.defaultFallAsleepAudioSample)
                         )
                     }
                 }
@@ -84,7 +84,7 @@ class SelectStayAsleepSoundViewModel @Inject constructor(
         }
     }
 
-    fun changeStayAsleepSound(audioSample: AudioSample) {
+    fun changeFallAsleepSound(audioSample: AudioSample) {
         _uiState.update { currentState ->
             currentState.copy(
                 audioSample = audioSample
@@ -95,7 +95,7 @@ class SelectStayAsleepSoundViewModel @Inject constructor(
                 if (userState is State.Success) {
                     if (userState.data != null) {
                         usersRepository.updateUser(
-                            userState.data.copy(stayAsleepSound = audioSample.id),
+                            userState.data.copy(fallAsleepSound = audioSample.id),
                             googleAuth.currentUserId
                         ).last().let { updateState ->
                             if (updateState is State.Success) {
@@ -105,7 +105,7 @@ class SelectStayAsleepSoundViewModel @Inject constructor(
                                     )
                                 }
                             } else {
-                                Log.d(tag, "Failed to update user stay asleep sound")
+                                Log.d(tag, "Failed to update user fall asleep sound")
                             }
                         }
                     }

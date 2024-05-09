@@ -40,6 +40,11 @@
             android:exported="false">
         </activity>
         <activity
+            android:name=".ui.activities.SelectFallAsleepSoundActivity"
+            android:theme="@style/Theme.Budz"
+            android:exported="false">
+        </activity>
+        <activity
             android:name=".ui.activities.SelectStayAsleepSoundActivity"
             android:theme="@style/Theme.Budz"
             android:exported="false">
