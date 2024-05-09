@@ -27,6 +27,7 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   double get thetaBandPower => _thetaBandPower;
   double get deltaBandPower => _deltaBandPower;
   double get gammaBandPower => _gammaBandPower;
+  double get powerLineFrequency => _mentalStateManager.powerLineFrequency;
 
   @override
   void init() async {

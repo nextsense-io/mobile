@@ -115,6 +115,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String SAVE_TO_CSV_KEY_ARGUMENT = "save_to_csv";
   public static final String BAND_START_ARGUMENT = "band_start";
   public static final String BAND_END_ARGUMENT = "band_end";
+  public static final String POWER_LINE_FREQUENCY_ARGUMENT = "power_line_frequency";
   public static final String ERROR_SERVICE_NOT_AVAILABLE = "service_not_available";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
   public static final String ERROR_SESSION_NOT_STARTED = "session_not_started";
@@ -451,9 +452,10 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         durationMillis = call.argument(DURATION_MILLIS_ARGUMENT);
         Double bandStart = call.argument(BAND_START_ARGUMENT);
         Double bandEnd = call.argument(BAND_END_ARGUMENT);
+        Double powerLineFrequency = call.argument(POWER_LINE_FREQUENCY_ARGUMENT);
         fromDatabase= call.argument(FROM_DATABASE_ARGUMENT);
         getBandPower(result, macAddress, localSessionId, channelName, startDateTime, durationMillis,
-            bandStart, bandEnd, fromDatabase);
+            bandStart, bandEnd, powerLineFrequency, fromDatabase);
         break;
       case EMULATOR_COMMAND:
         String command = call.argument("command");
@@ -1059,7 +1061,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   private void getBandPower(Result result, String macAddress, Integer localSessionId,
                             String channelName, Instant startDateTime, Integer durationMillis,
-                            Double bandStart, Double bandEnd, Boolean fromDatabase) {
+                            Double bandStart, Double bandEnd, Double powerLineFrequency,
+                            Boolean fromDatabase) {
     Optional<Device> device = nextSenseService.getDeviceManager().getDevice(macAddress);
     if (!device.isPresent()) {
       returnError(result, GET_CHANNEL_DATA_COMMAND, ERROR_DEVICE_NOT_FOUND, /*errorMessage=*/null,
@@ -1086,7 +1089,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
     }
     if (data != null && !data.isEmpty()) {
       double bandPower = BandPowerAnalysis.getBandPower(
-          data, (int)eegSamplingRate, /*bandStart=*/bandStart, /*bandEnd=*/bandEnd);
+          data, (int)eegSamplingRate, /*bandStart=*/bandStart, /*bandEnd=*/bandEnd,
+          /*powerLineFrequency=*/powerLineFrequency);
       result.success(bandPower);
     } else {
       result.success(null);

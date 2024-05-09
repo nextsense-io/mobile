@@ -61,6 +61,7 @@ class MentalStateManager extends ChangeNotifier {
   MentalCheckCalculationState _mentalCheckCalculationState = MentalCheckCalculationState.waiting;
   MentalChecksState _mentalChecksState = MentalChecksState.notStarted;
   MentalState _mentalState = MentalState.unknown;
+  double? _powerLineFrequency = null;
 
   MentalState get mentalState => _mentalState;
   MentalCheckCalculationState get mentalCheckCalculationState => _mentalCheckCalculationState;
@@ -70,6 +71,7 @@ class MentalStateManager extends ChangeNotifier {
   double get thetaBandPower => _bandPowers[Band.theta]?.last ?? 0;
   double get deltaBandPower => _bandPowers[Band.delta]?.last ?? 0;
   double get gammaBandPower => _bandPowers[Band.gamma]?.last ?? 0;
+  double get powerLineFrequency => _powerLineFrequency ?? 0;
 
   void startMentalStateChecks({Duration calculationInterval = _calculationCheckInterval}) {
     clearMentalStates();
@@ -137,11 +139,31 @@ class MentalStateManager extends ChangeNotifier {
     }
   }
 
+  Future<double?> _findPowerLineFrequency(String macAddress, String channelName, startTime) async {
+    double fiftyHertzBandPower = await NextsenseBase.getBandPower(
+        macAddress: macAddress, localSessionId: _sessionManager.currentLocalSession!,
+        channelName: channelName, startTime: startTime,
+        bandStart: 49, bandEnd: 51, powerLineFrequency: null,
+        duration: _calculationEpoch);
+    double sixtyHertzBandPower = await NextsenseBase.getBandPower(
+        macAddress: macAddress, localSessionId: _sessionManager.currentLocalSession!,
+        channelName: channelName, startTime: startTime,
+        bandStart: 59, bandEnd: 61, powerLineFrequency: null,
+        duration: _calculationEpoch);
+    _logger.log(Level.INFO, "50 hertz band power: $fiftyHertzBandPower\n"
+        "60 hertz band power: $sixtyHertzBandPower");
+    if (fiftyHertzBandPower == 0 && sixtyHertzBandPower == 0) {
+      return null;
+    }
+    return fiftyHertzBandPower > sixtyHertzBandPower ? 50 : 60;
+  }
+
   Future _calculateMentalStateResults() async {
     _logger.log(Level.INFO, "Calculating mental state...");
     _mentalCheckCalculationState = MentalCheckCalculationState.calculating;
     Device? device = _deviceManager.getConnectedDevice();
     if (device == null || _checksStartTime == null) {
+      _mentalCheckCalculationState = MentalCheckCalculationState.waiting;
       return null;
     }
     String channelName = '1';
@@ -166,6 +188,13 @@ class MentalStateManager extends ChangeNotifier {
     DateTime startTime = _checksStartTime!.add(_calculatedDuration);
     DateTime endTime = startTime.add(_calculationEpoch);
     if (endTime.isBefore(DateTime.now())) {
+      _powerLineFrequency ??= await _findPowerLineFrequency(
+          device.macAddress, channelName, startTime);
+      if (_powerLineFrequency == null) {
+        _logger.log(Level.INFO,
+            "Could not find power line frequency, skipping power bands calculation.");
+        return;
+      }
       for (Band band in Band.values) {
         if (!_bandPowers.containsKey(band)) {
           _bandPowers[band] = [];
@@ -174,7 +203,7 @@ class MentalStateManager extends ChangeNotifier {
             macAddress: device.macAddress, localSessionId: _sessionManager.currentLocalSession!,
             channelName: channelName, startTime: startTime,
             bandStart: band.bandStart, bandEnd: band.bandEnd,
-            duration: _calculationEpoch));
+            powerLineFrequency: _powerLineFrequency, duration: _calculationEpoch));
       }
       _logger.log(Level.INFO, "Alpha band power: $alphaBandPower\n"
           "Beta band power: $betaBandPower. \n"

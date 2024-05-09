@@ -52,6 +52,8 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
               LightHeaderText(text:
               'Alpha/Theta ratio ${(viewModel.alphaBandPower / viewModel.thetaBandPower)
                   .toStringAsFixed(2)}'),
+              LightHeaderText(text: 'Power line frequency:'
+                  ' ${viewModel.powerLineFrequency.toStringAsFixed(0)}'),
               const Spacer(),
               SessionControlButton(stopSession)
             ]));

@@ -34,13 +34,14 @@ public class BandPowerAnalysis {
     }
   }
 
-  public static double getBandPower(List<Float> signal, int samplingRate, Band band) {
-    return getBandPower(signal, samplingRate, band.getStart(), band.getEnd());
+  public static double getBandPower(
+      List<Float> signal, int samplingRate, Band band, Double powerLineFrequency) {
+    return getBandPower(signal, samplingRate, band.getStart(), band.getEnd(), powerLineFrequency);
   }
 
-  // TODO(eric): Have a setting to be able to select 50 Hertz when not in the USA.
   public static double getBandPower(
-      List<Float> data, int samplingRate, double bandStart, double bandEnd) {
+      List<Float> data, int samplingRate, double bandStart, double bandEnd,
+      Double powerLineFrequency) {
     if (data == null || data.isEmpty()) {
         throw new IllegalArgumentException("Data list cannot be null or empty.");
     }
@@ -62,7 +63,10 @@ public class BandPowerAnalysis {
     // Apply wavelet artifact rejection using Daubechies 4 wavelet,
     dataArray = WaveletArtifactRejection.applyWaveletArtifactRejection(dataArray, "db4");
 
-    dataArray = Filters.applyBandStop(dataArray, samplingRate, 8, 60, 2);
+    if (powerLineFrequency != null) {
+      dataArray = Filters.applyBandStop(
+          dataArray, samplingRate, 4, powerLineFrequency.floatValue(), 2);
+    }
     dataArray = Filters.applyBandPass(dataArray, samplingRate, 4, 0.1f, 50);
 
     int segmentSize = 256; // Usual value
