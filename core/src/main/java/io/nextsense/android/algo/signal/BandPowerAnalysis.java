@@ -38,6 +38,18 @@ public class BandPowerAnalysis {
       List<Float> signal, int samplingRate, Band band, Double powerLineFrequency) {
     return getBandPower(signal, samplingRate, band.getStart(), band.getEnd(), powerLineFrequency);
   }
+  
+  private static double calculatePower(double[] signal) {
+      double power = 0;
+      for (double amplitude : signal) {
+          power += amplitude * amplitude;
+      }
+      return power / signal.length;
+  }
+
+  private static double calculateSNR(double signalPower, double noisePower) {
+      return 10 * Math.log10(signalPower / noisePower);
+  }
 
   public static double getBandPower(
       List<Float> data, int samplingRate, double bandStart, double bandEnd,
@@ -60,8 +72,21 @@ public class BandPowerAnalysis {
     // Ensure the data array is 8192 samples long.
     dataArray = Arrays.copyOfRange(dataArray, dataArray.length - 8192, dataArray.length);
 
+    // Original signal power calculation for SNR
+    double originalPower = calculatePower(dataArray);
+
     // Apply wavelet artifact rejection using Daubechies 4 wavelet,
     dataArray = WaveletArtifactRejection.applyWaveletArtifactRejection(dataArray, "db4");
+
+    // After processing signal power calculation for SNR
+    double processedPower = calculatePower(dataArray);
+
+    // Calculate and log SNR improvements
+    double originalSNR = calculateSNR(originalPower, originalPower - processedPower); // Example computation
+    double processedSNR = calculateSNR(processedPower, originalPower - processedPower); // Example computation
+
+    Log.d("SNR", "Original SNR: " + originalSNR + " dB");
+    Log.d("SNR", "Processed SNR: " + processedSNR + " dB");
 
     if (powerLineFrequency != null) {
       dataArray = Filters.applyBandStop(
@@ -75,7 +100,7 @@ public class BandPowerAnalysis {
 
     return calculateBandPower(averagedPowerSpectrum, samplingRate, bandStart, bandEnd);
   }
-
+  
   private static double[] computeWelchPSD(
       double[] dataArray, int segmentSize, int overlap) {
     if (segmentSize > dataArray.length) {
