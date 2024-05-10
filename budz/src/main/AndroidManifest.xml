@@ -2,6 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+
+    <uses-feature android:name="android.hardware.bluetooth" android:required="true" />
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+
     <application
         android:name=".BudzApplication"
         android:allowBackup="true"
@@ -36,6 +47,11 @@
         </activity>
         <activity
             android:name=".ui.activities.HomeActivity"
+            android:theme="@style/Theme.Budz"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".ui.activities.DeviceConnectionActivity"
             android:theme="@style/Theme.Budz"
             android:exported="false">
         </activity>

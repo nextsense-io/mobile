@@ -30,6 +30,12 @@ android {
         vectorDrawables {
             useSupportLibrary true
         }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags ''
+            }
+        }
     }
 
     buildTypes {
@@ -64,7 +70,7 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.7.0'
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
     def lifecycle_version = "2.7.0"
     def activity_version = "1.9.0"
 
@@ -88,6 +94,7 @@ dependencies {
     implementation "androidx.compose.ui:ui-tooling-preview"
     implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
     implementation 'androidx.hilt:hilt-navigation-fragment:1.2.0'
+    implementation "androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
     implementation "androidx.navigation:navigation-compose:$lifecycle_version"
