@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.nextsense.android.budz.ui.activities.DeviceConnectionActivity
 import io.nextsense.android.budz.ui.activities.SelectFallAsleepSoundActivity
 import io.nextsense.android.budz.ui.activities.SelectStayAsleepSoundActivity
 import io.nextsense.android.budz.ui.activities.SignInActivity
@@ -34,6 +35,13 @@ fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
     Column(verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 30.dp)) {
+        SimpleButton(name = if (homeUiState.fallingAsleep) "Stop Sleeping" else "Sleep", onClick = {
+            if (homeUiState.fallingAsleep) {
+                homeViewModel.stopSleeping()
+            } else {
+                homeViewModel.startSleeping(context)
+            }
+        })
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
             Text("Fall asleep: ${homeUiState.fallAsleepSample?.name}")
@@ -60,6 +68,14 @@ fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
                 )
             })
         }
+        SimpleButton(name = "Check connection", onClick = {
+            context.startActivity(
+                Intent(
+                    context,
+                    DeviceConnectionActivity::class.java
+                )
+            )
+        })
         SimpleButton(name = "Sign out", onClick = {
             homeViewModel.signOut()
             context.startActivity(Intent(context, SignInActivity::class.java))

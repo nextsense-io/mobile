@@ -1,5 +1,6 @@
 package io.nextsense.android.budz.ui.screens
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,6 +19,7 @@ import javax.inject.Inject
 
 data class HomeState(
     val loading: Boolean = false,
+    val fallingAsleep: Boolean = false,
     val fallAsleepSample: AudioSample? = null,
     val stayAsleepSample: AudioSample? = null
 )
@@ -66,6 +68,25 @@ class HomeViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun startSleeping(context: Context) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                fallingAsleep = true
+            )
+        }
+        SoundsManager.loopAudioSample(
+            context = context, resId = uiState.value.fallAsleepSample!!.resId)
+    }
+
+    fun stopSleeping() {
+        SoundsManager.stopLoopAudioSample()
+        _uiState.update { currentState ->
+            currentState.copy(
+                fallingAsleep = false
+            )
         }
     }
 }

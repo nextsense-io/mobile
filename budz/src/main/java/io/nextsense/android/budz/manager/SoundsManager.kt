@@ -2,6 +2,7 @@ package io.nextsense.android.budz.manager
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.media.SoundPool
 import android.net.Uri
 import io.nextsense.android.budz.R
 
@@ -58,6 +59,10 @@ object SoundsManager {
     )
 
     private val _mediaPlayer = MediaPlayer()
+    private val _soundPool = SoundPool.Builder().setMaxStreams(1).build()
+    private var _soundId: Int? = null
+    private var _playing: Boolean = false
+    private var _loaded: Boolean = false
 
     private fun idToSample(id: String) : AudioSample {
         return _idToSampleMap[id]!!
@@ -68,6 +73,28 @@ object SoundsManager {
             return _idToSampleMap[default.key()]
         }
         return _idToSampleMap[id]
+    }
+
+    fun loopAudioSample(context: Context, resId: Int) {
+        _playing = true
+        _soundId = _soundPool.load(context, resId, 1)
+        _soundPool.setOnLoadCompleteListener { _, _, _ ->
+            _loaded = true
+            if (_playing) {
+                _soundPool.play(_soundId!!, /*leftVolume=*/1f, /*rightVolume=*/1f, /*priority=*/1,
+                    /*loop=*/-1, /*rate=*/1f)
+            }
+        }
+    }
+
+    fun stopLoopAudioSample() {
+        if (_playing && _soundId != null) {
+            _soundPool.stop(_soundId!!)
+            _soundPool.unload(_soundId!!)
+            _soundId = null
+            _loaded = false
+            _playing = false
+        }
     }
 
     fun playAudioSample(context: Context, resId: Int, onComplete: () -> Unit = {}) {
@@ -84,5 +111,6 @@ object SoundsManager {
 
     fun stopAudioSample() {
         _mediaPlayer.stop()
+        _mediaPlayer.release()
     }
 }
