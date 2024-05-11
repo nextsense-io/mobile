@@ -191,6 +191,7 @@ class MentalStateManager extends ChangeNotifier {
       _powerLineFrequency ??= await _findPowerLineFrequency(
           device.macAddress, channelName, startTime);
       if (_powerLineFrequency == null) {
+        _mentalCheckCalculationState = MentalCheckCalculationState.waiting;
         _logger.log(Level.INFO,
             "Could not find power line frequency, skipping power bands calculation.");
         return;
