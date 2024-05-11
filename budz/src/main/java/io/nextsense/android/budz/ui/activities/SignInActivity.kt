@@ -6,12 +6,15 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.ViewModelProvider
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -20,12 +23,15 @@ import com.google.android.gms.tasks.Task
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.GoogleAuth
+import io.nextsense.android.budz.ui.components.SimpleButton
+import io.nextsense.android.budz.ui.screens.SignInViewModel
 import io.nextsense.android.budz.ui.theme.BudzTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class SignInActivity : ComponentActivity() {
@@ -39,6 +45,12 @@ class SignInActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         googleSignInClient = GoogleSignIn.getClient(this, googleAuth.gso)
+
+        val signInViewModel: SignInViewModel by viewModels()
+        signInViewModel.prepare(this)
+
+
+
         setContent {
             BudzTheme {
                 // A surface container using the 'background' color from the theme
@@ -47,8 +59,10 @@ class SignInActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Column {
-
+                        SimpleButton(name = "Sign in with Google",
+                            onClick = { signInGoogle() })
                     }
+                    Text(text = "Sign in with Google")
                 }
             }
         }
@@ -64,7 +78,7 @@ class SignInActivity : ComponentActivity() {
 //            )
 //            finish()
 //        }
-        signInGoogle()
+        // signInGoogle()
     }
 
     private fun signInGoogle() {

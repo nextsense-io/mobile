@@ -70,14 +70,14 @@ import io.nextsense.android.budz.BudzApplication;
 @SuppressLint("MissingPermission")
 public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionListener {
 
-    String TAG = "DeviceSearchPresenter";
+    private static String TAG = "DeviceSearchPresenter";
     public static final String KEY_BDADDRESS = "KEY_BDADDRESS";
-    AirohaLogger gLogger = AirohaLogger.getInstance();
-    Context act;
+    private static AirohaLogger gLogger = AirohaLogger.getInstance();
+    private Context act;
 
-    String SPP_UUID = "00000000-0000-0000-0099-AABBCCDDEEFF";
-    boolean _isConnected = false;
-    AirohaConnector _airohaDeviceConnector;
+    private static String SPP_UUID = "00000000-0000-0000-0099-AABBCCDDEEFF";
+    private boolean _isConnected = false;
+    private AirohaConnector _airohaDeviceConnector;
     private boolean _isChecking;
     private Thread _thread;
 

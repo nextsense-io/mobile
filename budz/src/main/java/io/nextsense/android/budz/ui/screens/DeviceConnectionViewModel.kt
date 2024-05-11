@@ -49,11 +49,8 @@ class DeviceConnectionViewModel @Inject constructor(): ViewModel() {
             }
     }
 
-    init {
-        _airohaDeviceConnector.registerConnectionListener(_airohaConnectionListener)
-    }
-
     fun initPresenter(context: Context) {
+        _airohaDeviceConnector.registerConnectionListener(_airohaConnectionListener)
         _devicePresenter = DeviceSearchPresenter(context)
     }
 
