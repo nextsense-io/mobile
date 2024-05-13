@@ -33,7 +33,7 @@ class DeviceConnectionViewModel @Inject constructor(): ViewModel() {
             override fun onStatusChanged(newStatus: Int) {
                 when (newStatus) {
                     AirohaConnector.CONNECTED -> {
-                        _uiState.value = _uiState.value.copy(connected = true)
+                        _uiState.value = _uiState.value.copy(connected = true, connecting = false)
                     }
                     AirohaConnector.CONNECTED_WRONG_ROLE -> {
                         _uiState.value = _uiState.value.copy(connectedWrongRole = true)
@@ -55,6 +55,7 @@ class DeviceConnectionViewModel @Inject constructor(): ViewModel() {
     }
 
     fun connectBoundDevice() {
+        _uiState.value = _uiState.value.copy(connecting = true)
         _devicePresenter?.connectBoundDevice()
     }
 

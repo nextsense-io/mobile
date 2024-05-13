@@ -189,7 +189,7 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
             }
 
             for (BluetoothDevice device : devices) {
-                if(isA2dpConnected(device.getAddress()) && isAirohaDevice(device)){
+                if (isA2dpConnected(device.getAddress()) && isAirohaDevice(device)) {
                     Log.i(TAG, "device_airoha==================" + device.getName() + "," + device.getAddress());
                     Log.i(TAG, "device_A2DP_connected==================" + device.getName() + "," + device.getAddress());
                     connectClassicDevice(device);
@@ -197,8 +197,7 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
                     synchronized (this) {
                         wait(30 * 1000);
                     }
-                }
-                else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     if (isLEAConnected(device.getAddress())) {
                         Log.i(TAG, "device_LEA_connected==================" + device.getName() + "," + device.getAddress());
                         connectLEADevice(device);

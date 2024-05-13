@@ -32,8 +32,8 @@ fun DeviceConnectionScreen(deviceConnectionViewModel: DeviceConnectionViewModel 
     Column(verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 30.dp)) {
-        SimpleButton(name = if (deviceConnectionUiState.connecting) "Stop Connecting" else
-                "Connecting...", enabled = !deviceConnectionUiState.connecting, onClick = {
+        SimpleButton(name = if (deviceConnectionUiState.connecting) "Connecting..." else
+                "Connect", enabled = !deviceConnectionUiState.connecting, onClick = {
             if (!deviceConnectionUiState.connecting) {
                 deviceConnectionViewModel.connectBoundDevice()
             }
