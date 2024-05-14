@@ -111,13 +111,28 @@ public class BandPowerAnalysis {
     FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
     int numSegments = (dataArray.length - overlap) / (segmentSize - overlap);
     double[][] powerSpectra = new double[numSegments][];
+    double[] frequencyFactor = new double[segmentSize];
+
+    // Minimum frequency to avoid too high compensation
+    double minFrequency = 0.1; // Usual value (could be modified if lower in practice)
+    double maxFactor = 1.0 / minFrequency;
+
+    // Calculate 1/f factors for each frequency index, we apply a cap to avoid excessive compensation
+    for (int i = 0; i < segmentSize; i++) {
+        double frequency = i * samplingRate / (double) segmentSize;
+        frequencyFactor[i] = (frequency > minFrequency) ? 1.0 / frequency : maxFactor;
+    }
 
     for (int i = 0; i < numSegments; i++) {
         int start = i * (segmentSize - overlap);
         double[] segment = Arrays.copyOfRange(dataArray, start, start + segmentSize);
-        windowFunction(segment);
+        // Apply a window function to reduce spectral leakage
+        windowFunction(segment); 
         Complex[] fftResult = transformer.transform(segment, TransformType.FORWARD);
-        powerSpectra[i] = Arrays.stream(fftResult).mapToDouble(c -> c.abs() * c.abs()).toArray();
+        powerSpectra[i] = new double[segmentSize];
+        for (int j = 0; j < segmentSize; j++) {
+            powerSpectra[i][j] = fftResult[j].abs() * fftResult[j].abs() * frequencyFactor[j]; // Apply 1/f compensation here
+        }
     }
 
     double[] averagedPowerSpectrum = new double[segmentSize];
@@ -130,7 +145,6 @@ public class BandPowerAnalysis {
     }
     return averagedPowerSpectrum;
   }
-
 
   private static void windowFunction(double[] segment) {
     // Apply a Hamming window
