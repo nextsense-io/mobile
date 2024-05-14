@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_common/domain/protocol.dart';
+import 'package:nextsense_consumer_ui/managers/mental_state_manager.dart';
 import 'package:nextsense_consumer_ui/ui/components/light_header_text.dart';
 import 'package:nextsense_consumer_ui/ui/components/page_scaffold.dart';
 import 'package:nextsense_consumer_ui/ui/nextsense_colors.dart';
@@ -20,6 +21,25 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
   Widget runningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
     final viewModel = context.watch<MentalStateAudioProtocolScreenViewModel>();
 
+    List<Widget> results = [];
+    for (Band band in viewModel.bandPowers.keys) {
+      results.add(LightHeaderText(text: '${band.toString().split('.').last} band:'));
+      for (double power in viewModel.bandPowers[band] ?? []) {
+        results.add(LightHeaderText(text: power.toStringAsFixed(2)));
+      }
+      results.add(LightHeaderText(text: '-----------'));
+    }
+    final int bandpowersSize = viewModel.bandPowers[Band.alpha]?.length ?? 0;
+    for (int i = 0; i < bandpowersSize; i++) {
+      results.add(LightHeaderText(text:
+      'Alpha/Beta ratio ${(viewModel.bandPowers[Band.alpha]![i] / viewModel.bandPowers[Band.beta]![i])
+          .toStringAsFixed(2)}'));
+      results.add(LightHeaderText(text:
+      'Alpha/Theta ratio ${(viewModel.bandPowers[Band.alpha]![i] / viewModel.bandPowers[Band.theta]![i])
+          .toStringAsFixed(2)}'));
+      results.add(LightHeaderText(text: '-----------'));
+    }
+
     return PageScaffold(
         backgroundColor: NextSenseColors.lightGrey,
         showBackground: false,
@@ -30,7 +50,7 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
         {
           if (await onBackButtonPressed(context, viewModel)) {Navigator.of(context).pop()}
         },
-        child: Column(
+        child: SingleChildScrollView(child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
@@ -54,9 +74,11 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
                   .toStringAsFixed(2)}'),
               LightHeaderText(text: 'Power line frequency:'
                   ' ${viewModel.powerLineFrequency.toStringAsFixed(0)}'),
-              const Spacer(),
+              LightHeaderText(text: '-----------'),
+              ...results,
+              const SizedBox(height: 20),
               SessionControlButton(stopSession)
-            ]));
+            ])));
   }
 
   @override

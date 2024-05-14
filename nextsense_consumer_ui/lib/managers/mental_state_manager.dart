@@ -71,6 +71,7 @@ class MentalStateManager extends ChangeNotifier {
   double get thetaBandPower => _bandPowers[Band.theta]?.last ?? 0;
   double get deltaBandPower => _bandPowers[Band.delta]?.last ?? 0;
   double get gammaBandPower => _bandPowers[Band.gamma]?.last ?? 0;
+  Map<Band, List<double>?> get bandPowers => _bandPowers;
   double get powerLineFrequency => _powerLineFrequency ?? 0;
 
   void startMentalStateChecks({Duration calculationInterval = _calculationCheckInterval}) {
