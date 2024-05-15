@@ -18,6 +18,7 @@ import javax.inject.Inject
 
 data class DeviceSettingsState(
     val message: String,
+    val gains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
 )
 
 @HiltViewModel
@@ -29,8 +30,10 @@ class DeviceSettingsViewModel @Inject constructor(): ViewModel() {
         floatArrayOf(200f, 280f, 400f, 550f, 770f, 1000f, 2000f, 4000f, 8000f, 16000f)
 
     val uiState: StateFlow<DeviceSettingsState> = _uiState.asStateFlow()
+    var _targetGains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
 
     fun changeEqualizer(gains: FloatArray) {
+        _targetGains = gains
         val params = LinkedList<EQIDParam>()
         for (i in _freqs.indices) {
             val bandInfo = EQIDParam()
@@ -70,12 +73,15 @@ class DeviceSettingsViewModel @Inject constructor(): ViewModel() {
         override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
             try {
                 if (code == AirohaStatusCode.STATUS_SUCCESS) {
-                    _uiState.value = _uiState.value.copy(message = "Equalizer settings changed.")
+                    _uiState.value = _uiState.value.copy(message = "Equalizer settings changed.",
+                        gains = _targetGains  )
                 } else {
+                    _targetGains = _uiState.value.gains
                     _uiState.value = _uiState.value.copy(message =
                         "Equalizer settings not changed: $code.")
                 }
             } catch (e: Exception) {
+                _targetGains = _uiState.value.gains
                 _uiState.value = _uiState.value.copy(message =
                 "Equalizer settings error: ${e.message}.")
                 Log.e(tag, e.message, e)

@@ -264,11 +264,11 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
 
         if (status == AirohaConnector.CONNECTED) {
             _isConnected = true;
-            UiDataModel.getInstance().setParam(KEY_BDADDRESS, _airohaDeviceConnector.getDevice().getTargetAddr());
+            AirohaDataModel.getInstance().setParam(KEY_BDADDRESS, _airohaDeviceConnector.getDevice().getTargetAddr());
         }
         else if (status == AirohaConnector.DISCONNECTED) {
             _isConnected = false;
-            UiDataModel.getInstance().setParam(KEY_BDADDRESS, "");
+            AirohaDataModel.getInstance().setParam(KEY_BDADDRESS, "");
         }
 
         if (status == AirohaConnector.CONNECTING ||

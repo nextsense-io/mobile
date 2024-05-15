@@ -35,9 +35,9 @@
 
 package io.nextsense.android.budz.manager.device;
 
-public class Constants {
+public class AirohaConstants {
 
-    private Constants() {}
+    private AirohaConstants() {}
 
     public static final String KEY_DEVICE_INFO = "key_device_info";
     public static final String KEY_HEARING_TEST_SIDE = "key_hearing_test_side";

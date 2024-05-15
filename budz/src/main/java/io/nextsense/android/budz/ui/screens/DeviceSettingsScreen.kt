@@ -17,7 +17,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.nextsense.android.budz.ui.components.SimpleButton
 
 @Composable
-fun DeviceConnectionScreen(deviceSettingsViewModel: DeviceSettingsViewModel = viewModel()) {
+fun DeviceSettingsScreen(deviceSettingsViewModel: DeviceSettingsViewModel = viewModel()) {
     val deviceSettingsUiState by deviceSettingsViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
@@ -25,7 +25,13 @@ fun DeviceConnectionScreen(deviceSettingsViewModel: DeviceSettingsViewModel = vi
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 30.dp)) {
         SimpleButton(name = "Increase bass gain", onClick = {
-            deviceSettingsViewModel.changeEqualizer(floatArrayOf(1f,2f,3f,4f,5f,6f,7f,8f,9f,10f))
+            deviceSettingsViewModel.changeEqualizer(floatArrayOf(-8f,-8f,-8f,-8f,0f,0f,0f,0f,0f,0f))
+        })
+        SimpleButton(name = "Normal bass gain", onClick = {
+            deviceSettingsViewModel.changeEqualizer(floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f))
+        })
+        SimpleButton(name = "Lower bass gain", onClick = {
+            deviceSettingsViewModel.changeEqualizer(floatArrayOf(8f,8f,8f,8f,0f,0f,0f,0f,0f,0f))
         })
         Spacer(modifier = Modifier.height(20.dp))
         Text("Current gains")
