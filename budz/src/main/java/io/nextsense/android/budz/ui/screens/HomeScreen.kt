@@ -21,7 +21,6 @@ import io.nextsense.android.budz.ui.activities.DeviceSettingsActivity
 import io.nextsense.android.budz.ui.activities.MainActivity2
 import io.nextsense.android.budz.ui.activities.SelectFallAsleepSoundActivity
 import io.nextsense.android.budz.ui.activities.SelectStayAsleepSoundActivity
-import io.nextsense.android.budz.ui.activities.SignInActivity
 import io.nextsense.android.budz.ui.components.SimpleButton
 
 @Composable

@@ -25,16 +25,16 @@ fun DeviceSettingsScreen(deviceSettingsViewModel: DeviceSettingsViewModel = view
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 30.dp)) {
         SimpleButton(name = "Increase bass gain", onClick = {
-            deviceSettingsViewModel.changeEqualizer(floatArrayOf(-8f,-8f,-8f,-8f,0f,0f,0f,0f,0f,0f))
+            deviceSettingsViewModel.changeEqualizer(floatArrayOf(8f,8f,8f,8f,0f,0f,0f,0f,0f,0f))
         })
         SimpleButton(name = "Normal bass gain", onClick = {
             deviceSettingsViewModel.changeEqualizer(floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f))
         })
         SimpleButton(name = "Lower bass gain", onClick = {
-            deviceSettingsViewModel.changeEqualizer(floatArrayOf(8f,8f,8f,8f,0f,0f,0f,0f,0f,0f))
+            deviceSettingsViewModel.changeEqualizer(floatArrayOf(-8f,-8f,-8f,-8f,0f,0f,0f,0f,0f,0f))
         })
         Spacer(modifier = Modifier.height(20.dp))
-        Text("Current gains")
+        Text("Current gains: ${deviceSettingsUiState.gains.joinToString(", ")}")
     }
 
 }
