@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.AudioSample
-import io.nextsense.android.budz.manager.GoogleAuth
+import io.nextsense.android.budz.manager.AuthRepository
 import io.nextsense.android.budz.manager.SoundsManager
 import io.nextsense.android.budz.model.UsersRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +27,7 @@ data class HomeState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val usersRepository: UsersRepository,
-    private val googleAuth: GoogleAuth
+    private val authRepository: AuthRepository
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeState())
@@ -39,7 +39,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun signOut() {
-        googleAuth.signOut()
+        viewModelScope.launch { authRepository.signOut() }
     }
 
     fun loadUserSounds() {
@@ -48,8 +48,16 @@ class HomeViewModel @Inject constructor(
                 loading = true
             )
         }
+        if (authRepository.currentUserId == null) {
+            _uiState.update { currentState ->
+                currentState.copy(
+                    loading = false
+                )
+            }
+            return
+        }
         viewModelScope.launch {
-            usersRepository.getUser(googleAuth.currentUserId).last().let { userState ->
+            usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
                 if (userState is State.Success && userState.data != null) {
                     _uiState.update { currentState ->
                         currentState.copy(

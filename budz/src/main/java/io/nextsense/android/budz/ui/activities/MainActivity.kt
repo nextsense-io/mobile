@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.stevdzasan.onetap.OneTapSignInWithGoogle
 import com.stevdzasan.onetap.rememberOneTapSignInState
 import dagger.hilt.android.AndroidEntryPoint
@@ -45,6 +46,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val activity = this
+
         setContent {
             BudzTheme {
                 // A surface container using the 'background' color from the theme
@@ -84,6 +87,17 @@ class MainActivity : ComponentActivity() {
                         Greeting("Android")
                     }
                 }
+            }
+        }
+
+        if (GoogleSignIn.getLastSignedInAccount(activity) != null) {
+            uiScope.launch {
+                signIn(tokenId = GoogleSignIn.getLastSignedInAccount(activity)!!.idToken!!)
+                startActivity(
+                    Intent(
+                        activity, HomeActivity::class.java
+                    )
+                )
             }
         }
     }

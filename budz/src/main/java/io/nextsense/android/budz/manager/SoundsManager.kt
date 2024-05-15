@@ -111,6 +111,5 @@ object SoundsManager {
 
     fun stopAudioSample() {
         _mediaPlayer.stop()
-        _mediaPlayer.release()
     }
 }

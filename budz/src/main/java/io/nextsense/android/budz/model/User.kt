@@ -39,6 +39,7 @@ data class User (
 ) {
     // Needed for Firestore.
     constructor() : this(null, null, null)
+    constructor(email: String, name: String) : this(email, name, null)
 
     @Exclude
     fun isConsumer() = type == UserType.CONSUMER

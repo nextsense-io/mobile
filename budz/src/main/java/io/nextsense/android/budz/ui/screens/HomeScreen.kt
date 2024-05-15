@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.nextsense.android.budz.ui.activities.DeviceConnectionActivity
+import io.nextsense.android.budz.ui.activities.DeviceSettingsActivity
+import io.nextsense.android.budz.ui.activities.MainActivity2
 import io.nextsense.android.budz.ui.activities.SelectFallAsleepSoundActivity
 import io.nextsense.android.budz.ui.activities.SelectStayAsleepSoundActivity
 import io.nextsense.android.budz.ui.activities.SignInActivity
@@ -76,9 +78,17 @@ fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
                 )
             )
         })
+        SimpleButton(name = "Test device settings", onClick = {
+            context.startActivity(
+                Intent(
+                    context,
+                    DeviceSettingsActivity::class.java
+                )
+            )
+        })
         SimpleButton(name = "Sign out", onClick = {
             homeViewModel.signOut()
-            context.startActivity(Intent(context, SignInActivity::class.java))
+            context.startActivity(Intent(context, MainActivity2::class.java))
         })
     }
 }

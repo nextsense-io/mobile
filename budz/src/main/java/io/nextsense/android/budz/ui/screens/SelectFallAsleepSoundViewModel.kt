@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.AudioSample
-import io.nextsense.android.budz.manager.GoogleAuth
+import io.nextsense.android.budz.manager.AuthRepository
 import io.nextsense.android.budz.manager.SoundsManager
 import io.nextsense.android.budz.model.UsersRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +27,7 @@ data class SelectFallAsleepSoundState(
 @HiltViewModel
 class SelectFallAsleepSoundViewModel @Inject constructor(
     private val usersRepository: UsersRepository,
-    private val googleAuth: GoogleAuth
+    private val authRepository: AuthRepository
 ): ViewModel() {
 
     private val tag = SelectFallAsleepSoundViewModel::class.java.simpleName
@@ -42,7 +42,7 @@ class SelectFallAsleepSoundViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            usersRepository.getUser(googleAuth.currentUserId).last().let { userState ->
+            usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
                 if (userState is State.Success && userState.data != null) {
                     _uiState.update { currentState ->
                         currentState.copy(
@@ -91,12 +91,12 @@ class SelectFallAsleepSoundViewModel @Inject constructor(
             )
         }
         viewModelScope.launch {
-            usersRepository.getUser(googleAuth.currentUserId).last().let { userState ->
+            usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
                 if (userState is State.Success) {
                     if (userState.data != null) {
                         usersRepository.updateUser(
                             userState.data.copy(fallAsleepSound = audioSample.id),
-                            googleAuth.currentUserId
+                            authRepository.currentUserId!!
                         ).last().let { updateState ->
                             if (updateState is State.Success) {
                                 _uiState.update { currentState ->
