@@ -4,6 +4,8 @@ apply plugin: 'io.objectbox'
 apply plugin: 'maven-publish'
 apply plugin: 'org.sonarqube'
 
+import org.apache.tools.ant.taskdefs.condition.Os
+
 android {
     namespace 'io.nextsense.android.base'
 
@@ -54,9 +56,12 @@ android {
     }
 }
 
+// Compatible with macOS on Apple Silicon
+def archSuffix = Os.isFamily(Os.FAMILY_MAC) ? ':osx-x86_64' : ''
+
 protobuf {
     protoc {
-        artifact = 'com.google.protobuf:protoc:3.8.0'
+        artifact = "com.google.protobuf:protoc:3.8.0$archSuffix"
     }
     generateProtoTasks {
         all().each { task ->
