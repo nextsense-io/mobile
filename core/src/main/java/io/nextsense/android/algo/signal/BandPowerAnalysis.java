@@ -96,13 +96,13 @@ public class BandPowerAnalysis {
 
     int segmentSize = 256; // Usual value
     int overlap = segmentSize / 2; // 50% overlap (usual value)
-    double[] averagedPowerSpectrum = computeWelchPSD(dataArray, segmentSize, overlap);
+    double[] averagedPowerSpectrum = computeWelchPSD(dataArray, samplingRate, segmentSize, overlap);
 
     return calculateBandPower(averagedPowerSpectrum, samplingRate, bandStart, bandEnd);
   }
   
   private static double[] computeWelchPSD(
-      double[] dataArray, int segmentSize, int overlap) {
+      double[] dataArray, int samplingRate, int segmentSize, int overlap) {
     if (segmentSize > dataArray.length) {
         throw new IllegalArgumentException(
             "Segment size must be less than or equal to the length of the data array.");
