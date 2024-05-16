@@ -1,15 +1,15 @@
 package io.nextsense.android.budz.ui.screens
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
-import com.airoha.sdk.AirohaConnector
-import com.airoha.sdk.AirohaSDK
-import com.airoha.sdk.api.message.AirohaBaseMsg
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.nextsense.android.budz.manager.device.DeviceSearchPresenter
+import io.nextsense.android.budz.manager.device.DeviceManager
+import io.nextsense.android.budz.manager.device.DeviceState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class DeviceConnectionState(
@@ -19,49 +19,35 @@ data class DeviceConnectionState(
 )
 
 @HiltViewModel
-class DeviceConnectionViewModel @Inject constructor(): ViewModel() {
+class DeviceConnectionViewModel @Inject constructor(
+        private val deviceManager: DeviceManager): ViewModel() {
 
     private val _uiState = MutableStateFlow(DeviceConnectionState())
-    private val _airohaDeviceConnector = AirohaSDK.getInst().airohaDeviceConnector
 
     val uiState: StateFlow<DeviceConnectionState> = _uiState.asStateFlow()
 
-    private var _devicePresenter: DeviceSearchPresenter? = null
-
-    private val _airohaConnectionListener: AirohaConnector.AirohaConnectionListener =
-        object: AirohaConnector.AirohaConnectionListener {
-            override fun onStatusChanged(newStatus: Int) {
-                when (newStatus) {
-                    AirohaConnector.CONNECTED -> {
+    init {
+        viewModelScope.launch {
+            deviceManager.deviceState.asStateFlow().collect { deviceState ->
+                when (deviceState) {
+                    DeviceState.CONNECTED_AIROHA -> {
                         _uiState.value = _uiState.value.copy(connected = true, connecting = false)
                     }
-                    AirohaConnector.CONNECTED_WRONG_ROLE -> {
+                    DeviceState.CONNECTED_AIROHA_WRONG_ROLE -> {
                         _uiState.value = _uiState.value.copy(connectedWrongRole = true)
                     }
-                    AirohaConnector.DISCONNECTED -> {
+                    else -> {
                         _uiState.value = DeviceConnectionState()
                     }
                 }
             }
-
-            override fun onDataReceived(data: AirohaBaseMsg?) {
-                // Nothing to do while connecting.
-            }
-    }
-
-    fun initPresenter(context: Context) {
-        _airohaDeviceConnector.registerConnectionListener(_airohaConnectionListener)
-        _devicePresenter = DeviceSearchPresenter(context)
+        }
     }
 
     fun connectBoundDevice() {
         _uiState.value = _uiState.value.copy(connecting = true)
-        _devicePresenter?.connectBoundDevice()
-    }
-
-    fun destroyPresenter() {
-        _devicePresenter?.destroy()
-        val airohaDeviceConnector = AirohaSDK.getInst().airohaDeviceConnector
-        airohaDeviceConnector.unregisterConnectionListener(_airohaConnectionListener)
+        viewModelScope.launch {
+            deviceManager.connectDevice()
+        }
     }
 }

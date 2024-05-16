@@ -22,12 +22,12 @@ fun DeviceConnectionScreen(deviceConnectionViewModel: DeviceConnectionViewModel 
     val deviceConnectionUiState by deviceConnectionViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    LifecycleResumeEffect {
-        deviceConnectionViewModel.initPresenter(context)
-        onPauseOrDispose {
-            deviceConnectionViewModel.destroyPresenter()
-        }
-    }
+//    LifecycleResumeEffect {
+//        deviceConnectionViewModel.initPresenter(context)
+//        onPauseOrDispose {
+//            deviceConnectionViewModel.destroyPresenter()
+//        }
+//    }
 
     Column(verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,

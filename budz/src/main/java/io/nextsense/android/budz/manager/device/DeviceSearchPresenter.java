@@ -219,6 +219,40 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         }
     }
 
+    public boolean findAirohaDevice() {
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        try {
+            if (!adapter.isEnabled()) {
+                Log.i(TAG, "adapter.isEnabled()=" + adapter.isEnabled());
+                return false;
+            }
+
+            if (adapter.getState() != BluetoothAdapter.STATE_ON) {
+                Log.i(TAG, "adapter.getState()=" + adapter.getState());
+                return false;
+            }
+
+            Set<BluetoothDevice> devices = adapter.getBondedDevices();
+
+            Log.i(TAG, "devices.size()=====================" + devices.size());
+
+            for (BluetoothDevice device : devices) {
+                Log.i(TAG, "found_device==================" + device.getName() + "," + device.getAddress());
+            }
+
+            for (BluetoothDevice device : devices) {
+                if (isA2dpConnected(device.getAddress()) && isAirohaDevice(device)) {
+                    Log.i(TAG, "device_airoha==================" + device.getName() + "," + device.getAddress());
+                    Log.i(TAG, "device_A2DP_connected==================" + device.getName() + "," + device.getAddress());
+                    return true;
+                }
+            }
+        } catch (Exception ex) {
+            gLogger.e(ex);
+        }
+        return false;
+    }
+
     final void connectClassicDevice(BluetoothDevice airoha_device) {
         AirohaDevice airohaDevice = new AirohaDevice();
         airohaDevice.setApiStrategy(new BudzDeviceStrategy());
