@@ -1,19 +1,13 @@
 package io.nextsense.android.budz.ui.screens
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.airoha.sdk.AirohaSDK
-import com.airoha.sdk.api.control.AirohaDeviceListener
-import com.airoha.sdk.api.message.AirohaBaseMsg
-import com.airoha.sdk.api.message.AirohaEQPayload
-import com.airoha.sdk.api.message.AirohaEQPayload.EQIDParam
-import com.airoha.sdk.api.utils.AirohaEQBandType
-import com.airoha.sdk.api.utils.AirohaStatusCode
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.budz.manager.device.DeviceManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.util.LinkedList
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class DeviceSettingsState(
@@ -22,70 +16,23 @@ data class DeviceSettingsState(
 )
 
 @HiltViewModel
-class DeviceSettingsViewModel @Inject constructor(): ViewModel() {
+class DeviceSettingsViewModel @Inject constructor(
+        private val deviceManager: DeviceManager): ViewModel() {
 
     private val _uiState = MutableStateFlow(DeviceSettingsState(""))
-    // Frequencies that can be set in the equalizer.
-    private val _freqs =
-        floatArrayOf(200f, 280f, 400f, 550f, 770f, 1000f, 2000f, 4000f, 8000f, 16000f)
 
     val uiState: StateFlow<DeviceSettingsState> = _uiState.asStateFlow()
-    var _targetGains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
 
-    fun changeEqualizer(gains: FloatArray) {
-        _targetGains = gains
-        val params = LinkedList<EQIDParam>()
-        for (i in _freqs.indices) {
-            val bandInfo = EQIDParam()
-            val freq: Float = _freqs[i]
-            val gain = gains[i]
-            val q = 2f
-
-            bandInfo.bandType = AirohaEQBandType.BAND_PASS.value
-            bandInfo.frequency = freq
-            bandInfo.gainValue = gain
-            bandInfo.qValue = q
-
-            params.add(bandInfo)
-        }
-
-        val eqPayload = AirohaEQPayload()
-        eqPayload.allSampleRates = intArrayOf(44100, 48000)
-        eqPayload.bandCount = 10f
-        eqPayload.iirParams = params
-        eqPayload.index = 101
-
-        AirohaSDK.getInst().airohaEQControl.setEQSetting(
-            101,
-            eqPayload,
-            /*=saveOrNot=*/true,
-            airohaDeviceListener
-        )
-    }
-
-    private val airohaDeviceListener = object : AirohaDeviceListener {
-
-        private val tag = DeviceSettingsViewModel::class.java.simpleName
-
-        override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-        }
-
-        override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-            try {
-                if (code == AirohaStatusCode.STATUS_SUCCESS) {
-                    _uiState.value = _uiState.value.copy(message = "Equalizer settings changed.",
-                        gains = _targetGains  )
-                } else {
-                    _targetGains = _uiState.value.gains
-                    _uiState.value = _uiState.value.copy(message =
-                        "Equalizer settings not changed: $code.")
-                }
-            } catch (e: Exception) {
-                _targetGains = _uiState.value.gains
-                _uiState.value = _uiState.value.copy(message =
-                "Equalizer settings error: ${e.message}.")
-                Log.e(tag, e.message, e)
+    init {
+        viewModelScope.launch {
+            deviceManager.equalizerState.asStateFlow().collect { gains ->
+                _uiState.value = _uiState.value.copy(gains = gains)
             }
         }
     }
+
+    fun changeEqualizer(gains: FloatArray) {
+        deviceManager.changeEqualizer(gains)
+    }
+
 }
