@@ -153,10 +153,10 @@ class MentalStateAudioProtocol extends ConsumerBaseProtocol {
   String get nameForUser => "Mental State Audio";
 
   @override
-  Duration get minDuration => minDurationOverride ?? const Duration(minutes: 2);
+  Duration get minDuration => minDurationOverride ?? const Duration(minutes: 0);
 
   @override
-  Duration get maxDuration => maxDurationOverride ?? const Duration(minutes: 10);
+  Duration get maxDuration => maxDurationOverride ?? const Duration(hours: 24);
 
   @override
   Duration get disconnectTimeoutDuration => const Duration(seconds: 0);

@@ -29,6 +29,8 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   double get thetaBandPower => _thetaBandPower;
   double get deltaBandPower => _deltaBandPower;
   double get gammaBandPower => _gammaBandPower;
+  Map<Band, List<double>?> get bandPowers => _mentalStateManager.bandPowers;
+  double get powerLineFrequency => _mentalStateManager.powerLineFrequency;
   double get alphaBetaRatioIncrease => _mentalStateManager.relaxedAlphaRatioIncrease;
   set alphaBetaRatioIncrease(double value) =>
       _mentalStateManager.setRelaxedAlphaRatioIncrease(value);
