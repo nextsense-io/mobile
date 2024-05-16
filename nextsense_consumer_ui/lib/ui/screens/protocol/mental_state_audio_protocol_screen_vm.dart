@@ -1,6 +1,7 @@
 import 'package:flutter_common/managers/audio_manager.dart';
 import 'package:flutter_common/managers/firebase_storage_manager.dart';
 import 'package:logging/logging.dart';
+import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_consumer_ui/di.dart';
 import 'package:nextsense_consumer_ui/managers/mental_state_manager.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen_vm.dart';
@@ -28,6 +29,9 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   double get thetaBandPower => _thetaBandPower;
   double get deltaBandPower => _deltaBandPower;
   double get gammaBandPower => _gammaBandPower;
+  double get alphaBetaRatioIncrease => _mentalStateManager.relaxedAlphaRatioIncrease;
+  set alphaBetaRatioIncrease(double value) =>
+      _mentalStateManager.setRelaxedAlphaRatioIncrease(value);
 
   @override
   void init() async {
@@ -37,10 +41,12 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
 
   @override
   Future<bool> startSession() async {
+    NextsenseBase.connectAiroha();
     bool started = await super.startSession();
     if (!started) {
       return false;
     }
+    NextsenseBase.setAirohaEq([-10,-10,-10,-10,0,0,0,0,0,0]);
     _mentalStateManager.startMentalStateChecks();
     return true;
   }
@@ -61,6 +67,8 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
     _mentalStateManager.stopCalculatingMentalStates();
   }
 
+  bool switchEq = false;
+
   @override
   void onAdvanceProtocol() {
     switch (getMentalState()) {
@@ -68,12 +76,22 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
         // _audioManager.playAudioFile(_eoecTransitionSoundCachedId);
         break;
       case MentalState.relaxed:
+        NextsenseBase.setAirohaEq([10,10,10,10,0,0,0,0,0,0]);
         // _audioManager.playAudioFile(_eoecTransitionSoundCachedId);
         break;
       case MentalState.unknown:
         break;
     }
     _logger.log(Level.INFO, "Advancing protocol.");
+    // if (switchEq = true) {
+    //   _logger.log(Level.INFO, "Eq to 8.");
+    //   NextsenseBase.setAirohaEq([10,10,10,10,0,0,0,0,0,0]);
+    //   switchEq = false;
+    // } else {
+    //   _logger.log(Level.INFO, "Eq to -8.");
+    //   NextsenseBase.setAirohaEq([-10,-10,-10,-10,0,0,0,0,0,0]);
+    //   switchEq = true;
+    // }
     notifyListeners();
   }
 

@@ -1,4 +1,4 @@
-package io.nextsense.android.budz.manager.device
+package io.nextsense.android.airoha.device
 
 import android.content.Context
 import android.util.Log
@@ -10,7 +10,6 @@ import com.airoha.sdk.api.message.AirohaEQPayload
 import com.airoha.sdk.api.utils.AirohaEQBandType
 import com.airoha.sdk.api.utils.AirohaStatusCode
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.nextsense.android.budz.ui.screens.DeviceSettingsViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.LinkedList
@@ -27,9 +26,9 @@ enum class DeviceState {
 }
 
 @Singleton
-class DeviceManager @Inject constructor(@ApplicationContext private val context: Context) {
+class AirohaDeviceManager @Inject constructor(@ApplicationContext private val context: Context) {
 
-    private val tag = DeviceManager::class.java.simpleName
+    private val tag = AirohaDeviceManager::class.java.simpleName
     private val _airohaDeviceConnector = AirohaSDK.getInst().airohaDeviceConnector
     private var _devicePresenter: DeviceSearchPresenter? = null
     // Frequencies that can be set in the equalizer.
@@ -82,7 +81,8 @@ class DeviceManager @Inject constructor(@ApplicationContext private val context:
     }
 
     init {
-        _airohaDeviceConnector.registerConnectionListener(_airohaConnectionListener)
+        val connector = AirohaSDK.getInst().airohaDeviceConnector;
+        connector.registerConnectionListener(_airohaConnectionListener)
         _devicePresenter = DeviceSearchPresenter(context)
     }
 
@@ -92,20 +92,21 @@ class DeviceManager @Inject constructor(@ApplicationContext private val context:
         return bonded
     }
 
-    suspend fun connectDevice() {
+    fun connectDevice(): Boolean {
         if (deviceState.value != DeviceState.BONDED) {
             val bonded = isAirohaDeviceBonded()
             if (!bonded) {
-                return
+                return false
             }
         }
         connectAirohaDevice()
-        deviceState.collect { deviceState ->
-            if (deviceState == DeviceState.CONNECTED_AIROHA) {
-                // Connect to BLE
-                // TODO(eric): Implement BLE connection
-            }
-        }
+        return true
+//        deviceState.collect { deviceState ->
+//            if (deviceState == DeviceState.CONNECTED_AIROHA) {
+//                // Connect to BLE
+//                // TODO(eric): Implement BLE connection
+//            }
+//        }
     }
 
     fun disconnectDevice() {
@@ -114,8 +115,8 @@ class DeviceManager @Inject constructor(@ApplicationContext private val context:
         airohaDeviceConnector.unregisterConnectionListener(_airohaConnectionListener)
     }
 
-    fun changeEqualizer(gains: FloatArray) {
-        _targetGains = gains
+    fun changeEqualizer(gains: Array<Float>) {
+        _targetGains = gains.toFloatArray()
         val params = LinkedList<AirohaEQPayload.EQIDParam>()
         for (i in _eqFrequencies.indices) {
             val bandInfo = AirohaEQPayload.EQIDParam()

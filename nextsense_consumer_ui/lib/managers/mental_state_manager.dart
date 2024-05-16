@@ -44,6 +44,7 @@ enum MentalChecksState {
 class MentalStateManager extends ChangeNotifier {
   static const Duration _calculationCheckInterval = Duration(seconds: 5);
   static const Duration _calculationEpoch = Duration(seconds: 30);
+  static const double _defaultRelaxedAlphaIncrease = 0.5;
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
@@ -61,6 +62,8 @@ class MentalStateManager extends ChangeNotifier {
   MentalCheckCalculationState _mentalCheckCalculationState = MentalCheckCalculationState.waiting;
   MentalChecksState _mentalChecksState = MentalChecksState.notStarted;
   MentalState _mentalState = MentalState.unknown;
+  double? _initialAlphaBetaRatio;
+  double _relaxedAlphaRatioIncrease = _defaultRelaxedAlphaIncrease;
 
   MentalState get mentalState => _mentalState;
   MentalCheckCalculationState get mentalCheckCalculationState => _mentalCheckCalculationState;
@@ -70,6 +73,7 @@ class MentalStateManager extends ChangeNotifier {
   double get thetaBandPower => _bandPowers[Band.theta]?.last ?? 0;
   double get deltaBandPower => _bandPowers[Band.delta]?.last ?? 0;
   double get gammaBandPower => _bandPowers[Band.gamma]?.last ?? 0;
+  double get relaxedAlphaRatioIncrease => _relaxedAlphaRatioIncrease;
 
   void startMentalStateChecks({Duration calculationInterval = _calculationCheckInterval}) {
     clearMentalStates();
@@ -82,6 +86,10 @@ class MentalStateManager extends ChangeNotifier {
       _calculationCheckInterval, (timer) async {
       _checkIfNeedToCalculate();
     });
+  }
+
+  void setRelaxedAlphaRatioIncrease(double ratioIncrease) {
+    _relaxedAlphaRatioIncrease = ratioIncrease;
   }
 
   void stopCalculatingMentalStates() {
@@ -182,10 +190,16 @@ class MentalStateManager extends ChangeNotifier {
           "Delta band power: $deltaBandPower. \n"
           "Gamma band power: $gammaBandPower. \n"
           "Alpha/Beta ratio: ${alphaBandPower / betaBandPower}.");
-      if (alphaBandPower > betaBandPower) {
-        _mentalState = MentalState.relaxed;
-      } else {
-        _mentalState = MentalState.alert;
+      int calcEpochs = _bandPowers[Band.alpha]?.length ?? 0;
+      if (_initialAlphaBetaRatio == null && calcEpochs >= 3) {
+        _initialAlphaBetaRatio = alphaBandPower / betaBandPower;
+        _logger.log(Level.INFO, "Initial alpha/beta ratio: $_initialAlphaBetaRatio.");
+      }
+      if (_initialAlphaBetaRatio != null) {
+        if ((alphaBandPower / betaBandPower) - _initialAlphaBetaRatio! > _relaxedAlphaRatioIncrease) {
+          _logger.log(Level.INFO, "Relaxed alpha/beta ratio: ${alphaBandPower / betaBandPower}.");
+          _mentalState = MentalState.relaxed;
+        }
       }
       _calculatedDuration += _calculationEpoch;
       _mentalStates.add(_mentalState);

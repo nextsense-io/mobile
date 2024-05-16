@@ -2,6 +2,7 @@ package io.nextsense.android.main;
 
 import android.app.Application;
 
+import com.airoha.sdk.AirohaSDK;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.appcheck.FirebaseAppCheck;
 import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory;
@@ -36,6 +37,7 @@ public class NextSenseApplication extends Application {
     initApplicationType();
     initFirebase();
     initFlutterEngineCache();
+    AirohaSDK.getInst().init(this);
   }
 
   private void initApplicationType() {

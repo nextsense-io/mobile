@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_common/domain/protocol.dart';
 import 'package:nextsense_consumer_ui/ui/components/light_header_text.dart';
 import 'package:nextsense_consumer_ui/ui/components/page_scaffold.dart';
@@ -40,6 +41,16 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
                 Center(child: CountDownTimer(duration: protocol.maxDuration, reverse: true)),
                 if (!viewModel.deviceCanRecord) deviceInactiveOverlay(context, viewModel),
               ]),
+              const SizedBox(height: 20),
+              TextField(
+                decoration: const InputDecoration(labelText: "Alpha/Beta ratio increase"),
+                controller: TextEditingController()..text = viewModel.alphaBetaRatioIncrease.toString(),
+                keyboardType: TextInputType.number,
+                onChanged: (value) => viewModel.alphaBetaRatioIncrease = double.parse(value),
+                inputFormatters: <TextInputFormatter>[
+                  FilteringTextInputFormatter.digitsOnly
+                ], // Only numbers can be entered
+              ),
               const SizedBox(height: 20),
               LightHeaderText(text: 'Alpha: ${viewModel.alphaBandPower.toStringAsFixed(2)}'),
               LightHeaderText(text: 'Beta: ${viewModel.betaBandPower.toStringAsFixed(2)}'),

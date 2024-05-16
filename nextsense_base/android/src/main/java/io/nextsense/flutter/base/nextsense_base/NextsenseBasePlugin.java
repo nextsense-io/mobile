@@ -94,6 +94,8 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String GET_NATIVE_LOGS_COMMAND = "get_native_logs";
   public static final String RUN_SLEEP_STAGING_COMMAND = "run_sleep_staging";
   public static final String GET_BAND_POWER_COMMAND = "get_band_power";
+  public static final String CONNECT_AIROHA_COMMAND = "connect_airoha";
+  public static final String SET_AIROHA_EQ_COMMAND = "set_airoha_eq";
   public static final String EMULATOR_COMMAND = "emulator_command";
   public static final String IS_BLUETOOTH_ENABLED_ARGUMENT = "is_bluetooth_enabled";
   public static final String MAC_ADDRESS_ARGUMENT = "mac_address";
@@ -115,6 +117,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
   public static final String SAVE_TO_CSV_KEY_ARGUMENT = "save_to_csv";
   public static final String BAND_START_ARGUMENT = "band_start";
   public static final String BAND_END_ARGUMENT = "band_end";
+  public static final String EQ_GAINS_ARGUMENT = "eq_gains";
   public static final String ERROR_SERVICE_NOT_AVAILABLE = "service_not_available";
   public static final String ERROR_DEVICE_NOT_FOUND = "not_found";
   public static final String ERROR_SESSION_NOT_STARTED = "session_not_started";
@@ -454,6 +457,13 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         fromDatabase= call.argument(FROM_DATABASE_ARGUMENT);
         getBandPower(result, macAddress, localSessionId, channelName, startDateTime, durationMillis,
             bandStart, bandEnd, fromDatabase);
+        break;
+      case CONNECT_AIROHA_COMMAND:
+        connectAirohaDevice(result);
+        break;
+      case SET_AIROHA_EQ_COMMAND:
+        Float[] gains = gson.fromJson((String) call.argument(EQ_GAINS_ARGUMENT), Float[].class);
+        changeAirohaEqSettings(result, gains);
         break;
       case EMULATOR_COMMAND:
         String command = call.argument("command");
@@ -1116,6 +1126,24 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       Connectivity.State minConnectivityState = connectionType.equals("mobile") ?
           Connectivity.State.LIMITED_CONNECTION : Connectivity.State.FULL_CONNECTION;
       nextSenseService.getUploader().setMinimumConnectivityState(minConnectivityState);
+      result.success(null);
+    } else {
+      result.error(ERROR_SERVICE_NOT_AVAILABLE, null, null);
+    }
+  }
+
+  private void connectAirohaDevice(Result result) {
+    if (nextSenseServiceBound) {
+      boolean connected = nextSenseService.getAirohaDeviceManager().connectDevice();
+      result.success(connected);
+    } else {
+      result.error(ERROR_SERVICE_NOT_AVAILABLE, null, null);
+    }
+  }
+
+  private void changeAirohaEqSettings(Result result, Float[] gains) {
+    if (nextSenseServiceBound) {
+      nextSenseService.getAirohaDeviceManager().changeEqualizer(gains);
       result.success(null);
     } else {
       result.error(ERROR_SERVICE_NOT_AVAILABLE, null, null);

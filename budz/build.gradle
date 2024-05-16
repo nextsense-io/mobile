@@ -85,13 +85,13 @@ dependencies {
     implementation 'androidx.compose.material3:material3-android:1.2.1'
     implementation "androidx.compose.ui:ui"
     implementation "androidx.compose.ui:ui-graphics"
+    implementation "androidx.compose.ui:ui-tooling-preview"
     // Contains the core Credential Manager functionalities including password and passkey support.
     implementation "androidx.credentials:credentials:1.2.2"
     // Provides support from Google Play services for Credential Manager, which lets you use the
     // APIs on older devices.
     implementation "androidx.credentials:credentials-play-services-auth:1.2.2"
     // implementation "androidx.compose.ui:ui-layout:$compose_version"
-    implementation "androidx.compose.ui:ui-tooling-preview"
     implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
     implementation 'androidx.hilt:hilt-navigation-fragment:1.2.0'
     implementation "androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version"
