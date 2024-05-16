@@ -148,6 +148,7 @@ class NextsenseBase {
   static const String _startDateTimeEpochMsArg = 'start_date_time_epoch_ms';
   static const String _bandStartArg = 'band_start';
   static const String _bandEndArg = 'band_end';
+  static const String _powerLineFrequencyArg = 'power_line_frequency';
   static const String _saveToCsvArg = 'save_to_csv';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
@@ -238,13 +239,14 @@ class NextsenseBase {
   static Future<double> getBandPower({
       required String macAddress, required String channelName, required DateTime startTime,
       required Duration duration, required double bandStart, required double bandEnd,
-      required int localSessionId, bool fromDatabase = false}) async {
+      required double? powerLineFrequency, required int localSessionId,
+      bool fromDatabase = false}) async {
     return await _channel.invokeMethod(_getBandPowerCommand,
         {_macAddressArg: macAddress, _channelNumberArg: channelName,
           _startDateTimeEpochMsArg: startTime.millisecondsSinceEpoch,
           _durationMillisArg: duration.inMilliseconds, _bandStartArg: bandStart,
-          _bandEndArg: bandEnd, _localSessionIdArg: localSessionId,
-          _fromDatabaseArg: fromDatabase});
+          _bandEndArg: bandEnd, _powerLineFrequencyArg: powerLineFrequency,
+          _localSessionIdArg: localSessionId, _fromDatabaseArg: fromDatabase});
   }
 
   static Future deleteLocalSession(int localSessionId) async {

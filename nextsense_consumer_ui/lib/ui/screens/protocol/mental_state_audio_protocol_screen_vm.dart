@@ -1,10 +1,8 @@
 import 'package:flutter_common/managers/audio_manager.dart';
-import 'package:flutter_common/managers/firebase_storage_manager.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_consumer_ui/di.dart';
 import 'package:nextsense_consumer_ui/managers/mental_state_manager.dart';
 import 'package:nextsense_consumer_ui/ui/screens/protocol/protocol_screen_vm.dart';
-
 
 class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   MentalStateAudioProtocolScreenViewModel(super.protocol);
@@ -28,6 +26,8 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   double get thetaBandPower => _thetaBandPower;
   double get deltaBandPower => _deltaBandPower;
   double get gammaBandPower => _gammaBandPower;
+  Map<Band, List<double>?> get bandPowers => _mentalStateManager.bandPowers;
+  double get powerLineFrequency => _mentalStateManager.powerLineFrequency;
 
   @override
   void init() async {

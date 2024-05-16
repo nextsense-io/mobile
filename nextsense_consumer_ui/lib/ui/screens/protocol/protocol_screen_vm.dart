@@ -321,6 +321,10 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
 
   Future<bool> endEvent(DateTime endTime) async {
     _lastEventEnd = endTime;
+    if (_currentEventStart == null) {
+      _logger.log(Level.WARNING, "Could not save event, no event start time!");
+      return false;
+    }
     DateTime eventStart = _currentEventStart!;
     String? currentMarker = _currentEventMarker;
     String? sessionId = sessionManager.currentSessionId;
