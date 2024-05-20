@@ -50,6 +50,8 @@ android {
         }
     }
     compileOptions {
+        // Flag to enable support for the new language APIs.
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -74,9 +76,12 @@ dependencies {
     def lifecycle_version = "2.7.0"
     def activity_version = "1.9.0"
 
+    implementation project(path: ':core')
+
     implementation platform('androidx.compose:compose-bom:2024.05.00')
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
 
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     implementation "androidx.activity:activity-compose:$activity_version"
     implementation "androidx.activity:activity-ktx:$activity_version"
     implementation "androidx.appcompat:appcompat:1.6.1"

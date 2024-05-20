@@ -3,8 +3,8 @@ package io.nextsense.android.budz.ui.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.nextsense.android.budz.manager.device.DeviceManager
-import io.nextsense.android.budz.manager.device.DeviceState
+import io.nextsense.android.airoha.device.AirohaDeviceManager
+import io.nextsense.android.airoha.device.AirohaDeviceState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +19,7 @@ data class DeviceConnectionState(
 
 @HiltViewModel
 class DeviceConnectionViewModel @Inject constructor(
-        private val deviceManager: DeviceManager): ViewModel() {
+        private val deviceManager: AirohaDeviceManager): ViewModel() {
 
     private val _uiState = MutableStateFlow(DeviceConnectionState())
 
@@ -29,10 +29,13 @@ class DeviceConnectionViewModel @Inject constructor(
         viewModelScope.launch {
             deviceManager.deviceState.collect { deviceState ->
                 when (deviceState) {
-                    DeviceState.CONNECTED_AIROHA -> {
+                    AirohaDeviceState.READY -> {
                         _uiState.value = _uiState.value.copy(connected = true, connecting = false)
                     }
-                    DeviceState.CONNECTED_AIROHA_WRONG_ROLE -> {
+                    AirohaDeviceState.CONNECTED_AIROHA -> {
+                        _uiState.value = _uiState.value.copy(connected = true, connecting = false)
+                    }
+                    AirohaDeviceState.CONNECTED_AIROHA_WRONG_ROLE -> {
                         _uiState.value = _uiState.value.copy(connectedWrongRole = true)
                     }
                     else -> {

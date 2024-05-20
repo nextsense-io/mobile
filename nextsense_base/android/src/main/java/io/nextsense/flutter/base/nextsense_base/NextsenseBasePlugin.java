@@ -464,7 +464,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
         connectAirohaDevice(result);
         break;
       case SET_AIROHA_EQ_COMMAND:
-        Float[] gains = gson.fromJson((String) call.argument(EQ_GAINS_ARGUMENT), Float[].class);
+        float[] gains = gson.fromJson((String) call.argument(EQ_GAINS_ARGUMENT), float[].class);
         changeAirohaEqSettings(result, gains);
         break;
       case EMULATOR_COMMAND:
@@ -1138,14 +1138,14 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
 
   private void connectAirohaDevice(Result result) {
     if (nextSenseServiceBound) {
-      boolean connected = nextSenseService.getAirohaDeviceManager().connectDevice();
+      boolean connected = nextSenseService.getAirohaDeviceManager().connectDeviceSync();
       result.success(connected);
     } else {
       result.error(ERROR_SERVICE_NOT_AVAILABLE, null, null);
     }
   }
 
-  private void changeAirohaEqSettings(Result result, Float[] gains) {
+  private void changeAirohaEqSettings(Result result, float[] gains) {
     if (nextSenseServiceBound) {
       nextSenseService.getAirohaDeviceManager().changeEqualizer(gains);
       result.success(null);
