@@ -10,20 +10,21 @@ import com.airoha.sdk.api.message.AirohaEQPayload
 import com.airoha.sdk.api.utils.AirohaEQBandType
 import com.airoha.sdk.api.utils.AirohaStatusCode
 import dagger.hilt.android.qualifiers.ApplicationContext
-import io.nextsense.android.budz.ui.screens.DeviceSettingsViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.util.LinkedList
 import javax.inject.Inject
 import javax.inject.Singleton
 
 enum class DeviceState {
-    DISCONNECTED,
-    BONDED,
-    CONNECTED_AIROHA,
-    CONNECTED_AIROHA_WRONG_ROLE,
-    READY,
-    CONNECTED_BLE
+    DISCONNECTED,  // Device is not currently connected.
+    BONDED,  // Device is bonded with Bluetooth Classic.
+    CONNECTED_AIROHA,  // Device is currently connected with Bluetooth Classic.
+    CONNECTED_AIROHA_WRONG_ROLE,  // Device is connected with Bluetooth Classic but with wrong role.
+    CONNECTED_BLE,  // Device is currently connected with BLE and Bluetooth Classic.
+    READY  // Device is ready to use (Airoha and BLE connected, settings applied).
 }
 
 @Singleton
@@ -35,23 +36,27 @@ class DeviceManager @Inject constructor(@ApplicationContext private val context:
     // Frequencies that can be set in the equalizer.
     private val _eqFrequencies =
         floatArrayOf(200f, 280f, 400f, 550f, 770f, 1000f, 2000f, 4000f, 8000f, 16000f)
+    // Equalizer gains that are currently being set. _equalizerState is the current state, and will
+    // get updated if these are set successfully.
     private var _targetGains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
+    private val _deviceState = MutableStateFlow(DeviceState.DISCONNECTED)
+    private val _equalizerState = MutableStateFlow(FloatArray(10) { 0f })
 
-    val deviceState = MutableStateFlow(DeviceState.DISCONNECTED)
-    val equalizerState = MutableStateFlow(FloatArray(10) { 0f })
+    val deviceState: StateFlow<DeviceState> = _deviceState.asStateFlow()
+    val equalizerState: StateFlow<FloatArray> = _equalizerState.asStateFlow()
 
     private val _airohaConnectionListener: AirohaConnector.AirohaConnectionListener =
         object: AirohaConnector.AirohaConnectionListener {
             override fun onStatusChanged(newStatus: Int) {
                 when (newStatus) {
                     AirohaConnector.CONNECTED -> {
-                        deviceState.update { DeviceState.CONNECTED_AIROHA }
+                        _deviceState.update { DeviceState.CONNECTED_AIROHA }
                     }
                     AirohaConnector.CONNECTED_WRONG_ROLE -> {
-                        deviceState.update { DeviceState.CONNECTED_AIROHA_WRONG_ROLE }
+                        _deviceState.update { DeviceState.CONNECTED_AIROHA_WRONG_ROLE }
                     }
                     AirohaConnector.DISCONNECTED -> {
-                        deviceState.update { DeviceState.DISCONNECTED }
+                        _deviceState.update { DeviceState.DISCONNECTED }
                     }
                 }
             }
@@ -64,18 +69,19 @@ class DeviceManager @Inject constructor(@ApplicationContext private val context:
     private val airohaDeviceListener = object : AirohaDeviceListener {
 
         override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+            // Nothing to do.
         }
 
         override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
             try {
                 if (code == AirohaStatusCode.STATUS_SUCCESS) {
-                    equalizerState.value = _targetGains
+                    _equalizerState.value = _targetGains
                 } else {
-                    _targetGains = equalizerState.value
+                    _targetGains = _equalizerState.value
                     Log.w(tag, "Equalizer settings not changed: $code.")
                 }
             } catch (e: Exception) {
-                _targetGains = equalizerState.value
+                _targetGains = _equalizerState.value
                 Log.w(tag, "Equalizer settings error: ${e.message}.")
             }
         }
@@ -86,14 +92,12 @@ class DeviceManager @Inject constructor(@ApplicationContext private val context:
         _devicePresenter = DeviceSearchPresenter(context)
     }
 
-    fun isAirohaDeviceBonded(): Boolean {
-        val bonded: Boolean = _devicePresenter?.findAirohaDevice() ?: false
-        deviceState.value = if (bonded) DeviceState.BONDED else DeviceState.DISCONNECTED
-        return bonded
+    fun destroy() {
+        disconnectDevice()
     }
 
     suspend fun connectDevice() {
-        if (deviceState.value != DeviceState.BONDED) {
+        if (_deviceState.value != DeviceState.BONDED) {
             val bonded = isAirohaDeviceBonded()
             if (!bonded) {
                 return
@@ -104,6 +108,7 @@ class DeviceManager @Inject constructor(@ApplicationContext private val context:
             if (deviceState == DeviceState.CONNECTED_AIROHA) {
                 // Connect to BLE
                 // TODO(eric): Implement BLE connection
+                _deviceState.value = DeviceState.READY
             }
         }
     }
@@ -143,6 +148,12 @@ class DeviceManager @Inject constructor(@ApplicationContext private val context:
             /*=saveOrNot=*/true,
             airohaDeviceListener
         )
+    }
+
+    private fun isAirohaDeviceBonded(): Boolean {
+        val bonded: Boolean = _devicePresenter?.findAirohaDevice() ?: false
+        _deviceState.value = if (bonded) DeviceState.BONDED else DeviceState.DISCONNECTED
+        return bonded
     }
 
     private fun connectAirohaDevice() {

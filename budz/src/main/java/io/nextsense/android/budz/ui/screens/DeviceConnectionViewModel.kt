@@ -8,7 +8,6 @@ import io.nextsense.android.budz.manager.device.DeviceState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,7 +27,7 @@ class DeviceConnectionViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            deviceManager.deviceState.asStateFlow().collect { deviceState ->
+            deviceManager.deviceState.collect { deviceState ->
                 when (deviceState) {
                     DeviceState.CONNECTED_AIROHA -> {
                         _uiState.value = _uiState.value.copy(connected = true, connecting = false)

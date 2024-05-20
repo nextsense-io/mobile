@@ -25,7 +25,7 @@ class DeviceSettingsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            deviceManager.equalizerState.asStateFlow().collect { gains ->
+            deviceManager.equalizerState.collect { gains ->
                 _uiState.value = _uiState.value.copy(gains = gains)
             }
         }
@@ -34,5 +34,4 @@ class DeviceSettingsViewModel @Inject constructor(
     fun changeEqualizer(gains: FloatArray) {
         deviceManager.changeEqualizer(gains)
     }
-
 }
