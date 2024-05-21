@@ -21,7 +21,7 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
         super(protocol);
 
   List<Widget> bandpowerResults(BuildContext context) {
-    final viewModel = context.watch<MentalStateAudioProtocolScreenViewModel>();
+    final viewModel = context.read<MentalStateAudioProtocolScreenViewModel>();
 
     List<Widget> results = [];
     for (Band band in viewModel.bandPowers.keys) {
@@ -29,24 +29,24 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
       for (double power in viewModel.bandPowers[band] ?? []) {
         results.add(LightHeaderText(text: power.toStringAsFixed(2)));
       }
-      results.add(LightHeaderText(text: '-----------'));
+      results.add(const LightHeaderText(text: '-----------'));
     }
     final int bandpowersSize = viewModel.bandPowers[Band.alpha]?.length ?? 0;
     for (int i = 0; i < bandpowersSize; i++) {
       results.add(LightHeaderText(text:
-      'Alpha/Beta ratio ${(viewModel.bandPowers[Band.alpha]![i] / viewModel.bandPowers[Band.beta]![i])
-          .toStringAsFixed(2)}'));
+      'Alpha/Beta ratio ${(viewModel.bandPowers[Band.alpha]![i] /
+          viewModel.bandPowers[Band.beta]![i]).toStringAsFixed(2)}'));
       results.add(LightHeaderText(text:
-      'Alpha/Theta ratio ${(viewModel.bandPowers[Band.alpha]![i] / viewModel.bandPowers[Band.theta]![i])
-          .toStringAsFixed(2)}'));
-      results.add(LightHeaderText(text: '-----------'));
+      'Alpha/Theta ratio ${(viewModel.bandPowers[Band.alpha]![i] /
+          viewModel.bandPowers[Band.theta]![i]).toStringAsFixed(2)}'));
+      results.add(const LightHeaderText(text: '-----------'));
     }
     return results;
   }
 
   @override
   Widget runningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
-    final viewModel = context.watch<MentalStateAudioProtocolScreenViewModel>();
+    final viewModel = context.read<MentalStateAudioProtocolScreenViewModel>();
 
     return PageScaffold(
         backgroundColor: NextSenseColors.lightGrey,
@@ -71,12 +71,15 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
               const SizedBox(height: 20),
               TextField(
                 decoration: const InputDecoration(labelText: "Alpha/Beta ratio increase"),
-                controller: TextEditingController()..text = viewModel.alphaBetaRatioIncrease.toString(),
-                keyboardType: TextInputType.number,
-                onChanged: (value) => viewModel.alphaBetaRatioIncrease = double.parse(value),
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.digitsOnly
-                ], // Only numbers can be entered
+                controller: TextEditingController()..text =
+                    viewModel.alphaBetaRatioIncrease.toString(),
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                onChanged: (value) {
+                  double? newValue = double.tryParse(value);
+                  if (newValue != null && newValue > 0) {
+                    viewModel.alphaBetaRatioIncrease = newValue;
+                  }
+                },
               ),
               const SizedBox(height: 20),
               LightHeaderText(text: 'Alpha: ${viewModel.alphaBandPower.toStringAsFixed(2)}'),
@@ -99,6 +102,7 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
             ])));
   }
 
+  @override
   Widget notRunningStateBody(BuildContext context, ProtocolScreenViewModel viewModel) {
     var statusMsg = '';
     if (viewModel.isError) {

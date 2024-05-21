@@ -78,6 +78,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
   Timer? _dataReceivedTimer;
   CancelListening? _currentSessionDataReceivedListener;
   Duration? _currentVariableDuration;
+  bool notifyOnTick = true;
 
   // This indicates that the minimum duration of the protocol is passed and can mark is as
   // completed.
@@ -224,7 +225,7 @@ class ProtocolScreenViewModel extends DeviceStateViewModel {
           onTimerFinished();
         }
         onTimerTick(milliSecondsElapsed);
-        notifyListeners();
+        // notifyListeners();
       },
     );
   }

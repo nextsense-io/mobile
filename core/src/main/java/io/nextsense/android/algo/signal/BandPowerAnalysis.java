@@ -34,6 +34,8 @@ public class BandPowerAnalysis {
     }
   }
 
+  public static final int SAMPLES_NUMBER = 8192;
+
   public static double getBandPower(
       List<Float> signal, int samplingRate, Band band, Double powerLineFrequency) {
     return getBandPower(signal, samplingRate, band.getStart(), band.getEnd(), powerLineFrequency);
@@ -57,8 +59,8 @@ public class BandPowerAnalysis {
     if (data == null || data.isEmpty()) {
       throw new IllegalArgumentException("Data list cannot be null or empty.");
     }
-    if (data.size() < 8192) {
-      Log.w("TAG", "Data list must contain at least 8192 samples.");
+    if (data.size() < SAMPLES_NUMBER) {
+      Log.w("TAG", "Data list must contain at least " + SAMPLES_NUMBER + " samples.");
       return 0;
     }
     if (samplingRate <= 0) {
@@ -70,7 +72,7 @@ public class BandPowerAnalysis {
 
     double[] dataArray = data.stream().mapToDouble(Float::doubleValue).toArray();
     // Ensure the data array is 8192 samples long.
-    dataArray = Arrays.copyOfRange(dataArray, dataArray.length - 8192, dataArray.length);
+    dataArray = Arrays.copyOfRange(dataArray, dataArray.length - SAMPLES_NUMBER, dataArray.length);
 
     // Original signal power calculation for SNR
     double originalPower = calculatePower(dataArray);
@@ -117,7 +119,8 @@ public class BandPowerAnalysis {
     double minFrequency = 0.1; // Usual value (could be modified if lower in practice)
     double maxFactor = 1.0 / minFrequency;
 
-    // Calculate 1/f factors for each frequency index, we apply a cap to avoid excessive compensation
+    // Calculate 1/f factors for each frequency index, we apply a cap to avoid excessive
+    // compensation.
     for (int i = 0; i < segmentSize; i++) {
       double frequency = i * samplingRate / (double) segmentSize;
       frequencyFactor[i] = (frequency > minFrequency) ? 1.0 / frequency : maxFactor;
@@ -131,7 +134,8 @@ public class BandPowerAnalysis {
       Complex[] fftResult = transformer.transform(segment, TransformType.FORWARD);
       powerSpectra[i] = new double[segmentSize];
       for (int j = 0; j < segmentSize; j++) {
-        powerSpectra[i][j] = fftResult[j].abs() * fftResult[j].abs() * frequencyFactor[j]; // Apply 1/f compensation here
+        // Apply 1/f compensation here
+        powerSpectra[i][j] = fftResult[j].abs() * fftResult[j].abs() * frequencyFactor[j];
       }
     }
 

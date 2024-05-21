@@ -1,5 +1,5 @@
 import 'package:flutter_common/managers/audio_manager.dart';
-import 'package:flutter_common/managers/firebase_storage_manager.dart';
+import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:logging/logging.dart';
 import 'package:nextsense_base/nextsense_base.dart';
 import 'package:nextsense_consumer_ui/di.dart';
@@ -23,6 +23,7 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   double _thetaBandPower = 0;
   double _deltaBandPower = 0;
   double _gammaBandPower = 0;
+  bool _volumeRaised = false;
 
   double get alphaBandPower => _alphaBandPower;
   double get betaBandPower => _betaBandPower;
@@ -49,7 +50,10 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
       return false;
     }
     NextsenseBase.setAirohaEq([-10,-10,-10,-10,0,0,0,0,0,0]);
+    FlutterVolumeController.lowerVolume(0.2);
     _mentalStateManager.startMentalStateChecks();
+    _mentalStateManager.addListener(_onMentalStateChange);
+    _volumeRaised = false;
     return true;
   }
 
@@ -66,34 +70,32 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   @override
   Future stopSession() async {
     await super.stopSession();
+    _mentalStateManager.removeListener(_onMentalStateChange);
     _mentalStateManager.stopCalculatingMentalStates();
   }
 
-  bool switchEq = false;
-
   @override
   void onAdvanceProtocol() {
+    _logger.log(Level.INFO, "Advancing protocol.");
+  }
+
+  void _onMentalStateChange() {
     switch (getMentalState()) {
       case MentalState.alert:
-        // _audioManager.playAudioFile(_eoecTransitionSoundCachedId);
+      // _audioManager.playAudioFile(_eoecTransitionSoundCachedId);
         break;
       case MentalState.relaxed:
         NextsenseBase.setAirohaEq([10,10,10,10,0,0,0,0,0,0]);
+        if (!_volumeRaised) {
+          FlutterVolumeController.raiseVolume(0.2);
+          _volumeRaised = true;
+        }
         // _audioManager.playAudioFile(_eoecTransitionSoundCachedId);
         break;
       case MentalState.unknown:
         break;
     }
     _logger.log(Level.INFO, "Advancing protocol.");
-    // if (switchEq = true) {
-    //   _logger.log(Level.INFO, "Eq to 8.");
-    //   NextsenseBase.setAirohaEq([10,10,10,10,0,0,0,0,0,0]);
-    //   switchEq = false;
-    // } else {
-    //   _logger.log(Level.INFO, "Eq to -8.");
-    //   NextsenseBase.setAirohaEq([-10,-10,-10,-10,0,0,0,0,0,0]);
-    //   switchEq = true;
-    // }
     notifyListeners();
   }
 

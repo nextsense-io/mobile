@@ -84,6 +84,7 @@ class MentalStateManager extends ChangeNotifier {
     _calculationInterval = calculationInterval;
     _mentalCheckCalculationState = MentalCheckCalculationState.waiting;
     _mentalChecksState = MentalChecksState.started;
+    _mentalState = MentalState.unknown;
     _calculatedDuration = Duration.zero;
     _initialAlphaBetaRatio = null;
     _checkIfNeedToCalculateTimer = Timer.periodic(
@@ -224,11 +225,12 @@ class MentalStateManager extends ChangeNotifier {
           "Gamma band power: $gammaBandPower. \n"
           "Alpha/Beta ratio: ${alphaBandPower / betaBandPower}.");
       int calcEpochs = _bandPowers[Band.alpha]?.length ?? 0;
-      if (_initialAlphaBetaRatio != null) {
-        if ((alphaBandPower / betaBandPower) - _initialAlphaBetaRatio! > _relaxedAlphaRatioIncrease) {
-          _logger.log(Level.INFO, "Relaxed alpha/beta ratio: ${alphaBandPower / betaBandPower}.");
-          _mentalState = MentalState.relaxed;
-        }
+      if (_initialAlphaBetaRatio != null &&
+          (alphaBandPower / betaBandPower) - _initialAlphaBetaRatio! > _relaxedAlphaRatioIncrease) {
+        _logger.log(Level.INFO, "Relaxed alpha/beta ratio: ${alphaBandPower / betaBandPower}.");
+        _mentalState = MentalState.relaxed;
+      } else {
+        _mentalState = MentalState.alert;
       }
       if (calcEpochs >= 3) {
         _initialAlphaBetaRatio = alphaBandPower / betaBandPower;
@@ -238,6 +240,7 @@ class MentalStateManager extends ChangeNotifier {
       _mentalStates.add(_mentalState);
       _logger.log(Level.INFO, "Adding mental state result: $_mentalState. Total results: "
           "${_mentalStates.length}.");
+      notifyListeners();
     } else {
       _logger.log(Level.INFO, "Not enough new data to check mental state.");
     }
@@ -246,6 +249,5 @@ class MentalStateManager extends ChangeNotifier {
       _mentalChecksState = MentalChecksState.complete;
     }
     _logger.log(Level.INFO, "Finished calculating mental states.");
-    notifyListeners();
   }
 }
