@@ -16,6 +16,7 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   final AudioManager _audioManager = getIt<AudioManager>();
   final MentalStateManager _mentalStateManager = getIt<MentalStateManager>();
   final _logger = Logger('MentalStateAudioProtocolScreenViewModel');
+  final calculationEpochSecondsOptions = [9, 18, 36];
 
   int _eoecTransitionSoundCachedId = -1;
   double _alphaBandPower = 0;
@@ -25,6 +26,7 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   double _gammaBandPower = 0;
   bool _volumeRaised = false;
 
+  Duration get calculationEpoch => _mentalStateManager.calculationEpoch;
   double get alphaBandPower => _alphaBandPower;
   double get betaBandPower => _betaBandPower;
   double get thetaBandPower => _thetaBandPower;
@@ -77,6 +79,11 @@ class MentalStateAudioProtocolScreenViewModel extends ProtocolScreenViewModel {
   @override
   void onAdvanceProtocol() {
     _logger.log(Level.INFO, "Advancing protocol.");
+  }
+
+  void changeCalculationEpoch(Duration value) {
+    _mentalStateManager.changeCalculationEpoch(value);
+    notifyListeners();
   }
 
   void _onMentalStateChange() {

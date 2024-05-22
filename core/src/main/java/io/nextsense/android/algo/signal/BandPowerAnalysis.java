@@ -9,7 +9,10 @@ import org.apache.commons.math3.transform.TransformType;
 import java.util.Arrays;
 import java.util.List;
 
+import io.nextsense.android.algo.MathUtils;
+
 public class BandPowerAnalysis {
+
   public enum Band {
     DELTA(1.0, 4.0),
     THETA(4.0, 8.0),
@@ -34,23 +37,12 @@ public class BandPowerAnalysis {
     }
   }
 
-  public static final int SAMPLES_NUMBER = 8192;
+  public static final int MIN_SAMPLES_NUMBER = 2048;  // About 8 seconds of data at 250 hertz.
+  private static final String TAG = BandPowerAnalysis.class.getSimpleName();
 
   public static double getBandPower(
-      List<Float> signal, int samplingRate, Band band, Double powerLineFrequency) {
-    return getBandPower(signal, samplingRate, band.getStart(), band.getEnd(), powerLineFrequency);
-  }
-
-  private static double calculatePower(double[] signal) {
-    double power = 0;
-    for (double amplitude : signal) {
-      power += amplitude * amplitude;
-    }
-    return power / signal.length;
-  }
-
-  private static double calculateSNR(double signalPower, double noisePower) {
-    return 10 * Math.log10(signalPower / noisePower);
+      List<Float> data, int samplingRate, Band band, Double powerLineFrequency) {
+    return getBandPower(data, samplingRate, band.getStart(), band.getEnd(), powerLineFrequency);
   }
 
   public static double getBandPower(
@@ -59,8 +51,8 @@ public class BandPowerAnalysis {
     if (data == null || data.isEmpty()) {
       throw new IllegalArgumentException("Data list cannot be null or empty.");
     }
-    if (data.size() < SAMPLES_NUMBER) {
-      Log.w("TAG", "Data list must contain at least " + SAMPLES_NUMBER + " samples.");
+    if (data.size() < MIN_SAMPLES_NUMBER) {
+      Log.w(TAG, "Data list must contain at least " + MIN_SAMPLES_NUMBER + " samples.");
       return 0;
     }
     if (samplingRate <= 0) {
@@ -71,8 +63,11 @@ public class BandPowerAnalysis {
     }
 
     double[] dataArray = data.stream().mapToDouble(Float::doubleValue).toArray();
-    // Ensure the data array is 8192 samples long.
-    dataArray = Arrays.copyOfRange(dataArray, dataArray.length - SAMPLES_NUMBER, dataArray.length);
+    int effectiveSamplesNumber = MathUtils.biggestPowerOfTwoUnder(dataArray.length);
+    Log.d(TAG, "Effective samples number: " + effectiveSamplesNumber);
+    // Ensure the data array is a power of 2.
+    dataArray = Arrays.copyOfRange(dataArray, dataArray.length - effectiveSamplesNumber,
+        dataArray.length);
 
     // Original signal power calculation for SNR
     double originalPower = calculatePower(dataArray);
@@ -87,8 +82,8 @@ public class BandPowerAnalysis {
     double originalSNR = calculateSNR(originalPower, originalPower - processedPower); // Example computation
     double processedSNR = calculateSNR(processedPower, originalPower - processedPower); // Example computation
 
-    Log.d("SNR", "Original SNR: " + originalSNR + " dB");
-    Log.d("SNR", "Processed SNR: " + processedSNR + " dB");
+    Log.d(TAG, "Original SNR: " + originalSNR + " dB");
+    Log.d(TAG, "Processed SNR: " + processedSNR + " dB");
 
     if (powerLineFrequency != null) {
       dataArray = Filters.applyBandStop(
@@ -101,6 +96,18 @@ public class BandPowerAnalysis {
     double[] averagedPowerSpectrum = computeWelchPSD(dataArray, samplingRate, segmentSize, overlap);
 
     return calculateBandPower(averagedPowerSpectrum, samplingRate, bandStart, bandEnd);
+  }
+
+  private static double calculatePower(double[] signal) {
+    double power = 0;
+    for (double amplitude : signal) {
+      power += amplitude * amplitude;
+    }
+    return power / signal.length;
+  }
+
+  private static double calculateSNR(double signalPower, double noisePower) {
+    return 10 * Math.log10(signalPower / noisePower);
   }
 
   private static double[] computeWelchPSD(

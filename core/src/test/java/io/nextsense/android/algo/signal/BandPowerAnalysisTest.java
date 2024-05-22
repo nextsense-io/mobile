@@ -9,7 +9,8 @@ import java.util.List;
 
 public class BandPowerAnalysisTest {
 
-  public static List<Float> createSinWaveBuffer(double samplingRate, int lengthMillis, double frequency) {
+  public static List<Float> createSinWaveBuffer(
+      double samplingRate, int lengthMillis, double frequency) {
     int samples = (int)((lengthMillis * samplingRate) / 1000);
     List<Float> output = new ArrayList<>(samples);
     double period = samplingRate / frequency;
@@ -24,8 +25,10 @@ public class BandPowerAnalysisTest {
   public void testGetAlphaBandPower() {
     List<Float> signal = createSinWaveBuffer(250, 1000, 10);
     int samplingRate = 250;
-    double alphaBandPower = BandPowerAnalysis.getBandPower(signal, samplingRate, BandPowerAnalysis.Band.ALPHA);
-    double betaBandPower = BandPowerAnalysis.getBandPower(signal, samplingRate, BandPowerAnalysis.Band.BETA);
+    double alphaBandPower = BandPowerAnalysis.getBandPower(
+        signal, samplingRate, BandPowerAnalysis.Band.ALPHA, null);
+    double betaBandPower = BandPowerAnalysis.getBandPower(
+        signal, samplingRate, BandPowerAnalysis.Band.BETA, null);
     assertEquals(5122.71475, alphaBandPower, 0.001);
     assertEquals(560.55061, betaBandPower, 0.001);
   }
@@ -34,8 +37,10 @@ public class BandPowerAnalysisTest {
   public void testGetBetaBandPower() {
     List<Float> signal = createSinWaveBuffer(250, 1000, 20);
     int samplingRate = 250;
-    double alphaBandPower = BandPowerAnalysis.getBandPower(signal, samplingRate, BandPowerAnalysis.Band.ALPHA);
-    double betaBandPower = BandPowerAnalysis.getBandPower(signal, samplingRate, BandPowerAnalysis.Band.BETA);
+    double alphaBandPower = BandPowerAnalysis.getBandPower(
+        signal, samplingRate, BandPowerAnalysis.Band.ALPHA, null);
+    double betaBandPower = BandPowerAnalysis.getBandPower(
+        signal, samplingRate, BandPowerAnalysis.Band.BETA, null);
     assertEquals(318.59644, alphaBandPower, 0.001);
     assertEquals(2190.10059, betaBandPower, 0.001);
   }

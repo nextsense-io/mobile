@@ -42,8 +42,8 @@ enum MentalChecksState {
 }
 
 class MentalStateManager extends ChangeNotifier {
+  static const Duration defaultCalculationEpoch = Duration(seconds: 36);
   static const Duration _calculationCheckInterval = Duration(seconds: 5);
-  static const Duration _calculationEpoch = Duration(seconds: 40);
   static const double _defaultRelaxedAlphaIncrease = 0.5;
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
@@ -54,7 +54,7 @@ class MentalStateManager extends ChangeNotifier {
   final Map<Band, List<double>> _bandPowers = {};
   final _logger = Logger('MentalStateManager');
 
-  // Interval between mental state checks.
+  Duration _calculationEpoch = defaultCalculationEpoch;
   DateTime? _checksStartTime;
   Duration _calculatedDuration = Duration.zero;
   Duration _calculationInterval = Duration.zero;
@@ -77,6 +77,7 @@ class MentalStateManager extends ChangeNotifier {
   Map<Band, List<double>?> get bandPowers => _bandPowers;
   double get powerLineFrequency => _powerLineFrequency ?? 0;
   double get relaxedAlphaRatioIncrease => _relaxedAlphaRatioIncrease;
+  Duration get calculationEpoch => _calculationEpoch;
 
   void startMentalStateChecks({Duration calculationInterval = _calculationCheckInterval}) {
     clearMentalStates();
@@ -95,6 +96,10 @@ class MentalStateManager extends ChangeNotifier {
 
   void setRelaxedAlphaRatioIncrease(double ratioIncrease) {
     _relaxedAlphaRatioIncrease = ratioIncrease;
+  }
+
+  void changeCalculationEpoch(Duration epoch) {
+    _calculationEpoch = epoch;
   }
 
   void stopCalculatingMentalStates() {

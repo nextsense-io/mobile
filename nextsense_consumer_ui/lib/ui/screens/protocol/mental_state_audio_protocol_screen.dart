@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_common/domain/protocol.dart';
 import 'package:flutter_common/ui/components/simple_button.dart';
 import 'package:nextsense_consumer_ui/managers/mental_state_manager.dart';
+import 'package:nextsense_consumer_ui/ui/components/drop_down_menu.dart';
 import 'package:nextsense_consumer_ui/ui/components/light_header_text.dart';
 import 'package:nextsense_consumer_ui/ui/components/medium_text.dart';
 import 'package:nextsense_consumer_ui/ui/components/page_scaffold.dart';
@@ -68,6 +69,16 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
                 Center(child: CountDownTimer(duration: protocol.maxDuration, reverse: false)),
                 if (!viewModel.deviceCanRecord) deviceInactiveOverlay(context, viewModel),
               ]),
+              const SizedBox(height: 20),
+              DropDownMenu(
+                title: "Calculation period:",
+                value: viewModel.calculationEpoch.inSeconds,
+                possibleValues: viewModel.calculationEpochSecondsOptions,
+                labelAbove: false,
+                onChanged: (dynamic value) async {
+                  viewModel.changeCalculationEpoch(Duration(seconds: value as int));
+                },
+              ),
               const SizedBox(height: 20),
               TextField(
                 decoration: const InputDecoration(labelText: "Alpha/Beta ratio increase"),
