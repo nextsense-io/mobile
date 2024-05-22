@@ -1,5 +1,6 @@
 package io.nextsense.android.budz.ui.screens
 
+import android.app.Activity
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,6 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.nextsense.android.budz.ui.activities.DeviceConnectionActivity
 import io.nextsense.android.budz.ui.activities.DeviceSettingsActivity
-import io.nextsense.android.budz.ui.activities.MainActivity2
 import io.nextsense.android.budz.ui.activities.SelectFallAsleepSoundActivity
 import io.nextsense.android.budz.ui.activities.SelectStayAsleepSoundActivity
 import io.nextsense.android.budz.ui.components.SimpleButton
@@ -32,7 +32,6 @@ fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
         homeViewModel.loadUserSounds()
         onPauseOrDispose {}
     }
-
     Column(verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 30.dp)) {
@@ -87,7 +86,7 @@ fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
         })
         SimpleButton(name = "Sign out", onClick = {
             homeViewModel.signOut()
-            context.startActivity(Intent(context, MainActivity2::class.java))
+            (context as Activity).finish()
         })
     }
 }

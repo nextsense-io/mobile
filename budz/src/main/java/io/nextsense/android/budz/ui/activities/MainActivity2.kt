@@ -29,7 +29,6 @@ class MainActivity2 : ComponentActivity() {
                 AuthDataProvider.updateAuthState(currentUser)
 
                 Log.i("AuthRepo", "Authenticated: ${AuthDataProvider.isAuthenticated}")
-                Log.i("AuthRepo", "Anonymous: ${AuthDataProvider.isAnonymous}")
                 Log.i("AuthRepo", "User: ${AuthDataProvider.user}")
 
                 if (AuthDataProvider.authState == AuthState.SignedIn) {
