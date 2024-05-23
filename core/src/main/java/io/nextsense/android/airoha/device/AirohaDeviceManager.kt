@@ -2,10 +2,13 @@ package io.nextsense.android.airoha.device
 
 import android.content.Context
 import android.util.Log
+import com.airoha.libbase.RaceCommand.constant.RaceType
+import com.airoha.libutils.Converter
 import com.airoha.sdk.AirohaConnector
 import com.airoha.sdk.AirohaSDK
 import com.airoha.sdk.api.control.AirohaDeviceListener
 import com.airoha.sdk.api.message.AirohaBaseMsg
+import com.airoha.sdk.api.message.AirohaCmdSettings
 import com.airoha.sdk.api.message.AirohaEQPayload
 import com.airoha.sdk.api.utils.AirohaEQBandType
 import com.airoha.sdk.api.utils.AirohaStatusCode
@@ -40,7 +43,6 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     // get updated if these are set successfully.
     private var _targetGains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
     private val _deviceState = MutableStateFlow(AirohaDeviceState.DISCONNECTED)
-
     private val _equalizerState = MutableStateFlow(FloatArray(10) { 0f })
 
     val deviceState: StateFlow<AirohaDeviceState> = _deviceState.asStateFlow()
@@ -70,7 +72,13 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private val airohaDeviceListener = object : AirohaDeviceListener {
 
         override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-            // Nothing to do.
+            Log.d(tag, "Read response: ${msg.msgContent}")
+            if (code == AirohaStatusCode.STATUS_SUCCESS) {
+                val resp = msg.msgContent as ByteArray
+                Log.d(tag, "Read response: ${Converter.byte2HerStrReverse(resp)}")
+            } else {
+                Log.w(tag, "Read error: $code.")
+            }
         }
 
         override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
@@ -130,6 +138,38 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         _devicePresenter?.destroy()
         val airohaDeviceConnector = AirohaSDK.getInst().airohaDeviceConnector
         airohaDeviceConnector.unregisterConnectionListener(_airohaConnectionListener)
+    }
+
+    fun startBleStreaming() {
+        val raceCommand = AirohaCmdSettings()
+        raceCommand.respType = RaceType.RESPONSE
+        raceCommand.command = DataStreamRaceCommand(
+            DataStreamRaceCommand.DataStreamType.START_STREAM).getBytes()
+        AirohaSDK.getInst().airohaDeviceControl.sendCustomCommand(
+            raceCommand,
+            airohaDeviceListener
+        )
+    }
+
+    fun stopBleStreaming() {
+        val raceCommand = AirohaCmdSettings()
+        raceCommand.respType = RaceType.RESPONSE
+        raceCommand.command = DataStreamRaceCommand(
+            DataStreamRaceCommand.DataStreamType.STOP_STREAM).getBytes()
+        AirohaSDK.getInst().airohaDeviceControl.sendCustomCommand(
+            raceCommand,
+            airohaDeviceListener
+        )
+    }
+
+    fun testRaceCommand() {
+        val raceCommand = AirohaCmdSettings()
+        raceCommand.respType = RaceType.RESPONSE
+        raceCommand.command = Converter.hexStringToByteArray("055A03000A1E00")
+        AirohaSDK.getInst().airohaDeviceControl.sendCustomCommand(
+            raceCommand,
+            airohaDeviceListener
+        )
     }
 
     fun changeEqualizer(gains: FloatArray) {

@@ -81,7 +81,7 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
 
     private BluetoothAdapter mBluetoothAdapter;
     private A2DPProfileServiceListener mA2dpProfileServiceListener;
-    private LEAProfileServiceListener mLeaProfileServiceListener;
+    // private LEAProfileServiceListener mLeaProfileServiceListener;
     private BluetoothA2dp mBluetoothProfileA2DP = null;
     private BluetoothLeAudio mBluetoothProfileLEA = null;
 
@@ -94,10 +94,10 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         mBluetoothAdapter = bluetoothManager.getAdapter();
         mA2dpProfileServiceListener = new A2DPProfileServiceListener();
         mBluetoothAdapter.getProfileProxy(act, mA2dpProfileServiceListener, BluetoothProfile.A2DP);
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            mLeaProfileServiceListener = new LEAProfileServiceListener();
-            mBluetoothAdapter.getProfileProxy(act, mLeaProfileServiceListener, BluetoothProfile.LE_AUDIO);
-        }
+//        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//            mLeaProfileServiceListener = new LEAProfileServiceListener();
+//            mBluetoothAdapter.getProfileProxy(act, mLeaProfileServiceListener, BluetoothProfile.LE_AUDIO);
+//        }
     }
 
     public final void destroy() {
@@ -195,16 +195,17 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
                     synchronized (this) {
                         wait(30 * 1000);
                     }
-                } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    if (isLEAConnected(device.getAddress())) {
-                        Log.i(TAG, "device_LEA_connected==================" + device.getName() + "," + device.getAddress());
-                        connectLEADevice(device);
-
-                        synchronized (this) {
-                            wait(30 * 1000);
-                        }
-                    }
                 }
+//                else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+//                    if (isLEAConnected(device.getAddress())) {
+//                        Log.i(TAG, "device_LEA_connected==================" + device.getName() + "," + device.getAddress());
+//                        connectLEADevice(device);
+//
+//                        synchronized (this) {
+//                            wait(30 * 1000);
+//                        }
+//                    }
+//                }
 
                 if (_isConnected) {
                     gLogger.d(TAG, "connected_and_stop_loop");
@@ -265,18 +266,18 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
 //            airoha_device.getName(), airoha_device.getAddress());
     }
 
-    void connectLEADevice(BluetoothDevice airoha_device) {
-        AirohaDevice airohaDevice = new AirohaDevice();
-        airohaDevice.setApiStrategy(new BudzDeviceStrategy());
-        airohaDevice.setTargetAddr(airoha_device.getAddress());
-        airohaDevice.setDeviceName(airoha_device.getName());
-        airohaDevice.setPreferredProtocol(ConnectionProtocol.PROTOCOL_LEA);
-        airohaDevice.setRelatedDeviceMAC(getRelatedDeviceAddress(airoha_device.getAddress()));
-        _airohaDeviceConnector.connect(airohaDevice);
-
-//        BudzApplication.Companion.getInstance().initDevice(
-//            airoha_device.getName(), airoha_device.getAddress());
-    }
+//    void connectLEADevice(BluetoothDevice airoha_device) {
+//        AirohaDevice airohaDevice = new AirohaDevice();
+//        airohaDevice.setApiStrategy(new BudzDeviceStrategy());
+//        airohaDevice.setTargetAddr(airoha_device.getAddress());
+//        airohaDevice.setDeviceName(airoha_device.getName());
+//        airohaDevice.setPreferredProtocol(ConnectionProtocol.PROTOCOL_LEA);
+//        airohaDevice.setRelatedDeviceMAC(getRelatedDeviceAddress(airoha_device.getAddress()));
+//        _airohaDeviceConnector.connect(airohaDevice);
+//
+////        BudzApplication.Companion.getInstance().initDevice(
+////            airoha_device.getName(), airoha_device.getAddress());
+//    }
 
     @Override
     public final void onStatusChanged(int status) {
@@ -347,30 +348,30 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         }
     }
 
-    public class LEAProfileServiceListener implements BluetoothProfile.ServiceListener {
-        @RequiresApi(api = 33)
-        @Override
-        public void onServiceConnected(int profile, BluetoothProfile bluetoothProfile) {
-            if (profile == BluetoothProfile.LE_AUDIO) {
-                if (ActivityCompat.checkSelfPermission(act, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    return;
-                }
-                mBluetoothProfileLEA = (BluetoothLeAudio) bluetoothProfile;
-                List<BluetoothDevice> devices = mBluetoothProfileLEA.getConnectedDevices();
-                int cnt = devices.size();
-                for (int i = 0; i < cnt; i++){
-                    gLogger.d(TAG, "LEA_device = " + devices.get(i).getName() + ", LEA_address=" + devices.get(i).getAddress());
-                }
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(int profile) {
-            if(profile == BluetoothProfile.LE_AUDIO){
-                mBluetoothProfileLEA = null;
-            }
-        }
-    }
+//    public class LEAProfileServiceListener implements BluetoothProfile.ServiceListener {
+//        @RequiresApi(api = 33)
+//        @Override
+//        public void onServiceConnected(int profile, BluetoothProfile bluetoothProfile) {
+//            if (profile == BluetoothProfile.LE_AUDIO) {
+//                if (ActivityCompat.checkSelfPermission(act, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+//                    return;
+//                }
+//                mBluetoothProfileLEA = (BluetoothLeAudio) bluetoothProfile;
+//                List<BluetoothDevice> devices = mBluetoothProfileLEA.getConnectedDevices();
+//                int cnt = devices.size();
+//                for (int i = 0; i < cnt; i++){
+//                    gLogger.d(TAG, "LEA_device = " + devices.get(i).getName() + ", LEA_address=" + devices.get(i).getAddress());
+//                }
+//            }
+//        }
+//
+//        @Override
+//        public void onServiceDisconnected(int profile) {
+//            if(profile == BluetoothProfile.LE_AUDIO){
+//                mBluetoothProfileLEA = null;
+//            }
+//        }
+//    }
 
     @SuppressWarnings({"MissingPermission"})
     private boolean isA2dpConnected(String bdAddr) {
@@ -388,38 +389,38 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         }
     }
 
-    @SuppressWarnings({"MissingPermission"})
-    private boolean isLEAConnected(String bdAddr) {
-        if (mBluetoothProfileLEA == null) {
-            mBluetoothAdapter.getProfileProxy(act, mLeaProfileServiceListener, BluetoothProfile.LE_AUDIO);
-            gLogger.d(TAG, "Error = mBluetoothProfileLEA is null");
-            return false;
-        }
-        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(bdAddr);
-        if (mBluetoothProfileLEA.getConnectionState(device) == BluetoothProfile.STATE_CONNECTED) {
-            return true;
-        } else {
-            gLogger.d(TAG, "Error = LEA is not Connected: " + bdAddr);
-            return false;
-        }
-    }
+//    @SuppressWarnings({"MissingPermission"})
+//    private boolean isLEAConnected(String bdAddr) {
+//        if (mBluetoothProfileLEA == null) {
+//            mBluetoothAdapter.getProfileProxy(act, mLeaProfileServiceListener, BluetoothProfile.LE_AUDIO);
+//            gLogger.d(TAG, "Error = mBluetoothProfileLEA is null");
+//            return false;
+//        }
+//        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(bdAddr);
+//        if (mBluetoothProfileLEA.getConnectionState(device) == BluetoothProfile.STATE_CONNECTED) {
+//            return true;
+//        } else {
+//            gLogger.d(TAG, "Error = LEA is not Connected: " + bdAddr);
+//            return false;
+//        }
+//    }
 
-    @SuppressWarnings({"MissingPermission"})
-    private String getRelatedDeviceAddress(String bdAddr) {
-        gLogger.d(TAG, "function = getRelatedDeviceAddress: addr = " + bdAddr);
-        if (mBluetoothProfileLEA == null) {
-            mBluetoothAdapter.getProfileProxy(act, mLeaProfileServiceListener, BluetoothProfile.LE_AUDIO);
-            gLogger.d(TAG, "Error = mBluetoothProfileLEA is null");
-            return null;
-        }
-        List<BluetoothDevice> devices = mBluetoothProfileLEA.getConnectedDevices();
-        int cnt = devices.size();
-        for (int i = 0; i < cnt; i++){
-            if(!devices.get(i).getAddress().equalsIgnoreCase(bdAddr)){
-                gLogger.d(TAG, "RelatedDeviceAddress = " +  devices.get(i).getAddress());
-                return devices.get(i).getAddress();
-            }
-        }
-        return null;
-    }
+//    @SuppressWarnings({"MissingPermission"})
+//    private String getRelatedDeviceAddress(String bdAddr) {
+//        gLogger.d(TAG, "function = getRelatedDeviceAddress: addr = " + bdAddr);
+//        if (mBluetoothProfileLEA == null) {
+//            mBluetoothAdapter.getProfileProxy(act, mLeaProfileServiceListener, BluetoothProfile.LE_AUDIO);
+//            gLogger.d(TAG, "Error = mBluetoothProfileLEA is null");
+//            return null;
+//        }
+//        List<BluetoothDevice> devices = mBluetoothProfileLEA.getConnectedDevices();
+//        int cnt = devices.size();
+//        for (int i = 0; i < cnt; i++){
+//            if(!devices.get(i).getAddress().equalsIgnoreCase(bdAddr)){
+//                gLogger.d(TAG, "RelatedDeviceAddress = " +  devices.get(i).getAddress());
+//                return devices.get(i).getAddress();
+//            }
+//        }
+//        return null;
+//    }
 }

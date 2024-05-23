@@ -9,7 +9,7 @@ apply plugin: 'io.objectbox'
 android {
     namespace 'io.nextsense.android.base'
 
-    compileSdkVersion 33
+    compileSdk 34
 
     defaultConfig {
         minSdkVersion 24

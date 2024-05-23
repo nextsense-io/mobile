@@ -34,4 +34,16 @@ class DeviceSettingsViewModel @Inject constructor(
     fun changeEqualizer(gains: FloatArray) {
         deviceManager.changeEqualizer(gains)
     }
+
+    fun startStreaming() {
+        deviceManager.startBleStreaming()
+    }
+
+    fun stopStreaming() {
+        deviceManager.stopBleStreaming()
+    }
+
+    fun testRaceCommand() {
+        deviceManager.testRaceCommand()
+    }
 }
