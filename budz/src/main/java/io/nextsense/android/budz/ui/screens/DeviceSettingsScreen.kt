@@ -22,14 +22,17 @@ fun DeviceSettingsScreen(deviceSettingsViewModel: DeviceSettingsViewModel = view
     Column(verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 30.dp)) {
+        SimpleButton(name = "Connect and Start Streaming", onClick = {
+            deviceSettingsViewModel.connectAndStartStreaming()
+        })
+        SimpleButton(name = "Disconnect and Stop Streaming", onClick = {
+            deviceSettingsViewModel.disconnectAndStopStreaming()
+        })
         SimpleButton(name = "Start Streaming", onClick = {
             deviceSettingsViewModel.startStreaming()
         })
         SimpleButton(name = "Stop Streaming", onClick = {
             deviceSettingsViewModel.stopStreaming()
-        })
-        SimpleButton(name = "Test RACE command", onClick = {
-            deviceSettingsViewModel.testRaceCommand()
         })
         Spacer(modifier = Modifier.height(20.dp))
         SimpleButton(name = "Increase bass gain", onClick = {
@@ -43,6 +46,8 @@ fun DeviceSettingsScreen(deviceSettingsViewModel: DeviceSettingsViewModel = view
         })
         Spacer(modifier = Modifier.height(20.dp))
         Text("Current gains: ${deviceSettingsUiState.gains.joinToString(", ")}")
+        Spacer(modifier = Modifier.height(20.dp))
+        Text("Last result: ${deviceSettingsUiState.message}")
     }
 
 }

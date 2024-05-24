@@ -4,6 +4,7 @@ import android.app.Application
 import com.airoha.sdk.AirohaSDK
 import com.google.firebase.FirebaseApp
 import dagger.hilt.android.HiltAndroidApp
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.model.Device
 
 @HiltAndroidApp
@@ -23,6 +24,7 @@ class BudzApplication: Application() {
     }
 
     private fun init() {
+        RotatingFileLogger.initialize(applicationContext)
         FirebaseApp.initializeApp(this)
         AirohaSDK.getInst().init(this)
     }

@@ -1,6 +1,7 @@
 package io.nextsense.android.airoha.device
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import com.airoha.libbase.RaceCommand.constant.RaceType
 import com.airoha.libutils.Converter
@@ -35,6 +36,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     private val tag = AirohaDeviceManager::class.java.simpleName
     private val _airohaDeviceConnector = AirohaSDK.getInst().airohaDeviceConnector
+    private val _foregroundServiceIntent: Intent? = null
+    private val _budzServiceBound = false
     private var _devicePresenter: DeviceSearchPresenter? = null
     // Frequencies that can be set in the equalizer.
     private val _eqFrequencies =
@@ -142,9 +145,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     fun startBleStreaming() {
         val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.RESPONSE
-        raceCommand.command = DataStreamRaceCommand(
-            DataStreamRaceCommand.DataStreamType.START_STREAM).getBytes()
+        raceCommand.respType = RaceType.INDICATION
+        raceCommand.command =
+            DataStreamRaceCommand(DataStreamRaceCommand.DataStreamType.START_STREAM).getBytes()
         AirohaSDK.getInst().airohaDeviceControl.sendCustomCommand(
             raceCommand,
             airohaDeviceListener
@@ -153,7 +156,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     fun stopBleStreaming() {
         val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.RESPONSE
+        raceCommand.respType = RaceType.INDICATION
         raceCommand.command = DataStreamRaceCommand(
             DataStreamRaceCommand.DataStreamType.STOP_STREAM).getBytes()
         AirohaSDK.getInst().airohaDeviceControl.sendCustomCommand(

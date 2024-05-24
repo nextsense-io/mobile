@@ -10,8 +10,8 @@ class DataStreamRaceCommand(dataStreamType: DataStreamType) : NextSenseRaceComma
 ) {
 
     enum class DataStreamType(private val value: String) {
-        START_STREAM("00"),
-        STOP_STREAM("01");
+        START_STREAM("01"),
+        STOP_STREAM("00");
 
         fun getHexValue(): ByteArray {
             return Converter.hexStringToByteArray(value)

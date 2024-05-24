@@ -3,7 +3,7 @@ package io.nextsense.android.budz.ui.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.nextsense.android.airoha.device.AirohaDeviceManager
+import io.nextsense.android.budz.manager.AirohaDeviceManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +17,8 @@ data class DeviceSettingsState(
 
 @HiltViewModel
 class DeviceSettingsViewModel @Inject constructor(
-        private val deviceManager: AirohaDeviceManager): ViewModel() {
+        private val deviceManager: AirohaDeviceManager
+): ViewModel() {
 
     private val _uiState = MutableStateFlow(DeviceSettingsState(""))
 
@@ -35,15 +36,35 @@ class DeviceSettingsViewModel @Inject constructor(
         deviceManager.changeEqualizer(gains)
     }
 
+    fun connectAndStartStreaming() {
+        viewModelScope.launch {
+            deviceManager.startBleStreaming().collect {started ->
+                _uiState.value = _uiState.value.copy(message = started.toString())
+            }
+        }
+    }
+
+    fun disconnectAndStopStreaming() {
+        viewModelScope.launch {
+            deviceManager.stopBleStreamingFlow().collect {stopped ->
+                _uiState.value = _uiState.value.copy(message = stopped.toString())
+            }
+        }
+    }
+
     fun startStreaming() {
-        deviceManager.startBleStreaming()
+        viewModelScope.launch {
+            deviceManager.startRaceBleStreamingFlow().collect {started ->
+                _uiState.value = _uiState.value.copy(message = started.toString())
+            }
+        }
     }
 
     fun stopStreaming() {
-        deviceManager.stopBleStreaming()
-    }
-
-    fun testRaceCommand() {
-        deviceManager.testRaceCommand()
+        viewModelScope.launch {
+            deviceManager.stopRaceBleStreamingFlow().collect {stopped ->
+                _uiState.value = _uiState.value.copy(message = stopped.toString())
+            }
+        }
     }
 }

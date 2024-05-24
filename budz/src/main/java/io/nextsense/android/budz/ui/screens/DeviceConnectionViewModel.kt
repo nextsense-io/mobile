@@ -3,8 +3,8 @@ package io.nextsense.android.budz.ui.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.nextsense.android.airoha.device.AirohaDeviceManager
-import io.nextsense.android.airoha.device.AirohaDeviceState
+import io.nextsense.android.budz.manager.AirohaDeviceManager
+import io.nextsense.android.budz.manager.AirohaDeviceState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +19,8 @@ data class DeviceConnectionState(
 
 @HiltViewModel
 class DeviceConnectionViewModel @Inject constructor(
-        private val deviceManager: AirohaDeviceManager): ViewModel() {
+        private val deviceManager: AirohaDeviceManager
+): ViewModel() {
 
     private val _uiState = MutableStateFlow(DeviceConnectionState())
 
