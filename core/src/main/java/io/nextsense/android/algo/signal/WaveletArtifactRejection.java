@@ -55,11 +55,29 @@ public class WaveletArtifactRejection {
     return noiseLevel * Math.sqrt(2 * Math.log(detailCoefficients.length));
   }
 
-  private static void applyCardiacArtifactThreshold(double[] data, double threshold) {
-    // Assuming cardiac artifacts are in the lower half of the wavelet coefficients
-    for (int i = 0; i < data.length / 2; i++) {
-      data[i] = Math.abs(data[i]) < threshold ? 0 : data[i];
+  private static void applyCardiacArtifactThreshold(double[] data, double baseThreshold) {
+    // Dynamic thresholding (computed on the variability of wavelet coefficients)
+    double[] detailCoefficients = Arrays.copyOfRange(data, data.length / 2, data.length);
+    double medianValue = calculateMedian(detailCoefficients);
+    double mad = calculateMAD(detailCoefficients, medianValue); // Median Absolute Deviation
+    double dynamicThreshold = baseThreshold * mad; // Adjust threshold dynamically
+
+    for (int i = 0; i < detailCoefficients.length; i++) {
+        if (Math.abs(detailCoefficients[i]) < dynamicThreshold) {
+            detailCoefficients[i] = 0; // Reproducing JB's assumption by setting coefficients below threshold to zero
+        }
     }
+
+    // Finally, copying the modified coefficients back to the original data array
+    System.arraycopy(detailCoefficients, 0, data, data.length / 2, detailCoefficients.length);
+  }
+
+  private static double calculateMAD(double[] data, double median) {
+    double[] deviations = new double[data.length];
+    for (int i = 0; i < data.length; i++) {
+        deviations[i] = Math.abs(data[i] - median);
+    }
+    return calculateMedian(deviations);
   }
 
   private static void adjustNoiseEstimationFactor(double[] originalData, double[] reconstructedData) {
