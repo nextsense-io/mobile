@@ -70,7 +70,9 @@ public class MauiDataParser {
       firstEegSampleTimestamp = receptionTimestamp;
     }
     short sequenceNumber = (short) (valuesBuffer.get() & 0xFF);  // Unsigned int.
-    RotatingFileLogger.get().logd(TAG, "Data sequence number: " + sequenceNumber);
+    if (sequenceNumber == 0 || sequenceNumber == 100 || sequenceNumber == 200) {
+      RotatingFileLogger.get().logd(TAG, "Data sequence number: " + sequenceNumber);
+    }
     Samples samples = Samples.create();
     boolean canParsePacket = true;
     while (canParsePacket && valuesBuffer.remaining() >= EEG_SAMPLE_SIZE_BYTES) {

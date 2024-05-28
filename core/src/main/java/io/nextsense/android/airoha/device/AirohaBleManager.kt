@@ -5,7 +5,9 @@ import io.nextsense.android.base.DeviceManager
 import io.nextsense.android.base.DeviceScanner.ScanError
 import io.nextsense.android.base.DeviceState
 import io.nextsense.android.base.utils.RotatingFileLogger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
@@ -15,7 +17,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Manages the communication through BLE for both right and left devices.
  */
-class AirohaBleManager constructor(
+class AirohaBleManager(
     private val deviceManager: DeviceManager
 ) {
     private val tag = AirohaBleManager::class.java.simpleName
@@ -76,7 +78,7 @@ class AirohaBleManager constructor(
         }
     }.flowOn(Dispatchers.IO)
 
-    fun deviceScanListenerFlow() = callbackFlow<Device?> {
+    private fun deviceScanListenerFlow() = callbackFlow<Device?> {
         val deviceScanListener = object : DeviceManager.DeviceScanListener {
             override fun onNewDevice(device: Device) {
                 RotatingFileLogger.get()
@@ -90,6 +92,7 @@ class AirohaBleManager constructor(
                     "Error while scanning in Android: " + scanError.name
                 )
                 trySend(null)
+                cancel(CancellationException("Error while scanning in Android: " + scanError.name))
             }
         }
 
@@ -97,6 +100,7 @@ class AirohaBleManager constructor(
 
         awaitClose {
             deviceManager.stopFindingDevices(deviceScanListener)
+            channel.close()
         }
     }.flowOn(Dispatchers.IO)
 

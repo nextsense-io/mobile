@@ -28,16 +28,16 @@ class DeviceConnectionViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            deviceManager.deviceState.collect { deviceState ->
+            deviceManager.airohaDeviceState.collect { deviceState ->
                 when (deviceState) {
+                    AirohaDeviceState.CONNECTING_CLASSIC -> {
+                        _uiState.value = _uiState.value.copy(connecting = true)
+                    }
                     AirohaDeviceState.READY -> {
                         _uiState.value = _uiState.value.copy(connected = true, connecting = false)
                     }
                     AirohaDeviceState.CONNECTED_AIROHA -> {
                         _uiState.value = _uiState.value.copy(connected = true, connecting = false)
-                    }
-                    AirohaDeviceState.CONNECTED_AIROHA_WRONG_ROLE -> {
-                        _uiState.value = _uiState.value.copy(connectedWrongRole = true)
                     }
                     else -> {
                         _uiState.value = DeviceConnectionState()

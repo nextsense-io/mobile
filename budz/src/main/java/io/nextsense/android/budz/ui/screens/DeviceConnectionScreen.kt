@@ -11,23 +11,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.nextsense.android.budz.ui.components.SimpleButton
 
 @Composable
 fun DeviceConnectionScreen(deviceConnectionViewModel: DeviceConnectionViewModel = viewModel()) {
     val deviceConnectionUiState by deviceConnectionViewModel.uiState.collectAsState()
-    val context = LocalContext.current
-
-//    LifecycleResumeEffect {
-//        deviceConnectionViewModel.initPresenter(context)
-//        onPauseOrDispose {
-//            deviceConnectionViewModel.destroyPresenter()
-//        }
-//    }
 
     Column(verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -39,6 +29,7 @@ fun DeviceConnectionScreen(deviceConnectionViewModel: DeviceConnectionViewModel 
             }
         })
         Spacer(modifier = Modifier.height(20.dp))
+        Text("Device connecting: ${deviceConnectionUiState.connecting}")
         Text("Device connected: ${deviceConnectionUiState.connected}")
     }
 }
