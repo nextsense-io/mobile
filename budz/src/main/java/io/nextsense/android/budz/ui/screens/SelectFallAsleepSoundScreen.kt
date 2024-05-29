@@ -8,19 +8,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleStartEffect
-import androidx.lifecycle.viewmodel.compose.viewModel
 import io.nextsense.android.budz.manager.SoundsManager
 import io.nextsense.android.budz.ui.components.AudioSampleList
 import io.nextsense.android.budz.ui.components.LoadingCircle
 import io.nextsense.android.budz.ui.components.Title
 
 @Composable
-fun SelectFallAsleepSoundScreen(stayAsleepViewModel: SelectFallAsleepSoundViewModel = viewModel()) {
+fun SelectFallAsleepSoundScreen(
+        stayAsleepViewModel: SelectFallAsleepSoundViewModel = hiltViewModel()) {
     val stayAsleepUiState by stayAsleepViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    LifecycleStartEffect {
+    LifecycleStartEffect(true) {
         onStopOrDispose {
             SoundsManager.stopAudioSample()
         }

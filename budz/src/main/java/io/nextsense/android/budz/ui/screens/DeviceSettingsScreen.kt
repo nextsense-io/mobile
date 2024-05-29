@@ -12,11 +12,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import io.nextsense.android.budz.ui.components.SimpleButton
 
 @Composable
-fun DeviceSettingsScreen(deviceSettingsViewModel: DeviceSettingsViewModel = viewModel()) {
+fun DeviceSettingsScreen(deviceSettingsViewModel: DeviceSettingsViewModel = hiltViewModel()) {
     val deviceSettingsUiState by deviceSettingsViewModel.uiState.collectAsState()
 
     Column(verticalArrangement = Arrangement.Center,

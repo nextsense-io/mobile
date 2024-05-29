@@ -47,7 +47,7 @@ object AuthErrors {
 
 @Singleton
 class AuthRepository @Inject constructor(
-    private val auth: FirebaseAuth,
+    private val firebaseAuth: FirebaseAuth,
     private var oneTapClient: SignInClient,
     private var googleSignInClient: GoogleSignInClient,
     private val usersRepository: UsersRepository,
@@ -61,27 +61,27 @@ class AuthRepository @Inject constructor(
     var currentUserId: String? = null
 
     suspend fun signInDatabase() = flow<State<User>> {
-        if (auth.currentUser == null) {
+        if (firebaseAuth.currentUser == null) {
             emit(State.failed("User is not authenticated"))
             return@flow
         }
-        val email = auth.currentUser!!.email
-        val name = auth.currentUser!!.displayName
-        usersRepository.getUser(auth.currentUser!!.uid).last().let { userGetState ->
+        val email = firebaseAuth.currentUser!!.email
+        val name = firebaseAuth.currentUser!!.displayName
+        usersRepository.getUser(firebaseAuth.currentUser!!.uid).last().let { userGetState ->
             if (userGetState is State.Success) {
                 if (userGetState.data == null) {
                     val newUser = User(email = email!!, name = name, type = UserType.CONSUMER,
                         createdAt = Timestamp.now())
-                    usersRepository.addUser(newUser, auth.currentUser!!.uid).last().let {userAddState ->
+                    usersRepository.addUser(newUser, firebaseAuth.currentUser!!.uid).last().let { userAddState ->
                         if (userAddState is State.Success) {
-                            currentUserId = auth.currentUser!!.uid
+                            currentUserId = firebaseAuth.currentUser!!.uid
                             emit(State.Success(newUser))
                         } else {
                             emit(State.failed(userAddState.toString()))
                         }
                     }
                 } else {
-                    currentUserId = auth.currentUser!!.uid
+                    currentUserId = firebaseAuth.currentUser!!.uid
                     emit(State.Success(userGetState.data))
                 }
             } else {
@@ -91,26 +91,35 @@ class AuthRepository @Inject constructor(
     }
 
     fun getAuthState(viewModelScope: CoroutineScope) = callbackFlow {
-        val authStateListener = AuthStateListener { auth ->
-            auth.currentUser?.let { user ->
+        val authStateListener = AuthStateListener { authState ->
+            authState.currentUser?.let { user ->
                 viewModelScope.launch {
                     signInDatabase().last().let { userState ->
                         if (userState is State.Success) {
-                            trySend(auth.currentUser)
+                            trySend(authState.currentUser)
+                        } else {
+                            trySend(null)
                         }
+                        channel.close()
                     }
                 }
             }
-            Log.i(TAG, "User: ${auth.currentUser?.uid ?: "Not authenticated"}")
+            if (authState.currentUser == null) {
+                trySend(null)
+                channel.close()
+            }
+            Log.i(TAG, "User: ${authState.currentUser?.uid ?: "Not authenticated"}")
         }
-        auth.addAuthStateListener(authStateListener)
+
+        firebaseAuth.addAuthStateListener(authStateListener)
+
         awaitClose {
-            auth.removeAuthStateListener(authStateListener)
+            firebaseAuth.removeAuthStateListener(authStateListener)
         }
     }.stateIn(scope=viewModelScope, started=SharingStarted.WhileSubscribed(), initialValue = null)
 
     suspend fun verifyGoogleSignIn(): Boolean {
-        auth.currentUser?.let { user ->
+        firebaseAuth.currentUser?.let { user ->
             if (user.providerData.map { it.providerId }.contains("google.com")) {
                 return try {
                     googleSignInClient.silentSignIn().await()
@@ -127,7 +136,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun signInAnonymously(): FirebaseSignInResponse {
         return try {
-            val authResult = auth.signInAnonymously().await()
+            val authResult = firebaseAuth.signInAnonymously().await()
             authResult?.user?.let { user ->
                 Log.i(TAG, "FirebaseAuthSuccess: Anonymous UID: ${user.uid}")
             }
@@ -159,7 +168,7 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun authenticateUser(credential: AuthCredential): FirebaseSignInResponse {
-        return if (auth.currentUser != null) {
+        return if (firebaseAuth.currentUser != null) {
             authLink(credential)
         } else {
             authSignIn(credential)
@@ -168,7 +177,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun authSignIn(credential: AuthCredential): FirebaseSignInResponse {
         return try {
-            val authResult = auth.signInWithCredential(credential).await()
+            val authResult = firebaseAuth.signInWithCredential(credential).await()
             Log.i(TAG, "User: ${authResult?.user?.uid}")
             AuthDataProvider.updateAuthState(authResult?.user)
             AuthResponse.Success(authResult)
@@ -180,7 +189,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun authLink(credential: AuthCredential): FirebaseSignInResponse {
         return try {
-            val authResult = auth.currentUser?.linkWithCredential(credential)?.await()
+            val authResult = firebaseAuth.currentUser?.linkWithCredential(credential)?.await()
             Log.i(TAG, "User: ${authResult?.user?.uid}")
             AuthDataProvider.updateAuthState(authResult?.user)
             AuthResponse.Success(authResult)
@@ -205,7 +214,7 @@ class AuthRepository @Inject constructor(
         return try {
             currentUserId = null
             oneTapClient.signOut().await()
-            auth.signOut()
+            firebaseAuth.signOut()
             AuthResponse.Success(true)
         }
         catch (e: java.lang.Exception) {
@@ -214,14 +223,14 @@ class AuthRepository @Inject constructor(
     }
 
     fun checkNeedsReAuth(): Boolean {
-        auth.currentUser?.metadata?.lastSignInTimestamp?.let { lastSignInDate ->
+        firebaseAuth.currentUser?.metadata?.lastSignInTimestamp?.let { lastSignInDate ->
             return !Date(lastSignInDate).isWithinPast(5)
         }
         return false
     }
 
     suspend fun authorizeGoogleSignIn(): String? {
-        auth.currentUser?.let { user ->
+        firebaseAuth.currentUser?.let { user ->
             if (user.providerData.map { it.providerId }.contains("google.com")) {
                 try {
                     val account = googleSignInClient.silentSignIn().await()
@@ -237,12 +246,12 @@ class AuthRepository @Inject constructor(
     private suspend fun reauthenticate(googleIdToken: String) {
         val googleCredential = GoogleAuthProvider
             .getCredential(googleIdToken, null)
-        auth.currentUser?.reauthenticate(googleCredential)?.await()
+        firebaseAuth.currentUser?.reauthenticate(googleCredential)?.await()
     }
 
     suspend fun deleteUserAccount(googleIdToken: String?): DeleteAccountResponse {
         return try {
-            auth.currentUser?.let { user ->
+            firebaseAuth.currentUser?.let { user ->
                 if (user.providerData.map { it.providerId }.contains("google.com")) {
                     // Re-authenticate if needed
                     if (checkNeedsReAuth() && googleIdToken != null) {
@@ -253,7 +262,7 @@ class AuthRepository @Inject constructor(
                     oneTapClient.signOut().await()
                 }
                 // Delete firebase user
-                auth.currentUser?.delete()?.await()
+                firebaseAuth.currentUser?.delete()?.await()
                 AuthResponse.Success(true)
             }
             Log.e(TAG, "FirebaseAuthError: Current user is not available")
@@ -267,7 +276,7 @@ class AuthRepository @Inject constructor(
 
     private suspend fun verifyAuthTokenResult(): Boolean {
         return try {
-            auth.currentUser?.getIdToken(true)?.await()
+            firebaseAuth.currentUser?.getIdToken(true)?.await()
             true
         } catch (e: Exception) {
             Log.i(TAG, "Error retrieving id token result. $e")

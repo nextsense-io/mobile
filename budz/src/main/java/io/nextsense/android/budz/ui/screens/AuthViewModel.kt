@@ -11,6 +11,7 @@ import io.nextsense.android.budz.model.AuthDataProvider
 import io.nextsense.android.budz.model.AuthResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -21,12 +22,15 @@ class AuthViewModel @Inject constructor(
 ): ViewModel() {
 
     val currentUser = getAuthState()
+    val loginDone = MutableStateFlow(false)
 
     init {
         getAuthState()
         CoroutineScope(Dispatchers.IO).launch {
-            authRepository.verifyGoogleSignIn()
-            authRepository.signInDatabase()
+            val signedInGoogle = authRepository.verifyGoogleSignIn()
+            if (signedInGoogle) {
+                authRepository.signInDatabase()
+            }
         }
     }
 

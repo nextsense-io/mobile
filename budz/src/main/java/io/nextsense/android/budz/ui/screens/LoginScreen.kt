@@ -5,7 +5,6 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,17 +19,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.identity.BeginSignInResult
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
 import io.nextsense.android.budz.model.AuthDataProvider
 import io.nextsense.android.budz.model.AuthState
@@ -40,13 +39,16 @@ import io.nextsense.android.budz.ui.theme.BudzTheme
 
 @Composable
 fun LoginScreen(
-    authViewModel: AuthViewModel,
-    loginState: MutableState<Boolean>? = null
-) {
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        onLogin: () -> Unit,
+        authViewModel: AuthViewModel = hiltViewModel(),
+        loginState: MutableState<Boolean> = mutableStateOf(false)) {
+
+    val launcher = rememberLauncherForActivityResult(
+            ActivityResultContracts.StartIntentSenderForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             try {
-                val credentials = authViewModel.oneTapClient.getSignInCredentialFromIntent(result.data)
+                val credentials =
+                    authViewModel.oneTapClient.getSignInCredentialFromIntent(result.data)
                 authViewModel.signInWithGoogle(credentials)
                 authViewModel.signInWithDatabase()
             }
@@ -62,6 +64,16 @@ fun LoginScreen(
     fun launch(signInResult: BeginSignInResult) {
         val intent = IntentSenderRequest.Builder(signInResult.pendingIntent.intentSender).build()
         launcher.launch(intent)
+    }
+
+    val currentUser = authViewModel.currentUser.collectAsState().value
+    AuthDataProvider.updateAuthState(currentUser)
+    if (AuthDataProvider.authState == AuthState.SignedIn) {
+        if (!authViewModel.loginDone.value) {
+            Log.i("LoginScreen", "Authenticated: ${AuthDataProvider.isAuthenticated}")
+            authViewModel.loginDone.value = true
+            onLogin()
+        }
     }
 
     Scaffold(
@@ -89,7 +101,6 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    // TODO: Sign in with Google
                     authViewModel.oneTapSignIn()
                 },
                 modifier = Modifier
@@ -145,6 +156,10 @@ fun LoginScreen(
             it.value = false
         }
     }
+
+//    LaunchedEffect(true) {
+//        authViewModel.checkCurrentAuthState()
+//    }
 }
 
 @Preview

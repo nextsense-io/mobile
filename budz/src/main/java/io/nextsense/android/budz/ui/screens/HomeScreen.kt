@@ -15,8 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.viewmodel.compose.viewModel
 import io.nextsense.android.budz.ui.activities.DeviceConnectionActivity
 import io.nextsense.android.budz.ui.activities.DeviceSettingsActivity
 import io.nextsense.android.budz.ui.activities.SelectFallAsleepSoundActivity
@@ -24,14 +24,22 @@ import io.nextsense.android.budz.ui.activities.SelectStayAsleepSoundActivity
 import io.nextsense.android.budz.ui.components.SimpleButton
 
 @Composable
-fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    onGoToFallAsleep: () -> Unit,
+    onGoToStayAsleep: () -> Unit,
+    onGoToDeviceConnection: () -> Unit,
+    onGoToDeviceSettings: () -> Unit,
+    onSignOut: () -> Unit
+) {
     val homeUiState by homeViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    LifecycleResumeEffect {
+    LifecycleResumeEffect(true) {
         homeViewModel.loadUserSounds()
         onPauseOrDispose {}
     }
+
     Column(verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 30.dp)) {
@@ -47,12 +55,7 @@ fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
             Text("Fall asleep: ${homeUiState.fallAsleepSample?.name}")
             Spacer(modifier = Modifier.weight(1f))
             SimpleButton(name = "Change sound", enabled = !homeUiState.loading, onClick = {
-                context.startActivity(
-                    Intent(
-                        context,
-                        SelectFallAsleepSoundActivity::class.java
-                    )
-                )
+                onGoToFallAsleep()
             })
         }
         Row(verticalAlignment = Alignment.CenterVertically,
@@ -60,33 +63,18 @@ fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
             Text("Stay asleep: ${homeUiState.stayAsleepSample?.name}")
             Spacer(modifier = Modifier.weight(1f))
             SimpleButton(name = "Change sound", enabled = !homeUiState.loading, onClick = {
-                context.startActivity(
-                    Intent(
-                        context,
-                        SelectStayAsleepSoundActivity::class.java
-                    )
-                )
+                onGoToStayAsleep()
             })
         }
         SimpleButton(name = "Check connection", onClick = {
-            context.startActivity(
-                Intent(
-                    context,
-                    DeviceConnectionActivity::class.java
-                )
-            )
+            onGoToDeviceConnection()
         })
         SimpleButton(name = "Test device settings", onClick = {
-            context.startActivity(
-                Intent(
-                    context,
-                    DeviceSettingsActivity::class.java
-                )
-            )
+            onGoToDeviceSettings()
         })
         SimpleButton(name = "Sign out", onClick = {
             homeViewModel.signOut()
-            (context as Activity).finish()
+            onSignOut()
         })
     }
 }
