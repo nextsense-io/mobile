@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -68,12 +67,10 @@ fun LoginScreen(
 
     val currentUser = authViewModel.currentUser.collectAsState().value
     AuthDataProvider.updateAuthState(currentUser)
-    if (AuthDataProvider.authState == AuthState.SignedIn) {
-        if (!authViewModel.loginDone.value) {
-            Log.i("LoginScreen", "Authenticated: ${AuthDataProvider.isAuthenticated}")
-            authViewModel.loginDone.value = true
-            onLogin()
-        }
+    if (AuthDataProvider.authState == AuthState.SignedIn && !authViewModel.loginDone.value) {
+        Log.i("LoginScreen", "Authenticated: ${AuthDataProvider.isAuthenticated}")
+        authViewModel.loginDone.value = true
+        onLogin()
     }
 
     Scaffold(
@@ -152,14 +149,8 @@ fun LoginScreen(
 
     GoogleSignIn {
         // Dismiss LoginScreen
-        loginState?.let {
-            it.value = false
-        }
+        loginState.value = false
     }
-
-//    LaunchedEffect(true) {
-//        authViewModel.checkCurrentAuthState()
-//    }
 }
 
 @Preview

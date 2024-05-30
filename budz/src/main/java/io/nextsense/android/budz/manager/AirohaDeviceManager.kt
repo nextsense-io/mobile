@@ -12,8 +12,11 @@ import com.airoha.sdk.AirohaConnector
 import com.airoha.sdk.AirohaSDK
 import com.airoha.sdk.api.control.AirohaDeviceControl
 import com.airoha.sdk.api.control.AirohaDeviceListener
+import com.airoha.sdk.api.device.AirohaDevice
 import com.airoha.sdk.api.message.AirohaBaseMsg
+import com.airoha.sdk.api.message.AirohaBatteryInfo
 import com.airoha.sdk.api.message.AirohaCmdSettings
+import com.airoha.sdk.api.message.AirohaDeviceInfoMsg
 import com.airoha.sdk.api.message.AirohaEQPayload
 import com.airoha.sdk.api.utils.AirohaEQBandType
 import com.airoha.sdk.api.utils.AirohaStatusCode
@@ -26,11 +29,13 @@ import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.service.BudzService
 import io.nextsense.android.budz.ui.activities.MainActivity
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.update
 import java.util.LinkedList
 import javax.inject.Inject
@@ -54,12 +59,17 @@ enum class StreamingState {
     ERROR  // Error when trying to start or stop streaming.
 }
 
+data class AirohaBatteryLevel(
+    val left: Int?,
+    val right: Int?,
+    val case: Int?
+)
+
 @Singleton
 class AirohaDeviceManager @Inject constructor(@ApplicationContext private val context: Context) {
 
     private val tag = AirohaDeviceManager::class.java.simpleName
     private val _airohaDeviceConnector = AirohaSDK.getInst().airohaDeviceConnector
-    private val _foregroundServiceIntent: Intent? = null
     // Frequencies that can be set in the equalizer.
     private val _eqFrequencies =
         floatArrayOf(200f, 280f, 400f, 550f, 770f, 1000f, 2000f, 4000f, 8000f, 16000f)
@@ -75,6 +85,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private var _budzServiceConnection: ServiceConnection? = null
     private var _airohaBleManager: AirohaBleManager? = null
     private var _devicePresenter: DeviceSearchPresenter? = null
+    private var _twsConnected: Boolean? = null
+    private var _deviceInfo: AirohaDevice? = null
     private var _targetGains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
 
     val airohaDeviceState: StateFlow<AirohaDeviceState> = _airohaDeviceState.asStateFlow()
@@ -147,6 +159,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     init {
         _airohaDeviceConnector.registerConnectionListener(_airohaConnectionListener)
         _devicePresenter = DeviceSearchPresenter(context)
+        Log.i(tag, "initialized")
     }
 
     fun destroy() {
@@ -159,6 +172,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     }
 
     suspend fun connectDevice() {
+        Log.i(tag, "connectDevice")
         _airohaDeviceState.value = AirohaDeviceState.CONNECTING_CLASSIC
         if (_airohaDeviceState.value != AirohaDeviceState.BONDED) {
             val bonded = isAirohaDeviceBonded()
@@ -170,7 +184,20 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         connectAirohaDevice()
         airohaDeviceState.collect { deviceState ->
             if (deviceState == AirohaDeviceState.CONNECTED_AIROHA) {
-                // Might need to run a few commands here before it is marked as READY.
+                // Need to call these 2 APIs to correctly initialize the connection. If not, things
+                // like getting the battery levels do not work correctly.
+                // Also need a small delay between these commands or they often fail.
+                delay(100L)
+                _twsConnected = twsConnectStatusFlow().last()
+                Log.d(tag, "twsConnected=$_twsConnected")
+                delay(100L)
+                _deviceInfo = deviceInfoFlow().last()
+                Log.d(tag, "deviceInfo=$_deviceInfo")
+                if (_twsConnected == null || _deviceInfo == null) {
+                    disconnectDevice()
+                    _airohaDeviceState.value = AirohaDeviceState.ERROR
+                    return@collect
+                }
                 _airohaDeviceState.value = AirohaDeviceState.READY
             }
         }
@@ -325,6 +352,132 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             airohaDeviceListener
         )
         return true
+    }
+
+    fun batteryLevelsFlow() = callbackFlow<AirohaBatteryLevel> {
+        val batteryInfoListener = object : AirohaDeviceListener {
+            override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg?) {
+                Log.d(tag,"BatteryInfoListener.onRead=${code.description}," +
+                        " msg = ${msg?.msgID?.cmdName}")
+
+                var leftBattery: Int? = null
+                var rightBattery: Int? = null
+                var caseBattery: Int? = null
+
+                try {
+                    if (code == AirohaStatusCode.STATUS_SUCCESS && msg != null) {
+                        val batteryInfo = msg.msgContent as AirohaBatteryInfo
+
+                        Log.d(tag,"batteryInfo master level ${batteryInfo.masterLevel}")
+                        Log.d(tag, "batteryInfo slave level ${batteryInfo.slaveLevel}")
+                        Log.d(tag,"AirohaSDK.getInst().isAgentRightSideDevice()=" +
+                                "${AirohaSDK.getInst().isAgentRightSideDevice}")
+                        if (AirohaSDK.getInst().isAgentRightSideDevice) {
+                            rightBattery = batteryInfo.masterLevel
+                            leftBattery = batteryInfo.slaveLevel
+                            caseBattery = batteryInfo.boxLevel
+                        } else {
+                            leftBattery = batteryInfo.masterLevel
+                            rightBattery = batteryInfo.slaveLevel
+                            caseBattery = batteryInfo.boxLevel
+                        }
+                    }
+                } catch (e: java.lang.Exception) {
+                    Log.e(tag, e.message, e)
+                }
+                trySend(AirohaBatteryLevel(leftBattery, rightBattery, caseBattery))
+                channel.close()
+            }
+
+            override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                // Nothing to do.
+            }
+        }
+
+        AirohaSDK.getInst().airohaDeviceControl.getBatteryInfo(batteryInfoListener)
+
+        awaitClose {
+        }
+    }
+
+    private fun twsConnectStatusFlow() = callbackFlow<Boolean?> {
+        val twsConnectStatusListener = object : AirohaDeviceListener {
+                override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                    Log.d(tag, "TwsConnectStatusListener.onRead=${code.description}," +
+                            " msg = ${msg.msgID.cmdName}")
+                    try {
+                        if (code == AirohaStatusCode.STATUS_SUCCESS) {
+                            val isTwsConnected = msg.msgContent as Boolean
+                            Log.d(tag, "isTwsConnected=$isTwsConnected")
+                            trySend(isTwsConnected)
+                        } else {
+                            Log.d(tag, "getTwsConnectStatus: ${code.description}," +
+                                    " msg = ${msg.msgID.cmdName}")
+                            trySend(null)
+                        }
+                    } catch (e: java.lang.Exception) {
+                        Log.e(tag, e.message, e)
+                        trySend(null)
+                    }
+                    channel.close()
+                }
+
+                override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                    // Nothing to do.
+                }
+            }
+
+        AirohaSDK.getInst().airohaDeviceControl.getTwsConnectStatus(twsConnectStatusListener)
+
+        awaitClose {
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun deviceInfoFlow() = callbackFlow<AirohaDevice?> {
+        val deviceInfoListener = object : AirohaDeviceListener {
+            override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                Log.d(tag, "DeviceInfoListener.onRead=${code.description}," +
+                        " msg = ${msg.msgID.cmdName}")
+                try {
+                    if (code == AirohaStatusCode.STATUS_SUCCESS) {
+                        Log.d(tag, "Parsing DeviceInfo")
+                        val deviceInfoMessage = msg as AirohaDeviceInfoMsg
+                        val content = deviceInfoMessage.msgContent as LinkedList<AirohaDevice>
+                        if (content.isEmpty()) {
+                            trySend(null)
+                            channel.close()
+                            return
+                        }
+                        val airohaDevice = content[0]
+                        if (AirohaSDK.getInst().isPartnerExisting) {
+                            val airohaDevicePartner = content[1]
+                            if (airohaDevicePartner.deviceName != null &&
+                                airohaDevicePartner.deviceName.isNotEmpty()
+                            ) {
+                                airohaDevice.deviceName = airohaDevicePartner.deviceName
+                            }
+                        }
+                        trySend(airohaDevice)
+                    } else {
+                        trySend(null)
+                    }
+                } catch (e: java.lang.Exception) {
+                    Log.e(tag, e.message, e)
+                    trySend(null)
+                }
+                channel.close()
+            }
+
+            override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                // Nothing to do.
+            }
+        }
+
+        AirohaSDK.getInst().airohaDeviceControl.getDeviceInfo(deviceInfoListener)
+
+        awaitClose {
+        }
     }
 
     private fun logAirohaResponse(method: String, code: AirohaStatusCode, msg: AirohaBaseMsg) {

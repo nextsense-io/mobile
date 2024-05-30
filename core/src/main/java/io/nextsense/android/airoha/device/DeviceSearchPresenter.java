@@ -84,6 +84,7 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         mBluetoothAdapter = bluetoothManager.getAdapter();
         mA2dpProfileServiceListener = new A2DPProfileServiceListener();
         mBluetoothAdapter.getProfileProxy(act, mA2dpProfileServiceListener, BluetoothProfile.A2DP);
+        Log.i(TAG, "initialized");
     }
 
     public final void destroy() {

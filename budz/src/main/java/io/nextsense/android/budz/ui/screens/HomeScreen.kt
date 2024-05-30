@@ -1,7 +1,5 @@
 package io.nextsense.android.budz.ui.screens
 
-import android.app.Activity
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,10 +15,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import io.nextsense.android.budz.ui.activities.DeviceConnectionActivity
-import io.nextsense.android.budz.ui.activities.DeviceSettingsActivity
-import io.nextsense.android.budz.ui.activities.SelectFallAsleepSoundActivity
-import io.nextsense.android.budz.ui.activities.SelectStayAsleepSoundActivity
 import io.nextsense.android.budz.ui.components.SimpleButton
 
 @Composable
@@ -76,5 +70,8 @@ fun HomeScreen(
             homeViewModel.signOut()
             onSignOut()
         })
+        Text("Connected: ${homeViewModel.uiState.value.connected}")
+        Text("Left battery: ${homeViewModel.uiState.value.batteryLevel.left}")
+        Text("Right battery: ${homeViewModel.uiState.value.batteryLevel.right}")
     }
 }
