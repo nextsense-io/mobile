@@ -1,5 +1,18 @@
 <resources>
     <string name="app_name">Budz</string>
+    <string name="app_title">BUDZ</string>
+    <string name="title_fall_asleep">Fall asleep sound library</string>
+    <string name="title_stay_asleep">Stay asleep sound library</string>
+    <string name="home_button_description">Home</string>
+    <string name="privacy_button_description">Privacy policy</string>
+    <string name="back_button_description">Go back</string>
+    <string name="button_change">Change</string>
+    <string name="label_case">Case</string>
+    <string name="label_fall_asleep">Fall asleep</string>
+    <string name="label_left">Left</string>
+    <string name="label_restoration_boost">Restoration boost</string>
+    <string name="label_right">Right</string>
+    <string name="label_stay_asleep">Stay asleep</string>
     <string name="notif_content">Press to access the application</string>
     <string name="web_client_id" translatable="false">894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com</string>
 </resources>

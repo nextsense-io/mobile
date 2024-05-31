@@ -1,21 +1,61 @@
 package io.nextsense.android.budz.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import io.nextsense.android.budz.R
+import io.nextsense.android.budz.ui.components.ActionButton
+import io.nextsense.android.budz.ui.components.BudzCard
+import io.nextsense.android.budz.ui.components.CircleButton
 import io.nextsense.android.budz.ui.components.SimpleButton
+import io.nextsense.android.budz.ui.components.TopBar
+import io.nextsense.android.budz.ui.theme.BudzTheme
+
+@Composable
+fun BatteryLevel(percent: Int?) {
+    Row {
+        Icon(painter = painterResource(id = R.drawable.ic_battery_40), contentDescription = null)
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(text = percent?.let { "$it%" } ?: "--%",
+            style = MaterialTheme.typography.labelMedium)
+    }
+
+}
 
 @Composable
 fun HomeScreen(
@@ -34,44 +74,135 @@ fun HomeScreen(
         onPauseOrDispose {}
     }
 
-    Column(verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 30.dp)) {
-        SimpleButton(name = if (homeUiState.fallingAsleep) "Stop Sleeping" else "Sleep", onClick = {
-            if (homeUiState.fallingAsleep) {
-                homeViewModel.stopSleeping()
-            } else {
-                homeViewModel.startSleeping(context)
+    Scaffold(
+        topBar = {
+            TopBar(title = stringResource(R.string.app_title), isAppTitle = true, showHome = true,
+                showPrivacy = true, onNavigationClick = { })
+        },
+        modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+    ) {
+        Surface(modifier = Modifier
+            .fillMaxSize()
+            .padding(it))
+        {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(horizontal = 30.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
+                CircleButton(text = "Sleep", onClick = {})
+                SimpleButton(name = if (homeUiState.fallingAsleep) "Stop Sleeping" else "Sleep",
+                    onClick = {
+                        if (homeUiState.fallingAsleep) {
+                            homeViewModel.stopSleeping()
+                        } else {
+                            homeViewModel.startSleeping(context)
+                        }
+                    })
+                Spacer(modifier = Modifier.height(15.dp))
+                BudzCard {
+                    Text(stringResource(R.string.label_fall_asleep),
+                        style = MaterialTheme.typography.labelMedium)
+                    HorizontalDivider(color = Color(0xFF444978))
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("${homeUiState.fallAsleepSample?.name}",
+                            style = MaterialTheme.typography.displayMedium)
+                        Spacer(modifier = Modifier.weight(1f))
+                        SimpleButton(name = stringResource(R.string.button_change),
+                            enabled = !homeUiState.loading, onClick = {
+                            onGoToFallAsleep()
+                        })
+                    }
+                }
+                Spacer(modifier = Modifier.height(15.dp))
+                BudzCard {
+                    Text(stringResource(R.string.label_stay_asleep),
+                        style = MaterialTheme.typography.labelMedium
+                    )
+                    HorizontalDivider(color = Color(0xFF444978))
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("${homeUiState.stayAsleepSample?.name}",
+                            style = MaterialTheme.typography.displayMedium)
+                        Spacer(modifier = Modifier.weight(1f))
+                        SimpleButton(name = stringResource(R.string.button_change),
+                            enabled = !homeUiState.loading, onClick = {
+                            onGoToStayAsleep()
+                        })
+                    }
+                }
+                Spacer(modifier = Modifier.height(15.dp))
+                BudzCard {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(stringResource(R.string.label_restoration_boost),
+                            style = MaterialTheme.typography.labelMedium)
+                        Spacer(modifier = Modifier.weight(1f))
+                        Switch(checked = homeUiState.restorationBoost, colors =
+                            SwitchDefaults.colors(
+                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                            ),
+                            onCheckedChange = {checked ->
+                                homeViewModel.setRestorationBoost(checked)
+                            })
+                    }
+                }
+                Spacer(modifier = Modifier.height(15.dp))
+                BudzCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.label_left),
+                            style = MaterialTheme.typography.displayMedium)
+                        Spacer(modifier = Modifier.width(5.dp))
+                        BatteryLevel(homeUiState.batteryLevel.left)
+                        Spacer(modifier = Modifier.weight(1f))
+                        VerticalDivider(
+                            // color = Color(0xFF434978),
+                            color = Color.White,
+                            modifier = Modifier
+                                .width(1.dp).height(20.dp)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text(stringResource(R.string.label_right),
+                            style = MaterialTheme.typography.displayMedium)
+                        Spacer(modifier = Modifier.width(5.dp))
+                        BatteryLevel(homeUiState.batteryLevel.right)
+                    }
+                }
+                Spacer(modifier = Modifier.height(15.dp))
+                BudzCard {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(R.string.label_case),
+                            style = MaterialTheme.typography.displayMedium)
+                        Spacer(modifier = Modifier.weight(1f))
+                        BatteryLevel(homeUiState.batteryLevel.case)
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+                Spacer(modifier = Modifier.height(15.dp))
+                Spacer(modifier = Modifier.weight(1f))
+                Row(verticalAlignment = Alignment.Top,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    ActionButton(name = "Check\nconnection", icon = R.drawable.ic_connection,
+                        onClick = { onGoToDeviceConnection() })
+                    ActionButton(name = "Device\nsettings", icon = R.drawable.ic_clock,
+                        onClick = { onGoToDeviceSettings() })
+                    ActionButton(name = "Sign out", icon= R.drawable.ic_focus, onClick = {
+                        homeViewModel.signOut()
+                        onSignOut()
+                    })
+                }
+                Spacer(modifier = Modifier.height(15.dp))
+                Text("Connected: ${homeViewModel.uiState.value.connected}")
+                Text("Left battery: ${homeViewModel.uiState.value.batteryLevel.left}")
+                Text("Right battery: ${homeViewModel.uiState.value.batteryLevel.right}")
             }
-        })
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Fall asleep: ${homeUiState.fallAsleepSample?.name}")
-            Spacer(modifier = Modifier.weight(1f))
-            SimpleButton(name = "Change sound", enabled = !homeUiState.loading, onClick = {
-                onGoToFallAsleep()
-            })
         }
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Stay asleep: ${homeUiState.stayAsleepSample?.name}")
-            Spacer(modifier = Modifier.weight(1f))
-            SimpleButton(name = "Change sound", enabled = !homeUiState.loading, onClick = {
-                onGoToStayAsleep()
-            })
-        }
-        SimpleButton(name = "Check connection", onClick = {
-            onGoToDeviceConnection()
-        })
-        SimpleButton(name = "Test device settings", onClick = {
-            onGoToDeviceSettings()
-        })
-        SimpleButton(name = "Sign out", onClick = {
-            homeViewModel.signOut()
-            onSignOut()
-        })
-        Text("Connected: ${homeViewModel.uiState.value.connected}")
-        Text("Left battery: ${homeViewModel.uiState.value.batteryLevel.left}")
-        Text("Right battery: ${homeViewModel.uiState.value.batteryLevel.right}")
     }
 }

@@ -30,6 +30,7 @@ data class HomeState(
     val batteryLevel: AirohaBatteryLevel =
         AirohaBatteryLevel(right = null, left = null, case = null),
     val connected: Boolean = false,
+    val restorationBoost: Boolean = true
 )
 
 @HiltViewModel
@@ -129,6 +130,15 @@ class HomeViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+    fun setRestorationBoost(value: Boolean) {
+        // TODO(eric): Implement restoration boost
+        _uiState.update { currentState ->
+            currentState.copy(
+                restorationBoost = value
+            )
         }
     }
 

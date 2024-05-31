@@ -62,7 +62,9 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable<Routes.SelectFallAsleepSoundScreen> {
-                        SelectFallAsleepSoundScreen()
+                        SelectFallAsleepSoundScreen(onNavigateBack = {
+                            navController.popBackStack()
+                        })
                     }
                     composable<Routes.SelectStayAsleepSoundScreen> {
                         SelectStayAsleepSoundScreen()
