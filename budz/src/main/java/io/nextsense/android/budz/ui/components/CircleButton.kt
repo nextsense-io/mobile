@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun CircleButton(text: String, onClick: () -> Unit) {
     Box(modifier = Modifier
-            .size(200.dp)
+            .size(240.dp)
             .border(10.dp, MaterialTheme.colorScheme.primary, CircleShape)
             .clip(CircleShape)
             .background(Color.Transparent)

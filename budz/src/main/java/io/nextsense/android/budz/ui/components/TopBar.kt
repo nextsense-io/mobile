@@ -43,14 +43,14 @@ fun TopBar(title: String, isAppTitle: Boolean = false, showHome: Boolean, showPr
                 if (showHome) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_home),
-                        contentDescription = stringResource(R.string.home_button_description),
+                        contentDescription = stringResource(R.string.desc_home_button),
                         modifier = Modifier.size(36.dp),
                         tint = MaterialTheme.colorScheme.tertiary
                     )
                 } else {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_left_arrow),
-                        contentDescription = stringResource(R.string.back_button_description),
+                        contentDescription = stringResource(R.string.desc_back_button),
                         modifier = Modifier.size(36.dp),
                         tint = MaterialTheme.colorScheme.tertiary
                     )
@@ -62,7 +62,7 @@ fun TopBar(title: String, isAppTitle: Boolean = false, showHome: Boolean, showPr
                 IconButton(onClick = { onPrivacyClick() }) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_privacy),
-                        contentDescription = stringResource(R.string.privacy_button_description),
+                        contentDescription = stringResource(R.string.desc_privacy_button),
                         modifier = Modifier.size(36.dp),
                         tint = MaterialTheme.colorScheme.tertiary
                     )

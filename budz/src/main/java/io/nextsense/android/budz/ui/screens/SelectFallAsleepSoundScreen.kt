@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -26,13 +25,13 @@ import io.nextsense.android.budz.R
 import io.nextsense.android.budz.manager.SoundsManager
 import io.nextsense.android.budz.ui.components.AudioSampleList
 import io.nextsense.android.budz.ui.components.LoadingCircle
-import io.nextsense.android.budz.ui.components.Title
 import io.nextsense.android.budz.ui.components.TopBar
 
 @Composable
 fun SelectFallAsleepSoundScreen(
     stayAsleepViewModel: SelectFallAsleepSoundViewModel = hiltViewModel(),
-    onNavigateBack: () -> Unit) {
+    onNavigateBack: () -> Unit
+) {
     val stayAsleepUiState by stayAsleepViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
@@ -55,20 +54,18 @@ fun SelectFallAsleepSoundScreen(
                 .padding(it)
         ) {
             Column(
-                verticalArrangement = Arrangement.Center,
+                verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(horizontal = 30.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Title("Select sound to play to fall asleep")
                 if (stayAsleepUiState.loading) {
                     LoadingCircle()
                 }
                 Row {
-                    Spacer(modifier = Modifier.weight(1f))
                     Column {
                         AudioSampleList(
-                            audioSamples = SoundsManager.fallAsleepSamples,
+                            audioGroups = SoundsManager.fallAsleepSamples,
                             selected = stayAsleepUiState.audioSample,
                             playing = stayAsleepUiState.playing,
                             enabled = !stayAsleepUiState.loading,
@@ -79,7 +76,6 @@ fun SelectFallAsleepSoundScreen(
                             onStop = {stayAsleepViewModel.stopPlayingSample()}
                         )
                     }
-                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }

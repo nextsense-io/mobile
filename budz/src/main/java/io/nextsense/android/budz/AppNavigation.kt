@@ -20,4 +20,7 @@ sealed class Routes{
 
     @Serializable
     data object SelectStayAsleepSoundScreen : Routes()
+
+    @Serializable
+    data object TimedSleepScreen : Routes()
 }

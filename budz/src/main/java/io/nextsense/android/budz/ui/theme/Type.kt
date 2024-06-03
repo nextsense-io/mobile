@@ -68,6 +68,14 @@ val Typography = Typography(
         lineHeight = 80.sp,
         letterSpacing = 0.sp
     ),
+    // Different typography for sleep emphasis for smaller elements
+    headlineSmall = TextStyle(
+        fontFamily = gowunBatangRegularFontFamily,
+        fontWeight = FontWeight.Light,
+        fontSize = 30.sp,
+        lineHeight = 40.sp,
+        letterSpacing = 0.sp
+    ),
     // Used for the title in the top bar for secondary screens
     titleSmall = TextStyle(
         fontFamily = workSansSemiBoldFontFamily,

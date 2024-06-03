@@ -14,6 +14,7 @@ import io.nextsense.android.budz.ui.screens.HomeScreen
 import io.nextsense.android.budz.ui.screens.LoginScreen
 import io.nextsense.android.budz.ui.screens.SelectFallAsleepSoundScreen
 import io.nextsense.android.budz.ui.screens.SelectStayAsleepSoundScreen
+import io.nextsense.android.budz.ui.screens.TimedSleepScreen
 import io.nextsense.android.budz.ui.theme.BudzTheme
 
 @AndroidEntryPoint
@@ -56,6 +57,9 @@ class MainActivity : ComponentActivity() {
                             onGoToStayAsleep = {
                                 navController.navigate(Routes.SelectStayAsleepSoundScreen)
                             },
+                            onGoToTimedSleep = {
+                                navController.navigate(Routes.TimedSleepScreen)
+                            },
                             onGoToDeviceSettings = {
                                 navController.navigate(Routes.DeviceSettingsScreen)
                             }
@@ -67,13 +71,28 @@ class MainActivity : ComponentActivity() {
                         })
                     }
                     composable<Routes.SelectStayAsleepSoundScreen> {
-                        SelectStayAsleepSoundScreen()
+                        SelectStayAsleepSoundScreen(onNavigateBack = {
+                            navController.popBackStack()
+                        })
                     }
                     composable<Routes.DeviceConnectionScreen> {
                         DeviceConnectionScreen()
                     }
                     composable<Routes.DeviceSettingsScreen> {
                         DeviceSettingsScreen()
+                    }
+                    composable<Routes.TimedSleepScreen> {
+                        TimedSleepScreen(
+                            onGoToFallAsleep = {
+                                navController.navigate(Routes.SelectFallAsleepSoundScreen)
+                            },
+                            onGoToStayAsleep = {
+                                navController.navigate(Routes.SelectStayAsleepSoundScreen)
+                            },
+                            onGoToHome = {
+                                navController.navigate(Routes.HomeScreen)
+                            }
+                        )
                     }
                 }
             }

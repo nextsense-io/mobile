@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,15 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
@@ -34,7 +30,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -44,7 +39,6 @@ import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.CircleButton
 import io.nextsense.android.budz.ui.components.SimpleButton
 import io.nextsense.android.budz.ui.components.TopBar
-import io.nextsense.android.budz.ui.theme.BudzTheme
 
 @Composable
 fun BatteryLevel(percent: Int?) {
@@ -54,7 +48,6 @@ fun BatteryLevel(percent: Int?) {
         Text(text = percent?.let { "$it%" } ?: "--%",
             style = MaterialTheme.typography.labelMedium)
     }
-
 }
 
 @Composable
@@ -62,6 +55,7 @@ fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
     onGoToFallAsleep: () -> Unit,
     onGoToStayAsleep: () -> Unit,
+    onGoToTimedSleep: () -> Unit,
     onGoToDeviceConnection: () -> Unit,
     onGoToDeviceSettings: () -> Unit,
     onSignOut: () -> Unit
@@ -92,7 +86,7 @@ fun HomeScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 Spacer(modifier = Modifier.weight(1f))
-                CircleButton(text = "Sleep", onClick = {})
+                CircleButton(text = stringResource(R.string.label_sleep), onClick = {})
                 SimpleButton(name = if (homeUiState.fallingAsleep) "Stop Sleeping" else "Sleep",
                     onClick = {
                         if (homeUiState.fallingAsleep) {
@@ -189,8 +183,12 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    ActionButton(name = "Check\nconnection", icon = R.drawable.ic_connection,
+                    ActionButton(name = stringResource(R.string.label_check_connection),
+                        icon = R.drawable.ic_connection,
                         onClick = { onGoToDeviceConnection() })
+                    ActionButton(name = stringResource(R.string.label_timed_sleep),
+                        icon = R.drawable.ic_clock,
+                        onClick = { onGoToTimedSleep() })
                     ActionButton(name = "Device\nsettings", icon = R.drawable.ic_clock,
                         onClick = { onGoToDeviceSettings() })
                     ActionButton(name = "Sign out", icon= R.drawable.ic_focus, onClick = {
@@ -200,8 +198,6 @@ fun HomeScreen(
                 }
                 Spacer(modifier = Modifier.height(15.dp))
                 Text("Connected: ${homeViewModel.uiState.value.connected}")
-                Text("Left battery: ${homeViewModel.uiState.value.batteryLevel.left}")
-                Text("Right battery: ${homeViewModel.uiState.value.batteryLevel.right}")
             }
         }
     }

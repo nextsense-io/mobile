@@ -6,10 +6,17 @@ import android.media.SoundPool
 import android.net.Uri
 import io.nextsense.android.budz.R
 
-data class AudioSample(
-    val id: String,
-    val name: String,
-    val resId: Int
+data class AudioSample (
+    val id: String,  // Unique identifier used in the database
+    val index: Int,  // Index of the order in which the sample should be displayed
+    val name: String,  // Displayed name in the UI
+    val resId: Int  // Raw resource ID of the audio file
+)
+
+data class AudioGroup(
+    val index: Int,  // Index of the order in which the group should be displayed
+    val name: String,  // Name of the group displayed over the audio samples
+    val samples: List<AudioSample>
 )
 
 object SoundsManager {
@@ -28,35 +35,39 @@ object SoundsManager {
 
     private val _idToSampleMap = mapOf(
         AudioSamples.BROWN_NOISE.key() to
-                AudioSample(AudioSamples.BROWN_NOISE.key(),"Brown Noise", R.raw.brown_noise),
+                AudioSample(AudioSamples.BROWN_NOISE.key(),0, "Brown Noise", R.raw.brown_noise),
         AudioSamples.PINK_NOISE.key() to
-                AudioSample(AudioSamples.PINK_NOISE.key(), "Pink Noise", R.raw.pink_noise),
+                AudioSample(AudioSamples.PINK_NOISE.key(), 2, "Pink Noise", R.raw.pink_noise),
         AudioSamples.WHITE_NOISE.key() to
-                AudioSample(AudioSamples.WHITE_NOISE.key(), "White Noise", R.raw.white_noise),
+                AudioSample(AudioSamples.WHITE_NOISE.key(), 1, "White Noise", R.raw.white_noise),
         AudioSamples.FAN_SOUND.key() to
-                AudioSample(AudioSamples.FAN_SOUND.key(), "Fan Sound", R.raw.fan_sound)
+                AudioSample(AudioSamples.FAN_SOUND.key(), 3, "Fan Sound", R.raw.fan_sound)
+    )
+
+    private val steadyNoiseSamples = AudioGroup(name = "Steady Noise", index = 0, samples = listOf(
+        idToSample(AudioSamples.BROWN_NOISE.key()),
+        idToSample(AudioSamples.PINK_NOISE.key()),
+        idToSample(AudioSamples.WHITE_NOISE.key())).sortedBy { it.index },
+    )
+
+    private val mechanicalNoiseSamples = AudioGroup(name = "Mechanical Noise", index = 1, samples = listOf(
+        idToSample(AudioSamples.FAN_SOUND.key())).sortedBy { it.index }
     )
 
     val fallAsleepSamples = listOf(
-        idToSample(AudioSamples.BROWN_NOISE.key()),
-        idToSample(AudioSamples.PINK_NOISE.key()),
-        idToSample(AudioSamples.WHITE_NOISE.key()),
-        idToSample(AudioSamples.FAN_SOUND.key())
-    )
+        steadyNoiseSamples,
+        mechanicalNoiseSamples,
+    ).sortedBy { it.index }
 
     val stayAsleepSamples = listOf(
-        idToSample(AudioSamples.BROWN_NOISE.key()),
-        idToSample(AudioSamples.PINK_NOISE.key()),
-        idToSample(AudioSamples.WHITE_NOISE.key()),
-        idToSample(AudioSamples.FAN_SOUND.key())
-    )
+        steadyNoiseSamples,
+        mechanicalNoiseSamples,
+    ).sortedBy { it.index }
 
     val focusSamples = listOf(
-        idToSample(AudioSamples.BROWN_NOISE.key()),
-        idToSample(AudioSamples.PINK_NOISE.key()),
-        idToSample(AudioSamples.WHITE_NOISE.key()),
-        idToSample(AudioSamples.FAN_SOUND.key())
-    )
+        steadyNoiseSamples,
+        mechanicalNoiseSamples,
+    ).sortedBy { it.index }
 
     private val _mediaPlayer = MediaPlayer()
     private val _soundPool = SoundPool.Builder().setMaxStreams(1).build()
