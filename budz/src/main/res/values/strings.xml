@@ -21,6 +21,7 @@
     <string name="label_focus_sounds">Focus sounds</string>
     <string name="label_left">Left</string>
     <string name="label_minutes">min</string>
+    <string name="label_minutes_choice">%1$d mins</string>
     <string name="label_restoration_boost">Restoration boost</string>
     <string name="label_right">Right</string>
     <string name="label_seconds">sec</string>

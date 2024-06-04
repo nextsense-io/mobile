@@ -20,7 +20,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -33,6 +32,7 @@ import io.nextsense.android.budz.ui.components.SimpleButton
 import io.nextsense.android.budz.ui.components.SleepCountdownTimer
 import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.WideButton
+import io.nextsense.android.budz.ui.theme.BudzColor
 
 @Composable
 fun FocusScreen(focusViewModel: FocusViewModel = hiltViewModel(),
@@ -102,7 +102,7 @@ fun FocusScreen(focusViewModel: FocusViewModel = hiltViewModel(),
                         Text(
                             stringResource(R.string.label_focus_sounds),
                             style = MaterialTheme.typography.labelMedium)
-                        HorizontalDivider(color = Color(0xFF444978))
+                        HorizontalDivider(color = BudzColor.lightPurple)
                         Row(verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {

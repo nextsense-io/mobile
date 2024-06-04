@@ -15,7 +15,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -23,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.manager.AudioGroup
 import io.nextsense.android.budz.manager.AudioSample
+import io.nextsense.android.budz.ui.theme.BudzColor
 
 @Composable
 fun AudioSampleList(audioGroups: List<AudioGroup>, enabled: Boolean, selected: AudioSample?,
@@ -32,7 +32,7 @@ fun AudioSampleList(audioGroups: List<AudioGroup>, enabled: Boolean, selected: A
             Spacer(modifier = Modifier.height(16.dp))
             BudzCard {
                 Text(text = audioGroup.name, style = MaterialTheme.typography.labelMedium)
-                HorizontalDivider(color = Color(0xFF444978))
+                HorizontalDivider(color = BudzColor.lightPurple)
                 audioGroup.samples.forEach { audioSample ->
                     val isSelected = audioSample == selected
                     Row(verticalAlignment = Alignment.CenterVertically,

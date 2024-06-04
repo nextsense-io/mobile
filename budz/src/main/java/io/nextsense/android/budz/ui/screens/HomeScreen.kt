@@ -39,6 +39,7 @@ import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.CircleButton
 import io.nextsense.android.budz.ui.components.SimpleButton
 import io.nextsense.android.budz.ui.components.TopBar
+import io.nextsense.android.budz.ui.theme.BudzColor
 
 @Composable
 fun BatteryLevel(percent: Int?) {
@@ -100,7 +101,7 @@ fun HomeScreen(
                 BudzCard {
                     Text(stringResource(R.string.label_fall_asleep),
                         style = MaterialTheme.typography.labelMedium)
-                    HorizontalDivider(color = Color(0xFF444978))
+                    HorizontalDivider(color = BudzColor.lightPurple)
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
@@ -118,7 +119,7 @@ fun HomeScreen(
                     Text(stringResource(R.string.label_stay_asleep),
                         style = MaterialTheme.typography.labelMedium
                     )
-                    HorizontalDivider(color = Color(0xFF444978))
+                    HorizontalDivider(color = BudzColor.lightPurple)
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {

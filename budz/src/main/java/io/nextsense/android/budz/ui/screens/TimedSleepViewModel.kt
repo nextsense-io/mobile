@@ -2,6 +2,7 @@ package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
 import android.os.CountDownTimer
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,14 +39,11 @@ class TimedSleepViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ): ViewModel() {
 
+    private val tag = TimedSleepViewModel::class.java.simpleName
     private val _uiState = MutableStateFlow(TimedSleepState())
     private var _sleepTimer: CountDownTimer? = null
 
     val uiState: StateFlow<TimedSleepState> = _uiState.asStateFlow()
-
-    init {
-        loadUserSounds()
-    }
 
     fun startSleeping(context: Context) {
         _uiState.update { currentState ->
@@ -82,7 +80,33 @@ class TimedSleepViewModel @Inject constructor(
         }
     }
 
-    fun loadUserSounds() {
+    fun changeSleepTime(newSleepTime: Duration) {
+        viewModelScope.launch {
+            usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
+                if (userState is State.Success) {
+                    if (userState.data != null) {
+                        val userStateData = userState.data.copy(
+                            timedSleepDurationMinutes = newSleepTime.inWholeMinutes.toInt())
+                        usersRepository.updateUser(userStateData, authRepository.currentUserId!!)
+                            .last().let { updateState ->
+                                if (updateState is State.Success) {
+                                    _uiState.update { currentState ->
+                                        currentState.copy(
+                                            sleepTime = newSleepTime,
+                                            sleepTimeLeft = newSleepTime
+                                        )
+                                    }
+                                } else {
+                                    Log.d(tag, "Failed to update timed sleep duration")
+                                }
+                            }
+                    }
+                }
+            }
+        }
+    }
+
+    fun loadUserData() {
         _uiState.update { currentState ->
             currentState.copy(
                 loading = true
@@ -112,7 +136,16 @@ class TimedSleepViewModel @Inject constructor(
                             } else {
                                 userState.data.stayAsleepTimedSound
                             }
+                        val timedSleepDuration: Duration =
+                            if (userState.data.timedSleepDurationMinutes != null) {
+                                (userState.data.timedSleepDurationMinutes)!!.minutes
+                            } else {
+                                30.minutes
+                            }
                         currentState.copy(
+                            sleepTime = timedSleepDuration,
+                            sleepTimeLeft = timedSleepDuration,
+                            connected = true,
                             fallAsleepSample = SoundsManager.idToSample(
                                 fallAsleepSampleName,
                                 SoundsManager.defaultAudioSamples[

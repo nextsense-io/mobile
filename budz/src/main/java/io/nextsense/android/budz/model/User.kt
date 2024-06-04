@@ -11,7 +11,7 @@ enum class UserType {
 
 enum class UserKeys {
     EMAIL, NAME, TYPE, IS_ONBOARDING_COMPLETED, FALL_ASLEEP_SOUND, FALL_ASLEEP_TIMED_SOUND,
-    STAY_ASLEEP_SOUND, STAY_ASLEEP_TIMED_SOUND, FOCUS_SOUND, CREATED_AT;
+    STAY_ASLEEP_SOUND, STAY_ASLEEP_TIMED_SOUND, TIMED_SLEEP_DURATION, FOCUS_SOUND, CREATED_AT;
 
     fun key() = name.lowercase()
 }
@@ -38,6 +38,9 @@ data class User (
     @get:PropertyName("focus_sound")
     @set:PropertyName("focus_sound")
     var focusSound: String? = null,
+    @get:PropertyName("timed_sleep_duration_minutes")
+    @set:PropertyName("timed_sleep_duration_minutes")
+    var timedSleepDurationMinutes: Int? = null,
     @ServerTimestamp
     @get:PropertyName("created_at")
     @set:PropertyName("created_at")
