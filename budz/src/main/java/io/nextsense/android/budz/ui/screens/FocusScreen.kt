@@ -35,25 +35,27 @@ import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.WideButton
 
 @Composable
-fun TimedSleepScreen(timedSleepViewModel: TimedSleepViewModel = hiltViewModel(),
-                     onGoToFallAsleep: () -> Unit,
-                     onGoToStayAsleep: () -> Unit,
-                     onGoToHome: () -> Unit
+fun FocusScreen(focusViewModel: FocusViewModel = hiltViewModel(),
+                onGoToFocusSelection: () -> Unit,
+                onGoToHome: () -> Unit
 ) {
-    val homeUiState by timedSleepViewModel.uiState.collectAsState()
+    val focusUiState by focusViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     LifecycleResumeEffect(true) {
-        timedSleepViewModel.loadUserSounds()
+        focusViewModel.loadUserSounds()
         onPauseOrDispose {
-            timedSleepViewModel.stopSleeping()
+            focusViewModel.stopFocusing()
         }
     }
 
+    val screenTitle = if (!focusUiState.focusing) stringResource(R.string.app_title) else
+        stringResource(R.string.title_time_remaining)
+
     Scaffold(
         topBar = {
-            TopBar(title = stringResource(R.string.app_title), isAppTitle = true, showHome = true,
-                showPrivacy = false, onNavigationClick = { onGoToHome() })
+            TopBar(title = screenTitle, isAppTitle = true, showHome = true, showPrivacy = false,
+                onNavigationClick = { onGoToHome() })
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {
@@ -68,15 +70,15 @@ fun TimedSleepScreen(timedSleepViewModel: TimedSleepViewModel = hiltViewModel(),
                     .verticalScroll(rememberScrollState())
             ) {
                 Spacer(modifier = Modifier.weight(1f))
-                if (homeUiState.fallingAsleep) {
-                    SleepCountdownTimer(durationLeft = homeUiState.sleepTimeLeft)
+                if (focusUiState.focusing) {
+                    SleepCountdownTimer(durationLeft = focusUiState.focusTimeLeft)
                 } else {
-                    CircleButton(text = stringResource(R.string.label_start), onClick = {
-                        timedSleepViewModel.startSleeping(context)
+                    CircleButton(text = stringResource(R.string.label_focus), onClick = {
+                        focusViewModel.startFocusing(context)
                     })
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                if (!homeUiState.fallingAsleep) {
+                if (!focusUiState.focusing) {
                     BudzCard {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -88,53 +90,34 @@ fun TimedSleepScreen(timedSleepViewModel: TimedSleepViewModel = hiltViewModel(),
                             )
                             Spacer(modifier = Modifier.weight(1f))
                             SimpleButton(name = stringResource(R.string.label_change),
-                                enabled = !homeUiState.loading, onClick = {
-                                    onGoToFallAsleep()
+                                enabled = !focusUiState.loading, onClick = {
+
                                 })
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(15.dp))
-                BudzCard {
-                    Text(
-                        stringResource(R.string.label_fall_asleep),
-                        style = MaterialTheme.typography.labelMedium)
-                    HorizontalDivider(color = Color(0xFF444978))
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("${homeUiState.fallAsleepSample?.name}",
-                            style = MaterialTheme.typography.displayMedium)
-                        Spacer(modifier = Modifier.weight(1f))
-                        SimpleButton(name = stringResource(R.string.label_change),
-                            enabled = !homeUiState.loading, onClick = {
-                                onGoToFallAsleep()
-                            })
+                if (focusUiState.focusing) {
+                    Spacer(modifier = Modifier.height(15.dp))
+                    BudzCard {
+                        Text(
+                            stringResource(R.string.label_focus_sounds),
+                            style = MaterialTheme.typography.labelMedium)
+                        HorizontalDivider(color = Color(0xFF444978))
+                        Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("${focusUiState.focusSample?.name}",
+                                style = MaterialTheme.typography.displayMedium)
+                            Spacer(modifier = Modifier.weight(1f))
+                            SimpleButton(name = stringResource(R.string.label_change),
+                                enabled = !focusUiState.loading, onClick = {
+                                    onGoToFocusSelection()
+                                })
+                        }
                     }
-                }
-                Spacer(modifier = Modifier.height(15.dp))
-                BudzCard {
-                    Text(
-                        stringResource(R.string.label_stay_asleep),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    HorizontalDivider(color = Color(0xFF444978))
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("${homeUiState.stayAsleepSample?.name}",
-                            style = MaterialTheme.typography.displayMedium)
-                        Spacer(modifier = Modifier.weight(1f))
-                        SimpleButton(name = stringResource(R.string.label_change),
-                            enabled = !homeUiState.loading, onClick = {
-                                onGoToStayAsleep()
-                            })
-                    }
-                }
-                if (homeUiState.fallingAsleep) {
                     Spacer(modifier = Modifier.weight(1f))
-                    WideButton(name = stringResource(R.string.label_end_timed_sleep), onClick = {
-                        timedSleepViewModel.stopSleeping()
+                    WideButton(name = stringResource(R.string.label_end_focus_session), onClick = {
+                        focusViewModel.stopFocusing()
                     })
                 }
                 Spacer(modifier = Modifier.weight(1f))

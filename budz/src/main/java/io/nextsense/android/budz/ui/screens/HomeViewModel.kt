@@ -10,6 +10,7 @@ import io.nextsense.android.budz.manager.AirohaBatteryLevel
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AirohaDeviceState
 import io.nextsense.android.budz.manager.AudioSample
+import io.nextsense.android.budz.manager.AudioSampleType
 import io.nextsense.android.budz.manager.AuthRepository
 import io.nextsense.android.budz.manager.SoundsManager
 import io.nextsense.android.budz.model.UsersRepository
@@ -117,10 +118,10 @@ class HomeViewModel @Inject constructor(
                         currentState.copy(
                             fallAsleepSample = SoundsManager.idToSample(
                                 userState.data.fallAsleepSound,
-                                SoundsManager.defaultFallAsleepAudioSample),
+                                SoundsManager.defaultAudioSamples[AudioSampleType.FALL_ASLEEP]!!),
                             stayAsleepSample = SoundsManager.idToSample(
                                 userState.data.stayAsleepSound,
-                                SoundsManager.defaultStayAsleepAudioSample)
+                                SoundsManager.defaultAudioSamples[AudioSampleType.STAY_ASLEEP]!!)
                         )
                     }
                 }

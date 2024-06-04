@@ -5,22 +5,22 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed class Routes{
     @Serializable
-    data object LoginScreen : Routes()
+    data object Login : Routes()
     @Serializable
-    data object HomeScreen : Routes()
+    data object Home : Routes()
 
     @Serializable
-    data object DeviceConnectionScreen : Routes()
+    data object DeviceConnection : Routes()
 
     @Serializable
-    data object DeviceSettingsScreen : Routes()
+    data object DeviceSettings : Routes()
 
     @Serializable
-    data object SelectFallAsleepSoundScreen : Routes()
+    data class SelectSound(val audioSampleTypeName: String) : Routes()
 
     @Serializable
-    data object SelectStayAsleepSoundScreen : Routes()
+    data object TimedSleep : Routes()
 
     @Serializable
-    data object TimedSleepScreen : Routes()
+    data object Focus : Routes()
 }

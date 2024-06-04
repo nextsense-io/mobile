@@ -56,6 +56,7 @@ fun HomeScreen(
     onGoToFallAsleep: () -> Unit,
     onGoToStayAsleep: () -> Unit,
     onGoToTimedSleep: () -> Unit,
+    onGoToFocus: () -> Unit,
     onGoToDeviceConnection: () -> Unit,
     onGoToDeviceSettings: () -> Unit,
     onSignOut: () -> Unit
@@ -106,7 +107,7 @@ fun HomeScreen(
                         Text("${homeUiState.fallAsleepSample?.name}",
                             style = MaterialTheme.typography.displayMedium)
                         Spacer(modifier = Modifier.weight(1f))
-                        SimpleButton(name = stringResource(R.string.button_change),
+                        SimpleButton(name = stringResource(R.string.label_change),
                             enabled = !homeUiState.loading, onClick = {
                             onGoToFallAsleep()
                         })
@@ -124,7 +125,7 @@ fun HomeScreen(
                         Text("${homeUiState.stayAsleepSample?.name}",
                             style = MaterialTheme.typography.displayMedium)
                         Spacer(modifier = Modifier.weight(1f))
-                        SimpleButton(name = stringResource(R.string.button_change),
+                        SimpleButton(name = stringResource(R.string.label_change),
                             enabled = !homeUiState.loading, onClick = {
                             onGoToStayAsleep()
                         })
@@ -191,10 +192,12 @@ fun HomeScreen(
                         onClick = { onGoToTimedSleep() })
                     ActionButton(name = "Device\nsettings", icon = R.drawable.ic_clock,
                         onClick = { onGoToDeviceSettings() })
+                    ActionButton(name = stringResource(R.string.label_button_focus),
+                        icon= R.drawable.ic_focus, onClick = { onGoToFocus() })
                     ActionButton(name = "Sign out", icon= R.drawable.ic_focus, onClick = {
-                        homeViewModel.signOut()
-                        onSignOut()
-                    })
+                            homeViewModel.signOut()
+                            onSignOut()
+                        })
                 }
                 Spacer(modifier = Modifier.height(15.dp))
                 Text("Connected: ${homeViewModel.uiState.value.connected}")

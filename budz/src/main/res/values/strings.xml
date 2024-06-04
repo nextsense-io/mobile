@@ -3,16 +3,33 @@
     <string name="app_title">BUDZ</string>
     <string name="title_fall_asleep">Fall asleep sound library</string>
     <string name="title_stay_asleep">Stay asleep sound library</string>
-    <string name="home_button_description">Home</string>
-    <string name="privacy_button_description">Privacy policy</string>
-    <string name="back_button_description">Go back</string>
-    <string name="button_change">Change</string>
+    <string name="title_focus_sounds">Focus sound library</string>
+    <string name="title_time_remaining">Time remaining</string>
+    <string name="desc_back_button">Go back</string>
+    <string name="desc_home_button">Home</string>
+    <string name="desc_play">Play sample</string>
+    <string name="desc_privacy_button">Privacy policy</string>
+    <string name="desc_stop">Stop playing sample</string>
     <string name="label_case">Case</string>
+    <string name="label_change">Change</string>
+    <string name="label_check_connection">Check\nconnection</string>
+    <string name="label_end_focus_session">End focus session</string>
+    <string name="label_end_timed_sleep">End timed sleep</string>
     <string name="label_fall_asleep">Fall asleep</string>
+    <string name="label_focus">focus</string>
+    <string name="label_button_focus">Focus</string>
+    <string name="label_focus_sounds">Focus sounds</string>
     <string name="label_left">Left</string>
+    <string name="label_minutes">min</string>
     <string name="label_restoration_boost">Restoration boost</string>
     <string name="label_right">Right</string>
+    <string name="label_seconds">sec</string>
+    <string name="label_select_timer">Select timer</string>
+    <string name="label_set_sleep_timer">Set sleep timer</string>
+    <string name="label_sleep">sleep</string>
+    <string name="label_start">start</string>
     <string name="label_stay_asleep">Stay asleep</string>
+    <string name="label_timed_sleep">Timed\nsleep</string>
     <string name="notif_content">Press to access the application</string>
     <string name="web_client_id" translatable="false">894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com</string>
 </resources>

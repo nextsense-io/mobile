@@ -14,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -22,19 +23,32 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.nextsense.android.budz.R
+import io.nextsense.android.budz.Routes
+import io.nextsense.android.budz.manager.AudioSampleType
 import io.nextsense.android.budz.manager.SoundsManager
 import io.nextsense.android.budz.ui.components.AudioSampleList
 import io.nextsense.android.budz.ui.components.LoadingCircle
 import io.nextsense.android.budz.ui.components.TopBar
 
 @Composable
-fun SelectStayAsleepSoundScreen(
-        stayAsleepViewModel: SelectStayAsleepSoundViewModel = hiltViewModel(),
-        onNavigateBack: () -> Unit) {
-    val stayAsleepUiState by stayAsleepViewModel.uiState.collectAsState()
+fun SelectSoundScreen(
+    selectSound: Routes.SelectSound,
+    selectSoundViewModel: SelectSoundViewModel = hiltViewModel(),
+    onNavigateBack: () -> Unit
+) {
+    val selectSoundUiState by selectSoundViewModel.uiState.collectAsState()
     val context = LocalContext.current
+    val audioSampleType = remember { AudioSampleType.valueOf(selectSound.audioSampleTypeName) }
+    val title = when (audioSampleType) {
+        AudioSampleType.FALL_ASLEEP -> stringResource(R.string.title_fall_asleep)
+        AudioSampleType.FALL_ASLEEP_TIMED_SLEEP -> stringResource(R.string.title_fall_asleep)
+        AudioSampleType.STAY_ASLEEP -> stringResource(R.string.title_stay_asleep)
+        AudioSampleType.STAY_ASLEEP_TIMED_SLEEP -> stringResource(R.string.title_stay_asleep)
+        AudioSampleType.FOCUS -> stringResource(R.string.title_focus_sounds)
+    }
 
     LifecycleStartEffect(true) {
+        selectSoundViewModel.loadAudioSample(audioSampleType)
         onStopOrDispose {
             SoundsManager.stopAudioSample()
         }
@@ -42,8 +56,7 @@ fun SelectStayAsleepSoundScreen(
 
     Scaffold(
         topBar = {
-            TopBar(title = stringResource(R.string.title_stay_asleep), isAppTitle = false,
-                showHome = false, showPrivacy = false, onNavigationClick = { onNavigateBack() })
+            TopBar(title = title, isAppTitle = false, showHome = false, showPrivacy = false, onNavigationClick = { onNavigateBack() })
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {
@@ -58,24 +71,23 @@ fun SelectStayAsleepSoundScreen(
                 modifier = Modifier.padding(horizontal = 30.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                Column {
-                    if (stayAsleepUiState.loading) {
-                        LoadingCircle()
-                    }
-                    Row {
-                        Column {
-                            AudioSampleList(
-                                audioGroups = SoundsManager.stayAsleepSamples,
-                                selected = stayAsleepUiState.audioSample,
-                                playing = stayAsleepUiState.playing,
-                                enabled = !stayAsleepUiState.loading,
-                                onSelect = { audioSample ->
-                                    stayAsleepViewModel.playAudioSample(context, audioSample)
-                                    stayAsleepViewModel.changeStayAsleepSound(audioSample)
-                                },
-                                onStop = { stayAsleepViewModel.stopPlayingSample() }
-                            )
-                        }
+                if (selectSoundUiState.loading) {
+                    LoadingCircle()
+                }
+                Row {
+                    Column {
+                        AudioSampleList(
+                            audioGroups = SoundsManager.audioSamples[audioSampleType]
+                                ?: emptyList(),
+                            selected = selectSoundUiState.audioSample,
+                            playing = selectSoundUiState.playing,
+                            enabled = !selectSoundUiState.loading,
+                            onSelect = {audioSample ->
+                                selectSoundViewModel.playAudioSample(context, audioSample)
+                                selectSoundViewModel.changeSound(audioSampleType, audioSample)
+                            },
+                            onStop = {selectSoundViewModel.stopPlayingSample()}
+                        )
                     }
                 }
             }

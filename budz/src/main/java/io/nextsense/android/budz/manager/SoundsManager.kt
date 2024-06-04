@@ -6,6 +6,14 @@ import android.media.SoundPool
 import android.net.Uri
 import io.nextsense.android.budz.R
 
+enum class AudioSampleType {
+    FALL_ASLEEP,
+    FALL_ASLEEP_TIMED_SLEEP,
+    STAY_ASLEEP,
+    STAY_ASLEEP_TIMED_SLEEP,
+    FOCUS
+}
+
 data class AudioSample (
     val id: String,  // Unique identifier used in the database
     val index: Int,  // Index of the order in which the sample should be displayed
@@ -30,9 +38,6 @@ object SoundsManager {
         fun key() = name.lowercase()
     }
 
-    val defaultFallAsleepAudioSample = AudioSamples.FAN_SOUND
-    val defaultStayAsleepAudioSample = AudioSamples.BROWN_NOISE
-
     private val _idToSampleMap = mapOf(
         AudioSamples.BROWN_NOISE.key() to
                 AudioSample(AudioSamples.BROWN_NOISE.key(),0, "Brown Noise", R.raw.brown_noise),
@@ -44,30 +49,46 @@ object SoundsManager {
                 AudioSample(AudioSamples.FAN_SOUND.key(), 3, "Fan Sound", R.raw.fan_sound)
     )
 
-    private val steadyNoiseSamples = AudioGroup(name = "Steady Noise", index = 0, samples = listOf(
+    private val _steadyNoiseSamples = AudioGroup(name = "Steady Noise", index = 0, samples = listOf(
         idToSample(AudioSamples.BROWN_NOISE.key()),
         idToSample(AudioSamples.PINK_NOISE.key()),
         idToSample(AudioSamples.WHITE_NOISE.key())).sortedBy { it.index },
     )
 
-    private val mechanicalNoiseSamples = AudioGroup(name = "Mechanical Noise", index = 1, samples = listOf(
+    private val _mechanicalNoiseSamples = AudioGroup(name = "Mechanical Noise", index = 1, samples = listOf(
         idToSample(AudioSamples.FAN_SOUND.key())).sortedBy { it.index }
     )
 
-    val fallAsleepSamples = listOf(
-        steadyNoiseSamples,
-        mechanicalNoiseSamples,
+    private val _fallAsleepSamples = listOf(
+        _steadyNoiseSamples,
+        _mechanicalNoiseSamples,
     ).sortedBy { it.index }
 
-    val stayAsleepSamples = listOf(
-        steadyNoiseSamples,
-        mechanicalNoiseSamples,
+    private val _stayAsleepSamples = listOf(
+        _steadyNoiseSamples,
+        _mechanicalNoiseSamples,
     ).sortedBy { it.index }
 
-    val focusSamples = listOf(
-        steadyNoiseSamples,
-        mechanicalNoiseSamples,
+    private val _focusSamples = listOf(
+        _steadyNoiseSamples,
+        _mechanicalNoiseSamples,
     ).sortedBy { it.index }
+
+    val audioSamples: Map<AudioSampleType, List<AudioGroup>> = mapOf(
+        AudioSampleType.FALL_ASLEEP to _fallAsleepSamples,
+        AudioSampleType.FALL_ASLEEP_TIMED_SLEEP to _fallAsleepSamples,
+        AudioSampleType.STAY_ASLEEP to _stayAsleepSamples,
+        AudioSampleType.STAY_ASLEEP_TIMED_SLEEP to _stayAsleepSamples,
+        AudioSampleType.FOCUS to _focusSamples
+    )
+
+    val defaultAudioSamples: Map<AudioSampleType, AudioSamples> = mapOf(
+        AudioSampleType.FALL_ASLEEP to AudioSamples.FAN_SOUND,
+        AudioSampleType.FALL_ASLEEP_TIMED_SLEEP to AudioSamples.FAN_SOUND,
+        AudioSampleType.STAY_ASLEEP to AudioSamples.BROWN_NOISE,
+        AudioSampleType.STAY_ASLEEP_TIMED_SLEEP to AudioSamples.BROWN_NOISE,
+        AudioSampleType.FOCUS to AudioSamples.WHITE_NOISE
+    )
 
     private val _mediaPlayer = MediaPlayer()
     private val _soundPool = SoundPool.Builder().setMaxStreams(1).build()

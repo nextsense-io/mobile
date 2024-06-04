@@ -22,62 +22,61 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-data class TimedSleepState(
+data class FocusState(
     val loading: Boolean = false,
-    val fallingAsleep: Boolean = false,
-    val fallAsleepSample: AudioSample? = null,
-    val stayAsleepSample: AudioSample? = null,
+    val focusing: Boolean = false,
+    val focusSample: AudioSample? = null,
     val connected: Boolean = false,
-    val sleepTime: Duration = 1.minutes,
-    val sleepTimeLeft: Duration = 1.minutes
+    val focusTime: Duration = 1.minutes,
+    val focusTimeLeft: Duration = 1.minutes
 )
 
 @HiltViewModel
-class TimedSleepViewModel @Inject constructor(
+class FocusViewModel @Inject constructor(
     private val usersRepository: UsersRepository,
     private val authRepository: AuthRepository
 ): ViewModel() {
 
-    private val _uiState = MutableStateFlow(TimedSleepState())
-    private var _sleepTimer: CountDownTimer? = null
+    private val _uiState = MutableStateFlow(FocusState())
+    private var _focusTimer: CountDownTimer? = null
 
-    val uiState: StateFlow<TimedSleepState> = _uiState.asStateFlow()
+    val uiState: StateFlow<FocusState> = _uiState.asStateFlow()
 
     init {
         loadUserSounds()
     }
 
-    fun startSleeping(context: Context) {
+    fun startFocusing(context: Context) {
         _uiState.update { currentState ->
             currentState.copy(
-                fallingAsleep = true
+                focusing = true
             )
         }
         SoundsManager.loopAudioSample(
-            context = context, resId = uiState.value.fallAsleepSample!!.resId)
-        _sleepTimer = object: CountDownTimer(_uiState.value.sleepTime.inWholeMilliseconds, 1000) {
+            context = context, resId = uiState.value.focusSample!!.resId)
+        _focusTimer = object: CountDownTimer(_uiState.value.focusTime.inWholeMilliseconds, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 _uiState.update { currentState ->
                     currentState.copy(
-                        sleepTimeLeft = (millisUntilFinished / 1000).seconds
+                        focusTimeLeft = (millisUntilFinished / 1000).seconds
                     )
                 }
             }
 
             override fun onFinish() {
-                stopSleeping()
+                stopFocusing()
             }
         }
-        _sleepTimer?.start()
+        _focusTimer?.start()
     }
 
-    fun stopSleeping() {
-        _sleepTimer?.cancel()
-        _sleepTimer = null
+    fun stopFocusing() {
+        _focusTimer?.cancel()
+        _focusTimer = null
         SoundsManager.stopLoopAudioSample()
         _uiState.update { currentState ->
             currentState.copy(
-                fallingAsleep = false
+                focusing = false
             )
         }
     }
@@ -100,27 +99,10 @@ class TimedSleepViewModel @Inject constructor(
             usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
                 if (userState is State.Success && userState.data != null) {
                     _uiState.update { currentState ->
-                        val fallAsleepSampleName =
-                            if (userState.data.fallAsleepTimedSound == null) {
-                                userState.data.fallAsleepSound
-                            } else {
-                                userState.data.fallAsleepTimedSound
-                            }
-                        val stayAsleepSampleName =
-                            if (userState.data.stayAsleepTimedSound == null) {
-                                userState.data.stayAsleepSound
-                            } else {
-                                userState.data.stayAsleepTimedSound
-                            }
                         currentState.copy(
-                            fallAsleepSample = SoundsManager.idToSample(
-                                fallAsleepSampleName,
-                                SoundsManager.defaultAudioSamples[
-                                    AudioSampleType.FALL_ASLEEP_TIMED_SLEEP]!!),
-                            stayAsleepSample = SoundsManager.idToSample(
-                                stayAsleepSampleName,
-                                SoundsManager.defaultAudioSamples[
-                                    AudioSampleType.STAY_ASLEEP_TIMED_SLEEP]!!)
+                            focusSample = SoundsManager.idToSample(
+                                userState.data.focusSound,
+                                SoundsManager.defaultAudioSamples[AudioSampleType.FOCUS]!!),
                         )
                     }
                 }

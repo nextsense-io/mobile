@@ -6,14 +6,16 @@ import androidx.activity.compose.setContent
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.budz.Routes
+import io.nextsense.android.budz.manager.AudioSampleType
 import io.nextsense.android.budz.ui.screens.DeviceConnectionScreen
 import io.nextsense.android.budz.ui.screens.DeviceSettingsScreen
+import io.nextsense.android.budz.ui.screens.FocusScreen
 import io.nextsense.android.budz.ui.screens.HomeScreen
 import io.nextsense.android.budz.ui.screens.LoginScreen
-import io.nextsense.android.budz.ui.screens.SelectFallAsleepSoundScreen
-import io.nextsense.android.budz.ui.screens.SelectStayAsleepSoundScreen
+import io.nextsense.android.budz.ui.screens.SelectSoundScreen
 import io.nextsense.android.budz.ui.screens.TimedSleepScreen
 import io.nextsense.android.budz.ui.theme.BudzTheme
 
@@ -26,71 +28,88 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController,
-                    startDestination = Routes.LoginScreen,
+                    startDestination = Routes.Login,
                 ) {
-                    composable<Routes.LoginScreen> {
+                    composable<Routes.Login> {
                         LoginScreen(onLogin = {
-                            navController.navigate(Routes.HomeScreen) {
-                                popUpTo(Routes.LoginScreen) {
+                            navController.navigate(Routes.Home) {
+                                popUpTo(Routes.Login) {
                                     inclusive = true
                                 }
                             }
-                            navController.clearBackStack<Routes.LoginScreen>()
+                            navController.clearBackStack<Routes.Login>()
                         })
                     }
-                    composable<Routes.HomeScreen> {
+                    composable<Routes.Home> {
                         HomeScreen(
                             onSignOut = {
-                                navController.navigate(Routes.LoginScreen) {
-                                    popUpTo(Routes.HomeScreen) {
+                                navController.navigate(Routes.Login) {
+                                    popUpTo(Routes.Home) {
                                         inclusive = true
                                     }
                                 }
-                                navController.clearBackStack<Routes.HomeScreen>()
+                                navController.clearBackStack<Routes.Home>()
                             },
                             onGoToDeviceConnection = {
-                                navController.navigate(Routes.DeviceConnectionScreen)
+                                navController.navigate(Routes.DeviceConnection)
                             },
                             onGoToFallAsleep = {
-                                navController.navigate(Routes.SelectFallAsleepSoundScreen)
+                                navController.navigate(Routes.SelectSound(
+                                    audioSampleTypeName = AudioSampleType.FALL_ASLEEP.name))
                             },
                             onGoToStayAsleep = {
-                                navController.navigate(Routes.SelectStayAsleepSoundScreen)
+                                navController.navigate(Routes.SelectSound(
+                                    audioSampleTypeName = AudioSampleType.STAY_ASLEEP.name))
                             },
                             onGoToTimedSleep = {
-                                navController.navigate(Routes.TimedSleepScreen)
+                                navController.navigate(Routes.TimedSleep)
+                            },
+                            onGoToFocus = {
+                                navController.navigate(Routes.Focus)
                             },
                             onGoToDeviceSettings = {
-                                navController.navigate(Routes.DeviceSettingsScreen)
+                                navController.navigate(Routes.DeviceSettings)
                             }
                         )
                     }
-                    composable<Routes.SelectFallAsleepSoundScreen> {
-                        SelectFallAsleepSoundScreen(onNavigateBack = {
-                            navController.popBackStack()
-                        })
+                    composable<Routes.SelectSound> { backStackEntry ->
+                        val selectSound: Routes.SelectSound = backStackEntry.toRoute()
+                        SelectSoundScreen(
+                            selectSound,
+                            onNavigateBack = {
+                                navController.popBackStack()
+                            }
+                        )
                     }
-                    composable<Routes.SelectStayAsleepSoundScreen> {
-                        SelectStayAsleepSoundScreen(onNavigateBack = {
-                            navController.popBackStack()
-                        })
-                    }
-                    composable<Routes.DeviceConnectionScreen> {
+                    composable<Routes.DeviceConnection> {
                         DeviceConnectionScreen()
                     }
-                    composable<Routes.DeviceSettingsScreen> {
+                    composable<Routes.DeviceSettings> {
                         DeviceSettingsScreen()
                     }
-                    composable<Routes.TimedSleepScreen> {
+                    composable<Routes.TimedSleep> {
                         TimedSleepScreen(
                             onGoToFallAsleep = {
-                                navController.navigate(Routes.SelectFallAsleepSoundScreen)
+                                navController.navigate(Routes.SelectSound(audioSampleTypeName =
+                                    AudioSampleType.FALL_ASLEEP_TIMED_SLEEP.name))
                             },
                             onGoToStayAsleep = {
-                                navController.navigate(Routes.SelectStayAsleepSoundScreen)
+                                navController.navigate(Routes.SelectSound(audioSampleTypeName =
+                                    AudioSampleType.STAY_ASLEEP_TIMED_SLEEP.name))
                             },
                             onGoToHome = {
-                                navController.navigate(Routes.HomeScreen)
+                                navController.navigate(Routes.Home)
+                            }
+                        )
+                    }
+                    composable<Routes.Focus> {
+                        FocusScreen(
+                            onGoToFocusSelection = {
+                                navController.navigate(Routes.SelectSound(audioSampleTypeName =
+                                    AudioSampleType.FOCUS.name))
+                            },
+                            onGoToHome = {
+                                navController.navigate(Routes.Home)
                             }
                         )
                     }
