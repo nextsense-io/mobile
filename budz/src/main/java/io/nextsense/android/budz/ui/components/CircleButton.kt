@@ -16,15 +16,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun CircleButton(text: String, onClick: () -> Unit) {
+fun CircleButton(text: String, circleModifier: Modifier = Modifier,
+                 textColor: Color = Color.White, onClick: () -> Unit) {
     Box(modifier = Modifier
             .size(240.dp)
             .border(10.dp, MaterialTheme.colorScheme.primary, CircleShape)
             .clip(CircleShape)
             .background(Color.Transparent)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .then(circleModifier)
     ) {
         Text(text = text, style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.align(Alignment.Center))
+            color = textColor, modifier = Modifier.align(Alignment.Center))
     }
 }

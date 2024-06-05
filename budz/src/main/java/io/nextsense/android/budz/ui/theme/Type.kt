@@ -44,6 +44,14 @@ val gowunBatangRegularFontFamily =
     )
 
 val Typography = Typography(
+    // Used for smaller labels in cards content
+    displaySmall = TextStyle(
+        fontFamily = workSansMediumFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.5.sp
+    ),
     // Used for thicker labels in cards content
     displayMedium = TextStyle(
         fontFamily = workSansMediumFontFamily,

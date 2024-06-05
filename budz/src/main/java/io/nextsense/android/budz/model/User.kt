@@ -41,6 +41,9 @@ data class User (
     @get:PropertyName("timed_sleep_duration_minutes")
     @set:PropertyName("timed_sleep_duration_minutes")
     var timedSleepDurationMinutes: Int? = null,
+    @get:PropertyName("focus_duration_minutes")
+    @set:PropertyName("focus_duration_minutes")
+    var focusDurationMinutes: Int? = null,
     @ServerTimestamp
     @get:PropertyName("created_at")
     @set:PropertyName("created_at")

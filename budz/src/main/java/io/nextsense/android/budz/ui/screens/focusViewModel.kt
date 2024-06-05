@@ -2,6 +2,7 @@ package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
 import android.os.CountDownTimer
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,14 +38,11 @@ class FocusViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ): ViewModel() {
 
+    private val tag = FocusViewModel::class.java.simpleName
     private val _uiState = MutableStateFlow(FocusState())
     private var _focusTimer: CountDownTimer? = null
 
     val uiState: StateFlow<FocusState> = _uiState.asStateFlow()
-
-    init {
-        loadUserSounds()
-    }
 
     fun startFocusing(context: Context) {
         _uiState.update { currentState ->
@@ -76,12 +74,39 @@ class FocusViewModel @Inject constructor(
         SoundsManager.stopLoopAudioSample()
         _uiState.update { currentState ->
             currentState.copy(
-                focusing = false
+                focusing = false,
+                focusTimeLeft = currentState.focusTime
             )
         }
     }
 
-    fun loadUserSounds() {
+    fun changeFocusTime(newFocusTime: Duration) {
+        viewModelScope.launch {
+            usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
+                if (userState is State.Success) {
+                    if (userState.data != null) {
+                        val userStateData = userState.data.copy(
+                            focusDurationMinutes = newFocusTime.inWholeMinutes.toInt())
+                        usersRepository.updateUser(userStateData, authRepository.currentUserId!!)
+                            .last().let { updateState ->
+                                if (updateState is State.Success) {
+                                    _uiState.update { currentState ->
+                                        currentState.copy(
+                                            focusTime = newFocusTime,
+                                            focusTimeLeft = newFocusTime
+                                        )
+                                    }
+                                } else {
+                                    Log.d(tag, "Failed to update focus duration")
+                                }
+                            }
+                    }
+                }
+            }
+        }
+    }
+
+    fun loadUserData() {
         _uiState.update { currentState ->
             currentState.copy(
                 loading = true
@@ -99,7 +124,10 @@ class FocusViewModel @Inject constructor(
             usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
                 if (userState is State.Success && userState.data != null) {
                     _uiState.update { currentState ->
+                        val focusTime = userState.data.focusDurationMinutes?.minutes ?: 10.minutes
                         currentState.copy(
+                            focusTime = focusTime,
+                            focusTimeLeft = focusTime,
                             focusSample = SoundsManager.idToSample(
                                 userState.data.focusSound,
                                 SoundsManager.defaultAudioSamples[AudioSampleType.FOCUS]!!),

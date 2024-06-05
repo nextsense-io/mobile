@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
@@ -30,20 +31,24 @@ import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.CircleButton
 import io.nextsense.android.budz.ui.components.SimpleButton
 import io.nextsense.android.budz.ui.components.SleepCountdownTimer
+import io.nextsense.android.budz.ui.components.TimerDropDown
 import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.WideButton
 import io.nextsense.android.budz.ui.theme.BudzColor
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun FocusScreen(focusViewModel: FocusViewModel = hiltViewModel(),
                 onGoToFocusSelection: () -> Unit,
                 onGoToHome: () -> Unit
 ) {
+    val focusDurations = listOf(10.minutes, 20.minutes, 30.minutes, 40.minutes, 50.minutes,
+        60.minutes, 90.minutes, 120.minutes)
     val focusUiState by focusViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
     LifecycleResumeEffect(true) {
-        focusViewModel.loadUserSounds()
+        focusViewModel.loadUserData()
         onPauseOrDispose {
             focusViewModel.stopFocusing()
         }
@@ -73,9 +78,12 @@ fun FocusScreen(focusViewModel: FocusViewModel = hiltViewModel(),
                 if (focusUiState.focusing) {
                     SleepCountdownTimer(durationLeft = focusUiState.focusTimeLeft)
                 } else {
-                    CircleButton(text = stringResource(R.string.label_focus), onClick = {
-                        focusViewModel.startFocusing(context)
-                    })
+                    CircleButton(text = stringResource(R.string.label_focus),
+                        circleModifier = Modifier.background(BudzColor.lightBlue),
+                        textColor = MaterialTheme.colorScheme.primary,
+                        onClick = {
+                            focusViewModel.startFocusing(context)
+                        })
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 if (!focusUiState.focusing) {
@@ -85,36 +93,37 @@ fun FocusScreen(focusViewModel: FocusViewModel = hiltViewModel(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                stringResource(R.string.label_set_sleep_timer),
+                                stringResource(R.string.label_time_goal),
                                 style = MaterialTheme.typography.displayMedium
                             )
-                            Spacer(modifier = Modifier.weight(1f))
-                            SimpleButton(name = stringResource(R.string.label_change),
-                                enabled = !focusUiState.loading, onClick = {
-
+                            Spacer(modifier = Modifier.width(30.dp))
+                            TimerDropDown(currentSelection = focusUiState.focusTime,
+                                durationOptions = focusDurations, onChange = { duration ->
+                                    focusViewModel.changeFocusTime(duration)
                                 })
                         }
                     }
                 }
-                if (focusUiState.focusing) {
-                    Spacer(modifier = Modifier.height(15.dp))
-                    BudzCard {
-                        Text(
-                            stringResource(R.string.label_focus_sounds),
-                            style = MaterialTheme.typography.labelMedium)
-                        HorizontalDivider(color = BudzColor.lightPurple)
-                        Row(verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text("${focusUiState.focusSample?.name}",
-                                style = MaterialTheme.typography.displayMedium)
-                            Spacer(modifier = Modifier.weight(1f))
-                            SimpleButton(name = stringResource(R.string.label_change),
-                                enabled = !focusUiState.loading, onClick = {
-                                    onGoToFocusSelection()
-                                })
-                        }
+
+                Spacer(modifier = Modifier.height(15.dp))
+                BudzCard {
+                    Text(
+                        stringResource(R.string.label_focus_sounds),
+                        style = MaterialTheme.typography.labelMedium)
+                    HorizontalDivider(color = BudzColor.lightPurple)
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("${focusUiState.focusSample?.name}",
+                            style = MaterialTheme.typography.displayMedium)
+                        Spacer(modifier = Modifier.weight(1f))
+                        SimpleButton(name = stringResource(R.string.label_change),
+                            enabled = !focusUiState.loading, onClick = {
+                                onGoToFocusSelection()
+                            })
                     }
+                }
+                if (focusUiState.focusing) {
                     Spacer(modifier = Modifier.weight(1f))
                     WideButton(name = stringResource(R.string.label_end_focus_session), onClick = {
                         focusViewModel.stopFocusing()

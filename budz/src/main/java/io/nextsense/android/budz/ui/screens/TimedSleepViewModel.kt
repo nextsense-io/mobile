@@ -75,7 +75,8 @@ class TimedSleepViewModel @Inject constructor(
         SoundsManager.stopLoopAudioSample()
         _uiState.update { currentState ->
             currentState.copy(
-                fallingAsleep = false
+                fallingAsleep = false,
+                sleepTimeLeft = currentState.sleepTime
             )
         }
     }
