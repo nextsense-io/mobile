@@ -67,7 +67,9 @@ fun HomeScreen(
 
     LifecycleResumeEffect(true) {
         homeViewModel.loadUserSounds()
-        onPauseOrDispose {}
+        onPauseOrDispose {
+            homeViewModel.stopSleeping()
+        }
     }
 
     Scaffold(
@@ -88,15 +90,14 @@ fun HomeScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 Spacer(modifier = Modifier.weight(1f))
-                CircleButton(text = stringResource(R.string.label_sleep), onClick = {})
-                SimpleButton(name = if (homeUiState.fallingAsleep) "Stop Sleeping" else "Sleep",
-                    onClick = {
-                        if (homeUiState.fallingAsleep) {
-                            homeViewModel.stopSleeping()
-                        } else {
-                            homeViewModel.startSleeping(context)
-                        }
-                    })
+                CircleButton(text = if (homeUiState.fallingAsleep) "Pause" else
+                        stringResource(R.string.label_sleep), onClick = {
+                    if (homeUiState.fallingAsleep) {
+                        homeViewModel.stopSleeping()
+                    } else {
+                        homeViewModel.startSleeping(context)
+                    }
+                })
                 Spacer(modifier = Modifier.height(15.dp))
                 BudzCard {
                     Text(stringResource(R.string.label_fall_asleep),

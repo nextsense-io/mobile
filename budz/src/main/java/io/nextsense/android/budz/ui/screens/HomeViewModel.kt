@@ -153,6 +153,24 @@ class HomeViewModel @Inject constructor(
             context = context, resId = uiState.value.fallAsleepSample!!.resId)
     }
 
+    fun pauseSleeping() {
+        SoundsManager.pauseAudioSample()
+        _uiState.update { currentState ->
+            currentState.copy(
+                fallingAsleep = false
+            )
+        }
+    }
+
+    fun resumeSleeping() {
+        SoundsManager.resumeAudioSample()
+        _uiState.update { currentState ->
+            currentState.copy(
+                fallingAsleep = true
+            )
+        }
+    }
+
     fun stopSleeping() {
         SoundsManager.stopLoopAudioSample()
         _uiState.update { currentState ->

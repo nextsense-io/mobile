@@ -94,6 +94,7 @@ object SoundsManager {
     private val _soundPool = SoundPool.Builder().setMaxStreams(1).build()
     private var _soundId: Int? = null
     private var _playing: Boolean = false
+    private var _paused: Boolean = false
     private var _loaded: Boolean = false
 
     private fun idToSample(id: String) : AudioSample {
@@ -116,6 +117,22 @@ object SoundsManager {
                 _soundPool.play(_soundId!!, /*leftVolume=*/1f, /*rightVolume=*/1f, /*priority=*/1,
                     /*loop=*/-1, /*rate=*/1f)
             }
+        }
+    }
+
+    fun pauseAudioSample() {
+        if (_playing && _soundId != null) {
+            _soundPool.pause(_soundId!!)
+            _paused = true
+            _playing = false
+        }
+    }
+
+    fun resumeAudioSample() {
+        if (_paused && _loaded && _soundId != null) {
+            _soundPool.resume(_soundId!!)
+            _playing = true
+            _paused = false
         }
     }
 
