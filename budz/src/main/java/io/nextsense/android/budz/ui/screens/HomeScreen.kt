@@ -74,8 +74,8 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            TopBar(title = stringResource(R.string.app_title), isAppTitle = true, showHome = true,
-                showPrivacy = true, onNavigationClick = { })
+            TopBar(title = stringResource(R.string.app_title), isAppTitle = true, showHome = false,
+                showBack = false, showPrivacy = true, onNavigationClick = {})
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {

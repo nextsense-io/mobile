@@ -100,6 +100,14 @@ val Typography = Typography(
         lineHeight = 30.sp,
         letterSpacing = 0.sp
     ),
+    // Used for the app name title in the top bar
+    titleLarge = TextStyle(
+        fontFamily = workSansSemiBoldFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 30.sp,
+        lineHeight = 36.sp,
+        letterSpacing = 0.sp
+    ),
     // Used for text in small buttons
     labelSmall = TextStyle(
         fontFamily = workSansSemiBoldFontFamily,

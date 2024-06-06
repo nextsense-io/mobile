@@ -8,12 +8,13 @@ import androidx.compose.ui.Modifier
 
 @Composable
 fun SimpleButton(name: String, modifier: Modifier = Modifier, enabled: Boolean = true,
-                 onClick: () -> Unit) {
+                 bigFont: Boolean = false, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier
     ) {
-        Text(text = name, style = MaterialTheme.typography.labelSmall)
+        Text(text = name, style = if (bigFont) MaterialTheme.typography.labelLarge else
+            MaterialTheme.typography.labelSmall)
     }
 }

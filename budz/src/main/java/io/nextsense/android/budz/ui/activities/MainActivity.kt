@@ -10,10 +10,12 @@ import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.budz.Routes
 import io.nextsense.android.budz.manager.AudioSampleType
+import io.nextsense.android.budz.ui.screens.ConnnectedScreen
 import io.nextsense.android.budz.ui.screens.DeviceConnectionScreen
 import io.nextsense.android.budz.ui.screens.DeviceSettingsScreen
 import io.nextsense.android.budz.ui.screens.FocusScreen
 import io.nextsense.android.budz.ui.screens.HomeScreen
+import io.nextsense.android.budz.ui.screens.IntroScreen
 import io.nextsense.android.budz.ui.screens.LoginScreen
 import io.nextsense.android.budz.ui.screens.SelectSoundScreen
 import io.nextsense.android.budz.ui.screens.TimedSleepScreen
@@ -32,13 +34,45 @@ class MainActivity : ComponentActivity() {
                 ) {
                     composable<Routes.Login> {
                         LoginScreen(onLogin = {
-                            navController.navigate(Routes.Home) {
+                            navController.navigate(Routes.Intro) {
                                 popUpTo(Routes.Login) {
                                     inclusive = true
                                 }
                             }
                             navController.clearBackStack<Routes.Login>()
                         })
+                    }
+                    composable<Routes.Intro> {
+                        IntroScreen(
+                            onGoToConnected = {
+                                navController.navigate(Routes.Connected) {
+                                    popUpTo(Routes.Intro) {
+                                        inclusive = true
+                                    }
+                                }
+                                navController.clearBackStack<Routes.Intro>()
+                            },
+                            onGoToHome = {
+                                navController.navigate(Routes.Home) {
+                                    popUpTo(Routes.Intro) {
+                                        inclusive = true
+                                    }
+                                }
+                                navController.clearBackStack<Routes.Intro>()
+                            }
+                        )
+                    }
+                    composable<Routes.Connected> {
+                        ConnnectedScreen(
+                            onGoToHome = {
+                                navController.navigate(Routes.Home) {
+                                    popUpTo(Routes.Connected) {
+                                        inclusive = true
+                                    }
+                                }
+                                navController.clearBackStack<Routes.Connected>()
+                            }
+                        )
                     }
                     composable<Routes.Home> {
                         HomeScreen(

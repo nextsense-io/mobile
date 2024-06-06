@@ -20,8 +20,8 @@ import io.nextsense.android.budz.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(title: String, isAppTitle: Boolean = false, showHome: Boolean, showPrivacy: Boolean,
-           onNavigationClick: () -> Unit, onPrivacyClick: () -> Unit? = { }) {
+fun TopBar(title: String, isAppTitle: Boolean = false, showHome: Boolean, showBack: Boolean = true,
+           showPrivacy: Boolean, onNavigationClick: () -> Unit, onPrivacyClick: () -> Unit? = { }) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
     CenterAlignedTopAppBar(
@@ -47,7 +47,7 @@ fun TopBar(title: String, isAppTitle: Boolean = false, showHome: Boolean, showPr
                         modifier = Modifier.size(36.dp),
                         tint = MaterialTheme.colorScheme.tertiary
                     )
-                } else {
+                } else if (showBack) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_left_arrow),
                         contentDescription = stringResource(R.string.desc_back_button),

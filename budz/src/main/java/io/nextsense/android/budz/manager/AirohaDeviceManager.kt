@@ -38,8 +38,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.update
 import java.util.LinkedList
+import java.util.Timer
+import java.util.TimerTask
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.time.Duration
 
 enum class AirohaDeviceState {
     ERROR,  // Error when trying to connect to the device.
@@ -88,6 +91,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private var _twsConnected: Boolean? = null
     private var _deviceInfo: AirohaDevice? = null
     private var _targetGains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
+    private var _connectionTimeoutTimer: Timer? = null
 
     val airohaDeviceState: StateFlow<AirohaDeviceState> = _airohaDeviceState.asStateFlow()
     val streamingState: StateFlow<StreamingState> = _streamingState.asStateFlow()
@@ -171,7 +175,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
     }
 
-    suspend fun connectDevice() {
+    suspend fun connectDevice(timeout: Duration? = null) {
         Log.i(tag, "connectDevice")
         _airohaDeviceState.value = AirohaDeviceState.CONNECTING_CLASSIC
         if (_airohaDeviceState.value != AirohaDeviceState.BONDED) {
@@ -181,9 +185,22 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                 return
             }
         }
+        if (timeout != null) {
+            _connectionTimeoutTimer = Timer()
+            _connectionTimeoutTimer?.schedule(object : TimerTask() {
+                override fun run() {
+                    if (_airohaDeviceState.value == AirohaDeviceState.CONNECTING_CLASSIC) {
+                        disconnectDevice()
+                        _airohaDeviceState.value = AirohaDeviceState.DISCONNECTED
+                    }
+                }
+            }, timeout.inWholeMilliseconds)
+        }
         connectAirohaDevice()
         airohaDeviceState.collect { deviceState ->
             if (deviceState == AirohaDeviceState.CONNECTED_AIROHA) {
+                _connectionTimeoutTimer?.cancel()
+                _connectionTimeoutTimer = null
                 // Need to call these 2 APIs to correctly initialize the connection. If not, things
                 // like getting the battery levels do not work correctly.
                 // Also need a small delay between these commands or they often fail.
@@ -203,8 +220,12 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
     }
 
+    fun stopConnectingDevice() {
+        _devicePresenter?.stopConnectingBoundDevice()
+    }
+
     fun disconnectDevice() {
-        _devicePresenter?.destroy()
+        _devicePresenter?.stopConnectingBoundDevice()
         val airohaDeviceConnector = AirohaSDK.getInst().airohaDeviceConnector
         airohaDeviceConnector.unregisterConnectionListener(_airohaConnectionListener)
         _airohaDeviceState.value = AirohaDeviceState.DISCONNECTED

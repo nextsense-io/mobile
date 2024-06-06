@@ -90,12 +90,7 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
     public final void destroy() {
         AirohaConnector airohaDeviceConnector = AirohaSDK.getInst().getAirohaDeviceConnector();
         airohaDeviceConnector.unregisterConnectionListener(this);
-
-        _isChecking = false;
-        if (_thread != null) {
-            _thread.interrupt();
-        }
-        _thread = null;
+        stopConnectingBoundDevice();
     }
 
     public final void connectBoundDevice() {
@@ -116,6 +111,14 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         _isChecking = true;
         _thread = new Thread(this::checkBondDevice);
         _thread.start();
+    }
+
+    public void stopConnectingBoundDevice() {
+        _isChecking = false;
+        if (_thread != null) {
+            _thread.interrupt();
+        }
+        _thread = null;
     }
 
     final void checkBondDevice() {
