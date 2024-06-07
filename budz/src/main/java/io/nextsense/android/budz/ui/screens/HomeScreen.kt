@@ -1,5 +1,7 @@
 package io.nextsense.android.budz.ui.screens
 
+import android.Manifest
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +24,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -33,6 +36,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.LifecycleStartEffect
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.ActionButton
 import io.nextsense.android.budz.ui.components.BudzCard
@@ -51,6 +57,7 @@ fun BatteryLevel(percent: Int?) {
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
@@ -66,9 +73,30 @@ fun HomeScreen(
     val context = LocalContext.current
 
     LifecycleResumeEffect(true) {
+        homeViewModel.connectDeviceIfNeeded()
         homeViewModel.loadUserSounds()
         onPauseOrDispose {
             homeViewModel.stopSleeping()
+        }
+    }
+
+    LifecycleStartEffect(true) {
+        onStopOrDispose {
+            // TODO(eric): Should not do this if streaming data?
+            homeViewModel.stopConnection()
+        }
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val bluetoothConnectPermissionsState = rememberMultiplePermissionsState(
+            permissions = listOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN
+            )
+        )
+
+        LaunchedEffect(bluetoothConnectPermissionsState) {
+            bluetoothConnectPermissionsState.launchMultiplePermissionRequest()
         }
     }
 

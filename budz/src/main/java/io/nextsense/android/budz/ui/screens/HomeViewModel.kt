@@ -45,8 +45,16 @@ class HomeViewModel @Inject constructor(
 
     val uiState: StateFlow<HomeState> = _uiState.asStateFlow()
 
-    init {
-        loadUserSounds()
+    fun stopConnection() {
+        Log.i("HomeViewModel", "stopConnection")
+        airohaDeviceManager.stopConnectingDevice()
+    }
+
+    fun connectDeviceIfNeeded() {
+        if (uiState.value.connected) {
+            getBatteryLevels()
+            return
+        }
         connectBoundDevice()
     }
 
@@ -70,6 +78,10 @@ class HomeViewModel @Inject constructor(
                     }
                     AirohaDeviceState.CONNECTED_AIROHA -> {
 //                        _uiState.value = _uiState.value.copy(connected = true, connecting = false)
+                    }
+                    AirohaDeviceState.DISCONNECTED -> {
+                        _uiState.value = _uiState.value.copy(connected = false,
+                            batteryLevel = AirohaBatteryLevel(null, null, null))
                     }
                     else -> {
 //                        _uiState.value = DeviceConnectionState()

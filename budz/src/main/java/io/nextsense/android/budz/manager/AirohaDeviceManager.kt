@@ -1,11 +1,15 @@
 package io.nextsense.android.budz.manager
 
+import android.bluetooth.BluetoothDevice
+import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.airoha.libbase.RaceCommand.constant.RaceType
 import com.airoha.libutils.Converter
 import com.airoha.sdk.AirohaConnector
@@ -28,6 +32,9 @@ import io.nextsense.android.base.DeviceState
 import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.service.BudzService
 import io.nextsense.android.budz.ui.activities.MainActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,12 +44,16 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import java.util.LinkedList
 import java.util.Timer
 import java.util.TimerTask
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 enum class AirohaDeviceState {
     ERROR,  // Error when trying to connect to the device.
@@ -160,13 +171,41 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
     }
 
+    fun BroadcastReceiver.goAsync(
+        context: CoroutineContext = EmptyCoroutineContext,
+        block: suspend CoroutineScope.() -> Unit
+    ) {
+        val pendingResult = goAsync()
+        @OptIn(DelicateCoroutinesApi::class) // Must run globally; there's no teardown callback.
+        GlobalScope.launch(context) {
+            try {
+                block()
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    private val broadCastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) = goAsync {
+            when (intent.action) {
+                BluetoothDevice.ACTION_ACL_CONNECTED -> {
+                    Log.d(tag, "BluetoothDevice.ACTION_ACL_CONNECTED")
+                    connectDevice(timeout = 10.seconds)
+                }
+            }
+        }
+    }
+
     init {
         _airohaDeviceConnector.registerConnectionListener(_airohaConnectionListener)
         _devicePresenter = DeviceSearchPresenter(context)
+        context.registerReceiver(broadCastReceiver, IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED))
         Log.i(tag, "initialized")
     }
 
     fun destroy() {
+        LocalBroadcastManager.getInstance(context).unregisterReceiver(broadCastReceiver)
         disconnectDevice()
         if (_budzServiceBound && _budzServiceConnection != null) {
             context.unbindService(_budzServiceConnection!!)
@@ -177,19 +216,21 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     suspend fun connectDevice(timeout: Duration? = null) {
         Log.i(tag, "connectDevice")
+        if (_airohaDeviceState.value == AirohaDeviceState.READY) {
+            _airohaDeviceState.value = AirohaDeviceState.READY
+            Log.i(tag, "Device already connected.")
+            return
+        }
         _airohaDeviceState.value = AirohaDeviceState.CONNECTING_CLASSIC
         if (_airohaDeviceState.value != AirohaDeviceState.BONDED) {
-            val bonded = isAirohaDeviceBonded()
-            if (!bonded) {
-                _airohaDeviceState.value = AirohaDeviceState.DISCONNECTED
-                return
-            }
+            isAirohaDeviceBonded()
         }
         if (timeout != null) {
             _connectionTimeoutTimer = Timer()
             _connectionTimeoutTimer?.schedule(object : TimerTask() {
                 override fun run() {
                     if (_airohaDeviceState.value == AirohaDeviceState.CONNECTING_CLASSIC) {
+                        Log.i(tag, "Timed out waiting for Airoha connection, disconnecting.")
                         disconnectDevice()
                         _airohaDeviceState.value = AirohaDeviceState.DISCONNECTED
                     }
@@ -586,6 +627,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         val bonded: Boolean = _devicePresenter?.findAirohaDevice() ?: false
         _airohaDeviceState.value = if (bonded) AirohaDeviceState.BONDED else
             AirohaDeviceState.DISCONNECTED
+        Log.i(tag, "isAirohaDeviceBonded=$bonded")
         return bonded
     }
 

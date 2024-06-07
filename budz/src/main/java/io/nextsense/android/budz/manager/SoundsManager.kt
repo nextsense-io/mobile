@@ -159,6 +159,8 @@ object SoundsManager {
     }
 
     fun stopAudioSample() {
-        _mediaPlayer.stop()
+        if (_mediaPlayer.isPlaying) {
+            _mediaPlayer.stop()
+        }
     }
 }

@@ -30,6 +30,7 @@
     <string name="label_change">Change</string>
     <string name="label_check_connection">Check\nconnection</string>
     <string name="label_connect">Connect</string>
+    <string name="label_connecting">Connecting</string>
     <string name="label_continue_with_apple">Continue with Apple ID</string>
     <string name="label_continue_with_google">Continue with Google</string>
     <string name="label_end_focus_session">End focus session</string>

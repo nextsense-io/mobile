@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AirohaDeviceState
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,9 +30,9 @@ class IntroViewModel @Inject constructor(
     fun connectBoundDevice(onConnected: () -> Unit) {
         _uiState.value = _uiState.value.copy(connecting = true)
         viewModelScope.launch {
-            // Need a bit of delay after initializing the Airoha SDK before connecting.
-            delay(1000L)
-            airohaDeviceManager.connectDevice(timeout = 5.seconds)
+            // Need a bit of delay (about 1 second) after initializing the Airoha SDK before
+            // connecting, but it is fine as the user needs to move through 4 screens.
+            airohaDeviceManager.connectDevice(timeout = 30.seconds)
         }
         viewModelScope.launch {
             airohaDeviceManager.airohaDeviceState.collect { deviceState ->
@@ -50,10 +49,16 @@ class IntroViewModel @Inject constructor(
                         _uiState.value = _uiState.value.copy(connected = true)
                     }
                     else -> {
-                        _uiState.value = IntroState()
+                        // _uiState.value = IntroState()
                     }
                 }
             }
+        }
+    }
+
+    fun stopConnecting() {
+        viewModelScope.launch {
+            airohaDeviceManager.stopConnectingDevice()
         }
     }
 }

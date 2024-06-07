@@ -94,8 +94,12 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
     }
 
     public final void connectBoundDevice() {
-
         gLogger.d(TAG, "connectBoundDevice()");
+
+        if (_isConnected) {
+            gLogger.d(TAG, "already_connected");
+            return;
+        }
 
         try {
             _isChecking = false;
@@ -122,6 +126,9 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
     }
 
     final void checkBondDevice() {
+        if (_isConnected) {
+            return;
+        }
 
         try {
             int i = 0;

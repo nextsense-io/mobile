@@ -1,5 +1,7 @@
 package io.nextsense.android.budz.ui.screens
 
+import android.Manifest
+import android.os.Build
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,6 +24,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +41,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.SimpleButton
 import kotlinx.coroutines.launch
@@ -277,12 +285,33 @@ fun PagerItem(page: Int, introViewModel: IntroViewModel) {
     }
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun IntroScreen(
     introViewModel: IntroViewModel = hiltViewModel(),
     onGoToConnected: () -> Unit,
     onGoToHome: () -> Unit
 ) {
+    val introUiState by introViewModel.uiState.collectAsState()
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val bluetoothConnectPermissionsState = rememberMultiplePermissionsState(
+            permissions = listOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN
+            )
+        )
+        LaunchedEffect(bluetoothConnectPermissionsState) {
+            bluetoothConnectPermissionsState.launchMultiplePermissionRequest()
+        }
+    }
+
+    LifecycleResumeEffect(true) {
+        onPauseOrDispose {
+            introViewModel.stopConnecting()
+        }
+    }
+
     Box(modifier  = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(
             verticalArrangement = Arrangement.Center,
@@ -316,8 +345,11 @@ fun IntroScreen(
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 if (pagerState.currentPage == pageCount - 1) {
-                    SimpleButton(name = stringResource(R.string.label_connect), bigFont=true,
-                        enabled = !introViewModel.uiState.value.connecting,
+                    SimpleButton(name = if (introUiState.connecting)
+                            stringResource(R.string.label_connecting) else
+                            stringResource(R.string.label_connect),
+                        bigFont=true,
+                        enabled = !introUiState.connecting,
                         onClick = {
                             introViewModel.connectBoundDevice(onGoToConnected)
                         })
