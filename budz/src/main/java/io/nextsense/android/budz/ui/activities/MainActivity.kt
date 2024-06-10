@@ -17,6 +17,7 @@ import io.nextsense.android.budz.ui.screens.FocusScreen
 import io.nextsense.android.budz.ui.screens.HomeScreen
 import io.nextsense.android.budz.ui.screens.IntroScreen
 import io.nextsense.android.budz.ui.screens.LoginScreen
+import io.nextsense.android.budz.ui.screens.PrivacyPolicyScreen
 import io.nextsense.android.budz.ui.screens.SelectSoundScreen
 import io.nextsense.android.budz.ui.screens.TimedSleepScreen
 import io.nextsense.android.budz.ui.theme.BudzTheme
@@ -93,6 +94,9 @@ class MainActivity : ComponentActivity() {
                                 }
                                 navController.clearBackStack<Routes.Home>()
                             },
+                            onGoToPrivacyPolicy = {
+                                navController.navigate(Routes.PrivacyPolicy)
+                            },
                             onGoToDeviceConnection = {
                                 navController.navigate(Routes.DeviceConnection)
                             },
@@ -112,6 +116,13 @@ class MainActivity : ComponentActivity() {
                             },
                             onGoToDeviceSettings = {
                                 navController.navigate(Routes.DeviceSettings)
+                            }
+                        )
+                    }
+                    composable<Routes.PrivacyPolicy> {
+                        PrivacyPolicyScreen(
+                            onGoToHome = {
+                                navController.popBackStack()
                             }
                         )
                     }

@@ -61,6 +61,7 @@ fun BatteryLevel(percent: Int?) {
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
+    onGoToPrivacyPolicy: () -> Unit,
     onGoToFallAsleep: () -> Unit,
     onGoToStayAsleep: () -> Unit,
     onGoToTimedSleep: () -> Unit,
@@ -103,7 +104,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             TopBar(title = stringResource(R.string.app_title), isAppTitle = true, showHome = false,
-                showBack = false, showPrivacy = true, onNavigationClick = {})
+                showBack = false, showPrivacy = true, onPrivacyClick = { onGoToPrivacyPolicy() })
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {

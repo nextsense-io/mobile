@@ -17,6 +17,9 @@ sealed class Routes{
     data object Home : Routes()
 
     @Serializable
+    data object PrivacyPolicy : Routes()
+
+    @Serializable
     data object DeviceConnection : Routes()
 
     @Serializable
