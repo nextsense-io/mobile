@@ -27,8 +27,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -60,33 +58,30 @@ class AuthRepository @Inject constructor(
 
     var currentUserId: String? = null
 
-    suspend fun signInDatabase() = flow<State<User>> {
+    suspend fun signInDatabase() : State<User> {
         if (firebaseAuth.currentUser == null) {
-            emit(State.failed("User is not authenticated"))
-            return@flow
+            return State.failed("User is not authenticated")
         }
         val email = firebaseAuth.currentUser!!.email
         val name = firebaseAuth.currentUser!!.displayName
-        usersRepository.getUser(firebaseAuth.currentUser!!.uid).last().let { userGetState ->
-            if (userGetState is State.Success) {
-                if (userGetState.data == null) {
-                    val newUser = User(email = email!!, name = name, type = UserType.CONSUMER,
-                        createdAt = Timestamp.now())
-                    usersRepository.addUser(newUser, firebaseAuth.currentUser!!.uid).last().let { userAddState ->
-                        if (userAddState is State.Success) {
-                            currentUserId = firebaseAuth.currentUser!!.uid
-                            emit(State.Success(newUser))
-                        } else {
-                            emit(State.failed(userAddState.toString()))
-                        }
-                    }
-                } else {
+        val userGetState = usersRepository.getUser(firebaseAuth.currentUser!!.uid)
+        if (userGetState is State.Success) {
+            if (userGetState.data == null) {
+                val newUser = User(email = email!!, name = name, type = UserType.CONSUMER,
+                    createdAt = Timestamp.now())
+                val userAddState = usersRepository.addUser(newUser, firebaseAuth.currentUser!!.uid)
+                if (userAddState is State.Success) {
                     currentUserId = firebaseAuth.currentUser!!.uid
-                    emit(State.Success(userGetState.data))
+                    return State.Success(newUser)
+                } else {
+                    return State.failed(userAddState.toString())
                 }
             } else {
-                emit(State.failed(userGetState.toString()))
+                currentUserId = firebaseAuth.currentUser!!.uid
+                return State.Success(userGetState.data)
             }
+        } else {
+            return State.failed(userGetState.toString())
         }
     }
 
@@ -94,7 +89,7 @@ class AuthRepository @Inject constructor(
         val authStateListener = AuthStateListener { authState ->
             authState.currentUser?.let { user ->
                 viewModelScope.launch {
-                    signInDatabase().last().let { userState ->
+                    signInDatabase().let { userState ->
                         if (userState is State.Success) {
                             trySend(authState.currentUser)
                         } else {
@@ -162,8 +157,7 @@ class AuthRepository @Inject constructor(
     }
 
     suspend fun signInWithGoogle(credential: SignInCredential): FirebaseSignInResponse {
-        val googleCredential = GoogleAuthProvider
-            .getCredential(credential.googleIdToken, null)
+        val googleCredential = GoogleAuthProvider.getCredential(credential.googleIdToken, null)
         return authenticateUser(googleCredential)
     }
 

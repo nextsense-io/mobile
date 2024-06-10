@@ -19,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -41,18 +42,21 @@ import io.nextsense.android.budz.ui.theme.BudzTheme
 
 @Composable
 fun LoginScreen(
-        onLogin: () -> Unit,
-        authViewModel: AuthViewModel = hiltViewModel(),
-        loginState: MutableState<Boolean> = mutableStateOf(false)) {
+    onGoToIntro: () -> Unit,
+    onGoToHome: () -> Unit,
+    authViewModel: AuthViewModel = hiltViewModel(),
+    loginViewModel: LoginViewModel = hiltViewModel(),
+    loginState: MutableState<Boolean> = mutableStateOf(false)) {
 
-    val launcher = rememberLauncherForActivityResult(
+    val googleSignInLauncher = rememberLauncherForActivityResult(
             ActivityResultContracts.StartIntentSenderForResult()) { result ->
+
         if (result.resultCode == Activity.RESULT_OK) {
             try {
                 val credentials =
                     authViewModel.oneTapClient.getSignInCredentialFromIntent(result.data)
                 authViewModel.signInWithGoogle(credentials)
-                authViewModel.signInWithDatabase()
+                Log.i("LoginScreen:Launcher","Login-in with database")
             }
             catch (e: ApiException) {
                 Log.e("LoginScreen:Launcher","Login One-tap $e")
@@ -63,17 +67,26 @@ fun LoginScreen(
         }
     }
 
-    fun launch(signInResult: BeginSignInResult) {
+    fun launchGoogleSignIn(signInResult: BeginSignInResult) {
         val intent = IntentSenderRequest.Builder(signInResult.pendingIntent.intentSender).build()
-        launcher.launch(intent)
+        googleSignInLauncher.launch(intent)
     }
 
     val currentUser = authViewModel.currentUser.collectAsState().value
-    AuthDataProvider.updateAuthState(currentUser)
-    if (AuthDataProvider.authState == AuthState.SignedIn && !authViewModel.loginDone.value) {
-        Log.i("LoginScreen", "Authenticated: ${AuthDataProvider.isAuthenticated}")
-        authViewModel.loginDone.value = true
-        onLogin()
+
+    LaunchedEffect(currentUser) {
+        AuthDataProvider.updateAuthState(currentUser)
+        Log.i("LoginScreen", "updating auth state: ${AuthDataProvider.authState}")
+        if (AuthDataProvider.authState == AuthState.SignedIn) {
+            Log.i("LoginScreen", "Authenticated in launched effect: ${AuthDataProvider.isAuthenticated}")
+            loginViewModel.navigateToNext(
+                goToIntro = {
+                    onGoToIntro()
+                },
+                goToHome = {
+                    onGoToHome()
+                })
+        }
     }
 
     Scaffold(
@@ -114,15 +127,27 @@ fun LoginScreen(
     }
 
     OneTapSignIn (
-        launch = {
-            launch(it)
+        launch = { signInResult ->
+            launchGoogleSignIn(signInResult)
         }
     )
 
-    GoogleSignIn {
-        // Dismiss LoginScreen
-        loginState.value = false
-    }
+    GoogleSignIn (
+        launch = {
+            // Dismiss LoginScreen
+            loginState.value = false
+            Log.i("LoginScreen", "Authenticated: ${AuthDataProvider.isAuthenticated}")
+            if (!loginViewModel.uiState.value.loading) {
+                loginViewModel.navigateToNext(
+                    goToIntro = {
+                        onGoToIntro()
+                    },
+                    goToHome = {
+                        onGoToHome()
+                    })
+            }
+        }
+    )
 }
 
 @Preview

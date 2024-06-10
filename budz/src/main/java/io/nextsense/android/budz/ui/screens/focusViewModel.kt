@@ -15,7 +15,6 @@ import io.nextsense.android.budz.model.UsersRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -43,6 +42,10 @@ class FocusViewModel @Inject constructor(
     private var _focusTimer: CountDownTimer? = null
 
     val uiState: StateFlow<FocusState> = _uiState.asStateFlow()
+
+    init {
+        loadUserData()
+    }
 
     fun startFocusing(context: Context) {
         _uiState.update { currentState ->
@@ -82,13 +85,13 @@ class FocusViewModel @Inject constructor(
 
     fun changeFocusTime(newFocusTime: Duration) {
         viewModelScope.launch {
-            usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
+            usersRepository.getUser(authRepository.currentUserId!!).let { userState ->
                 if (userState is State.Success) {
                     if (userState.data != null) {
                         val userStateData = userState.data.copy(
                             focusDurationMinutes = newFocusTime.inWholeMinutes.toInt())
                         usersRepository.updateUser(userStateData, authRepository.currentUserId!!)
-                            .last().let { updateState ->
+                            .let { updateState ->
                                 if (updateState is State.Success) {
                                     _uiState.update { currentState ->
                                         currentState.copy(
@@ -121,7 +124,7 @@ class FocusViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
+            usersRepository.getUser(authRepository.currentUserId!!).let { userState ->
                 if (userState is State.Success && userState.data != null) {
                     _uiState.update { currentState ->
                         val focusTime = userState.data.focusDurationMinutes?.minutes ?: 10.minutes

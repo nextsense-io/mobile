@@ -15,7 +15,6 @@ import io.nextsense.android.budz.model.UsersRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.last
 
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -44,12 +43,12 @@ class GoogleAuth @Inject constructor() {
             currentUserId = authResult.user!!.uid
             val email = firebaseAuth.currentUser?.email
             val name = firebaseAuth.currentUser?.displayName
-            usersRepository.getUser(currentUserId).last().let { userGetState ->
+            val userGetState = usersRepository.getUser(currentUserId).let { userGetState ->
                 if (userGetState is State.Success) {
                     if (userGetState.data == null) {
                         val newUser = User(email = email!!, name = name, type = UserType.CONSUMER,
                             createdAt = Timestamp.now())
-                        usersRepository.addUser(newUser, currentUserId).last().let {userAddState ->
+                        usersRepository.addUser(newUser, currentUserId).let {userAddState ->
                             if (userAddState is State.Success) {
                                 emit(State.Success(newUser))
                             } else {

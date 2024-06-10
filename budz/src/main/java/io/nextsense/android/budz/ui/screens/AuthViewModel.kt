@@ -6,12 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.auth.api.identity.SignInCredential
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.AuthRepository
 import io.nextsense.android.budz.model.AuthDataProvider
 import io.nextsense.android.budz.model.AuthResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,10 +22,9 @@ class AuthViewModel @Inject constructor(
 ): ViewModel() {
 
     val currentUser = getAuthState()
-    val loginDone = MutableStateFlow(false)
 
     init {
-        getAuthState()
+//        getAuthState()
         CoroutineScope(Dispatchers.IO).launch {
             val signedInGoogle = authRepository.verifyGoogleSignIn()
             if (signedInGoogle) {
@@ -34,7 +33,7 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    private fun getAuthState() = authRepository.getAuthState(viewModelScope)
+    fun getAuthState() = authRepository.getAuthState(viewModelScope)
 
 //    fun signInAnonymously() = CoroutineScope(Dispatchers.IO).launch {
 //        AuthDataProvider.anonymousSignInResponse = AuthResponse.Loading
@@ -48,10 +47,21 @@ class AuthViewModel @Inject constructor(
 
     fun signInWithGoogle(credentials: SignInCredential) = CoroutineScope(Dispatchers.IO).launch {
         AuthDataProvider.googleSignInResponse = AuthResponse.Loading
-        AuthDataProvider.googleSignInResponse = authRepository.signInWithGoogle(credentials)
+        val response = authRepository.signInWithGoogle(credentials)
+        if (response is AuthResponse.Success) {
+            val signedInDb = authRepository.signInDatabase()
+            if (signedInDb is State.Success) {
+                AuthDataProvider.googleSignInResponse = response
+            } else {
+                AuthDataProvider.googleSignInResponse = AuthResponse.Failure(Exception("Failed to sign in with database"))
+            }
+            return@launch
+        }
+        AuthDataProvider.googleSignInResponse = response
     }
 
     fun signInWithDatabase() = CoroutineScope(Dispatchers.IO).launch {
+        AuthDataProvider.googleSignInResponse = AuthResponse.Loading
         authRepository.signInDatabase()
     }
 

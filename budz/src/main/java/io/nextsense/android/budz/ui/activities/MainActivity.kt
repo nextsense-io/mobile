@@ -33,14 +33,23 @@ class MainActivity : ComponentActivity() {
                     startDestination = Routes.Login,
                 ) {
                     composable<Routes.Login> {
-                        LoginScreen(onLogin = {
-                            navController.navigate(Routes.Intro) {
-                                popUpTo(Routes.Login) {
-                                    inclusive = true
+                        LoginScreen(
+                            onGoToIntro = {
+                                navController.navigate(Routes.Intro) {
+                                    popUpTo(Routes.Login) {
+                                        inclusive = true
+                                    }
                                 }
-                            }
-                            navController.clearBackStack<Routes.Login>()
-                        })
+                                navController.clearBackStack<Routes.Login>()
+                            },
+                            onGoToHome = {
+                                navController.navigate(Routes.Home) {
+                                    popUpTo(Routes.Login) {
+                                        inclusive = true
+                                    }
+                                }
+                                navController.clearBackStack<Routes.Login>()
+                            })
                     }
                     composable<Routes.Intro> {
                         IntroScreen(

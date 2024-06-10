@@ -15,7 +15,6 @@ import io.nextsense.android.budz.model.UsersRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -44,6 +43,10 @@ class TimedSleepViewModel @Inject constructor(
     private var _sleepTimer: CountDownTimer? = null
 
     val uiState: StateFlow<TimedSleepState> = _uiState.asStateFlow()
+
+    init {
+        loadUserData()
+    }
 
     fun startSleeping(context: Context) {
         _uiState.update { currentState ->
@@ -83,13 +86,13 @@ class TimedSleepViewModel @Inject constructor(
 
     fun changeSleepTime(newSleepTime: Duration) {
         viewModelScope.launch {
-            usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
+            usersRepository.getUser(authRepository.currentUserId!!).let { userState ->
                 if (userState is State.Success) {
                     if (userState.data != null) {
                         val userStateData = userState.data.copy(
                             timedSleepDurationMinutes = newSleepTime.inWholeMinutes.toInt())
                         usersRepository.updateUser(userStateData, authRepository.currentUserId!!)
-                            .last().let { updateState ->
+                            .let { updateState ->
                                 if (updateState is State.Success) {
                                     _uiState.update { currentState ->
                                         currentState.copy(
@@ -108,6 +111,7 @@ class TimedSleepViewModel @Inject constructor(
     }
 
     fun loadUserData() {
+        Log.d(tag, "updating state")
         _uiState.update { currentState ->
             currentState.copy(
                 loading = true
@@ -121,8 +125,10 @@ class TimedSleepViewModel @Inject constructor(
             }
             return
         }
+        Log.d(tag, "loading user data")
         viewModelScope.launch {
-            usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
+            usersRepository.getUser(authRepository.currentUserId!!).let { userState ->
+                Log.d(tag, "user data loaded")
                 if (userState is State.Success && userState.data != null) {
                     _uiState.update { currentState ->
                         val fallAsleepSampleName =
@@ -157,6 +163,7 @@ class TimedSleepViewModel @Inject constructor(
                                     AudioSampleType.STAY_ASLEEP_TIMED_SLEEP]!!)
                         )
                     }
+                    Log.d(tag, "state updated")
                 }
                 _uiState.update { currentState ->
                     currentState.copy(

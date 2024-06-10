@@ -7,9 +7,7 @@ import io.nextsense.android.budz.model.AuthDataProvider
 import io.nextsense.android.budz.model.AuthResponse
 
 @Composable
-fun GoogleSignIn(
-    launch: () -> Unit
-) {
+fun GoogleSignIn(launch: () -> Unit) {
     when (val signInWithGoogleResponse = AuthDataProvider.googleSignInResponse) {
         is AuthResponse.Loading -> {
             Log.i("Login:GoogleSignIn", "Loading")

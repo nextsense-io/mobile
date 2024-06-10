@@ -18,7 +18,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -124,7 +123,7 @@ class HomeViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            usersRepository.getUser(authRepository.currentUserId!!).last().let { userState ->
+            usersRepository.getUser(authRepository.currentUserId!!).let { userState ->
                 if (userState is State.Success && userState.data != null) {
                     _uiState.update { currentState ->
                         currentState.copy(
