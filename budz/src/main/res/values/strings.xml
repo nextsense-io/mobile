@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Budz</string>
     <string name="app_title">BUDZ</string>
+    <string name="title_brain_signal">Brain Signal</string>
     <string name="title_fall_asleep">Fall asleep sound library</string>
     <string name="title_get_you_connected">Let\'s get you\nConnected</string>
     <string name="title_stay_asleep">Stay asleep sound library</string>
@@ -9,6 +10,11 @@
     <string name="title_privacy_policy">Privacy policy</string>
     <string name="title_all_set">You\'re all set!</string>
     <string name="text_how_it_works">How it works:</string>
+    <string name="text_instructions">Instructions:</string>
+    <string name="text_brain_signal_1">With your buds in and on, stream any song you like from your music player of choice. Then return to this screen.</string>
+    <string name="text_brain_signal_2">As you become more or less relaxed, your changing brain dynamics will adjust the treble and bass on the track. You should be able to hear these changes and see them reflected below.</string>
+    <string name="text_brain_signal_3">To boost alpha (bass), close your eyes and try to clear your mind. To boost beta (treble) open your eyes again.</string>
+    <string name="text_brain_signal_4">If nothing changes or you see "No Signal" refer to the Fit Guide.</string>
     <string name="text_fall_asleep">fall asleep</string>
     <string name="text_stay_asleep">stay asleep</string>
     <string name="text_data_connection">Data Collection:</string>
@@ -26,16 +32,22 @@
     <string name="desc_play">Play sample</string>
     <string name="desc_privacy_button">Privacy policy</string>
     <string name="desc_stop">Stop playing sample</string>
+    <string name="label_bluetooth_connection_guide">Bluetooth Connection Guide</string>
+    <string name="label_bluetooth_status">Bluetooth status:</string>
     <string name="label_case">Case</string>
     <string name="label_change">Change</string>
+    <string name="label_check_brain_signal">Check brain signal -></string>
     <string name="label_check_connection">Check\nconnection</string>
     <string name="label_connect">Connect</string>
+    <string name="label_connected">Connected</string>
     <string name="label_connecting">Connecting</string>
     <string name="label_continue_with_apple">Continue with Apple ID</string>
     <string name="label_continue_with_google">Continue with Google</string>
+    <string name="label_disconnected">Disconnected</string>
     <string name="label_end_focus_session">End focus session</string>
     <string name="label_end_timed_sleep">End timed sleep</string>
     <string name="label_fall_asleep">Fall asleep</string>
+    <string name="label_fit_guide">Fit Guide</string>
     <string name="label_focus">focus</string>
     <string name="label_focus_sound">Focus sound</string>
     <string name="label_button_focus">Focus</string>

@@ -23,6 +23,12 @@ sealed class Routes{
     data object DeviceConnection : Routes()
 
     @Serializable
+    data object CheckConnection : Routes()
+
+    @Serializable
+    data object CheckBrainSignalIntro : Routes()
+
+    @Serializable
     data object DeviceSettings : Routes()
 
     @Serializable

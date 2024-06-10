@@ -10,6 +10,8 @@ import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.budz.Routes
 import io.nextsense.android.budz.manager.AudioSampleType
+import io.nextsense.android.budz.ui.screens.CheckBrainSignalIntroScreen
+import io.nextsense.android.budz.ui.screens.CheckConnectionScreen
 import io.nextsense.android.budz.ui.screens.ConnnectedScreen
 import io.nextsense.android.budz.ui.screens.DeviceConnectionScreen
 import io.nextsense.android.budz.ui.screens.DeviceSettingsScreen
@@ -98,7 +100,7 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate(Routes.PrivacyPolicy)
                             },
                             onGoToDeviceConnection = {
-                                navController.navigate(Routes.DeviceConnection)
+                                navController.navigate(Routes.CheckConnection)
                             },
                             onGoToFallAsleep = {
                                 navController.navigate(Routes.SelectSound(
@@ -123,6 +125,32 @@ class MainActivity : ComponentActivity() {
                         PrivacyPolicyScreen(
                             onGoToHome = {
                                 navController.popBackStack()
+                            }
+                        )
+                    }
+                    composable<Routes.CheckConnection> {
+                        CheckConnectionScreen(
+                            onGoToHome = {
+                                navController.navigate(Routes.Home)
+                            },
+                            onGoToConnectionGuide = {
+                                navController.navigate(Routes.DeviceConnection)
+                            },
+                            onGoToFitGuide = {
+                                navController.navigate(Routes.DeviceSettings)
+                            },
+                            onGoToCheckBrainSignal = {
+                                navController.navigate(Routes.CheckBrainSignalIntro)
+                            }
+                        )
+                    }
+                    composable<Routes.CheckBrainSignalIntro> {
+                        CheckBrainSignalIntroScreen(
+                            onGoToCheckConnection = {
+                                navController.navigate(Routes.CheckConnection)
+                            },
+                            onGoToCheckBrainSignal = {
+                                navController.navigate(Routes.DeviceConnection)
                             }
                         )
                     }
