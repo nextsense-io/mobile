@@ -43,7 +43,7 @@
     <string name="label_connecting">Connecting</string>
     <string name="label_continue_with_apple">Continue with Apple ID</string>
     <string name="label_continue_with_google">Continue with Google</string>
-    <string name="label_disconnected">Disconnected</string>
+    <string name="label_disconnected">Device not detected</string>
     <string name="label_end_focus_session">End focus session</string>
     <string name="label_end_timed_sleep">End timed sleep</string>
     <string name="label_fall_asleep">Fall asleep</string>
