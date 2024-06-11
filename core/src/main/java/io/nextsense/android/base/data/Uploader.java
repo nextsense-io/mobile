@@ -158,9 +158,11 @@ public class Uploader {
     running.set(false);
     if (eegSampleSubscription != null) {
       eegSampleSubscription.cancel();
+      eegSampleSubscription = null;
     }
     if (activeSessionSubscription != null) {
       activeSessionSubscription.cancel();
+      activeSessionSubscription = null;
     }
     if (waitForDataTimer != null) {
       waitForDataTimer.purge();
@@ -292,12 +294,14 @@ public class Uploader {
   }
 
   // If the app is shutdown suddenly, some sessions that were recording might not have been marked
-  // as finished. Mark them as finished so that hte remaining data is uploaded and they are not
+  // as finished. Mark them as finished so that the remaining data is uploaded and they are not
   // confused as currently recording by the application.
   private void cleanActiveSessions() {
-    List<LocalSession> recordingSessions = objectBoxDatabase.getActiveSessions();
+    List<LocalSession> recordingSessions = objectBoxDatabase.getUnfinishedSessions();
     for (LocalSession session : recordingSessions) {
-      session.setStatus(LocalSession.Status.FINISHED);
+      RotatingFileLogger.get().logd(TAG, "Cleaning session " + session.id +
+          " as all data received. It was " + session.getStatus());
+      session.setStatus(LocalSession.Status.ALL_DATA_RECEIVED);
       objectBoxDatabase.putLocalSession(session);
     }
   }
@@ -460,13 +464,17 @@ public class Uploader {
           }
         }
       }
-      eegSampleSubscription.cancel();
+      if (eegSampleSubscription != null) {
+        eegSampleSubscription.cancel();
+        eegSampleSubscription = null;
+      }
       if (activeSessionSubscription != null) {
         activeSessionSubscription.cancel();
+        activeSessionSubscription = null;
       }
       if (waitForDataTimer != null) {
-        waitForDataTimer.purge();
         waitForDataTimer.cancel();
+        waitForDataTimer.purge();
         waitForDataTimer = null;
       }
       RotatingFileLogger.get().logd(TAG, "New records to upload, wait finished.");
@@ -761,7 +769,11 @@ public class Uploader {
             objectBoxDatabase.putLocalSession(localSession);
             databaseSink.resetEegRecordsCounter();
             recordsToUpload.set(true);
-            waitForDataTimer.cancel();
+            if (waitForDataTimer != null) {
+              waitForDataTimer.cancel();
+              waitForDataTimer.purge();
+              waitForDataTimer = null;
+            }
             synchronized (syncToken) {
               syncToken.notifyAll();
             }

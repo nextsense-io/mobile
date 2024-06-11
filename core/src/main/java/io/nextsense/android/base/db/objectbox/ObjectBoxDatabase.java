@@ -40,6 +40,7 @@ public class ObjectBoxDatabase implements Database {
   private Box<Acceleration> accelerationBox;
   private Box<DeviceInternalState> deviceInternalStateBox;
   private Query<LocalSession> activeSessionQuery;
+  private Query<LocalSession> unfinishedSessionQuery;
   private Query<LocalSession> sessionFinishedQuery;
   private Query<LocalSession> sessionUploadedQuery;
   private Query<EegSample> eegSamplesQuery;
@@ -55,6 +56,9 @@ public class ObjectBoxDatabase implements Database {
   public void init(Context context) {
     boxStore = MyObjectBox.builder().androidContext(context.getApplicationContext()).build();
     localSessionBox = boxStore.boxFor(LocalSession.class);
+    unfinishedSessionQuery = localSessionBox.query().equal(
+        LocalSession_.status, LocalSession.Status.RECORDING.id).or()
+        .equal(LocalSession_.status, LocalSession.Status.FINISHED.id).build();
     activeSessionQuery = localSessionBox.query().equal(
         LocalSession_.status, LocalSession.Status.RECORDING.id).build();
     sessionFinishedQuery = localSessionBox.query().equal(LocalSession_.id, 0)
@@ -154,8 +158,8 @@ public class ObjectBoxDatabase implements Database {
     });
   }
 
-  public List<LocalSession> getActiveSessions() {
-    return runWithExceptionLog(() -> activeSessionQuery.find());
+  public List<LocalSession> getUnfinishedSessions() {
+    return runWithExceptionLog(() -> unfinishedSessionQuery.find());
   }
 
   public List<EegSample> getEegSamples(int localSessionId) {
