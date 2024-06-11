@@ -6,11 +6,9 @@ option java_package = "io.nextsense.android.budz";
 option java_outer_classname = "BudzDataPacketProto";
 
 message BudzDataPacket {
-    bytes leftEarEeg = 1;
-    bytes rightEarEeg = 2;
-    bytes leftEarImu = 3;
-    bytes rightEarImu = 4;
-    uint64 timestampEeg = 5;
-    uint64 timestampAcc = 6;
-    uint32 flags = 7;
+    bytes earEeg = 1;
+    bytes earImu = 2;
+    uint64 timestampEeg = 3;
+    uint64 timestampAcc = 4;
+    uint32 flags = 5;
 }
