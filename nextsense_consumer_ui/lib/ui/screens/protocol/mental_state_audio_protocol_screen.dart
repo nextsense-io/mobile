@@ -80,18 +80,52 @@ class MentalStateAudioProtocolScreen extends ProtocolScreen {
                 },
               ),
               const SizedBox(height: 20),
-              TextField(
-                decoration: const InputDecoration(labelText: "Alpha/Beta ratio increase"),
-                controller: TextEditingController()..text =
-                    viewModel.alphaBetaRatioIncrease.toString(),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                onChanged: (value) {
-                  double? newValue = double.tryParse(value);
-                  if (newValue != null && newValue > 0) {
-                    viewModel.alphaBetaRatioIncrease = newValue;
-                  }
-                },
-              ),
+              const LightHeaderText(text: 'Alpha/Beta ratio increase:'),
+              const SizedBox(height: 20),
+              Row(children: [
+                Radio(
+                    value: RatioIncreaseType.fixed,
+                    groupValue: viewModel.increaseType,
+                    onChanged: (RatioIncreaseType? increaseType) {
+                      viewModel.increaseType = increaseType ?? RatioIncreaseType.fixed;
+                      viewModel.notifyListeners();
+                    }),
+                Expanded(child: TextField(
+                  decoration: const InputDecoration(labelText: "Fixed"),
+                  controller: TextEditingController()..text =
+                  viewModel.alphaBetaRatioIncrease.toString(),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (value) {
+                    double? newValue = double.tryParse(value);
+                    if (newValue != null && newValue > 0) {
+                      viewModel.alphaBetaRatioIncrease = newValue;
+                    }
+                  },
+                ),
+                ),
+                const SizedBox(width: 20),
+                Radio(
+                    value: RatioIncreaseType.percentage,
+                    groupValue: viewModel.increaseType,
+                    onChanged: (RatioIncreaseType? increaseType) {
+                      viewModel.increaseType = increaseType ?? RatioIncreaseType.percentage;
+                      viewModel.notifyListeners();
+                    }),
+                Expanded(child:
+                TextField(
+                  decoration: const InputDecoration(labelText: "Percentage"),
+                  controller: TextEditingController()..text =
+                  viewModel.alphaBetaRatioIncreasePercentage.toString(),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (value) {
+                    double? newValue = double.tryParse(value);
+                    if (newValue != null && newValue > 0) {
+                      viewModel.alphaBetaRatioIncreasePercentage = newValue;
+                    }
+                  },
+                ),
+                ),
+              ]),
               const SizedBox(height: 20),
               LightHeaderText(text: 'Alpha: ${viewModel.alphaBandPower.toStringAsFixed(2)}'),
               LightHeaderText(text: 'Beta: ${viewModel.betaBandPower.toStringAsFixed(2)}'),

@@ -41,8 +41,23 @@ enum MentalChecksState {
   complete  // Sleep staging results complete.
 }
 
+enum RatioIncreaseType {
+  fixed,
+  percentage,
+  unknown;
+
+  factory RatioIncreaseType.create(String? value,
+      {RatioIncreaseType defaultValue = RatioIncreaseType.fixed}) {
+    if (value == null) {
+      return defaultValue;
+    }
+    return values.firstWhere((element) => element.name == value, orElse: () => unknown);
+  }
+}
+
 class MentalStateManager extends ChangeNotifier {
   static const Duration defaultCalculationEpoch = Duration(seconds: 36);
+  static const double defaultRelaxedAlphaIncreasePercentage = 20;
   static const Duration _calculationCheckInterval = Duration(seconds: 5);
   static const double _defaultRelaxedAlphaIncrease = 0.5;
 
@@ -62,9 +77,12 @@ class MentalStateManager extends ChangeNotifier {
   MentalCheckCalculationState _mentalCheckCalculationState = MentalCheckCalculationState.waiting;
   MentalChecksState _mentalChecksState = MentalChecksState.notStarted;
   MentalState _mentalState = MentalState.unknown;
-  double? _powerLineFrequency = null;
+  double? _powerLineFrequency;
   double? _initialAlphaBetaRatio;
+  RatioIncreaseType _increaseType = RatioIncreaseType.fixed;
   double _relaxedAlphaRatioIncrease = _defaultRelaxedAlphaIncrease;
+  // Change the default to null to use the hardcoded threshold instead.
+  double _relaxedAlphaRatioIncreasePercentage = defaultRelaxedAlphaIncreasePercentage;
 
   MentalState get mentalState => _mentalState;
   MentalCheckCalculationState get mentalCheckCalculationState => _mentalCheckCalculationState;
@@ -77,7 +95,10 @@ class MentalStateManager extends ChangeNotifier {
   Map<Band, List<double>?> get bandPowers => _bandPowers;
   double get powerLineFrequency => _powerLineFrequency ?? 0;
   double get relaxedAlphaRatioIncrease => _relaxedAlphaRatioIncrease;
+  double get relaxedAlphaRatioIncreasePercentage => _relaxedAlphaRatioIncreasePercentage;
   Duration get calculationEpoch => _calculationEpoch;
+  RatioIncreaseType get increaseType => _increaseType;
+    set increaseType(RatioIncreaseType value) => _increaseType = value;
 
   void startMentalStateChecks({Duration calculationInterval = _calculationCheckInterval}) {
     clearMentalStates();
@@ -96,6 +117,10 @@ class MentalStateManager extends ChangeNotifier {
 
   void setRelaxedAlphaRatioIncrease(double ratioIncrease) {
     _relaxedAlphaRatioIncrease = ratioIncrease;
+  }
+
+  void setRelaxedAlphaRatioIncreasePercentage(double ratioIncreasePercentage) {
+    _relaxedAlphaRatioIncreasePercentage = ratioIncreasePercentage;
   }
 
   void changeCalculationEpoch(Duration epoch) {
@@ -230,8 +255,14 @@ class MentalStateManager extends ChangeNotifier {
           "Gamma band power: $gammaBandPower. \n"
           "Alpha/Beta ratio: ${alphaBandPower / betaBandPower}.");
       int calcEpochs = _bandPowers[Band.alpha]?.length ?? 0;
+      double relaxedAlphaRatioIncrease = _relaxedAlphaRatioIncrease;
+      if (_initialAlphaBetaRatio != null && _increaseType == RatioIncreaseType.percentage) {
+        relaxedAlphaRatioIncrease = _initialAlphaBetaRatio! *
+            (_relaxedAlphaRatioIncreasePercentage! / 100);
+      }
+      _logger.log(Level.INFO, "Alpha/Beta ratio increase needed: $relaxedAlphaRatioIncrease.");
       if (_initialAlphaBetaRatio != null &&
-          (alphaBandPower / betaBandPower) - _initialAlphaBetaRatio! > _relaxedAlphaRatioIncrease) {
+          (alphaBandPower / betaBandPower) - _initialAlphaBetaRatio! > relaxedAlphaRatioIncrease) {
         _logger.log(Level.INFO, "Relaxed alpha/beta ratio: ${alphaBandPower / betaBandPower}.");
         _mentalState = MentalState.relaxed;
       } else {
