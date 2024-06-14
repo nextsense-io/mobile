@@ -230,8 +230,6 @@ fun HomeScreen(
                             onSignOut()
                         })
                 }
-                Spacer(modifier = Modifier.height(15.dp))
-                Text("Connected: ${homeViewModel.uiState.value.connected}")
             }
         }
     }
