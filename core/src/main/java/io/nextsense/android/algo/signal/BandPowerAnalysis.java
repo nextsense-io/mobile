@@ -63,9 +63,10 @@ public class BandPowerAnalysis {
     }
 
     double[] dataArray = data.stream().mapToDouble(Float::doubleValue).toArray();
-    int effectiveSamplesNumber = MathUtils.biggestPowerOfTwoUnder(dataArray.length);
-    Log.d(TAG, "Effective samples number: " + effectiveSamplesNumber);
     // Ensure the data array is a power of 2.
+    int effectiveSamplesNumber = MathUtils.biggestPowerOfTwoUnder(dataArray.length);
+    Log.d(TAG, "Number of samples: " + dataArray.length + ", Effective samples number: " +
+        effectiveSamplesNumber);
     dataArray = Arrays.copyOfRange(dataArray, dataArray.length - effectiveSamplesNumber,
         dataArray.length);
 
@@ -90,6 +91,11 @@ public class BandPowerAnalysis {
           dataArray, samplingRate, 4, powerLineFrequency.floatValue(), 2);
     }
     dataArray = Filters.applyBandPass(dataArray, samplingRate, 4, 0.5f, 50);
+
+    // TODO(eric): Test moving the cropping of the data to a power of 2 here to remove the filtering
+    //             artifacts.
+    // dataArray = Arrays.copyOfRange(dataArray, dataArray.length - effectiveSamplesNumber,
+    //     dataArray.length);
 
     int segmentSize = 256; // Usual value
     int overlap = segmentSize / 2; // 50% overlap (usual value)
