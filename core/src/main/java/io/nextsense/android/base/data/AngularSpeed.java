@@ -2,10 +2,7 @@ package io.nextsense.android.base.data;
 
 import androidx.annotation.Nullable;
 
-import com.google.common.collect.ImmutableList;
-
 import java.time.Instant;
-import java.util.List;
 
 import io.nextsense.android.base.db.objectbox.Converters;
 import io.objectbox.annotation.Convert;
@@ -13,22 +10,22 @@ import io.objectbox.annotation.Entity;
 import io.objectbox.relation.ToOne;
 
 /**
- * IMU Acceleration components.
+ * IMU Angular speed components from the Gyroscope.
  * Either the relative or absolute sampling timestamp need to be provided.
  */
 @Entity
-public class Acceleration extends BaseRecord {
+public class AngularSpeed extends BaseRecord {
 
   public enum Channels {
-    ACC_X("acc_x"),  // Acceleration X from a device with a single value, usually the box.
-    ACC_Y("acc_y"),  // Acceleration Y from a device with a single value, usually the box.
-    ACC_Z("acc_z"),  // Acceleration Z from a device with a single value, usually the box.
-    ACC_R_X("acc_r_x"),  // Acceleration X from the right earbud.
-    ACC_R_Y("acc_r_y"),  // Acceleration Y from the right earbud.
-    ACC_R_Z("acc_r_z"),  // Acceleration Z from the right earbud.
-    ACC_L_X("acc_l_x"),  // Acceleration X from the left earbud.
-    ACC_L_Y("acc_l_y"),  // Acceleration Y from the left earbud.
-    ACC_L_Z("acc_l_z");  // Acceleration Z from the left earbud.
+    GYRO_X("gyro_x"),  // Angular speed X from a device with a single value, usually the box.
+    GYRO_Y("gyro_y"),  // Angular speed Y from a device with a single value, usually the box.
+    GYRO_Z("gyro_z"),  // Angular speed Z from a device with a single value, usually the box.
+    GYRO_R_X("gyro_r_x"),  // Angular speed X from the right earbud.
+    GYRO_R_Y("gyro_r_y"),  // Angular speed Y from the right earbud.
+    GYRO_R_Z("gyro_r_z"),  // Angular speed Z from the right earbud.
+    GYRO_L_X("gyro_l_x"),  // Angular speed X from the left earbud.
+    GYRO_L_Y("gyro_l_y"),  // Angular speed Y from the left earbud.
+    GYRO_L_Z("gyro_l_z");  // Angular speed Z from the left earbud.
 
     private final String name;
 
@@ -40,8 +37,6 @@ public class Acceleration extends BaseRecord {
       return name;
     }
   }
-  public static final List<String> CHANNELS = ImmutableList.of("acc_x", "acc_y", "acc_z", "acc_r_x",
-      "acc_r_y", "acc_r_z", "acc_l_x", "acc_l_y", "acc_l_z");
 
   public ToOne<LocalSession> localSession;
 
@@ -62,13 +57,13 @@ public class Acceleration extends BaseRecord {
   @Nullable
   private Instant absoluteSamplingTimestamp;
 
-  private Acceleration(
+  private AngularSpeed(
       long localSessionId, @Nullable Integer x, @Nullable Integer y, @Nullable Integer z,
       @Nullable Integer rightX, @Nullable Integer rightY, @Nullable Integer rightZ,
       @Nullable Integer leftX, @Nullable Integer leftY, @Nullable Integer leftZ,
       Instant receptionTimestamp, @Nullable Integer relativeSamplingTimestamp,
       @Nullable Instant absoluteSamplingTimestamp) {
-    this.localSession = new ToOne<>(this, Acceleration_.localSession);
+    this.localSession = new ToOne<>(this, AngularSpeed_.localSession);
     this.localSession.setTargetId(localSessionId);
     this.x = x;
     this.y = y;
@@ -84,7 +79,7 @@ public class Acceleration extends BaseRecord {
     this.absoluteSamplingTimestamp = absoluteSamplingTimestamp;
   }
 
-  public static Acceleration create(
+  public static AngularSpeed create(
       long localSessionId, int x, int y, int z, DeviceLocation location, Instant receptionTimestamp,
       @Nullable Integer relativeSamplingTimestamp, @Nullable Instant absoluteSamplingTimestamp) {
     if (relativeSamplingTimestamp == null && absoluteSamplingTimestamp == null) {
@@ -92,34 +87,21 @@ public class Acceleration extends BaseRecord {
           "Either the relative or the absolute timestamp need to be present");
     }
     return switch (location) {
-      case BOX -> new Acceleration(localSessionId, x, y, z, null, null, null, null, null, null,
+      case BOX -> new AngularSpeed(localSessionId, x, y, z, null, null, null, null, null, null,
           receptionTimestamp, relativeSamplingTimestamp, absoluteSamplingTimestamp);
       case RIGHT_EARBUD ->
-          new Acceleration(localSessionId, null, null, null, x, y, z, null, null, null,
+          new AngularSpeed(localSessionId, null, null, null, x, y, z, null, null, null,
               receptionTimestamp, relativeSamplingTimestamp, absoluteSamplingTimestamp);
       case LEFT_EARBUD ->
-          new Acceleration(localSessionId, null, null, null, null, null, null, x, y, z,
+          new AngularSpeed(localSessionId, null, null, null, null, null, null, x, y, z,
               receptionTimestamp, relativeSamplingTimestamp, absoluteSamplingTimestamp);
       default -> throw new IllegalArgumentException("Unknown location: " + location);
     };
   }
 
-  public static Acceleration create(
-      long localSessionId, @Nullable Integer x, @Nullable Integer y, @Nullable Integer z,
-      @Nullable Integer rightX, @Nullable Integer rightY, @Nullable Integer rightZ,
-      @Nullable Integer leftX, @Nullable Integer leftY, @Nullable Integer leftZ,
-      Instant receptionTimestamp, @Nullable Integer relativeSamplingTimestamp,
-      @Nullable Instant absoluteSamplingTimestamp) {
-    if (relativeSamplingTimestamp == null && absoluteSamplingTimestamp == null) {
-      throw new IllegalArgumentException(
-          "Either the relative or the absolute timestamp need to be present");
-    }
-    return new Acceleration(localSessionId, x, y, z, rightX, rightY, rightZ, leftX, leftY, leftZ,
-        receptionTimestamp, relativeSamplingTimestamp, absoluteSamplingTimestamp);
-  }
-
   // Needs to be public for ObjectBox performance.
-  public Acceleration(
+  @SuppressWarnings("unused")
+  public AngularSpeed(
       long id, long localSessionId, @Nullable Integer x, @Nullable Integer y, @Nullable Integer z,
       @Nullable Integer rightX, @Nullable Integer rightY, @Nullable Integer rightZ,
       @Nullable Integer leftX, @Nullable Integer leftY, @Nullable Integer leftZ,
@@ -142,7 +124,9 @@ public class Acceleration extends BaseRecord {
     this.absoluteSamplingTimestamp = absoluteSamplingTimestamp;
   }
 
-  public Acceleration() {}
+  // Needed for ObjectBox.
+  @SuppressWarnings("unused")
+  public AngularSpeed() {}
 
   public LocalSession getLocalSession() {
     return localSession.getTarget();

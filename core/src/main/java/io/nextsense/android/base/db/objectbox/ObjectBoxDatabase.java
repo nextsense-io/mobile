@@ -11,6 +11,8 @@ import java.util.concurrent.Callable;
 
 import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.data.Acceleration_;
+import io.nextsense.android.base.data.AngularSpeed;
+import io.nextsense.android.base.data.AngularSpeed_;
 import io.nextsense.android.base.data.BaseRecord;
 import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.DeviceInternalState_;
@@ -38,6 +40,7 @@ public class ObjectBoxDatabase implements Database {
   private Box<LocalSession> localSessionBox;
   private Box<EegSample> eegSampleBox;
   private Box<Acceleration> accelerationBox;
+  private Box<AngularSpeed> angularSpeedBox;
   private Box<DeviceInternalState> deviceInternalStateBox;
   private Query<LocalSession> activeSessionQuery;
   private Query<LocalSession> unfinishedSessionQuery;
@@ -47,6 +50,8 @@ public class ObjectBoxDatabase implements Database {
   private Query<EegSample> eegSamplesTimestampIsLesserQuery;
   private Query<Acceleration> accelerationQuery;
   private Query<Acceleration> accelerationTimestampIsLesserQuery;
+  private Query<AngularSpeed> angularSpeedQuery;
+  private Query<AngularSpeed> angularSpeedTimestampIsLesserQuery;
   private Query<DeviceInternalState> sessionDeviceInternalStateQuery;
   private Query<DeviceInternalState> recentDeviceInternalStateQuery;
   private Query<DeviceInternalState> lastDeviceInternalStateQuery;
@@ -73,6 +78,10 @@ public class ObjectBoxDatabase implements Database {
     accelerationQuery = accelerationBox.query().equal(Acceleration_.localSessionId, 0).build();
     accelerationTimestampIsLesserQuery = accelerationBox.query().equal(
         Acceleration_.localSessionId, 0).less(Acceleration_.absoluteSamplingTimestamp, 0).build();
+    angularSpeedBox = boxStore.boxFor(AngularSpeed.class);
+    angularSpeedQuery = angularSpeedBox.query().equal(AngularSpeed_.localSessionId, 0).build();
+    angularSpeedTimestampIsLesserQuery = angularSpeedBox.query().equal(
+        AngularSpeed_.localSessionId, 0).less(AngularSpeed_.absoluteSamplingTimestamp, 0).build();
     deviceInternalStateBox = boxStore.boxFor(DeviceInternalState.class);
     sessionDeviceInternalStateQuery = deviceInternalStateBox.query().equal(
             DeviceInternalState_.localSessionId, 0).build();
@@ -128,6 +137,14 @@ public class ObjectBoxDatabase implements Database {
 
   public void putAccelerations(List<Acceleration> accelerations) {
     accelerationBox.put(accelerations);
+  }
+
+  public long putAngularSpeed(AngularSpeed angularSpeed) {
+    return runWithExceptionLog(() -> angularSpeedBox.put(angularSpeed));
+  }
+
+  public void putAngularSpeeds(List<AngularSpeed> angularSpeeds) {
+    angularSpeedBox.put(angularSpeeds);
   }
 
   public long putDeviceInternalState(DeviceInternalState deviceInternalState) {
@@ -258,6 +275,20 @@ public class ObjectBoxDatabase implements Database {
         accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).count());
   }
 
+  public List<AngularSpeed> getAngularSpeeds(long localSessionId, long offset, long count) {
+    return runWithExceptionLog(() -> angularSpeedQuery.setParameter(
+        AngularSpeed_.localSessionId, localSessionId).find(offset, count));
+  }
+
+  public long getAngularSpeedCount() {
+    return runWithExceptionLog(() -> angularSpeedBox.count());
+  }
+
+  public long getAngularSpeedCount(long localSessionId) {
+    return runWithExceptionLog(() ->
+        angularSpeedQuery.setParameter(AngularSpeed_.localSessionId, localSessionId).count());
+  }
+
   public List<DeviceInternalState> getLastDeviceInternalStates(long count) {
     return runWithExceptionLog(() -> {
       long deviceInternalStateCount = deviceInternalStateBox.count();
@@ -279,6 +310,7 @@ public class ObjectBoxDatabase implements Database {
     return runWithExceptionLog(() -> {
       deleteEegSamplesData(localSessionId);
       deleteAccelerationData(localSessionId);
+      deleteAngularSpeedData(localSessionId);
       return localSessionBox.remove(localSessionId);
     });
   }
@@ -305,6 +337,18 @@ public class ObjectBoxDatabase implements Database {
   public long deleteAccelerationData(long localSessionId) {
     return runWithExceptionLog(() ->
         accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).remove());
+  }
+
+  public long deleteFirstAngularSpeedData(long localSessionId, long timestampCutoff) {
+    return runWithExceptionLog(() ->
+        angularSpeedTimestampIsLesserQuery
+            .setParameter(AngularSpeed_.localSessionId, localSessionId)
+            .setParameter(AngularSpeed_.absoluteSamplingTimestamp, timestampCutoff).remove());
+  }
+
+  public long deleteAngularSpeedData(long localSessionId) {
+    return runWithExceptionLog(() ->
+        angularSpeedQuery.setParameter(AngularSpeed_.localSessionId, localSessionId).remove());
   }
 
   public static <T> T runWithExceptionLog(Callable<T> function) {

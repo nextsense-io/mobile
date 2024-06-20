@@ -41,7 +41,8 @@ public class NextSenseDeviceManager {
       devicesMapping.put(KauaiMedicalDevice.BLUETOOTH_PREFIX, KauaiMedicalDevice.class);
     }
     if (deviceGroup == null || deviceGroup == DeviceGroup.CONSUMER) {
-      devicesMapping.put(MauiDevice.BLUETOOTH_PREFIX, MauiDevice.class);
+      devicesMapping.put(MauiDevice.BLUETOOTH_PREFIX_LEFT, MauiDevice.class);
+      devicesMapping.put(MauiDevice.BLUETOOTH_PREFIX_RIGHT, MauiDevice.class);
     }
   }
 

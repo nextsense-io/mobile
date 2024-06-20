@@ -340,10 +340,62 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "8:2305739789178864595",
+      "lastPropertyId": "8:894003901266616460",
+      "name": "AngularSpeed",
+      "properties": [
+        {
+          "id": "1:2136414802706514925",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5566551109608340250",
+          "name": "x",
+          "type": 5
+        },
+        {
+          "id": "3:5855670705920856455",
+          "name": "y",
+          "type": 5
+        },
+        {
+          "id": "4:3778950126313221177",
+          "name": "z",
+          "type": 5
+        },
+        {
+          "id": "5:6626874622764669998",
+          "name": "receptionTimestamp",
+          "type": 6
+        },
+        {
+          "id": "6:8613048978926625836",
+          "name": "relativeSamplingTimestamp",
+          "type": 5
+        },
+        {
+          "id": "7:8751504952291949080",
+          "name": "absoluteSamplingTimestamp",
+          "type": 6
+        },
+        {
+          "id": "8:894003901266616460",
+          "name": "localSessionId",
+          "indexId": "7:7495440003052720935",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "LocalSession"
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "7:5721869432385465913",
-  "lastIndexId": "6:8757822738783033429",
+  "lastEntityId": "8:2305739789178864595",
+  "lastIndexId": "7:7495440003052720935",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

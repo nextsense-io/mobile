@@ -226,7 +226,7 @@ public class Uploader {
                   sessionEegSamplesCount - localSession.getEegSamplesUploaded()));
           if (eegSamplesToUpload.isEmpty()) {
             // Nothing to upload, marking it as UPLOADED.
-            RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + "" +
+            RotatingFileLogger.get().logd(TAG, "Session " + localSession.id +
                 " upload is completed.");
             localSession.setStatus(LocalSession.Status.UPLOADED);
             completeSession(localSession);
@@ -492,7 +492,7 @@ public class Uploader {
       ContentValues contentValues = new ContentValues();
 
       contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME,
-          "test_proto_" + + System.currentTimeMillis() + ".txt");
+          "test_proto_" + System.currentTimeMillis() + ".txt");
       contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "txt/plain");
       contentValues.put(MediaStore.MediaColumns.SIZE, dataSamplesProto.getSerializedSize());
       contentValues.put(MediaStore.MediaColumns.DATE_MODIFIED, Instant.now().getEpochSecond());
@@ -621,13 +621,13 @@ public class Uploader {
           DataSamplesProto.Channel.Builder channelBuilder = channelBuilders.computeIfAbsent(
                   accChannel, channelValue -> DataSamplesProto.Channel.newBuilder().setName(accChannel));
           switch (Acceleration.Channels.valueOf(accChannel.toUpperCase())) {
-            case X:
+            case ACC_X:
               channelBuilder.addSample(acceleration.getX());
               break;
-            case Y:
+            case ACC_Y:
               channelBuilder.addSample(acceleration.getY());
               break;
-            case Z:
+            case ACC_Z:
               channelBuilder.addSample(acceleration.getZ());
               break;
           }
@@ -780,7 +780,7 @@ public class Uploader {
         }
       }
     };
-    waitForDataTimer.scheduleAtFixedRate(checkTransmissionFinishedTask,
+    waitForDataTimer.schedule(checkTransmissionFinishedTask,
         /*delay=*/Duration.ofSeconds(1).toMillis(), Duration.ofSeconds(1).toMillis());
   }
 

@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import io.nextsense.android.base.data.DeviceLocation;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -83,8 +84,8 @@ public class H1DataParser {
     }
     LocalSession localSession = localSessionOptional.get();
     Acceleration acceleration = Acceleration.create(localSession.id, /*x=*/valuesBuffer.getShort(),
-        /*y=*/valuesBuffer.getShort(), /*z=*/valuesBuffer.getShort(), receptionTimestamp,
-        samplingTimestamp,null);
+        /*y=*/valuesBuffer.getShort(), /*z=*/valuesBuffer.getShort(), DeviceLocation.BOX,
+        receptionTimestamp, samplingTimestamp, null);
     EventBus.getDefault().post(acceleration);
     HashMap<Integer, Float> eegData = new HashMap<>();
     for (Integer activeChannel : activeChannels) {

@@ -1015,7 +1015,7 @@ public class NextsenseBasePlugin implements FlutterPlugin, MethodCallHandler {
       int numberOfSamples = (int) Math.round(Math.ceil(
           (float) durationMillis / Math.round(1000f /
               device.get().getSettings().getImuStreamingRate())));
-      result.success(nextSenseService.getMemoryCache().getLastAccChannelData(
+      result.success(nextSenseService.getMemoryCache().getLastImuChannelData(
           channelName, numberOfSamples));
     }
   }

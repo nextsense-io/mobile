@@ -29,6 +29,7 @@ import io.nextsense.android.base.DeviceState;
 import io.nextsense.android.base.DeviceType;
 import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.data.DeviceInternalState;
+import io.nextsense.android.base.data.DeviceLocation;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -102,8 +103,8 @@ public class EmulatedDevice extends Device {
     Instant receptionTimestamp = Instant.now();
     Instant samplingTime = receptionTimestamp.minusMillis(1);
     Acceleration acceleration = Acceleration.create(localSession.id, accelerationData.get(0),
-            accelerationData.get(1), accelerationData.get(2), receptionTimestamp,
-            null, samplingTime);
+        accelerationData.get(1), accelerationData.get(2), DeviceLocation.BOX, receptionTimestamp,
+       null, samplingTime);
 
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
             null, samplingTime, XenonSampleFlags.create((byte)0));

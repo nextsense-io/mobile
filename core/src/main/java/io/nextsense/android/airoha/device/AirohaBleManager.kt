@@ -4,6 +4,7 @@ import io.nextsense.android.base.Device
 import io.nextsense.android.base.DeviceManager
 import io.nextsense.android.base.DeviceScanner.ScanError
 import io.nextsense.android.base.DeviceState
+import io.nextsense.android.base.devices.maui.MauiDevice
 import io.nextsense.android.base.utils.RotatingFileLogger
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -27,11 +28,21 @@ class AirohaBleManager(
     fun connectFlow() = flow {
         emit(DeviceState.CONNECTING)
         deviceScanListenerFlow().collect {device ->
-            leftEarDevice = device
+            if (device?.name == MauiDevice.BLUETOOTH_PREFIX_LEFT) {
+                leftEarDevice = device
+            } else if (device?.name == MauiDevice.BLUETOOTH_PREFIX_RIGHT) {
+                rightEarDevice = device
+            } else {
+                RotatingFileLogger.get().logw(tag, "Found a device with unknown name: " +
+                        "${device?.name}")
+                return@collect
+            }
             try {
-                val deviceStateFuture = device?.connect(/*autoReconnect=*/true)
+                val deviceStateFuture = device.connect(/*autoReconnect=*/true)
                 val deviceState = deviceStateFuture?.get(5, TimeUnit.SECONDS)
-                emit(deviceState)
+                if (leftEarDevice != null && rightEarDevice != null) {
+                    emit(deviceState)
+                }
             } catch (e: Exception) {
                 RotatingFileLogger.get().loge(tag,
                     "Error while connecting to device: ${e.message}")
@@ -41,41 +52,35 @@ class AirohaBleManager(
     }.flowOn(Dispatchers.IO)
 
     fun startStreamingFlow() = flow<Boolean> {
-        leftEarDevice?.let { device ->
-            try {
-                val started = device.startStreaming(
-                    /*uploadToCloud=*/false,
-                    /*userBigTableKey=*/null,
-                    /*dataSessionId=*/null,
-                    /*earbudsConfig=*/null,
-                    /*saveToCsv=*/false
-                ).get(5, TimeUnit.SECONDS)
-                emit(started)
-            } catch (e: Exception) {
-                RotatingFileLogger.get().loge(tag,
-                    "Error while starting streaming: ${e.message}")
-                emit(false)
-            }
-        }
-        rightEarDevice?.let { device ->
-            try {
-                val started = device.startStreaming(
-                    /*uploadToCloud=*/false,
-                    /*userBigTableKey=*/null,
-                    /*dataSessionId=*/null,
-                    /*earbudsConfig=*/null,
-                    /*saveToCsv=*/false
-                ).get(5, TimeUnit.SECONDS)
-                emit(started)
-            } catch (e: Exception) {
-                RotatingFileLogger.get().loge(tag,
-                    "Error while starting streaming: ${e.message}")
-                emit(false)
-            }
-        }
-        if (leftEarDevice == null && rightEarDevice == null) {
+        var leftStarted: Boolean? = null
+        var rightStarted: Boolean? = null
+        try {
+            leftStarted = leftEarDevice?.startStreaming(
+                /*uploadToCloud=*/false,
+                /*userBigTableKey=*/null,
+                /*dataSessionId=*/null,
+                /*earbudsConfig=*/null,
+                /*saveToCsv=*/false
+            )?.get(5, TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            RotatingFileLogger.get().loge(tag,
+                "Error while starting streaming: ${e.message}")
             emit(false)
         }
+        try {
+            rightStarted = rightEarDevice?.startStreaming(
+                /*uploadToCloud=*/false,
+                /*userBigTableKey=*/null,
+                /*dataSessionId=*/null,
+                /*earbudsConfig=*/null,
+                /*saveToCsv=*/false
+            )?.get(5, TimeUnit.SECONDS)
+        } catch (e: Exception) {
+            RotatingFileLogger.get().loge(tag,
+                "Error while starting streaming: ${e.message}")
+            emit(false)
+        }
+        emit(leftStarted ?: false && rightStarted ?: true)
     }.flowOn(Dispatchers.IO)
 
     private fun deviceScanListenerFlow() = callbackFlow<Device?> {
@@ -105,31 +110,19 @@ class AirohaBleManager(
     }.flowOn(Dispatchers.IO)
 
     fun disconnect() {
-        leftEarDevice?.let {
-            it.disconnect()
-        }
-        rightEarDevice?.let {
-            it.disconnect()
-        }
+        leftEarDevice?.disconnect()
+        rightEarDevice?.disconnect()
     }
 
     fun startStreaming() {
-        leftEarDevice?.let {
-            it.startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null, /*dataSessionId=*/null,
-                /*earbudsConfig=*/null, /*saveToCsv=*/false)
-        }
-        rightEarDevice?.let {
-            it.startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null, /*dataSessionId=*/null,
-                /*earbudsConfig=*/null, /*saveToCsv=*/false)
-        }
+        leftEarDevice?.startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null, /*dataSessionId=*/null,
+            /*earbudsConfig=*/null, /*saveToCsv=*/false)
+        rightEarDevice?.startStreaming(/*uploadToCloud=*/false, /*userBigTableKey=*/null, /*dataSessionId=*/null,
+            /*earbudsConfig=*/null, /*saveToCsv=*/false)
     }
 
     fun stopStreaming() {
-        leftEarDevice?.let {
-            it.stopStreaming()
-        }
-        rightEarDevice?.let {
-            it.stopStreaming()
-        }
+        leftEarDevice?.stopStreaming()
+        rightEarDevice?.stopStreaming()
     }
 }

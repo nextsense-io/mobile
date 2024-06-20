@@ -285,15 +285,17 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                         _airohaDeviceState.value = AirohaDeviceState.CONNECTED_BLE
                         _airohaBleManager?.startStreamingFlow()?.collect { streaming ->
                             if (streaming) {
-                                startRaceBleStreamingFlow().collect { airohaStatusCode ->
-                                    if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
-                                        _streamingState.value = StreamingState.STARTED
-                                        emit(true)
-                                    } else {
-                                        _streamingState.value = StreamingState.ERROR
-                                        emit(false)
-                                    }
-                                }
+                                emit(true)
+                                // TODO(eric): Re-enable when switching back to race commands.
+//                                startRaceBleStreamingFlow().collect { airohaStatusCode ->
+//                                    if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
+//                                        _streamingState.value = StreamingState.STARTED
+//                                        emit(true)
+//                                    } else {
+//                                        _streamingState.value = StreamingState.ERROR
+//                                        emit(false)
+//                                    }
+//                                }
                             } else {
                                 _streamingState.value = StreamingState.ERROR
                                 emit(false)
