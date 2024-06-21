@@ -25,6 +25,7 @@ import java.time.Duration;
 
 import io.nextsense.android.ApplicationType;
 import io.nextsense.android.Config;
+import io.nextsense.android.airoha.device.AirohaDeviceManager;
 import io.nextsense.android.algo.tflite.SleepTransformerModel;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
@@ -91,6 +92,7 @@ public class ForegroundService extends Service {
   private Uploader uploader;
   private SampleRateCalculator sampleRateCalculator;
   private SleepTransformerModel sleepTransformerModel;
+  private AirohaDeviceManager airohaDeviceManager;
   private boolean initialized = false;
   // Starts true so the activity is launched on first start.
   private boolean flutterActivityActive = true;
@@ -169,6 +171,9 @@ public class ForegroundService extends Service {
   public SleepTransformerModel getSleepTransformerModel() {
     return sleepTransformerModel;
   }
+  public AirohaDeviceManager getAirohaDeviceManager() {
+    return airohaDeviceManager;
+  }
 
   public boolean isFlutterActivityActive() {
     return flutterActivityActive;
@@ -236,6 +241,7 @@ public class ForegroundService extends Service {
       }
     });
     initializeAlgorithms();
+    airohaDeviceManager = new AirohaDeviceManager(getApplicationContext());
     initialized = true;
   }
 

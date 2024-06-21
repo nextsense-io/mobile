@@ -17,6 +17,7 @@ import java.util.UUID;
 
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceSettings;
+import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.data.LocalSessionManager;
 
 public abstract class BaseNextSenseDevice implements NextSenseDevice {
@@ -33,8 +34,10 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
 
   @Override
   public List<String> GetAccChannelNames() {
-    return Arrays.asList("x", "y", "z");
+    return Arrays.asList(Acceleration.Channels.ACC_X.getName(),
+        Acceleration.Channels.ACC_Y.getName(), Acceleration.Channels.ACC_Z.getName());
   }
+
   @Override
   public DeviceMode getDeviceMode() {
     return deviceMode;

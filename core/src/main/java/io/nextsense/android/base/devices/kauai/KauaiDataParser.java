@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import io.nextsense.android.base.data.Acceleration;
 import io.nextsense.android.base.data.DeviceInternalState;
+import io.nextsense.android.base.data.DeviceLocation;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -146,8 +147,8 @@ public class KauaiDataParser {
         valuesBuffer.get()}, 0, ByteOrder.LITTLE_ENDIAN);
     Instant samplingTime = Instant.ofEpochMilli(samplingTimestamp);
     Acceleration acceleration = Acceleration.create(localSession.id, /*x=*/accelerationData.get(0),
-        /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), receptionTimestamp,
-        null, samplingTime);
+        /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), DeviceLocation.BOX,
+        receptionTimestamp, null, samplingTime);
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
         null, samplingTime, KauaiSampleFlags.create(valuesBuffer.get()));
     return Optional.of(Sample.create(eegSample, acceleration));

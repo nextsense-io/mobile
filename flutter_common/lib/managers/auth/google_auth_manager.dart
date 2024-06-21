@@ -54,7 +54,7 @@ class GoogleAuthManager {
     // obtained from Google Auth.
     try {
       final UserCredential userCredential =
-      await _firebaseAuth.signInWithCredential(authCredential);
+          await _firebaseAuth.signInWithCredential(authCredential);
       if (userCredential.user == null || userCredential.user!.isAnonymous) {
         _logger.log(Level.SEVERE, "No user returned from Google Auth.");
         return AuthenticationResult.error;

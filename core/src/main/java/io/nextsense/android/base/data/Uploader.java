@@ -158,9 +158,11 @@ public class Uploader {
     running.set(false);
     if (eegSampleSubscription != null) {
       eegSampleSubscription.cancel();
+      eegSampleSubscription = null;
     }
     if (activeSessionSubscription != null) {
       activeSessionSubscription.cancel();
+      activeSessionSubscription = null;
     }
     if (waitForDataTimer != null) {
       waitForDataTimer.purge();
@@ -224,7 +226,7 @@ public class Uploader {
                   sessionEegSamplesCount - localSession.getEegSamplesUploaded()));
           if (eegSamplesToUpload.isEmpty()) {
             // Nothing to upload, marking it as UPLOADED.
-            RotatingFileLogger.get().logd(TAG, "Session " + localSession.id + "" +
+            RotatingFileLogger.get().logd(TAG, "Session " + localSession.id +
                 " upload is completed.");
             localSession.setStatus(LocalSession.Status.UPLOADED);
             completeSession(localSession);
@@ -292,12 +294,14 @@ public class Uploader {
   }
 
   // If the app is shutdown suddenly, some sessions that were recording might not have been marked
-  // as finished. Mark them as finished so that hte remaining data is uploaded and they are not
+  // as finished. Mark them as finished so that the remaining data is uploaded and they are not
   // confused as currently recording by the application.
   private void cleanActiveSessions() {
-    List<LocalSession> recordingSessions = objectBoxDatabase.getActiveSessions();
+    List<LocalSession> recordingSessions = objectBoxDatabase.getUnfinishedSessions();
     for (LocalSession session : recordingSessions) {
-      session.setStatus(LocalSession.Status.FINISHED);
+      RotatingFileLogger.get().logd(TAG, "Cleaning session " + session.id +
+          " as all data received. It was " + session.getStatus());
+      session.setStatus(LocalSession.Status.ALL_DATA_RECEIVED);
       objectBoxDatabase.putLocalSession(session);
     }
   }
@@ -460,13 +464,17 @@ public class Uploader {
           }
         }
       }
-      eegSampleSubscription.cancel();
+      if (eegSampleSubscription != null) {
+        eegSampleSubscription.cancel();
+        eegSampleSubscription = null;
+      }
       if (activeSessionSubscription != null) {
         activeSessionSubscription.cancel();
+        activeSessionSubscription = null;
       }
       if (waitForDataTimer != null) {
-        waitForDataTimer.purge();
         waitForDataTimer.cancel();
+        waitForDataTimer.purge();
         waitForDataTimer = null;
       }
       RotatingFileLogger.get().logd(TAG, "New records to upload, wait finished.");
@@ -484,7 +492,7 @@ public class Uploader {
       ContentValues contentValues = new ContentValues();
 
       contentValues.put(MediaStore.MediaColumns.DISPLAY_NAME,
-          "test_proto_" + + System.currentTimeMillis() + ".txt");
+          "test_proto_" + System.currentTimeMillis() + ".txt");
       contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "txt/plain");
       contentValues.put(MediaStore.MediaColumns.SIZE, dataSamplesProto.getSerializedSize());
       contentValues.put(MediaStore.MediaColumns.DATE_MODIFIED, Instant.now().getEpochSecond());
@@ -613,13 +621,13 @@ public class Uploader {
           DataSamplesProto.Channel.Builder channelBuilder = channelBuilders.computeIfAbsent(
                   accChannel, channelValue -> DataSamplesProto.Channel.newBuilder().setName(accChannel));
           switch (Acceleration.Channels.valueOf(accChannel.toUpperCase())) {
-            case X:
+            case ACC_X:
               channelBuilder.addSample(acceleration.getX());
               break;
-            case Y:
+            case ACC_Y:
               channelBuilder.addSample(acceleration.getY());
               break;
-            case Z:
+            case ACC_Z:
               channelBuilder.addSample(acceleration.getZ());
               break;
           }
@@ -761,14 +769,18 @@ public class Uploader {
             objectBoxDatabase.putLocalSession(localSession);
             databaseSink.resetEegRecordsCounter();
             recordsToUpload.set(true);
-            waitForDataTimer.cancel();
+            if (waitForDataTimer != null) {
+              waitForDataTimer.cancel();
+              waitForDataTimer.purge();
+              waitForDataTimer = null;
+            }
             synchronized (syncToken) {
               syncToken.notifyAll();
             }
         }
       }
     };
-    waitForDataTimer.scheduleAtFixedRate(checkTransmissionFinishedTask,
+    waitForDataTimer.schedule(checkTransmissionFinishedTask,
         /*delay=*/Duration.ofSeconds(1).toMillis(), Duration.ofSeconds(1).toMillis());
   }
 

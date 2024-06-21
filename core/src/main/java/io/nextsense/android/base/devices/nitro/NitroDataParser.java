@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import io.nextsense.android.base.data.Acceleration;
+import io.nextsense.android.base.data.DeviceLocation;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -141,8 +142,8 @@ public class NitroDataParser {
     List<Short> accelerationData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
         valuesBuffer.getShort());
     Acceleration acceleration = Acceleration.create(localSession.id, /*x=*/accelerationData.get(0),
-        /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), receptionTimestamp,
-        null, /*samplingTime=*/receptionTimestamp);
+        /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), DeviceLocation.BOX,
+        receptionTimestamp, null, /*samplingTime=*/receptionTimestamp);
     Samples samples = Samples.create();
     samples.addAcceleration((Sample.create(null, acceleration).getAcceleration()));
     EventBus.getDefault().post(samples);

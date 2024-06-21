@@ -14,6 +14,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import io.nextsense.android.base.data.Acceleration;
+import io.nextsense.android.base.data.DeviceLocation;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -137,8 +138,8 @@ public class KauaiMedicalDataParser {
     List<Short> accelerationData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
         valuesBuffer.getShort());
     Acceleration acceleration = Acceleration.create(localSession.id, /*x=*/accelerationData.get(0),
-        /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), acquisitionTimestamp,
-        null, acquisitionTimestamp);
+        /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), DeviceLocation.BOX,
+        acquisitionTimestamp, null, acquisitionTimestamp);
     EegSample eegSample = EegSample.create(localSession.id, eegData, acquisitionTimestamp,
         null, acquisitionTimestamp, /*flags=*/KauaiMedicalSampleFlags.create(valuesBuffer.get()));
     valuesBuffer.get();  // Skip the leads off flags byte.

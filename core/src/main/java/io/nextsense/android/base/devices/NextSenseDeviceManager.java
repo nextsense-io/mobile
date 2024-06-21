@@ -8,6 +8,7 @@ import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.h1.H1Device;
 import io.nextsense.android.base.devices.kauai.KauaiDevice;
 import io.nextsense.android.base.devices.kauai_medical.KauaiMedicalDevice;
+import io.nextsense.android.base.devices.maui.MauiDevice;
 import io.nextsense.android.base.devices.nitro.NitroDevice;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
 import io.nextsense.android.base.utils.RotatingFileLogger;
@@ -17,6 +18,11 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
  */
 public class NextSenseDeviceManager {
 
+  public enum DeviceGroup {
+    CLINICAL,
+    CONSUMER
+  }
+
   private static final String TAG = NextSenseDeviceManager.class.getSimpleName();
 
   // Contains the mapping of devices bluetooth name prefixes to the classes that should be
@@ -24,18 +30,30 @@ public class NextSenseDeviceManager {
   private final Map<String, Class<? extends NextSenseDevice>> devicesMapping;
   private final LocalSessionManager localSessionManager;
 
-  private NextSenseDeviceManager(LocalSessionManager localSessionManager) {
+  private NextSenseDeviceManager(LocalSessionManager localSessionManager, DeviceGroup deviceGroup) {
     this.localSessionManager = localSessionManager;
     devicesMapping = new HashMap<>();
-    devicesMapping.put(H1Device.BLUETOOTH_PREFIX, H1Device.class);
-    devicesMapping.put(NitroDevice.BLUETOOTH_PREFIX, NitroDevice.class);
-    devicesMapping.put(XenonDevice.BLUETOOTH_PREFIX, XenonDevice.class);
-    devicesMapping.put(KauaiDevice.BLUETOOTH_PREFIX, KauaiDevice.class);
-    devicesMapping.put(KauaiMedicalDevice.BLUETOOTH_PREFIX, KauaiMedicalDevice.class);
+    if (deviceGroup == null || deviceGroup == DeviceGroup.CLINICAL) {
+      devicesMapping.put(H1Device.BLUETOOTH_PREFIX, H1Device.class);
+      devicesMapping.put(NitroDevice.BLUETOOTH_PREFIX, NitroDevice.class);
+      devicesMapping.put(XenonDevice.BLUETOOTH_PREFIX, XenonDevice.class);
+      devicesMapping.put(KauaiDevice.BLUETOOTH_PREFIX, KauaiDevice.class);
+      devicesMapping.put(KauaiMedicalDevice.BLUETOOTH_PREFIX, KauaiMedicalDevice.class);
+    }
+    if (deviceGroup == null || deviceGroup == DeviceGroup.CONSUMER) {
+      devicesMapping.put(MauiDevice.BLUETOOTH_PREFIX_LEFT, MauiDevice.class);
+      devicesMapping.put(MauiDevice.BLUETOOTH_PREFIX_RIGHT, MauiDevice.class);
+    }
   }
 
+  public static NextSenseDeviceManager create(
+      LocalSessionManager localSessionManager, DeviceGroup deviceGroup) {
+    return new NextSenseDeviceManager(localSessionManager, deviceGroup);
+  }
+
+
   public static NextSenseDeviceManager create(LocalSessionManager localSessionManager) {
-    return new NextSenseDeviceManager(localSessionManager);
+    return new NextSenseDeviceManager(localSessionManager, DeviceGroup.CLINICAL);
   }
 
   public Set<String> getValidPrefixes() {
