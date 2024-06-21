@@ -29,7 +29,7 @@ android {
         minSdkVersion 28
         targetSdkVersion 34
         versionCode 57
-        versionName "0.8.2"
+        versionName "0.8.4"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {

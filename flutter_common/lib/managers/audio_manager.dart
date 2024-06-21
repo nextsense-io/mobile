@@ -19,14 +19,15 @@ class AudioManager {
     return pool.load(soundData);
   }
 
-  Future<int> playAudioFile(int cachedAudioFileId) async {
+  Future<int> playAudioFile(int cachedAudioFileId, {int repeat = 0}) async {
     _logger.log(Level.FINE, "Playing cached audio file id $cachedAudioFileId");
-    _lastStreamId = await pool.play(cachedAudioFileId);
+    _lastStreamId = await pool.play(cachedAudioFileId, repeat: repeat);
     return _lastStreamId;
   }
 
   Future stopPlayingAudio(int streamId) async {
     if (streamId >= 0) {
+      _logger.log(Level.FINE, "Stopping last audio stream $_lastStreamId");
       await pool.stop(streamId);
     }
   }

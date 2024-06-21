@@ -1,4 +1,5 @@
 import 'package:nextsense_trial_ui/domain/session/protocol.dart';
+import 'package:nextsense_trial_ui/ui/screens/protocol/abr_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/bio_calibration_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/eoec_protocol_screen.dart';
 import 'package:nextsense_trial_ui/ui/screens/protocol/erp_audio_protocol_screen.dart';
@@ -14,6 +15,7 @@ class ProtocolScreenMapping {
     ProtocolType.nap: ProtocolScreen.id,
     ProtocolType.sleep: ProtocolScreen.id,
     ProtocolType.variable_daytime: ProtocolScreen.id,
+    ProtocolType.abr: ABRProtocolScreen.id,
   };
 
   static getProtocolScreenId(ProtocolType protocolType) {

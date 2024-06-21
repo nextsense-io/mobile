@@ -9,6 +9,7 @@ enum ProtocolType {
   eyes_movement, // Eyes movement recording
   nap,  // Nap recording.
   bio_calibration,  // Bio Calibration recording
+  abr,  // Auditory Brainstem Response recording
   unknown
 }
 
@@ -40,6 +41,9 @@ abstract class TrialProtocol extends Protocol {
         break;
       case ProtocolType.erp_audio:
         protocol = ERPAudioProtocol();
+        break;
+      case ProtocolType.abr:
+        protocol = AbrProtocol();
         break;
       default:
         print("Class for protocol type $type isn't defined");
@@ -401,6 +405,28 @@ class BioCalibrationProtocol extends TrialBaseProtocol {
 
   @override
   List<ProtocolPart> get protocolBlock => _protocolBlock;
+}
+
+class AbrProtocol extends TrialBaseProtocol {
+
+  @override
+  ProtocolType get protocolType => ProtocolType.abr;
+
+  @override
+  String get nameForUser => 'Auditory Brainstem Response';
+
+  @override
+  Duration get minDuration => minDurationOverride ?? const Duration(minutes: 2);
+
+  @override
+  Duration get maxDuration => maxDurationOverride ?? const Duration(minutes: 2);
+
+  @override
+  String get description => 'Auditory Brainstem Response';
+
+  @override
+  String get intro =>
+      'Make sure your volume is near the maximum, sit comfortably and then start.';
 }
 
 enum GenericStates {
