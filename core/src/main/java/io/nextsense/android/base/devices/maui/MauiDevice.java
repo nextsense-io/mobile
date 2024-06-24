@@ -8,8 +8,6 @@ import androidx.annotation.Nullable;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 import com.welie.blessed.BluetoothPeripheralCallback;
@@ -22,7 +20,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import io.nextsense.android.base.DeviceInfo;
@@ -131,6 +128,7 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
   @Override
   public ListenableFuture<Boolean> connect(BluetoothPeripheral peripheral, boolean reconnecting) {
     this.peripheral = peripheral;
+    mauiDataParser.setDeviceName(peripheral.getName());
     initializeCharacteristics();
     return Futures.immediateFuture(true);
   }
@@ -266,6 +264,13 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
                 }
                 deviceMode = DeviceMode.STREAMING;
               } else {
+                // TODO(eric): Should use a RACE command when possible instead of writing to each
+                //             BLE connection.
+                try {
+                  executeCommandNoResponse(COMMAND_STOP_STREAMING);
+                } catch (ExecutionException | InterruptedException | CancellationException e) {
+                  changeStreamingStateFuture.setException(e);
+                }
                 deviceMode = DeviceMode.IDLE;
               }
               changeStreamingStateFuture.set(true);

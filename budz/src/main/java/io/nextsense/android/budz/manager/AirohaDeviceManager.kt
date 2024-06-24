@@ -285,6 +285,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                         _airohaDeviceState.value = AirohaDeviceState.CONNECTED_BLE
                         _airohaBleManager?.startStreamingFlow()?.collect { streaming ->
                             if (streaming) {
+                                _streamingState.value = StreamingState.STARTED
                                 emit(true)
                                 // TODO(eric): Re-enable when switching back to race commands.
 //                                startRaceBleStreamingFlow().collect { airohaStatusCode ->
@@ -314,7 +315,6 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     }
 
     fun stopBleStreamingFlow() = flow<Boolean> {
-
         if (!_budzServiceBound || _budzService == null ||
                 _streamingState.value != StreamingState.STARTED) {
             if (_airohaDeviceState.value == AirohaDeviceState.CONNECTING_BLE ||
@@ -324,18 +324,26 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             emit(true)
             return@flow
         }
-        stopRaceBleStreamingFlow().collect {airohaStatusCode ->
-            if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
-                _airohaBleManager?.disconnect()
-                _airohaDeviceState.value = AirohaDeviceState.READY
-                _streamingState.value = StreamingState.STOPPED
-                stopService()
-                emit(true)
-            } else {
-                _streamingState.value = StreamingState.ERROR
-                emit(false)
-            }
-        }
+        // TODO(eric): Remove when switching back to race commands.
+        _airohaBleManager?.stopStreaming()
+        _airohaBleManager?.disconnect()
+        _airohaDeviceState.value = AirohaDeviceState.READY
+        _streamingState.value = StreamingState.STOPPED
+        stopService()
+        emit(true)
+        // TODO(eric): Re-enable when switching back to race commands.
+//        stopRaceBleStreamingFlow().collect {airohaStatusCode ->
+//            if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
+//                _airohaBleManager?.disconnect()
+//                _airohaDeviceState.value = AirohaDeviceState.READY
+//                _streamingState.value = StreamingState.STOPPED
+//                stopService()
+//                emit(true)
+//            } else {
+//                _streamingState.value = StreamingState.ERROR
+//                emit(false)
+//            }
+//        }
     }
 
     fun startRaceBleStreamingFlow() = callbackFlow<AirohaStatusCode> {

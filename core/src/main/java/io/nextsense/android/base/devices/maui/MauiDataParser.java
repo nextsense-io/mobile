@@ -43,6 +43,7 @@ public class MauiDataParser {
   private static final int IMU_SAMPLE_SIZE_BYTES = 12;
 
   private final LocalSessionManager localSessionManager;
+  private String deviceName;
 
   private Instant firstEegSampleTimestamp = null;
   private int eegSampleCounter = 0;
@@ -53,6 +54,10 @@ public class MauiDataParser {
 
   public static MauiDataParser create(LocalSessionManager localSessionManager) {
     return new MauiDataParser(localSessionManager);
+  }
+
+  public void setDeviceName(String deviceName) {
+    this.deviceName = deviceName;
   }
 
   private static float convertToMicroVolts(int data) {
@@ -81,7 +86,7 @@ public class MauiDataParser {
         rightProtoLength;
     Log.d(TAG, "Proto length left: " + leftProtoLength + " Proto length right: " +
         rightProtoLength + ", values length: " + values.length + ". Location: " +
-        deviceLocation.name());
+        deviceLocation.name() + ", device name: " + deviceName);
     // TODO(eric): Re-enable this check when the length is fixed by AUT.
     // if (protoLength > values.length - PROTO_SIZE_BYTES) {
     if (protoLength > values.length) {
