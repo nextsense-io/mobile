@@ -29,6 +29,7 @@ import io.nextsense.android.budz.manager.SoundsManager
 import io.nextsense.android.budz.ui.components.AudioSampleList
 import io.nextsense.android.budz.ui.components.LoadingCircle
 import io.nextsense.android.budz.ui.components.TopBar
+import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 
 @Composable
 fun SelectSoundScreen(
@@ -56,7 +57,8 @@ fun SelectSoundScreen(
 
     Scaffold(
         topBar = {
-            TopBar(title = title, isAppTitle = false, showHome = false, showPrivacy = false, onNavigationClick = { onNavigateBack() })
+            TopBar(title = title, isAppTitle = false, leftIconContent = TopBarLeftIconContent.BACK,
+                onNavigationClick = { onNavigateBack() })
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {

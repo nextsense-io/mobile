@@ -33,6 +33,7 @@ import io.nextsense.android.budz.ui.components.SimpleButton
 import io.nextsense.android.budz.ui.components.SleepCountdownTimer
 import io.nextsense.android.budz.ui.components.TimerDropDown
 import io.nextsense.android.budz.ui.components.TopBar
+import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 import io.nextsense.android.budz.ui.components.WideButton
 import io.nextsense.android.budz.ui.theme.BudzColor
 import kotlin.time.Duration.Companion.minutes
@@ -59,7 +60,8 @@ fun FocusScreen(focusViewModel: FocusViewModel = hiltViewModel(),
 
     Scaffold(
         topBar = {
-            TopBar(title = screenTitle, isAppTitle = true, showHome = true, showPrivacy = false,
+            TopBar(title = screenTitle, isAppTitle = true,
+                leftIconContent = TopBarLeftIconContent.HOME, showPrivacy = false,
                 onNavigationClick = { onGoToHome() })
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)

@@ -56,7 +56,9 @@
     <string name="label_minutes">min</string>
     <string name="label_minutes_choice">%1$d mins</string>
     <string name="label_next">Next</string>
+    <string name="label_not_paired">Not paired</string>
     <string name="label_ok">OK</string>
+    <string name="label_paired">Paired</string>
     <string name="label_restoration_boost">Restoration boost</string>
     <string name="label_right">Right</string>
     <string name="label_seconds">sec</string>

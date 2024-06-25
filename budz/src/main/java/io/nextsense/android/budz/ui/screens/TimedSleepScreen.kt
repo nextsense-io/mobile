@@ -33,6 +33,7 @@ import io.nextsense.android.budz.ui.components.SimpleButton
 import io.nextsense.android.budz.ui.components.SleepCountdownTimer
 import io.nextsense.android.budz.ui.components.TimerDropDown
 import io.nextsense.android.budz.ui.components.TopBar
+import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 import io.nextsense.android.budz.ui.components.WideButton
 import io.nextsense.android.budz.ui.theme.BudzColor
 import kotlin.time.Duration.Companion.minutes
@@ -57,8 +58,8 @@ fun TimedSleepScreen(timedSleepViewModel: TimedSleepViewModel = hiltViewModel(),
 
     Scaffold(
         topBar = {
-            TopBar(title = stringResource(R.string.app_title), isAppTitle = true, showHome = true,
-                showPrivacy = false, onNavigationClick = { onGoToHome() })
+            TopBar(title = stringResource(R.string.app_title), isAppTitle = true,
+                leftIconContent = TopBarLeftIconContent.HOME, onNavigationClick = { onGoToHome() })
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {

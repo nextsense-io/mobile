@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.TopBar
+import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 
 @Composable
 fun CheckBrainSignalIntroScreen(
@@ -33,7 +34,7 @@ fun CheckBrainSignalIntroScreen(
     Scaffold(
         topBar = {
             TopBar(title = stringResource(R.string.title_brain_signal), isAppTitle = false,
-                showBack = true, showHome = false, showPrivacy = false,
+                leftIconContent = TopBarLeftIconContent.BACK, showPrivacy = false,
                 onNavigationClick = { onGoToCheckConnection() })
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)

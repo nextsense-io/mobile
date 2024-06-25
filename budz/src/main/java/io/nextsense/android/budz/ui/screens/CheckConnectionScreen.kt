@@ -32,6 +32,7 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.TopBar
+import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 import io.nextsense.android.budz.ui.components.WideButton
 import io.nextsense.android.budz.ui.theme.BudzColor
 
@@ -61,8 +62,9 @@ fun CheckConnectionScreen(
 
     Scaffold(
         topBar = {
-            TopBar(title = stringResource(R.string.app_title), isAppTitle = true, showBack = true,
-                showHome = false, showPrivacy = false, onNavigationClick = { onGoToHome() })
+            TopBar(title = stringResource(R.string.app_title), isAppTitle = true,
+                leftIconContent = TopBarLeftIconContent.BACK, showPrivacy = false,
+                onNavigationClick = { onGoToHome() })
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {

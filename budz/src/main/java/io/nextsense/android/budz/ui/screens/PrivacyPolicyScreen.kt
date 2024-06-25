@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.PrivacyPolicyPage
 import io.nextsense.android.budz.ui.components.TopBar
+import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 
 @Composable
 fun PrivacyPolicyScreen(
@@ -25,7 +26,8 @@ fun PrivacyPolicyScreen(
 ) {
     Scaffold(
         topBar = {
-            TopBar(title = stringResource(R.string.title_privacy_policy), showHome = true,
+            TopBar(title = stringResource(R.string.title_privacy_policy),
+                leftIconContent = TopBarLeftIconContent.HOME,
                 showPrivacy = false, onNavigationClick = { onGoToHome() })
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)

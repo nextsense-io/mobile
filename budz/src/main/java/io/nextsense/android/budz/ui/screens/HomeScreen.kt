@@ -45,6 +45,7 @@ import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.CircleButton
 import io.nextsense.android.budz.ui.components.SimpleButton
 import io.nextsense.android.budz.ui.components.TopBar
+import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 import io.nextsense.android.budz.ui.theme.BudzColor
 
 @Composable
@@ -74,7 +75,6 @@ fun HomeScreen(
     val context = LocalContext.current
 
     LifecycleResumeEffect(true) {
-        homeViewModel.connectDeviceIfNeeded()
         homeViewModel.loadUserSounds()
         onPauseOrDispose {
             homeViewModel.stopSleeping()
@@ -82,6 +82,7 @@ fun HomeScreen(
     }
 
     LifecycleStartEffect(true) {
+        homeViewModel.connectDeviceIfNeeded()
         onStopOrDispose {
             // TODO(eric): Should not do this if streaming data?
             homeViewModel.stopConnection()
@@ -103,8 +104,10 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            TopBar(title = stringResource(R.string.app_title), isAppTitle = true, showHome = false,
-                showBack = false, showPrivacy = true, onPrivacyClick = { onGoToPrivacyPolicy() })
+            TopBar(title = stringResource(R.string.app_title), isAppTitle = true, showPrivacy = true,
+                leftIconContent = if (homeUiState.connected) TopBarLeftIconContent.CONNECTED else
+                    TopBarLeftIconContent.DISCONNECTED,
+                onPrivacyClick = { onGoToPrivacyPolicy() })
         },
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
     ) {
