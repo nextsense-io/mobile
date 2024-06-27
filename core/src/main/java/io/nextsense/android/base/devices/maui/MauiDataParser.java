@@ -100,13 +100,13 @@ public class MauiDataParser {
           BudzDataPacketProto.BudzDataPacket.parseFrom(protoBytes);
         // TODO(eric): Re-enable this check once timestamp is not 0 from AUT.
 //      if (!budzDataPacket.getEarEeg().isEmpty() && budzDataPacket.getTimestampEeg() != 0) {  // Re-apply timestamp check
-        if (!budzDataPacket.getEarEeg().isEmpty()) {
+      if (!budzDataPacket.getEarEeg().isEmpty()) {
         ByteBuffer eegBuffer = ByteBuffer.wrap(budzDataPacket.getEarEeg().toByteArray());
         ByteBuffer imuBuffer = ByteBuffer.wrap(budzDataPacket.getEarImu().toByteArray());
         firstEegSampleTimestamp =
-            Instant.ofEpochMilli(budzDataPacket.getTimestampEeg() & 0xffffffffL);
+           Instant.ofEpochMilli(budzDataPacket.getTimestampEeg() & 0xffffffffL);
         eegSampleCounter = 0;
-        parseSampleData(eegBuffer, imuBuffer, deviceLocation);
+       parseSampleData(eegBuffer, imuBuffer, deviceLocation);
       }
     } catch (InvalidProtocolBufferException e) {
       throw new FirmwareMessageParsingException("Error parsing proto data: " + e.getMessage());
@@ -129,9 +129,11 @@ public class MauiDataParser {
     }
 
     while (imuBuffer.remaining() >= IMU_SAMPLE_SIZE_BYTES) {
-      Acceleration acceleration = parseSingleAccelerationPacket(imuBuffer, receptionTimestamp, deviceLocation);
+      Acceleration acceleration = parseSingleAccelerationPacket(
+          imuBuffer, receptionTimestamp, deviceLocation);
       samples.addAcceleration(acceleration);
-      AngularSpeed angularSpeed = parseSingleAngularSpeedPacket(imuBuffer, receptionTimestamp, deviceLocation);
+      AngularSpeed angularSpeed = parseSingleAngularSpeedPacket(
+          imuBuffer, receptionTimestamp, deviceLocation);
       samples.addAngularSpeed(angularSpeed);
     }
     EventBus.getDefault().post(samples);
@@ -157,8 +159,8 @@ public class MauiDataParser {
     // be seen as the timestamp will be contiguous.
     Instant samplingTimestamp = firstEegSampleTimestamp.plusMillis(
         (long)(eegSampleCounter * 1000.0f / localSession.getEegSampleRate()));
-    EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
-        null, samplingTimestamp, null);
+    EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,null,
+        samplingTimestamp, null);
     ++eegSampleCounter;
     return Optional.of(eegSample);
   }
