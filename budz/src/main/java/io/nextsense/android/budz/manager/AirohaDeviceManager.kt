@@ -28,6 +28,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.airoha.device.AirohaBleManager
 import io.nextsense.android.airoha.device.DataStreamRaceCommand
 import io.nextsense.android.airoha.device.DeviceSearchPresenter
+import io.nextsense.android.airoha.device.StartStopSoundLoopRaceCommand
 import io.nextsense.android.base.DeviceState
 import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.service.BudzService
@@ -216,8 +217,11 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     suspend fun connectDevice(timeout: Duration? = null) {
         Log.i(tag, "connectDevice")
-        if (_airohaDeviceState.value == AirohaDeviceState.READY) {
-            _airohaDeviceState.value = AirohaDeviceState.READY
+        if (_airohaDeviceState.value == AirohaDeviceState.READY ||
+                 _airohaDeviceState.value == AirohaDeviceState.CONNECTED_BLE ||
+                _airohaDeviceState.value == AirohaDeviceState.CONNECTED_AIROHA ||
+                _airohaDeviceState.value == AirohaDeviceState.CONNECTING_BLE) {
+                _airohaDeviceState.value = AirohaDeviceState.READY
             Log.i(tag, "Device already connected.")
             return
         }
@@ -390,6 +394,14 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                 // Nothing to do.
             }
         }
+
+    fun startStopSoundLoop() {
+        if (_airohaDeviceState.value != AirohaDeviceState.READY) {
+            return
+        }
+        getAirohaDeviceControl().sendCustomCommand(
+            getStartStopSoundLoopAirohaCommand(), airohaDeviceListener)
+    }
 
     fun changeEqualizer(gains: FloatArray) : Boolean {
         if (_airohaDeviceState.value != AirohaDeviceState.READY) {
@@ -579,6 +591,14 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         raceCommand.respType = RaceType.INDICATION
         raceCommand.command = DataStreamRaceCommand(
             DataStreamRaceCommand.DataStreamType.STOP_STREAM).getBytes()
+        return raceCommand
+    }
+
+    private fun getStartStopSoundLoopAirohaCommand(): AirohaCmdSettings {
+        val raceCommand = AirohaCmdSettings()
+        raceCommand.respType = RaceType.INDICATION
+        raceCommand.command = StartStopSoundLoopRaceCommand().getBytes()
+        Log.d(tag, "getStartStopSoundLoopAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
         return raceCommand
     }
 

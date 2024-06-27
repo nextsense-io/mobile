@@ -34,6 +34,9 @@ fun DeviceSettingsScreen(deviceSettingsViewModel: DeviceSettingsViewModel = hilt
         SimpleButton(name = "Stop Streaming", onClick = {
             deviceSettingsViewModel.stopStreaming()
         })
+        SimpleButton(name = "Start Stop Sound Loop", onClick = {
+            deviceSettingsViewModel.startStopSoundLoop()
+        })
         Spacer(modifier = Modifier.height(20.dp))
         SimpleButton(name = "Increase bass gain", onClick = {
             deviceSettingsViewModel.changeEqualizer(floatArrayOf(8f,8f,8f,8f,0f,0f,0f,0f,0f,0f))

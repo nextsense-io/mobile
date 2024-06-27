@@ -21,6 +21,7 @@ abstract class RaceCommand(raceCommandType: RaceCommandType, raceId: RaceId) {
     }
 
     enum class RaceId(private val value: String) {
+        MCU("0111"),
         AFE("0100");
 
         fun getValue(): String {

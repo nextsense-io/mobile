@@ -70,7 +70,7 @@ public class MauiDataParser {
   }
 
   public synchronized void parseDataBytes(byte[] values) throws FirmwareMessageParsingException {
-    if (values.length < 5) {
+    if (values.length < 3) {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device proto data.");
     }
     ByteBuffer valuesBuffer = ByteBuffer.wrap(values);
@@ -100,12 +100,14 @@ public class MauiDataParser {
           BudzDataPacketProto.BudzDataPacket.parseFrom(protoBytes);
         // TODO(eric): Re-enable this check once timestamp is not 0 from AUT.
 //      if (!budzDataPacket.getEarEeg().isEmpty() && budzDataPacket.getTimestampEeg() != 0) {  // Re-apply timestamp check
-      if (!budzDataPacket.getEarEeg().isEmpty()) {
-        ByteBuffer eegBuffer = ByteBuffer.wrap(budzDataPacket.getEarEeg().toByteArray());
-        ByteBuffer imuBuffer = ByteBuffer.wrap(budzDataPacket.getEarImu().toByteArray());
-        firstEegSampleTimestamp =
-           Instant.ofEpochMilli(budzDataPacket.getTimestampEeg() & 0xffffffffL);
-        eegSampleCounter = 0;
+      firstEegSampleTimestamp =
+          Instant.ofEpochMilli(budzDataPacket.getBtClockNclk() & 0xffffL);
+      eegSampleCounter = 0;
+      Log.w(TAG, "btClockNclk: " + budzDataPacket.getBtClockNclk() + ", btClockNclIntra: " +
+          (budzDataPacket.getBtClockNclkIntra() & 0xffffL) + ", flags: " + budzDataPacket.getFlags());
+      if (!budzDataPacket.getEeeg().isEmpty()) {
+        ByteBuffer eegBuffer = ByteBuffer.wrap(budzDataPacket.getEeeg().toByteArray());
+        ByteBuffer imuBuffer = ByteBuffer.wrap(budzDataPacket.getImu().toByteArray());
        parseSampleData(eegBuffer, imuBuffer, deviceLocation);
       }
     } catch (InvalidProtocolBufferException e) {

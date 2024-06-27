@@ -40,8 +40,8 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
 // only.
 public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
 
-  public static final String BLUETOOTH_PREFIX_LEFT = "AH203_L";
-  public static final String BLUETOOTH_PREFIX_RIGHT = "AH203_R";
+  public static final String BLUETOOTH_PREFIX_LEFT = "AH203";
+  public static final String BLUETOOTH_PREFIX_RIGHT = "AH203";
   public static final ByteOrder BYTE_ORDER = ByteOrder.LITTLE_ENDIAN;
   private static final String TAG = MauiDevice.class.getSimpleName();
   private static final int TARGET_MTU = 512;
