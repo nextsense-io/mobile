@@ -6,7 +6,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -34,11 +33,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -51,7 +47,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun HowToFallAsleepPage() {
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column {
             Spacer(modifier = Modifier.height(100.dp))
             Row(
@@ -122,7 +118,7 @@ fun HowToFallAsleepPage() {
 
 @Composable
 fun HowToStayAsleepPage() {
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column {
             Spacer(modifier = Modifier.weight(1f))
             Row(
@@ -175,8 +171,8 @@ fun HowToStayAsleepPage() {
 }
 
 @Composable
-fun GetYouConnectedPage(introViewModel: IntroViewModel) {
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+fun GetYouConnectedPage() {
+    Box(modifier = Modifier.fillMaxSize()) {
         Column {
             Spacer(modifier = Modifier.height(20.dp))
             Row(modifier = Modifier.fillMaxWidth(),
@@ -203,14 +199,14 @@ fun GetYouConnectedPage(introViewModel: IntroViewModel) {
 }
 
 @Composable
-fun PagerItem(page: Int, introViewModel: IntroViewModel) {
+fun IntroPagerItem(page: Int) {
     Surface(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f)
             .background(MaterialTheme.colorScheme.background)) {
         when (page) {
             0 -> HowToFallAsleepPage()
             1 -> HowToStayAsleepPage()
             2 -> PrivacyPolicyPage()
-            3 -> GetYouConnectedPage(introViewModel)
+            3 -> GetYouConnectedPage()
         }
     }
 }
@@ -254,7 +250,7 @@ fun IntroScreen(
                 beyondViewportPageCount = 2,
                 state = pagerState
             ) { pageNumber ->
-                PagerItem(page = pageNumber, introViewModel)
+                IntroPagerItem(page = pageNumber)
             }
             Row(Modifier.height(50.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 repeat(pageCount) { iteration ->

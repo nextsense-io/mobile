@@ -13,7 +13,6 @@ import io.nextsense.android.budz.manager.AudioSampleType
 import io.nextsense.android.budz.ui.screens.CheckBrainSignalIntroScreen
 import io.nextsense.android.budz.ui.screens.CheckConnectionScreen
 import io.nextsense.android.budz.ui.screens.ConnnectedScreen
-import io.nextsense.android.budz.ui.screens.DeviceConnectionScreen
 import io.nextsense.android.budz.ui.screens.DeviceSettingsScreen
 import io.nextsense.android.budz.ui.screens.FocusScreen
 import io.nextsense.android.budz.ui.screens.HomeScreen
@@ -162,9 +161,6 @@ class MainActivity : ComponentActivity() {
                                 navController.popBackStack()
                             }
                         )
-                    }
-                    composable<Routes.DeviceConnection> {
-                        DeviceConnectionScreen()
                     }
                     composable<Routes.DeviceSettings> {
                         DeviceSettingsScreen()
