@@ -68,9 +68,15 @@ class DeviceSettingsViewModel @Inject constructor(
         }
     }
 
-    fun startStopSoundLoop() {
+    fun startSoundLoop() {
         viewModelScope.launch {
-            deviceManager.startStopSoundLoop();
+            deviceManager.startSoundLoop()
+        }
+    }
+
+    fun stopSoundLoop() {
+        viewModelScope.launch {
+            deviceManager.stopSoundLoop()
         }
     }
 }

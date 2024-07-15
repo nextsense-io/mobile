@@ -289,18 +289,15 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                         _airohaDeviceState.value = AirohaDeviceState.CONNECTED_BLE
                         _airohaBleManager?.startStreamingFlow()?.collect { streaming ->
                             if (streaming) {
-                                _streamingState.value = StreamingState.STARTED
-                                emit(true)
-                                // TODO(eric): Re-enable when switching back to race commands.
-//                                startRaceBleStreamingFlow().collect { airohaStatusCode ->
-//                                    if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
-//                                        _streamingState.value = StreamingState.STARTED
-//                                        emit(true)
-//                                    } else {
-//                                        _streamingState.value = StreamingState.ERROR
-//                                        emit(false)
-//                                    }
-//                                }
+                                startRaceBleStreamingFlow().collect { airohaStatusCode ->
+                                    if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
+                                        _streamingState.value = StreamingState.STARTED
+                                        emit(true)
+                                    } else {
+                                        _streamingState.value = StreamingState.ERROR
+                                        emit(false)
+                                    }
+                                }
                             } else {
                                 _streamingState.value = StreamingState.ERROR
                                 emit(false)
@@ -335,19 +332,18 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         _streamingState.value = StreamingState.STOPPED
         stopService()
         emit(true)
-        // TODO(eric): Re-enable when switching back to race commands.
-//        stopRaceBleStreamingFlow().collect {airohaStatusCode ->
-//            if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
-//                _airohaBleManager?.disconnect()
-//                _airohaDeviceState.value = AirohaDeviceState.READY
-//                _streamingState.value = StreamingState.STOPPED
-//                stopService()
-//                emit(true)
-//            } else {
-//                _streamingState.value = StreamingState.ERROR
-//                emit(false)
-//            }
-//        }
+        stopRaceBleStreamingFlow().collect {airohaStatusCode ->
+            if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
+                _airohaBleManager?.disconnect()
+                _airohaDeviceState.value = AirohaDeviceState.READY
+                _streamingState.value = StreamingState.STOPPED
+                stopService()
+                emit(true)
+            } else {
+                _streamingState.value = StreamingState.ERROR
+                emit(false)
+            }
+        }
     }
 
     fun startRaceBleStreamingFlow() = callbackFlow<AirohaStatusCode> {
@@ -395,12 +391,20 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             }
         }
 
-    fun startStopSoundLoop() {
+    fun startSoundLoop() {
         if (_airohaDeviceState.value != AirohaDeviceState.READY) {
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
-            getStartStopSoundLoopAirohaCommand(), airohaDeviceListener)
+            getStartSoundLoopAirohaCommand(), airohaDeviceListener)
+    }
+
+    fun stopSoundLoop() {
+        if (_airohaDeviceState.value != AirohaDeviceState.READY) {
+            return
+        }
+        getAirohaDeviceControl().sendCustomCommand(
+            getStopSoundLoopAirohaCommand(), airohaDeviceListener)
     }
 
     fun changeEqualizer(gains: FloatArray) : Boolean {
@@ -594,10 +598,20 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         return raceCommand
     }
 
-    private fun getStartStopSoundLoopAirohaCommand(): AirohaCmdSettings {
+    private fun getStartSoundLoopAirohaCommand(): AirohaCmdSettings {
         val raceCommand = AirohaCmdSettings()
         raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = StartStopSoundLoopRaceCommand().getBytes()
+        raceCommand.command = StartStopSoundLoopRaceCommand(
+            StartStopSoundLoopRaceCommand.SoundLoopType.START_LOOP).getBytes()
+        Log.d(tag, "getStartStopSoundLoopAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        return raceCommand
+    }
+
+    private fun getStopSoundLoopAirohaCommand(): AirohaCmdSettings {
+        val raceCommand = AirohaCmdSettings()
+        raceCommand.respType = RaceType.INDICATION
+        raceCommand.command = StartStopSoundLoopRaceCommand(
+            StartStopSoundLoopRaceCommand.SoundLoopType.STOP_LOOP).getBytes()
         Log.d(tag, "getStartStopSoundLoopAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
         return raceCommand
     }

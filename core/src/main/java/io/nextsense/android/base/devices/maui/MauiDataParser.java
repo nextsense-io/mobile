@@ -94,7 +94,7 @@ public class MauiDataParser {
           " bigger than values: " + values.length);
     }
     try {
-      byte[] protoBytes = new byte[protoLength - 2];
+      byte[] protoBytes = new byte[values.length - 2];
       valuesBuffer.get(protoBytes);
       BudzDataPacketProto.BudzDataPacket budzDataPacket =
           BudzDataPacketProto.BudzDataPacket.parseFrom(protoBytes);
@@ -103,12 +103,14 @@ public class MauiDataParser {
       firstEegSampleTimestamp =
           Instant.ofEpochMilli(budzDataPacket.getBtClockNclk() & 0xffffL);
       eegSampleCounter = 0;
-      Log.w(TAG, "btClockNclk: " + budzDataPacket.getBtClockNclk() + ", btClockNclIntra: " +
-          (budzDataPacket.getBtClockNclkIntra() & 0xffffL) + ", flags: " + budzDataPacket.getFlags());
+      if (budzDataPacket.getBtClockNclk() != 0) {
+        Log.w(TAG, "btClockNclk: " + budzDataPacket.getBtClockNclk() + ", btClockNclIntra: " +
+            (budzDataPacket.getBtClockNclkIntra() & 0xffffL) + ", flags: " + budzDataPacket.getFlags());
+      }
       if (!budzDataPacket.getEeeg().isEmpty()) {
         ByteBuffer eegBuffer = ByteBuffer.wrap(budzDataPacket.getEeeg().toByteArray());
         ByteBuffer imuBuffer = ByteBuffer.wrap(budzDataPacket.getImu().toByteArray());
-       parseSampleData(eegBuffer, imuBuffer, deviceLocation);
+        parseSampleData(eegBuffer, imuBuffer, deviceLocation);
       }
     } catch (InvalidProtocolBufferException e) {
       throw new FirmwareMessageParsingException("Error parsing proto data: " + e.getMessage());
@@ -138,6 +140,10 @@ public class MauiDataParser {
           imuBuffer, receptionTimestamp, deviceLocation);
       samples.addAngularSpeed(angularSpeed);
     }
+
+    Log.d(TAG, "Parsed " + samples.getEegSamples().size() + " EEG samples, " +
+        samples.getAccelerations().size() + " accelerations and " +
+        samples.getAngularSpeeds().size() + " angular speeds.");
     EventBus.getDefault().post(samples);
   }
 
