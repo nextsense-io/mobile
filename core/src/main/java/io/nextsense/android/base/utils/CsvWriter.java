@@ -29,6 +29,10 @@ public class CsvWriter {
 
   public synchronized void initCsvFile(String fileName, String earbudsConfig, boolean haveRssi) {
     try {
+      if (writer != null) {
+        RotatingFileLogger.get().logw(TAG, "csv file already initialized");
+        return;
+      }
       String fullFileName = fileName + ".csv";
       File csvFile = new File(appDirectory, fullFileName);
       RotatingFileLogger.get().logi(TAG, "Creating csv file: " + csvFile.getAbsolutePath());
@@ -81,16 +85,21 @@ public class CsvWriter {
       List<Float> eegData, List<Float> accData, long samplingTimestamp, long receptionTimestamp,
       int impedanceFlag, int sync, int trigOut, int trigIn, int zmod, int marker, int tbd6,
       int tbd7, int button, Integer rssi) {
-    String line = sampleNumber + "," + eegData.get(0) + "," + eegData.get(1) + "," +
-        eegData.get(2) + "," + eegData.get(3) + "," + eegData.get(4) + "," + eegData.get(5) + "," +
-        eegData.get(6) + "," + eegData.get(7) + "," + accData.get(0) + "," + accData.get(1) + "," +
-        accData.get(2) + "," + samplingTimestamp + "," + receptionTimestamp + "," + impedanceFlag +
-        "," + sync + "," + trigOut + "," + trigIn + "," + zmod + "," + marker + "," + tbd6 + "," +
-        tbd7 + "," + button;
-    if (rssi != null) {
-      line += "," + rssi;
+    StringBuilder line = new StringBuilder(sampleNumber + ",");
+    for (int i = 0; i < eegData.size(); i++) {
+      line.append(eegData.get(i)).append(",");
     }
-    appendLine(line);
+    for (int i = 0; i < accData.size(); i++) {
+      line.append(accData.get(i)).append(",");
+    }
+    line.append(samplingTimestamp).append(",").append(receptionTimestamp).append(",")
+        .append(impedanceFlag).append(",").append(sync).append(",").append(trigOut).append(",")
+        .append(trigIn).append(",").append(zmod).append(",").append(marker).append(",")
+        .append(tbd6).append(",").append(tbd7).append(",").append(button);
+    if (rssi != null) {
+      line.append(",").append(rssi);
+    }
+    appendLine(line.toString());
     sampleNumber++;
   }
 

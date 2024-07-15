@@ -103,10 +103,6 @@ public class CsvSink {
 
   @Subscribe(threadMode = ThreadMode.ASYNC)
   public synchronized void onSamples(Samples samples) {
-    if (samples.getEegSamples().size() != samples.getAccelerations().size()) {
-      RotatingFileLogger.get().loge(TAG, "Number of EEG samples and accelerations does not match!");
-      return;
-    }
     if (blePeripheralCallbackProxy != null && currentPeripheral != null &&
         lastRssiCheck.plus(RSSI_CHECK_INTERVAL).isBefore(Instant.now())) {
       currentPeripheral.readRemoteRssi();
@@ -115,20 +111,22 @@ public class CsvSink {
     for (int i = 0; i < samples.getEegSamples().size(); i++) {
       EegSample eegSample = samples.getEegSamples().get(i);
       List<Float> eegData = new ArrayList<>();
-      for (int j = 1; j < 9;++j) {
+      for (int j = 1; j < 9; ++j) {
         eegData.add(eegSample.getEegSamples().getOrDefault(j, 0.0f));
       }
       List<Float> accData = new ArrayList<>();
-      accData.add((float)samples.getAccelerations().get(i).getX());
-      accData.add((float)samples.getAccelerations().get(i).getY());
-      accData.add((float)samples.getAccelerations().get(i).getZ());
+//      accData.add((float)samples.getAccelerations().get(i).getX());
+//      accData.add((float)samples.getAccelerations().get(i).getY());
+//      accData.add((float)samples.getAccelerations().get(i).getZ());
       csvWriter.appendData(eegData, accData,
           eegSample.getAbsoluteSamplingTimestamp().toEpochMilli(),
           eegSample.getReceptionTimestamp().toEpochMilli(), /*impedance_flag=*/0,
-          boolToInt(eegSample.getSync()), boolToInt(eegSample.getTrigOut()),
-          boolToInt(eegSample.getTrigIn()), boolToInt(eegSample.getZMod()),
-          boolToInt(eegSample.getMarker()), /*tbd6=*/0, /*tbd7=*/0,
-          boolToInt(eegSample.getButton()), lastRssi);
+          boolToInt(Boolean.TRUE.equals(eegSample.getSync())),
+          boolToInt(Boolean.TRUE.equals(eegSample.getTrigOut())),
+          boolToInt(Boolean.TRUE.equals(eegSample.getTrigIn())),
+          boolToInt(Boolean.TRUE.equals(eegSample.getZMod())),
+          boolToInt(Boolean.TRUE.equals(eegSample.getMarker())), /*tbd6=*/0, /*tbd7=*/0,
+          boolToInt(Boolean.TRUE.equals(eegSample.getButton())), lastRssi);
     }
   }
 
