@@ -48,7 +48,7 @@ public class CsvWriter {
     appendHeaderLine("Protocol version", "1");
     appendHeaderLine("Device", "Xenon");
     appendHeaderLine("MAC address", "unknown");
-    appendHeaderLine("eegStreamingRate", "250");
+    appendHeaderLine("eegStreamingRate", "1000");
     appendHeaderLine("accelerationStreamingRate", "250");
     appendHeaderLine("channelConfig", earbudsConfig);
     appendHeaderLine("========== Start Data ==========");

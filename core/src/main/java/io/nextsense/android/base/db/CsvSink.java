@@ -115,11 +115,19 @@ public class CsvSink {
         eegData.add(eegSample.getEegSamples().getOrDefault(j, 0.0f));
       }
       List<Float> accData = new ArrayList<>();
+      // TODO(eric): This is a temporary fix for the missing accelerometer data.
+      accData.add(0.0f);
+      accData.add(0.0f);
+      accData.add(0.0f);
 //      accData.add((float)samples.getAccelerations().get(i).getX());
 //      accData.add((float)samples.getAccelerations().get(i).getY());
 //      accData.add((float)samples.getAccelerations().get(i).getZ());
+
+      long samplingTimestamp = eegSample.getRelativeSamplingTimestamp() != null
+          ? eegSample.getRelativeSamplingTimestamp()
+          : eegSample.getAbsoluteSamplingTimestamp().toEpochMilli();
       csvWriter.appendData(eegData, accData,
-          eegSample.getAbsoluteSamplingTimestamp().toEpochMilli(),
+          samplingTimestamp,
           eegSample.getReceptionTimestamp().toEpochMilli(), /*impedance_flag=*/0,
           boolToInt(Boolean.TRUE.equals(eegSample.getSync())),
           boolToInt(Boolean.TRUE.equals(eegSample.getTrigOut())),

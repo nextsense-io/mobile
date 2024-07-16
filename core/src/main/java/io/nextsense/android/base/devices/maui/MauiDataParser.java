@@ -32,6 +32,7 @@ public class MauiDataParser {
   private static final String TAG = MauiDataParser.class.getSimpleName();
 
   private static final float V_REF = 2.048f;
+  private static final double CLOCK_TO_US_MULTIPLIER = 312.5f;
   private static final int ADC_GAIN = 128;
   private static final int AFE_EXT_AMP = 1;
   private static final int CHANNEL_LEFT = 1;
@@ -43,10 +44,12 @@ public class MauiDataParser {
   private static final int IMU_SAMPLE_SIZE_BYTES = 12;
 
   private final LocalSessionManager localSessionManager;
-  private String deviceName;
 
-  private Instant firstEegSampleTimestamp = null;
-  private int eegSampleCounter = 0;
+  private String deviceName;
+  private long lastKeyTimestampRight = 0;
+  private int rightSamplesSinceKeyTimestamp = 0;
+  private long lastKeyTimestampLeft = 0;
+  private int leftSamplesSinceKeyTimestamp = 0;
 
   private MauiDataParser(LocalSessionManager localSessionManager) {
     this.localSessionManager = localSessionManager;
@@ -65,14 +68,25 @@ public class MauiDataParser {
   }
 
   public void startNewSession() {
-    firstEegSampleTimestamp = null;
-    eegSampleCounter = 0;
+    lastKeyTimestampRight = 0;
+    rightSamplesSinceKeyTimestamp = 0;
+    lastKeyTimestampLeft = 0;
+    leftSamplesSinceKeyTimestamp = 0;
   }
 
   public synchronized void parseDataBytes(byte[] values) throws FirmwareMessageParsingException {
     if (values.length < 3) {
       throw new FirmwareMessageParsingException("Empty values, cannot parse device proto data.");
     }
+    Instant receptionTimestamp = Instant.now();
+
+    Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
+    if (!localSessionOptional.isPresent()) {
+      Log.e(TAG, "No active local session found.");
+      return;
+    }
+    LocalSession localSession = localSessionOptional.get();
+
     ByteBuffer valuesBuffer = ByteBuffer.wrap(values);
     valuesBuffer.order(MauiDevice.BYTE_ORDER);
     int leftProtoLength = valuesBuffer.get() & 0xff;
@@ -98,33 +112,53 @@ public class MauiDataParser {
       valuesBuffer.get(protoBytes);
       BudzDataPacketProto.BudzDataPacket budzDataPacket =
           BudzDataPacketProto.BudzDataPacket.parseFrom(protoBytes);
-        // TODO(eric): Re-enable this check once timestamp is not 0 from AUT.
-//      if (!budzDataPacket.getEarEeg().isEmpty() && budzDataPacket.getTimestampEeg() != 0) {  // Re-apply timestamp check
-      firstEegSampleTimestamp =
-          Instant.ofEpochMilli(budzDataPacket.getBtClockNclk() & 0xffffL);
-      eegSampleCounter = 0;
+      deviceLocation = budzDataPacket.getFlags() == 0 ? DeviceLocation.LEFT_EARBUD :
+          DeviceLocation.RIGHT_EARBUD;
+
+      long acquisitionTimestamp = 0;
       if (budzDataPacket.getBtClockNclk() != 0) {
         Log.w(TAG, "btClockNclk: " + budzDataPacket.getBtClockNclk() + ", btClockNclIntra: " +
-            (budzDataPacket.getBtClockNclkIntra() & 0xffffL) + ", flags: " + budzDataPacket.getFlags());
+            (budzDataPacket.getBtClockNclkIntra() & 0xffffL) + ", flags: " +
+            budzDataPacket.getFlags());
+        if (deviceLocation == DeviceLocation.RIGHT_EARBUD) {
+          lastKeyTimestampRight = getTimestamp(budzDataPacket, localSession.getEegSampleRate());
+          rightSamplesSinceKeyTimestamp = 0;
+        } else {
+          lastKeyTimestampLeft = getTimestamp(budzDataPacket, localSession.getEegSampleRate());
+          leftSamplesSinceKeyTimestamp = 0;
+        }
       }
+      acquisitionTimestamp = deviceLocation == DeviceLocation.LEFT_EARBUD ? lastKeyTimestampLeft :
+          lastKeyTimestampRight;
       if (!budzDataPacket.getEeeg().isEmpty()) {
         ByteBuffer eegBuffer = ByteBuffer.wrap(budzDataPacket.getEeeg().toByteArray());
         ByteBuffer imuBuffer = ByteBuffer.wrap(budzDataPacket.getImu().toByteArray());
-        parseSampleData(eegBuffer, imuBuffer, deviceLocation);
+        parseSampleData(eegBuffer, imuBuffer, deviceLocation, receptionTimestamp,
+            acquisitionTimestamp);
       }
     } catch (InvalidProtocolBufferException e) {
       throw new FirmwareMessageParsingException("Error parsing proto data: " + e.getMessage());
     }
   }
 
+  private long getTimestamp(BudzDataPacketProto.BudzDataPacket budzDataPacket,
+                            float eegSamplingRate) {
+    int eegSamplesInPacket = budzDataPacket.getEeeg().size() / EEG_SAMPLE_SIZE_BYTES;
+    long uptimeMs = Math.round((budzDataPacket.getBtClockNclk() & 0xffffL) * CLOCK_TO_US_MULTIPLIER
+        + (budzDataPacket.getBtClockNclkIntra() & 0xffffL)) / 1000;
+    // The timestamp is the time when the last sample in this packet was collected. Subtract the
+    // time to get back to the first sample of this packet.
+    return uptimeMs - (long) eegSamplesInPacket * Math.round(1000 / eegSamplingRate);
+  }
+
   private void parseSampleData(ByteBuffer eegBuffer, ByteBuffer imuBuffer,
-                               DeviceLocation deviceLocation) {
-    Instant receptionTimestamp = Instant.now();
+                               DeviceLocation deviceLocation, Instant receptionTimestamp,
+                               long acquisitionTimestamp) {
     Samples samples = Samples.create();
     boolean canParseEeg = true;
     while (canParseEeg && eegBuffer.remaining() >= EEG_SAMPLE_SIZE_BYTES) {
       Optional<EegSample> eegSampleOptional =
-          parseSingleEegPacket(eegBuffer, receptionTimestamp, deviceLocation);
+          parseSingleEegPacket(eegBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
       if (eegSampleOptional.isPresent()) {
         EegSample eegSample = eegSampleOptional.get();
         samples.addEegSample(eegSample);
@@ -134,10 +168,10 @@ public class MauiDataParser {
 
     while (imuBuffer.remaining() >= IMU_SAMPLE_SIZE_BYTES) {
       Acceleration acceleration = parseSingleAccelerationPacket(
-          imuBuffer, receptionTimestamp, deviceLocation);
+          imuBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
       samples.addAcceleration(acceleration);
       AngularSpeed angularSpeed = parseSingleAngularSpeedPacket(
-          imuBuffer, receptionTimestamp, deviceLocation);
+          imuBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
       samples.addAngularSpeed(angularSpeed);
     }
 
@@ -148,8 +182,8 @@ public class MauiDataParser {
   }
 
   private Optional<EegSample> parseSingleEegPacket(
-      ByteBuffer valuesBuffer, Instant receptionTimestamp, DeviceLocation deviceLocation)
-      throws NoSuchElementException {
+      ByteBuffer valuesBuffer, Instant receptionTimestamp, DeviceLocation deviceLocation,
+      long acquisitionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
       return Optional.empty();
@@ -162,20 +196,22 @@ public class MauiDataParser {
     HashMap<Integer, Float> eegData = new HashMap<>();
     eegData.put(deviceLocation == DeviceLocation.LEFT_EARBUD? CHANNEL_LEFT : CHANNEL_RIGHT,
         convertToMicroVolts(eegValue));
-    // The sampling timestamp is calculated based on the first sample timestamp and the sample rate.
-    // It is not provided by the simple Maui/Softy protocol. If there are lost packets, they won't
-    // be seen as the timestamp will be contiguous.
-    Instant samplingTimestamp = firstEegSampleTimestamp.plusMillis(
-        (long)(eegSampleCounter * 1000.0f / localSession.getEegSampleRate()));
-    EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,null,
-        samplingTimestamp, null);
-    ++eegSampleCounter;
+    int dataPointAcquisitionTimeStamp = (int) acquisitionTimestamp + (deviceLocation ==
+        DeviceLocation.LEFT_EARBUD ? leftSamplesSinceKeyTimestamp : rightSamplesSinceKeyTimestamp) *
+        Math.round(1000 / localSession.getEegSampleRate());
+    EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
+        dataPointAcquisitionTimeStamp, /*samplingTimestamp=*/null, null);
+    if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
+      ++leftSamplesSinceKeyTimestamp;
+    } else {
+      ++rightSamplesSinceKeyTimestamp;
+    }
     return Optional.of(eegSample);
   }
 
   private Acceleration parseSingleAccelerationPacket(
-      ByteBuffer valuesBuffer, Instant receptionTimestamp, DeviceLocation deviceLocation)
-      throws NoSuchElementException {
+      ByteBuffer valuesBuffer, Instant receptionTimestamp, DeviceLocation deviceLocation,
+      long acquisitionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
       return null;
@@ -184,15 +220,14 @@ public class MauiDataParser {
     valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
     List<Short> accelerationData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
         valuesBuffer.getShort());
-    // TODO(Eric): put the timestamp when available.
     return Acceleration.create(localSession.id, /*x=*/accelerationData.get(0),
         /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), deviceLocation,
-        receptionTimestamp, null, receptionTimestamp);
+        /*samplingTimestamp=*/null, (int) acquisitionTimestamp, receptionTimestamp);
   }
 
   private AngularSpeed parseSingleAngularSpeedPacket(
-      ByteBuffer valuesBuffer, Instant receptionTimestamp, DeviceLocation deviceLocation)
-      throws NoSuchElementException {
+      ByteBuffer valuesBuffer, Instant receptionTimestamp, DeviceLocation deviceLocation,
+      long acquisitionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
       return null;
@@ -201,9 +236,8 @@ public class MauiDataParser {
     valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
     List<Short> angularSpeedData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
         valuesBuffer.getShort());
-    // TODO(Eric): put the timestamp when available.
     return AngularSpeed.create(localSession.id, /*x=*/angularSpeedData.get(0),
         /*y=*/angularSpeedData.get(1), /*z=*/angularSpeedData.get(2), deviceLocation,
-        receptionTimestamp, null, receptionTimestamp);
+        /*samplingTimeStamp=*/null, (int) acquisitionTimestamp, receptionTimestamp);
   }
 }

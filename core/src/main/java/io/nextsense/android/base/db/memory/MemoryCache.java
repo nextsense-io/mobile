@@ -59,7 +59,10 @@ public class MemoryCache {
   public void addChannelData(Samples samples) {
     synchronized (eegLock) {
       for (EegSample eegSample : samples.getEegSamples()) {
-        timestamps.addValue(eegSample.getAbsoluteSamplingTimestamp().toEpochMilli());
+        long timestamp = eegSample.getAbsoluteSamplingTimestamp() != null ?
+            eegSample.getAbsoluteSamplingTimestamp().toEpochMilli() :
+            eegSample.getRelativeSamplingTimestamp();
+        timestamps.addValue(timestamp);
         for (Integer eegChannelNumber : eegSample.getEegSamples().keySet()) {
           String channelName = String.valueOf(eegChannelNumber);
           eegChannels.get(channelName).addValue(
@@ -76,14 +79,20 @@ public class MemoryCache {
             imuChannels.get(Acceleration.Channels.ACC_Z.getName()).addValue(acceleration.getZ());
             break;
           case LEFT_EARBUD:
-            imuChannels.get(Acceleration.Channels.ACC_L_X.getName()).addValue(acceleration.getLeftX());
-            imuChannels.get(Acceleration.Channels.ACC_L_Y.getName()).addValue(acceleration.getLeftY());
-            imuChannels.get(Acceleration.Channels.ACC_L_Z.getName()).addValue(acceleration.getLeftZ());
+            imuChannels.get(Acceleration.Channels.ACC_L_X.getName()).addValue(
+                acceleration.getLeftX());
+            imuChannels.get(Acceleration.Channels.ACC_L_Y.getName()).addValue(
+                acceleration.getLeftY());
+            imuChannels.get(Acceleration.Channels.ACC_L_Z.getName()).addValue(
+                acceleration.getLeftZ());
             break;
           case RIGHT_EARBUD:
-            imuChannels.get(Acceleration.Channels.ACC_R_X.getName()).addValue(acceleration.getRightX());
-            imuChannels.get(Acceleration.Channels.ACC_R_Y.getName()).addValue(acceleration.getRightY());
-            imuChannels.get(Acceleration.Channels.ACC_R_Z.getName()).addValue(acceleration.getRightZ());
+            imuChannels.get(Acceleration.Channels.ACC_R_X.getName()).addValue(
+                acceleration.getRightX());
+            imuChannels.get(Acceleration.Channels.ACC_R_Y.getName()).addValue(
+                acceleration.getRightY());
+            imuChannels.get(Acceleration.Channels.ACC_R_Z.getName()).addValue(
+                acceleration.getRightZ());
             break;
           default:
             throw new IllegalArgumentException("Unknown device location: " +
