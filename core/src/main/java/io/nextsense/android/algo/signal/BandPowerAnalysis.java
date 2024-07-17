@@ -1,5 +1,6 @@
 package io.nextsense.android.algo.signal;
 
+import android.util.Log;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
@@ -8,7 +9,10 @@ import org.apache.commons.math3.transform.TransformType;
 import java.util.Arrays;
 import java.util.List;
 
+import io.nextsense.android.algo.MathUtils;
+
 public class BandPowerAnalysis {
+
   public enum Band {
     DELTA(1.0, 4.0),
     THETA(4.0, 8.0),
@@ -33,26 +37,137 @@ public class BandPowerAnalysis {
     }
   }
 
-  public static double getBandPower(List<Float> signal, int samplingRate, Band band) {
-    return getBandPower(signal, samplingRate, band.getStart(), band.getEnd());
+  public static final int MIN_SAMPLES_NUMBER = 2048;  // About 8 seconds of data at 250 hertz.
+  private static final String TAG = BandPowerAnalysis.class.getSimpleName();
+
+  public static double getBandPower(
+      List<Float> data, int samplingRate, Band band, Double powerLineFrequency) {
+    return getBandPower(data, samplingRate, band.getStart(), band.getEnd(), powerLineFrequency);
   }
 
   public static double getBandPower(
-      List<Float> data, int samplingRate, double bandStart, double bandEnd) {
-    FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
-    double[] fftDataArray = new double[getNextPowerOfTwo(data.size())];
-    Arrays.fill(fftDataArray, data.size(), fftDataArray.length, 0.0f);
-    double[] dataArray = data.stream().mapToDouble(aFloat -> aFloat).toArray();
-    // TODO(eric): Have a setting to be able to select 50 Hertz when not in the USA.
-    dataArray = Filters.applyBandStop(dataArray, samplingRate, 8, 60, 2);
-    dataArray = Filters.applyBandPass(dataArray, samplingRate, 4, 0.1f, 50);
-    System.arraycopy(dataArray, 0, fftDataArray, 0, dataArray.length);
-    Complex[] complexResult = transformer.transform(fftDataArray, TransformType.FORWARD);
-    double[] powerSpectrum = new double[complexResult.length];
-    for (int i = 0; i < complexResult.length; i++) {
-      powerSpectrum[i] = complexResult[i].abs();
+      List<Float> data, int samplingRate, double bandStart, double bandEnd,
+      Double powerLineFrequency) {
+    if (data == null || data.isEmpty()) {
+      throw new IllegalArgumentException("Data list cannot be null or empty.");
     }
-    return calculateBandPower(powerSpectrum, samplingRate, bandStart, bandEnd);
+    if (data.size() < MIN_SAMPLES_NUMBER) {
+      Log.w(TAG, "Data list must contain at least " + MIN_SAMPLES_NUMBER + " samples.");
+      return 0;
+    }
+    if (samplingRate <= 0) {
+      throw new IllegalArgumentException("Sampling rate must be positive.");
+    }
+    if (bandStart < 0 || bandEnd <= bandStart) {
+      throw new IllegalArgumentException("Invalid band frequency range.");
+    }
+
+    double[] dataArray = data.stream().mapToDouble(Float::doubleValue).toArray();
+    // Ensure the data array is a power of 2.
+    int effectiveSamplesNumber = MathUtils.biggestPowerOfTwoUnder(dataArray.length);
+    Log.d(TAG, "Number of samples: " + dataArray.length + ", Effective samples number: " +
+        effectiveSamplesNumber);
+    dataArray = Arrays.copyOfRange(dataArray, dataArray.length - effectiveSamplesNumber,
+        dataArray.length);
+
+    // Original signal power calculation for SNR
+    double originalPower = calculatePower(dataArray);
+
+    // Apply wavelet artifact rejection using Daubechies 4 wavelet,
+    dataArray = WaveletArtifactRejection.applyWaveletArtifactRejection(dataArray);
+
+    // After processing signal power calculation for SNR
+    double processedPower = calculatePower(dataArray);
+
+    // Calculate and log SNR improvements
+    double originalSNR = calculateSNR(originalPower, originalPower - processedPower); // Example computation
+    double processedSNR = calculateSNR(processedPower, originalPower - processedPower); // Example computation
+
+    Log.d(TAG, "Original SNR: " + originalSNR + " dB");
+    Log.d(TAG, "Processed SNR: " + processedSNR + " dB");
+
+    if (powerLineFrequency != null) {
+      dataArray = Filters.applyBandStop(
+          dataArray, samplingRate, 4, powerLineFrequency.floatValue(), 2);
+    }
+    dataArray = Filters.applyBandPass(dataArray, samplingRate, 4, 0.5f, 50);
+
+    // TODO(eric): Test moving the cropping of the data to a power of 2 here to remove the filtering
+    //             artifacts.
+    // dataArray = Arrays.copyOfRange(dataArray, dataArray.length - effectiveSamplesNumber,
+    //     dataArray.length);
+
+    int segmentSize = 256; // Usual value
+    int overlap = segmentSize / 2; // 50% overlap (usual value)
+    double[] averagedPowerSpectrum = computeWelchPSD(dataArray, samplingRate, segmentSize, overlap);
+
+    return calculateBandPower(averagedPowerSpectrum, samplingRate, bandStart, bandEnd);
+  }
+
+  private static double calculatePower(double[] signal) {
+    double power = 0;
+    for (double amplitude : signal) {
+      power += amplitude * amplitude;
+    }
+    return power / signal.length;
+  }
+
+  private static double calculateSNR(double signalPower, double noisePower) {
+    return 10 * Math.log10(signalPower / noisePower);
+  }
+
+  private static double[] computeWelchPSD(
+      double[] dataArray, int samplingRate, int segmentSize, int overlap) {
+    if (segmentSize > dataArray.length) {
+      throw new IllegalArgumentException(
+          "Segment size must be less than or equal to the length of the data array.");
+    }
+
+    FastFourierTransformer transformer = new FastFourierTransformer(DftNormalization.STANDARD);
+    int numSegments = (dataArray.length - overlap) / (segmentSize - overlap);
+    double[][] powerSpectra = new double[numSegments][];
+    double[] frequencyFactor = new double[segmentSize];
+
+    // Minimum frequency to avoid too high compensation
+    double minFrequency = 0.1; // Usual value (could be modified if lower in practice)
+    double maxFactor = 1.0 / minFrequency;
+
+    // Calculate 1/f factors for each frequency index, we apply a cap to avoid excessive
+    // compensation.
+    for (int i = 0; i < segmentSize; i++) {
+      double frequency = i * samplingRate / (double) segmentSize;
+      frequencyFactor[i] = (frequency > minFrequency) ? 1.0 / frequency : maxFactor;
+    }
+
+    for (int i = 0; i < numSegments; i++) {
+      int start = i * (segmentSize - overlap);
+      double[] segment = Arrays.copyOfRange(dataArray, start, start + segmentSize);
+      // Apply a window function to reduce spectral leakage
+      windowFunction(segment);
+      Complex[] fftResult = transformer.transform(segment, TransformType.FORWARD);
+      powerSpectra[i] = new double[segmentSize];
+      for (int j = 0; j < segmentSize; j++) {
+        // Apply 1/f compensation here
+        powerSpectra[i][j] = fftResult[j].abs() * fftResult[j].abs() * frequencyFactor[j];
+      }
+    }
+
+    double[] averagedPowerSpectrum = new double[segmentSize];
+    Arrays.fill(averagedPowerSpectrum, 0);
+    for (int i = 0; i < segmentSize; i++) {
+      for (double[] spectrum : powerSpectra) {
+        averagedPowerSpectrum[i] += spectrum[i];
+      }
+      averagedPowerSpectrum[i] /= numSegments;
+    }
+    return averagedPowerSpectrum;
+  }
+
+  private static void windowFunction(double[] segment) {
+    // Apply a Hamming window
+    for (int i = 0; i < segment.length; i++) {
+      segment[i] *= 0.54 - 0.46 * Math.cos(2 * Math.PI * i / (segment.length - 1));
+    }
   }
 
   private static double calculateBandPower(
@@ -60,15 +175,9 @@ public class BandPowerAnalysis {
     int startIndex = (int)(lowFreq / fs * powerSpectrum.length);
     int endIndex = (int)(highFreq / fs * powerSpectrum.length);
     double bandPower = 0;
-    int resultsSize = 0;
     for (int i = startIndex; i <= endIndex; i++) {
       bandPower += powerSpectrum[i];
-      resultsSize++;
     }
-    return bandPower / resultsSize;
-  }
-
-  private static int getNextPowerOfTwo(int n) {
-    return (int) Math.pow(2, Math.ceil(Math.log(n) / Math.log(2)));
+    return bandPower / (endIndex - startIndex + 1);
   }
 }

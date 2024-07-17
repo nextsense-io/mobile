@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package nextsense;
+
+option java_package = "io.nextsense.android.budz";
+option java_outer_classname = "BudzDataPacketProto";
+
+message BudzDataPacket {
+    bytes eeeg = 1;
+    bytes imu = 2;
+    uint32 bt_clock_nclk = 3;
+    uint32 bt_clock_nclk_intra = 4;
+    uint32 flags = 5;
+}

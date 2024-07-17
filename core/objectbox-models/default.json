@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:3658994930751552543",
-      "lastPropertyId": "8:4163970389268528287",
+      "lastPropertyId": "14:9073749853583641367",
       "name": "Acceleration",
       "properties": [
         {
@@ -51,6 +51,36 @@
           "type": 11,
           "flags": 520,
           "relationTarget": "LocalSession"
+        },
+        {
+          "id": "9:1786492366173782021",
+          "name": "rightX",
+          "type": 5
+        },
+        {
+          "id": "10:9152130849575436052",
+          "name": "rightY",
+          "type": 5
+        },
+        {
+          "id": "11:2751740407322629322",
+          "name": "rightZ",
+          "type": 5
+        },
+        {
+          "id": "12:5756981352762286195",
+          "name": "leftX",
+          "type": 5
+        },
+        {
+          "id": "13:7754633682019888179",
+          "name": "leftY",
+          "type": 5
+        },
+        {
+          "id": "14:9073749853583641367",
+          "name": "leftZ",
+          "type": 5
         }
       ],
       "relations": []
@@ -340,10 +370,92 @@
         }
       ],
       "relations": []
+    },
+    {
+      "id": "8:2305739789178864595",
+      "lastPropertyId": "14:8855641057293512176",
+      "name": "AngularSpeed",
+      "properties": [
+        {
+          "id": "1:2136414802706514925",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:5566551109608340250",
+          "name": "x",
+          "type": 5
+        },
+        {
+          "id": "3:5855670705920856455",
+          "name": "y",
+          "type": 5
+        },
+        {
+          "id": "4:3778950126313221177",
+          "name": "z",
+          "type": 5
+        },
+        {
+          "id": "5:6626874622764669998",
+          "name": "receptionTimestamp",
+          "type": 6
+        },
+        {
+          "id": "6:8613048978926625836",
+          "name": "relativeSamplingTimestamp",
+          "type": 5
+        },
+        {
+          "id": "7:8751504952291949080",
+          "name": "absoluteSamplingTimestamp",
+          "type": 6
+        },
+        {
+          "id": "8:894003901266616460",
+          "name": "localSessionId",
+          "indexId": "7:7495440003052720935",
+          "type": 11,
+          "flags": 520,
+          "relationTarget": "LocalSession"
+        },
+        {
+          "id": "9:7826067142913150697",
+          "name": "rightX",
+          "type": 5
+        },
+        {
+          "id": "10:3837616897804495366",
+          "name": "rightY",
+          "type": 5
+        },
+        {
+          "id": "11:6845232573343839674",
+          "name": "rightZ",
+          "type": 5
+        },
+        {
+          "id": "12:561960359202965629",
+          "name": "leftX",
+          "type": 5
+        },
+        {
+          "id": "13:8538441311878204569",
+          "name": "leftY",
+          "type": 5
+        },
+        {
+          "id": "14:8855641057293512176",
+          "name": "leftZ",
+          "type": 5
+        }
+      ],
+      "relations": []
     }
   ],
-  "lastEntityId": "7:5721869432385465913",
-  "lastIndexId": "6:8757822738783033429",
+  "lastEntityId": "8:2305739789178864595",
+  "lastIndexId": "7:7495440003052720935",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

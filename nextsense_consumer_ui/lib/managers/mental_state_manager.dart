@@ -12,10 +12,10 @@ import 'package:nextsense_consumer_ui/managers/session_manager.dart';
 
 enum Band {
   delta(0.5, 4),
-  theta(4, 8),
-  alpha(8, 12),
+  theta(4, 7),
+  alpha(7, 12),
   beta(12, 30),
-  gamma(30, 50);
+  gamma(30, 49);
 
   final double bandStart;
   final double bandEnd;
@@ -41,9 +41,25 @@ enum MentalChecksState {
   complete  // Sleep staging results complete.
 }
 
+enum RatioIncreaseType {
+  fixed,
+  percentage,
+  unknown;
+
+  factory RatioIncreaseType.create(String? value,
+      {RatioIncreaseType defaultValue = RatioIncreaseType.fixed}) {
+    if (value == null) {
+      return defaultValue;
+    }
+    return values.firstWhere((element) => element.name == value, orElse: () => unknown);
+  }
+}
+
 class MentalStateManager extends ChangeNotifier {
+  static const Duration defaultCalculationEpoch = Duration(seconds: 36);
+  static const double defaultRelaxedAlphaIncreasePercentage = 20;
   static const Duration _calculationCheckInterval = Duration(seconds: 5);
-  static const Duration _calculationEpoch = Duration(seconds: 30);
+  static const double _defaultRelaxedAlphaIncrease = 0.5;
 
   final DeviceManager _deviceManager = getIt<DeviceManager>();
   final SessionManager _sessionManager = getIt<SessionManager>();
@@ -53,7 +69,7 @@ class MentalStateManager extends ChangeNotifier {
   final Map<Band, List<double>> _bandPowers = {};
   final _logger = Logger('MentalStateManager');
 
-  // Interval between mental state checks.
+  Duration _calculationEpoch = defaultCalculationEpoch;
   DateTime? _checksStartTime;
   Duration _calculatedDuration = Duration.zero;
   Duration _calculationInterval = Duration.zero;
@@ -61,6 +77,12 @@ class MentalStateManager extends ChangeNotifier {
   MentalCheckCalculationState _mentalCheckCalculationState = MentalCheckCalculationState.waiting;
   MentalChecksState _mentalChecksState = MentalChecksState.notStarted;
   MentalState _mentalState = MentalState.unknown;
+  double? _powerLineFrequency;
+  double? _initialAlphaBetaRatio;
+  RatioIncreaseType _increaseType = RatioIncreaseType.fixed;
+  double _relaxedAlphaRatioIncrease = _defaultRelaxedAlphaIncrease;
+  // Change the default to null to use the hardcoded threshold instead.
+  double _relaxedAlphaRatioIncreasePercentage = defaultRelaxedAlphaIncreasePercentage;
 
   MentalState get mentalState => _mentalState;
   MentalCheckCalculationState get mentalCheckCalculationState => _mentalCheckCalculationState;
@@ -70,6 +92,13 @@ class MentalStateManager extends ChangeNotifier {
   double get thetaBandPower => _bandPowers[Band.theta]?.last ?? 0;
   double get deltaBandPower => _bandPowers[Band.delta]?.last ?? 0;
   double get gammaBandPower => _bandPowers[Band.gamma]?.last ?? 0;
+  Map<Band, List<double>?> get bandPowers => _bandPowers;
+  double get powerLineFrequency => _powerLineFrequency ?? 0;
+  double get relaxedAlphaRatioIncrease => _relaxedAlphaRatioIncrease;
+  double get relaxedAlphaRatioIncreasePercentage => _relaxedAlphaRatioIncreasePercentage;
+  Duration get calculationEpoch => _calculationEpoch;
+  RatioIncreaseType get increaseType => _increaseType;
+    set increaseType(RatioIncreaseType value) => _increaseType = value;
 
   void startMentalStateChecks({Duration calculationInterval = _calculationCheckInterval}) {
     clearMentalStates();
@@ -77,11 +106,25 @@ class MentalStateManager extends ChangeNotifier {
     _calculationInterval = calculationInterval;
     _mentalCheckCalculationState = MentalCheckCalculationState.waiting;
     _mentalChecksState = MentalChecksState.started;
+    _mentalState = MentalState.unknown;
     _calculatedDuration = Duration.zero;
+    _initialAlphaBetaRatio = null;
     _checkIfNeedToCalculateTimer = Timer.periodic(
       _calculationCheckInterval, (timer) async {
       _checkIfNeedToCalculate();
     });
+  }
+
+  void setRelaxedAlphaRatioIncrease(double ratioIncrease) {
+    _relaxedAlphaRatioIncrease = ratioIncrease;
+  }
+
+  void setRelaxedAlphaRatioIncreasePercentage(double ratioIncreasePercentage) {
+    _relaxedAlphaRatioIncreasePercentage = ratioIncreasePercentage;
+  }
+
+  void changeCalculationEpoch(Duration epoch) {
+    _calculationEpoch = epoch;
   }
 
   void stopCalculatingMentalStates() {
@@ -103,6 +146,7 @@ class MentalStateManager extends ChangeNotifier {
     _mentalStates.clear();
     _bandPowers.clear();
     _checksStartTime = null;
+    _initialAlphaBetaRatio = null;
   }
 
   Future uploadBandPowerResults() async {
@@ -137,11 +181,31 @@ class MentalStateManager extends ChangeNotifier {
     }
   }
 
+  Future<double?> _findPowerLineFrequency(String macAddress, String channelName, startTime) async {
+    double fiftyHertzBandPower = await NextsenseBase.getBandPower(
+        macAddress: macAddress, localSessionId: _sessionManager.currentLocalSession!,
+        channelName: channelName, startTime: startTime,
+        bandStart: 49, bandEnd: 51, powerLineFrequency: null,
+        duration: _calculationEpoch);
+    double sixtyHertzBandPower = await NextsenseBase.getBandPower(
+        macAddress: macAddress, localSessionId: _sessionManager.currentLocalSession!,
+        channelName: channelName, startTime: startTime,
+        bandStart: 59, bandEnd: 61, powerLineFrequency: null,
+        duration: _calculationEpoch);
+    _logger.log(Level.INFO, "50 hertz band power: $fiftyHertzBandPower\n"
+        "60 hertz band power: $sixtyHertzBandPower");
+    if (fiftyHertzBandPower == 0 && sixtyHertzBandPower == 0) {
+      return null;
+    }
+    return fiftyHertzBandPower > sixtyHertzBandPower ? 50 : 60;
+  }
+
   Future _calculateMentalStateResults() async {
     _logger.log(Level.INFO, "Calculating mental state...");
     _mentalCheckCalculationState = MentalCheckCalculationState.calculating;
     Device? device = _deviceManager.getConnectedDevice();
     if (device == null || _checksStartTime == null) {
+      _mentalCheckCalculationState = MentalCheckCalculationState.waiting;
       return null;
     }
     String channelName = '1';
@@ -166,6 +230,14 @@ class MentalStateManager extends ChangeNotifier {
     DateTime startTime = _checksStartTime!.add(_calculatedDuration);
     DateTime endTime = startTime.add(_calculationEpoch);
     if (endTime.isBefore(DateTime.now())) {
+      _powerLineFrequency ??= await _findPowerLineFrequency(
+          device.macAddress, channelName, startTime);
+      if (_powerLineFrequency == null) {
+        _mentalCheckCalculationState = MentalCheckCalculationState.waiting;
+        _logger.log(Level.INFO,
+            "Could not find power line frequency, skipping power bands calculation.");
+        return;
+      }
       for (Band band in Band.values) {
         if (!_bandPowers.containsKey(band)) {
           _bandPowers[band] = [];
@@ -174,7 +246,7 @@ class MentalStateManager extends ChangeNotifier {
             macAddress: device.macAddress, localSessionId: _sessionManager.currentLocalSession!,
             channelName: channelName, startTime: startTime,
             bandStart: band.bandStart, bandEnd: band.bandEnd,
-            duration: _calculationEpoch));
+            powerLineFrequency: _powerLineFrequency, duration: _calculationEpoch));
       }
       _logger.log(Level.INFO, "Alpha band power: $alphaBandPower\n"
           "Beta band power: $betaBandPower. \n"
@@ -182,15 +254,29 @@ class MentalStateManager extends ChangeNotifier {
           "Delta band power: $deltaBandPower. \n"
           "Gamma band power: $gammaBandPower. \n"
           "Alpha/Beta ratio: ${alphaBandPower / betaBandPower}.");
-      if (alphaBandPower > betaBandPower) {
+      int calcEpochs = _bandPowers[Band.alpha]?.length ?? 0;
+      double relaxedAlphaRatioIncrease = _relaxedAlphaRatioIncrease;
+      if (_initialAlphaBetaRatio != null && _increaseType == RatioIncreaseType.percentage) {
+        relaxedAlphaRatioIncrease = _initialAlphaBetaRatio! *
+            (_relaxedAlphaRatioIncreasePercentage! / 100);
+      }
+      _logger.log(Level.INFO, "Alpha/Beta ratio increase needed: $relaxedAlphaRatioIncrease.");
+      if (_initialAlphaBetaRatio != null &&
+          (alphaBandPower / betaBandPower) - _initialAlphaBetaRatio! > relaxedAlphaRatioIncrease) {
+        _logger.log(Level.INFO, "Relaxed alpha/beta ratio: ${alphaBandPower / betaBandPower}.");
         _mentalState = MentalState.relaxed;
       } else {
         _mentalState = MentalState.alert;
+      }
+      if (calcEpochs >= 3) {
+        _initialAlphaBetaRatio = alphaBandPower / betaBandPower;
+        _logger.log(Level.INFO, "Initial alpha/beta ratio: $_initialAlphaBetaRatio.");
       }
       _calculatedDuration += _calculationEpoch;
       _mentalStates.add(_mentalState);
       _logger.log(Level.INFO, "Adding mental state result: $_mentalState. Total results: "
           "${_mentalStates.length}.");
+      notifyListeners();
     } else {
       _logger.log(Level.INFO, "Not enough new data to check mental state.");
     }
@@ -199,6 +285,5 @@ class MentalStateManager extends ChangeNotifier {
       _mentalChecksState = MentalChecksState.complete;
     }
     _logger.log(Level.INFO, "Finished calculating mental states.");
-    notifyListeners();
   }
 }

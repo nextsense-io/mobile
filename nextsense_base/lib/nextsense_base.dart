@@ -131,6 +131,8 @@ class NextsenseBase {
   static const String _runSleepStagingCommand = 'run_sleep_staging';
   static const String _emulatorCommand = 'emulator_command';
   static const String _getBandPowerCommand = 'get_band_power';
+  static const String _connectAirohaCommand = 'connect_airoha';
+  static const String _setAirohaEqCommand = 'set_airoha_eq';
   static const String _macAddressArg = 'mac_address';
   static const String _uploadToCloudArg = 'upload_to_cloud';
   static const String _userBigTableKeyArg = 'user_bigtable_key';
@@ -148,7 +150,9 @@ class NextsenseBase {
   static const String _startDateTimeEpochMsArg = 'start_date_time_epoch_ms';
   static const String _bandStartArg = 'band_start';
   static const String _bandEndArg = 'band_end';
+  static const String _powerLineFrequencyArg = 'power_line_frequency';
   static const String _saveToCsvArg = 'save_to_csv';
+  static const String _eqGainsArg = 'eq_gains';
   static const String _connectToDeviceErrorNotFound = 'not_found';
   static const String _connectToDeviceErrorConnection = 'connection_error';
   static const String _connectToDeviceErrorInterrupted =
@@ -238,13 +242,14 @@ class NextsenseBase {
   static Future<double> getBandPower({
       required String macAddress, required String channelName, required DateTime startTime,
       required Duration duration, required double bandStart, required double bandEnd,
-      required int localSessionId, bool fromDatabase = false}) async {
+      required double? powerLineFrequency, required int localSessionId,
+      bool fromDatabase = false}) async {
     return await _channel.invokeMethod(_getBandPowerCommand,
         {_macAddressArg: macAddress, _channelNumberArg: channelName,
           _startDateTimeEpochMsArg: startTime.millisecondsSinceEpoch,
           _durationMillisArg: duration.inMilliseconds, _bandStartArg: bandStart,
-          _bandEndArg: bandEnd, _localSessionIdArg: localSessionId,
-          _fromDatabaseArg: fromDatabase});
+          _bandEndArg: bandEnd, _powerLineFrequencyArg: powerLineFrequency,
+          _localSessionIdArg: localSessionId, _fromDatabaseArg: fromDatabase});
   }
 
   static Future deleteLocalSession(int localSessionId) async {
@@ -389,6 +394,14 @@ class NextsenseBase {
 
   static Future<String> getNativeLogs() async {
     return await _channel.invokeMethod(_getNativeLogsCommand);
+  }
+
+  static Future<bool> connectAiroha() async {
+    return await _channel.invokeMethod(_connectAirohaCommand);
+  }
+
+  static Future setAirohaEq(List<double> eqGains) async {
+    return await _channel.invokeMethod(_setAirohaEqCommand, {_eqGainsArg: gson.encode(eqGains)});
   }
 
   static Future<bool> sendEmulatorCommand(EmulatorCommand command,

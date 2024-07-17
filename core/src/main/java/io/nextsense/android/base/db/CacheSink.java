@@ -42,12 +42,13 @@ public class CacheSink {
     }
 
     @Subscribe(threadMode = ThreadMode.ASYNC)
+    @SuppressWarnings("unused")
     public synchronized void onSamples(Samples samples) {
         Instant saveStartTime = Instant.now();
         memoryCache.addChannelData(samples);
         long saveTime = Instant.now().toEpochMilli() - saveStartTime.toEpochMilli();
         if (saveTime > 20) {
-            RotatingFileLogger.get().logd(TAG, "It took " + saveTime + " to cache xenon data.");
+            RotatingFileLogger.get().logd(TAG, "It took " + saveTime + " to cache device data.");
         }
     }
 }

@@ -1,21 +1,29 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.google.protobuf'
-apply plugin: 'io.objectbox'
 apply plugin: 'maven-publish'
 apply plugin: 'org.sonarqube'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'io.objectbox'
 
 import org.apache.tools.ant.taskdefs.condition.Os
 
 android {
     namespace 'io.nextsense.android.base'
 
-    compileSdkVersion 33
+    compileSdk 34
 
     defaultConfig {
         minSdkVersion 24
         targetSdkVersion 33
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        externalNativeBuild {
+            cmake {
+                cppFlags ''
+            }
+        }
     }
 
     testOptions {
@@ -37,6 +45,26 @@ android {
         }
     }
 
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    kotlin {
+        jvmToolchain(17)
+    }
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+        kotlinOptions {
+            jvmTarget = "17"
+        }
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.3'
+    }
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+
     sourceSets {
         main {
             proto {
@@ -53,6 +81,7 @@ android {
     }
     buildFeatures {
         buildConfig true
+        compose true
     }
 }
 
@@ -91,9 +120,14 @@ sonarqube {
 }
 
 dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
     implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation platform('androidx.compose:compose-bom:2024.05.00')
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation "androidx.compose.ui:ui"
+    implementation "androidx.core:core-ktx:1.13.1"
     implementation 'androidx.test:core:1.5.0'
     implementation 'com.github.weliem:blessed-android:2.4.2'
     // implementation 'com.github.nextsense-io:blessed-android:2.0.11-nextsense'
@@ -103,11 +137,16 @@ dependencies {
     compileOnly "com.google.firebase:firebase-firestore"
     implementation "com.google.firebase:firebase-functions"
     implementation 'com.google.code.gson:gson:2.10'
+    implementation "com.google.dagger:hilt-android:2.50"
+    kapt "com.google.dagger:hilt-compiler:2.50"
     implementation 'com.google.guava:guava:31.1-jre'
     implementation 'com.google.protobuf:protobuf-javalite:3.21.7'
     implementation 'com.google.protobuf:protoc:3.13.0'
     implementation 'org.apache.commons:commons-math3:3.6.1'
     implementation 'org.greenrobot:eventbus:3.3.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
     compileOnly 'org.tensorflow:tensorflow-lite:2.14.0'
     compileOnly 'org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0'
     implementation group: 'uk.me.berndporr', name:'iirj', version: '1.5'
@@ -115,4 +154,13 @@ dependencies {
     testImplementation 'org.robolectric:robolectric:4.9'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+
+// Allow references to generated code
+kapt {
+    correctErrorTypes true
+}
+
+repositories {
+    google()
 }
