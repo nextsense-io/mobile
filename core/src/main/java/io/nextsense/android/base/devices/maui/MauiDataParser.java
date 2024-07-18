@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -45,6 +46,7 @@ public class MauiDataParser {
 
   private final LocalSessionManager localSessionManager;
 
+  private DataSynchronizer dataSynchronizer;
   private String deviceName;
   private long lastKeyTimestampRight = 0;
   private int rightSamplesSinceKeyTimestamp = 0;
@@ -57,6 +59,10 @@ public class MauiDataParser {
 
   public static MauiDataParser create(LocalSessionManager localSessionManager) {
     return new MauiDataParser(localSessionManager);
+  }
+
+  public void setDataSynchronizer(DataSynchronizer dataSynchronizer) {
+    this.dataSynchronizer = dataSynchronizer;
   }
 
   public void setDeviceName(String deviceName) {
@@ -115,7 +121,7 @@ public class MauiDataParser {
       deviceLocation = budzDataPacket.getFlags() == 0 ? DeviceLocation.LEFT_EARBUD :
           DeviceLocation.RIGHT_EARBUD;
 
-      long acquisitionTimestamp = 0;
+      long acquisitionTimestamp;
       if (budzDataPacket.getBtClockNclk() != 0) {
         Log.w(TAG, "btClockNclk: " + budzDataPacket.getBtClockNclk() + ", btClockNclIntra: " +
             (budzDataPacket.getBtClockNclkIntra() & 0xffffL) + ", flags: " +
@@ -127,7 +133,12 @@ public class MauiDataParser {
           lastKeyTimestampLeft = getTimestamp(budzDataPacket, localSession.getEegSampleRate());
           leftSamplesSinceKeyTimestamp = 0;
         }
+      } else if (deviceLocation == DeviceLocation.LEFT_EARBUD && lastKeyTimestampLeft == 0 ||
+          deviceLocation == DeviceLocation.RIGHT_EARBUD && lastKeyTimestampRight == 0) {
+        Log.d(TAG, "Data packet before first key timestamp, ignoring.");
+        return;
       }
+
       acquisitionTimestamp = deviceLocation == DeviceLocation.LEFT_EARBUD ? lastKeyTimestampLeft :
           lastKeyTimestampRight;
       if (!budzDataPacket.getEeeg().isEmpty()) {
@@ -147,7 +158,7 @@ public class MauiDataParser {
     long uptimeMs = Math.round((budzDataPacket.getBtClockNclk() & 0xffffL) * CLOCK_TO_US_MULTIPLIER
         + (budzDataPacket.getBtClockNclkIntra() & 0xffffL)) / 1000;
     // The timestamp is the time when the last sample in this packet was collected. Subtract the
-    // time to get back to the first sample of this packet.
+    // time to go back to the first sample of this packet.
     return uptimeMs - (long) eegSamplesInPacket * Math.round(1000 / eegSamplingRate);
   }
 
@@ -155,17 +166,8 @@ public class MauiDataParser {
                                DeviceLocation deviceLocation, Instant receptionTimestamp,
                                long acquisitionTimestamp) {
     Samples samples = Samples.create();
-    boolean canParseEeg = true;
-    while (canParseEeg && eegBuffer.remaining() >= EEG_SAMPLE_SIZE_BYTES) {
-      Optional<EegSample> eegSampleOptional =
-          parseSingleEegPacket(eegBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
-      if (eegSampleOptional.isPresent()) {
-        EegSample eegSample = eegSampleOptional.get();
-        samples.addEegSample(eegSample);
-      }
-      canParseEeg = eegSampleOptional.isPresent();
-    }
 
+    // TODO(eric): Synchronize IMU data.
     while (imuBuffer.remaining() >= IMU_SAMPLE_SIZE_BYTES) {
       Acceleration acceleration = parseSingleAccelerationPacket(
           imuBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
@@ -175,38 +177,56 @@ public class MauiDataParser {
       samples.addAngularSpeed(angularSpeed);
     }
 
+    while (eegBuffer.remaining() >= EEG_SAMPLE_SIZE_BYTES) {
+      parseSingleEegPacket(eegBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
+    }
+    List<Map<String, DataSynchronizer.DataPoint>> allSynchronizedData =
+        dataSynchronizer.getAllSynchronizedDataAndRemove();
+    if (!allSynchronizedData.isEmpty()) {
+      Log.d(TAG, allSynchronizedData.size() + " synchronised samples are ready.");
+      for (Map<String, DataSynchronizer.DataPoint> data : allSynchronizedData) {
+        HashMap<Integer, Float> eegDataMap = new HashMap<>();
+        int samplingTimeStamp = 0;
+        for (Map.Entry<String, DataSynchronizer.DataPoint> entry : data.entrySet()) {
+          eegDataMap.put(Integer.parseInt(entry.getKey()), entry.getValue().value);
+          samplingTimeStamp = (int) entry.getValue().samplingTimestamp;
+        }
+        samples.addEegSample(EegSample.create(localSessionManager.getActiveLocalSession().get().id,
+            eegDataMap, receptionTimestamp, /*relativeSamplingTimestamp=*/samplingTimeStamp,
+            null));
+      }
+      EventBus.getDefault().post(samples);
+    }
+
     Log.d(TAG, "Parsed " + samples.getEegSamples().size() + " EEG samples, " +
         samples.getAccelerations().size() + " accelerations and " +
         samples.getAngularSpeeds().size() + " angular speeds.");
-    EventBus.getDefault().post(samples);
   }
 
-  private Optional<EegSample> parseSingleEegPacket(
+  private void parseSingleEegPacket(
       ByteBuffer valuesBuffer, Instant receptionTimestamp, DeviceLocation deviceLocation,
       long acquisitionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
-      return Optional.empty();
+      return;
     }
     LocalSession localSession = localSessionOptional.get();
     valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
     int eegValue = Util.bytesToInt24(
         new byte[]{valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get()}, 0,
         ByteOrder.LITTLE_ENDIAN, /*signed=*/false);
-    HashMap<Integer, Float> eegData = new HashMap<>();
-    eegData.put(deviceLocation == DeviceLocation.LEFT_EARBUD? CHANNEL_LEFT : CHANNEL_RIGHT,
-        convertToMicroVolts(eegValue));
     int dataPointAcquisitionTimeStamp = (int) acquisitionTimestamp + (deviceLocation ==
         DeviceLocation.LEFT_EARBUD ? leftSamplesSinceKeyTimestamp : rightSamplesSinceKeyTimestamp) *
         Math.round(1000 / localSession.getEegSampleRate());
-    EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
-        dataPointAcquisitionTimeStamp, /*samplingTimestamp=*/null, null);
+    String channelName = deviceLocation == DeviceLocation.LEFT_EARBUD ? String.valueOf(CHANNEL_LEFT) :
+        String.valueOf(CHANNEL_RIGHT);
+    dataSynchronizer.addData(channelName, dataPointAcquisitionTimeStamp, receptionTimestamp,
+        convertToMicroVolts(eegValue));
     if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
       ++leftSamplesSinceKeyTimestamp;
     } else {
       ++rightSamplesSinceKeyTimestamp;
     }
-    return Optional.of(eegSample);
   }
 
   private Acceleration parseSingleAccelerationPacket(

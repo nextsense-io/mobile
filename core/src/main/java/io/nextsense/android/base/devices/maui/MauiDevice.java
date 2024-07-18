@@ -88,6 +88,10 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
     mauiDataParser = MauiDataParser.create(getLocalSessionManager());
   }
 
+  public void setDataSynchronizer(DataSynchronizer dataSynchronizer) {
+    mauiDataParser.setDataSynchronizer(dataSynchronizer);
+  }
+
   @Override
   public void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy) {
     blePeripheralCallbackProxy = proxy;
