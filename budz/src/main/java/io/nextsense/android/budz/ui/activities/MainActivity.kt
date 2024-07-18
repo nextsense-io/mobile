@@ -9,6 +9,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.budz.Routes
+import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AudioSampleType
 import io.nextsense.android.budz.ui.screens.CheckBrainSignalIntroScreen
 import io.nextsense.android.budz.ui.screens.CheckConnectionScreen
@@ -22,9 +23,13 @@ import io.nextsense.android.budz.ui.screens.PrivacyPolicyScreen
 import io.nextsense.android.budz.ui.screens.SelectSoundScreen
 import io.nextsense.android.budz.ui.screens.TimedSleepScreen
 import io.nextsense.android.budz.ui.theme.BudzTheme
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject lateinit var airohaDeviceManager: AirohaDeviceManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -130,7 +135,7 @@ class MainActivity : ComponentActivity() {
                     composable<Routes.CheckConnection> {
                         CheckConnectionScreen(
                             onGoToHome = {
-                                navController.navigate(Routes.Home)
+                                navController.popBackStack()
                             },
                             onGoToConnectionGuide = {
                                 navController.navigate(Routes.DeviceConnection)
@@ -176,7 +181,7 @@ class MainActivity : ComponentActivity() {
                                     AudioSampleType.STAY_ASLEEP_TIMED_SLEEP.name))
                             },
                             onGoToHome = {
-                                navController.navigate(Routes.Home)
+                                navController.popBackStack()
                             }
                         )
                     }
@@ -187,12 +192,17 @@ class MainActivity : ComponentActivity() {
                                     AudioSampleType.FOCUS.name))
                             },
                             onGoToHome = {
-                                navController.navigate(Routes.Home)
+                                navController.popBackStack()
                             }
                         )
                     }
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        airohaDeviceManager.destroy()
+        super.onDestroy()
     }
 }
