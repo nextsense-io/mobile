@@ -38,23 +38,21 @@ class DeviceSettingsViewModel @Inject constructor(
 
     fun connectAndStartStreaming() {
         viewModelScope.launch {
-            deviceManager.startBleStreaming().collect {started ->
-                _uiState.value = _uiState.value.copy(message = started.toString())
-            }
+            val started = deviceManager.startBleStreaming()
+            _uiState.value = _uiState.value.copy(message = started.toString())
         }
     }
 
     fun disconnectAndStopStreaming() {
         viewModelScope.launch {
-            deviceManager.stopBleStreamingFlow().collect {stopped ->
-                _uiState.value = _uiState.value.copy(message = stopped.toString())
-            }
+            val stopped = deviceManager.stopBleStreaming()
+            _uiState.value = _uiState.value.copy(message = stopped.toString())
         }
     }
 
     fun startStreaming() {
         viewModelScope.launch {
-            deviceManager.startRaceBleStreamingFlow().collect {started ->
+            deviceManager.startRaceBleStreamingFlow().collect { started ->
                 _uiState.value = _uiState.value.copy(message = started.toString())
             }
         }
@@ -62,7 +60,7 @@ class DeviceSettingsViewModel @Inject constructor(
 
     fun stopStreaming() {
         viewModelScope.launch {
-            deviceManager.stopRaceBleStreamingFlow().collect {stopped ->
+            deviceManager.stopRaceBleStreamingFlow().collect { stopped ->
                 _uiState.value = _uiState.value.copy(message = stopped.toString())
             }
         }

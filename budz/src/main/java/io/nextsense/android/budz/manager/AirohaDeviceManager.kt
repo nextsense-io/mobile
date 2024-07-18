@@ -35,6 +35,7 @@ import io.nextsense.android.budz.service.BudzService
 import io.nextsense.android.budz.ui.activities.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
@@ -42,10 +43,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import java.util.LinkedList
 import java.util.Timer
 import java.util.TimerTask
@@ -202,6 +205,31 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         _airohaDeviceConnector.registerConnectionListener(_airohaConnectionListener)
         _devicePresenter = DeviceSearchPresenter(context)
         context.registerReceiver(broadCastReceiver, IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED))
+
+        @OptIn(DelicateCoroutinesApi::class)
+        GlobalScope.launch {
+            airohaDeviceState.collect { deviceState ->
+                if (deviceState == AirohaDeviceState.CONNECTED_AIROHA) {
+                    _connectionTimeoutTimer?.cancel()
+                    _connectionTimeoutTimer = null
+                    // Need to call these 2 APIs to correctly initialize the connection. If not, things
+                    // like getting the battery levels do not work correctly.
+                    // Also need a small delay between these commands or they often fail.
+                    delay(100L)
+                    _twsConnected = twsConnectStatusFlow().last()
+                    Log.d(tag, "twsConnected=$_twsConnected")
+                    delay(100L)
+                    _deviceInfo = deviceInfoFlow().last()
+                    Log.d(tag, "deviceInfo=$_deviceInfo")
+                    if (_twsConnected == null || _deviceInfo == null) {
+                        disconnectDevice()
+                        _airohaDeviceState.value = AirohaDeviceState.ERROR
+                        return@collect
+                    }
+                    _airohaDeviceState.value = AirohaDeviceState.READY
+                }
+            }
+        }
         Log.i(tag, "initialized")
     }
 
@@ -215,7 +243,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
     }
 
-    suspend fun connectDevice(timeout: Duration? = null) {
+    fun connectDevice(timeout: Duration? = null) {
         Log.i(tag, "connectDevice")
         if (_airohaDeviceState.value == AirohaDeviceState.READY ||
                  _airohaDeviceState.value == AirohaDeviceState.CONNECTED_BLE ||
@@ -242,27 +270,6 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             }, timeout.inWholeMilliseconds)
         }
         connectAirohaDevice()
-        airohaDeviceState.collect { deviceState ->
-            if (deviceState == AirohaDeviceState.CONNECTED_AIROHA) {
-                _connectionTimeoutTimer?.cancel()
-                _connectionTimeoutTimer = null
-                // Need to call these 2 APIs to correctly initialize the connection. If not, things
-                // like getting the battery levels do not work correctly.
-                // Also need a small delay between these commands or they often fail.
-                delay(100L)
-                _twsConnected = twsConnectStatusFlow().last()
-                Log.d(tag, "twsConnected=$_twsConnected")
-                delay(100L)
-                _deviceInfo = deviceInfoFlow().last()
-                Log.d(tag, "deviceInfo=$_deviceInfo")
-                if (_twsConnected == null || _deviceInfo == null) {
-                    disconnectDevice()
-                    _airohaDeviceState.value = AirohaDeviceState.ERROR
-                    return@collect
-                }
-                _airohaDeviceState.value = AirohaDeviceState.READY
-            }
-        }
     }
 
     fun stopConnectingDevice() {
@@ -276,73 +283,63 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         _airohaDeviceState.value = AirohaDeviceState.DISCONNECTED
     }
 
-    fun startBleStreaming() = flow<Boolean> {
+    suspend fun startBleStreaming() : Boolean {
         if (_airohaDeviceState.value != AirohaDeviceState.READY) {
-            emit(false)
-            return@flow
+            return false
         }
         _airohaDeviceState.value = AirohaDeviceState.CONNECTING_BLE
-        connectServiceFlow().collect { serviceConnected ->
-            if (serviceConnected) {
-                _airohaBleManager?.connectFlow()?.collect { deviceState ->
-                    if (deviceState == DeviceState.READY) {
-                        _airohaDeviceState.value = AirohaDeviceState.CONNECTED_BLE
-                        _airohaBleManager?.startStreamingFlow()?.collect { streaming ->
-                            if (streaming) {
-                                startRaceBleStreamingFlow().collect { airohaStatusCode ->
-                                    if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
-                                        _streamingState.value = StreamingState.STARTED
-                                        emit(true)
-                                    } else {
-                                        _streamingState.value = StreamingState.ERROR
-                                        emit(false)
-                                    }
-                                }
-                            } else {
-                                _streamingState.value = StreamingState.ERROR
-                                emit(false)
-                            }
-                        }
-                    } else if (deviceState == DeviceState.DISCONNECTED) {
-                        _airohaDeviceState.value = AirohaDeviceState.READY
-                        emit(false)
-                    }
-                }
-            } else {
-                _airohaDeviceState.value = AirohaDeviceState.READY
-                emit(false)
-            }
+        val serviceConnected = withTimeout(2000L) {
+            connectServiceFlow().flowOn(Dispatchers.IO).take(1).last()
         }
+        if (serviceConnected) {
+            val deviceState =_airohaBleManager?.connect()
+            if (deviceState == DeviceState.READY) {
+                _airohaDeviceState.value = AirohaDeviceState.CONNECTED_BLE
+                val streaming = _airohaBleManager!!.startStreaming()
+                if (streaming) {
+                    val airohaStatusCode = startRaceBleStreamingFlow().last()
+                    if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
+                        _streamingState.value = StreamingState.STARTED
+                        return true
+                    } else {
+                        _streamingState.value = StreamingState.ERROR
+                        return false
+                    }
+                } else {
+                    _streamingState.value = StreamingState.ERROR
+                    return false
+                }
+            } else if (deviceState == DeviceState.DISCONNECTED) {
+                _airohaDeviceState.value = AirohaDeviceState.READY
+                return false
+            }
+        } else {
+            _airohaDeviceState.value = AirohaDeviceState.READY
+            return false
+        }
+        return false
     }
 
-    fun stopBleStreamingFlow() = flow<Boolean> {
+    suspend fun stopBleStreaming() : Boolean {
         if (!_budzServiceBound || _budzService == null ||
                 _streamingState.value != StreamingState.STARTED) {
             if (_airohaDeviceState.value == AirohaDeviceState.CONNECTING_BLE ||
                 _airohaDeviceState.value == AirohaDeviceState.CONNECTED_BLE) {
               _airohaDeviceState.value = AirohaDeviceState.READY
             }
-            emit(true)
-            return@flow
+            return true
         }
-        // TODO(eric): Remove when switching back to race commands.
-        _airohaBleManager?.stopStreaming()
-        _airohaBleManager?.disconnect()
-        _airohaDeviceState.value = AirohaDeviceState.READY
-        _streamingState.value = StreamingState.STOPPED
-        stopService()
-        emit(true)
-        stopRaceBleStreamingFlow().collect {airohaStatusCode ->
-            if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
-                _airohaBleManager?.disconnect()
-                _airohaDeviceState.value = AirohaDeviceState.READY
-                _streamingState.value = StreamingState.STOPPED
-                stopService()
-                emit(true)
-            } else {
-                _streamingState.value = StreamingState.ERROR
-                emit(false)
-            }
+        val airohaStatusCode = stopRaceBleStreamingFlow().take(1).last()
+        if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
+            _airohaBleManager?.stopStreaming()
+            _airohaBleManager?.disconnect()
+            _airohaDeviceState.value = AirohaDeviceState.READY
+            _streamingState.value = StreamingState.STOPPED
+            stopService()
+            return true
+        } else {
+            _streamingState.value = StreamingState.ERROR
+            return false
         }
     }
 
@@ -639,7 +636,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         connectBudzService(budzServiceConnection)
 
         awaitClose {
-            destroy()
+            // destroy()
         }
     }
 

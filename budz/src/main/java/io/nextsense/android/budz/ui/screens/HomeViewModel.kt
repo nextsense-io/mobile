@@ -18,6 +18,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -68,44 +70,38 @@ class HomeViewModel @Inject constructor(
             airohaDeviceManager.airohaDeviceState.collect { deviceState ->
                 Log.d("HomeViewModel", "deviceState: $deviceState")
                 when (deviceState) {
-                    AirohaDeviceState.CONNECTING_CLASSIC -> {
-//                        _uiState.value = _uiState.value.copy(connecting = true)
-                    }
+                    AirohaDeviceState.CONNECTING_CLASSIC -> {}
                     AirohaDeviceState.READY -> {
                         _uiState.value = _uiState.value.copy(connected = true)
                         getBatteryLevels()
                     }
-                    AirohaDeviceState.CONNECTED_AIROHA -> {
-//                        _uiState.value = _uiState.value.copy(connected = true, connecting = false)
-                    }
+                    AirohaDeviceState.CONNECTED_AIROHA -> {}
                     AirohaDeviceState.DISCONNECTED -> {
                         _uiState.value = _uiState.value.copy(connected = false,
                             batteryLevel = AirohaBatteryLevel(null, null, null))
                     }
-                    else -> {
-//                        _uiState.value = DeviceConnectionState()
-                    }
+                    else -> {}
                 }
             }
         }
     }
 
     private fun getBatteryLevels() {
-        airohaDeviceManager.batteryLevelsFlow().let { batteryLevelFlow ->
-            viewModelScope.launch {
-                batteryLevelFlow.collect { batteryLevel ->
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            batteryLevel = batteryLevel
-                        )
-                    }
-                }
+        viewModelScope.launch {
+            val batteryLevel = airohaDeviceManager.batteryLevelsFlow().take(1).last()
+            _uiState.update { currentState ->
+                currentState.copy(
+                    batteryLevel = batteryLevel
+                )
             }
         }
     }
 
     fun signOut() {
-        viewModelScope.launch { authRepository.signOut() }
+        viewModelScope.launch {
+            airohaDeviceManager.destroy()
+            authRepository.signOut()
+        }
     }
 
     fun loadUserSounds() {
