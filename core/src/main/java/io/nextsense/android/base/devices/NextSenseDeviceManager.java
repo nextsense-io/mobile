@@ -8,6 +8,7 @@ import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.devices.h1.H1Device;
 import io.nextsense.android.base.devices.kauai.KauaiDevice;
 import io.nextsense.android.base.devices.kauai_medical.KauaiMedicalDevice;
+import io.nextsense.android.base.devices.maui.DataSynchronizer;
 import io.nextsense.android.base.devices.maui.MauiDevice;
 import io.nextsense.android.base.devices.nitro.NitroDevice;
 import io.nextsense.android.base.devices.xenon.XenonDevice;
@@ -29,6 +30,7 @@ public class NextSenseDeviceManager {
   // instantiated to
   private final Map<String, Class<? extends NextSenseDevice>> devicesMapping;
   private final LocalSessionManager localSessionManager;
+  private DataSynchronizer dataSynchronizer;
 
   private NextSenseDeviceManager(LocalSessionManager localSessionManager, DeviceGroup deviceGroup) {
     this.localSessionManager = localSessionManager;
@@ -75,6 +77,12 @@ public class NextSenseDeviceManager {
     try {
       NextSenseDevice nextSenseDevice = deviceClass.newInstance();
       nextSenseDevice.setLocalSessionManager(localSessionManager);
+      if (nextSenseDevice instanceof MauiDevice) {
+        if (dataSynchronizer == null) {
+          dataSynchronizer = new DataSynchronizer(nextSenseDevice.getEegChannelNames());
+        }
+        ((MauiDevice) nextSenseDevice).setDataSynchronizer(dataSynchronizer);
+      }
       return nextSenseDevice;
     } catch (IllegalAccessException | InstantiationException e) {
       RotatingFileLogger.get().loge(TAG, "Could not instantiate " + deviceClass.getName());
