@@ -48,8 +48,8 @@ class AirohaBleManager(
     }
 
     suspend fun connect(): DeviceState {
-        val devices = deviceScanListenerFlow().take(2).toList()
-        for (device in devices ?: emptyList()) {
+        val devices = deviceScanListenerFlow().take(1).toList()
+        for (device in devices) {
             if (device?.name == MauiDevice.BLUETOOTH_PREFIX_LEFT) {
                 leftEarDevice = device
             } else if (device?.name == MauiDevice.BLUETOOTH_PREFIX_RIGHT) {
@@ -74,8 +74,8 @@ class AirohaBleManager(
                 return DeviceState.DISCONNECTED
             }
         }
-        if (leftEarDevice != null && rightEarDevice != null) {
-            if (leftDeviceState == DeviceState.READY && rightDeviceState == DeviceState.READY) {
+        if (leftEarDevice != null || rightEarDevice != null) {
+            if (leftDeviceState == DeviceState.READY || rightDeviceState == DeviceState.READY) {
                 return DeviceState.READY
             }
         } else if (leftEarDevice != null) {
