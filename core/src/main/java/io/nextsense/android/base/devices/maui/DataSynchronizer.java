@@ -44,7 +44,7 @@ public class DataSynchronizer {
     }
   }
 
-  public void addData(
+  public synchronized void addData(
       String channel, long samplingTimestamp, Instant receptionTimestamp, float value) {
     if (!channelDataMap.containsKey(channel)) {
       throw new IllegalArgumentException("Channel does not exist: " + channel);
@@ -53,7 +53,7 @@ public class DataSynchronizer {
         new DataPoint(samplingTimestamp, receptionTimestamp, value));
   }
 
-  public List<Map<String, DataPoint>> getAllSynchronizedDataAndRemove() {
+  public synchronized List<Map<String, DataPoint>> getAllSynchronizedDataAndRemove() {
     List<Map<String, DataPoint>> synchronizedData = new ArrayList<>();
     Map<Long, Map<String, DataPoint>> timestampedData = new HashMap<>();
 
