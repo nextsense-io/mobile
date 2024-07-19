@@ -34,7 +34,8 @@ public class MauiDataParser {
 
   private static final float V_REF = 2.048f;
   private static final double CLOCK_TO_US_MULTIPLIER = 312.5f;
-  private static final int ADC_GAIN = 128;
+  private static final float AFE_FS = 1.1f;
+  private static final int AFE_GAIN = 12;
   private static final int AFE_EXT_AMP = 1;
   private static final int CHANNEL_LEFT = 1;
   private static final int CHANNEL_RIGHT = 2;
@@ -70,7 +71,7 @@ public class MauiDataParser {
   }
 
   private static float convertToMicroVolts(int data) {
-    return (float)(data * ((V_REF * 1000000.0f) / (ADC_GAIN * AFE_EXT_AMP * (pow(2, 23) - 1))));
+    return (float)(data * ((V_REF * 1000000.0f) / (AFE_FS / AFE_GAIN * (pow(2, 21) - 1))));
   }
 
   public void startNewSession() {
