@@ -59,9 +59,8 @@ class UsersRepository @Inject constructor() {
             val user = userSnapshot.toObject(User::class.java)
             cachedUser = user
             return State.success(user)
-        } else {
-            return State.success(null)
         }
+        return State.success(null)
     }
 
     /**
@@ -73,9 +72,8 @@ class UsersRepository @Inject constructor() {
             firestoreClient.usersRef.whereEqualTo(UserKeys.EMAIL.key(), email).get().await()
         if (userSnapshot.isEmpty) {
             return State.success(null)
-        } else {
-            val user = userSnapshot.documents[0].toObject(User::class.java)
-            return State.success(user)
         }
+        val user = userSnapshot.documents[0].toObject(User::class.java)
+        return State.success(user)
     }
 }

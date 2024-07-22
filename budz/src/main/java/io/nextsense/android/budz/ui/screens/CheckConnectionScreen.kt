@@ -42,8 +42,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleStartEffect
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.fullWidth
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
+import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
+import com.patrykandpatrick.vico.compose.common.shader.color
+import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
+import com.patrykandpatrick.vico.core.cartesian.Zoom
+import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.TopBar
@@ -156,7 +169,82 @@ fun SoundCheckPager() {
 }
 
 @Composable
-fun CardConnected() {
+fun BrainSignal(checkConnectionViewModel: CheckConnectionViewModel) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = stringResource(R.string.title_brain_signal),
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        BudzCard {
+            Row {
+                Text(
+                    text = stringResource(R.string.label_left_bud),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                Spacer(modifier = Modifier.width(5.dp))
+                CartesianChartHost(
+                    rememberCartesianChart(
+                        rememberLineCartesianLayer(
+                            LineCartesianLayer.LineProvider.series(
+                                rememberLine(
+                                    shader = DynamicShader.color(BudzColor.darkBlue),
+                                    backgroundShader = null
+                                )
+                            ),
+                        ),
+                        horizontalLayout = HorizontalLayout.fullWidth(),
+                        startAxis = null,
+                        bottomAxis = null,
+                    ),
+                    checkConnectionViewModel.leftEarChartModelProducer,
+                    zoomState = rememberVicoZoomState(initialZoom = Zoom.x(1000.0),
+                        zoomEnabled = false),
+                    scrollState = rememberVicoScrollState(scrollEnabled = false),
+                    animationSpec = null,
+                    modifier = Modifier.height(80.dp).background(Color.Transparent)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        BudzCard {
+            Row {
+                Text(
+                    text = stringResource(R.string.label_right_bud),
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+                Spacer(modifier = Modifier.width(5.dp))
+                CartesianChartHost(
+                    rememberCartesianChart(
+                        rememberLineCartesianLayer(
+                            LineCartesianLayer.LineProvider.series(
+                                rememberLine(
+                                    shader = DynamicShader.color(BudzColor.darkBlue),
+                                    backgroundShader = null
+                                )
+                            )
+                        ),
+                        horizontalLayout = HorizontalLayout.fullWidth(),
+                        startAxis = null,
+                        bottomAxis = null
+                    ),
+                    checkConnectionViewModel.rightEarChartModelProducer,
+                    zoomState = rememberVicoZoomState(initialZoom = Zoom.x(1000.0),
+                        zoomEnabled = false),
+                    scrollState = rememberVicoScrollState(scrollEnabled = false),
+                    animationSpec = null,
+                    modifier = Modifier.height(80.dp).background(Color.Transparent)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CardConnected(checkConnectionViewModel: CheckConnectionViewModel) {
     BudzCard(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.label_bluetooth_status),
@@ -231,7 +319,8 @@ fun CardConnected() {
     }
     Column {
         Spacer(modifier = Modifier.height(20.dp))
-        SoundCheckPager()
+        // SoundCheckPager()
+        BrainSignal(checkConnectionViewModel)
         Spacer(modifier = Modifier.height(20.dp))
         WideButton(name = stringResource(R.string.label_launch_sound_check), onClick = {})
     }
@@ -261,6 +350,12 @@ fun CheckConnectionScreen(
         }
     }
 
+    LifecycleStartEffect(true) {
+        onStopOrDispose {
+            checkConnectionViewModel.stopStreaming()
+        }
+    }
+
     Scaffold(
         topBar = {
             TopBar(title = stringResource(R.string.app_title), isAppTitle = true,
@@ -284,7 +379,7 @@ fun CheckConnectionScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 if (checkConnectionUiState.connected) {
-                    CardConnected()
+                    CardConnected(checkConnectionViewModel)
                 } else {
                     CardNotConnected()
                 }

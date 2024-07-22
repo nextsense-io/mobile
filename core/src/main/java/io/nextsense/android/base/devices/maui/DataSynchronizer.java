@@ -2,6 +2,7 @@ package io.nextsense.android.base.devices.maui;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -92,6 +93,9 @@ public class DataSynchronizer {
       }
       dataPoints.removeIf(dp -> dp.samplingTimestamp <= finalLastTimestamp);
     }
+
+    // Sort the result data by sampling timestamp
+    synchronizedData.sort(Comparator.comparing(map -> map.values().iterator().next().samplingTimestamp));
 
     return synchronizedData;
   }

@@ -49,7 +49,7 @@ class AirohaBleManager(
 
     suspend fun connect(): DeviceState {
         val devices = deviceScanListenerFlow().take(2).toList()
-        for (device in devices ?: emptyList()) {
+        for (device in devices) {
             if (device?.name == MauiDevice.BLUETOOTH_PREFIX_LEFT) {
                 leftEarDevice = device
             } else if (device?.name == MauiDevice.BLUETOOTH_PREFIX_RIGHT) {
@@ -158,5 +158,14 @@ class AirohaBleManager(
     fun stopStreaming() {
         leftEarDevice?.stopStreaming()
         rightEarDevice?.stopStreaming()
+    }
+
+    fun getEegSamplingRate(): Float {
+        if (leftEarDevice != null) {
+            return leftEarDevice!!.settings.eegSamplingRate
+        } else if (rightEarDevice != null) {
+            return rightEarDevice!!.settings.eegSamplingRate
+        }
+        return 0f
     }
 }

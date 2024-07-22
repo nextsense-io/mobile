@@ -30,15 +30,15 @@ import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.budz.BudzDataPacketProto;
 
 public class MauiDataParser {
+  public static final int CHANNEL_LEFT = 1;
+  public static final int CHANNEL_RIGHT = 2;
+
   private static final String TAG = MauiDataParser.class.getSimpleName();
 
   private static final float V_REF = 2.048f;
   private static final double CLOCK_TO_US_MULTIPLIER = 312.5f;
   private static final float AFE_FS = 1.1f;
   private static final int AFE_GAIN = 12;
-  private static final int AFE_EXT_AMP = 1;
-  private static final int CHANNEL_LEFT = 1;
-  private static final int CHANNEL_RIGHT = 2;
   // One channel at 24 bits of resolution. Real resolution is 22 bits.
   private static final int EEG_SAMPLE_SIZE_BYTES = 3;
   // Acceleration and Angular speed from the gyroscope. X, Y and Z from each at 16 bits of
@@ -53,6 +53,7 @@ public class MauiDataParser {
   private int rightSamplesSinceKeyTimestamp = 0;
   private long lastKeyTimestampLeft = 0;
   private int leftSamplesSinceKeyTimestamp = 0;
+  private boolean verboseLogging = false;
 
   private MauiDataParser(LocalSessionManager localSessionManager) {
     this.localSessionManager = localSessionManager;
@@ -105,9 +106,11 @@ public class MauiDataParser {
     deviceLocation = leftProtoLength > 0 ? DeviceLocation.LEFT_EARBUD : DeviceLocation.RIGHT_EARBUD;
     int protoLength = deviceLocation == DeviceLocation.LEFT_EARBUD ? leftProtoLength :
         rightProtoLength;
-    Log.d(TAG, "Proto length left: " + leftProtoLength + " Proto length right: " +
-        rightProtoLength + ", values length: " + values.length + ". Location: " +
-        deviceLocation.name() + ", device name: " + deviceName);
+    if (verboseLogging) {
+      Log.d(TAG, "Proto length left: " + leftProtoLength + " Proto length right: " +
+          rightProtoLength + ", values length: " + values.length + ". Location: " +
+          deviceLocation.name() + ", device name: " + deviceName);
+    }
     // TODO(eric): Re-enable this check when the length is fixed by AUT.
     // if (protoLength > values.length - PROTO_SIZE_BYTES) {
     if (protoLength > values.length) {
@@ -184,7 +187,9 @@ public class MauiDataParser {
     List<Map<String, DataSynchronizer.DataPoint>> allSynchronizedData =
         dataSynchronizer.getAllSynchronizedDataAndRemove();
     if (!allSynchronizedData.isEmpty()) {
-      Log.d(TAG, allSynchronizedData.size() + " synchronised samples are ready.");
+      if (verboseLogging) {
+        Log.d(TAG, allSynchronizedData.size() + " synchronised samples are ready.");
+      }
       for (Map<String, DataSynchronizer.DataPoint> data : allSynchronizedData) {
         HashMap<Integer, Float> eegDataMap = new HashMap<>();
         int samplingTimeStamp = 0;
@@ -199,9 +204,11 @@ public class MauiDataParser {
       EventBus.getDefault().post(samples);
     }
 
-    Log.d(TAG, "Parsed " + samples.getEegSamples().size() + " EEG samples, " +
-        samples.getAccelerations().size() + " accelerations and " +
-        samples.getAngularSpeeds().size() + " angular speeds.");
+    if (verboseLogging) {
+      Log.d(TAG, "Parsed " + samples.getEegSamples().size() + " EEG samples, " +
+          samples.getAccelerations().size() + " accelerations and " +
+          samples.getAngularSpeeds().size() + " angular speeds.");
+    }
   }
 
   private void parseSingleEegPacket(

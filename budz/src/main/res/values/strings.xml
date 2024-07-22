@@ -61,6 +61,7 @@
     <string name="label_great">Great</string>
     <string name="label_launch_sound_check">Launch Sound Check</string>
     <string name="label_left">Left</string>
+    <string name="label_left_bud">Left Bud</string>
     <string name="label_minutes">min</string>
     <string name="label_minutes_choice">%1$d mins</string>
     <string name="label_next">Next</string>
@@ -69,6 +70,7 @@
     <string name="label_paired">Paired</string>
     <string name="label_restoration_boost">Restoration boost</string>
     <string name="label_right">Right</string>
+    <string name="label_right_bud">Right Bud</string>
     <string name="label_seconds">sec</string>
     <string name="label_select_timer">Select timer</string>
     <string name="label_set_sleep_timer">Set sleep timer</string>
@@ -79,7 +81,7 @@
     <string name="label_timed_sleep">Timed\nsleep</string>
     <string name="label_troubleshoot">Troubleshoot</string>
     <string name="label_welcome_1">Welcome to the</string>
-    <string name="label_welcome_2">Budz App</string>
+    <string name="label_welcome_2">Tone App</string>
     <string name="notif_content">Press to access the application</string>
     <string name="web_client_id" translatable="false">894094054051-d381lk2udjhqhp20uu7v365qnvnuav8k.apps.googleusercontent.com</string>
 </resources>

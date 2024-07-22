@@ -25,8 +25,8 @@ android {
         applicationId "io.nextsense.android.budz"
         minSdk 26
         targetSdk 34
-        versionCode 5
-        versionName "0.1.4"
+        versionCode 6
+        versionName "0.1.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -109,6 +109,7 @@ dependencies {
     implementation "androidx.navigation:navigation-dynamic-features-fragment:$nav_version"
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
+    implementation "com.patrykandpatrick.vico:compose:2.0.0-alpha.24"
     implementation "com.github.stevdza-san:OneTapCompose:1.0.12"
     implementation "com.google.accompanist:accompanist-permissions:0.34.0"
     implementation "com.google.android.gms:play-services-auth:21.1.1"

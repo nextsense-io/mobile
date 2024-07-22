@@ -1,5 +1,6 @@
 package io.nextsense.android.base.db.memory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,11 +10,13 @@ import io.nextsense.android.base.data.AngularSpeed;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.Samples;
 import io.nextsense.android.base.utils.EvictingArray;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Memory cache for recent data for performance.
  */
 public class MemoryCache {
+  private static final String TAG = MemoryCache.class.getSimpleName();
   // 250 samples per second times 60 seconds times 12 minutes.
   private static final int DEFAULT_RETENTION_SAMPLES = 250 * 60 * 12;
 
@@ -132,7 +135,8 @@ public class MemoryCache {
 
   public List<Float> getLastEegChannelData(String channelName, int numberOfSamples) {
     if (!eegChannels.containsKey(channelName)) {
-      throw new IllegalArgumentException("channel " + channelName + " does not exists.");
+      RotatingFileLogger.get().logw(TAG, "channel " + channelName + " does not exists.");
+      return new ArrayList<>();
     }
     synchronized (eegLock) {
       return eegChannels.get(channelName).getLastValues(numberOfSamples);
@@ -141,7 +145,8 @@ public class MemoryCache {
 
   public List<Integer> getLastImuChannelData(String channelName, int numberOfSamples) {
     if (!imuChannels.containsKey(channelName)) {
-      throw new IllegalArgumentException("channel " + channelName + " does not exists.");
+      RotatingFileLogger.get().logw(TAG, "channel " + channelName + " does not exists.");
+      return new ArrayList<>();
     }
     synchronized (imuLock) {
       return imuChannels.get(channelName).getLastValues(numberOfSamples);

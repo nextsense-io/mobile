@@ -56,6 +56,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.math.ceil
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -295,8 +296,10 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             val deviceState =_airohaBleManager?.connect()
             if (deviceState == DeviceState.READY) {
                 _airohaDeviceState.value = AirohaDeviceState.CONNECTED_BLE
-                val streaming = _airohaBleManager!!.startStreaming()
-                if (streaming) {
+                val readyForStreaming = _airohaBleManager!!.startStreaming()
+                if (readyForStreaming) {
+                    // Clear the memory cache from the previous recording data, if any.
+                    _budzService?.getMemoryCache()?.clear()
                     val airohaStatusCode = startRaceBleStreamingFlow().last()
                     if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
                         _streamingState.value = StreamingState.STARTED
@@ -482,6 +485,40 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         AirohaSDK.getInst().airohaDeviceControl.getBatteryInfo(batteryInfoListener)
 
         awaitClose {
+        }
+    }
+
+    fun getChannelData(
+        localSessionId: Int?,
+        channelName: String,
+        durationMillis: Int,
+        fromDatabase: Boolean?
+    ) : List<Float>? {
+        if (fromDatabase != null && fromDatabase) {
+            var selectedLocalSessionId: Int? = localSessionId
+            if (localSessionId == null) {
+                selectedLocalSessionId =
+                    _budzService?.localSessionManager?.activeLocalSession?.get()?.id?.toInt()
+                if (selectedLocalSessionId == null) {
+                    return null
+                }
+            }
+            return _budzService?.getObjectBoxDatabase()?.getLastChannelData(
+                selectedLocalSessionId!!,
+                channelName,
+                java.time.Duration.ofMillis(durationMillis.toLong())
+            )
+        } else {
+            val eegSamplingRate = _airohaBleManager?.getEegSamplingRate() ?: 1000f
+            val numberOfSamples = Math.round(
+                ceil(
+                    (durationMillis.toFloat() / Math.round(
+                        1000f / eegSamplingRate
+                    )).toDouble()
+                )
+            ).toInt()
+            return _budzService?.getMemoryCache()?.getLastEegChannelData(
+                channelName, numberOfSamples)
         }
     }
 
