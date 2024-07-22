@@ -21,7 +21,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.io.IOException;
+import java.time.Duration;
 
+import io.nextsense.android.ApplicationType;
 import io.nextsense.android.Config;
 import io.nextsense.android.airoha.device.AirohaBleManager;
 import io.nextsense.android.airoha.device.AirohaDeviceManager;
@@ -190,8 +192,8 @@ public class BudzService extends Service {
     deviceManager = DeviceManager.create(
         deviceScanner, localSessionManager, centralManagerProxy, bluetoothStateManager,
         budzDeviceManager, memoryCache, csvSink);
-    // databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
-    // databaseSink.startListening();
+     databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
+     databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);
     // sampleRateCalculator.startListening();
     cacheSink = CacheSink.create(memoryCache);
@@ -200,12 +202,12 @@ public class BudzService extends Service {
     connectivity = Connectivity.create(this);
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
     // minRecordsToKeep is set at 12 minutes as we need 10 minutes for sleep staging.
-//    uploader = Uploader.create(this, ApplicationType.CONSUMER, objectBoxDatabase, databaseSink,
-//        connectivity, /*uploadChunk=*/Duration.ofSeconds(5), /*minRecordsToKeep=*/250 * 60 * 12,
-//        /*minDurationToKeep=*/Duration.ofMinutes(12));
-//    uploader.setMinimumConnectivityState(allowDataViaCellular ?
-//        Connectivity.State.LIMITED_CONNECTION : Connectivity.State.FULL_CONNECTION);
-//    uploader.start();
+    uploader = Uploader.create(this, ApplicationType.CONSUMER, objectBoxDatabase, databaseSink,
+        connectivity, /*uploadChunk=*/Duration.ofSeconds(5), /*minRecordsToKeep=*/250 * 60 * 12,
+        /*minDurationToKeep=*/Duration.ofMinutes(12));
+    uploader.setMinimumConnectivityState(allowDataViaCellular ?
+        Connectivity.State.LIMITED_CONNECTION : Connectivity.State.FULL_CONNECTION);
+    uploader.start();
 
     firebaseAuth = FirebaseAuth.getInstance();
     firebaseAuth.addAuthStateListener(firebaseAuth -> {

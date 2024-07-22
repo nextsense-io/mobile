@@ -26,6 +26,7 @@ class AirohaBleManager(
     private val deviceManager: DeviceManager
 ) {
     private val tag = AirohaBleManager::class.java.simpleName
+    private val earbudsConfig = "maui_config"
     private var leftEarDevice: Device? = null
     private var rightEarDevice: Device? = null
     private var leftDeviceState: DeviceState? = null
@@ -86,16 +87,16 @@ class AirohaBleManager(
         return DeviceState.DISCONNECTED
     }
 
-    suspend fun startStreaming(): Boolean {
+    suspend fun startStreaming(uploadToCloud: Boolean = false): Boolean {
         val leftStarted: Boolean?
         val rightStarted: Boolean?
         try {
             val leftStartedFuture = CompletableFuture.supplyAsync {
                 leftEarDevice?.startStreaming(
-                    /*uploadToCloud=*/false,
+                    /*uploadToCloud=*/uploadToCloud,
                     /*userBigTableKey=*/null,
                     /*dataSessionId=*/null,
-                    /*earbudsConfig=*/null,
+                    /*earbudsConfig=*/earbudsConfig,
                     /*saveToCsv=*/false
                 )?.get(5, TimeUnit.SECONDS)
             }
@@ -108,10 +109,10 @@ class AirohaBleManager(
         try {
             val rightStartedFuture = CompletableFuture.supplyAsync {
                 rightEarDevice?.startStreaming(
-                    /*uploadToCloud=*/false,
+                    /*uploadToCloud=*/uploadToCloud,
                     /*userBigTableKey=*/null,
                     /*dataSessionId=*/null,
-                    /*earbudsConfig=*/null,
+                    /*earbudsConfig=*/earbudsConfig,
                     /*saveToCsv=*/false
                 )?.get(5, TimeUnit.SECONDS)
             }
