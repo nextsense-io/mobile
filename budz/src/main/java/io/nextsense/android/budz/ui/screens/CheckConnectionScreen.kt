@@ -45,20 +45,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleStartEffect
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.fullWidth
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
-import com.patrykandpatrick.vico.compose.cartesian.rememberVicoScrollState
-import com.patrykandpatrick.vico.compose.cartesian.rememberVicoZoomState
-import com.patrykandpatrick.vico.compose.common.shader.color
-import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
-import com.patrykandpatrick.vico.core.cartesian.Zoom
-import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.BudzCard
+import io.nextsense.android.budz.ui.components.SignalLineChart
 import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 import io.nextsense.android.budz.ui.components.WideButton
@@ -185,27 +174,7 @@ fun BrainSignal(checkConnectionViewModel: CheckConnectionViewModel) {
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
-                CartesianChartHost(
-                    rememberCartesianChart(
-                        rememberLineCartesianLayer(
-                            LineCartesianLayer.LineProvider.series(
-                                rememberLine(
-                                    shader = DynamicShader.color(BudzColor.darkBlue),
-                                    backgroundShader = null
-                                )
-                            ),
-                        ),
-                        horizontalLayout = HorizontalLayout.fullWidth(),
-                        startAxis = null,
-                        bottomAxis = null,
-                    ),
-                    checkConnectionViewModel.leftEarChartModelProducer,
-                    zoomState = rememberVicoZoomState(initialZoom = Zoom.x(1000.0),
-                        zoomEnabled = false),
-                    scrollState = rememberVicoScrollState(scrollEnabled = false),
-                    animationSpec = null,
-                    modifier = Modifier.height(80.dp).background(Color.Transparent)
-                )
+                SignalLineChart(checkConnectionViewModel.leftEarChartModelProducer, 1000.0)
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -217,34 +186,15 @@ fun BrainSignal(checkConnectionViewModel: CheckConnectionViewModel) {
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
-                CartesianChartHost(
-                    rememberCartesianChart(
-                        rememberLineCartesianLayer(
-                            LineCartesianLayer.LineProvider.series(
-                                rememberLine(
-                                    shader = DynamicShader.color(BudzColor.darkBlue),
-                                    backgroundShader = null
-                                )
-                            )
-                        ),
-                        horizontalLayout = HorizontalLayout.fullWidth(),
-                        startAxis = null,
-                        bottomAxis = null
-                    ),
-                    checkConnectionViewModel.rightEarChartModelProducer,
-                    zoomState = rememberVicoZoomState(initialZoom = Zoom.x(1000.0),
-                        zoomEnabled = false),
-                    scrollState = rememberVicoScrollState(scrollEnabled = false),
-                    animationSpec = null,
-                    modifier = Modifier.height(80.dp).background(Color.Transparent)
-                )
+                SignalLineChart(checkConnectionViewModel.rightEarChartModelProducer, 1000.0)
             }
         }
     }
 }
 
 @Composable
-fun CardConnected(checkConnectionViewModel: CheckConnectionViewModel) {
+fun CardConnected(checkConnectionViewModel: CheckConnectionViewModel,
+                  onGoToCheckBrainSignal: () -> Unit) {
     BudzCard(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.label_bluetooth_status),
@@ -322,7 +272,8 @@ fun CardConnected(checkConnectionViewModel: CheckConnectionViewModel) {
         // SoundCheckPager()
         BrainSignal(checkConnectionViewModel)
         Spacer(modifier = Modifier.height(20.dp))
-        WideButton(name = stringResource(R.string.label_launch_sound_check), onClick = {})
+        WideButton(name = stringResource(R.string.label_brain_equalizer),
+            onClick = { onGoToCheckBrainSignal() })
     }
 }
 
@@ -351,6 +302,7 @@ fun CheckConnectionScreen(
     }
 
     LifecycleStartEffect(true) {
+        checkConnectionViewModel.startStreaming()
         onStopOrDispose {
             checkConnectionViewModel.stopStreaming()
         }
@@ -379,7 +331,7 @@ fun CheckConnectionScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 if (checkConnectionUiState.connected) {
-                    CardConnected(checkConnectionViewModel)
+                    CardConnected(checkConnectionViewModel, onGoToCheckBrainSignal)
                 } else {
                     CardNotConnected()
                 }

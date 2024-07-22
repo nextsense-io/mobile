@@ -11,6 +11,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.budz.Routes
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AudioSampleType
+import io.nextsense.android.budz.ui.screens.BrainEqualizerScreen
 import io.nextsense.android.budz.ui.screens.CheckBrainSignalIntroScreen
 import io.nextsense.android.budz.ui.screens.CheckConnectionScreen
 import io.nextsense.android.budz.ui.screens.ConnnectedScreen
@@ -141,10 +142,23 @@ class MainActivity : ComponentActivity() {
                                 navController.navigate(Routes.DeviceConnection)
                             },
                             onGoToFitGuide = {
-                                navController.navigate(Routes.DeviceSettings)
+                                navController.popBackStack()
                             },
                             onGoToCheckBrainSignal = {
-                                navController.navigate(Routes.CheckBrainSignalIntro)
+                                navController.navigate(Routes.BrainEqualizer)
+                            }
+                        )
+                    }
+                    composable<Routes.BrainEqualizer> {
+                        BrainEqualizerScreen(
+                            onGoToCheckConnection = {
+                                navController.popBackStack()
+                            },
+                            onGoToConnectionGuide = {
+                                navController.navigate(Routes.DeviceConnection)
+                            },
+                            onGoToFitGuide = {
+                                navController.popBackStack()
                             }
                         )
                     }

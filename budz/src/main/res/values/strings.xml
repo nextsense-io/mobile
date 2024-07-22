@@ -31,6 +31,8 @@
     <string name="text_how_stay_asleep_2">If you opt into “Restoration Boost,” Budz will play slow-wave enhancing audio during the deepest stages of sleep.</string>
     <string name="text_privacy_policy">NextSense is committed to good data privacy practices. We think you have the right to understand how we collect and use your data. Here are the basics:\n\n%1$ Budz collect neural data through EEG sensors to enhance your sleep and overall brain health. This data helps us personalize audio features, improve your sleep quality, and identify trends over time.\n\n%2$ We use your data to provide personalized insights and improve product functionality. We analyze the patterns to offer better sleep solutions and make real-time adjustments to the audio you hear.\n\nWe %3$ upload your data to the cloud or sell it to third parties.</string>
     <string name="text_get_you_connected">Open Bluetooth: Open the Bluetooth screen from your notification bar.\n\nSelect Bluetooth: Make sure "Use Bluetooth" is selected.\n\nPair Budz: Press "Pair new device" and select "Budz" from the list.\n\nConfirm Connection: Once connected, you\'ll see "Budz" under "Bluetooth"\n\nIf you encounter any issues, ensure your Budz are charged and within range of your device.</string>
+    <string name="text_tune_your_music_title">Tune your music with your mind!</string>
+    <string name="text_tune_your_music_content">As you become more or less relaxed, your changing brain dynamics will adjust the treble and bass on the track</string>
     <string name="desc_back_button">Go back</string>
     <string name="desc_home_button">Home</string>
     <string name="desc_play">Play sample</string>
@@ -38,6 +40,7 @@
     <string name="desc_stop">Stop playing sample</string>
     <string name="label_bluetooth_connection_guide">Bluetooth Connection Guide</string>
     <string name="label_bluetooth_status">Bluetooth status:</string>
+    <string name="label_brain_equalizer">Brain Equalizer</string>
     <string name="label_button_focus">Focus</string>
     <string name="label_case">Case</string>
     <string name="label_change">Change</string>
@@ -59,6 +62,7 @@
     <string name="label_focus_sound">Focus sound</string>
     <string name="label_focus_sounds">Focus sounds</string>
     <string name="label_great">Great</string>
+    <string name="label_instructions_and_tips">INSTRUCTIONS &amp; TIPS</string>
     <string name="label_launch_sound_check">Launch Sound Check</string>
     <string name="label_left">Left</string>
     <string name="label_left_bud">Left Bud</string>

@@ -26,6 +26,9 @@ sealed class Routes{
     data object CheckConnection : Routes()
 
     @Serializable
+    data object BrainEqualizer : Routes()
+
+    @Serializable
     data object CheckBrainSignalIntro : Routes()
 
     @Serializable
