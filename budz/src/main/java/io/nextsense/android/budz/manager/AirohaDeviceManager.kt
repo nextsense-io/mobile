@@ -693,10 +693,15 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             return
         }
         if (_budzServiceBound && _budzServiceConnection != null) {
-            context.unbindService(_budzServiceConnection!!)
-            _budzServiceBound = false
-            _budzServiceConnection = null
-        }
+            try {
+                context.unbindService(_budzServiceConnection!!)
+            } catch (e: IllegalArgumentException) {
+                Log.w(tag, e.message, e)
+            } finally {
+                _budzServiceBound = false
+                _budzServiceConnection = null
+            }
+       }
         context.stopService(_budzServiceIntent)
         _budzService = null
     }

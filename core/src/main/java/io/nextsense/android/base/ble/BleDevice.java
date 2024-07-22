@@ -236,7 +236,6 @@ public class BleDevice extends Device {
     deviceConnectionFuture = SettableFuture.create();
     centralManagerProxy.getCentralManager().connectPeripheral(
         btPeripheral, callbackProxy.getMainCallback());
-    RotatingFileLogger.get().logd(TAG, "connect returning future");
     return deviceConnectionFuture;
   }
 

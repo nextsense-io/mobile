@@ -30,7 +30,7 @@ data class CheckConnectionState(
 class CheckConnectionViewModel @Inject constructor(
     private val airohaDeviceManager: AirohaDeviceManager
 ): ViewModel() {
-
+    private val tag = CheckConnectionViewModel::class.simpleName
     private val _shownDuration = 10.seconds
     private val _filterCropDuration = 2.seconds
     private val _totalDataDuration = _shownDuration + _filterCropDuration
@@ -65,6 +65,7 @@ class CheckConnectionViewModel @Inject constructor(
             airohaDeviceManager.streamingState.collect { streamingState ->
                 when (streamingState) {
                     StreamingState.STARTED -> {
+                        dataRefreshJob?.cancel()
                         dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
                             while (true) {
                                 val startTime = System.currentTimeMillis()
@@ -105,10 +106,17 @@ class CheckConnectionViewModel @Inject constructor(
                         }
                     }
                     else -> {
+                        Log.i(tag, "Streaming stopped")
                         dataRefreshJob?.cancel()
                     }
                 }
             }
+        }
+    }
+
+    fun startStreaming() {
+        viewModelScope.launch {
+            airohaDeviceManager.startBleStreaming()
         }
     }
 
@@ -121,6 +129,7 @@ class CheckConnectionViewModel @Inject constructor(
     private fun prepareData(data: List<Float>): List<Double> {
         val doubleData = data.map { it.toDouble() }.toDoubleArray()
         val doubleArrayData = Sampling.resample(doubleData, 1000F, 100, _chartSamplingRate)
+        // val doubleArrayData = Sampling.resamplePoly(doubleData, _chartSamplingRate, 1000F)
         return doubleArrayData.toList().subList(200, doubleArrayData.size)
     }
 }

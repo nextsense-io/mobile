@@ -14,7 +14,7 @@ public class Sampling {
   public static double[] resample(double[] signal, float rawFs, int order, float newFs) {
     // apply anti-aliasing filter.
     float nyquist = newFs / 2;
-    signal = Filters.applyLowPass(signal, rawFs, order, nyquist);
+    signal = Filters.applyLowPass(signal, rawFs, order, nyquist - 2);
 
     // resample the signal.
     signal = resamplePoly(signal, newFs, rawFs);
