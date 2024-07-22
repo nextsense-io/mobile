@@ -108,8 +108,7 @@ public class MauiDataParser {
         rightProtoLength;
     if (verboseLogging) {
       Log.d(TAG, "Proto length left: " + leftProtoLength + " Proto length right: " +
-          rightProtoLength + ", values length: " + values.length + ". Location: " +
-          deviceLocation.name() + ", device name: " + deviceName);
+          rightProtoLength + ", values length: " + values.length + ", device name: " + deviceName);
     }
     // TODO(eric): Re-enable this check when the length is fixed by AUT.
     // if (protoLength > values.length - PROTO_SIZE_BYTES) {
