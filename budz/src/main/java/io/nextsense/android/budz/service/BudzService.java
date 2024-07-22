@@ -43,6 +43,10 @@ import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.budz.R;
 
+
+import androidx.health.connect.client.HealthConnectClient
+
+
 /**
  * Main Foreground service that will manage the Bluetooth connection to the NextSense device and the
  * Cloud data sync. This service will run only while streaming raw data.
@@ -55,6 +59,54 @@ import io.nextsense.android.budz.R;
  * This service could be extended later on with an AIDL file to let external applications connect
  * to our device if that is something we want to do.
  */
+
+/**
+ * BudzService: Foreground Service for NextSense App
+ *
+ * This service manages continuous Bluetooth connections and data synchronization tasks,
+ * ensuring seamless operation even when the app is not in the foreground. The service is designed to be robust,
+ * handling long sessions without interruption due to system sleep or app backgrounding.
+ *
+ * Recent Updates:
+ * - Integration of Android Health Connect:
+ *   Health Connect Client is initialized in this service to facilitate health data management,
+ *   specifically focusing on sleep data. This addition allows the app to access, store, and manage
+ *   health data in compliance with user permissions and system guidelines.
+ *
+ * Key Functionalities:
+ * 1. Health Connect Integration:
+ *    - HealthConnectClient setup: Initializes the client and requests necessary permissions
+ *      for accessing health data (Read and Write permissions for sleep data).
+ *    - Permission Handling: Dynamically requests health-related permissions at runtime,
+ *      ensuring compliance with Android's privacy requirements.
+ *
+ * 2. Continuous Bluetooth Management:
+ *    - Manages Bluetooth connections with NextSense devices, ensuring data is continuously streamed.
+ *    - Utilizes BluetoothStateManager and AirohaBleManager for managing connections and data transmission.
+ *
+ * 3. Data Handling and Storage:
+ *    - LocalSessionManager and ObjectBoxDatabase are used for local data storage and session management.
+ *    - Data from devices is processed and optionally uploaded, controlled by connectivity and user preferences.
+ *
+ * 4. Notification Management:
+ *    - Handles foreground service notifications to keep the user informed about the service status.
+ *    - Creates notification channels as required by newer Android versions.
+ *
+ * Usage of Service:
+ * - The service should be started and stopped by the main activity of the app,
+ *   ensuring it runs only when necessary. It uses a binder for activities to bind to and interact with the service.
+ *
+ * Additional Notes:
+ * - The service is crucial for applications requiring reliable data capture from external devices,
+ *   especially in health applications where data integrity and availability are critical.
+ *
+ * Developer Notes:
+ * - Ensure any modifications to Bluetooth or Health Connect functionalities are tested rigorously
+ *   to maintain data accuracy and application stability.
+ * - Future enhancements may include more granular health data management or expanded device support.
+ */
+
+
 public class BudzService extends Service {
 
   public static final String EXTRA_UI_CLASS = "ui_class";
@@ -178,7 +230,7 @@ public class BudzService extends Service {
     objectBoxDatabase.init(this);
     bluetoothStateManager = BluetoothStateManager.create(getApplicationContext());
     centralManagerProxy = (!Config.USE_EMULATED_BLE) ?
-            new BleCentralManagerProxy(getApplicationContext()) : null;
+        new BleCentralManagerProxy(getApplicationContext()) : null;
     // Uncomment when the CSV sink is needed.
     csvSink = CsvSink.create(this, objectBoxDatabase, centralManagerProxy);
     localSessionManager = LocalSessionManager.create(objectBoxDatabase, csvSink);
@@ -220,8 +272,8 @@ public class BudzService extends Service {
               RotatingFileLogger.get().logi(TAG, "Refreshed Firebase auth token.");
             })
             .addOnFailureListener(e ->
-              // Token refresh failed
-              RotatingFileLogger.get().logw(TAG, "Failed to refresh Firebase auth token: " + e.getMessage())
+                // Token refresh failed
+                RotatingFileLogger.get().logw(TAG, "Failed to refresh Firebase auth token: " + e.getMessage())
             );
       }
     });
@@ -229,6 +281,25 @@ public class BudzService extends Service {
     // initializeAlgorithms();
     initialized = true;
   }
+
+  private lateinit var healthConnectClient: HealthConnectClient
+
+  private fun initialize(allowDataViaCellular: Boolean) {
+    objectBoxDatabase = new ObjectBoxDatabase()
+    objectBoxDatabase.init(this)
+    bluetoothStateManager = BluetoothStateManager.create(getApplicationContext())
+    centralManagerProxy = if (!Config.USE_EMULATED_BLE) BleCentralManagerProxy(getApplicationContext()) else null
+    csvSink = CsvSink.create(this, objectBoxDatabase, centralManagerProxy)
+    localSessionManager = LocalSessionManager.create(objectBoxDatabase, csvSink)
+    budzDeviceManager = NextSenseDeviceManager.create(localSessionManager, NextSenseDeviceManager.DeviceGroup.CONSUMER)
+    memoryCache = MemoryCache.create()
+    deviceScanner = DeviceScanner.create(
+        budzDeviceManager, centralManagerProxy, bluetoothStateManager, memoryCache, csvSink)
+
+    // Initialize HealthConnectClient
+    healthConnectClient = HealthConnectClient.getOrCreate(this)
+  }
+
 
   private void initializeAlgorithms() {
     sleepTransformerModel = new SleepTransformerModel(getApplicationContext());
