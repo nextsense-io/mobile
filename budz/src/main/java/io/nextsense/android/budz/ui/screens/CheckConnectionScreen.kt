@@ -158,8 +158,7 @@ fun SoundCheckPager() {
 }
 
 @Composable
-fun BrainSignal(checkConnectionViewModel: CheckConnectionViewModel,
-                checkConnectionUiState: CheckConnectionState) {
+fun BrainSignal(checkConnectionViewModel: CheckConnectionViewModel) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.title_brain_signal),
@@ -176,9 +175,7 @@ fun BrainSignal(checkConnectionViewModel: CheckConnectionViewModel,
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 SignalLineChart(modelProducer = checkConnectionViewModel.leftEarChartModelProducer,
-                    dataPointsSize = 1000.0,
-                    minY = checkConnectionUiState.minY,
-                    maxY = checkConnectionUiState.maxY)
+                    dataPointsSize = 1000.0)
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -191,16 +188,14 @@ fun BrainSignal(checkConnectionViewModel: CheckConnectionViewModel,
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 SignalLineChart(checkConnectionViewModel.rightEarChartModelProducer,
-                    dataPointsSize = 1000.0,
-                    minY = checkConnectionUiState.minY,
-                    maxY = checkConnectionUiState.maxY)            }
+                    dataPointsSize = 1000.0)
+            }
         }
     }
 }
 
 @Composable
 fun CardConnected(checkConnectionViewModel: CheckConnectionViewModel,
-                  checkConnectionUiState: CheckConnectionState,
                   onGoToCheckBrainSignal: () -> Unit) {
     BudzCard(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -277,7 +272,7 @@ fun CardConnected(checkConnectionViewModel: CheckConnectionViewModel,
     Column {
         Spacer(modifier = Modifier.height(20.dp))
         // SoundCheckPager()
-        BrainSignal(checkConnectionViewModel, checkConnectionUiState)
+        BrainSignal(checkConnectionViewModel)
         Spacer(modifier = Modifier.height(20.dp))
         WideButton(name = stringResource(R.string.label_brain_equalizer),
             onClick = { onGoToCheckBrainSignal() })
@@ -338,8 +333,7 @@ fun CheckConnectionScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 if (checkConnectionUiState.connected) {
-                    CardConnected(checkConnectionViewModel, checkConnectionUiState,
-                        onGoToCheckBrainSignal)
+                    CardConnected(checkConnectionViewModel, onGoToCheckBrainSignal)
                 } else {
                     CardNotConnected()
                 }

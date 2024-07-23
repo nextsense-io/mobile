@@ -23,9 +23,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 data class CheckConnectionState(
-    val connected: Boolean = false,
-    val minY: Int = 0,
-    val maxY: Int = 0
+    val connected: Boolean = false
 )
 
 @HiltViewModel
@@ -96,6 +94,7 @@ class CheckConnectionViewModel @Inject constructor(
 
     fun stopStreaming() {
         viewModelScope.launch {
+            dataRefreshJob?.cancel()
             airohaDeviceManager.stopBleStreaming()
         }
     }
@@ -122,31 +121,6 @@ class CheckConnectionViewModel @Inject constructor(
 
         val leftEarDataPrepared = if (gotLeftEarData) prepareData(leftEarData!!) else emptyList()
         val rightEarDataPrepared = if (gotRightEarData) prepareData(rightEarData!!) else emptyList()
-
-        // Update Y scale for the charts.
-        if (gotLeftEarData && gotRightEarData) {
-            val (leftMinY, lefMaxY) = getDataBounds(leftEarDataPrepared)
-            val (rightMinY, rightMaxY) = getDataBounds(rightEarDataPrepared)
-            _uiState.value = CheckConnectionState(
-                connected = true,
-                minY = leftMinY.coerceAtMost(rightMinY),
-                maxY = lefMaxY.coerceAtLeast(rightMaxY)
-            )
-        } else if (gotLeftEarData) {
-            val (leftMinY, lefMaxY) = getDataBounds(leftEarDataPrepared)
-            _uiState.value = CheckConnectionState(
-                connected = true,
-                minY = leftMinY,
-                maxY = lefMaxY
-            )
-        } else {
-            val (rightMinY, rightMaxY) = getDataBounds(rightEarDataPrepared)
-            _uiState.value = CheckConnectionState(
-                connected = true,
-                minY = rightMinY,
-                maxY = rightMaxY
-            )
-        }
 
         // Update the charts.
         if (gotLeftEarData) {

@@ -24,12 +24,8 @@ import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import io.nextsense.android.budz.ui.theme.BudzColor
 
 @Composable
-fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: Double,
-                    minY: Int, maxY: Int) {
-    val axisValueOverrider = AxisValueOverrider.fixed(
-        minY = minY.toDouble(),
-        maxY = maxY.toDouble(),
-    )
+fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: Double) {
+    val axisValueOverrider = AxisValueOverrider.adaptiveYValues(yFraction = 1.0f, round = true)
     CartesianChartHost(
         rememberCartesianChart(
             rememberLineCartesianLayer(

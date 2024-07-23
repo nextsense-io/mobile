@@ -50,7 +50,7 @@ fun BrainSignal(viewModel: BrainEqualizerViewModel) {
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
-                SignalLineChart(viewModel.leftEarChartModelProducer, 1000.0, minY = 0, maxY = 100)
+                SignalLineChart(viewModel.leftEarChartModelProducer, 1000.0)
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -62,7 +62,7 @@ fun BrainSignal(viewModel: BrainEqualizerViewModel) {
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
-                SignalLineChart(viewModel.rightEarChartModelProducer, 1000.0, minY = 0, maxY = 100)
+                SignalLineChart(viewModel.rightEarChartModelProducer, 1000.0)
             }
         }
     }
