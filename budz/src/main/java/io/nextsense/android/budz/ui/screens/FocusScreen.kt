@@ -43,8 +43,7 @@ fun FocusScreen(focusViewModel: FocusViewModel = hiltViewModel(),
                 onGoToFocusSelection: () -> Unit,
                 onGoToHome: () -> Unit
 ) {
-    val focusDurations = listOf(10.minutes, 20.minutes, 30.minutes, 40.minutes, 50.minutes,
-        60.minutes, 90.minutes, 120.minutes)
+    val focusDurations = listOf(10.minutes, 15.minutes, 20.minutes, 30.minutes, 40.minutes)
     val focusUiState by focusViewModel.uiState.collectAsState()
     val context = LocalContext.current
 

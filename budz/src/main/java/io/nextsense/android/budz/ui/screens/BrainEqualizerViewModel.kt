@@ -118,16 +118,15 @@ class BrainEqualizerViewModel @Inject constructor(
             return
         }
 
-        val leftEarDataPrepared = if (gotLeftEarData) prepareData(leftEarData!!) else emptyList()
-        val rightEarDataPrepared = if (gotRightEarData) prepareData(rightEarData!!) else emptyList()
-
         // Update the charts.
         if (gotLeftEarData) {
+            val leftEarDataPrepared = prepareData(leftEarData!!)
             leftEarChartModelProducer.runTransaction {
                 lineSeries { series(leftEarDataPrepared) }
             }
         }
         if (gotRightEarData) {
+            val rightEarDataPrepared = prepareData(rightEarData!!)
             rightEarChartModelProducer.runTransaction {
                 lineSeries { series(rightEarDataPrepared) }
             }
