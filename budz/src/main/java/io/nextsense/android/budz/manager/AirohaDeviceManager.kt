@@ -73,7 +73,9 @@ enum class AirohaDeviceState {
 
 enum class StreamingState {
     UNKNOWN, // Streaming state is unknown.
+    STARTING,  // Starting streaming.
     STARTED,  // Streaming has started.
+    STOPPING,  // Stopping streaming.
     STOPPED,  // Streaming has stopped.
     ERROR  // Error when trying to start or stop streaming.
 }
@@ -247,10 +249,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     fun connectDevice(timeout: Duration? = null) {
         Log.i(tag, "connectDevice")
         if (_airohaDeviceState.value == AirohaDeviceState.READY ||
-                 _airohaDeviceState.value == AirohaDeviceState.CONNECTED_BLE ||
+                _airohaDeviceState.value == AirohaDeviceState.CONNECTED_BLE ||
                 _airohaDeviceState.value == AirohaDeviceState.CONNECTED_AIROHA ||
                 _airohaDeviceState.value == AirohaDeviceState.CONNECTING_BLE) {
-                _airohaDeviceState.value = AirohaDeviceState.READY
             Log.i(tag, "Device already connected.")
             return
         }
@@ -288,6 +289,25 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         if (_airohaDeviceState.value != AirohaDeviceState.READY) {
             return false
         }
+
+        if (streamingState.value == StreamingState.STARTED) {
+            return true
+        }
+
+        if (streamingState.value == StreamingState.STARTING) {
+            // Wait until it finished starting
+            val result = streamingState.take(1).last()
+            return result == StreamingState.STARTED
+        }
+
+        if (streamingState.value == StreamingState.STOPPING) {
+            // Wait until it finished stopping and give a small delay to make sure the firmware
+            // is ready.
+            streamingState.take(1).last()
+            delay(500L)
+        }
+
+        _streamingState.value = StreamingState.STARTING
         _airohaDeviceState.value = AirohaDeviceState.CONNECTING_BLE
         val serviceConnected = withTimeout(2000L) {
             connectServiceFlow().flowOn(Dispatchers.IO).take(1).last()
@@ -314,10 +334,12 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                 }
             } else if (deviceState == DeviceState.DISCONNECTED) {
                 _airohaDeviceState.value = AirohaDeviceState.READY
+                _streamingState.value = StreamingState.STOPPED
                 return false
             }
         } else {
             _airohaDeviceState.value = AirohaDeviceState.READY
+            _streamingState.value = StreamingState.STOPPED
             return false
         }
         return false
@@ -327,11 +349,30 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         if (!_budzServiceBound || _budzService == null ||
                 _streamingState.value != StreamingState.STARTED) {
             if (_airohaDeviceState.value == AirohaDeviceState.CONNECTING_BLE ||
-                _airohaDeviceState.value == AirohaDeviceState.CONNECTED_BLE) {
-              _airohaDeviceState.value = AirohaDeviceState.READY
+                    _airohaDeviceState.value == AirohaDeviceState.CONNECTED_BLE) {
+                // Already stopped.
+                _airohaDeviceState.value = AirohaDeviceState.READY
             }
             return true
         }
+
+        if (streamingState.value == StreamingState.STOPPED) {
+            return true
+        }
+
+        if (streamingState.value == StreamingState.STOPPING) {
+            // Wait until it finished stopping
+            val result = streamingState.take(1).last()
+            return result == StreamingState.STOPPED
+        }
+
+        if (streamingState.value == StreamingState.STARTING) {
+            // Wait until it finished starting and then stop it.
+            streamingState.take(1).last()
+            delay(500L)
+        }
+
+        _streamingState.value = StreamingState.STOPPING
         val airohaStatusCode = stopRaceBleStreamingFlow().take(1).last()
         if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
             _airohaBleManager?.stopStreaming()

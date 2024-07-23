@@ -71,7 +71,7 @@ class CheckConnectionViewModel @Inject constructor(
                                 val startTime = System.currentTimeMillis()
                                 updateSignalCharts()
                                 val runtimeMs = System.currentTimeMillis() - startTime
-                                Log.d("CheckConnectionViewModel", "Update time: " +
+                                Log.d(tag, "Update time: " +
                                         "${System.currentTimeMillis() - startTime}")
                                 delay(Math.max(_refreshInterval.inWholeMilliseconds - runtimeMs, 0))
                             }
@@ -96,12 +96,11 @@ class CheckConnectionViewModel @Inject constructor(
         viewModelScope.launch {
             dataRefreshJob?.cancel()
             airohaDeviceManager.stopBleStreaming()
+            delay(500L)
         }
     }
 
     private suspend fun updateSignalCharts() {
-        val startTime = System.currentTimeMillis()
-
         // Get the data for both ears.
         val leftEarData = airohaDeviceManager.getChannelData(
             localSessionId=null,
@@ -140,9 +139,5 @@ class CheckConnectionViewModel @Inject constructor(
         val doubleArrayData = Sampling.resample(doubleData, 1000F, 100, _chartSamplingRate)
         // val doubleArrayData = Sampling.resamplePoly(doubleData, _chartSamplingRate, 1000F)
         return doubleArrayData.toList().subList(200, doubleArrayData.size)
-    }
-
-    private fun getDataBounds(data: List<Double>): Pair<Int, Int> {
-        return data.minOrNull()!!.toInt() to data.maxOrNull()!!.toInt() + 1
     }
 }

@@ -69,37 +69,9 @@ class BrainEqualizerViewModel @Inject constructor(
                         dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
                             while (true) {
                                 val startTime = System.currentTimeMillis()
-                                val leftEarData = airohaDeviceManager.getChannelData(
-                                    localSessionId=null,
-                                    channelName= MauiDataParser.CHANNEL_LEFT.toString(),
-                                    durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
-                                    fromDatabase=false)
-                                if (leftEarData == null || leftEarData.size < 2100) {
-                                    continue
-                                }
-                                Log.d("CheckConnectionViewModel", "Before prepare: " +
-                                        "${System.currentTimeMillis() - startTime}")
-                                val preparedData = prepareData(leftEarData)
-                                Log.d("CheckConnectionViewModel", "Before chart: " +
-                                        "${System.currentTimeMillis() - startTime}")
-                                leftEarChartModelProducer.runTransaction {
-                                    lineSeries { series(preparedData) }
-                                }
-                                Log.d("CheckConnectionViewModel", "After chart: " +
-                                        "${System.currentTimeMillis() - startTime}")
-                                val rightEarData = airohaDeviceManager.getChannelData(
-                                    localSessionId=null,
-                                    channelName= MauiDataParser.CHANNEL_RIGHT.toString(),
-                                    durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
-                                    fromDatabase=false)
-                                if (rightEarData == null || rightEarData.size < 2100) {
-                                    continue
-                                }
-                                rightEarChartModelProducer.runTransaction {
-                                    lineSeries { series(prepareData(rightEarData)) }
-                                }
+                                updateSignalCharts()
                                 val runtimeMs = System.currentTimeMillis() - startTime
-                                Log.d("CheckConnectionViewModel", "Update time: " +
+                                Log.d(tag, "Update time: " +
                                         "${System.currentTimeMillis() - startTime}")
                                 delay(Math.max(_refreshInterval.inWholeMilliseconds - runtimeMs, 0))
                             }
@@ -122,13 +94,50 @@ class BrainEqualizerViewModel @Inject constructor(
 
     fun stopStreaming() {
         viewModelScope.launch {
+            dataRefreshJob?.cancel()
             airohaDeviceManager.stopBleStreaming()
+            delay(500L)
+        }
+    }
+
+    private suspend fun updateSignalCharts() {
+        // Get the data for both ears.
+        val leftEarData = airohaDeviceManager.getChannelData(
+            localSessionId=null,
+            channelName=MauiDataParser.CHANNEL_LEFT.toString(),
+            durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
+            fromDatabase=false)
+        val rightEarData = airohaDeviceManager.getChannelData(
+            localSessionId=null,
+            channelName=MauiDataParser.CHANNEL_RIGHT.toString(),
+            durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
+            fromDatabase=false)
+        val gotRightEarData = rightEarData != null && rightEarData.size >= 2100
+        val gotLeftEarData = leftEarData != null && leftEarData.size >= 2100
+        if (!gotLeftEarData && !gotRightEarData) {
+            return
+        }
+
+        val leftEarDataPrepared = if (gotLeftEarData) prepareData(leftEarData!!) else emptyList()
+        val rightEarDataPrepared = if (gotRightEarData) prepareData(rightEarData!!) else emptyList()
+
+        // Update the charts.
+        if (gotLeftEarData) {
+            leftEarChartModelProducer.runTransaction {
+                lineSeries { series(leftEarDataPrepared) }
+            }
+        }
+        if (gotRightEarData) {
+            rightEarChartModelProducer.runTransaction {
+                lineSeries { series(rightEarDataPrepared) }
+            }
         }
     }
 
     private fun prepareData(data: List<Float>): List<Double> {
         val doubleData = data.map { it.toDouble() }.toDoubleArray()
         val doubleArrayData = Sampling.resample(doubleData, 1000F, 100, _chartSamplingRate)
+        // val doubleArrayData = Sampling.resamplePoly(doubleData, _chartSamplingRate, 1000F)
         return doubleArrayData.toList().subList(200, doubleArrayData.size)
     }
 }

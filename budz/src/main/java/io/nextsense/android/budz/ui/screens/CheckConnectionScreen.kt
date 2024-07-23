@@ -275,7 +275,9 @@ fun CardConnected(checkConnectionViewModel: CheckConnectionViewModel,
         BrainSignal(checkConnectionViewModel)
         Spacer(modifier = Modifier.height(20.dp))
         WideButton(name = stringResource(R.string.label_brain_equalizer),
-            onClick = { onGoToCheckBrainSignal() })
+            onClick = {
+                onGoToCheckBrainSignal()
+            })
     }
 }
 
