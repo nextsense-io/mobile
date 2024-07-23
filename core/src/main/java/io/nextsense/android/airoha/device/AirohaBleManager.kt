@@ -60,7 +60,7 @@ class AirohaBleManager(
             }
             try {
                 val deviceConnectFuture = CompletableFuture.supplyAsync {
-                    device?.connect(/*autoReconnect=*/true)?.get(5, TimeUnit.SECONDS)
+                    device?.connect(/*autoReconnect=*/true)?.get(30, TimeUnit.SECONDS)
                 }
                 val deviceState = deviceConnectFuture.await()
                 if (device?.name == MauiDevice.BLUETOOTH_PREFIX_LEFT) {

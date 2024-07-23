@@ -196,7 +196,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             when (intent.action) {
                 BluetoothDevice.ACTION_ACL_CONNECTED -> {
                     Log.d(tag, "BluetoothDevice.ACTION_ACL_CONNECTED")
-                    connectDevice(timeout = 10.seconds)
+                    connectDevice(timeout = 30.seconds)
                 }
             }
         }
@@ -216,10 +216,10 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                     // Need to call these 2 APIs to correctly initialize the connection. If not, things
                     // like getting the battery levels do not work correctly.
                     // Also need a small delay between these commands or they often fail.
-                    delay(100L)
+                    delay(200L)
                     _twsConnected = twsConnectStatusFlow().last()
                     Log.d(tag, "twsConnected=$_twsConnected")
-                    delay(100L)
+                    delay(200L)
                     _deviceInfo = deviceInfoFlow().last()
                     Log.d(tag, "deviceInfo=$_deviceInfo")
                     if (_twsConnected == null || _deviceInfo == null) {
