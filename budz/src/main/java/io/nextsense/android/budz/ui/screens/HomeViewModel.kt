@@ -46,6 +46,27 @@ class HomeViewModel @Inject constructor(
 
     val uiState: StateFlow<HomeState> = _uiState.asStateFlow()
 
+    init {
+        viewModelScope.launch {
+            airohaDeviceManager.airohaDeviceState.collect { deviceState ->
+                Log.d("HomeViewModel", "deviceState: $deviceState")
+                when (deviceState) {
+                    AirohaDeviceState.CONNECTING_CLASSIC -> {}
+                    AirohaDeviceState.READY -> {
+                        _uiState.value = _uiState.value.copy(connected = true)
+                        getBatteryLevels()
+                    }
+                    AirohaDeviceState.CONNECTED_AIROHA -> {}
+                    AirohaDeviceState.DISCONNECTED -> {
+                        _uiState.value = _uiState.value.copy(connected = false,
+                            batteryLevel = AirohaBatteryLevel(null, null, null))
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
     fun stopConnection() {
         Log.i("HomeViewModel", "stopConnection")
         airohaDeviceManager.stopConnectingDevice()
@@ -65,24 +86,6 @@ class HomeViewModel @Inject constructor(
             // Need a bit of delay after initializing the Airoha SDK before connecting.
             delay(1000L)
             airohaDeviceManager.connectDevice()
-        }
-        viewModelScope.launch {
-            airohaDeviceManager.airohaDeviceState.collect { deviceState ->
-                Log.d("HomeViewModel", "deviceState: $deviceState")
-                when (deviceState) {
-                    AirohaDeviceState.CONNECTING_CLASSIC -> {}
-                    AirohaDeviceState.READY -> {
-                        _uiState.value = _uiState.value.copy(connected = true)
-                        getBatteryLevels()
-                    }
-                    AirohaDeviceState.CONNECTED_AIROHA -> {}
-                    AirohaDeviceState.DISCONNECTED -> {
-                        _uiState.value = _uiState.value.copy(connected = false,
-                            batteryLevel = AirohaBatteryLevel(null, null, null))
-                    }
-                    else -> {}
-                }
-            }
         }
     }
 
