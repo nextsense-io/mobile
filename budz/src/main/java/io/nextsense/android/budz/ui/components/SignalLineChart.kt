@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartAxis
 import com.patrykandpatrick.vico.compose.cartesian.fullWidth
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
@@ -23,15 +24,16 @@ import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import io.nextsense.android.budz.ui.theme.BudzColor
 
 @Composable
-fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: Double) {
-//    val axisValueOverrider = AxisValueOverrider.fixed(
-//        maxY = 1500.0,
-//        minY = -1500.0
-//    )
+fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: Double,
+                    minY: Int, maxY: Int) {
+    val axisValueOverrider = AxisValueOverrider.fixed(
+        minY = minY.toDouble(),
+        maxY = maxY.toDouble(),
+    )
     CartesianChartHost(
         rememberCartesianChart(
             rememberLineCartesianLayer(
-//                axisValueOverrider = axisValueOverrider,
+                axisValueOverrider = axisValueOverrider,
                 lineProvider = LineCartesianLayer.LineProvider.series(
                     rememberLine(
                         shader = DynamicShader.color(BudzColor.darkBlue),
@@ -40,12 +42,12 @@ fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: 
                 ),
             ),
             horizontalLayout = HorizontalLayout.fullWidth(),
-            startAxis = null,
+            startAxis = rememberStartAxis(),
             bottomAxis = null,
         ),
         modelProducer,
         zoomState = rememberVicoZoomState(initialZoom = Zoom.x(dataPointsSize),
-            zoomEnabled = true),
+            zoomEnabled = false),
         scrollState = rememberVicoScrollState(scrollEnabled = false),
         animationSpec = null,
         runInitialAnimation = false,

@@ -24,6 +24,8 @@ import kotlin.time.Duration.Companion.seconds
 
 data class CheckConnectionState(
     val connected: Boolean = false,
+    val minY: Int = 0,
+    val maxY: Int = 0
 )
 
 @HiltViewModel
@@ -69,35 +71,7 @@ class CheckConnectionViewModel @Inject constructor(
                         dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
                             while (true) {
                                 val startTime = System.currentTimeMillis()
-                                val leftEarData = airohaDeviceManager.getChannelData(
-                                    localSessionId=null,
-                                    channelName=MauiDataParser.CHANNEL_LEFT.toString(),
-                                    durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
-                                    fromDatabase=false)
-                                if (leftEarData == null || leftEarData.size < 2100) {
-                                    continue
-                                }
-                                Log.d("CheckConnectionViewModel", "Before prepare: " +
-                                        "${System.currentTimeMillis() - startTime}")
-                                val preparedData = prepareData(leftEarData)
-                                Log.d("CheckConnectionViewModel", "Before chart: " +
-                                        "${System.currentTimeMillis() - startTime}")
-                                leftEarChartModelProducer.runTransaction {
-                                    lineSeries { series(preparedData) }
-                                }
-                                Log.d("CheckConnectionViewModel", "After chart: " +
-                                        "${System.currentTimeMillis() - startTime}")
-                                val rightEarData = airohaDeviceManager.getChannelData(
-                                    localSessionId=null,
-                                    channelName=MauiDataParser.CHANNEL_RIGHT.toString(),
-                                    durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
-                                    fromDatabase=false)
-                                if (rightEarData == null || rightEarData.size < 2100) {
-                                    continue
-                                }
-                                rightEarChartModelProducer.runTransaction {
-                                    lineSeries { series(prepareData(rightEarData)) }
-                                }
+                                updateSignalCharts()
                                 val runtimeMs = System.currentTimeMillis() - startTime
                                 Log.d("CheckConnectionViewModel", "Update time: " +
                                         "${System.currentTimeMillis() - startTime}")
@@ -126,10 +100,79 @@ class CheckConnectionViewModel @Inject constructor(
         }
     }
 
+    private suspend fun updateSignalCharts() {
+        val startTime = System.currentTimeMillis()
+
+        // Get the data for both ears.
+        val leftEarData = airohaDeviceManager.getChannelData(
+            localSessionId=null,
+            channelName=MauiDataParser.CHANNEL_LEFT.toString(),
+            durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
+            fromDatabase=false)
+        val rightEarData = airohaDeviceManager.getChannelData(
+            localSessionId=null,
+            channelName=MauiDataParser.CHANNEL_RIGHT.toString(),
+            durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
+            fromDatabase=false)
+        val gotRightEarData = rightEarData != null && rightEarData.size >= 2100
+        val gotLeftEarData = leftEarData != null && leftEarData.size >= 2100
+        if (!gotLeftEarData && !gotRightEarData) {
+            return
+        }
+
+        val leftEarDataPrepared = if (gotLeftEarData) prepareData(leftEarData!!) else emptyList()
+        val rightEarDataPrepared = if (gotRightEarData) prepareData(rightEarData!!) else emptyList()
+
+        // Update Y scale for the charts.
+        if (gotLeftEarData && gotRightEarData) {
+            val (leftMinY, lefMaxY) = getDataBounds(leftEarDataPrepared)
+            val (rightMinY, rightMaxY) = getDataBounds(rightEarDataPrepared)
+            _uiState.value = CheckConnectionState(
+                connected = true,
+                minY = leftMinY.coerceAtMost(rightMinY),
+                maxY = lefMaxY.coerceAtLeast(rightMaxY)
+            )
+        } else if (gotLeftEarData) {
+            val (leftMinY, lefMaxY) = getDataBounds(leftEarDataPrepared)
+            _uiState.value = CheckConnectionState(
+                connected = true,
+                minY = leftMinY,
+                maxY = lefMaxY
+            )
+        } else {
+            val (rightMinY, rightMaxY) = getDataBounds(rightEarDataPrepared)
+            _uiState.value = CheckConnectionState(
+                connected = true,
+                minY = rightMinY,
+                maxY = rightMaxY
+            )
+        }
+
+        // Update the charts.
+        if (gotLeftEarData) {
+            Log.d("CheckConnectionViewModel", "Before chart: " +
+                    "${System.currentTimeMillis() - startTime}")
+            leftEarChartModelProducer.runTransaction {
+                lineSeries { series(leftEarDataPrepared) }
+            }
+            Log.d("CheckConnectionViewModel", "After chart: " +
+                    "${System.currentTimeMillis() - startTime}")
+        }
+        if (gotRightEarData) {
+            rightEarChartModelProducer.runTransaction {
+                lineSeries { series(rightEarDataPrepared) }
+            }
+        }
+    }
+
     private fun prepareData(data: List<Float>): List<Double> {
         val doubleData = data.map { it.toDouble() }.toDoubleArray()
         val doubleArrayData = Sampling.resample(doubleData, 1000F, 100, _chartSamplingRate)
         // val doubleArrayData = Sampling.resamplePoly(doubleData, _chartSamplingRate, 1000F)
         return doubleArrayData.toList().subList(200, doubleArrayData.size)
+    }
+
+    private fun getDataBounds(data: List<Double>): Pair<Int, Int> {
+        return data.minOrNull()!!.toInt() to data.maxOrNull()!!.toInt() + 1
     }
 }
