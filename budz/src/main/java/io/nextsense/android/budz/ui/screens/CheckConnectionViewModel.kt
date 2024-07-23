@@ -124,13 +124,9 @@ class CheckConnectionViewModel @Inject constructor(
 
         // Update the charts.
         if (gotLeftEarData) {
-            Log.d("CheckConnectionViewModel", "Before chart: " +
-                    "${System.currentTimeMillis() - startTime}")
             leftEarChartModelProducer.runTransaction {
                 lineSeries { series(leftEarDataPrepared) }
             }
-            Log.d("CheckConnectionViewModel", "After chart: " +
-                    "${System.currentTimeMillis() - startTime}")
         }
         if (gotRightEarData) {
             rightEarChartModelProducer.runTransaction {
