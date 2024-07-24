@@ -11,7 +11,9 @@ import androidx.media3.common.util.Util
 import com.paramsen.noise.Noise
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.time.LocalDateTime
 import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * An audio processor which forwards the input to the output,
@@ -23,7 +25,7 @@ import kotlin.math.max
 class FFTAudioProcessor : AudioProcessor {
 
     companion object {
-        const val SAMPLE_SIZE = 4096
+        const val SAMPLE_SIZE = 2048
 
         // From DefaultAudioSink.java:160 'MIN_BUFFER_DURATION_US'
         private const val EXO_MIN_BUFFER_DURATION_US: Long = 250000
@@ -36,6 +38,8 @@ class FFTAudioProcessor : AudioProcessor {
 
         // Extra size next in addition to the AudioTrack buffer size
         private const val BUFFER_EXTRA_SIZE = SAMPLE_SIZE * 8
+
+        private val REFRESH_INTERVAL = 500.milliseconds
     }
 
     private var noise: Noise? = null
@@ -57,6 +61,8 @@ class FFTAudioProcessor : AudioProcessor {
 
     private val src = FloatArray(SAMPLE_SIZE)
     private val dst = FloatArray(SAMPLE_SIZE + 2)
+
+    private var lastProcessTime = LocalDateTime.now()
 
 
     interface FFTListener {
@@ -129,6 +135,9 @@ class FFTAudioProcessor : AudioProcessor {
     }
 
     override fun queueInput(inputBuffer: ByteBuffer) {
+        val processFft = (lastProcessTime.plusSeconds(REFRESH_INTERVAL.inWholeSeconds) <
+                LocalDateTime.now())
+
         var position = inputBuffer.position()
         val limit = inputBuffer.limit()
         val frameCount = (limit - position) / (2 * inputAudioFormat.channelCount)
@@ -142,11 +151,14 @@ class FFTAudioProcessor : AudioProcessor {
             processBuffer.clear()
         }
 
-        if (fftBuffer.capacity() < singleChannelOutputSize) {
-            fftBuffer =
-                ByteBuffer.allocateDirect(singleChannelOutputSize).order(ByteOrder.nativeOrder())
-        } else {
-            fftBuffer.clear()
+        if (processFft) {
+            if (fftBuffer.capacity() < singleChannelOutputSize) {
+                fftBuffer =
+                    ByteBuffer.allocateDirect(singleChannelOutputSize)
+                        .order(ByteOrder.nativeOrder())
+            } else {
+                fftBuffer.clear()
+            }
         }
 
         while (position < limit) {
@@ -156,14 +168,19 @@ class FFTAudioProcessor : AudioProcessor {
                 processBuffer.putShort(current)
                 summedUp += current
             }
-            // For the FFT, we use an currentAverage of all the channels
-            fftBuffer.putShort((summedUp / inputAudioFormat.channelCount).toShort())
+            if (processFft) {
+                // For the FFT, we use an currentAverage of all the channels
+                fftBuffer.putShort((summedUp / inputAudioFormat.channelCount).toShort())
+            }
             position += inputAudioFormat.channelCount * 2
         }
 
         inputBuffer.position(limit)
 
-        processFFT(this.fftBuffer)
+        if (processFft) {
+            processFFT(this.fftBuffer)
+            lastProcessTime = LocalDateTime.now()
+        }
 
         processBuffer.flip()
         outputBuffer = this.processBuffer

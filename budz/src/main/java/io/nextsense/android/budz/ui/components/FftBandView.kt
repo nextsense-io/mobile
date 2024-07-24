@@ -37,7 +37,7 @@ class FFTBandView @JvmOverloads constructor(
 
     private val bands = FREQUENCY_BAND_LIMITS.size
     private val size = FFTAudioProcessor.SAMPLE_SIZE / 2
-    private val maxConst = 25_000 // Reference max value for accum magnitude
+    private val maxConst = 2_000 // Reference max value for accum magnitude
     private val fft: FloatArray = FloatArray(size)
     private val paintBandsFill = Paint()
     private val paintBands = Paint()
@@ -45,7 +45,7 @@ class FFTBandView @JvmOverloads constructor(
     private val paintPath = Paint()
 
     // We average out the values over 3 occurences (plus the current one), so big jumps are smoothed out
-    private val smoothingFactor = 3
+    private val smoothingFactor = 5
     private val previousValues = FloatArray(bands * smoothingFactor)
 
     private val fftPath = Path()
@@ -83,13 +83,13 @@ class FFTBandView @JvmOverloads constructor(
         var currentAverage = 0f
 
         // Iterate over the entire FFT result array
-        while (currentFftPosition < size) {
+        while (currentFftPosition + 1 < size) {
             var accum = 0f
 
             // We divide the bands by frequency.
             // Check until which index we need to stop for the current band
             val nextLimitAtPosition =
-                floor(FREQUENCY_BAND_LIMITS[currentFrequencyBandLimitIndex] / 20_000.toFloat() * size).toInt()
+                floor(FREQUENCY_BAND_LIMITS[currentFrequencyBandLimitIndex] / 20_000.toFloat() * size).toInt().coerceAtMost(size - 1)
 
             synchronized(fft) {
                 // Here we iterate within this single band
