@@ -5,8 +5,10 @@ import android.util.AttributeSet
 import android.widget.FrameLayout
 import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
@@ -18,7 +20,7 @@ fun ExoVisualizer(audioProcessor: FFTAudioProcessor) {
 
     // Adds view to Compose
     AndroidView(
-        modifier = Modifier.fillMaxSize(), // Occupy the max size in the Compose UI tree
+        modifier = Modifier.fillMaxSize().height(200.dp), // Occupy the max size in the Compose UI tree
         factory = { context ->
             // Creates view
             ExoVisualizerView(context).apply {

@@ -1,7 +1,6 @@
 package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
-import android.net.Uri
 import android.os.Handler
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -218,10 +217,11 @@ class BrainEqualizerViewModel @Inject constructor(
             }
         }
         player = ExoPlayer.Builder(context, renderersFactory).build()
+        player.repeatMode = ExoPlayer.REPEAT_MODE_ALL
 
         // Online radio:
         // val uri = Uri.parse("https://listen.livestreamingservice.com/181-xsoundtrax_128k.mp3")
-        val uri = RawResourceDataSource.buildRawResourceUri(R.raw.white_noise)
+        val uri = RawResourceDataSource.buildRawResourceUri(R.raw.fan_sound)
         // 1 kHz test sound:
         // val uri = Uri.parse("https://www.mediacollege.com/audio/tone/files/1kHz_44100Hz_16bit_05sec.mp3")
         // 10 kHz test sound:
