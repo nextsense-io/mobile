@@ -35,7 +35,6 @@ public class MauiDataParser {
 
   private static final String TAG = MauiDataParser.class.getSimpleName();
 
-  private static final float V_REF = 2.048f;
   private static final double CLOCK_TO_US_MULTIPLIER = 312.5f;
   private static final float AFE_FS = 1.1f;
   private static final int AFE_GAIN = 12;
@@ -44,7 +43,7 @@ public class MauiDataParser {
   // Acceleration and Angular speed from the gyroscope. X, Y and Z from each at 16 bits of
   // resolution.
   private static final int IMU_SAMPLE_SIZE_BYTES = 12;
-  private static final boolean VERBOSE_LOGGING = true;
+  private static final boolean VERBOSE_LOGGING = false;
 
   private final LocalSessionManager localSessionManager;
 
@@ -72,7 +71,11 @@ public class MauiDataParser {
   }
 
   private static float convertToMicroVolts(int data) {
-    return (float)(data * ((V_REF * 1000000.0f) / (AFE_FS / AFE_GAIN * (pow(2, 21) - 1))));
+    if (data <= 2097151) {  // Midpoint of 22 bits.
+      return (float) (data / (pow(2, 21) - 1) * AFE_FS / AFE_GAIN) * 1000000.0f;
+    } else {
+      return (float) (data - pow(2, 22) / pow(2, 21) * AFE_FS / AFE_GAIN) * 1000000.0f;
+    }
   }
 
   public void startNewSession() {
@@ -219,9 +222,9 @@ public class MauiDataParser {
     }
     LocalSession localSession = localSessionOptional.get();
     valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
-    int eegValue = Util.bytesToInt24(
+    int eegValue = Util.bytesToInt22(
         new byte[]{valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get()}, 0,
-        ByteOrder.LITTLE_ENDIAN, /*signed=*/false);
+        ByteOrder.LITTLE_ENDIAN);
     int dataPointAcquisitionTimeStamp = (int) acquisitionTimestamp + (deviceLocation ==
         DeviceLocation.LEFT_EARBUD ? leftSamplesSinceKeyTimestamp : rightSamplesSinceKeyTimestamp) *
         Math.round(1000 / localSession.getEegSampleRate());

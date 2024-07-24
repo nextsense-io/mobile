@@ -22,6 +22,16 @@ public class Util {
     return sb.toString();
   }
 
+  public static int bytesToInt22(byte[] buffer, int byteOffset, ByteOrder byteOrder) {
+    return byteOrder == ByteOrder.LITTLE_ENDIAN?
+        (((buffer[byteOffset] & 0x3F) << 16) |
+            ((buffer[byteOffset + 1] & 0xFF) << 8) |
+            (buffer[byteOffset + 2] & 0xFF)):
+        (((buffer[byteOffset + 2] & 0xFF) << 16) |
+            ((buffer[byteOffset + 1] & 0xFF) << 8) |
+            (buffer[byteOffset] & 0x3F));
+  }
+
   public static int bytesToInt24(byte[] buffer, int byteOffset, ByteOrder byteOrder) {
     return bytesToInt24(buffer, byteOffset, byteOrder, /*signed=*/true);
   }
