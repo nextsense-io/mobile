@@ -1,5 +1,6 @@
 package io.nextsense.android.budz.ui.screens
 
+import androidx.annotation.OptIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,14 +26,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.media3.common.util.UnstableApi
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.BudzCard
+import io.nextsense.android.budz.ui.components.ExoVisualizer
 import io.nextsense.android.budz.ui.components.SignalLineChart
 import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 import io.nextsense.android.budz.ui.components.WideButton
 
+@OptIn(UnstableApi::class)
 @Composable
 fun BrainSignal(viewModel: BrainEqualizerViewModel) {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -68,6 +73,7 @@ fun BrainSignal(viewModel: BrainEqualizerViewModel) {
     }
 }
 
+@OptIn(UnstableApi::class)
 @Composable
 fun BrainEqualizerScreen(
     brainEqualizerViewModel: BrainEqualizerViewModel = hiltViewModel(),
@@ -77,10 +83,18 @@ fun BrainEqualizerScreen(
 ) {
     val brainEqualizerUiState by brainEqualizerViewModel.uiState.collectAsState()
 
+    LifecycleResumeEffect(true) {
+        brainEqualizerViewModel.startPlayer()
+        onPauseOrDispose {
+            brainEqualizerViewModel.pausePlayer()
+        }
+    }
+
     LifecycleStartEffect(true) {
         brainEqualizerViewModel.startStreaming()
         onStopOrDispose {
             brainEqualizerViewModel.stopStreaming()
+            brainEqualizerViewModel.stopPlayer()
         }
     }
 
@@ -117,7 +131,7 @@ fun BrainEqualizerScreen(
                 Text(text = stringResource(R.string.text_tune_your_music_content),
                     style = MaterialTheme.typography.displaySmall)
                 Spacer(modifier = Modifier.height(20.dp))
-
+                ExoVisualizer(brainEqualizerViewModel.fftAudioProcessor)
                 Spacer(modifier = Modifier.height(20.dp))
                 WideButton(
                     name = stringResource(R.string.label_instructions_and_tips),
