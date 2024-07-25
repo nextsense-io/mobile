@@ -43,7 +43,7 @@ public class MauiDataParser {
   // Acceleration and Angular speed from the gyroscope. X, Y and Z from each at 16 bits of
   // resolution.
   private static final int IMU_SAMPLE_SIZE_BYTES = 12;
-  private static final boolean VERBOSE_LOGGING = false;
+  private static final boolean VERBOSE_LOGGING = true;
 
   private final LocalSessionManager localSessionManager;
 
@@ -70,11 +70,13 @@ public class MauiDataParser {
     this.deviceName = deviceName;
   }
 
-  private static float convertToMicroVolts(int data) {
+  public static float convertToMicroVolts(int data) {
     if (data <= 2097151) {  // Midpoint of 22 bits.
-      return (float) (data / (pow(2, 21) - 1) * AFE_FS / AFE_GAIN) * 1000000.0f;
+      float result = (float) (data / (pow(2, 21) - 1) * AFE_FS / AFE_GAIN) * 1000000;
+      return result;
     } else {
-      return (float) (data - pow(2, 22) / pow(2, 21) * AFE_FS / AFE_GAIN) * 1000000.0f;
+      float result = (float) ((data - pow(2, 22)) / pow(2, 21) * AFE_FS / AFE_GAIN) * 1000000;
+      return result;
     }
   }
 
