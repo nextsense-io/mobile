@@ -313,7 +313,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             connectServiceFlow().flowOn(Dispatchers.IO).take(1).last()
         }
         if (serviceConnected) {
-            val deviceState =_airohaBleManager?.connect()
+            val deviceMac = (_deviceInfo?.deviceMAC ?: "").filter { it != ':' }
+            Log.d(tag, "Connecting to BLE devices with mac $deviceMac")
+            val deviceState =_airohaBleManager?.connect(deviceMac)
             if (deviceState == DeviceState.READY) {
                 _airohaDeviceState.value = AirohaDeviceState.CONNECTED_BLE
                 val readyForStreaming = _airohaBleManager!!.startStreaming()

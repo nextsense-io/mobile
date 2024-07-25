@@ -40,6 +40,8 @@ public interface DeviceManager {
 
   void findDevices(DeviceScanListener deviceScanListener);
 
+  void findDevices(DeviceScanListener deviceScanListener, String suffix);
+
   List<Device> getConnectedDevices();
 
   void stopFindingDevices(DeviceScanListener deviceScanListener);

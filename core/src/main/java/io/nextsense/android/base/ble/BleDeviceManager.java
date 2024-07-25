@@ -75,6 +75,11 @@ public class BleDeviceManager implements DeviceManager {
 
   @Override
   public void findDevices(DeviceManager.DeviceScanListener deviceScanListener) {
+    findDevices(deviceScanListener, /*suffix=*/null);
+  }
+
+  @Override
+  public void findDevices(DeviceManager.DeviceScanListener deviceScanListener, String suffix) {
     // Return already connected devices first.
     for (Device device : devices.values()) {
       if (device.getState() == DeviceState.CONNECTING ||
@@ -86,7 +91,7 @@ public class BleDeviceManager implements DeviceManager {
     // Add the listener then launch a new scan.
     deviceScanListeners.add(deviceScanListener);
     scanning = true;
-    deviceScanner.findPeripherals(mainDeviceScanListener);
+    deviceScanner.findPeripherals(mainDeviceScanListener, suffix);
   }
 
   @Override

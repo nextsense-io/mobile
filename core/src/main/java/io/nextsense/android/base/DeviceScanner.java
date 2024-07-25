@@ -84,9 +84,19 @@ public interface DeviceScanner {
     void findDevices(DeviceScanListener deviceScanListener);
 
     /**
+     * Returns the list of valid devices that are detected.
+     */
+    void findDevices(DeviceScanListener deviceScanListener, String suffix);
+
+    /**
      * Returns the list of valid peripherals that are detected.
      */
     void findPeripherals(PeripheralScanListener peripheralScanListener);
+
+    /**
+     * Returns the list of valid peripherals that are detected.
+     */
+    void findPeripherals(PeripheralScanListener peripheralScanListener, String suffix);
 
     /**
      * Stops finding devices or peripherals if it was currently running.

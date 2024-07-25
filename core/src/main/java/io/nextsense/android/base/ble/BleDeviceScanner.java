@@ -43,6 +43,7 @@ public class BleDeviceScanner implements DeviceScanner {
   private final MemoryCache memoryCache;
   private final CsvSink csvSink;
   private boolean scanning = false;
+  private String suffix = null;
 
   private final BluetoothCentralManagerCallback bluetoothCentralManagerCallback =
       new BluetoothCentralManagerCallback() {
@@ -53,7 +54,9 @@ public class BleDeviceScanner implements DeviceScanner {
         return;
       }
       for (String prefix : deviceManager.getValidPrefixes()) {
-        if (scanResult.getDevice().getName().startsWith(prefix)) {
+        if (scanResult.getDevice().getName().startsWith(prefix) && (
+            suffix == null || scanResult.getDevice().getName().endsWith(suffix)
+            )) {
           if (foundPeripheralAddresses.contains(peripheral.getAddress())) {
             return;
           }
@@ -139,11 +142,19 @@ public class BleDeviceScanner implements DeviceScanner {
    */
   @Override
   public void findDevices(DeviceScanner.DeviceScanListener deviceScanListener) {
+    findDevices(deviceScanListener, /*suffix=*/null);
+  }
+  /**
+   * Returns the list of valid devices that are detected.
+   */
+  @Override
+  public void findDevices(DeviceScanner.DeviceScanListener deviceScanListener, String suffix) {
     scanningForPeripherals = false;
     this.deviceScanListener = deviceScanListener;
     this.devices.clear();
     RotatingFileLogger.get().logd(TAG, "Finding Bluetooth devices...");
     centralManagerProxy.getCentralManager().stopScan();
+    this.suffix = suffix;
     centralManagerProxy.getCentralManager()
         .scanForPeripheralsWithNames(deviceManager.getValidPrefixes().toArray(new String[0]));
     scanning = true;
@@ -154,10 +165,20 @@ public class BleDeviceScanner implements DeviceScanner {
    */
   @Override
   public void findPeripherals(DeviceScanner.PeripheralScanListener peripheralScanListener) {
+    findPeripherals(peripheralScanListener, /*suffix=*/null);
+  }
+
+  /**
+   * Returns the list of valid peripherals that are detected.
+   */
+  @Override
+  public void findPeripherals(DeviceScanner.PeripheralScanListener peripheralScanListener,
+                              String suffix) {
     scanningForPeripherals = true;
     this.peripheralScanListener = peripheralScanListener;
     RotatingFileLogger.get().logd(TAG, "Finding Bluetooth peripherals...");
     centralManagerProxy.getCentralManager().stopScan();
+    this.suffix = suffix;
     centralManagerProxy.getCentralManager()
         .scanForPeripheralsWithNames(deviceManager.getValidPrefixes().toArray(new String[0]));
     scanning = true;

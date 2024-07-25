@@ -18,7 +18,13 @@ public class EmulatedDeviceScanner implements DeviceScanner {
   public void findDevices(DeviceScanner.DeviceScanListener deviceScanListener) {}
 
   @Override
+  public void findDevices(DeviceScanner.DeviceScanListener deviceScanListener, String suffix) {}
+
+  @Override
   public void findPeripherals(DeviceScanner.PeripheralScanListener peripheralScanListener) {}
+
+  @Override
+  public void findPeripherals(DeviceScanner.PeripheralScanListener peripheralScanListener, String suffix) {}
 
   @Override
   public void stopFinding() { }

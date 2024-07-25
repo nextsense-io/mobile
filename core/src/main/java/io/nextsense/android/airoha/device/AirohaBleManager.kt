@@ -47,8 +47,8 @@ class AirohaBleManager(
         }
     }
 
-    suspend fun connect(): DeviceState {
-        val devices = deviceScanListenerFlow().take(2).toList()
+    suspend fun connect(macAddress: String): DeviceState {
+        val devices = deviceScanListenerFlow(macAddress).take(2).toList()
         for (device in devices) {
             if (device?.name == MauiDevice.BLUETOOTH_PREFIX_LEFT) {
                 leftEarDevice = device
@@ -124,7 +124,7 @@ class AirohaBleManager(
         return (leftStarted ?: false || rightStarted ?: false)
     }
 
-    private fun deviceScanListenerFlow() = callbackFlow<Device?> {
+    private fun deviceScanListenerFlow(macAddress: String) = callbackFlow<Device?> {
         val deviceScanListener = object : DeviceManager.DeviceScanListener {
             override fun onNewDevice(device: Device) {
                 RotatingFileLogger.get()
@@ -142,7 +142,7 @@ class AirohaBleManager(
             }
         }
 
-        deviceManager.findDevices(deviceScanListener)
+        deviceManager.findDevices(deviceScanListener, /*suffix=*/macAddress)
 
         awaitClose {
             deviceManager.stopFindingDevices(deviceScanListener)
