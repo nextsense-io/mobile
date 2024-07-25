@@ -47,12 +47,22 @@ class AirohaBleManager(
         }
     }
 
+    private fun isLeftDevice(device: Device?, macAddress: String): Boolean {
+        return device?.name!!.startsWith(MauiDevice.BLUETOOTH_PREFIX_LEFT) &&
+                device.name!!.endsWith(macAddress)
+    }
+
+    private fun isRightDevice(device: Device?, macAddress: String): Boolean {
+        return device?.name!!.startsWith(MauiDevice.BLUETOOTH_PREFIX_RIGHT) &&
+                device.name!!.endsWith(macAddress)
+    }
+
     suspend fun connect(macAddress: String): DeviceState {
         val devices = deviceScanListenerFlow(macAddress).take(2).toList()
         for (device in devices) {
-            if (device?.name == MauiDevice.BLUETOOTH_PREFIX_LEFT) {
+            if (isLeftDevice(device, macAddress)) {
                 leftEarDevice = device
-            } else if (device?.name == MauiDevice.BLUETOOTH_PREFIX_RIGHT) {
+            } else if (isRightDevice(device, macAddress)) {
                 rightEarDevice = device
             } else {
                 RotatingFileLogger.get().logw(tag, "Found a device with unknown name: " +
@@ -63,9 +73,9 @@ class AirohaBleManager(
                     device?.connect(/*autoReconnect=*/true)?.get(30, TimeUnit.SECONDS)
                 }
                 val deviceState = deviceConnectFuture.await()
-                if (device?.name == MauiDevice.BLUETOOTH_PREFIX_LEFT) {
+                if (isLeftDevice(device, macAddress)) {
                     leftDeviceState = deviceState
-                } else if (device?.name == MauiDevice.BLUETOOTH_PREFIX_RIGHT) {
+                } else if (isRightDevice(device, macAddress)) {
                     rightDeviceState = deviceState
                 }
             } catch (e: Exception) {
