@@ -1,5 +1,6 @@
 package io.nextsense.android.base.devices.maui;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -10,7 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 
 public class DataSynchronizer {
-  static class DataPoint {
+  public static class DataPoint {
     long samplingTimestamp;
     Instant receptionTimestamp;
     float value;
@@ -35,6 +36,9 @@ public class DataSynchronizer {
           && Float.compare(other.value, value) == 0;
     }
   }
+
+  // If no sync was done after this long, remove data points.
+  private static final Duration SYNC_TIMEOUT = Duration.ofSeconds(10);
 
   private final Map<String, List<DataPoint>> channelDataMap;
 
@@ -98,5 +102,20 @@ public class DataSynchronizer {
     synchronizedData.sort(Comparator.comparing(map -> map.values().iterator().next().samplingTimestamp));
 
     return synchronizedData;
+  }
+
+  public synchronized int removeOldData() {
+    int removed = 0;
+    for (List<DataPoint> dataPoints : channelDataMap.values()) {
+      Iterator<DataPoint> iterator = dataPoints.iterator();
+      while (iterator.hasNext()) {
+        DataPoint dp = iterator.next();
+        if (dp.receptionTimestamp.plus(SYNC_TIMEOUT).isBefore(Instant.now())) {
+          iterator.remove();
+          removed++;
+        }
+      }
+    }
+    return removed;
   }
 }

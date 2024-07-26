@@ -99,4 +99,53 @@ public class DataSynchronizerTest {
     allSynchronizedData = dataSynchronizer.getAllSynchronizedDataAndRemove();
     assertTrue(allSynchronizedData.isEmpty());
   }
+
+  @Test
+  public void testEquals() {
+    DataSynchronizer.DataPoint dataPoint1 = new DataSynchronizer.DataPoint(1627550710000L,
+        Instant.ofEpochMilli(1627550710000L), 1.0f);
+    DataSynchronizer.DataPoint dataPoint2 = new DataSynchronizer.DataPoint(1627550710000L,
+        Instant.ofEpochMilli(1627550710000L), 1.0f);
+    DataSynchronizer.DataPoint dataPoint3 = new DataSynchronizer.DataPoint(1627550710000L,
+        Instant.ofEpochMilli(1627550710000L), 2.0f);
+
+    assertEquals(dataPoint1, dataPoint2);
+    assertNotEquals(dataPoint1, dataPoint3);
+  }
+
+  @Test
+  public void testEqualsWithDifferentObject() {
+    DataSynchronizer.DataPoint dataPoint = new DataSynchronizer.DataPoint(1627550710000L,
+        Instant.ofEpochMilli(1627550710000L), 1.0f);
+    assertNotEquals(dataPoint, new Object());
+  }
+
+  @Test
+  public void testRemoveOldData() {
+    Instant twentySecondAgo = Instant.now().minusSeconds(20);
+    dataSynchronizer.addData("channel1", 1627550710000L, twentySecondAgo,
+        1.0f);
+    dataSynchronizer.addData("channel2", 1627550710000L, twentySecondAgo,
+        2.0f);
+    dataSynchronizer.addData("channel3", 1627550710000L, twentySecondAgo,
+        3.0f);
+
+    dataSynchronizer.addData("channel1", 1627550720000L, twentySecondAgo,
+        1.1f);
+    dataSynchronizer.addData("channel2", 1627550720000L, twentySecondAgo,
+        2.1f);
+
+    dataSynchronizer.addData("channel1", 1627550730000L, Instant.now(),
+        1.2f);
+    dataSynchronizer.addData("channel2", 1627550730000L, Instant.now(),
+        2.2f);
+    dataSynchronizer.addData("channel3", 1627550730000L, Instant.now(),
+        3.2f);
+
+    dataSynchronizer.removeOldData();
+
+    List<Map<String, DataSynchronizer.DataPoint>> allSynchronizedData =
+        dataSynchronizer.getAllSynchronizedDataAndRemove();
+    assertEquals(1, allSynchronizedData.size());
+  }
 }
