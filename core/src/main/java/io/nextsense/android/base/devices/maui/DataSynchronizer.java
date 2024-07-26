@@ -38,7 +38,7 @@ public class DataSynchronizer {
   }
 
   // If no sync was done after this long, remove data points.
-  private static final Duration SYNC_TIMEOUT = Duration.ofSeconds(10);
+  public static final Duration SYNC_TIMEOUT = Duration.ofSeconds(10);
 
   private final Map<String, List<DataPoint>> channelDataMap;
 

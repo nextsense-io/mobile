@@ -35,6 +35,7 @@ public class MauiDataParser {
   public static final int CHANNEL_RIGHT = 2;
 
   private static final String TAG = MauiDataParser.class.getSimpleName();
+  private static final Long UNSIGNED_INT_MAX_VALUE = 4294967295L;
 
   private static final double CLOCK_TO_US_MULTIPLIER = 312.5f;
   private static final float AFE_FS = 1.1f;
@@ -54,6 +55,7 @@ public class MauiDataParser {
   private int rightSamplesSinceKeyTimestamp = 0;
   private long lastKeyTimestampLeft = 0;
   private int leftSamplesSinceKeyTimestamp = 0;
+  private Long lastPackageNum = null;
 
   private MauiDataParser(LocalSessionManager localSessionManager) {
     this.localSessionManager = localSessionManager;
@@ -130,10 +132,27 @@ public class MauiDataParser {
       deviceLocation = budzDataPacket.getFlags() == 0 ? DeviceLocation.LEFT_EARBUD :
           DeviceLocation.RIGHT_EARBUD;
 
+      long packageNum = Integer.toUnsignedLong(budzDataPacket.getPackageNum());
+      long skipped = getSkippedPackets(packageNum);
+      if (skipped != 0) {
+        // TODO(eric): Replace the content of the field with number of eeg packets sent instead of
+        //  number of packets to be able to increment the time correctly for skipped eeg samples.
+//        int eegSamplesPerPacket = Math.round(1000 / localSession.getEegSampleRate()) / 20;
+//        if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
+//          leftSamplesSinceKeyTimestamp += skipped * eegSamplesPerPacket;
+//        } else {
+//          rightSamplesSinceKeyTimestamp += skipped * eegSamplesPerPacket;
+//        }
+        Log.w(TAG, "Package number is not sequential. Last: " + lastPackageNum + ", current: " +
+            packageNum + ", skipped: " + skipped);
+      }
+      lastPackageNum = packageNum;
+
       long acquisitionTimestamp;
       if (budzDataPacket.getBtClockNclk() != 0) {
-        Log.w(TAG, "btClockNclk: " + budzDataPacket.getBtClockNclk() + ", btClockNclIntra: " +
-            (budzDataPacket.getBtClockNclkIntra() & 0xffffL) + ", flags: " +
+        Log.w(TAG, "btClockNclk: " + Integer.toUnsignedLong(budzDataPacket.getBtClockNclk()) +
+            ", btClockNclIntra: " +
+            (Integer.toUnsignedLong(budzDataPacket.getBtClockNclkIntra())) + ", flags: " +
             budzDataPacket.getFlags());
         if (deviceLocation == DeviceLocation.RIGHT_EARBUD) {
           lastKeyTimestampRight = getTimestamp(budzDataPacket, localSession.getEegSampleRate());
@@ -147,9 +166,9 @@ public class MauiDataParser {
         Log.d(TAG, "Data packet before first key timestamp, ignoring.");
         return;
       }
-
       acquisitionTimestamp = deviceLocation == DeviceLocation.LEFT_EARBUD ? lastKeyTimestampLeft :
           lastKeyTimestampRight;
+
       if (!budzDataPacket.getEeeg().isEmpty()) {
         parseSampleData(budzDataPacket, deviceLocation, receptionTimestamp,
             acquisitionTimestamp);
@@ -159,11 +178,27 @@ public class MauiDataParser {
     }
   }
 
+  private long getSkippedPackets(Long packageNum) {
+    long skipped = 0;
+    if (lastPackageNum != null) {
+      // Check for rollover after integer limit.
+      if (lastPackageNum > packageNum) {
+        if (!lastPackageNum.equals(UNSIGNED_INT_MAX_VALUE) || packageNum != 0) {
+          skipped = UNSIGNED_INT_MAX_VALUE - lastPackageNum + packageNum;
+        }
+      } else if (lastPackageNum + 1 != packageNum) {
+        skipped = packageNum - lastPackageNum - 1;
+      }
+    }
+    return skipped;
+  }
+
   private long getTimestamp(BudzDataPacketProto.BudzDataPacket budzDataPacket,
                             float eegSamplingRate) {
     int eegSamplesInPacket = budzDataPacket.getEeeg().size() / EEG_SAMPLE_SIZE_BYTES;
-    long uptimeMs = Math.round((budzDataPacket.getBtClockNclk() & 0xffffL) * CLOCK_TO_US_MULTIPLIER
-        + (budzDataPacket.getBtClockNclkIntra() & 0xffffL)) / 1000;
+    long uptimeMs = Math.round((Integer.toUnsignedLong(budzDataPacket.getBtClockNclk())) *
+        CLOCK_TO_US_MULTIPLIER + (Integer.toUnsignedLong(budzDataPacket.getBtClockNclkIntra()))) /
+        1000;
     // The timestamp is the time when the last sample in this packet was collected. Subtract the
     // time to go back to the first sample of this packet.
     return uptimeMs - (long) eegSamplesInPacket * Math.round(1000 / eegSamplingRate);
@@ -214,6 +249,14 @@ public class MauiDataParser {
             null));
       }
       EventBus.getDefault().post(samples);
+    } else {
+      // Check in case sync is failing and need to remove data. It it fails for a long time, memory
+      // could run out.
+      long removedCount = dataSynchronizer.removeOldData();
+      if (VERBOSE_LOGGING && removedCount > 0) {
+        Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toString() +
+            ". Removed " + removedCount + " old data points.");
+      }
     }
 
     if (VERBOSE_LOGGING) {
