@@ -29,6 +29,11 @@ public class EmulatedDeviceManager implements DeviceManager {
     }
 
     @Override
+    public void stopFindingAll() {
+        // Nothing to do here when emulated
+    }
+
+    @Override
     public void close() {
         // Nothing to do here when emulated
     }

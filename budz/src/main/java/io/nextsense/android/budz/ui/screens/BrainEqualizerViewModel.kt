@@ -58,7 +58,8 @@ class BrainEqualizerViewModel @Inject constructor(
     private val _refreshInterval = 100.milliseconds
     private val _chartSamplingRate = 100F
     private val _uiState = MutableStateFlow(BrainEqualizerState())
-    private var dataRefreshJob: Job? = null
+    private var _stopping = false
+    private var _dataRefreshJob: Job? = null
     private lateinit var player: ExoPlayer
 
     val leftEarChartModelProducer = CartesianChartModelProducer()
@@ -76,7 +77,9 @@ class BrainEqualizerViewModel @Inject constructor(
                     )
                 when (deviceState) {
                     AirohaDeviceState.READY -> {
-                        airohaDeviceManager.startBleStreaming()
+                        if (!_stopping) {
+                            airohaDeviceManager.startBleStreaming()
+                        }
                     }
                     else -> {
                         // Nothing to do
@@ -88,8 +91,8 @@ class BrainEqualizerViewModel @Inject constructor(
             airohaDeviceManager.streamingState.collect { streamingState ->
                 when (streamingState) {
                     StreamingState.STARTED -> {
-                        dataRefreshJob?.cancel()
-                        dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
+                        _dataRefreshJob?.cancel()
+                        _dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
                             while (true) {
                                 val startTime = System.currentTimeMillis()
                                 updateSignalCharts()
@@ -100,9 +103,12 @@ class BrainEqualizerViewModel @Inject constructor(
                             }
                         }
                     }
-                    else -> {
+                    StreamingState.STOPPED -> {
                         Log.i(tag, "Streaming stopped")
-                        dataRefreshJob?.cancel()
+                        _dataRefreshJob?.cancel()
+                    }
+                    else -> {
+                        Log.i(tag, "Streaming $streamingState")
                     }
                 }
             }
@@ -111,14 +117,16 @@ class BrainEqualizerViewModel @Inject constructor(
     }
 
     fun startStreaming() {
+        _stopping = false
         viewModelScope.launch {
             airohaDeviceManager.startBleStreaming()
         }
     }
 
     fun stopStreaming() {
+        _stopping = true
         viewModelScope.launch {
-            dataRefreshJob?.cancel()
+            _dataRefreshJob?.cancel()
             airohaDeviceManager.stopBleStreaming()
             delay(500L)
         }

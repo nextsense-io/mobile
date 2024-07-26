@@ -36,6 +36,8 @@ public interface DeviceManager {
     void onScanError(DeviceScanner.ScanError scanError);
   }
 
+  void stopFindingAll();
+
   void close();
 
   void findDevices(DeviceScanListener deviceScanListener);

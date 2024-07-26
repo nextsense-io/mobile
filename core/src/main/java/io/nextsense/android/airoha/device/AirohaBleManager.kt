@@ -70,7 +70,7 @@ class AirohaBleManager(
             }
             try {
                 val deviceConnectFuture = CompletableFuture.supplyAsync {
-                    device?.connect(/*autoReconnect=*/true)?.get(30, TimeUnit.SECONDS)
+                    device?.connect(/*autoReconnect=*/false)?.get(30, TimeUnit.SECONDS)
                 }
                 val deviceState = deviceConnectFuture.await()
                 if (isLeftDevice(device, macAddress)) {
@@ -161,6 +161,7 @@ class AirohaBleManager(
     }.flowOn(Dispatchers.IO)
 
     fun disconnect() {
+        deviceManager.stopFindingAll()
         leftEarDevice?.disconnect()
         rightEarDevice?.disconnect()
     }
