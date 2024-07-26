@@ -10,6 +10,7 @@ public class Samples {
     private final List<EegSample> eegSamples = new ArrayList<>();
     private final List<Acceleration> accelerations = new ArrayList<>();
     private final List<AngularSpeed> angularSpeeds = new ArrayList<>();
+    private final List<SleepStageRecord> sleepStageRecords = new ArrayList<>();
 
     private Samples() {}
 
@@ -29,6 +30,10 @@ public class Samples {
         angularSpeeds.add(angularSpeed);
     }
 
+    public void addSleepStateRecord(SleepStageRecord sleepStageRecord) {
+        sleepStageRecords.add(sleepStageRecord);
+    }
+
     public List<EegSample> getEegSamples() {
         return eegSamples;
     }
@@ -39,5 +44,9 @@ public class Samples {
 
     public List<AngularSpeed> getAngularSpeeds() {
         return angularSpeeds;
+    }
+
+    public List<SleepStageRecord> getSleepStateRecords() {
+        return sleepStageRecords;
     }
 }

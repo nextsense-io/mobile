@@ -46,7 +46,7 @@ public class CsvWriter {
     appendHeaderLine("Header version 1.0");
     appendHeaderLine("Version", "0.7.0");
     appendHeaderLine("Protocol version", "1");
-    appendHeaderLine("Device", "Xenon");
+    appendHeaderLine("Device", "Maui");
     appendHeaderLine("MAC address", "unknown");
     appendHeaderLine("eegStreamingRate", "1000");
     appendHeaderLine("accelerationStreamingRate", "250");
@@ -54,7 +54,7 @@ public class CsvWriter {
     appendHeaderLine("========== Start Data ==========");
     String headerLine = "SAMPLE_NUMBER,CH-1,CH-2,CH-3,CH-4,CH-5,CH-6,CH-7,CH-8,ACC_X,ACC_Y,ACC_Z," +
         "SAMPLING_TIMESTAMP,RECEPTION_TIMESTAMP,IMPEDANCE_FLAG,SYNC,TRIG_OUT,TRIG_IN,ZMOD,MARKER," +
-        "TBD6,TBD7,BUTTON";
+        "TBD6,TBD7,BUTTON,SLEEP_STAGE";
     if (haveRssi) {
       headerLine += ",RSSI";
     }
@@ -84,7 +84,7 @@ public class CsvWriter {
   public synchronized void appendData(
       List<Float> eegData, List<Float> accData, long samplingTimestamp, long receptionTimestamp,
       int impedanceFlag, int sync, int trigOut, int trigIn, int zmod, int marker, int tbd6,
-      int tbd7, int button, Integer rssi) {
+      int tbd7, int button, Integer rssi, String sleepStage) {
     StringBuilder line = new StringBuilder(sampleNumber + ",");
     for (int i = 0; i < eegData.size(); i++) {
       line.append(eegData.get(i)).append(",");
@@ -95,7 +95,8 @@ public class CsvWriter {
     line.append(samplingTimestamp).append(",").append(receptionTimestamp).append(",")
         .append(impedanceFlag).append(",").append(sync).append(",").append(trigOut).append(",")
         .append(trigIn).append(",").append(zmod).append(",").append(marker).append(",")
-        .append(tbd6).append(",").append(tbd7).append(",").append(button);
+        .append(tbd6).append(",").append(tbd7).append(",").append(button).append(",")
+        .append(sleepStage);
     if (rssi != null) {
       line.append(",").append(rssi);
     }

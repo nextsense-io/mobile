@@ -25,6 +25,7 @@ import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Samples;
+import io.nextsense.android.base.data.SleepStageRecord;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
 import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.budz.BudzDataPacketProto;
@@ -150,9 +151,7 @@ public class MauiDataParser {
       acquisitionTimestamp = deviceLocation == DeviceLocation.LEFT_EARBUD ? lastKeyTimestampLeft :
           lastKeyTimestampRight;
       if (!budzDataPacket.getEeeg().isEmpty()) {
-        ByteBuffer eegBuffer = ByteBuffer.wrap(budzDataPacket.getEeeg().toByteArray());
-        ByteBuffer imuBuffer = ByteBuffer.wrap(budzDataPacket.getImu().toByteArray());
-        parseSampleData(eegBuffer, imuBuffer, deviceLocation, receptionTimestamp,
+        parseSampleData(budzDataPacket, deviceLocation, receptionTimestamp,
             acquisitionTimestamp);
       }
     } catch (InvalidProtocolBufferException e) {
@@ -170,12 +169,20 @@ public class MauiDataParser {
     return uptimeMs - (long) eegSamplesInPacket * Math.round(1000 / eegSamplingRate);
   }
 
-  private void parseSampleData(ByteBuffer eegBuffer, ByteBuffer imuBuffer,
+  private void parseSampleData(BudzDataPacketProto.BudzDataPacket budzDataPacket,
                                DeviceLocation deviceLocation, Instant receptionTimestamp,
                                long acquisitionTimestamp) {
     Samples samples = Samples.create();
 
+    if (budzDataPacket.getSleepStage() != BudzDataPacketProto.SleepStage.SLEEP_STAGE_UNSPECIFIED) {
+      samples.addSleepStateRecord(new SleepStageRecord(
+          SleepStageRecord.SleepStage.fromValue(budzDataPacket.getSleepStageValue()),
+          receptionTimestamp,
+          /*relativeSamplingTimestamp=*/null));
+    }
+
     // TODO(eric): Synchronize IMU data.
+    ByteBuffer imuBuffer = ByteBuffer.wrap(budzDataPacket.getImu().toByteArray());
     while (imuBuffer.remaining() >= IMU_SAMPLE_SIZE_BYTES) {
       Acceleration acceleration = parseSingleAccelerationPacket(
           imuBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
@@ -185,6 +192,7 @@ public class MauiDataParser {
       samples.addAngularSpeed(angularSpeed);
     }
 
+    ByteBuffer eegBuffer = ByteBuffer.wrap(budzDataPacket.getEeeg().toByteArray());
     while (eegBuffer.remaining() >= EEG_SAMPLE_SIZE_BYTES) {
       parseSingleEegPacket(eegBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
     }

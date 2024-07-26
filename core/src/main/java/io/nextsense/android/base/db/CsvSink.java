@@ -108,6 +108,10 @@ public class CsvSink {
       currentPeripheral.readRemoteRssi();
       lastRssiCheck = Instant.now();
     }
+    String sleepStage = "Unspecified";
+    if (!samples.getSleepStateRecords().isEmpty()) {
+      sleepStage = samples.getSleepStateRecords().get(0).getSleepStage().name();
+    }
     for (int i = 0; i < samples.getEegSamples().size(); i++) {
       EegSample eegSample = samples.getEegSamples().get(i);
       List<Float> eegData = new ArrayList<>();
@@ -134,7 +138,7 @@ public class CsvSink {
           boolToInt(Boolean.TRUE.equals(eegSample.getTrigIn())),
           boolToInt(Boolean.TRUE.equals(eegSample.getZMod())),
           boolToInt(Boolean.TRUE.equals(eegSample.getMarker())), /*tbd6=*/0, /*tbd7=*/0,
-          boolToInt(Boolean.TRUE.equals(eegSample.getButton())), lastRssi);
+          boolToInt(Boolean.TRUE.equals(eegSample.getButton())), lastRssi, sleepStage);
     }
   }
 
