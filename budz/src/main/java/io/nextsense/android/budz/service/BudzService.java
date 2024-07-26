@@ -24,7 +24,6 @@ import java.io.IOException;
 
 import io.nextsense.android.Config;
 import io.nextsense.android.airoha.device.AirohaBleManager;
-import io.nextsense.android.airoha.device.AirohaDeviceManager;
 import io.nextsense.android.algo.tflite.SleepTransformerModel;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
@@ -252,7 +251,7 @@ public class BudzService extends Service {
       deviceScanner.close();
     }
     if (deviceManager != null) {
-      deviceManager.close();
+      deviceManager.stopFindingAll();
     }
     if (centralManagerProxy != null) {
       centralManagerProxy.close();

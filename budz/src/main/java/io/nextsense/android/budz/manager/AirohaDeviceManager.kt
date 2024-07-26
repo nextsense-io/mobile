@@ -37,15 +37,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -294,23 +297,47 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             return true
         }
 
-        if (streamingState.value == StreamingState.STARTING) {
-            // Wait until it finished starting
-            val result = streamingState.take(1).last()
-            return result == StreamingState.STARTED
-        }
-
         if (streamingState.value == StreamingState.STOPPING) {
             // Wait until it finished stopping and give a small delay to make sure the firmware
             // is ready.
-            streamingState.take(1).last()
-            delay(500L)
+            try {
+                streamingState.timeout(5.seconds).first {
+                    it == StreamingState.STOPPED || it == StreamingState.ERROR
+                }
+                delay(500L)
+            } catch (timeout: TimeoutCancellationException) {
+                Log.i(tag, "Timeout waiting for streaming to stop, starting again.")
+            }
+        }
+
+        if (streamingState.value == StreamingState.STARTING) {
+            return true
+            // Wait until it finished starting
+//            try {
+//                val result = streamingState.timeout(5.seconds).first {
+//                    it == StreamingState.STARTED || it == StreamingState.ERROR
+//                }
+//                return result == StreamingState.STARTED
+//            } catch (timeout: TimeoutCancellationException) {
+//                Log.i(tag, "Timeout waiting for streaming to start, starting again.")
+//            }
         }
 
         _streamingState.value = StreamingState.STARTING
         _airohaDeviceState.value = AirohaDeviceState.CONNECTING_BLE
-        val serviceConnected = withTimeout(2000L) {
-            connectServiceFlow().flowOn(Dispatchers.IO).take(1).last()
+        var serviceConnected: Boolean
+        try {
+            serviceConnected = withTimeout(1000L) {
+                connectServiceFlow().flowOn(Dispatchers.IO).take(1).last()
+            }
+        } catch (timeout: TimeoutCancellationException) {
+            if (!_budzServiceBound) {
+                Log.i(tag, "Timeout waiting for service to connect.")
+                _airohaDeviceState.value = AirohaDeviceState.READY
+                _streamingState.value = StreamingState.STOPPED
+                return false
+            }
+            serviceConnected = true
         }
         if (serviceConnected) {
             val deviceMac = (_deviceInfo?.deviceMAC ?: "").filter { it != ':' }
@@ -349,7 +376,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     suspend fun stopBleStreaming() : Boolean {
         if (!_budzServiceBound || _budzService == null ||
-                _streamingState.value != StreamingState.STARTED) {
+            (_streamingState.value != StreamingState.STARTED &&
+                    _streamingState.value != StreamingState.STARTING)) {
             if (_airohaDeviceState.value == AirohaDeviceState.CONNECTING_BLE ||
                     _airohaDeviceState.value == AirohaDeviceState.CONNECTED_BLE) {
                 // Already stopped.
@@ -370,7 +398,15 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
         if (streamingState.value == StreamingState.STARTING) {
             // Wait until it finished starting and then stop it.
-            streamingState.take(1).last()
+            try {
+                withTimeout(5000L) {
+                    streamingState.first {
+                        it == StreamingState.STARTED || it == StreamingState.ERROR
+                    }
+                }
+            } catch (timeout: TimeoutCancellationException) {
+                Log.i(tag, "Timeout waiting for streaming to start, stopping anyway.")
+            }
             delay(500L)
         }
 
@@ -383,10 +419,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             _streamingState.value = StreamingState.STOPPED
             stopService()
             return true
-        } else {
-            _streamingState.value = StreamingState.ERROR
-            return false
         }
+        _streamingState.value = StreamingState.ERROR
+        return false
     }
 
     fun startRaceBleStreamingFlow() = callbackFlow<AirohaStatusCode> {

@@ -38,6 +38,7 @@ class CheckConnectionViewModel @Inject constructor(
     private val _chartSamplingRate = 100F
     private val _uiState = MutableStateFlow(CheckConnectionState())
     private var dataRefreshJob: Job? = null
+    private var _stopping = false
 
     val leftEarChartModelProducer = CartesianChartModelProducer()
     val rightEarChartModelProducer = CartesianChartModelProducer()
@@ -53,7 +54,9 @@ class CheckConnectionViewModel @Inject constructor(
                     )
                 when (deviceState) {
                     AirohaDeviceState.READY -> {
-                        airohaDeviceManager.startBleStreaming()
+                        if (!_stopping) {
+                            airohaDeviceManager.startBleStreaming()
+                        }
                     }
                     else -> {
                         // Nothing to do
@@ -77,9 +80,12 @@ class CheckConnectionViewModel @Inject constructor(
                             }
                         }
                     }
-                    else -> {
+                    StreamingState.STOPPED -> {
                         Log.i(tag, "Streaming stopped")
                         dataRefreshJob?.cancel()
+                    }
+                    else -> {
+                        Log.i(tag, "Streaming $streamingState")
                     }
                 }
             }
@@ -87,12 +93,14 @@ class CheckConnectionViewModel @Inject constructor(
     }
 
     fun startStreaming() {
+        _stopping = false
         viewModelScope.launch {
             airohaDeviceManager.startBleStreaming()
         }
     }
 
     fun stopStreaming() {
+        _stopping = true
         viewModelScope.launch {
             dataRefreshJob?.cancel()
             airohaDeviceManager.stopBleStreaming()

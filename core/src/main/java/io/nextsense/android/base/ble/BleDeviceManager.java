@@ -55,7 +55,15 @@ public class BleDeviceManager implements DeviceManager {
   }
 
   @Override
+  public void stopFindingAll() {
+    deviceScanListeners.clear();
+    scanning = false;
+    deviceScanner.stopFinding();
+  }
+
+  @Override
   public void close() {
+    stopFindingAll();
     for (Device connectedDevice : getConnectedDevices()) {
       try {
         connectedDevice.disconnect().get(10, TimeUnit.SECONDS);
