@@ -38,7 +38,7 @@ public class DataSynchronizer {
   }
 
   // If no sync was done after this long, remove data points.
-  public static final Duration SYNC_TIMEOUT = Duration.ofSeconds(10);
+  public static final Duration SYNC_TIMEOUT = Duration.ofSeconds(1);
 
   private final Map<String, List<DataPoint>> channelDataMap;
 
@@ -104,15 +104,15 @@ public class DataSynchronizer {
     return synchronizedData;
   }
 
-  public synchronized int removeOldData() {
-    int removed = 0;
-    for (List<DataPoint> dataPoints : channelDataMap.values()) {
-      Iterator<DataPoint> iterator = dataPoints.iterator();
+  public synchronized List<Map<String, DataPoint>> removeOldData() {
+    List<Map<String, DataPoint>> removed = new ArrayList<>();
+    for (Map.Entry<String, List<DataPoint>> entry : channelDataMap.entrySet()) {
+      Iterator<DataPoint> iterator = entry.getValue().iterator();
       while (iterator.hasNext()) {
         DataPoint dp = iterator.next();
         if (dp.receptionTimestamp.plus(SYNC_TIMEOUT).isBefore(Instant.now())) {
+          removed.add(new HashMap<>(Map.of(entry.getKey(), dp)));
           iterator.remove();
-          removed++;
         }
       }
     }

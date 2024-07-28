@@ -233,6 +233,13 @@ public class MauiDataParser {
     }
     List<Map<String, DataSynchronizer.DataPoint>> allSynchronizedData =
         dataSynchronizer.getAllSynchronizedDataAndRemove();
+    List<Map<String, DataSynchronizer.DataPoint>> timedOutData =
+        dataSynchronizer.removeOldData();
+    if (VERBOSE_LOGGING && !timedOutData.isEmpty()) {
+      Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toString() +
+          ". Removed " + timedOutData.size() + " old data points and emitted them.");
+    }
+    allSynchronizedData.addAll(timedOutData);
     if (!allSynchronizedData.isEmpty()) {
       if (VERBOSE_LOGGING) {
         Log.d(TAG, allSynchronizedData.size() + " synchronised samples are ready.");
@@ -249,15 +256,16 @@ public class MauiDataParser {
             null));
       }
       EventBus.getDefault().post(samples);
-    } else {
+    } // else {
       // Check in case sync is failing and need to remove data. It it fails for a long time, memory
       // could run out.
-      long removedCount = dataSynchronizer.removeOldData();
-      if (VERBOSE_LOGGING && removedCount > 0) {
-        Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toString() +
-            ". Removed " + removedCount + " old data points.");
-      }
-    }
+
+//      long removedCount = dataSynchronizer.removeOldData();
+//      if (VERBOSE_LOGGING && removedCount > 0) {
+//        Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toString() +
+//            ". Removed " + removedCount + " old data points.");
+//      }
+//    }
 
     if (VERBOSE_LOGGING) {
       Log.d(TAG, "Parsed " + samples.getEegSamples().size() + " EEG samples, " +
