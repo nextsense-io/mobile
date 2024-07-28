@@ -109,7 +109,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private var _budzServiceConnection: ServiceConnection? = null
     private var _airohaBleManager: AirohaBleManager? = null
     private var _devicePresenter: DeviceSearchPresenter? = null
-    private var _twsConnected: Boolean? = null
+    private var _twsConnected = MutableStateFlow(false)
     private var _deviceInfo: AirohaDevice? = null
     private var _targetGains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
     private var _connectionTimeoutTimer: Timer? = null
@@ -117,6 +117,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     val airohaDeviceState: StateFlow<AirohaDeviceState> = _airohaDeviceState.asStateFlow()
     val streamingState: StateFlow<StreamingState> = _streamingState.asStateFlow()
     val equalizerState: StateFlow<FloatArray> = _equalizerState.asStateFlow()
+    val twsConnected: StateFlow<Boolean?> = MutableStateFlow(null).asStateFlow()
 
     private val _airohaConnectionListener: AirohaConnector.AirohaConnectionListener =
         object: AirohaConnector.AirohaConnectionListener {
@@ -222,12 +223,12 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                     // like getting the battery levels do not work correctly.
                     // Also need a small delay between these commands or they often fail.
                     delay(200L)
-                    _twsConnected = twsConnectStatusFlow().last()
+                    _twsConnected.value = twsConnectStatusFlow().last() ?: false
                     Log.d(tag, "twsConnected=$_twsConnected")
                     delay(200L)
                     _deviceInfo = deviceInfoFlow().last()
                     Log.d(tag, "deviceInfo=$_deviceInfo")
-                    if (_twsConnected == null || _deviceInfo == null) {
+                    if (_deviceInfo == null) {
                         disconnectDevice()
                         _airohaDeviceState.value = AirohaDeviceState.ERROR
                         return@collect
@@ -301,8 +302,10 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             // Wait until it finished stopping and give a small delay to make sure the firmware
             // is ready.
             try {
-                streamingState.timeout(5.seconds).first {
-                    it == StreamingState.STOPPED || it == StreamingState.ERROR
+                withTimeout(5000L) {
+                    streamingState.first {
+                        it == StreamingState.STOPPED || it == StreamingState.ERROR
+                    }
                 }
                 delay(500L)
             } catch (timeout: TimeoutCancellationException) {
@@ -342,10 +345,10 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         if (serviceConnected) {
             val deviceMac = (_deviceInfo?.deviceMAC ?: "").filter { it != ':' }
             Log.d(tag, "Connecting to BLE devices with mac $deviceMac")
-            val deviceState =_airohaBleManager?.connect(deviceMac)
+            val deviceState =_airohaBleManager?.connect(deviceMac, _twsConnected.value)
             if (deviceState == DeviceState.READY) {
                 _airohaDeviceState.value = AirohaDeviceState.CONNECTED_BLE
-                val readyForStreaming = _airohaBleManager!!.startStreaming()
+                val readyForStreaming = _airohaBleManager!!.startStreaming(twsConnected.value ?: false)
                 if (readyForStreaming) {
                     // Clear the memory cache from the previous recording data, if any.
                     _budzService?.getMemoryCache()?.clear()

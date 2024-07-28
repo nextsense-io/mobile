@@ -12,12 +12,14 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.transformWhile
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resumeWithException
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Manages the communication through BLE for both right and left devices.
@@ -57,8 +59,27 @@ class AirohaBleManager(
                 device.name!!.endsWith(macAddress)
     }
 
-    suspend fun connect(macAddress: String): DeviceState {
-        val devices = deviceScanListenerFlow(macAddress).take(2).toList()
+    suspend fun connect(macAddress: String, twsConnected: Boolean): DeviceState {
+        leftEarDevice = null
+        rightEarDevice = null
+        leftDeviceState = null
+        rightDeviceState = null
+        val devicesToConnect = if (twsConnected) 2 else 1
+        var devices = mutableListOf<Device?>()
+        try {
+            withTimeout(15.seconds) {
+                deviceScanListenerFlow(macAddress).transformWhile {
+                    emit(it)
+                    devices.add(it)
+                    devices.size != devicesToConnect }.toList()
+            }
+        } catch (e: Exception) {
+            if (devices.isEmpty()) {
+                RotatingFileLogger.get().loge(tag,
+                    "Error while scanning for devices: ${e.message}")
+                return DeviceState.DISCONNECTED
+            }
+        }
         for (device in devices) {
             if (isLeftDevice(device, macAddress)) {
                 leftEarDevice = device
@@ -96,7 +117,7 @@ class AirohaBleManager(
         return DeviceState.DISCONNECTED
     }
 
-    suspend fun startStreaming(): Boolean {
+    suspend fun startStreaming(twsConnected: Boolean): Boolean {
         val leftStarted: Boolean?
         val rightStarted: Boolean?
         try {
@@ -131,7 +152,8 @@ class AirohaBleManager(
                 "Error while starting streaming: ${e.message}")
             return false
         }
-        return (leftStarted ?: false || rightStarted ?: false)
+        return if (twsConnected) leftStarted ?: false && rightStarted ?: false else
+                leftStarted ?: false || rightStarted ?: false
     }
 
     private fun deviceScanListenerFlow(macAddress: String) = callbackFlow<Device?> {
@@ -161,6 +183,10 @@ class AirohaBleManager(
     }.flowOn(Dispatchers.IO)
 
     fun disconnect() {
+        leftEarDevice = null
+        rightEarDevice = null
+        leftDeviceState = null
+        rightDeviceState = null
         deviceManager.stopFindingAll()
         leftEarDevice?.disconnect()
         rightEarDevice?.disconnect()
