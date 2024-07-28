@@ -20,16 +20,40 @@ import com.patrykandpatrick.vico.core.cartesian.Zoom
 import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.core.common.data.ExtraStore
 import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import io.nextsense.android.budz.ui.theme.BudzColor
+import kotlin.math.abs
+import kotlin.math.roundToInt
+
+val Double.roundedToNearest: Double
+    get() = roundToInt().toDouble()
+
+fun fullyAdaptiveYValues(yFraction: Float, round: Boolean = false): AxisValueOverrider =
+    object : AxisValueOverrider {
+        private val Double.conditionallyRoundedToNearest
+            get() = if (round) roundedToNearest else this
+
+        init {
+            require(yFraction > 0f)
+        }
+
+        override fun getMinY(minY: Double, maxY: Double, extraStore: ExtraStore): Double {
+            val difference = abs(getMaxY(minY, maxY, extraStore) - maxY)
+            return (minY - difference).conditionallyRoundedToNearest
+        }
+
+        override fun getMaxY(minY: Double, maxY: Double, extraStore: ExtraStore): Double =
+            if (minY == maxY) maxY + 2 else (yFraction * maxY).conditionallyRoundedToNearest
+    }
 
 @Composable
 fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: Double) {
-    val axisValueOverrider = AxisValueOverrider.adaptiveYValues(yFraction = 1.0f, round = true)
     CartesianChartHost(
         rememberCartesianChart(
             rememberLineCartesianLayer(
-                axisValueOverrider = axisValueOverrider,
+                axisValueOverrider =
+                    fullyAdaptiveYValues(yFraction = 1.0f, round = true),
                 lineProvider = LineCartesianLayer.LineProvider.series(
                     rememberLine(
                         shader = DynamicShader.color(BudzColor.darkBlue),

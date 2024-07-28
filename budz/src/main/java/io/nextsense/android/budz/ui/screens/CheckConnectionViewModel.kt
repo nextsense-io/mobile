@@ -120,8 +120,10 @@ class CheckConnectionViewModel @Inject constructor(
             channelName=MauiDataParser.CHANNEL_RIGHT.toString(),
             durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
             fromDatabase=false)
-        val gotRightEarData = rightEarData != null && rightEarData.size >= 2100
-        val gotLeftEarData = leftEarData != null && leftEarData.size >= 2100
+        val gotRightEarData = rightEarData != null && rightEarData.size >=
+                _filterCropDuration.inWholeMilliseconds + 100
+        val gotLeftEarData = leftEarData != null && leftEarData.size >=
+                _filterCropDuration.inWholeMilliseconds + 100
         if (!gotLeftEarData && !gotRightEarData) {
             return
         }
@@ -145,6 +147,7 @@ class CheckConnectionViewModel @Inject constructor(
         val doubleData = data.map { it.toDouble() }.toDoubleArray()
         val doubleArrayData = Sampling.resample(doubleData, 1000F, 100, _chartSamplingRate)
         // val doubleArrayData = Sampling.resamplePoly(doubleData, _chartSamplingRate, 1000F)
-        return doubleArrayData.toList().subList(200, doubleArrayData.size)
+        return doubleArrayData.toList().subList(
+            (_filterCropDuration.inWholeMilliseconds / 10).toInt(), doubleArrayData.size)
     }
 }
