@@ -53,7 +53,7 @@ class BrainEqualizerViewModel @Inject constructor(
 
     private val tag = BrainEqualizerViewModel::class.simpleName
     private val _shownDuration = 10.seconds
-    private val _filterCropDuration = 2.seconds
+    private val _filterCropDuration = 3.seconds
     private val _totalDataDuration = _shownDuration + _filterCropDuration
     private val _refreshInterval = 100.milliseconds
     private val _chartSamplingRate = 100F
@@ -157,8 +157,10 @@ class BrainEqualizerViewModel @Inject constructor(
             channelName=MauiDataParser.CHANNEL_RIGHT.toString(),
             durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
             fromDatabase=false)
-        val gotRightEarData = rightEarData != null && rightEarData.size >= 2100
-        val gotLeftEarData = leftEarData != null && leftEarData.size >= 2100
+        val gotRightEarData = rightEarData != null && rightEarData.size >=
+                _filterCropDuration.inWholeMilliseconds + 100
+        val gotLeftEarData = leftEarData != null && leftEarData.size >=
+                _filterCropDuration.inWholeMilliseconds + 100
         if (!gotLeftEarData && !gotRightEarData) {
             return
         }
@@ -182,7 +184,8 @@ class BrainEqualizerViewModel @Inject constructor(
         val doubleData = data.map { it.toDouble() }.toDoubleArray()
         val doubleArrayData = Sampling.resample(doubleData, 1000F, 100, _chartSamplingRate)
         // val doubleArrayData = Sampling.resamplePoly(doubleData, _chartSamplingRate, 1000F)
-        return doubleArrayData.toList().subList(200, doubleArrayData.size)
+        return doubleArrayData.toList().subList(
+            (_filterCropDuration.inWholeMilliseconds / 10).toInt(), doubleArrayData.size)
     }
 
     private fun initPlayer() {
