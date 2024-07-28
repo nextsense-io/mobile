@@ -32,6 +32,7 @@ import androidx.media3.common.util.UnstableApi
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.ExoVisualizer
+import io.nextsense.android.budz.ui.components.KeepScreenOn
 import io.nextsense.android.budz.ui.components.SignalLineChart
 import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
@@ -81,6 +82,7 @@ fun BrainEqualizerScreen(
     onGoToConnectionGuide: () -> Unit,
     onGoToFitGuide: () -> Unit,
 ) {
+    KeepScreenOn()
     val brainEqualizerUiState by brainEqualizerViewModel.uiState.collectAsState()
 
     LifecycleResumeEffect(true) {

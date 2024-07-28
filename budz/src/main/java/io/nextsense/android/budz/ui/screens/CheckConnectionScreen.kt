@@ -47,6 +47,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.BudzCard
+import io.nextsense.android.budz.ui.components.KeepScreenOn
 import io.nextsense.android.budz.ui.components.SignalLineChart
 import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
@@ -290,6 +291,7 @@ fun CheckConnectionScreen(
     onGoToFitGuide: () -> Unit,
     onGoToCheckBrainSignal: () -> Unit,
 ) {
+    KeepScreenOn()
     val checkConnectionUiState by checkConnectionViewModel.uiState.collectAsState()
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
