@@ -32,7 +32,7 @@ class CheckConnectionViewModel @Inject constructor(
 ): ViewModel() {
     private val tag = CheckConnectionViewModel::class.simpleName
     private val _shownDuration = 10.seconds
-    private val _filterCropDuration = 2.seconds
+    private val _filterCropDuration = 3.seconds
     private val _totalDataDuration = _shownDuration + _filterCropDuration
     private val _refreshInterval = 100.milliseconds
     private val _chartSamplingRate = 100F

@@ -44,7 +44,7 @@ fun fullyAdaptiveYValues(yFraction: Float, round: Boolean = false): AxisValueOve
         }
 
         override fun getMaxY(minY: Double, maxY: Double, extraStore: ExtraStore): Double =
-            if (minY == maxY) maxY + 2 else (yFraction * maxY).conditionallyRoundedToNearest
+            if (minY.roundedToNearest == maxY.roundedToNearest) maxY + 1 else (yFraction * maxY).conditionallyRoundedToNearest
     }
 
 @Composable
