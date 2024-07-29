@@ -18,6 +18,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -77,7 +79,8 @@ fun SignalVisualization(signalVisualizationViewModel: SignalVisualizationViewMod
 }
 
 @Composable
-fun CardConnected(signalVisualizationViewModel: SignalVisualizationViewModel) {
+fun CardConnected(signalVisualizationViewModel: SignalVisualizationViewModel,
+                  signalVisualizationState: SignalVisualizationState) {
     BudzCard(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.label_bluetooth_status),
@@ -91,9 +94,25 @@ fun CardConnected(signalVisualizationViewModel: SignalVisualizationViewModel) {
         HorizontalDivider(color = BudzColor.lightPurple)
     }
     Column {
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+        Row {
+            Text(
+                text = "Filtered",
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Switch(checked = signalVisualizationState.filtered, colors =
+            SwitchDefaults.colors(
+                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+                onCheckedChange = {checked ->
+                    signalVisualizationViewModel.setFiltered(checked)
+                })
+        }
+        Spacer(modifier = Modifier.height(10.dp))
         SignalVisualization(signalVisualizationViewModel)
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
     }
 }
 
@@ -149,7 +168,7 @@ fun SignalVisualizationScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 if (signalVisualizationUiState.connected) {
-                    CardConnected(signalVisualizationViewModel)
+                    CardConnected(signalVisualizationViewModel, signalVisualizationUiState)
                 } else {
                     CardNotConnected()
                 }
