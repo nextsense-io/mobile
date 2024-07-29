@@ -42,4 +42,7 @@ sealed class Routes{
 
     @Serializable
     data object Focus : Routes()
+
+    @Serializable
+    data object SignalVisualization : Routes()
 }

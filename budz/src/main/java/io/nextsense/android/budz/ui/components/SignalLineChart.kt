@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStartAxis
@@ -48,7 +49,8 @@ fun fullyAdaptiveYValues(yFraction: Float, round: Boolean = false): AxisValueOve
     }
 
 @Composable
-fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: Double) {
+fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: Double,
+                    height: Dp = 80.dp) {
     CartesianChartHost(
         rememberCartesianChart(
             rememberLineCartesianLayer(
@@ -71,6 +73,6 @@ fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: 
         scrollState = rememberVicoScrollState(scrollEnabled = false),
         animationSpec = null,
         runInitialAnimation = false,
-        modifier = Modifier.height(80.dp).background(Color.Transparent)
+        modifier = Modifier.height(height).background(Color.Transparent)
     )
 }

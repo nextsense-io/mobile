@@ -22,6 +22,7 @@ import io.nextsense.android.budz.ui.screens.IntroScreen
 import io.nextsense.android.budz.ui.screens.LoginScreen
 import io.nextsense.android.budz.ui.screens.PrivacyPolicyScreen
 import io.nextsense.android.budz.ui.screens.SelectSoundScreen
+import io.nextsense.android.budz.ui.screens.SignalVisualizationScreen
 import io.nextsense.android.budz.ui.screens.TimedSleepScreen
 import io.nextsense.android.budz.ui.theme.BudzTheme
 import javax.inject.Inject
@@ -182,7 +183,11 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable<Routes.DeviceSettings> {
-                        DeviceSettingsScreen()
+                        DeviceSettingsScreen(
+                            onGoToSignalVisualization = {
+                                navController.navigate(Routes.SignalVisualization)
+                            }
+                        )
                     }
                     composable<Routes.TimedSleep> {
                         TimedSleepScreen(
@@ -208,6 +213,13 @@ class MainActivity : ComponentActivity() {
                             onGoToHome = {
                                 navController.popBackStack()
                             }
+                        )
+                    }
+                    composable<Routes.SignalVisualization> {
+                        SignalVisualizationScreen(
+                            onGoToHome = {
+                                navController.popBackStack()
+                            },
                         )
                     }
                 }
