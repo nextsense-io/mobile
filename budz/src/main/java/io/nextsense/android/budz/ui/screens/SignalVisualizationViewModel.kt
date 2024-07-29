@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.algo.signal.Filters
 import io.nextsense.android.algo.signal.Sampling
 import io.nextsense.android.base.devices.maui.MauiDataParser
 import io.nextsense.android.budz.manager.AirohaDeviceManager
@@ -23,7 +24,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 data class SignalVisualizationState(
-    val connected: Boolean = false
+    val connected: Boolean = false,
+    val filtered: Boolean = true
 )
 
 @HiltViewModel
@@ -32,23 +34,23 @@ open class SignalVisualizationViewModel @Inject constructor(
 ): ViewModel() {
     private val tag = CheckConnectionViewModel::class.simpleName
     private val _shownDuration = 10.seconds
-    private val _filterCropDuration = 3.seconds
+    private val _filterCropDuration = 5.seconds
     private val _totalDataDuration = _shownDuration + _filterCropDuration
     private val _refreshInterval = 100.milliseconds
     private val _chartSamplingRate = 100F
-    private val _uiState = MutableStateFlow(CheckConnectionState())
+    private val _uiState = MutableStateFlow(SignalVisualizationState())
     private var dataRefreshJob: Job? = null
     private var _stopping = false
 
     val leftEarChartModelProducer = CartesianChartModelProducer()
     val rightEarChartModelProducer = CartesianChartModelProducer()
-    val signalUiState: StateFlow<CheckConnectionState> = _uiState.asStateFlow()
+    val signalUiState: StateFlow<SignalVisualizationState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
             airohaDeviceManager.airohaDeviceState.collect { deviceState ->
                 _uiState.value =
-                    CheckConnectionState(connected = deviceState == AirohaDeviceState.READY ||
+                    SignalVisualizationState(connected = deviceState == AirohaDeviceState.READY ||
                             deviceState == AirohaDeviceState.CONNECTING_BLE ||
                             deviceState == AirohaDeviceState.CONNECTED_BLE
                     )
@@ -108,6 +110,10 @@ open class SignalVisualizationViewModel @Inject constructor(
         }
     }
 
+    fun setFiltered(filtered: Boolean) {
+        _uiState.value = _uiState.value.copy(filtered = filtered)
+    }
+
     private suspend fun updateSignalCharts() {
         // Get the data for both ears.
         val leftEarData = airohaDeviceManager.getChannelData(
@@ -144,7 +150,14 @@ open class SignalVisualizationViewModel @Inject constructor(
     }
 
     private fun prepareData(data: List<Float>): List<Double> {
-        val doubleData = data.map { it.toDouble() }.toDoubleArray()
+        var doubleData = data.map { it.toDouble() }.toDoubleArray()
+        if (_uiState.value.filtered) {
+            doubleData = Filters.applyBandStop(doubleData, /*samplingRate=*/1000F,
+                /*order=*/4, /*centerFrequency=*/60F, /*widthFrequency=*/2F)
+            doubleData = Filters.applyBandPass(doubleData, /*samplingRate=*/1000F,
+                /*order=*/4, /*lowCutoff=*/0.5F, /*highCutoff=*/40F)
+        }
+        // Resample the data to the chart sampling rate for performance.
         val doubleArrayData = Sampling.resample(doubleData, 1000F, 100, _chartSamplingRate)
         return doubleArrayData.toList().subList(
             (_filterCropDuration.inWholeMilliseconds / 10).toInt(), doubleArrayData.size)

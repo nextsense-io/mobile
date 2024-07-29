@@ -25,27 +25,18 @@ import com.patrykandpatrick.vico.core.common.data.ExtraStore
 import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import io.nextsense.android.budz.ui.theme.BudzColor
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
-val Double.roundedToNearest: Double
-    get() = roundToInt().toDouble()
+fun Double.nearValue(other: Double) : Boolean {
+    return (abs(this - other) < 0.01)
+}
 
-fun fullyAdaptiveYValues(yFraction: Float, round: Boolean = false): AxisValueOverrider =
+fun fullyAdaptiveYValues(): AxisValueOverrider =
     object : AxisValueOverrider {
-        private val Double.conditionallyRoundedToNearest
-            get() = if (round) roundedToNearest else this
+        override fun getMinY(minY: Double, maxY: Double, extraStore: ExtraStore) =
+            if (minY.nearValue(maxY)) minY - 1 else minY
 
-        init {
-            require(yFraction > 0f)
-        }
-
-        override fun getMinY(minY: Double, maxY: Double, extraStore: ExtraStore): Double {
-            val difference = abs(getMaxY(minY, maxY, extraStore) - maxY)
-            return (minY - difference).conditionallyRoundedToNearest
-        }
-
-        override fun getMaxY(minY: Double, maxY: Double, extraStore: ExtraStore): Double =
-            if (minY.roundedToNearest == maxY.roundedToNearest) maxY + 1 else (yFraction * maxY).conditionallyRoundedToNearest
+        override fun getMaxY(minY: Double, maxY: Double, extraStore: ExtraStore) =
+            if (minY.nearValue(maxY)) maxY + 1 else maxY
     }
 
 @Composable
@@ -54,8 +45,7 @@ fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: 
     CartesianChartHost(
         rememberCartesianChart(
             rememberLineCartesianLayer(
-                axisValueOverrider =
-                    fullyAdaptiveYValues(yFraction = 1.0f, round = true),
+                axisValueOverrider = fullyAdaptiveYValues(),
                 lineProvider = LineCartesianLayer.LineProvider.series(
                     rememberLine(
                         shader = DynamicShader.color(BudzColor.darkBlue),
