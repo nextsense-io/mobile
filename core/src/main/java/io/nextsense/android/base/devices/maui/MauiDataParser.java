@@ -10,6 +10,7 @@ import org.greenrobot.eventbus.EventBus;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -45,6 +46,8 @@ public class MauiDataParser {
   // Acceleration and Angular speed from the gyroscope. X, Y and Z from each at 16 bits of
   // resolution.
   private static final int IMU_SAMPLE_SIZE_BYTES = 12;
+  // Firmware should send its uptime at least once per 5 seconds.
+  private static final Duration FIRST_KEY_TIMESTAMP_TIMEOUT = Duration.ofSeconds(6);
   private static final boolean VERBOSE_LOGGING = true;
 
   private final LocalSessionManager localSessionManager;
@@ -56,6 +59,9 @@ public class MauiDataParser {
   private long lastKeyTimestampLeft = 0;
   private int leftSamplesSinceKeyTimestamp = 0;
   private Long lastPackageNum = null;
+  private Instant firstReceptionTimestamp = null;
+  private boolean useSequenceNumberAsRelativeTimestamp = false;
+  private int eegSamplesCount = 0;
 
   private MauiDataParser(LocalSessionManager localSessionManager) {
     this.localSessionManager = localSessionManager;
@@ -75,11 +81,9 @@ public class MauiDataParser {
 
   public static float convertToMicroVolts(int data) {
     if (data <= 2097151) {  // Midpoint of 22 bits.
-      float result = (float) (data / (pow(2, 21) - 1) * AFE_FS / AFE_GAIN) * 1000000;
-      return result;
+      return (float) (data / (pow(2, 21) - 1) * AFE_FS / AFE_GAIN) * 1000000;
     } else {
-      float result = (float) ((data - pow(2, 22)) / pow(2, 21) * AFE_FS / AFE_GAIN) * 1000000;
-      return result;
+      return (float) ((data - pow(2, 22)) / pow(2, 21) * AFE_FS / AFE_GAIN) * 1000000;
     }
   }
 
@@ -88,6 +92,10 @@ public class MauiDataParser {
     rightSamplesSinceKeyTimestamp = 0;
     lastKeyTimestampLeft = 0;
     leftSamplesSinceKeyTimestamp = 0;
+    lastPackageNum = null;
+    firstReceptionTimestamp = null;
+    useSequenceNumberAsRelativeTimestamp = false;
+    eegSamplesCount = 0;
   }
 
   public synchronized void parseDataBytes(byte[] values) throws FirmwareMessageParsingException {
@@ -163,11 +171,29 @@ public class MauiDataParser {
         }
       } else if (deviceLocation == DeviceLocation.LEFT_EARBUD && lastKeyTimestampLeft == 0 ||
           deviceLocation == DeviceLocation.RIGHT_EARBUD && lastKeyTimestampRight == 0) {
-        Log.d(TAG, "Data packet before first key timestamp, ignoring.");
-        return;
+        if (firstReceptionTimestamp == null) {
+          firstReceptionTimestamp = receptionTimestamp;
+        }
+        if (!useSequenceNumberAsRelativeTimestamp) {
+          if (Duration.between(firstReceptionTimestamp, receptionTimestamp).compareTo(
+              FIRST_KEY_TIMESTAMP_TIMEOUT) > 0) {
+            Log.w(TAG, "First key timestamp not received after " + FIRST_KEY_TIMESTAMP_TIMEOUT +
+                ". Start accepting data.");
+            useSequenceNumberAsRelativeTimestamp = true;
+          } else {
+            Log.d(TAG, "Data packet before first key timestamp, ignoring.");
+            return;
+          }
+        }
       }
-      acquisitionTimestamp = deviceLocation == DeviceLocation.LEFT_EARBUD ? lastKeyTimestampLeft :
-          lastKeyTimestampRight;
+      if (!useSequenceNumberAsRelativeTimestamp) {
+        acquisitionTimestamp = deviceLocation == DeviceLocation.LEFT_EARBUD ? lastKeyTimestampLeft :
+            lastKeyTimestampRight;
+      } else {
+        // TODO(eric): Replace this counter with the package number when it is fixed by AUT.
+        acquisitionTimestamp =
+            (long) eegSamplesCount * Math.round(1000 / localSession.getEegSampleRate());
+      }
 
       if (!budzDataPacket.getEeeg().isEmpty()) {
         parseSampleData(budzDataPacket, deviceLocation, receptionTimestamp,
@@ -293,6 +319,7 @@ public class MauiDataParser {
         String.valueOf(CHANNEL_RIGHT);
     dataSynchronizer.addData(channelName, dataPointAcquisitionTimeStamp, receptionTimestamp,
         convertToMicroVolts(eegValue));
+    ++eegSamplesCount;
     if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
       ++leftSamplesSinceKeyTimestamp;
     } else {
