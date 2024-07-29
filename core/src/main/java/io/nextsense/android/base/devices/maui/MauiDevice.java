@@ -167,7 +167,7 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
     }
     long localSessionId = localSessionManager.startLocalSession(userBigTableKey, dataSessionId,
         earbudsConfig, uploadToCloud, deviceSettings.getEegStreamingRate(),
-        deviceSettings.getImuStreamingRate(), saveToCsv);
+        deviceSettings.getImuStreamingRate(), true);
     if (localSessionId == -1) {
       // Previous session not finished, cannot start streaming.
       RotatingFileLogger.get().logw(TAG, "Previous session not finished, cannot start streaming.");
