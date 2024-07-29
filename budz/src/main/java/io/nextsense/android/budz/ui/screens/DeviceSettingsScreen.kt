@@ -16,7 +16,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import io.nextsense.android.budz.ui.components.SimpleButton
 
 @Composable
-fun DeviceSettingsScreen(deviceSettingsViewModel: DeviceSettingsViewModel = hiltViewModel()) {
+fun DeviceSettingsScreen(
+    deviceSettingsViewModel: DeviceSettingsViewModel = hiltViewModel(),
+    onGoToSignalVisualization: () -> Unit
+) {
     val deviceSettingsUiState by deviceSettingsViewModel.uiState.collectAsState()
 
     Column(verticalArrangement = Arrangement.Center,
@@ -27,12 +30,6 @@ fun DeviceSettingsScreen(deviceSettingsViewModel: DeviceSettingsViewModel = hilt
         })
         SimpleButton(name = "Disconnect and Stop Streaming", onClick = {
             deviceSettingsViewModel.disconnectAndStopStreaming()
-        })
-        SimpleButton(name = "Start Streaming", onClick = {
-            deviceSettingsViewModel.startStreaming()
-        })
-        SimpleButton(name = "Stop Streaming", onClick = {
-            deviceSettingsViewModel.stopStreaming()
         })
         SimpleButton(name = "Start Sound Loop", onClick = {
             deviceSettingsViewModel.startSoundLoop()
@@ -49,6 +46,9 @@ fun DeviceSettingsScreen(deviceSettingsViewModel: DeviceSettingsViewModel = hilt
         })
         SimpleButton(name = "Lower bass gain", onClick = {
             deviceSettingsViewModel.changeEqualizer(floatArrayOf(-8f,-8f,-8f,-8f,0f,0f,0f,0f,0f,0f))
+        })
+        SimpleButton(name = "Go to Signal Visualization", onClick = {
+            onGoToSignalVisualization()
         })
         Spacer(modifier = Modifier.height(20.dp))
         Text("Current gains: ${deviceSettingsUiState.gains.joinToString(", ")}")
