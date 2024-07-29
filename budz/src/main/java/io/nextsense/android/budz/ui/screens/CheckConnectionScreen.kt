@@ -292,7 +292,7 @@ fun CheckConnectionScreen(
     onGoToCheckBrainSignal: () -> Unit,
 ) {
     KeepScreenOn()
-    val checkConnectionUiState by checkConnectionViewModel.uiState.collectAsState()
+    val checkConnectionUiState by checkConnectionViewModel.signalUiState.collectAsState()
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val bluetoothConnectPermissionsState = rememberMultiplePermissionsState(

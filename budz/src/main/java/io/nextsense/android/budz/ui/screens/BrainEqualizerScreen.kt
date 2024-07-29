@@ -83,7 +83,7 @@ fun BrainEqualizerScreen(
     onGoToFitGuide: () -> Unit,
 ) {
     KeepScreenOn()
-    val brainEqualizerUiState by brainEqualizerViewModel.uiState.collectAsState()
+    val brainEqualizerUiState by brainEqualizerViewModel.signalUiState.collectAsState()
 
     LifecycleResumeEffect(true) {
         brainEqualizerViewModel.startPlayer()
