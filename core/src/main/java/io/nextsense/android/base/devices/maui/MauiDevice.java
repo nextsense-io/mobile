@@ -88,8 +88,9 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
     mauiDataParser = MauiDataParser.create(getLocalSessionManager());
   }
 
-  public void setDataSynchronizer(DataSynchronizer dataSynchronizer) {
-    mauiDataParser.setDataSynchronizer(dataSynchronizer);
+  public void setDataSynchronizers(DataSynchronizer eegDataSynchronizer,
+                                   DataSynchronizer imuDataSynchronizer) {
+    mauiDataParser.setDataSynchronizers(eegDataSynchronizer, imuDataSynchronizer);
   }
 
   @Override
@@ -210,8 +211,8 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
       deviceSettings.setEnabledChannels(List.of(1));
       deviceSettings.setEegSamplingRate(1000f);
       deviceSettings.setEegStreamingRate(1000f);
-      deviceSettings.setImuSamplingRate(1f);
-      deviceSettings.setImuStreamingRate(1f);
+      deviceSettings.setImuSamplingRate(100f);
+      deviceSettings.setImuStreamingRate(100f);
       deviceSettings.setImpedanceMode(DeviceSettings.ImpedanceMode.OFF);
       deviceSettings.setImpedanceDivider(25);
     }

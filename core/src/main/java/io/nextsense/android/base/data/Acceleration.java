@@ -105,16 +105,15 @@ public class Acceleration extends BaseRecord {
   }
 
   public static Acceleration create(
-      long localSessionId, @Nullable Integer x, @Nullable Integer y, @Nullable Integer z,
-      @Nullable Integer rightX, @Nullable Integer rightY, @Nullable Integer rightZ,
-      @Nullable Integer leftX, @Nullable Integer leftY, @Nullable Integer leftZ,
-      Instant receptionTimestamp, @Nullable Integer relativeSamplingTimestamp,
-      @Nullable Instant absoluteSamplingTimestamp) {
+      long localSessionId, @Nullable Integer leftX, @Nullable Integer leftY,
+      @Nullable Integer leftZ, @Nullable Integer rightX, @Nullable Integer rightY,
+      @Nullable Integer rightZ, Instant receptionTimestamp,
+      @Nullable Integer relativeSamplingTimestamp, @Nullable Instant absoluteSamplingTimestamp) {
     if (relativeSamplingTimestamp == null && absoluteSamplingTimestamp == null) {
       throw new IllegalArgumentException(
           "Either the relative or the absolute timestamp need to be present");
     }
-    return new Acceleration(localSessionId, x, y, z, rightX, rightY, rightZ, leftX, leftY, leftZ,
+    return new Acceleration(localSessionId, null, null, null, rightX, rightY, rightZ, leftX, leftY, leftZ,
         receptionTimestamp, relativeSamplingTimestamp, absoluteSamplingTimestamp);
   }
 
@@ -187,6 +186,8 @@ public class Acceleration extends BaseRecord {
   public DeviceLocation getDeviceLocation() {
     if (x != null) {
       return DeviceLocation.BOX;
+    } else if (rightX != null && leftX != null) {
+      return DeviceLocation.BOTH_EARBUDS;
     } else if (rightX != null) {
       return DeviceLocation.RIGHT_EARBUD;
     } else if (leftX != null) {

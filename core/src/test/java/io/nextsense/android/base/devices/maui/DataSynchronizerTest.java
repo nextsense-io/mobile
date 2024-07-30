@@ -14,7 +14,7 @@ public class DataSynchronizerTest {
   @Before
   public void setUp() {
     List<String> channels = Arrays.asList("channel1", "channel2", "channel3");
-    dataSynchronizer = new DataSynchronizer(channels);
+    dataSynchronizer = new DataSynchronizer(channels, 1.0f); // 1 Hz sampling rate
   }
 
   @Test
@@ -147,5 +147,25 @@ public class DataSynchronizerTest {
     List<Map<String, DataSynchronizer.DataPoint>> allSynchronizedData =
         dataSynchronizer.getAllSynchronizedDataAndRemove();
     assertEquals(1, allSynchronizedData.size());
+  }
+
+  @Test
+  public void testMatchingBasedOnNearbyTimestamp() {
+    Instant now = Instant.now();
+
+    dataSynchronizer.addData("channel1", 1627550710000L, now, 1.0f);
+    dataSynchronizer.addData("channel2", 1627550710500L, now, 2.0f); // 500ms later
+    dataSynchronizer.addData("channel3", 1627550710900L, now, 3.0f); // 400ms after channel2
+
+    List<Map<String, DataSynchronizer.DataPoint>> allData = dataSynchronizer.getAllSynchronizedDataAndRemove();
+
+    List<Map<String, DataSynchronizer.DataPoint>> expectedData = new ArrayList<>();
+    Map<String, DataSynchronizer.DataPoint> dataPoint = new HashMap<>();
+    dataPoint.put("channel1", new DataSynchronizer.DataPoint(1627550710000L, now, 1.0f));
+    dataPoint.put("channel2", new DataSynchronizer.DataPoint(1627550710500L, now, 2.0f));
+    dataPoint.put("channel3", new DataSynchronizer.DataPoint(1627550710900L, now, 3.0f));
+    expectedData.add(dataPoint);
+
+    assertTrue(allData.containsAll(expectedData));
   }
 }

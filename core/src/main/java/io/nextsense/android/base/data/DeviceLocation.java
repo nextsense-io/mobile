@@ -6,5 +6,6 @@ public enum DeviceLocation {
   BOX,  // Box or main single device.
   CASE,  // Charging or carrying case.
   RIGHT_EARBUD,  // Right earbud.
-  LEFT_EARBUD  // LEft earbud.
+  LEFT_EARBUD,  // Left earbud.
+  BOTH_EARBUDS  // Data from both earbuds.
 }

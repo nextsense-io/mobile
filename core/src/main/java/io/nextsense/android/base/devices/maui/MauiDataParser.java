@@ -52,12 +52,15 @@ public class MauiDataParser {
 
   private final LocalSessionManager localSessionManager;
 
-  private DataSynchronizer dataSynchronizer;
+  private DataSynchronizer eegDataSynchronizer;
+  private DataSynchronizer imuDataSynchronizer;
   private String deviceName;
   private long lastKeyTimestampRight = 0;
-  private int rightSamplesSinceKeyTimestamp = 0;
+  private int rightEegSamplesSinceKeyTimestamp = 0;
+  private int rightImuSamplesSinceKeyTimestamp = 0;
   private long lastKeyTimestampLeft = 0;
-  private int leftSamplesSinceKeyTimestamp = 0;
+  private int leftEegSamplesSinceKeyTimestamp = 0;
+  private int leftImuSamplesSinceKeyTimestamp = 0;
   private Long lastPackageNum = null;
   private Instant firstReceptionTimestamp = null;
   private boolean useSequenceNumberAsRelativeTimestamp = false;
@@ -71,8 +74,10 @@ public class MauiDataParser {
     return new MauiDataParser(localSessionManager);
   }
 
-  public void setDataSynchronizer(DataSynchronizer dataSynchronizer) {
-    this.dataSynchronizer = dataSynchronizer;
+  public void setDataSynchronizers(DataSynchronizer eegDataSynchronizer,
+                                   DataSynchronizer imuDataSynchronizer) {
+    this.eegDataSynchronizer = eegDataSynchronizer;
+    this.imuDataSynchronizer = imuDataSynchronizer;
   }
 
   public void setDeviceName(String deviceName) {
@@ -89,13 +94,17 @@ public class MauiDataParser {
 
   public void startNewSession() {
     lastKeyTimestampRight = 0;
-    rightSamplesSinceKeyTimestamp = 0;
+    rightEegSamplesSinceKeyTimestamp = 0;
+    rightImuSamplesSinceKeyTimestamp = 0;
     lastKeyTimestampLeft = 0;
-    leftSamplesSinceKeyTimestamp = 0;
+    leftEegSamplesSinceKeyTimestamp = 0;
+    leftImuSamplesSinceKeyTimestamp = 0;
     lastPackageNum = null;
     firstReceptionTimestamp = null;
     useSequenceNumberAsRelativeTimestamp = false;
     eegSamplesCount = 0;
+    eegDataSynchronizer.clear();
+    imuDataSynchronizer.clear();
   }
 
   public synchronized void parseDataBytes(byte[] values) throws FirmwareMessageParsingException {
@@ -164,10 +173,10 @@ public class MauiDataParser {
             budzDataPacket.getFlags());
         if (deviceLocation == DeviceLocation.RIGHT_EARBUD) {
           lastKeyTimestampRight = getTimestamp(budzDataPacket, localSession.getEegSampleRate());
-          rightSamplesSinceKeyTimestamp = 0;
+          rightEegSamplesSinceKeyTimestamp = 0;
         } else {
           lastKeyTimestampLeft = getTimestamp(budzDataPacket, localSession.getEegSampleRate());
-          leftSamplesSinceKeyTimestamp = 0;
+          leftEegSamplesSinceKeyTimestamp = 0;
         }
       } else if (deviceLocation == DeviceLocation.LEFT_EARBUD && lastKeyTimestampLeft == 0 ||
           deviceLocation == DeviceLocation.RIGHT_EARBUD && lastKeyTimestampRight == 0) {
@@ -242,35 +251,43 @@ public class MauiDataParser {
           /*relativeSamplingTimestamp=*/null));
     }
 
-    // TODO(eric): Synchronize IMU data.
+    // Parse the EEG and IMU data and add them to the synchronizers.
     ByteBuffer imuBuffer = ByteBuffer.wrap(budzDataPacket.getImu().toByteArray());
     while (imuBuffer.remaining() >= IMU_SAMPLE_SIZE_BYTES) {
-      Acceleration acceleration = parseSingleAccelerationPacket(
-          imuBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
-      samples.addAcceleration(acceleration);
-      AngularSpeed angularSpeed = parseSingleAngularSpeedPacket(
-          imuBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
-      samples.addAngularSpeed(angularSpeed);
+      parseSingleImuPacket(imuBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
     }
-
     ByteBuffer eegBuffer = ByteBuffer.wrap(budzDataPacket.getEeeg().toByteArray());
     while (eegBuffer.remaining() >= EEG_SAMPLE_SIZE_BYTES) {
       parseSingleEegPacket(eegBuffer, receptionTimestamp, deviceLocation, acquisitionTimestamp);
     }
-    List<Map<String, DataSynchronizer.DataPoint>> allSynchronizedData =
-        dataSynchronizer.getAllSynchronizedDataAndRemove();
-    List<Map<String, DataSynchronizer.DataPoint>> timedOutData =
-        dataSynchronizer.removeOldData();
-    if (VERBOSE_LOGGING && !timedOutData.isEmpty()) {
+
+    // Get all synchronized data and remove old data.
+    List<Map<String, DataSynchronizer.DataPoint>> allEegSynchronizedData =
+        eegDataSynchronizer.getAllSynchronizedDataAndRemove();
+    List<Map<String, DataSynchronizer.DataPoint>> eegTimedOutData =
+        eegDataSynchronizer.removeOldData();
+    if (VERBOSE_LOGGING && !eegTimedOutData.isEmpty()) {
       Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toString() +
-          ". Removed " + timedOutData.size() + " old data points and emitted them.");
+          ". Removed " + eegTimedOutData.size() + " old EEG data points and emitted them.");
     }
-    allSynchronizedData.addAll(timedOutData);
-    if (!allSynchronizedData.isEmpty()) {
+    allEegSynchronizedData.addAll(eegTimedOutData);
+
+    List<Map<String, DataSynchronizer.DataPoint>> allImuSynchronizedData =
+        imuDataSynchronizer.getAllSynchronizedDataAndRemove();
+    List<Map<String, DataSynchronizer.DataPoint>> imuTimedOutData =
+        imuDataSynchronizer.removeOldData();
+    if (VERBOSE_LOGGING && !imuTimedOutData.isEmpty()) {
+      Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toString() +
+          ". Removed " + imuTimedOutData.size() + " old IMU data points and emitted them.");
+    }
+    allImuSynchronizedData.addAll(imuTimedOutData);
+
+    if (!allEegSynchronizedData.isEmpty() || !allImuSynchronizedData.isEmpty()) {
       if (VERBOSE_LOGGING) {
-        Log.d(TAG, allSynchronizedData.size() + " synchronised samples are ready.");
+        Log.d(TAG, allEegSynchronizedData.size() + " synchronised eeg samples and " +
+            allImuSynchronizedData.size() + " synchronized imu samples are ready.");
       }
-      for (Map<String, DataSynchronizer.DataPoint> data : allSynchronizedData) {
+      for (Map<String, DataSynchronizer.DataPoint> data : allEegSynchronizedData) {
         HashMap<Integer, Float> eegDataMap = new HashMap<>();
         int samplingTimeStamp = 0;
         for (Map.Entry<String, DataSynchronizer.DataPoint> entry : data.entrySet()) {
@@ -281,17 +298,49 @@ public class MauiDataParser {
             eegDataMap, receptionTimestamp, /*relativeSamplingTimestamp=*/samplingTimeStamp,
             null));
       }
-      EventBus.getDefault().post(samples);
-    } // else {
-      // Check in case sync is failing and need to remove data. It it fails for a long time, memory
-      // could run out.
+      for (Map<String, DataSynchronizer.DataPoint> data : allImuSynchronizedData) {
+        HashMap<String, Float> imuDataMap = new HashMap<>();
+        int samplingTimeStamp = 0;
+        for (Map.Entry<String, DataSynchronizer.DataPoint> entry : data.entrySet()) {
+          imuDataMap.put(entry.getKey(), entry.getValue().value);
+          samplingTimeStamp = (int) entry.getValue().samplingTimestamp;
+        }
+        boolean accLeftPresent = (imuDataMap.containsKey(Acceleration.Channels.ACC_L_X.getName()) &&
+            imuDataMap.containsKey(Acceleration.Channels.ACC_L_Y.getName()) &&
+            imuDataMap.containsKey(Acceleration.Channels.ACC_L_Z.getName()));
+        boolean accRightPresent = (imuDataMap.containsKey(Acceleration.Channels.ACC_R_X.getName()) &&
+            imuDataMap.containsKey(Acceleration.Channels.ACC_R_Y.getName()) &&
+            imuDataMap.containsKey(Acceleration.Channels.ACC_R_Z.getName()));
+        boolean gyroLeftPresent = (imuDataMap.containsKey(AngularSpeed.Channels.GYRO_L_X.getName()) &&
+            imuDataMap.containsKey(AngularSpeed.Channels.GYRO_L_Y.getName()) &&
+            imuDataMap.containsKey(AngularSpeed.Channels.GYRO_L_Z.getName()));
+        boolean gyroRightPresent = (imuDataMap.containsKey(AngularSpeed.Channels.GYRO_R_X.getName()) &&
+            imuDataMap.containsKey(AngularSpeed.Channels.GYRO_R_Y.getName()) &&
+            imuDataMap.containsKey(AngularSpeed.Channels.GYRO_R_Z.getName()));
 
-//      long removedCount = dataSynchronizer.removeOldData();
-//      if (VERBOSE_LOGGING && removedCount > 0) {
-//        Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toString() +
-//            ". Removed " + removedCount + " old data points.");
-//      }
-//    }
+        samples.addAcceleration(Acceleration.create(
+            localSessionManager.getActiveLocalSession().get().id,
+            accLeftPresent ? Math.round(imuDataMap.get(Acceleration.Channels.ACC_L_X.getName())) : 0,
+            accLeftPresent ? Math.round(imuDataMap.get(Acceleration.Channels.ACC_L_Y.getName())) : 0,
+            accLeftPresent ? Math.round(imuDataMap.get(Acceleration.Channels.ACC_L_Z.getName())) : 0,
+            accRightPresent ? Math.round(imuDataMap.get(Acceleration.Channels.ACC_R_X.getName())) : 0,
+            accRightPresent ? Math.round(imuDataMap.get(Acceleration.Channels.ACC_R_Y.getName())) : 0,
+            accRightPresent ? Math.round(imuDataMap.get(Acceleration.Channels.ACC_R_Z.getName())) : 0,
+            /*samplingTimestamp=*/null, samplingTimeStamp,
+            receptionTimestamp));
+        samples.addAngularSpeed(AngularSpeed.create(
+            localSessionManager.getActiveLocalSession().get().id,
+            gyroLeftPresent ? Math.round(imuDataMap.get(AngularSpeed.Channels.GYRO_L_X.getName())) : 0,
+            gyroLeftPresent ? Math.round(imuDataMap.get(AngularSpeed.Channels.GYRO_L_Y.getName())) : 0,
+            gyroLeftPresent ? Math.round(imuDataMap.get(AngularSpeed.Channels.GYRO_L_Z.getName())) : 0,
+            gyroRightPresent ? Math.round(imuDataMap.get(AngularSpeed.Channels.GYRO_R_X.getName())) : 0,
+            gyroRightPresent ? Math.round(imuDataMap.get(AngularSpeed.Channels.GYRO_R_Y.getName())) : 0,
+            gyroRightPresent ? Math.round(imuDataMap.get(AngularSpeed.Channels.GYRO_R_Z.getName())) : 0,
+            /*samplingTimestamp=*/null, samplingTimeStamp,
+            receptionTimestamp));
+      }
+      EventBus.getDefault().post(samples);
+    }
 
     if (VERBOSE_LOGGING) {
       Log.d(TAG, "Parsed " + samples.getEegSamples().size() + " EEG samples, " +
@@ -313,49 +362,65 @@ public class MauiDataParser {
         new byte[]{valuesBuffer.get(), valuesBuffer.get(), valuesBuffer.get()}, 0,
         ByteOrder.LITTLE_ENDIAN);
     int dataPointAcquisitionTimeStamp = (int) acquisitionTimestamp + (deviceLocation ==
-        DeviceLocation.LEFT_EARBUD ? leftSamplesSinceKeyTimestamp : rightSamplesSinceKeyTimestamp) *
-        Math.round(1000 / localSession.getEegSampleRate());
-    String channelName = deviceLocation == DeviceLocation.LEFT_EARBUD ? String.valueOf(CHANNEL_LEFT) :
-        String.valueOf(CHANNEL_RIGHT);
-    dataSynchronizer.addData(channelName, dataPointAcquisitionTimeStamp, receptionTimestamp,
+        DeviceLocation.LEFT_EARBUD ? leftEegSamplesSinceKeyTimestamp :
+        rightEegSamplesSinceKeyTimestamp) * Math.round(1000 / localSession.getEegSampleRate());
+    String channelName = deviceLocation == DeviceLocation.LEFT_EARBUD ?
+        String.valueOf(CHANNEL_LEFT) : String.valueOf(CHANNEL_RIGHT);
+    eegDataSynchronizer.addData(channelName, dataPointAcquisitionTimeStamp, receptionTimestamp,
         convertToMicroVolts(eegValue));
     ++eegSamplesCount;
     if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
-      ++leftSamplesSinceKeyTimestamp;
+      ++leftEegSamplesSinceKeyTimestamp;
     } else {
-      ++rightSamplesSinceKeyTimestamp;
+      ++rightEegSamplesSinceKeyTimestamp;
     }
   }
 
-  private Acceleration parseSingleAccelerationPacket(
+  private void parseSingleImuPacket(
       ByteBuffer valuesBuffer, Instant receptionTimestamp, DeviceLocation deviceLocation,
       long acquisitionTimestamp) throws NoSuchElementException {
     Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
     if (!localSessionOptional.isPresent()) {
-      return null;
+      return;
     }
     LocalSession localSession = localSessionOptional.get();
     valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
-    List<Short> accelerationData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
+    List<Short> imuData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
+        valuesBuffer.getShort(), valuesBuffer.getShort(), valuesBuffer.getShort(),
         valuesBuffer.getShort());
-    return Acceleration.create(localSession.id, /*x=*/accelerationData.get(0),
-        /*y=*/accelerationData.get(1), /*z=*/accelerationData.get(2), deviceLocation,
-        /*samplingTimestamp=*/null, (int) acquisitionTimestamp, receptionTimestamp);
-  }
+    int dataPointAcquisitionTimeStamp = (int) acquisitionTimestamp + (deviceLocation ==
+        DeviceLocation.LEFT_EARBUD ? leftImuSamplesSinceKeyTimestamp :
+        rightImuSamplesSinceKeyTimestamp) *
+        Math.round(1000 / localSession.getAccelerationSampleRate());
 
-  private AngularSpeed parseSingleAngularSpeedPacket(
-      ByteBuffer valuesBuffer, Instant receptionTimestamp, DeviceLocation deviceLocation,
-      long acquisitionTimestamp) throws NoSuchElementException {
-    Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
-    if (!localSessionOptional.isPresent()) {
-      return null;
+    if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
+      imuDataSynchronizer.addData(Acceleration.Channels.ACC_L_X.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(0));
+      imuDataSynchronizer.addData(Acceleration.Channels.ACC_L_Y.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(1));
+      imuDataSynchronizer.addData(Acceleration.Channels.ACC_L_Z.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(2));
+      imuDataSynchronizer.addData(AngularSpeed.Channels.GYRO_L_X.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(3));
+      imuDataSynchronizer.addData(AngularSpeed.Channels.GYRO_L_Y.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(4));
+      imuDataSynchronizer.addData(AngularSpeed.Channels.GYRO_L_Z.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(5));
+      ++leftImuSamplesSinceKeyTimestamp;
+    } else {
+      imuDataSynchronizer.addData(Acceleration.Channels.ACC_R_X.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(0));
+      imuDataSynchronizer.addData(Acceleration.Channels.ACC_R_Y.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(1));
+      imuDataSynchronizer.addData(Acceleration.Channels.ACC_R_Z.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(2));
+      imuDataSynchronizer.addData(AngularSpeed.Channels.GYRO_R_X.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(3));
+      imuDataSynchronizer.addData(AngularSpeed.Channels.GYRO_R_Y.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(4));
+      imuDataSynchronizer.addData(AngularSpeed.Channels.GYRO_R_Z.getName(),
+          dataPointAcquisitionTimeStamp, receptionTimestamp, imuData.get(5));
+      ++rightImuSamplesSinceKeyTimestamp;
     }
-    LocalSession localSession = localSessionOptional.get();
-    valuesBuffer.order(ByteOrder.LITTLE_ENDIAN);
-    List<Short> angularSpeedData = Arrays.asList(valuesBuffer.getShort(), valuesBuffer.getShort(),
-        valuesBuffer.getShort());
-    return AngularSpeed.create(localSession.id, /*x=*/angularSpeedData.get(0),
-        /*y=*/angularSpeedData.get(1), /*z=*/angularSpeedData.get(2), deviceLocation,
-        /*samplingTimeStamp=*/null, (int) acquisitionTimestamp, receptionTimestamp);
   }
 }
