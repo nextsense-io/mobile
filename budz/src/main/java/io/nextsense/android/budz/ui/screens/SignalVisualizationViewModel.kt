@@ -22,6 +22,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import io.nextsense.android.algo.signal.WaveletArtifactRejection;
+
 
 data class SignalVisualizationState(
     val connected: Boolean = false,
@@ -126,36 +128,39 @@ open class SignalVisualizationViewModel @Inject constructor(
             channelName=MauiDataParser.CHANNEL_RIGHT.toString(),
             durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
             fromDatabase=false)
-        val gotRightEarData = rightEarData != null && rightEarData.size >=
-                _filterCropDuration.inWholeMilliseconds + 100
-        val gotLeftEarData = leftEarData != null && leftEarData.size >=
-                _filterCropDuration.inWholeMilliseconds + 100
-        if (!gotLeftEarData && !gotRightEarData) {
+        if (leftEarData == null || rightEarData == null) {
             return
         }
 
-        // Update the charts.
-        if (gotLeftEarData) {
-            val leftEarDataPrepared = prepareData(leftEarData!!)
-            leftEarChartModelProducer.runTransaction {
-                lineSeries { series(leftEarDataPrepared) }
-            }
-        }
-        if (gotRightEarData) {
-            val rightEarDataPrepared = prepareData(rightEarData!!)
-            rightEarChartModelProducer.runTransaction {
-                lineSeries { series(rightEarDataPrepared) }
-            }
+        // Apply Wavelet Artifact Rejection if enabled
+        if (_uiState.value.filtered) {
+            val filteredLeftEarData = WaveletArtifactRejection.applyWaveletArtifactRejection(leftEarData.map { it.toDouble() }.toDoubleArray())
+            val filteredRightEarData = WaveletArtifactRejection.applyWaveletArtifactRejection(rightEarData.map { it.toDouble() }.toDoubleArray())
+
+            // Update charts with filtered data
+            updateChart(leftEarChartModelProducer, filteredLeftEarData)
+            updateChart(rightEarChartModelProducer, filteredRightEarData)
+        } else {
+            // Update charts with original data
+            updateChart(leftEarChartModelProducer, leftEarData)
+            updateChart(rightEarChartModelProducer, rightEarData)
         }
     }
+
+    private fun updateChart(producer: CartesianChartModelProducer, data: DoubleArray) {
+        producer.runTransaction {
+            lineSeries { series(data.toList()) }
+        }
+    }
+
 
     private fun prepareData(data: List<Float>): List<Double> {
         var doubleData = data.map { it.toDouble() }.toDoubleArray()
         if (_uiState.value.filtered) {
             doubleData = Filters.applyBandStop(doubleData, /*samplingRate=*/1000F,
-                /*order=*/4, /*centerFrequency=*/60F, /*widthFrequency=*/2F)
+                /*order=*/6, /*centerFrequency=*/60F, /*widthFrequency=*/2F)
             doubleData = Filters.applyBandPass(doubleData, /*samplingRate=*/1000F,
-                /*order=*/4, /*lowCutoff=*/0.5F, /*highCutoff=*/40F)
+                /*order=*/4, /*lowCutoff=*/1.5F, /*highCutoff=*/30F)
         }
         // Resample the data to the chart sampling rate for performance.
         val doubleArrayData = Sampling.resample(doubleData, 1000F, 100, _chartSamplingRate)
