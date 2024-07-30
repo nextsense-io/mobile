@@ -97,6 +97,20 @@ public class MemoryCache {
             imuChannels.get(Acceleration.Channels.ACC_R_Z.getName()).addValue(
                 acceleration.getRightZ());
             break;
+          case BOTH_EARBUDS:
+            imuChannels.get(Acceleration.Channels.ACC_L_X.getName()).addValue(
+                acceleration.getLeftX());
+            imuChannels.get(Acceleration.Channels.ACC_L_Y.getName()).addValue(
+                acceleration.getLeftY());
+            imuChannels.get(Acceleration.Channels.ACC_L_Z.getName()).addValue(
+                acceleration.getLeftZ());
+            imuChannels.get(Acceleration.Channels.ACC_R_X.getName()).addValue(
+                acceleration.getRightX());
+            imuChannels.get(Acceleration.Channels.ACC_R_Y.getName()).addValue(
+                acceleration.getRightY());
+            imuChannels.get(Acceleration.Channels.ACC_R_Z.getName()).addValue(
+                acceleration.getRightZ());
+            break;
           default:
             throw new IllegalArgumentException("Unknown device location: " +
                 acceleration.getDeviceLocation());
@@ -118,6 +132,20 @@ public class MemoryCache {
                 angularSpeed.getLeftZ());
             break;
           case RIGHT_EARBUD:
+            imuChannels.get(AngularSpeed.Channels.GYRO_R_X.getName()).addValue(
+                angularSpeed.getRightX());
+            imuChannels.get(AngularSpeed.Channels.GYRO_R_Y.getName()).addValue(
+                angularSpeed.getRightY());
+            imuChannels.get(AngularSpeed.Channels.GYRO_R_Z.getName()).addValue(
+                angularSpeed.getRightZ());
+            break;
+          case BOTH_EARBUDS:
+            imuChannels.get(AngularSpeed.Channels.GYRO_L_X.getName()).addValue(
+                angularSpeed.getLeftX());
+            imuChannels.get(AngularSpeed.Channels.GYRO_L_Y.getName()).addValue(
+                angularSpeed.getLeftY());
+            imuChannels.get(AngularSpeed.Channels.GYRO_L_Z.getName()).addValue(
+                angularSpeed.getLeftZ());
             imuChannels.get(AngularSpeed.Channels.GYRO_R_X.getName()).addValue(
                 angularSpeed.getRightX());
             imuChannels.get(AngularSpeed.Channels.GYRO_R_Y.getName()).addValue(

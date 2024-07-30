@@ -2,13 +2,7 @@ package io.nextsense.android.base.devices.maui;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class DataSynchronizer {
   public static class DataPoint {
@@ -35,22 +29,28 @@ public class DataSynchronizer {
           && receptionTimestamp.equals(other.receptionTimestamp)
           && Float.compare(other.value, value) == 0;
     }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(samplingTimestamp, receptionTimestamp, value);
+    }
   }
 
   // If no sync was done after this long, remove data points.
-  public static final Duration SYNC_TIMEOUT = Duration.ofSeconds(1);
+  public static final Duration SYNC_TIMEOUT = Duration.ofSeconds(6);
 
   private final Map<String, List<DataPoint>> channelDataMap;
+  private final Duration syncPeriod;
 
-  public DataSynchronizer(List<String> channels) {
+  public DataSynchronizer(List<String> channels, float samplingRate) {
     channelDataMap = new HashMap<>();
     for (String channel : channels) {
       channelDataMap.put(channel, new ArrayList<>());
     }
+    syncPeriod = Duration.ofMillis(Math.round(1000 / samplingRate));
   }
 
-  public synchronized void addData(
-      String channel, long samplingTimestamp, Instant receptionTimestamp, float value) {
+  public synchronized void addData(String channel, long samplingTimestamp, Instant receptionTimestamp, float value) {
     if (!channelDataMap.containsKey(channel)) {
       throw new IllegalArgumentException("Channel does not exist: " + channel);
     }
@@ -60,7 +60,7 @@ public class DataSynchronizer {
 
   public synchronized List<Map<String, DataPoint>> getAllSynchronizedDataAndRemove() {
     List<Map<String, DataPoint>> synchronizedData = new ArrayList<>();
-    Map<Long, Map<String, DataPoint>> timestampedData = new HashMap<>();
+    Map<Long, Map<String, DataPoint>> timestampedData = new TreeMap<>();
 
     // Collect all data points by timestamp
     for (Map.Entry<String, List<DataPoint>> entry : channelDataMap.entrySet()) {
@@ -73,19 +73,42 @@ public class DataSynchronizer {
       }
     }
 
-    // Filter out timestamps that do not have data for all channels
+    // Match the closest timestamps that are not more than the syncPeriod apart
+    List<Long> timestampsToRemove = new ArrayList<>();
     Long lastTimestamp = 0L;
-    Iterator<Map.Entry<Long, Map<String, DataPoint>>> iterator =
-        timestampedData.entrySet().iterator();
+    Iterator<Map.Entry<Long, Map<String, DataPoint>>> iterator = timestampedData.entrySet().iterator();
     while (iterator.hasNext()) {
       Map.Entry<Long, Map<String, DataPoint>> entry = iterator.next();
+      Long timestamp = entry.getKey();
+
       if (entry.getValue().size() == channelDataMap.size()) {
         synchronizedData.add(entry.getValue());
-        iterator.remove(); // Remove from timestampedData to indicate it's processed
-        if (entry.getKey() > lastTimestamp) {
-          lastTimestamp = entry.getKey();
+        timestampsToRemove.add(timestamp);
+        if (timestamp > lastTimestamp) {
+          lastTimestamp = timestamp;
+        }
+      } else {
+        for (Map.Entry<Long, Map<String, DataPoint>> innerEntry : timestampedData.entrySet()) {
+          if (!innerEntry.getKey().equals(timestamp) &&
+              Math.abs(innerEntry.getKey() - timestamp) <= syncPeriod.toMillis()) {
+            entry.getValue().putAll(innerEntry.getValue());
+            if (entry.getValue().size() == channelDataMap.size()) {
+              synchronizedData.add(entry.getValue());
+              timestampsToRemove.add(timestamp);
+              timestampsToRemove.add(innerEntry.getKey());
+              if (timestamp > lastTimestamp) {
+                lastTimestamp = timestamp;
+              }
+              break;
+            }
+          }
         }
       }
+    }
+
+    // Remove the processed timestamps from timestampedData
+    for (Long timestamp : timestampsToRemove) {
+      timestampedData.remove(timestamp);
     }
 
     // Remove the synchronized data points from the original channel data map
@@ -105,17 +128,29 @@ public class DataSynchronizer {
   }
 
   public synchronized List<Map<String, DataPoint>> removeOldData() {
-    List<Map<String, DataPoint>> removed = new ArrayList<>();
+    Map<Long, Map<String, DataPoint>> removedData = new TreeMap<>();
     for (Map.Entry<String, List<DataPoint>> entry : channelDataMap.entrySet()) {
+      String channel = entry.getKey();
       Iterator<DataPoint> iterator = entry.getValue().iterator();
       while (iterator.hasNext()) {
         DataPoint dp = iterator.next();
         if (dp.receptionTimestamp.plus(SYNC_TIMEOUT).isBefore(Instant.now())) {
-          removed.add(new HashMap<>(Map.of(entry.getKey(), dp)));
+          removedData.putIfAbsent(dp.samplingTimestamp, new HashMap<>());
+          removedData.get(dp.samplingTimestamp).put(channel, dp);
           iterator.remove();
         }
       }
     }
-    return removed;
+
+    List<Map<String, DataPoint>> removedList = new ArrayList<>(removedData.values());
+    removedList.sort(Comparator.comparing(map -> map.values().iterator().next().samplingTimestamp));
+
+    return removedList;
+  }
+
+  public synchronized void clear() {
+    for (String channel : channelDataMap.keySet()) {
+      Objects.requireNonNull(channelDataMap.get(channel)).clear();
+    }
   }
 }

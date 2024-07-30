@@ -30,7 +30,8 @@ public class NextSenseDeviceManager {
   // instantiated to
   private final Map<String, Class<? extends NextSenseDevice>> devicesMapping;
   private final LocalSessionManager localSessionManager;
-  private DataSynchronizer dataSynchronizer;
+  private DataSynchronizer eegDataSynchronizer;
+  private DataSynchronizer imuDataSynchronizer;
 
   private NextSenseDeviceManager(LocalSessionManager localSessionManager, DeviceGroup deviceGroup) {
     this.localSessionManager = localSessionManager;
@@ -78,10 +79,14 @@ public class NextSenseDeviceManager {
       NextSenseDevice nextSenseDevice = deviceClass.newInstance();
       nextSenseDevice.setLocalSessionManager(localSessionManager);
       if (nextSenseDevice instanceof MauiDevice) {
-        if (dataSynchronizer == null) {
-          dataSynchronizer = new DataSynchronizer(nextSenseDevice.getEegChannelNames());
+        if (eegDataSynchronizer == null) {
+          eegDataSynchronizer = new DataSynchronizer(nextSenseDevice.getEegChannelNames(), 1000);
         }
-        ((MauiDevice) nextSenseDevice).setDataSynchronizer(dataSynchronizer);
+        if (imuDataSynchronizer == null) {
+          imuDataSynchronizer = new DataSynchronizer(nextSenseDevice.GetAccChannelNames(), 100);
+        }
+        ((MauiDevice) nextSenseDevice).setDataSynchronizers(
+            eegDataSynchronizer, imuDataSynchronizer);
       }
       return nextSenseDevice;
     } catch (IllegalAccessException | InstantiationException e) {

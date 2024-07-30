@@ -17,7 +17,7 @@ public class CsvWriter {
   private static final String HEADER_PREFIX = "#";
   private static final String KEY_VALUE_SEPARATOR = ": ";
 
-  private File appDirectory;
+  private final File appDirectory;
   private OutputStream csvOutputStream;
   private BufferedWriter writer;
   private int sampleNumber = 1;
@@ -52,7 +52,8 @@ public class CsvWriter {
     appendHeaderLine("accelerationStreamingRate", "250");
     appendHeaderLine("channelConfig", earbudsConfig);
     appendHeaderLine("========== Start Data ==========");
-    String headerLine = "SAMPLE_NUMBER,CH-1,CH-2,CH-3,CH-4,CH-5,CH-6,CH-7,CH-8,ACC_X,ACC_Y,ACC_Z," +
+    String headerLine = "SAMPLE_NUMBER,CH-1,CH-2,CH-3,CH-4,CH-5,CH-6,CH-7,CH-8,ACC_L_X,ACC_L_Y," +
+        "ACC_L_Z,GYRO_L_X,GYRO_L_Y,GYRO_L_Z,ACC_R_X,ACC_R_Y,ACC_R_Z,GYRO_R_X,GYRO_R_Y,GYRO_R_Z," +
         "SAMPLING_TIMESTAMP,RECEPTION_TIMESTAMP,IMPEDANCE_FLAG,SYNC,TRIG_OUT,TRIG_IN,ZMOD,MARKER," +
         "TBD6,TBD7,BUTTON,SLEEP_STAGE";
     if (haveRssi) {
@@ -82,15 +83,19 @@ public class CsvWriter {
   }
 
   public synchronized void appendData(
-      List<Float> eegData, List<Float> accData, long samplingTimestamp, long receptionTimestamp,
-      int impedanceFlag, int sync, int trigOut, int trigIn, int zmod, int marker, int tbd6,
-      int tbd7, int button, Integer rssi, String sleepStage) {
+      List<Float> eegData, List<Float> leftImuData, List<Float> rightImuData,
+      long samplingTimestamp, long receptionTimestamp, int impedanceFlag, int sync, int trigOut,
+      int trigIn, int zmod, int marker, int tbd6, int tbd7, int button, Integer rssi,
+      String sleepStage) {
     StringBuilder line = new StringBuilder(sampleNumber + ",");
     for (int i = 0; i < eegData.size(); i++) {
       line.append(eegData.get(i)).append(",");
     }
-    for (int i = 0; i < accData.size(); i++) {
-      line.append(accData.get(i)).append(",");
+    for (int i = 0; i < leftImuData.size(); i++) {
+      line.append(leftImuData.get(i)).append(",");
+    }
+    for (int i = 0; i < rightImuData.size(); i++) {
+      line.append(rightImuData.get(i)).append(",");
     }
     line.append(samplingTimestamp).append(",").append(receptionTimestamp).append(",")
         .append(impedanceFlag).append(",").append(sync).append(",").append(trigOut).append(",")

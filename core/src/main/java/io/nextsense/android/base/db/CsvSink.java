@@ -40,6 +40,8 @@ public class CsvSink {
   private Long currentSessionId;
   private int lastRssi = 0;
   private Instant lastRssiCheck = Instant.now();
+  private float eegSamplingRate;
+  private float imuSamplingRate;
 
   private CsvSink(Context context, ObjectBoxDatabase objectBoxDatabase,
                   BleCentralManagerProxy bleCentralManagerProxy) {
@@ -78,6 +80,9 @@ public class CsvSink {
   public void openCsv(String filename, String earbudsConfig, long localSessionId) {
     csvWriter.initCsvFile(filename, earbudsConfig, /*haveRssi=*/true);
     currentSessionId = localSessionId;
+    LocalSession localSession = objectBoxDatabase.getLocalSession(localSessionId);
+    eegSamplingRate = localSession.getEegSampleRate();
+    imuSamplingRate = localSession.getAccelerationSampleRate();
     if (bleCentralManagerProxy.getCentralManager().getConnectedPeripherals().isEmpty()) {
       RotatingFileLogger.get().logw(TAG, "No connected peripherals!");
       return;
@@ -112,25 +117,82 @@ public class CsvSink {
     if (!samples.getSleepStateRecords().isEmpty()) {
       sleepStage = samples.getSleepStateRecords().get(0).getSleepStage().name();
     }
+
+    List<List<Float>> leftImuSamples = new ArrayList<>();
+    List<List<Float>> rightImuSamples = new ArrayList<>();
+    boolean hasAngularSpeeds = !samples.getAngularSpeeds().isEmpty();
+    if (hasAngularSpeeds &&
+        samples.getAngularSpeeds().size() != samples.getAccelerations().size()) {
+      RotatingFileLogger.get().logw(TAG,
+          "Number of accelerometer samples does not match angular speed samples.");
+      return;
+    }
+    for (int i = 0; i < samples.getAccelerations().size(); i++) {
+      List<Float> leftImuData = new ArrayList<>();
+      List<Float> rightImuData = new ArrayList<>();
+      if (samples.getAccelerations().get(i).getLeftX() != null) {
+        leftImuData.add((float) samples.getAccelerations().get(i).getLeftX());
+        leftImuData.add((float) samples.getAccelerations().get(i).getLeftY());
+        leftImuData.add((float) samples.getAccelerations().get(i).getLeftZ());
+      }
+      if (samples.getAccelerations().get(i).getRightX() != null) {
+        rightImuData.add((float) samples.getAccelerations().get(i).getRightX());
+        rightImuData.add((float) samples.getAccelerations().get(i).getRightY());
+        rightImuData.add((float) samples.getAccelerations().get(i).getRightZ());
+      }
+      if (hasAngularSpeeds) {
+        if (samples.getAngularSpeeds().get(i).getLeftX() != null) {
+          leftImuData.add((float) samples.getAngularSpeeds().get(i).getLeftX());
+          leftImuData.add((float) samples.getAngularSpeeds().get(i).getLeftY());
+          leftImuData.add((float) samples.getAngularSpeeds().get(i).getLeftZ());
+        }
+        if (samples.getAngularSpeeds().get(i).getRightX() != null) {
+          rightImuData.add((float) samples.getAngularSpeeds().get(i).getRightX());
+          rightImuData.add((float) samples.getAngularSpeeds().get(i).getRightY());
+          rightImuData.add((float) samples.getAngularSpeeds().get(i).getRightZ());
+        }
+      }
+      leftImuSamples.add(leftImuData);
+      rightImuSamples.add(rightImuData);
+    }
+
+    float imuToEegRatio = imuSamplingRate / eegSamplingRate;
+
     for (int i = 0; i < samples.getEegSamples().size(); i++) {
       EegSample eegSample = samples.getEegSamples().get(i);
       List<Float> eegData = new ArrayList<>();
       for (int j = 1; j < 9; ++j) {
         eegData.add(eegSample.getEegSamples().getOrDefault(j, 0.0f));
       }
-      List<Float> accData = new ArrayList<>();
-      // TODO(eric): This is a temporary fix for the missing accelerometer data.
-      accData.add(0.0f);
-      accData.add(0.0f);
-      accData.add(0.0f);
-//      accData.add((float)samples.getAccelerations().get(i).getX());
-//      accData.add((float)samples.getAccelerations().get(i).getY());
-//      accData.add((float)samples.getAccelerations().get(i).getZ());
+      List<Float> leftImuData = new ArrayList<>();
+      List<Float> rightImuData = new ArrayList<>();
+      if (!leftImuSamples.isEmpty() && i % imuToEegRatio == 0) {
+        leftImuData = leftImuSamples.get((int)(i / imuToEegRatio));
+      }
+      if (leftImuData.isEmpty()) {
+        leftImuData.add(0.0f);
+        leftImuData.add(0.0f);
+        leftImuData.add(0.0f);
+        leftImuData.add(0.0f);
+        leftImuData.add(0.0f);
+        leftImuData.add(0.0f);
+      }
+      if (!rightImuSamples.isEmpty() && i % imuToEegRatio == 0) {
+        rightImuData = rightImuSamples.get((int) (i / imuToEegRatio));
+      }
+      if (rightImuData.isEmpty()) {
+        rightImuData.add(0.0f);
+        rightImuData.add(0.0f);
+        rightImuData.add(0.0f);
+        rightImuData.add(0.0f);
+        rightImuData.add(0.0f);
+        rightImuData.add(0.0f);
+      }
 
       long samplingTimestamp = eegSample.getRelativeSamplingTimestamp() != null
           ? eegSample.getRelativeSamplingTimestamp()
           : eegSample.getAbsoluteSamplingTimestamp().toEpochMilli();
-      csvWriter.appendData(eegData, accData,
+      csvWriter.appendData(eegData, leftImuData, rightImuData,
           samplingTimestamp,
           eegSample.getReceptionTimestamp().toEpochMilli(), /*impedance_flag=*/0,
           boolToInt(Boolean.TRUE.equals(eegSample.getSync())),

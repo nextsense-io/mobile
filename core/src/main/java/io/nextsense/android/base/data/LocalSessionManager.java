@@ -97,14 +97,14 @@ public class LocalSessionManager {
     }
     activeLocalSession = LocalSession.create(userBigTableKey, cloudDataSessionId, earbudsConfig,
         uploadNeeded, /*receivedData=*/false, eegSampleRate, accelerationSampleRate, Instant.now());
+    long sessionId = objectBoxDatabase.putLocalSession(activeLocalSession);
     if (saveToCsv && csvSink != null) {
       csvSink.startListening();
       String formattedDateTime =
           LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).format(csvFileNameFormatter);
-      csvSink.openCsv(/*fileName=*/"data_recording_" + formattedDateTime, earbudsConfig,
-          activeLocalSession.id);
+      csvSink.openCsv(/*fileName=*/"data_recording_" + formattedDateTime, earbudsConfig, sessionId);
     }
-    return objectBoxDatabase.putLocalSession(activeLocalSession);
+    return sessionId;
   }
 
   public synchronized void stopLocalSession(LocalSession localSession) {

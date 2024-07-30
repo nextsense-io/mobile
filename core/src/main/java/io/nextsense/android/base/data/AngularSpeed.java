@@ -99,6 +99,19 @@ public class AngularSpeed extends BaseRecord {
     };
   }
 
+  public static AngularSpeed create(
+      long localSessionId, @Nullable Integer leftX, @Nullable Integer leftY,
+      @Nullable Integer leftZ, @Nullable Integer rightX, @Nullable Integer rightY,
+      @Nullable Integer rightZ, Instant receptionTimestamp,
+      @Nullable Integer relativeSamplingTimestamp, @Nullable Instant absoluteSamplingTimestamp) {
+    if (relativeSamplingTimestamp == null && absoluteSamplingTimestamp == null) {
+      throw new IllegalArgumentException(
+          "Either the relative or the absolute timestamp need to be present");
+    }
+    return new AngularSpeed(localSessionId, null, null, null, rightX, rightY, rightZ, leftX, leftY, leftZ,
+        receptionTimestamp, relativeSamplingTimestamp, absoluteSamplingTimestamp);
+  }
+
   // Needs to be public for ObjectBox performance.
   @SuppressWarnings("unused")
   public AngularSpeed(
