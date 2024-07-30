@@ -37,6 +37,12 @@ fun DeviceSettingsScreen(
         SimpleButton(name = "Stop Sound Loop", onClick = {
             deviceSettingsViewModel.stopSoundLoop()
         })
+        SimpleButton(name = "Reset Buds", onClick = {
+            deviceSettingsViewModel.resetBuds()
+        })
+        SimpleButton(name = "Power Off Buds", onClick = {
+            deviceSettingsViewModel.powerOffBuds()
+        })
         Spacer(modifier = Modifier.height(20.dp))
         SimpleButton(name = "Increase bass gain", onClick = {
             deviceSettingsViewModel.changeEqualizer(floatArrayOf(8f,8f,8f,8f,0f,0f,0f,0f,0f,0f))

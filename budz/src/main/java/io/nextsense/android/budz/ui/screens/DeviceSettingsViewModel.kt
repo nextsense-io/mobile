@@ -50,22 +50,6 @@ class DeviceSettingsViewModel @Inject constructor(
         }
     }
 
-    fun startStreaming() {
-        viewModelScope.launch {
-            deviceManager.startRaceBleStreamingFlow().collect { started ->
-                _uiState.value = _uiState.value.copy(message = started.toString())
-            }
-        }
-    }
-
-    fun stopStreaming() {
-        viewModelScope.launch {
-            deviceManager.stopRaceBleStreamingFlow().collect { stopped ->
-                _uiState.value = _uiState.value.copy(message = stopped.toString())
-            }
-        }
-    }
-
     fun startSoundLoop() {
         viewModelScope.launch {
             deviceManager.startSoundLoop()
@@ -75,6 +59,18 @@ class DeviceSettingsViewModel @Inject constructor(
     fun stopSoundLoop() {
         viewModelScope.launch {
             deviceManager.stopSoundLoop()
+        }
+    }
+
+    fun resetBuds() {
+        viewModelScope.launch {
+            deviceManager.reset()
+        }
+    }
+
+    fun powerOffBuds() {
+        viewModelScope.launch {
+            deviceManager.powerOff()
         }
     }
 }
