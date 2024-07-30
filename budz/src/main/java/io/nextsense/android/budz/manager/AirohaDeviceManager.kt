@@ -28,6 +28,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.airoha.device.AirohaBleManager
 import io.nextsense.android.airoha.device.DataStreamRaceCommand
 import io.nextsense.android.airoha.device.DeviceSearchPresenter
+import io.nextsense.android.airoha.device.PowerRaceCommand
 import io.nextsense.android.airoha.device.StartStopSoundLoopRaceCommand
 import io.nextsense.android.base.DeviceState
 import io.nextsense.android.base.utils.RotatingFileLogger
@@ -48,7 +49,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.timeout
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
@@ -118,6 +118,10 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     val streamingState: StateFlow<StreamingState> = _streamingState.asStateFlow()
     val equalizerState: StateFlow<FloatArray> = _equalizerState.asStateFlow()
     val twsConnected: StateFlow<Boolean?> = MutableStateFlow(null).asStateFlow()
+    val isAvailable: Boolean
+        get() = _airohaDeviceState.value == AirohaDeviceState.READY ||
+                _airohaDeviceState.value == AirohaDeviceState.CONNECTED_BLE ||
+                _airohaDeviceState.value == AirohaDeviceState.CONNECTED_BLE
 
     private val _airohaConnectionListener: AirohaConnector.AirohaConnectionListener =
         object: AirohaConnector.AirohaConnectionListener {
@@ -356,24 +360,20 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                     if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
                         _streamingState.value = StreamingState.STARTED
                         return true
-                    } else {
-                        _streamingState.value = StreamingState.ERROR
-                        return false
                     }
-                } else {
                     _streamingState.value = StreamingState.ERROR
                     return false
                 }
+                _streamingState.value = StreamingState.ERROR
+                return false
             } else if (deviceState == DeviceState.DISCONNECTED) {
                 _airohaDeviceState.value = AirohaDeviceState.READY
                 _streamingState.value = StreamingState.STOPPED
                 return false
             }
-        } else {
-            _airohaDeviceState.value = AirohaDeviceState.READY
-            _streamingState.value = StreamingState.STOPPED
-            return false
         }
+        _airohaDeviceState.value = AirohaDeviceState.READY
+        _streamingState.value = StreamingState.STOPPED
         return false
     }
 
@@ -473,7 +473,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
 
     fun startSoundLoop() {
-        if (_airohaDeviceState.value != AirohaDeviceState.READY) {
+        if (!isAvailable) {
+            Log.w(tag, "Tried to start sound loop, but device is not available: " +
+                    "${_airohaDeviceState.value}")
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
@@ -481,11 +483,33 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     }
 
     fun stopSoundLoop() {
-        if (_airohaDeviceState.value != AirohaDeviceState.READY) {
+        if (!isAvailable) {
+            Log.w(tag, "Tried to stop sound loop, but device is not available: " +
+                    "${_airohaDeviceState.value}")
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
             getStopSoundLoopAirohaCommand(), airohaDeviceListener)
+    }
+
+    fun reset() {
+        if (!isAvailable) {
+            Log.w(tag, "Tried to reset device, but device is not available: " +
+                    "${_airohaDeviceState.value}")
+            return
+        }
+        getAirohaDeviceControl().sendCustomCommand(
+            getResetAirohaCommand(), airohaDeviceListener)
+    }
+
+    fun powerOff() {
+        if (!isAvailable) {
+            Log.w(tag, "Tried to power off device, but device is not available: " +
+                    "${_airohaDeviceState.value}")
+            return
+        }
+        getAirohaDeviceControl().sendCustomCommand(
+            getPowerOffAirohaCommand(), airohaDeviceListener)
     }
 
     fun changeEqualizer(gains: FloatArray) : Boolean {
@@ -589,18 +613,17 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                 channelName,
                 java.time.Duration.ofMillis(durationMillis.toLong())
             )
-        } else {
-            val eegSamplingRate = _airohaBleManager?.getEegSamplingRate() ?: 1000f
-            val numberOfSamples = Math.round(
-                ceil(
-                    (durationMillis.toFloat() / Math.round(
-                        1000f / eegSamplingRate
-                    )).toDouble()
-                )
-            ).toInt()
-            return _budzService?.getMemoryCache()?.getLastEegChannelData(
-                channelName, numberOfSamples)
         }
+        val eegSamplingRate = _airohaBleManager?.getEegSamplingRate() ?: 1000f
+        val numberOfSamples = Math.round(
+            ceil(
+                (durationMillis.toFloat() / Math.round(
+                    1000f / eegSamplingRate
+                )).toDouble()
+            )
+        ).toInt()
+        return _budzService?.getMemoryCache()?.getLastEegChannelData(
+            channelName, numberOfSamples)
     }
 
     private fun twsConnectStatusFlow() = callbackFlow<Boolean?> {
@@ -728,6 +751,24 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         raceCommand.command = StartStopSoundLoopRaceCommand(
             StartStopSoundLoopRaceCommand.SoundLoopType.STOP_LOOP).getBytes()
         Log.d(tag, "getStartStopSoundLoopAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        return raceCommand
+    }
+
+    private fun getResetAirohaCommand(): AirohaCmdSettings {
+        val raceCommand = AirohaCmdSettings()
+        raceCommand.respType = RaceType.INDICATION
+        raceCommand.command = PowerRaceCommand(
+            PowerRaceCommand.PowerType.RESET).getBytes()
+        Log.d(tag, "getResetAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        return raceCommand
+    }
+
+    private fun getPowerOffAirohaCommand(): AirohaCmdSettings {
+        val raceCommand = AirohaCmdSettings()
+        raceCommand.respType = RaceType.INDICATION
+        raceCommand.command = PowerRaceCommand(
+            PowerRaceCommand.PowerType.POWER_OFF).getBytes()
+        Log.d(tag, "getPowerOffAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
         return raceCommand
     }
 
