@@ -166,8 +166,9 @@ public class CsvSink {
       }
       List<Float> leftImuData = new ArrayList<>();
       List<Float> rightImuData = new ArrayList<>();
-      if (!leftImuSamples.isEmpty() && i % imuToEegRatio == 0) {
-        leftImuData = leftImuSamples.get((int)(i / imuToEegRatio));
+      if (!leftImuSamples.isEmpty() && i % imuToEegRatio == 0 &&
+          leftImuSamples.size() > i / imuToEegRatio) {
+        leftImuData = leftImuSamples.get((int) (i / imuToEegRatio));
       }
       if (leftImuData.isEmpty()) {
         leftImuData.add(0.0f);
@@ -177,7 +178,8 @@ public class CsvSink {
         leftImuData.add(0.0f);
         leftImuData.add(0.0f);
       }
-      if (!rightImuSamples.isEmpty() && i % imuToEegRatio == 0) {
+      if (!rightImuSamples.isEmpty() && i % imuToEegRatio == 0 &&
+          rightImuSamples.size() > i / imuToEegRatio) {
         rightImuData = rightImuSamples.get((int) (i / imuToEegRatio));
       }
       if (rightImuData.isEmpty()) {
