@@ -39,7 +39,7 @@ open class SignalVisualizationViewModel @Inject constructor(
     private val _refreshInterval = 100.milliseconds
     private val _chartSamplingRate = 100F
     private val _uiState = MutableStateFlow(SignalVisualizationState())
-    private var dataRefreshJob: Job? = null
+    private var _dataRefreshJob: Job? = null
     private var _stopping = false
 
     val leftEarChartModelProducer = CartesianChartModelProducer()
@@ -70,8 +70,8 @@ open class SignalVisualizationViewModel @Inject constructor(
             airohaDeviceManager.streamingState.collect { streamingState ->
                 when (streamingState) {
                     StreamingState.STARTED -> {
-                        dataRefreshJob?.cancel()
-                        dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
+                        _dataRefreshJob?.cancel()
+                        _dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
                             while (true) {
                                 val startTime = System.currentTimeMillis()
                                 updateSignalCharts()
@@ -84,7 +84,7 @@ open class SignalVisualizationViewModel @Inject constructor(
                     }
                     StreamingState.STOPPED -> {
                         Log.i(tag, "Streaming stopped")
-                        dataRefreshJob?.cancel()
+                        _dataRefreshJob?.cancel()
                     }
                     else -> {
                         Log.i(tag, "Streaming $streamingState")
@@ -104,7 +104,7 @@ open class SignalVisualizationViewModel @Inject constructor(
     fun stopStreaming() {
         _stopping = true
         viewModelScope.launch {
-            dataRefreshJob?.cancel()
+            _dataRefreshJob?.cancel()
             airohaDeviceManager.stopBleStreaming()
             delay(500L)
         }

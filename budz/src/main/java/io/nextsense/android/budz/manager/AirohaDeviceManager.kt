@@ -92,6 +92,10 @@ data class AirohaBatteryLevel(
 @Singleton
 class AirohaDeviceManager @Inject constructor(@ApplicationContext private val context: Context) {
 
+    companion object {
+        const val maxEqualizerSettings = 12
+    }
+
     private val tag = AirohaDeviceManager::class.java.simpleName
     private val _airohaDeviceConnector = AirohaSDK.getInst().airohaDeviceConnector
     // Frequencies that can be set in the equalizer.
