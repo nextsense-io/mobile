@@ -294,7 +294,11 @@ public class MauiDataParser {
           eegDataMap.put(Integer.parseInt(entry.getKey()), entry.getValue().value);
           samplingTimeStamp = (int) entry.getValue().samplingTimestamp;
         }
-        samples.addEegSample(EegSample.create(localSessionManager.getActiveLocalSession().get().id,
+        Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
+        if (!localSessionOptional.isPresent()) {
+          return;
+        }
+        samples.addEegSample(EegSample.create(localSessionOptional.get().id,
             eegDataMap, receptionTimestamp, /*relativeSamplingTimestamp=*/samplingTimeStamp,
             null));
       }

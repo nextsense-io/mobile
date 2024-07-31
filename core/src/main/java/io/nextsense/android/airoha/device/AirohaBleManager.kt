@@ -183,13 +183,13 @@ class AirohaBleManager(
     }.flowOn(Dispatchers.IO)
 
     fun disconnect() {
+        deviceManager.stopFindingAll()
+        leftEarDevice?.disconnect()
+        rightEarDevice?.disconnect()
         leftEarDevice = null
         rightEarDevice = null
         leftDeviceState = null
         rightDeviceState = null
-        deviceManager.stopFindingAll()
-        leftEarDevice?.disconnect()
-        rightEarDevice?.disconnect()
     }
 
     fun stopStreaming() {
