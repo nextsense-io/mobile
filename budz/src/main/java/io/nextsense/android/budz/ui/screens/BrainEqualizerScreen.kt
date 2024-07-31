@@ -94,7 +94,9 @@ fun BrainEqualizerScreen(
 
     LifecycleStartEffect(true) {
         brainEqualizerViewModel.startStreaming()
+        brainEqualizerViewModel.startModulatingSound()
         onStopOrDispose {
+            brainEqualizerViewModel.stopModulatingSound()
             brainEqualizerViewModel.stopStreaming()
             brainEqualizerViewModel.stopPlayer()
         }
