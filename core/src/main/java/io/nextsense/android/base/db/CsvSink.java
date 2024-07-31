@@ -156,7 +156,7 @@ public class CsvSink {
       rightImuSamples.add(rightImuData);
     }
 
-    float imuToEegRatio = imuSamplingRate / eegSamplingRate;
+    float imuToEegRatio = eegSamplingRate / imuSamplingRate;
 
     for (int i = 0; i < samples.getEegSamples().size(); i++) {
       EegSample eegSample = samples.getEegSamples().get(i);
