@@ -1,7 +1,10 @@
 package io.nextsense.android.algo.signal;
 
+import android.util.Log;
+
 import java.util.Arrays;
 
+import io.nextsense.android.algo.MathUtils;
 import jwave.Transform;
 import jwave.transforms.FastWaveletTransform;
 import jwave.transforms.wavelets.daubechies.Daubechies4;
@@ -12,6 +15,8 @@ public class WaveletArtifactRejection {
     // Prevent instantiation
   }
 
+
+  private static final String TAG = WaveletArtifactRejection.class.getSimpleName();
   private static final double KP = 0.02; // Proportional gain for the control mechanism
   private static final double DESIRED_ERROR = 0.05; // Desired baseline error for optimal performance
 
@@ -21,9 +26,30 @@ public class WaveletArtifactRejection {
   private static double noiseEstimationFactor = 0.01; // Initial estimation factor
   private static double noiseLevel = 0.0; // Initial noise level estimate
 
+
+  /**
+   * Get the data that is a power of 2.
+   * @param data
+   * @return The data that is a power of 2.
+   */
+  public static double[] getPowerOf2DataSize(double[] data) {
+    // Ensure the data array is a power of 2.
+    int effectiveSamplesNumber = MathUtils.biggestPowerOfTwoUnder(data.length);
+    Log.d(TAG, "Number of samples: " + data.length + ", Effective samples number: " +
+        effectiveSamplesNumber);
+    return Arrays.copyOfRange(data, data.length - effectiveSamplesNumber, data.length);
+  }
+
+  /**
+   * Apply wavelet artifact rejection to the given data. It needs to be a length that is a power
+   * of 2.
+   * @param data
+   * @return The data with wavelet artifact rejection applied.
+   */
   public static double[] applyWaveletArtifactRejection(double[] data) {
     if (data == null || data.length == 0) {
-      throw new IllegalArgumentException("Data array cannot be null or empty.");
+      Log.w(TAG, "Data array cannot be null or empty.");
+      return data;
     }
 
     try {
