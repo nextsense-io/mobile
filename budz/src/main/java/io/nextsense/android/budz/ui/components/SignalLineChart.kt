@@ -48,7 +48,7 @@ fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: 
                 axisValueOverrider = fullyAdaptiveYValues(),
                 lineProvider = LineCartesianLayer.LineProvider.series(
                     rememberLine(
-                        shader = DynamicShader.color(BudzColor.darkBlue),
+                        shader = DynamicShader.color(BudzColor.green),
                         backgroundShader = null
                     )
                 ),
