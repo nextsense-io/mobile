@@ -34,7 +34,9 @@ open class SignalVisualizationViewModel @Inject constructor(
 ): ViewModel() {
     private val tag = CheckConnectionViewModel::class.simpleName
     private val _shownDuration = 10.seconds
-    private val _filterCropDuration = 5.seconds
+    private val _filterCropDuration = 7.seconds
+    // You want at least 17 seconds at 1000 hertz with artifact rejection enabled so it cuts at
+    // 16384 samples.
     private val _totalDataDuration = _shownDuration + _filterCropDuration
     private val _refreshInterval = 100.milliseconds
     private val _chartSamplingRate = 100F
@@ -162,7 +164,8 @@ open class SignalVisualizationViewModel @Inject constructor(
 
     private fun prepareData(data : List<Float>): List<Double> {
         val preparedData = signalStateManager.prepareVisualizedData(data = data,
-            filtered = _uiState.value.filtered, targetSamplingRate = _chartSamplingRate)
+            filtered = _uiState.value.filtered, removeArtifacts = false,
+            targetSamplingRate = _chartSamplingRate)
         val minimumSamples = _filterCropDuration.inWholeMilliseconds / _dataToChartSamplingRateRatio
         if (preparedData.size <= minimumSamples) {
             return listOf()

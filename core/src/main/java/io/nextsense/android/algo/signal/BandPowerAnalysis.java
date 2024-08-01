@@ -9,8 +9,6 @@ import org.apache.commons.math3.transform.TransformType;
 import java.util.Arrays;
 import java.util.List;
 
-import io.nextsense.android.algo.MathUtils;
-
 public class BandPowerAnalysis {
 
   public enum Band {
@@ -64,11 +62,7 @@ public class BandPowerAnalysis {
 
     double[] dataArray = data.stream().mapToDouble(Float::doubleValue).toArray();
     // Ensure the data array is a power of 2.
-    int effectiveSamplesNumber = MathUtils.biggestPowerOfTwoUnder(dataArray.length);
-    Log.d(TAG, "Number of samples: " + dataArray.length + ", Effective samples number: " +
-        effectiveSamplesNumber);
-    dataArray = Arrays.copyOfRange(dataArray, dataArray.length - effectiveSamplesNumber,
-        dataArray.length);
+    dataArray = WaveletArtifactRejection.getPowerOf2DataSize(dataArray);
 
     // Original signal power calculation for SNR
     double originalPower = calculatePower(dataArray);

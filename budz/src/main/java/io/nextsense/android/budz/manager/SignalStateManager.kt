@@ -5,6 +5,7 @@ import io.nextsense.android.algo.signal.BandPowerAnalysis
 import io.nextsense.android.algo.signal.BandPowerAnalysis.Band
 import io.nextsense.android.algo.signal.Filters
 import io.nextsense.android.algo.signal.Sampling
+import io.nextsense.android.algo.signal.WaveletArtifactRejection
 import io.nextsense.android.base.devices.maui.MauiDataParser
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -43,11 +44,15 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
         return _bandPowers
     }
 
-    fun prepareVisualizedData(data: List<Float>, filtered: Boolean, targetSamplingRate: Float):
-            List<Double> {
+    fun prepareVisualizedData(data: List<Float>, filtered: Boolean, removeArtifacts: Boolean,
+                              targetSamplingRate: Float): List<Double> {
         val powerLineFrequency = getPowerLineFrequency(data,
             airohaDeviceManager.getEegSamplingRate().toInt()) ?: return listOf()
         var doubleData = data.map { it.toDouble() }.toDoubleArray()
+        if (removeArtifacts) {
+            doubleData = WaveletArtifactRejection.getPowerOf2DataSize(doubleData)
+            doubleData = WaveletArtifactRejection.applyWaveletArtifactRejection(doubleData)
+        }
         if (filtered) {
             doubleData = Filters.applyBandStop(doubleData, airohaDeviceManager.getEegSamplingRate(),
                 /*order=*/4, powerLineFrequency.toFloat(), /*widthFrequency=*/2F)
@@ -75,7 +80,7 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
         val sixtyHertzBandPower = BandPowerAnalysis.getBandPower(data, eegSamplingRate,
             /*bandStart=*/59.0, /*bandEnd=*/61.0, /*powerLineFrequency=*/null)
         Log.i(tag, "50 hertz band power: $fiftyHertzBandPower\n" +
-                "60 hertz band power: $sixtyHertzBandPower");
+                "60 hertz band power: $sixtyHertzBandPower")
         if (fiftyHertzBandPower == 0.0 && sixtyHertzBandPower == 0.0) {
             return null
         }
