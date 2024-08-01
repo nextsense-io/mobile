@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import io.nextsense.android.budz.BuildConfig
 import io.nextsense.android.budz.ui.components.SimpleButton
 
 @Composable
@@ -60,6 +61,8 @@ fun DeviceSettingsScreen(
         Text("Current gains: ${deviceSettingsUiState.gains.joinToString(", ")}")
         Spacer(modifier = Modifier.height(20.dp))
         Text("Last result: ${deviceSettingsUiState.message}")
+        Spacer(modifier = Modifier.weight(1f))
+        Text("Version: ${BuildConfig.VERSION_NAME}")
     }
 
 }
