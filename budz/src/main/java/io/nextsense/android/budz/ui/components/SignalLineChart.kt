@@ -45,6 +45,7 @@ fun SignalLineChart(modelProducer: CartesianChartModelProducer, dataPointsSize: 
     CartesianChartHost(
         rememberCartesianChart(
             rememberLineCartesianLayer(
+                // axisValueOverrider = AxisValueOverrider.fixed(minY = -200.0, maxY = 200.0),
                 axisValueOverrider = fullyAdaptiveYValues(),
                 lineProvider = LineCartesianLayer.LineProvider.series(
                     rememberLine(
