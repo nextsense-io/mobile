@@ -207,8 +207,8 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
   public ListenableFuture<DeviceSettings> loadDeviceSettings() {
     if (deviceSettings == null) {
       deviceSettings = new DeviceSettings();
-      // No command to load settings yet in Nitro, apply default values.
-      deviceSettings.setEnabledChannels(List.of(1));
+      // No command to load settings yet in Maui, apply default values.
+      deviceSettings.setEnabledChannels(List.of(1, 2));
       deviceSettings.setEegSamplingRate(1000f);
       deviceSettings.setEegStreamingRate(1000f);
       deviceSettings.setImuSamplingRate(100f);

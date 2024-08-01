@@ -176,7 +176,7 @@ fun BrainSignal(checkConnectionViewModel: CheckConnectionViewModel) {
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 SignalLineChart(modelProducer = checkConnectionViewModel.leftEarChartModelProducer,
-                    dataPointsSize = 1000.0)
+                    dataPointsSize = checkConnectionViewModel.dataPointsSize)
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -189,7 +189,7 @@ fun BrainSignal(checkConnectionViewModel: CheckConnectionViewModel) {
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 SignalLineChart(checkConnectionViewModel.rightEarChartModelProducer,
-                    dataPointsSize = 1000.0)
+                    dataPointsSize = checkConnectionViewModel.dataPointsSize)
             }
         }
     }
