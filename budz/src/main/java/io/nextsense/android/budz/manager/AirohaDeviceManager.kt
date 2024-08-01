@@ -597,6 +597,10 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
     }
 
+    fun getEegSamplingRate() : Float {
+        return _airohaBleManager?.getEegSamplingRate() ?: 1000f
+    }
+
     fun getChannelData(
         localSessionId: Int?,
         channelName: String,
@@ -618,7 +622,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                 java.time.Duration.ofMillis(durationMillis.toLong())
             )
         }
-        val eegSamplingRate = _airohaBleManager?.getEegSamplingRate() ?: 1000f
+        val eegSamplingRate = getEegSamplingRate()
         val numberOfSamples = Math.round(
             ceil(
                 (durationMillis.toFloat() / Math.round(

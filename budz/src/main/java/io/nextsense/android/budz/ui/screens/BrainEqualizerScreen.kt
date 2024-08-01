@@ -56,7 +56,7 @@ fun BrainSignal(viewModel: BrainEqualizerViewModel) {
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
-                SignalLineChart(viewModel.leftEarChartModelProducer, 1000.0)
+                SignalLineChart(viewModel.leftEarChartModelProducer, viewModel.dataPointsSize)
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -68,7 +68,7 @@ fun BrainSignal(viewModel: BrainEqualizerViewModel) {
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
-                SignalLineChart(viewModel.rightEarChartModelProducer, 1000.0)
+                SignalLineChart(viewModel.rightEarChartModelProducer, viewModel.dataPointsSize)
             }
         }
     }

@@ -58,8 +58,9 @@ fun SignalVisualization(signalVisualizationViewModel: SignalVisualizationViewMod
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
-                SignalLineChart(modelProducer = signalVisualizationViewModel.leftEarChartModelProducer,
-                    dataPointsSize = 1000.0, height = 200.dp)
+                SignalLineChart(
+                    modelProducer = signalVisualizationViewModel.leftEarChartModelProducer,
+                    dataPointsSize = signalVisualizationViewModel.dataPointsSize, height = 200.dp)
             }
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -71,8 +72,9 @@ fun SignalVisualization(signalVisualizationViewModel: SignalVisualizationViewMod
                     modifier = Modifier.align(Alignment.CenterVertically)
                 )
                 Spacer(modifier = Modifier.width(5.dp))
-                SignalLineChart(signalVisualizationViewModel.rightEarChartModelProducer,
-                    dataPointsSize = 1000.0, height = 200.dp)
+                SignalLineChart(
+                    modelProducer = signalVisualizationViewModel.rightEarChartModelProducer,
+                    dataPointsSize = signalVisualizationViewModel.dataPointsSize, height = 200.dp)
             }
         }
     }

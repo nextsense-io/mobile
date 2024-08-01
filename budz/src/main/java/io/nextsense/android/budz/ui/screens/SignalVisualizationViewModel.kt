@@ -6,11 +6,10 @@ import androidx.lifecycle.viewModelScope
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.nextsense.android.algo.signal.Filters
-import io.nextsense.android.algo.signal.Sampling
 import io.nextsense.android.base.devices.maui.MauiDataParser
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AirohaDeviceState
+import io.nextsense.android.budz.manager.SignalStateManager
 import io.nextsense.android.budz.manager.StreamingState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -30,7 +29,8 @@ data class SignalVisualizationState(
 
 @HiltViewModel
 open class SignalVisualizationViewModel @Inject constructor(
-    private val airohaDeviceManager: AirohaDeviceManager
+    private val airohaDeviceManager: AirohaDeviceManager,
+    private val signalStateManager: SignalStateManager
 ): ViewModel() {
     private val tag = CheckConnectionViewModel::class.simpleName
     private val _shownDuration = 10.seconds
@@ -41,9 +41,12 @@ open class SignalVisualizationViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SignalVisualizationState())
     private var _dataRefreshJob: Job? = null
     private var _stopping = false
+    private var _eegSamplingRate = 0F
+    private var _dataToChartSamplingRateRatio = 1F
 
     val leftEarChartModelProducer = CartesianChartModelProducer()
     val rightEarChartModelProducer = CartesianChartModelProducer()
+    val dataPointsSize = (_shownDuration.inWholeSeconds * _chartSamplingRate).toDouble()
     val signalUiState: StateFlow<SignalVisualizationState> = _uiState.asStateFlow()
 
     init {
@@ -70,6 +73,8 @@ open class SignalVisualizationViewModel @Inject constructor(
             airohaDeviceManager.streamingState.collect { streamingState ->
                 when (streamingState) {
                     StreamingState.STARTED -> {
+                        _dataToChartSamplingRateRatio = airohaDeviceManager.getEegSamplingRate() /
+                                _chartSamplingRate
                         _dataRefreshJob?.cancel()
                         _dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
                             while (true) {
@@ -126,10 +131,10 @@ open class SignalVisualizationViewModel @Inject constructor(
             channelName=MauiDataParser.CHANNEL_RIGHT.toString(),
             durationMillis=_totalDataDuration.inWholeMilliseconds.toInt(),
             fromDatabase=false)
-        val gotRightEarData = rightEarData != null && rightEarData.size >=
-                _filterCropDuration.inWholeMilliseconds + 100
-        val gotLeftEarData = leftEarData != null && leftEarData.size >=
-                _filterCropDuration.inWholeMilliseconds + 100
+        val minimumDataSize =  _filterCropDuration.inWholeMilliseconds /
+                (1000F / _eegSamplingRate) + _chartSamplingRate
+        val gotRightEarData = rightEarData != null && rightEarData.size >= minimumDataSize
+        val gotLeftEarData = leftEarData != null && leftEarData.size >= minimumDataSize
         if (!gotLeftEarData && !gotRightEarData) {
             return
         }
@@ -137,29 +142,31 @@ open class SignalVisualizationViewModel @Inject constructor(
         // Update the charts.
         if (gotLeftEarData) {
             val leftEarDataPrepared = prepareData(leftEarData!!)
+            if (leftEarDataPrepared.isEmpty()) {
+                return
+            }
             leftEarChartModelProducer.runTransaction {
                 lineSeries { series(leftEarDataPrepared) }
             }
         }
         if (gotRightEarData) {
             val rightEarDataPrepared = prepareData(rightEarData!!)
+            if (rightEarDataPrepared.isEmpty()) {
+                return
+            }
             rightEarChartModelProducer.runTransaction {
                 lineSeries { series(rightEarDataPrepared) }
             }
         }
     }
 
-    private fun prepareData(data: List<Float>): List<Double> {
-        var doubleData = data.map { it.toDouble() }.toDoubleArray()
-        if (_uiState.value.filtered) {
-            doubleData = Filters.applyBandStop(doubleData, /*samplingRate=*/1000F,
-                /*order=*/4, /*centerFrequency=*/60F, /*widthFrequency=*/2F)
-            doubleData = Filters.applyBandPass(doubleData, /*samplingRate=*/1000F,
-                /*order=*/4, /*lowCutoff=*/0.5F, /*highCutoff=*/40F)
+    private fun prepareData(data : List<Float>): List<Double> {
+        val preparedData = signalStateManager.prepareVisualizedData(data = data,
+            filtered = _uiState.value.filtered, targetSamplingRate = _chartSamplingRate)
+        val minimumSamples = _filterCropDuration.inWholeMilliseconds / _dataToChartSamplingRateRatio
+        if (preparedData.size <= minimumSamples) {
+            return listOf()
         }
-        // Resample the data to the chart sampling rate for performance.
-        val doubleArrayData = Sampling.resample(doubleData, 1000F, 100, _chartSamplingRate)
-        return doubleArrayData.toList().subList(
-            (_filterCropDuration.inWholeMilliseconds / 10).toInt(), doubleArrayData.size)
+        return preparedData.subList((minimumSamples).toInt(), preparedData.size)
     }
 }

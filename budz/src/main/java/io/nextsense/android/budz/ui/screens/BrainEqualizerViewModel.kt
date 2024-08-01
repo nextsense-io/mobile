@@ -23,7 +23,8 @@ import io.nextsense.android.algo.signal.BandPowerAnalysis
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.FFTAudioProcessor
-import io.nextsense.android.budz.manager.MentalStateManager
+import io.nextsense.android.budz.manager.SignalStateManager
+import io.nextsense.android.budz.manager.StreamingState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -45,8 +46,8 @@ private const val alphaBetaRatioMidPoint = 3F
 class BrainEqualizerViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     val airohaDeviceManager: AirohaDeviceManager,
-    val mentalStateManager: MentalStateManager,
-): SignalVisualizationViewModel(airohaDeviceManager) {
+    val signalStateManager: SignalStateManager,
+): SignalVisualizationViewModel(airohaDeviceManager, signalStateManager) {
 
     private val tag = BrainEqualizerViewModel::class.simpleName
     private val _uiState = MutableStateFlow(BrainEqualizerState())
@@ -99,7 +100,10 @@ class BrainEqualizerViewModel @Inject constructor(
     }
 
     private fun updateSoundModulation() {
-        val bandPowers = mentalStateManager.getBandPowers(listOf(
+        if (airohaDeviceManager.streamingState.value != StreamingState.STARTED) {
+            return
+        }
+        val bandPowers = signalStateManager.getBandPowers(listOf(
             BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA))
         if (bandPowers.isEmpty()) {
             return
@@ -114,7 +118,7 @@ class BrainEqualizerViewModel @Inject constructor(
         } else {
             0F
         }
-        _trebleEqLevel = if (alphaBetaRatio < 3.0) {
+        _trebleEqLevel = if (alphaBetaRatio < alphaBetaRatioMidPoint) {
             ((alphaBetaRatioMidPoint - alphaBetaRatio).coerceAtMost(1.0) *
                     AirohaDeviceManager.maxEqualizerSettings).toFloat()
         } else {
@@ -125,7 +129,6 @@ class BrainEqualizerViewModel @Inject constructor(
             _bassEqLevel, _bassEqLevel,  // Bass is 300 hertz and lower.
             0f, 0f, 0f, 0f, 0f,  // Mid is 300 hertz to 4 khz
             _trebleEqLevel, _trebleEqLevel, _trebleEqLevel))  // Treble is 4 khz and higher.
-
     }
 
     private fun initPlayer() {
