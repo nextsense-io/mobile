@@ -170,6 +170,8 @@ open class SignalVisualizationViewModel @Inject constructor(
         if (preparedData.size <= minimumSamples) {
             return listOf()
         }
-        return preparedData.subList((minimumSamples).toInt(), preparedData.size)
+        val startIndex = (preparedData.size - _shownDuration.inWholeMilliseconds /
+                _dataToChartSamplingRateRatio).coerceAtLeast(0F).toInt()
+        return preparedData.subList(startIndex, preparedData.size)
     }
 }
