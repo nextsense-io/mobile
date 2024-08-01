@@ -111,6 +111,20 @@ fun CardConnected(signalVisualizationViewModel: SignalVisualizationViewModel,
                 onCheckedChange = {checked ->
                     signalVisualizationViewModel.setFiltered(checked)
                 })
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = "Artifacts Removal",
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.align(Alignment.CenterVertically)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Switch(checked = signalVisualizationState.artifactsRemoval, colors =
+            SwitchDefaults.colors(
+                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+                onCheckedChange = {checked ->
+                    signalVisualizationViewModel.setArtifactsRemoval(checked)
+                })
         }
         Spacer(modifier = Modifier.height(10.dp))
         SignalVisualization(signalVisualizationViewModel)

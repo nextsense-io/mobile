@@ -24,7 +24,8 @@ import kotlin.time.Duration.Companion.seconds
 
 data class SignalVisualizationState(
     val connected: Boolean = false,
-    val filtered: Boolean = true
+    val filtered: Boolean = true,
+    val artifactsRemoval: Boolean = false
 )
 
 @HiltViewModel
@@ -121,6 +122,10 @@ open class SignalVisualizationViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(filtered = filtered)
     }
 
+    fun setArtifactsRemoval(artifactsRemoval: Boolean) {
+        _uiState.value = _uiState.value.copy(artifactsRemoval = artifactsRemoval)
+    }
+
     private suspend fun updateSignalCharts() {
         // Get the data for both ears.
         val leftEarData = airohaDeviceManager.getChannelData(
@@ -164,7 +169,7 @@ open class SignalVisualizationViewModel @Inject constructor(
 
     private fun prepareData(data : List<Float>): List<Double> {
         val preparedData = signalStateManager.prepareVisualizedData(data = data,
-            filtered = _uiState.value.filtered, removeArtifacts = false,
+            filtered = _uiState.value.filtered, removeArtifacts = _uiState.value.artifactsRemoval,
             targetSamplingRate = _chartSamplingRate)
         val minimumSamples = _filterCropDuration.inWholeMilliseconds / _dataToChartSamplingRateRatio
         if (preparedData.size <= minimumSamples) {
