@@ -18,6 +18,7 @@ import java.util.List;
 
 import io.nextsense.android.base.communication.ble.BleCentralManagerProxy;
 import io.nextsense.android.base.communication.ble.BlePeripheralCallbackProxy;
+import io.nextsense.android.base.data.DeviceLocation;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSession;
 import io.nextsense.android.base.data.Samples;
@@ -33,7 +34,8 @@ public class CsvSink {
 
   private final ObjectBoxDatabase objectBoxDatabase;
   private final BleCentralManagerProxy bleCentralManagerProxy;
-  private final CsvWriter csvWriter;
+  private final CsvWriter leftCsvWriter;
+  private final CsvWriter rightCsvWriter;
   private BlePeripheralCallbackProxy blePeripheralCallbackProxy;
   private BluetoothPeripheral currentPeripheral;
   private DataSubscription uploadedSessionSubscription;
@@ -47,7 +49,8 @@ public class CsvSink {
                   BleCentralManagerProxy bleCentralManagerProxy) {
     this.objectBoxDatabase = objectBoxDatabase;
     this.bleCentralManagerProxy = bleCentralManagerProxy;
-    csvWriter = new CsvWriter(context);
+    leftCsvWriter = new CsvWriter(context);
+    rightCsvWriter = new CsvWriter(context);
   }
 
   public static CsvSink create(Context context, ObjectBoxDatabase objectBoxDatabase,
@@ -78,7 +81,8 @@ public class CsvSink {
   }
 
   public void openCsv(String filename, String earbudsConfig, long localSessionId) {
-    csvWriter.initCsvFile(filename, earbudsConfig, /*haveRssi=*/true);
+    leftCsvWriter.initCsvFile(filename + "_left", earbudsConfig, /*haveRssi=*/true);
+    rightCsvWriter.initCsvFile(filename + "_right", earbudsConfig, /*haveRssi=*/true);
     currentSessionId = localSessionId;
     LocalSession localSession = objectBoxDatabase.getLocalSession(localSessionId);
     eegSamplingRate = localSession.getEegSampleRate();
@@ -103,7 +107,8 @@ public class CsvSink {
       uploadedSessionSubscription.cancel();
       uploadedSessionSubscription = null;
     }
-    csvWriter.closeCsvFile();
+    leftCsvWriter.closeCsvFile();
+    rightCsvWriter.closeCsvFile();
   }
 
   @Subscribe(threadMode = ThreadMode.ASYNC)
@@ -114,6 +119,11 @@ public class CsvSink {
       lastRssiCheck = Instant.now();
     }
     String sleepStage = "Unspecified";
+    if (samples.getEegSamples().isEmpty()) {
+      RotatingFileLogger.get().logw(TAG, "No EEG samples!");
+      return;
+    }
+
     if (!samples.getSleepStateRecords().isEmpty()) {
       sleepStage = samples.getSleepStateRecords().get(0).getSleepStage().name();
     }
@@ -158,6 +168,9 @@ public class CsvSink {
 
     float imuToEegRatio = eegSamplingRate / imuSamplingRate;
 
+    DeviceLocation deviceLocation = samples.getEegSamples().get(0).getEegSamples().get(1) != null
+        ? DeviceLocation.LEFT_EARBUD
+        : DeviceLocation.RIGHT_EARBUD;
     for (int i = 0; i < samples.getEegSamples().size(); i++) {
       EegSample eegSample = samples.getEegSamples().get(i);
       List<Float> eegData = new ArrayList<>();
@@ -194,7 +207,10 @@ public class CsvSink {
       long samplingTimestamp = eegSample.getRelativeSamplingTimestamp() != null
           ? eegSample.getRelativeSamplingTimestamp()
           : eegSample.getAbsoluteSamplingTimestamp().toEpochMilli();
-      csvWriter.appendData(eegData, leftImuData, rightImuData,
+      CsvWriter locationCsvWriter = deviceLocation == DeviceLocation.LEFT_EARBUD
+          ? leftCsvWriter
+          : rightCsvWriter;
+      locationCsvWriter.appendData(eegData, leftImuData, rightImuData,
           samplingTimestamp,
           eegSample.getReceptionTimestamp().toEpochMilli(), /*impedance_flag=*/0,
           boolToInt(Boolean.TRUE.equals(eegSample.getSync())),
@@ -216,7 +232,8 @@ public class CsvSink {
             return;
           }
           RotatingFileLogger.get().logd(TAG, "uploaded session, closing csv file.");
-          csvWriter.closeCsvFile();
+          leftCsvWriter.closeCsvFile();
+          rightCsvWriter.closeCsvFile();
         });
   }
 
