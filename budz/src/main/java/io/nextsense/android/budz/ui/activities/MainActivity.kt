@@ -26,6 +26,7 @@ import io.nextsense.android.budz.ui.screens.SignalVisualizationScreen
 import io.nextsense.android.budz.ui.screens.TimedSleepScreen
 import io.nextsense.android.budz.ui.theme.BudzTheme
 import javax.inject.Inject
+import kotlin.system.exitProcess
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -230,5 +231,6 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         airohaDeviceManager.destroy()
         super.onDestroy()
+        exitProcess(0);
     }
 }

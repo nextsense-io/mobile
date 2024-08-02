@@ -38,6 +38,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.delay
@@ -106,6 +107,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private val _airohaDeviceState = MutableStateFlow(AirohaDeviceState.DISCONNECTED)
     private val _streamingState = MutableStateFlow(StreamingState.UNKNOWN)
     private val _equalizerState = MutableStateFlow(FloatArray(10) { 0f })
+    private val airohaDeviceStateJob: Job
 
     private var _budzServiceBound = false
     private var _budzServiceIntent: Intent? = null
@@ -223,7 +225,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED))
 
         @OptIn(DelicateCoroutinesApi::class)
-        GlobalScope.launch {
+        airohaDeviceStateJob = GlobalScope.launch {
             airohaDeviceState.collect { deviceState ->
                 if (deviceState == AirohaDeviceState.CONNECTED_AIROHA) {
                     _connectionTimeoutTimer?.cancel()
@@ -250,10 +252,11 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     }
 
     fun destroy() {
+        airohaDeviceStateJob.cancel()
         LocalBroadcastManager.getInstance(context).unregisterReceiver(broadCastReceiver)
-        disconnectDevice()
         AirohaSDK.getInst().airohaDeviceConnector.unregisterConnectionListener(
             _airohaConnectionListener)
+        disconnectDevice()
         if (_budzServiceBound && _budzServiceConnection != null) {
             context.unbindService(_budzServiceConnection!!)
             _budzServiceBound = false
