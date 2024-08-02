@@ -83,7 +83,7 @@ public class NextSenseDeviceManager {
           eegDataSynchronizer = new DataSynchronizer(nextSenseDevice.getEegChannelNames(), 1000);
         }
         if (imuDataSynchronizer == null) {
-          imuDataSynchronizer = new DataSynchronizer(nextSenseDevice.GetAccChannelNames(), 100);
+          imuDataSynchronizer = new DataSynchronizer(nextSenseDevice.getAccChannelNames(), 100);
         }
         ((MauiDevice) nextSenseDevice).setDataSynchronizers(
             eegDataSynchronizer, imuDataSynchronizer);
