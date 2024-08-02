@@ -43,6 +43,8 @@ public class CsvWriter {
       return;
     }
     sampleNumber = 1;
+    String effectiveEarbudsConfig = earbudsConfig == null || earbudsConfig.isEmpty() ?
+        "maui_config" : earbudsConfig;
     appendHeaderLine("Header version 1.0");
     appendHeaderLine("Version", "0.7.0");
     appendHeaderLine("Protocol version", "1");
@@ -50,7 +52,7 @@ public class CsvWriter {
     appendHeaderLine("MAC address", "unknown");
     appendHeaderLine("eegStreamingRate", "1000");
     appendHeaderLine("accelerationStreamingRate", "250");
-    appendHeaderLine("channelConfig", earbudsConfig);
+    appendHeaderLine("channelConfig", effectiveEarbudsConfig);
     appendHeaderLine("========== Start Data ==========");
     String headerLine = "SAMPLE_NUMBER,CH-1,CH-2,CH-3,CH-4,CH-5,CH-6,CH-7,CH-8,ACC_L_X,ACC_L_Y," +
         "ACC_L_Z,GYRO_L_X,GYRO_L_Y,GYRO_L_Z,ACC_R_X,ACC_R_Y,ACC_R_Z,GYRO_R_X,GYRO_R_Y,GYRO_R_Z," +
