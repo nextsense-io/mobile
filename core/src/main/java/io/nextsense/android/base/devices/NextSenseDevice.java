@@ -42,7 +42,7 @@ public interface NextSenseDevice {
   List<String> getEegChannelNames();
 
   // Gets the list of accelerometer channel names that the device will stream.
-  List<String> GetAccChannelNames();
+  List<String> getAccChannelNames();
 
   void setBluetoothPeripheralProxy(BlePeripheralCallbackProxy proxy);
 

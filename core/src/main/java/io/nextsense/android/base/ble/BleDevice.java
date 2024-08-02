@@ -323,7 +323,7 @@ public class BleDevice extends Device {
             disconnectionStatus == DisconnectionStatus.HARD).get();
         deviceSettings = new DeviceSettings(nextSenseDevice.loadDeviceSettings().get());
         memoryCache.init(nextSenseDevice.getEegChannelNames(),
-            nextSenseDevice.GetAccChannelNames());
+            nextSenseDevice.getAccChannelNames());
         deviceState = DeviceState.READY;
         deviceConnectionFuture.set(deviceState);
         notifyDeviceStateChangeListeners(DeviceState.READY);

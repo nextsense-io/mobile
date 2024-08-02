@@ -33,7 +33,7 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
-  public List<String> GetAccChannelNames() {
+  public List<String> getAccChannelNames() {
     return Arrays.asList(Acceleration.Channels.ACC_X.getName(),
         Acceleration.Channels.ACC_Y.getName(), Acceleration.Channels.ACC_Z.getName());
   }

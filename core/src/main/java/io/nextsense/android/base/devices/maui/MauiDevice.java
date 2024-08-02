@@ -120,7 +120,7 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
   }
 
   @Override
-  public List<String> GetAccChannelNames() {
+  public List<String> getAccChannelNames() {
     return Arrays.asList(Acceleration.Channels.ACC_R_X.getName(),
         Acceleration.Channels.ACC_R_Y.getName(), Acceleration.Channels.ACC_R_Z.getName(),
         Acceleration.Channels.ACC_L_X.getName(), Acceleration.Channels.ACC_L_Y.getName(),
