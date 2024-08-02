@@ -289,10 +289,15 @@ public class MauiDataParser {
       }
       for (Map<String, DataSynchronizer.DataPoint> data : allEegSynchronizedData) {
         HashMap<Integer, Float> eegDataMap = new HashMap<>();
+        HashMap<String, Float> imuDataMap = new HashMap<>();
         int samplingTimeStamp = 0;
         for (Map.Entry<String, DataSynchronizer.DataPoint> entry : data.entrySet()) {
-          eegDataMap.put(Integer.parseInt(entry.getKey()), entry.getValue().value);
-          samplingTimeStamp = (int) entry.getValue().samplingTimestamp;
+          if (entry.getKey().matches("\\d+")) {
+            eegDataMap.put(Integer.parseInt(entry.getKey()), entry.getValue().value);
+            samplingTimeStamp = (int) entry.getValue().samplingTimestamp;
+          } else {
+            imuDataMap.put(entry.getKey(), entry.getValue().value);
+          }
         }
         Optional<LocalSession> localSessionOptional = localSessionManager.getActiveLocalSession();
         if (!localSessionOptional.isPresent()) {
@@ -301,14 +306,6 @@ public class MauiDataParser {
         samples.addEegSample(EegSample.create(localSessionOptional.get().id,
             eegDataMap, receptionTimestamp, /*relativeSamplingTimestamp=*/samplingTimeStamp,
             null));
-      }
-      for (Map<String, DataSynchronizer.DataPoint> data : allImuSynchronizedData) {
-        HashMap<String, Float> imuDataMap = new HashMap<>();
-        int samplingTimeStamp = 0;
-        for (Map.Entry<String, DataSynchronizer.DataPoint> entry : data.entrySet()) {
-          imuDataMap.put(entry.getKey(), entry.getValue().value);
-          samplingTimeStamp = (int) entry.getValue().samplingTimestamp;
-        }
         boolean accLeftPresent = (imuDataMap.containsKey(Acceleration.Channels.ACC_L_X.getName()) &&
             imuDataMap.containsKey(Acceleration.Channels.ACC_L_Y.getName()) &&
             imuDataMap.containsKey(Acceleration.Channels.ACC_L_Z.getName()));

@@ -3,6 +3,7 @@ package io.nextsense.android.base.devices.maui;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
@@ -13,8 +14,12 @@ public class DataSynchronizerTest {
 
   @Before
   public void setUp() {
-    List<String> channels = Arrays.asList("channel1", "channel2", "channel3");
-    dataSynchronizer = new DataSynchronizer(channels, 1.0f); // 1 Hz sampling rate
+    Map<String, Duration> channelSyncPeriods = new HashMap<>();
+    channelSyncPeriods.put("channel1", Duration.ofSeconds(1)); // 1 second
+    channelSyncPeriods.put("channel2", Duration.ofSeconds(2)); // 2 seconds
+    channelSyncPeriods.put("channel3", Duration.ofMillis(500)); // 0.5 second
+
+    dataSynchronizer = new DataSynchronizer(channelSyncPeriods);
   }
 
   @Test

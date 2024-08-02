@@ -1,5 +1,6 @@
 package io.nextsense.android.base.devices;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -79,14 +80,22 @@ public class NextSenseDeviceManager {
       NextSenseDevice nextSenseDevice = deviceClass.newInstance();
       nextSenseDevice.setLocalSessionManager(localSessionManager);
       if (nextSenseDevice instanceof MauiDevice) {
+
+        Map<String, Duration> channels = new HashMap<>();
+        for (String channel : nextSenseDevice.getEegChannelNames()) {
+          channels.put(channel, Duration.ofMillis(1));
+        }
+        for (String channel : nextSenseDevice.getAccChannelNames()) {
+          channels.put(channel, Duration.ofMillis(10));
+        }
         if (eegDataSynchronizer == null) {
-          eegDataSynchronizer = new DataSynchronizer(nextSenseDevice.getEegChannelNames(), 1000);
+          eegDataSynchronizer = new DataSynchronizer(channels);
         }
-        if (imuDataSynchronizer == null) {
-          imuDataSynchronizer = new DataSynchronizer(nextSenseDevice.GetAccChannelNames(), 100);
-        }
+//        if (imuDataSynchronizer == null) {
+//          imuDataSynchronizer = new DataSynchronizer(nextSenseDevice.getAccChannelNames(), 100);
+//        }
         ((MauiDevice) nextSenseDevice).setDataSynchronizers(
-            eegDataSynchronizer, imuDataSynchronizer);
+            eegDataSynchronizer, eegDataSynchronizer);
       }
       return nextSenseDevice;
     } catch (IllegalAccessException | InstantiationException e) {

@@ -37,20 +37,21 @@ public class DataSynchronizer {
   }
 
   // If no sync was done after this long, remove data points.
-  public static final Duration SYNC_TIMEOUT = Duration.ofSeconds(6);
+  public static final Duration SYNC_TIMEOUT = Duration.ofSeconds(30);
 
   private final Map<String, List<DataPoint>> channelDataMap;
-  private final Duration syncPeriod;
+  private final Map<String, Duration> channelSyncPeriods;
 
-  public DataSynchronizer(List<String> channels, float samplingRate) {
+  public DataSynchronizer(Map<String, Duration> channelSyncPeriods) {
     channelDataMap = new HashMap<>();
-    for (String channel : channels) {
+    this.channelSyncPeriods = new HashMap<>(channelSyncPeriods);
+    for (String channel : channelSyncPeriods.keySet()) {
       channelDataMap.put(channel, new ArrayList<>());
     }
-    syncPeriod = Duration.ofMillis(Math.round(1000 / samplingRate));
   }
 
-  public synchronized void addData(String channel, long samplingTimestamp, Instant receptionTimestamp, float value) {
+  public synchronized void addData(String channel, long samplingTimestamp,
+                                   Instant receptionTimestamp, float value) {
     if (!channelDataMap.containsKey(channel)) {
       throw new IllegalArgumentException("Channel does not exist: " + channel);
     }
@@ -77,23 +78,33 @@ public class DataSynchronizer {
     List<Long> timestampsToRemove = new ArrayList<>();
     for (Map.Entry<Long, Map<String, DataPoint>> entry : timestampedData.entrySet()) {
       Long timestamp = entry.getKey();
+      Map<String, DataPoint> dataPointMap = entry.getValue();
 
-      if (entry.getValue().size() == channelDataMap.size()) {
-        synchronizedData.add(entry.getValue());
-        timestampsToRemove.add(timestamp);
-      } else {
-        for (Map.Entry<Long, Map<String, DataPoint>> innerEntry : timestampedData.entrySet()) {
-          if (!innerEntry.getKey().equals(timestamp) &&
-              Math.abs(innerEntry.getKey() - timestamp) < syncPeriod.toMillis()) {
-            entry.getValue().putAll(innerEntry.getValue());
-            if (entry.getValue().size() == channelDataMap.size()) {
-              synchronizedData.add(entry.getValue());
-              timestampsToRemove.add(timestamp);
-              timestampsToRemove.add(innerEntry.getKey());
-              break;
+      // Check if all channels are present or can be matched with nearby timestamps
+      Map<String, DataPoint> synchronizedMap = new HashMap<>(dataPointMap);
+      int syncSize = dataPointMap.size();
+      // List<Long> conditionalTimestampsToRemove = new ArrayList<>();
+      if (syncSize != channelSyncPeriods.size()) {
+        for (String channel : channelSyncPeriods.keySet()) {
+          if (!dataPointMap.containsKey(channel)) {
+            Duration syncPeriod = channelSyncPeriods.get(channel);
+            for (Map.Entry<Long, Map<String, DataPoint>> innerEntry : timestampedData.entrySet()) {
+              long difference = Math.abs(innerEntry.getKey() - timestamp);
+              if (difference < syncPeriod.minus(Duration.ofMillis(1)).toMillis() &&
+                  innerEntry.getValue().containsKey(channel)) {
+                // synchronizedMap.put(channel, innerEntry.getValue().get(channel));
+                // conditionalTimestampsToRemove.add(innerEntry.getKey());
+                ++syncSize;
+              }
             }
           }
         }
+      }
+
+      if (syncSize == channelSyncPeriods.size()) {
+        synchronizedData.add(synchronizedMap);
+        timestampsToRemove.add(timestamp);
+        // timestampsToRemove.addAll(conditionalTimestampsToRemove);
       }
     }
 
@@ -107,7 +118,8 @@ public class DataSynchronizer {
     }
 
     // Sort the result data by sampling timestamp
-    synchronizedData.sort(Comparator.comparing(map -> map.values().iterator().next().samplingTimestamp));
+    synchronizedData.sort(
+        Comparator.comparing(map -> map.values().iterator().next().samplingTimestamp));
 
     return synchronizedData;
   }
