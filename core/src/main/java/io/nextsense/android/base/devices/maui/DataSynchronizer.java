@@ -75,30 +75,21 @@ public class DataSynchronizer {
 
     // Match the closest timestamps that are not more than the syncPeriod apart
     List<Long> timestampsToRemove = new ArrayList<>();
-    Long lastTimestamp = 0L;
-    Iterator<Map.Entry<Long, Map<String, DataPoint>>> iterator = timestampedData.entrySet().iterator();
-    while (iterator.hasNext()) {
-      Map.Entry<Long, Map<String, DataPoint>> entry = iterator.next();
+    for (Map.Entry<Long, Map<String, DataPoint>> entry : timestampedData.entrySet()) {
       Long timestamp = entry.getKey();
 
       if (entry.getValue().size() == channelDataMap.size()) {
         synchronizedData.add(entry.getValue());
         timestampsToRemove.add(timestamp);
-        if (timestamp > lastTimestamp) {
-          lastTimestamp = timestamp;
-        }
       } else {
         for (Map.Entry<Long, Map<String, DataPoint>> innerEntry : timestampedData.entrySet()) {
           if (!innerEntry.getKey().equals(timestamp) &&
-              Math.abs(innerEntry.getKey() - timestamp) <= syncPeriod.toMillis()) {
+              Math.abs(innerEntry.getKey() - timestamp) < syncPeriod.toMillis()) {
             entry.getValue().putAll(innerEntry.getValue());
             if (entry.getValue().size() == channelDataMap.size()) {
               synchronizedData.add(entry.getValue());
               timestampsToRemove.add(timestamp);
               timestampsToRemove.add(innerEntry.getKey());
-              if (timestamp > lastTimestamp) {
-                lastTimestamp = timestamp;
-              }
               break;
             }
           }
@@ -106,19 +97,13 @@ public class DataSynchronizer {
       }
     }
 
-    // Remove the processed timestamps from timestampedData
-    for (Long timestamp : timestampsToRemove) {
-      timestampedData.remove(timestamp);
-    }
-
     // Remove the synchronized data points from the original channel data map
-    final long finalLastTimestamp = lastTimestamp;
     for (String channel : channelDataMap.keySet()) {
       List<DataPoint> dataPoints = channelDataMap.get(channel);
       if (dataPoints == null) {
         continue;
       }
-      dataPoints.removeIf(dp -> dp.samplingTimestamp <= finalLastTimestamp);
+      dataPoints.removeIf(dp -> timestampsToRemove.contains(dp.samplingTimestamp));
     }
 
     // Sort the result data by sampling timestamp
@@ -134,7 +119,8 @@ public class DataSynchronizer {
       Iterator<DataPoint> iterator = entry.getValue().iterator();
       while (iterator.hasNext()) {
         DataPoint dp = iterator.next();
-        if (dp.receptionTimestamp.plus(SYNC_TIMEOUT).isBefore(Instant.now())) {
+        Instant now = Instant.now();
+        if ((dp.receptionTimestamp.plus(SYNC_TIMEOUT)).isBefore(now)) {
           removedData.putIfAbsent(dp.samplingTimestamp, new HashMap<>());
           removedData.get(dp.samplingTimestamp).put(channel, dp);
           iterator.remove();

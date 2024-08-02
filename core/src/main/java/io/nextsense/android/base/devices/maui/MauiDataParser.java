@@ -47,7 +47,7 @@ public class MauiDataParser {
   // resolution.
   private static final int IMU_SAMPLE_SIZE_BYTES = 12;
   // Firmware should send its uptime at least once per 5 seconds.
-  private static final Duration FIRST_KEY_TIMESTAMP_TIMEOUT = Duration.ofSeconds(6);
+  private static final Duration FIRST_KEY_TIMESTAMP_TIMEOUT = Duration.ofSeconds(16);
   private static final boolean VERBOSE_LOGGING = true;
 
   private final LocalSessionManager localSessionManager;
@@ -132,8 +132,8 @@ public class MauiDataParser {
     int protoLength = deviceLocation == DeviceLocation.LEFT_EARBUD ? leftProtoLength :
         rightProtoLength;
     if (VERBOSE_LOGGING) {
-      Log.d(TAG, "Proto length left: " + leftProtoLength + " Proto length right: " +
-          rightProtoLength + ", values length: " + values.length + ", device name: " + deviceName);
+      Log.d(TAG, "Proto length: " + leftProtoLength + ", values length: " + values.length +
+          ", device name: " + deviceName);
     }
     // TODO(eric): Re-enable this check when the length is fixed by AUT.
     // if (protoLength > values.length - PROTO_SIZE_BYTES) {
@@ -267,8 +267,8 @@ public class MauiDataParser {
     List<Map<String, DataSynchronizer.DataPoint>> eegTimedOutData =
         eegDataSynchronizer.removeOldData();
     if (VERBOSE_LOGGING && !eegTimedOutData.isEmpty()) {
-      Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toString() +
-          ". Removed " + eegTimedOutData.size() + " old EEG data points and emitted them.");
+      Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toSeconds() +
+          " seconds. Removed " + eegTimedOutData.size() + " old EEG data points and emitted them.");
     }
     allEegSynchronizedData.addAll(eegTimedOutData);
 
@@ -277,8 +277,8 @@ public class MauiDataParser {
     List<Map<String, DataSynchronizer.DataPoint>> imuTimedOutData =
         imuDataSynchronizer.removeOldData();
     if (VERBOSE_LOGGING && !imuTimedOutData.isEmpty()) {
-      Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toString() +
-          ". Removed " + imuTimedOutData.size() + " old IMU data points and emitted them.");
+      Log.w(TAG, "Sync failed for over " + DataSynchronizer.SYNC_TIMEOUT.toSeconds() +
+          " seconds. Removed " + imuTimedOutData.size() + " old IMU data points and emitted them.");
     }
     allImuSynchronizedData.addAll(imuTimedOutData);
 
