@@ -2,10 +2,14 @@ package io.nextsense.android.budz.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,7 +29,7 @@ fun DeviceSettingsScreen(
 
     Column(verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 30.dp)) {
+            modifier = Modifier.padding(horizontal = 30.dp).verticalScroll(rememberScrollState())) {
         SimpleButton(name = "Connect and Start Streaming", onClick = {
             deviceSettingsViewModel.connectAndStartStreaming()
         })
@@ -44,6 +48,27 @@ fun DeviceSettingsScreen(
         SimpleButton(name = "Power Off Buds", onClick = {
             deviceSettingsViewModel.powerOffBuds()
         })
+        Spacer(modifier = Modifier.height(20.dp))
+        TextField(
+            value = deviceSettingsUiState.register,
+            onValueChange = { deviceSettingsViewModel.setRegisterField(it) },
+            label = { Text("Register:") }
+        )
+        TextField(
+            value = deviceSettingsUiState.registerValue,
+            onValueChange = { deviceSettingsViewModel.setRegisterValueField(it) },
+            label = { Text("Value:") }
+        )
+        Row {
+            SimpleButton(name = "Set Register", onClick = {
+                deviceSettingsViewModel.setRegister(deviceSettingsUiState.register,
+                    deviceSettingsUiState.registerValue)
+            })
+            Spacer(modifier = Modifier.weight(1f))
+            SimpleButton(name = "Get Register", onClick = {
+                deviceSettingsViewModel.getRegister(deviceSettingsUiState.register)
+            })
+        }
         Spacer(modifier = Modifier.height(20.dp))
         SimpleButton(name = "Increase bass gain", onClick = {
             deviceSettingsViewModel.changeEqualizer(floatArrayOf(8f,8f,8f,8f,0f,0f,0f,0f,0f,0f))
@@ -64,5 +89,4 @@ fun DeviceSettingsScreen(
         Spacer(modifier = Modifier.weight(1f))
         Text("Version: ${BuildConfig.VERSION_NAME}")
     }
-
 }

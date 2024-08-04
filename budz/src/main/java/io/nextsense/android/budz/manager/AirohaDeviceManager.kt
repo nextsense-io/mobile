@@ -28,7 +28,9 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.airoha.device.AirohaBleManager
 import io.nextsense.android.airoha.device.DataStreamRaceCommand
 import io.nextsense.android.airoha.device.DeviceSearchPresenter
+import io.nextsense.android.airoha.device.GetAfeRegisterRaceCommand
 import io.nextsense.android.airoha.device.PowerRaceCommand
+import io.nextsense.android.airoha.device.SetAfeRegisterRaceCommand
 import io.nextsense.android.airoha.device.StartStopSoundLoopRaceCommand
 import io.nextsense.android.base.DeviceState
 import io.nextsense.android.base.utils.RotatingFileLogger
@@ -520,6 +522,25 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             getPowerOffAirohaCommand(), airohaDeviceListener)
     }
 
+    suspend fun setAfeRegisterValue(register: String, value: String): AirohaStatusCode? {
+        if (!isAvailable) {
+            Log.w(tag, "Tried to set AFE register, but device is not available: " +
+                    "${_airohaDeviceState.value}")
+            return null
+        }
+
+        return setAfeRegisterFlow(register, value).first()
+    }
+
+    suspend fun getAfeRegisterValue(register: String): String? {
+        if (!isAvailable) {
+            Log.w(tag, "Tried to get AFE register, but device is not available: " +
+                    "${_airohaDeviceState.value}")
+            return null
+        }
+        return getAfeRegisterFlow(register).first()
+    }
+
     fun changeEqualizer(gains: FloatArray) : Boolean {
         if (_airohaDeviceState.value != AirohaDeviceState.READY) {
             return false
@@ -596,6 +617,69 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
 
         AirohaSDK.getInst().airohaDeviceControl.getBatteryInfo(batteryInfoListener)
+
+        awaitClose {
+        }
+    }
+
+    fun setAfeRegisterFlow(register: String, value: String) = callbackFlow<AirohaStatusCode> {
+        val airohaDeviceListener = object : AirohaDeviceListener {
+            override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                logAirohaResponse("onRead", code, msg)
+                trySend(code)
+                channel.close()
+            }
+
+            override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                logAirohaResponse("onChanged", code, msg)
+                trySend(code)
+                channel.close()
+            }
+        }
+
+        getAirohaDeviceControl().sendCustomCommand(
+            getSetAfeRegisterAirohaCommand(register, value), airohaDeviceListener)
+
+        awaitClose {
+        }
+    }
+
+    fun getAfeRegisterFlow(register: String) = callbackFlow<String?> {
+        val airohaDeviceListener = object : AirohaDeviceListener {
+            override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                Log.d(tag, "GetAfeRegisterListener.onRead=${code.description}," +
+                        " msg = ${msg.msgID.cmdName}")
+                try {
+                    if (code == AirohaStatusCode.STATUS_SUCCESS) {
+                        val afeRegisterResponseBytes = msg.msgContent as ByteArray
+                        val afeRegisterResponseValue = Converter.byteArrayToHexString(
+                            afeRegisterResponseBytes)
+                        // TODO(eric): Parse the full response.
+                        val afeRegisterValue = Converter.byteArrayToHexString(
+                            afeRegisterResponseBytes.copyOfRange(9, 12))
+                        Log.d(tag, "afe register response: $afeRegisterResponseValue, " +
+                                "value=$afeRegisterValue.")
+                        trySend(afeRegisterValue)
+                    } else {
+                        Log.d(tag, "getAfeRegisterFlowStatus: ${code.description}," +
+                                " msg = ${msg.msgID.cmdName}")
+                        trySend(null)
+                    }
+                } catch (e: java.lang.Exception) {
+                    Log.e(tag, e.message, e)
+                    trySend(null)
+                }
+                channel.close()
+
+            }
+
+            override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                // Nothing to do.
+            }
+        }
+
+        getAirohaDeviceControl().sendCustomCommand(
+            getGetAfeRegisterAirohaCommand(register), airohaDeviceListener)
 
         awaitClose {
         }
@@ -775,12 +859,28 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         return raceCommand
     }
 
-    private fun getPowerOffAirohaCommand(): AirohaCmdSettings {
+    private fun getPowerOffAirohaCommand() : AirohaCmdSettings {
         val raceCommand = AirohaCmdSettings()
         raceCommand.respType = RaceType.INDICATION
         raceCommand.command = PowerRaceCommand(
             PowerRaceCommand.PowerType.POWER_OFF).getBytes()
         Log.d(tag, "getPowerOffAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        return raceCommand
+    }
+
+    private fun getSetAfeRegisterAirohaCommand(register: String, value: String): AirohaCmdSettings {
+        val raceCommand = AirohaCmdSettings()
+        raceCommand.respType = RaceType.INDICATION
+        raceCommand.command = SetAfeRegisterRaceCommand(register, value).getBytes()
+        Log.d(tag, "setAfeRegisterAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        return raceCommand
+    }
+
+    private fun getGetAfeRegisterAirohaCommand(register: String): AirohaCmdSettings {
+        val raceCommand = AirohaCmdSettings()
+        raceCommand.respType = RaceType.INDICATION
+        raceCommand.command = GetAfeRegisterRaceCommand(register).getBytes()
+        Log.d(tag, "getAfeRegisterAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
         return raceCommand
     }
 
