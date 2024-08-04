@@ -9,6 +9,7 @@ import io.nextsense.android.algo.signal.WaveletArtifactRejection
 import io.nextsense.android.base.devices.maui.MauiDataParser
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.abs
 import kotlin.time.Duration.Companion.seconds
 
 @Singleton
@@ -49,16 +50,20 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
 
     fun prepareVisualizedData(data: List<Float>, filtered: Boolean, removeArtifacts: Boolean,
                               targetSamplingRate: Float): List<Double> {
-        val powerLineFrequency = getPowerLineFrequency(data,
-            airohaDeviceManager.getEegSamplingRate().toInt()) ?: return listOf()
+        val powerLineFrequency = getPowerLineFrequency(
+            data, airohaDeviceManager.getEegSamplingRate().toInt())
         var doubleData = data.map { it.toDouble() }.toDoubleArray()
         if (removeArtifacts) {
             doubleData = WaveletArtifactRejection.getPowerOf2DataSize(doubleData)
             doubleData = WaveletArtifactRejection.applyWaveletArtifactRejection(doubleData)
         }
         if (filtered) {
-            doubleData = Filters.applyBandStop(doubleData, airohaDeviceManager.getEegSamplingRate(),
-                /*order=*/4, powerLineFrequency.toFloat(), /*widthFrequency=*/2F)
+            if (powerLineFrequency != null) {
+                doubleData = Filters.applyBandStop(
+                    doubleData, airohaDeviceManager.getEegSamplingRate(),
+                    /*order=*/4, powerLineFrequency.toFloat(), /*widthFrequency=*/2F
+                )
+            }
             doubleData = Filters.applyBandPass(doubleData, airohaDeviceManager.getEegSamplingRate(),
                 /*order=*/4, /*lowCutoff=*/0.5F, /*highCutoff=*/40F)
         }
@@ -68,7 +73,7 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
     }
 
     private fun getPowerLineFrequency(data: List<Float>?, eegSamplingRate: Int): Int? {
-        if (_powerLineFrequency == null) {
+        if (_powerLineFrequency == null && !isSignalFlat(data, windows = 2)) {
             _powerLineFrequency = findPowerLineFrequency(data, eegSamplingRate)
         }
         if (_powerLineFrequency == null) {
@@ -88,5 +93,24 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
             return null
         }
         return if (fiftyHertzBandPower > sixtyHertzBandPower) 50 else 60
+    }
+
+    private fun isSignalFlat(data: List<Float>?, windows: Int = 1): Boolean {
+        if (data == null) {
+            return false
+        }
+        val threshold = 1.0
+        for (i in data.indices step data.size / windows) {
+            if (isWindowFlat(data.subList(i, (i + data.size / windows).coerceAtMost(data.size)), threshold)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun isWindowFlat(data: List<Float>, threshold: Double): Boolean {
+        val max = data.maxOrNull() ?: return false
+        val min = data.minOrNull() ?: return false
+        return abs(abs(max) - abs(min)) < threshold
     }
 }
