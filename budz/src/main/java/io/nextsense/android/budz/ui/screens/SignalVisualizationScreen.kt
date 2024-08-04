@@ -127,6 +127,11 @@ fun CardConnected(signalVisualizationViewModel: SignalVisualizationViewModel,
                 })
         }
         Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            text = "Power Line Frequency: ${signalVisualizationState.powerLineFrequency} Hz",
+            style = MaterialTheme.typography.labelMedium
+        )
+        Spacer(modifier = Modifier.height(10.dp))
         SignalVisualization(signalVisualizationViewModel)
         Spacer(modifier = Modifier.height(10.dp))
     }
