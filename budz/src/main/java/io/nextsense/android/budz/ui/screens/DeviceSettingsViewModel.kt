@@ -12,6 +12,8 @@ import javax.inject.Inject
 
 data class DeviceSettingsState(
     val message: String,
+    val register: String,
+    val registerValue: String,
     val gains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
 )
 
@@ -20,7 +22,9 @@ class DeviceSettingsViewModel @Inject constructor(
         private val deviceManager: AirohaDeviceManager
 ): ViewModel() {
 
-    private val _uiState = MutableStateFlow(DeviceSettingsState(""))
+    private val _uiState = MutableStateFlow(DeviceSettingsState(
+        message = "", register = "", registerValue = ""
+    ))
 
     val uiState: StateFlow<DeviceSettingsState> = _uiState.asStateFlow()
 
@@ -38,15 +42,17 @@ class DeviceSettingsViewModel @Inject constructor(
 
     fun connectAndStartStreaming() {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(message = "Starting streaming...")
             val started = deviceManager.startBleStreaming()
-            _uiState.value = _uiState.value.copy(message = started.toString())
+            _uiState.value = _uiState.value.copy(message = "Started streaming: $started")
         }
     }
 
     fun disconnectAndStopStreaming() {
         viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(message = "Stopping streaming...")
             val stopped = deviceManager.stopBleStreaming()
-            _uiState.value = _uiState.value.copy(message = stopped.toString())
+            _uiState.value = _uiState.value.copy(message = "Stopped streaming: $stopped")
         }
     }
 
@@ -71,6 +77,36 @@ class DeviceSettingsViewModel @Inject constructor(
     fun powerOffBuds() {
         viewModelScope.launch {
             deviceManager.powerOff()
+        }
+    }
+
+    fun setRegisterField(register: String) {
+        _uiState.value = _uiState.value.copy(register = register)
+    }
+
+    fun setRegisterValueField(value: String) {
+        _uiState.value = _uiState.value.copy(registerValue = value)
+    }
+
+    fun setRegister(register: String, value: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(message = "Setting register...")
+            val registerSet = deviceManager.setAfeRegisterValue(register, value)
+            _uiState.value = _uiState.value.copy(message = "Register set: $registerSet")
+        }
+    }
+
+    fun getRegister(register: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(message = "Getting register...")
+            val registerValue = deviceManager.getAfeRegisterValue(register)
+            if (registerValue != null) {
+                _uiState.value = _uiState.value.copy(message = "Got register",
+                    registerValue = registerValue)
+            } else {
+                _uiState.value = _uiState.value.copy(message = "Failed to get register",
+                    registerValue = "")
+            }
         }
     }
 }
