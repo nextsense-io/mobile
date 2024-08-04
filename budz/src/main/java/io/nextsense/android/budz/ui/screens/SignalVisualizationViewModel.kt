@@ -25,7 +25,8 @@ import kotlin.time.Duration.Companion.seconds
 data class SignalVisualizationState(
     val connected: Boolean = false,
     val filtered: Boolean = true,
-    val artifactsRemoval: Boolean = false
+    val artifactsRemoval: Boolean = false,
+    val powerLineFrequency: Int? = null
 )
 
 @HiltViewModel
@@ -144,6 +145,13 @@ open class SignalVisualizationViewModel @Inject constructor(
         val gotLeftEarData = leftEarData != null && leftEarData.size >= minimumDataSize
         if (!gotLeftEarData && !gotRightEarData) {
             return
+        }
+
+        // Update the power line frequency.
+        if (_uiState.value.powerLineFrequency == null &&
+            signalStateManager.powerLineFrequency != null) {
+            _uiState.value = _uiState.value.copy(
+                powerLineFrequency = signalStateManager.powerLineFrequency)
         }
 
         // Update the charts.

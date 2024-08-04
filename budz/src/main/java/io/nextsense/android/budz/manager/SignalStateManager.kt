@@ -19,6 +19,9 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
     private val _calculationEpoch = defaultCalculationEpoch
     private var _powerLineFrequency: Int? = null
 
+    val powerLineFrequency: Int?
+        get() = _powerLineFrequency
+
     fun getBandPowers(bands: List<Band>): Map<Band, Double> {
         if (bands.isEmpty()) {
             return mapOf()
