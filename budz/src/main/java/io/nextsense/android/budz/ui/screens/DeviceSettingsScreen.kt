@@ -36,12 +36,28 @@ fun DeviceSettingsScreen(
         SimpleButton(name = "Disconnect and Stop Streaming", onClick = {
             deviceSettingsViewModel.disconnectAndStopStreaming()
         })
+        Spacer(modifier = Modifier.height(20.dp))
+        TextField(
+            value = deviceSettingsUiState.soundLoopVolume?.toString() ?: "",
+            onValueChange = { deviceSettingsViewModel.setSoundLoopVolumeField(it) },
+            label = { Text("Sound Loop Volume:") }
+        )
+        Row {
+            SimpleButton(name = "Set Volume (0-4)", onClick = {
+                deviceSettingsViewModel.setSoundLoopVolume(deviceSettingsUiState.soundLoopVolume)
+            })
+            Spacer(modifier = Modifier.weight(1f))
+            SimpleButton(name = "Get Volume", onClick = {
+                deviceSettingsViewModel.getSoundLoopVolume()
+            })
+        }
         SimpleButton(name = "Start Sound Loop", onClick = {
             deviceSettingsViewModel.startSoundLoop()
         })
         SimpleButton(name = "Stop Sound Loop", onClick = {
             deviceSettingsViewModel.stopSoundLoop()
         })
+
         SimpleButton(name = "Reset Buds", onClick = {
             deviceSettingsViewModel.resetBuds()
         })
