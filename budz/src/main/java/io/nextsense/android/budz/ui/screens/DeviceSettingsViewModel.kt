@@ -14,6 +14,7 @@ data class DeviceSettingsState(
     val message: String,
     val register: String,
     val registerValue: String,
+    val soundLoopVolume: Int? = null,
     val gains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
 )
 
@@ -68,6 +69,31 @@ class DeviceSettingsViewModel @Inject constructor(
         }
     }
 
+    fun setSoundLoopVolume(volume: Int?) {
+        if (volume == null) {
+            return
+        }
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(message = "Setting sound loop volume...")
+            val set =deviceManager.setSoundLoopVolume(volume)
+            _uiState.value = _uiState.value.copy(message = "Sound loop volume set: $set")
+        }
+    }
+
+    fun getSoundLoopVolume() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(message = "Getting sound loop volume...")
+            val volume = deviceManager.getSoundLoopVolume()
+            if (volume != null) {
+                _uiState.value = _uiState.value.copy(message = "Got sound loop volume",
+                    soundLoopVolume = volume)
+            } else {
+                _uiState.value = _uiState.value.copy(message = "Failed to get register",
+                    soundLoopVolume = null)
+            }
+        }
+    }
+
     fun resetBuds() {
         viewModelScope.launch {
             deviceManager.reset()
@@ -78,6 +104,11 @@ class DeviceSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             deviceManager.powerOff()
         }
+    }
+
+    fun setSoundLoopVolumeField(volume: String) {
+        val volumeInt = volume.toIntOrNull() ?: 0
+        _uiState.value = _uiState.value.copy(soundLoopVolume = volumeInt)
     }
 
     fun setRegisterField(register: String) {
