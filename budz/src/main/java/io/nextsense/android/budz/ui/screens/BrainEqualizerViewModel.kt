@@ -39,7 +39,7 @@ data class BrainEqualizerState(
     val connected: Boolean = false,
 )
 
-private const val alphaBetaRatioMidPoint = 3F
+private const val alphaBetaRatioMidPoint = 1F
 
 @UnstableApi
 @HiltViewModel
@@ -113,7 +113,7 @@ class BrainEqualizerViewModel @Inject constructor(
         Log.d(tag, "Alpha: ${bandPowers[BandPowerAnalysis.Band.ALPHA]} Beta: " +
                 "${bandPowers[BandPowerAnalysis.Band.BETA]} Alpha/Beta ratio: $alphaBetaRatio")
         _bassEqLevel = if (alphaBetaRatio >= alphaBetaRatioMidPoint) {
-            ((alphaBetaRatio - alphaBetaRatioMidPoint).coerceAtMost(1.0) *
+            (((alphaBetaRatio - alphaBetaRatioMidPoint) * 2).coerceAtMost(1.0) *
                     AirohaDeviceManager.maxEqualizerSettings).toFloat()
         } else {
             0F

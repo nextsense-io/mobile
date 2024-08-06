@@ -57,8 +57,12 @@ public class BandPowerAnalysis {
       bandPairs.add(Pair.of(band.getStart(), band.getEnd()));
     }
     try {
-      // optional: detrend before psd
+      // Optional: Detrend before calculating band powers.
       DataFilter.detrend(dataArray, DetrendOperations.LINEAR);
+      // apply_filters does:
+      // 1. Detrend the data with a CONSTANT fit.
+      // 2. Bandstop 48-52 and 58-62 Hz to remove power line noise.
+      // 3. Bandpass 2-40 Hz to keep only the useful frequencies.
       Pair<double[], double[]> bandPowers = DataFilter.get_custom_band_powers(
           new double[][] {dataArray}, bandPairs, /*channels=*/new int[] {0}, samplingRate,
           /*apply_filters=*/true);
