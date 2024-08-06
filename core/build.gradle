@@ -123,7 +123,6 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
-    implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation platform('androidx.compose:compose-bom:2024.05.00')
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation "androidx.compose.ui:ui"
@@ -143,6 +142,7 @@ dependencies {
     implementation 'com.google.protobuf:protobuf-javalite:3.21.7'
     implementation 'com.google.protobuf:protoc:3.13.0'
     implementation 'org.apache.commons:commons-math3:3.6.1'
+    implementation 'org.apache.commons:commons-lang3:3.1'
     implementation 'org.greenrobot:eventbus:3.3.1'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3"
