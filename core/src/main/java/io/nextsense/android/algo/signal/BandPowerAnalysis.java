@@ -50,32 +50,20 @@ public class BandPowerAnalysis {
 
   public static Map<Band, Double> getBandPowersBF(
       List<Float> data, int samplingRate, List<Band> bands, Double powerLineFrequency) {
-    double[] dataArray = data.stream().mapToDouble(Float::doubleValue).toArray();
     Map<Band, Double> bandpowersMap = new HashMap<>();
+    double[] dataArray = data.stream().mapToDouble(Float::doubleValue).toArray();
+    List<Pair<Double, Double>> bandPairs = new ArrayList<>();
+    for (Band band : bands) {
+      bandPairs.add(Pair.of(band.getStart(), band.getEnd()));
+    }
     try {
       // optional: detrend before psd
       DataFilter.detrend(dataArray, DetrendOperations.LINEAR);
-      Pair<double[], double[]> bandPowers = DataFilter.get_avg_band_powers(
-          new double[][]{dataArray}, /*channels=*/new int[]{0}, samplingRate,
+      Pair<double[], double[]> bandPowers = DataFilter.get_custom_band_powers(
+          new double[][] {dataArray}, bandPairs, /*channels=*/new int[] {0}, samplingRate,
           /*apply_filters=*/true);
-      for (Band band : bands) {
-        switch (band) {
-          case DELTA:
-            bandpowersMap.put(band, bandPowers.getLeft()[0]);
-            break;
-          case THETA:
-            bandpowersMap.put(band, bandPowers.getLeft()[1]);
-            break;
-          case ALPHA:
-            bandpowersMap.put(band, bandPowers.getLeft()[2]);
-            break;
-          case BETA:
-            bandpowersMap.put(band, bandPowers.getLeft()[3]);
-            break;
-          case GAMMA:
-            bandpowersMap.put(band, bandPowers.getLeft()[4]);
-            break;
-        }
+      for (int i = 0; i < bands.size(); i++) {
+        bandpowersMap.put(bands.get(i), bandPowers.getLeft()[i]);
       }
     } catch (BrainFlowError error) {
       Log.e(TAG, error.getMessage());
