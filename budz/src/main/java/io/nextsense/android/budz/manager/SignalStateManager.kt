@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.seconds
 @Singleton
 class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDeviceManager) {
     private val tag = SignalStateManager::class.simpleName
-    private val defaultCalculationEpoch = 5.seconds
+    private val defaultCalculationEpoch = 36.seconds
     private var _bandPowers: MutableMap<Band, Double> = mutableMapOf()
     private val _calculationEpoch = defaultCalculationEpoch
     private var _powerLineFrequency: Int? = null
