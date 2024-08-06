@@ -57,17 +57,15 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
         }
         if (filtered) {
             if (powerLineFrequency != null) {
-                doubleData = Filters.applyBandStop(
-                    doubleData, airohaDeviceManager.getEegSamplingRate(),
-                    /*order=*/4, powerLineFrequency.toFloat(), /*widthFrequency=*/2F
-                )
+                Filters.removeEnvironmentalNoise(
+                    doubleData, airohaDeviceManager.getEegSamplingRate(), powerLineFrequency)
             }
-            doubleData = Filters.applyBandPass(doubleData, airohaDeviceManager.getEegSamplingRate(),
+            Filters.applyBandPassBF(doubleData, airohaDeviceManager.getEegSamplingRate(),
                 /*order=*/4, /*lowCutoff=*/0.5F, /*highCutoff=*/40F)
         }
         // Resample the data to the chart sampling rate for performance.
-        return Sampling.resample(doubleData, airohaDeviceManager.getEegSamplingRate(),
-            /*order=*/100, targetSamplingRate).toList()
+        return Sampling.downsampleBF(doubleData, airohaDeviceManager.getEegSamplingRate(),
+            targetSamplingRate).toList()
     }
 
     private fun getPowerLineFrequency(data: List<Float>?, eegSamplingRate: Int): Int? {
