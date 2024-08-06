@@ -109,13 +109,30 @@ class BrainEqualizerViewModel @Inject constructor(
         if (bandPowers.isEmpty()) {
             return
         }
-        Log.d(tag, "Delta: ${"%.2f".format(bandPowers[BandPowerAnalysis.Band.DELTA])}" +
-            " Theta: ${"%.2f".format(bandPowers[BandPowerAnalysis.Band.THETA])}" +
-            " Alpha: ${"%.2f".format(bandPowers[BandPowerAnalysis.Band.ALPHA])}" +
-            " Beta: ${"%.2f".format(bandPowers[BandPowerAnalysis.Band.BETA])}" +
-            " Gamma: ${"%.2f".format(bandPowers[BandPowerAnalysis.Band.GAMMA])}")
-        val alphaBetaRatio = bandPowers[BandPowerAnalysis.Band.ALPHA]!! /
-                bandPowers[BandPowerAnalysis.Band.BETA]!!
+        var alphaBetaRatio: Double? = null
+        for (channelBandPowers in bandPowers.entries) {
+            val channel = if (channelBandPowers.key == 1) "Left" else "Right"
+
+            Log.d(tag, "$channel Delta: ${"%.3f".format(channelBandPowers.value[
+                BandPowerAnalysis.Band.DELTA])}" +
+                " $channel Theta: ${"%.3f".format(channelBandPowers.value[
+                    BandPowerAnalysis.Band.THETA])}" +
+                " $channel Alpha: ${"%.3f".format(channelBandPowers.value[
+                    BandPowerAnalysis.Band.ALPHA])}" +
+                " $channel Beta: ${"%.3f".format(channelBandPowers.value[
+                    BandPowerAnalysis.Band.BETA])}" +
+                " $channel Gamma: ${"%.3f".format(channelBandPowers.value[
+                    BandPowerAnalysis.Band.GAMMA])}")
+
+            if (alphaBetaRatio == null) {
+                alphaBetaRatio = channelBandPowers.value[BandPowerAnalysis.Band.ALPHA]!! /
+                        channelBandPowers.value[BandPowerAnalysis.Band.BETA]!!
+            }
+        }
+
+        if (alphaBetaRatio == null) {
+            return
+        }
         _bassEqLevel = if (alphaBetaRatio >= alphaBetaRatioMidPoint) {
             (((alphaBetaRatio - alphaBetaRatioMidPoint) * 2).coerceAtMost(1.0) *
                     AirohaDeviceManager.maxEqualizerSettings).toFloat()
