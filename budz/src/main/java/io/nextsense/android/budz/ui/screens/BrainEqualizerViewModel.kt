@@ -103,15 +103,19 @@ class BrainEqualizerViewModel @Inject constructor(
         if (airohaDeviceManager.streamingState.value != StreamingState.STARTED) {
             return
         }
-        val bandPowers = signalStateManager.getBandPowers(listOf(
-            BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA))
+        val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.DELTA,
+            BandPowerAnalysis.Band.THETA, BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA,
+            BandPowerAnalysis.Band.GAMMA))
         if (bandPowers.isEmpty()) {
             return
         }
+        Log.d(tag, "Delta: ${"%.2f".format(bandPowers[BandPowerAnalysis.Band.DELTA])}" +
+            " Theta: ${"%.2f".format(bandPowers[BandPowerAnalysis.Band.THETA])}" +
+            " Alpha: ${"%.2f".format(bandPowers[BandPowerAnalysis.Band.ALPHA])}" +
+            " Beta: ${"%.2f".format(bandPowers[BandPowerAnalysis.Band.BETA])}" +
+            " Gamma: ${"%.2f".format(bandPowers[BandPowerAnalysis.Band.GAMMA])}")
         val alphaBetaRatio = bandPowers[BandPowerAnalysis.Band.ALPHA]!! /
                 bandPowers[BandPowerAnalysis.Band.BETA]!!
-        Log.d(tag, "Alpha: ${bandPowers[BandPowerAnalysis.Band.ALPHA]} Beta: " +
-                "${bandPowers[BandPowerAnalysis.Band.BETA]} Alpha/Beta ratio: $alphaBetaRatio")
         _bassEqLevel = if (alphaBetaRatio >= alphaBetaRatioMidPoint) {
             (((alphaBetaRatio - alphaBetaRatioMidPoint) * 2).coerceAtMost(1.0) *
                     AirohaDeviceManager.maxEqualizerSettings).toFloat()
