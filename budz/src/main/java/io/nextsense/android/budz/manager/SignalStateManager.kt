@@ -16,33 +16,33 @@ import kotlin.time.Duration.Companion.seconds
 class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDeviceManager) {
     private val tag = SignalStateManager::class.simpleName
     private val defaultCalculationEpoch = 36.seconds
-    private var _bandPowers: MutableMap<Band, Double> = mutableMapOf()
+    private var _bandPowers: MutableMap<Int, MutableMap<Band, Double>> = mutableMapOf()
     private val _calculationEpoch = defaultCalculationEpoch
     private var _powerLineFrequency: Int? = null
 
     val powerLineFrequency: Int?
         get() = _powerLineFrequency
 
-    fun getBandPowers(bands: List<Band>): Map<Band, Double> {
+    fun getBandPowers(bands: List<Band>): Map<Int, MutableMap<Band, Double>> {
         if (bands.isEmpty()) {
             return mapOf()
         }
-        var data = airohaDeviceManager.getChannelData(localSessionId=null,
-            channelName = MauiDataParser.CHANNEL_LEFT.toString(),
-            durationMillis = _calculationEpoch.inWholeMilliseconds.toInt(), fromDatabase = false)
-        if (data?.isEmpty() == true) {
-            data = airohaDeviceManager.getChannelData(localSessionId=null,
-                channelName = MauiDataParser.CHANNEL_RIGHT.toString(),
-                durationMillis = _calculationEpoch.inWholeMilliseconds.toInt(),
-                fromDatabase = false)
+        for (channel in arrayOf(MauiDataParser.CHANNEL_LEFT, MauiDataParser.CHANNEL_RIGHT)) {
+            val data = airohaDeviceManager.getChannelData(
+                localSessionId = null,
+                channelName = channel.toString(),
+                durationMillis = _calculationEpoch.inWholeMilliseconds.toInt(), fromDatabase = false
+            )
+            if (data?.isEmpty() == true) {
+                continue
+            }
+            val eegSamplingRate = airohaDeviceManager.getEegSamplingRate().toInt()
+            val powerLineFrequency = getPowerLineFrequency(data, eegSamplingRate) ?: return mapOf()
+            _bandPowers[channel] = BandPowerAnalysis.getBandPowersBF(
+                data, eegSamplingRate, bands,
+                powerLineFrequency.toDouble()
+            )
         }
-        if (data?.isEmpty() == true) {
-            return mapOf()
-        }
-        val eegSamplingRate = airohaDeviceManager.getEegSamplingRate().toInt()
-        val powerLineFrequency = getPowerLineFrequency(data, eegSamplingRate) ?: return mapOf()
-        _bandPowers = BandPowerAnalysis.getBandPowersBF(data, eegSamplingRate, bands,
-            powerLineFrequency.toDouble())
         return _bandPowers
     }
 
