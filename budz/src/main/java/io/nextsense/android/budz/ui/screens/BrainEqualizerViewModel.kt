@@ -1,6 +1,7 @@
 package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
+import android.media.AudioManager
 import android.os.Handler
 import android.util.Log
 import androidx.lifecycle.viewModelScope
@@ -50,12 +51,16 @@ class BrainEqualizerViewModel @Inject constructor(
 ): SignalVisualizationViewModel(airohaDeviceManager, signalStateManager) {
 
     private val tag = BrainEqualizerViewModel::class.simpleName
+    private val _audioManager: AudioManager =
+        context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    private val _maxMusicVolume = _audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
     private val _uiState = MutableStateFlow(BrainEqualizerState())
     private val _soundModulationInterval = 5.seconds
     private var _soundModulationJob: Job? = null
     private lateinit var _player: ExoPlayer
     private var _bassEqLevel = 0F
     private var _trebleEqLevel = 0F
+    private var _modulatedVolume = false
 
     val uiState: StateFlow<BrainEqualizerState> = _uiState.asStateFlow()
     val fftAudioProcessor = FFTAudioProcessor()
@@ -99,13 +104,21 @@ class BrainEqualizerViewModel @Inject constructor(
         }
     }
 
+    private fun modulateVolume() {
+        val currentVolume = _audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+        val targetVolume = currentVolume + _maxMusicVolume / 5
+        _audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVolume, 0)
+    }
+
     private fun updateSoundModulation() {
         if (airohaDeviceManager.streamingState.value != StreamingState.STARTED) {
             return
         }
-        val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.DELTA,
-            BandPowerAnalysis.Band.THETA, BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA,
-            BandPowerAnalysis.Band.GAMMA))
+//        val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.DELTA,
+//            BandPowerAnalysis.Band.THETA, BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA,
+//            BandPowerAnalysis.Band.GAMMA))
+        val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.ALPHA,
+            BandPowerAnalysis.Band.BETA))
         if (bandPowers.isEmpty()) {
             return
         }
@@ -113,16 +126,18 @@ class BrainEqualizerViewModel @Inject constructor(
         for (channelBandPowers in bandPowers.entries) {
             val channel = if (channelBandPowers.key == 1) "Left" else "Right"
 
-            Log.d(tag, "$channel Delta: ${"%.3f".format(channelBandPowers.value[
-                BandPowerAnalysis.Band.DELTA])}" +
-                " $channel Theta: ${"%.3f".format(channelBandPowers.value[
-                    BandPowerAnalysis.Band.THETA])}" +
+            Log.d(tag,
+//                "$channel Delta: ${"%.3f".format(channelBandPowers.value[
+//                BandPowerAnalysis.Band.DELTA])}" +
+//                " $channel Theta: ${"%.3f".format(channelBandPowers.value[
+//                    BandPowerAnalysis.Band.THETA])}" +
                 " $channel Alpha: ${"%.3f".format(channelBandPowers.value[
                     BandPowerAnalysis.Band.ALPHA])}" +
                 " $channel Beta: ${"%.3f".format(channelBandPowers.value[
-                    BandPowerAnalysis.Band.BETA])}" +
-                " $channel Gamma: ${"%.3f".format(channelBandPowers.value[
-                    BandPowerAnalysis.Band.GAMMA])}")
+                    BandPowerAnalysis.Band.BETA])}"  // +
+//                " $channel Gamma: ${"%.3f".format(channelBandPowers.value[
+//                    BandPowerAnalysis.Band.GAMMA])}"
+            )
 
             if (alphaBetaRatio == null) {
                 alphaBetaRatio = channelBandPowers.value[BandPowerAnalysis.Band.ALPHA]!! /
@@ -146,6 +161,11 @@ class BrainEqualizerViewModel @Inject constructor(
             0F
         }
         Log.d(tag, "Bass: $_bassEqLevel Treble: $_trebleEqLevel")
+
+        if (!_modulatedVolume && _bassEqLevel > 0F) {
+            modulateVolume()
+        }
+
         airohaDeviceManager.changeEqualizer(floatArrayOf(
             _bassEqLevel, _bassEqLevel,  // Bass is 300 hertz and lower.
             0f, 0f, 0f, 0f, 0f,  // Mid is 300 hertz to 4 khz
