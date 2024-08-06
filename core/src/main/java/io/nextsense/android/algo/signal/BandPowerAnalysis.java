@@ -1,13 +1,23 @@
 package io.nextsense.android.algo.signal;
 
 import android.util.Log;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import brainflow.BrainFlowError;
+import brainflow.DataFilter;
+import brainflow.DetrendOperations;
+import brainflow.WindowOperations;
 
 public class BandPowerAnalysis {
 
@@ -37,6 +47,41 @@ public class BandPowerAnalysis {
 
   public static final int MIN_SAMPLES_NUMBER = 2048;  // About 8 seconds of data at 250 hertz.
   private static final String TAG = BandPowerAnalysis.class.getSimpleName();
+
+  public static Map<Band, Double> getBandPowersBF(
+      List<Float> data, int samplingRate, List<Band> bands, Double powerLineFrequency) {
+    double[] dataArray = data.stream().mapToDouble(Float::doubleValue).toArray();
+    Map<Band, Double> bandpowersMap = new HashMap<>();
+    try {
+      // optional: detrend before psd
+      DataFilter.detrend(dataArray, DetrendOperations.LINEAR);
+      Pair<double[], double[]> bandPowers = DataFilter.get_avg_band_powers(
+          new double[][]{dataArray}, /*channels=*/new int[]{0}, samplingRate,
+          /*apply_filters=*/true);
+      for (Band band : bands) {
+        switch (band) {
+          case DELTA:
+            bandpowersMap.put(band, bandPowers.getLeft()[0]);
+            break;
+          case THETA:
+            bandpowersMap.put(band, bandPowers.getLeft()[1]);
+            break;
+          case ALPHA:
+            bandpowersMap.put(band, bandPowers.getLeft()[2]);
+            break;
+          case BETA:
+            bandpowersMap.put(band, bandPowers.getLeft()[3]);
+            break;
+          case GAMMA:
+            bandpowersMap.put(band, bandPowers.getLeft()[4]);
+            break;
+        }
+      }
+    } catch (BrainFlowError error) {
+      Log.e(TAG, error.getMessage());
+    }
+    return bandpowersMap;
+  }
 
   public static double getBandPower(
       List<Float> data, int samplingRate, Band band, Double powerLineFrequency) {
