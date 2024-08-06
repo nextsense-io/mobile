@@ -1,5 +1,13 @@
 package io.nextsense.android.algo.signal;
 
+import android.util.Log;
+
+import java.util.Objects;
+
+import brainflow.BrainFlowError;
+import brainflow.DataFilter;
+import brainflow.FilterTypes;
+import brainflow.NoiseTypes;
 import uk.me.berndporr.iirj.Butterworth;
 
 public class Filters {
@@ -57,6 +65,16 @@ public class Filters {
     return filteredSignal;
   }
 
+  public static void applyBandPassBF(double[] signal, float samplingRate, int order,
+                                       float lowCutoff, float highCutoff) {
+    try {
+      DataFilter.perform_bandpass(signal, (int) samplingRate, lowCutoff, highCutoff, order,
+          FilterTypes.BUTTERWORTH, /*ripple=*/0.0);
+    } catch (BrainFlowError error) {
+      Log.e("Filters", Objects.requireNonNull(error.getMessage()));
+    }
+  }
+
   /*
    * Applies band stop filter
    * signal -- signal to be filtered
@@ -74,5 +92,15 @@ public class Filters {
       filteredSig[i] = butterworth.filter(signal[i]);
     }
     return filteredSig;
+  }
+
+  public static void removeEnvironmentalNoise(
+      double[] signal, float samplingRate, int centerFrequency) {
+    NoiseTypes noiseType = centerFrequency == 50 ? NoiseTypes.FIFTY : NoiseTypes.SIXTY;
+    try {
+      DataFilter.remove_environmental_noise(signal, (int) samplingRate, noiseType.get_code());
+    } catch (BrainFlowError error) {
+      Log.e("Filters", Objects.requireNonNull(error.getMessage()));
+    }
   }
 }
