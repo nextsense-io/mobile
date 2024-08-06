@@ -41,8 +41,8 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
         }
         val eegSamplingRate = airohaDeviceManager.getEegSamplingRate().toInt()
         val powerLineFrequency = getPowerLineFrequency(data, eegSamplingRate) ?: return mapOf()
-        _bandPowers = BandPowerAnalysis.getBandPowersBF(data, eegSamplingRate,
-            arrayOf(Band.ALPHA, Band.BETA).toMutableList(), powerLineFrequency.toDouble())
+        _bandPowers = BandPowerAnalysis.getBandPowersBF(data, eegSamplingRate, bands,
+            powerLineFrequency.toDouble())
         return _bandPowers
     }
 
@@ -69,7 +69,7 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
     }
 
     private fun getPowerLineFrequency(data: List<Float>?, eegSamplingRate: Int): Int? {
-        if (_powerLineFrequency == null && !isSignalFlat(data, windows = 2)) {
+        if (_powerLineFrequency == null && !isSignalFlat(data, windows = 4)) {
             _powerLineFrequency = findPowerLineFrequency(data, eegSamplingRate)
         }
         if (_powerLineFrequency == null) {
