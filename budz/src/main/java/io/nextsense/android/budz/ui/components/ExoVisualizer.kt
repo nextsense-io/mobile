@@ -20,7 +20,8 @@ fun ExoVisualizer(audioProcessor: FFTAudioProcessor) {
 
     // Adds view to Compose
     AndroidView(
-        modifier = Modifier.fillMaxSize().height(200.dp), // Occupy the max size in the Compose UI tree
+        // Occupy the max size in the Compose UI tree
+        modifier = Modifier.fillMaxSize().height(200.dp),
         factory = { context ->
             // Creates view
             ExoVisualizerView(context).apply {
@@ -50,6 +51,7 @@ class ExoVisualizerView @JvmOverloads constructor(
     var processor: FFTAudioProcessor? = null
 
     private var currentWaveform: FloatArray? = null
+    private var currentEqualizerValues: FloatArray? = null
 
     private val bandView = FFTBandView(context, attrs)
 
@@ -63,6 +65,7 @@ class ExoVisualizerView @JvmOverloads constructor(
         } else {
             processor?.listener = null
             currentWaveform = null
+            currentEqualizerValues = null
         }
     }
 
@@ -76,8 +79,10 @@ class ExoVisualizerView @JvmOverloads constructor(
         updateProcessorListenerState(false)
     }
 
-    override fun onFFTReady(sampleRateHz: Int, channelCount: Int, fft: FloatArray) {
+    override fun onFFTReady(sampleRateHz: Int, channelCount: Int, fft: FloatArray,
+                            equalizerValues: FloatArray) {
         currentWaveform = fft
-        bandView.onFFT(fft)
+        currentEqualizerValues = equalizerValues
+        bandView.onFFT(fft, equalizerValues)
     }
 }

@@ -9,6 +9,7 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
+import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.FFTAudioProcessor
 import java.lang.System.arraycopy
 import kotlin.math.cos
@@ -33,22 +34,34 @@ class FFTBandView @JvmOverloads constructor(
             800, 1000, 1250, 1600, 2000, 2500, 3150, 4000, 5000, 6300, 8000, 10000,
             12500, 16000, 20000
         )
+
+        private val BANDS_TO_EQ_MAP: Map<Int, Int?> =
+            FREQUENCY_BAND_LIMITS.indices.associateWith { bandIndex ->
+                val band = FREQUENCY_BAND_LIMITS[bandIndex]
+                AirohaDeviceManager.EQ_FREQUENCIES.indices.minByOrNull {
+                    eqIndex -> kotlin.math.abs(AirohaDeviceManager.EQ_FREQUENCIES[eqIndex] - band) }
+            }
     }
 
     private val bands = FREQUENCY_BAND_LIMITS.size
     private val size = FFTAudioProcessor.SAMPLE_SIZE / 2
     private val maxConst = 2_000 // Reference max value for accum magnitude
     private val fft: FloatArray = FloatArray(size)
+    private val equalizerValues: FloatArray = floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
     private val paintBandsFill = Paint()
+    private val paintEqFill = Paint()
     private val paintBands = Paint()
     private val paintAvg = Paint()
     private val paintPath = Paint()
+    private val paintEqPath = Paint()
 
-    // We average out the values over 3 occurences (plus the current one), so big jumps are smoothed out
+    // We average out the values over 5 occurrences (plus the current one), so big jumps are
+    // smoothed out.
     private val smoothingFactor = 5
     private val previousValues = FloatArray(bands * smoothingFactor)
 
     private val fftPath = Path()
+    private val eqPath = Path()
 
     private var startedAt: Long = 0
 
@@ -56,6 +69,9 @@ class FFTBandView @JvmOverloads constructor(
         keepScreenOn = true
         paintBandsFill.color = Color.parseColor("#20FFFFFF")
         paintBandsFill.style = Paint.Style.FILL
+
+        paintEqFill.color = Color.parseColor("#80FFFFFF")
+        paintEqFill.style = Paint.Style.FILL
 
         paintBands.color = Color.parseColor("#60FFFFFF")
         paintBands.strokeWidth = 1f
@@ -69,6 +85,11 @@ class FFTBandView @JvmOverloads constructor(
         paintPath.strokeWidth = 8f
         paintPath.isAntiAlias = true
         paintPath.style = Paint.Style.STROKE
+
+        paintEqPath.color = Color.GREEN
+        paintEqPath.strokeWidth = 8f
+        paintEqPath.isAntiAlias = true
+        paintEqPath.style = Paint.Style.STROKE
     }
 
     private fun drawAudio(canvas: Canvas) {
@@ -80,6 +101,8 @@ class FFTBandView @JvmOverloads constructor(
         var currentFrequencyBandLimitIndex = 0
         fftPath.reset()
         fftPath.moveTo(0f, height.toFloat())
+        eqPath.reset()
+        eqPath.moveTo(0f, height.toFloat())
         var currentAverage = 0f
 
         // Iterate over the entire FFT result array
@@ -89,7 +112,8 @@ class FFTBandView @JvmOverloads constructor(
             // We divide the bands by frequency.
             // Check until which index we need to stop for the current band
             val nextLimitAtPosition =
-                floor(FREQUENCY_BAND_LIMITS[currentFrequencyBandLimitIndex] / 20_000.toFloat() * size).toInt().coerceAtMost(size - 1)
+                floor(FREQUENCY_BAND_LIMITS[currentFrequencyBandLimitIndex] / 20_000.toFloat() * size).toInt()
+                    .coerceAtMost(size - 1)
 
             synchronized(fft) {
                 // Here we iterate within this single band
@@ -159,8 +183,19 @@ class FFTBandView @JvmOverloads constructor(
                 top
             )
 
+            val relEqValue = equalizerValues[
+                BANDS_TO_EQ_MAP[currentFrequencyBandLimitIndex]!!.toInt()] /
+                    AirohaDeviceManager.MAX_EQUALIZER_SETTING
+
+            eqPath.lineTo(
+                (leftX + rightX) / 2,
+                height - barHeight * (1 + relEqValue * 1.5f)
+            )
+
             currentFrequencyBandLimitIndex++
         }
+
+        canvas.drawPath(eqPath, paintEqPath)
 
         canvas.drawPath(fftPath, paintPath)
 
@@ -173,16 +208,18 @@ class FFTBandView @JvmOverloads constructor(
         )
     }
 
-    fun onFFT(fft: FloatArray) {
+    fun onFFT(fft: FloatArray, equalizerValues: FloatArray) {
         synchronized(this.fft) {
             if (startedAt == 0L) {
                 startedAt = System.currentTimeMillis()
             }
-            // The resulting graph is mirrored, because we are using real numbers instead of imaginary
+            // The resulting graph is mirrored, because we are using real numbers instead of
+            // imaginary.
             // Explanations: https://www.mathworks.com/matlabcentral/answers/338408-why-are-fft-diagrams-mirrored
             // https://dsp.stackexchange.com/questions/4825/why-is-the-fft-mirrored/4827#4827
             // So what we do here, we only check the left part of the graph.
             arraycopy(fft, 2, this.fft, 0, size)
+            arraycopy(equalizerValues, 0, this.equalizerValues, 0, this.equalizerValues.size)
             // By calling invalidate, we request a redraw.
             invalidate()
         }
@@ -191,7 +228,8 @@ class FFTBandView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         drawAudio(canvas)
-        // By calling invalidate, we request a redraw. See https://github.com/dzolnai/ExoVisualizer/issues/2
+        // By calling invalidate, we request a redraw. See
+        // https://github.com/dzolnai/ExoVisualizer/issues/2
         invalidate()
     }
 }

@@ -98,14 +98,15 @@ data class AirohaBatteryLevel(
 class AirohaDeviceManager @Inject constructor(@ApplicationContext private val context: Context) {
 
     companion object {
-        const val maxEqualizerSettings = 12
+        // Maximum value that can be set in the equalizer, either positive or negative.
+        const val MAX_EQUALIZER_SETTING = 12
+        // Frequencies that can be set in the equalizer.
+        val EQ_FREQUENCIES =
+            floatArrayOf(200f, 280f, 400f, 550f, 770f, 1000f, 2000f, 4000f, 8000f, 16000f)
     }
 
     private val tag = AirohaDeviceManager::class.java.simpleName
     private val _airohaDeviceConnector = AirohaSDK.getInst().airohaDeviceConnector
-    // Frequencies that can be set in the equalizer.
-    private val _eqFrequencies =
-        floatArrayOf(200f, 280f, 400f, 550f, 770f, 1000f, 2000f, 4000f, 8000f, 16000f)
     // Equalizer gains that are currently being set. _equalizerState is the current state, and will
     // get updated if these are set successfully.
     private val _airohaDeviceState = MutableStateFlow(AirohaDeviceState.DISCONNECTED)
@@ -568,9 +569,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
         _targetGains = gains
         val params = LinkedList<AirohaEQPayload.EQIDParam>()
-        for (i in _eqFrequencies.indices) {
+        for (i in EQ_FREQUENCIES.indices) {
             val bandInfo = AirohaEQPayload.EQIDParam()
-            val freq: Float = _eqFrequencies[i]
+            val freq: Float = EQ_FREQUENCIES[i]
             val gain = gains[i]
             val q = 2f
 
