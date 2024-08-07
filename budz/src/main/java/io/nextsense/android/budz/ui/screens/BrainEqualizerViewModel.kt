@@ -105,6 +105,7 @@ class BrainEqualizerViewModel @Inject constructor(
     }
 
     private fun modulateVolume() {
+        _modulatedVolume = true
         val currentVolume = _audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
         val targetVolume = currentVolume + _maxMusicVolume / 5
         _audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVolume, 0)
