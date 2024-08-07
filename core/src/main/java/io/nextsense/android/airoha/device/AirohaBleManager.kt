@@ -199,10 +199,10 @@ class AirohaBleManager(
 
     fun getEegSamplingRate(): Float {
         if (leftEarDevice != null) {
-            return leftEarDevice!!.settings.eegSamplingRate
+            return leftEarDevice?.settings?.eegSamplingRate ?: 1000f
         } else if (rightEarDevice != null) {
-            return rightEarDevice!!.settings.eegSamplingRate
+            return rightEarDevice?.settings?.eegSamplingRate ?: 1000f
         }
-        return 0f
+        return 1000f
     }
 }

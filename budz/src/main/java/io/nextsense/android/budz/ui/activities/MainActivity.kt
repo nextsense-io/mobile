@@ -147,7 +147,13 @@ class MainActivity : ComponentActivity() {
                                 navController.popBackStack()
                             },
                             onGoToCheckBrainSignal = {
-                                navController.navigate(Routes.BrainEqualizer)
+                                navController.navigate(Routes.BrainEqualizer) {
+                                    popUpTo(Routes.Home) {
+                                        inclusive = false
+                                    }
+                                }
+                                navController.clearBackStack<Routes.Home>()
+//                                 navController.navigate(Routes.BrainEqualizer)
                             }
                         )
                     }

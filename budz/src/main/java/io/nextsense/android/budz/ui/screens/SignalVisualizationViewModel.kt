@@ -77,6 +77,9 @@ open class SignalVisualizationViewModel @Inject constructor(
             airohaDeviceManager.streamingState.collect { streamingState ->
                 when (streamingState) {
                     StreamingState.STARTED -> {
+                        if (_stopping || _dataRefreshJob != null) {
+                            return@collect
+                        }
                         _dataToChartSamplingRateRatio = airohaDeviceManager.getEegSamplingRate() /
                                 _chartSamplingRate
                         _dataRefreshJob?.cancel()
@@ -106,7 +109,22 @@ open class SignalVisualizationViewModel @Inject constructor(
     fun startStreaming() {
         _stopping = false
         viewModelScope.launch {
-            airohaDeviceManager.startBleStreaming()
+            val started = airohaDeviceManager.startBleStreaming()
+            if (started) {
+                _dataToChartSamplingRateRatio = airohaDeviceManager.getEegSamplingRate() /
+                        _chartSamplingRate
+                _dataRefreshJob?.cancel()
+                _dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
+                    while (true) {
+                        val startTime = System.currentTimeMillis()
+                        updateSignalCharts()
+                        val runtimeMs = System.currentTimeMillis() - startTime
+                        Log.d(tag, "Update time: " +
+                                "${System.currentTimeMillis() - startTime}")
+                        delay(Math.max(_refreshInterval.inWholeMilliseconds - runtimeMs, 0))
+                    }
+                }
+            }
         }
     }
 
