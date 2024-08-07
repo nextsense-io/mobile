@@ -43,6 +43,7 @@ class HomeViewModel @Inject constructor(
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeState())
+    private val _forceStreaming = true
 
     val uiState: StateFlow<HomeState> = _uiState.asStateFlow()
 
@@ -55,6 +56,10 @@ class HomeViewModel @Inject constructor(
                     AirohaDeviceState.READY -> {
                         _uiState.value = _uiState.value.copy(connected = true)
                         getBatteryLevels()
+                        if (_forceStreaming) {
+                            airohaDeviceManager.setForceStream(true)
+                            airohaDeviceManager.startBleStreaming()
+                        }
                     }
                     AirohaDeviceState.CONNECTED_AIROHA -> {}
                     AirohaDeviceState.DISCONNECTED -> {

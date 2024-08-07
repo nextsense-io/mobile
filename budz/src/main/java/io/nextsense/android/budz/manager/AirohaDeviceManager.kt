@@ -124,6 +124,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private var _deviceInfo: AirohaDevice? = null
     private var _targetGains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
     private var _connectionTimeoutTimer: Timer? = null
+    private var _forceStreaming = false
 
     val airohaDeviceState: StateFlow<AirohaDeviceState> = _airohaDeviceState.asStateFlow()
     val streamingState: StateFlow<StreamingState> = _streamingState.asStateFlow()
@@ -257,6 +258,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     }
 
     fun destroy() {
+        setForceStream(false)
         airohaDeviceStateJob.cancel()
         LocalBroadcastManager.getInstance(context).unregisterReceiver(broadCastReceiver)
         AirohaSDK.getInst().airohaDeviceConnector.unregisterConnectionListener(
@@ -267,6 +269,10 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             _budzServiceBound = false
             _budzServiceConnection = null
         }
+    }
+
+    fun setForceStream(force: Boolean) {
+        _forceStreaming = force
     }
 
     fun connectDevice(timeout: Duration? = null) {
@@ -307,10 +313,6 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     }
 
     suspend fun startBleStreaming() : Boolean {
-        if (_airohaDeviceState.value != AirohaDeviceState.READY) {
-            return false
-        }
-
         if (streamingState.value == StreamingState.STARTED) {
             return true
         }
@@ -341,6 +343,10 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 //            } catch (timeout: TimeoutCancellationException) {
 //                Log.i(tag, "Timeout waiting for streaming to start, starting again.")
 //            }
+        }
+
+        if (_airohaDeviceState.value != AirohaDeviceState.READY) {
+            return false
         }
 
         _streamingState.value = StreamingState.STARTING
@@ -391,6 +397,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     }
 
     suspend fun stopBleStreaming() : Boolean {
+        if (_forceStreaming) {
+            return false
+        }
         if (!_budzServiceBound || _budzService == null ||
             (_streamingState.value != StreamingState.STARTED &&
                     _streamingState.value != StreamingState.STARTING)) {
