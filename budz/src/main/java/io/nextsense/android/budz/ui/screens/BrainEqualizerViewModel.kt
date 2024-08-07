@@ -151,13 +151,13 @@ class BrainEqualizerViewModel @Inject constructor(
         }
         _bassEqLevel = if (alphaBetaRatio >= alphaBetaRatioMidPoint) {
             (((alphaBetaRatio - alphaBetaRatioMidPoint) * 2).coerceAtMost(1.0) *
-                    AirohaDeviceManager.maxEqualizerSettings).toFloat()
+                    AirohaDeviceManager.MAX_EQUALIZER_SETTING).toFloat()
         } else {
             0F
         }
         _trebleEqLevel = if (alphaBetaRatio < alphaBetaRatioMidPoint) {
             ((alphaBetaRatioMidPoint - alphaBetaRatio).coerceAtMost(1.0) *
-                    AirohaDeviceManager.maxEqualizerSettings).toFloat()
+                    AirohaDeviceManager.MAX_EQUALIZER_SETTING).toFloat()
         } else {
             0F
         }
@@ -167,10 +167,12 @@ class BrainEqualizerViewModel @Inject constructor(
             modulateVolume()
         }
 
-        airohaDeviceManager.changeEqualizer(floatArrayOf(
+        val newEqualizerLevels = floatArrayOf(
             _bassEqLevel, _bassEqLevel,  // Bass is 300 hertz and lower.
             0f, 0f, 0f, 0f, 0f,  // Mid is 300 hertz to 4 khz
-            _trebleEqLevel, _trebleEqLevel, _trebleEqLevel))  // Treble is 4 khz and higher.
+            _trebleEqLevel, _trebleEqLevel, _trebleEqLevel)  // Treble is 4 khz and higher.
+        fftAudioProcessor.setEqualizerValues(newEqualizerLevels)
+        airohaDeviceManager.changeEqualizer(newEqualizerLevels)
     }
 
     private fun initPlayer() {
