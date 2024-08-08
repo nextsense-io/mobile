@@ -14,6 +14,7 @@ import io.nextsense.android.budz.manager.AudioSampleType
 import io.nextsense.android.budz.manager.AuthRepository
 import io.nextsense.android.budz.manager.SoundsManager
 import io.nextsense.android.budz.model.UsersRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -44,11 +45,12 @@ class HomeViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(HomeState())
     private val _forceStreaming = true
+    private var _monitoringJob: Job? = null
 
     val uiState: StateFlow<HomeState> = _uiState.asStateFlow()
 
-    init {
-        viewModelScope.launch {
+    fun startMonitoring() {
+        _monitoringJob = viewModelScope.launch {
             airohaDeviceManager.airohaDeviceState.collect { deviceState ->
                 Log.d("HomeViewModel", "deviceState: $deviceState")
                 when (deviceState) {
@@ -70,6 +72,10 @@ class HomeViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun stopMonitoring() {
+        _monitoringJob?.cancel()
     }
 
     fun stopConnection() {
