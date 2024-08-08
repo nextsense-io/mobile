@@ -21,6 +21,7 @@ public class CsvWriter {
   private OutputStream csvOutputStream;
   private BufferedWriter writer;
   private int sampleNumber = 1;
+  private boolean warnedNoWriter = false;
 
   public CsvWriter(Context context) {
     ContextWrapper contextWrapper = new ContextWrapper(context);
@@ -38,6 +39,7 @@ public class CsvWriter {
       RotatingFileLogger.get().logi(TAG, "Creating csv file: " + csvFile.getAbsolutePath());
       csvOutputStream = new FileOutputStream(csvFile);
       writer = new BufferedWriter(new OutputStreamWriter(csvOutputStream));
+      warnedNoWriter = false;
     } catch (FileNotFoundException e) {
       RotatingFileLogger.get().logw(TAG, "Failed to create: " + e.getMessage());
       return;
@@ -113,7 +115,10 @@ public class CsvWriter {
 
   private void appendLine(String line) {
     if (writer == null) {
-      RotatingFileLogger.get().logw(TAG, "csv file not initialized");
+      if (!warnedNoWriter) {
+        warnedNoWriter = true;
+        RotatingFileLogger.get().logw(TAG, "csv file not initialized");
+      }
       return;
     }
     try {

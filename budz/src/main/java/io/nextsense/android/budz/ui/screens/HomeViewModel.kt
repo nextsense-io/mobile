@@ -80,6 +80,12 @@ class HomeViewModel @Inject constructor(
     fun connectDeviceIfNeeded() {
         if (uiState.value.connected) {
             getBatteryLevels()
+            if (_forceStreaming) {
+                airohaDeviceManager.setForceStream(true)
+                viewModelScope.launch {
+                    airohaDeviceManager.startBleStreaming()
+                }
+            }
             return
         }
         connectBoundDevice()
