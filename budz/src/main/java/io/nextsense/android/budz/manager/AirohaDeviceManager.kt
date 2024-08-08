@@ -396,9 +396,12 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         return false
     }
 
-    suspend fun stopBleStreaming() : Boolean {
-        if (_forceStreaming) {
+    suspend fun stopBleStreaming(overrideForceStreaming: Boolean = false) : Boolean {
+        if (_forceStreaming && !overrideForceStreaming) {
             return false
+        }
+        if (overrideForceStreaming) {
+            setForceStream(false)
         }
         if (!_budzServiceBound || _budzService == null ||
             (_streamingState.value != StreamingState.STARTED &&

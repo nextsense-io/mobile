@@ -48,7 +48,8 @@ public class MauiDataParser {
   private static final int IMU_SAMPLE_SIZE_BYTES = 12;
   // Firmware should send its uptime at least once per 5 seconds.
   private static final Duration FIRST_KEY_TIMESTAMP_TIMEOUT = Duration.ofSeconds(16);
-  private static final boolean VERBOSE_LOGGING = true;
+  private static final boolean VERBOSE_LOGGING = false;
+  private static final boolean SEMI_VERBOSE_LOGGING = true;
 
   private final LocalSessionManager localSessionManager;
 
@@ -150,6 +151,10 @@ public class MauiDataParser {
           DeviceLocation.RIGHT_EARBUD;
 
       long packageNum = Integer.toUnsignedLong(budzDataPacket.getPackageNum());
+      if (SEMI_VERBOSE_LOGGING && packageNum % 100 == 0) {
+        Log.d(TAG, "Proto length: " + leftProtoLength + ", values length: " + values.length +
+            ", device name: " + deviceName);
+      }
       long skipped = getSkippedPackets(packageNum);
       if (skipped != 0) {
         // TODO(eric): Replace the content of the field with number of eeg packets sent instead of
