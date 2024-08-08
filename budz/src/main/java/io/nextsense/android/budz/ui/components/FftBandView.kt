@@ -12,6 +12,7 @@ import androidx.media3.common.util.UnstableApi
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.FFTAudioProcessor
 import java.lang.System.arraycopy
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.pow
@@ -39,13 +40,13 @@ class FFTBandView @JvmOverloads constructor(
             FREQUENCY_BAND_LIMITS.indices.associateWith { bandIndex ->
                 val band = FREQUENCY_BAND_LIMITS[bandIndex]
                 AirohaDeviceManager.EQ_FREQUENCIES.indices.minByOrNull {
-                    eqIndex -> kotlin.math.abs(AirohaDeviceManager.EQ_FREQUENCIES[eqIndex] - band) }
+                    eqIndex -> abs(AirohaDeviceManager.EQ_FREQUENCIES[eqIndex] - band) }
             }
     }
 
     private val bands = FREQUENCY_BAND_LIMITS.size
     private val size = FFTAudioProcessor.SAMPLE_SIZE / 2
-    private val maxConst = 2_000 // Reference max value for accum magnitude
+    private val maxConst = 10_000  // Reference max value for accum magnitude
     private val fft: FloatArray = FloatArray(size)
     private val equalizerValues: FloatArray = floatArrayOf(0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f)
     private val paintBandsFill = Paint()
