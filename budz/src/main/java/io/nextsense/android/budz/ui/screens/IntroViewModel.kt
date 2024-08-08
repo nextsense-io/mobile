@@ -89,4 +89,12 @@ class IntroViewModel @Inject constructor(
             airohaDeviceManager.stopConnectingDevice()
         }
     }
+
+    fun skipToHome(onGoToHome: () -> Unit) {
+        viewModelScope.launch {
+            setOnboardingCompleted().let {
+                onGoToHome()
+            }
+        }
+    }
 }
