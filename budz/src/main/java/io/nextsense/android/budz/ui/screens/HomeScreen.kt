@@ -83,7 +83,9 @@ fun HomeScreen(
 
     LifecycleStartEffect(true) {
         homeViewModel.connectDeviceIfNeeded()
+        homeViewModel.startMonitoring()
         onStopOrDispose {
+            homeViewModel.stopMonitoring()
             // TODO(eric): Should not do this if streaming data?
             homeViewModel.stopConnection()
         }
