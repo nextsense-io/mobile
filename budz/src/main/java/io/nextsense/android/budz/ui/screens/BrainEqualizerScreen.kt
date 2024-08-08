@@ -30,10 +30,13 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.util.UnstableApi
 import io.nextsense.android.budz.R
+import io.nextsense.android.budz.ui.components.AmplitudeDirectionDropDown
+import io.nextsense.android.budz.ui.components.AmplitudeDropDown
 import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.ExoVisualizer
 import io.nextsense.android.budz.ui.components.KeepScreenOn
 import io.nextsense.android.budz.ui.components.SignalLineChart
+import io.nextsense.android.budz.ui.components.SimpleButton
 import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 import io.nextsense.android.budz.ui.components.WideButton
@@ -83,16 +86,18 @@ fun BrainEqualizerScreen(
     onGoToFitGuide: () -> Unit,
 ) {
     KeepScreenOn()
-    val brainEqualizerUiState by brainEqualizerViewModel.signalUiState.collectAsState()
+    val signalUiState by brainEqualizerViewModel.signalUiState.collectAsState()
+    val uiState by brainEqualizerViewModel.uiState.collectAsState()
 
     LifecycleResumeEffect(true) {
-        brainEqualizerViewModel.startPlayer()
+        brainEqualizerViewModel.resumePlayer()
         onPauseOrDispose {
             brainEqualizerViewModel.pausePlayer()
         }
     }
 
     LifecycleStartEffect(true) {
+        brainEqualizerViewModel.startPlayer()
         brainEqualizerViewModel.startStreaming()
         brainEqualizerViewModel.startModulatingSound()
         onStopOrDispose {
@@ -137,15 +142,66 @@ fun BrainEqualizerScreen(
                 Spacer(modifier = Modifier.height(20.dp))
                 ExoVisualizer(brainEqualizerViewModel.fftAudioProcessor)
                 Spacer(modifier = Modifier.height(20.dp))
-                WideButton(
-                    name = stringResource(R.string.label_instructions_and_tips),
-                    onClick = { onGoToFitGuide() })
-                Spacer(modifier = Modifier.height(20.dp))
+                if (!uiState.alphaModulationDemoMode) {
+                    WideButton(
+                        name = stringResource(R.string.label_instructions_and_tips),
+                        onClick = { onGoToFitGuide() })
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
                 BrainSignal(brainEqualizerViewModel)
                 Spacer(modifier = Modifier.height(20.dp))
-                WideButton(
-                    name = stringResource(R.string.label_fit_guide),
-                    onClick = { onGoToConnectionGuide() })
+                if (!uiState.alphaModulationDemoMode) {
+                    WideButton(
+                        name = stringResource(R.string.label_fit_guide),
+                        onClick = { onGoToConnectionGuide() })
+                } else {
+                    Row {
+                        Text(
+                            text = "Alpha Target",
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        AmplitudeDropDown(options = arrayListOf(1, 2, 3),
+                            currentSelection = uiState.alphaAmplitudeTarget,
+                            enabled = !uiState.modulatingStarted,
+                            onChange = {amplitude ->
+                                brainEqualizerViewModel.changeAmplitudeTarget(amplitude)
+                            })
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row {
+                        Text(
+                            text = "Direction",
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        AmplitudeDirectionDropDown(options =
+                            arrayListOf(AlphaDirection.UP.toString(),
+                                AlphaDirection.DOWN.toString()),
+                            currentSelection = uiState.alphaDirection.toString(),
+                            enabled = !uiState.modulatingStarted,
+                            onChange = {direction ->
+                                brainEqualizerViewModel.changeAlphaDirection(
+                                    AlphaDirection.fromString(direction))
+                            })
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row {
+                        Text(
+                            text = "Alpha: ${"%.3f".format(uiState.alpha ?: 0.0)}",
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                        Spacer(modifier = Modifier.width(60.dp))
+                        SimpleButton(name = if (uiState.modulatingStarted) "Stop" else "Start",
+                            enabled = uiState.alpha != null,
+                            onClick = {
+                                brainEqualizerViewModel.startStopModulating()
+                            })
+                    }
+                }
             }
         }
     }

@@ -7,6 +7,7 @@ import io.nextsense.android.algo.signal.Filters
 import io.nextsense.android.algo.signal.Sampling
 import io.nextsense.android.algo.signal.WaveletArtifactRejection
 import io.nextsense.android.base.devices.maui.MauiDataParser
+import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.abs
@@ -16,9 +17,11 @@ import kotlin.time.Duration.Companion.seconds
 class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDeviceManager) {
     private val tag = SignalStateManager::class.simpleName
     private val defaultCalculationEpoch = 36.seconds
-    private var _bandPowers: MutableMap<Int, MutableMap<Band, Double>> = mutableMapOf()
+    private val _bandPowers: MutableMap<Int, MutableMap<Band, Double>> = mutableMapOf()
     private val _calculationEpoch = defaultCalculationEpoch
     private var _powerLineFrequency: Int? = null
+
+    val bandPowersState = MutableStateFlow(_bandPowers)
 
     val powerLineFrequency: Int?
         get() = _powerLineFrequency
@@ -27,6 +30,7 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
         if (bands.isEmpty()) {
             return mapOf()
         }
+        val newBandPowers: MutableMap<Int, MutableMap<Band, Double>> = mutableMapOf()
         for (channel in arrayOf(MauiDataParser.CHANNEL_LEFT, MauiDataParser.CHANNEL_RIGHT)) {
             val data = airohaDeviceManager.getChannelData(
                 localSessionId = null,
@@ -38,12 +42,13 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
             }
             val eegSamplingRate = airohaDeviceManager.getEegSamplingRate().toInt()
             val powerLineFrequency = getPowerLineFrequency(data, eegSamplingRate) ?: return mapOf()
-            _bandPowers[channel] = BandPowerAnalysis.getBandPowersBF(
+            newBandPowers[channel] = BandPowerAnalysis.getBandPowersBF(
                 data, eegSamplingRate, bands,
                 powerLineFrequency.toDouble()
             )
         }
-        return _bandPowers
+        bandPowersState.value = newBandPowers
+        return newBandPowers
     }
 
     fun prepareVisualizedData(data: List<Float>, filtered: Boolean, removeArtifacts: Boolean,

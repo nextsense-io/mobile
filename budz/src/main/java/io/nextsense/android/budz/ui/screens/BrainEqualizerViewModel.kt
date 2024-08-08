@@ -36,11 +36,32 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
+enum class AlphaDirection(val direction: String) {
+    UP("Up"), DOWN("Down");
+
+    companion object {
+        fun fromString(value: String): AlphaDirection {
+            return values().first { it.name == value }
+        }
+    }
+
+    override fun toString(): String {
+        return name
+    }
+}
+
 data class BrainEqualizerState(
     val connected: Boolean = false,
+    val alphaModulationDemoMode: Boolean = true,
+    val alphaAmplitudeTarget: Int = 1,
+    val alphaDirection: AlphaDirection = AlphaDirection.UP,
+    val alpha: Float? = null,
+    val alphaSnapshot: Float? = null,
+    val modulatingStarted: Boolean = false
 )
 
 private const val alphaBetaRatioMidPoint = 1F
+private const val alphaStepSize = 0.1F
 
 @UnstableApi
 @HiltViewModel
@@ -65,16 +86,33 @@ class BrainEqualizerViewModel @Inject constructor(
     val uiState: StateFlow<BrainEqualizerState> = _uiState.asStateFlow()
     val fftAudioProcessor = FFTAudioProcessor()
 
-    init {
-        initPlayer()
+    fun changeAmplitudeTarget(amplitude: Int) {
+        _uiState.value = _uiState.value.copy(alphaAmplitudeTarget = amplitude)
+    }
+
+    fun changeAlphaDirection(direction: AlphaDirection) {
+        _uiState.value = _uiState.value.copy(alphaDirection = direction)
+    }
+
+    fun startStopModulating() {
+        if (_uiState.value.modulatingStarted) {
+            _uiState.value = _uiState.value.copy(modulatingStarted = false, alphaSnapshot = null)
+        } else {
+            _uiState.value = _uiState.value.copy(modulatingStarted = true,
+                alphaSnapshot = _uiState.value.alpha)
+        }
     }
 
     fun startPlayer() {
-        _player.playWhenReady = true
+        initPlayer()
     }
 
     fun pausePlayer() {
         _player.playWhenReady = false
+    }
+
+    fun resumePlayer() {
+        _player.playWhenReady = true
     }
 
     fun stopPlayer() {
@@ -124,6 +162,19 @@ class BrainEqualizerViewModel @Inject constructor(
             return
         }
         var alphaBetaRatio: Double? = null
+
+        val gotLeft = bandPowers.containsKey(1)
+        val gotRight = bandPowers.containsKey(2)
+        if (!gotLeft && !gotRight) {
+            return
+        }
+        if (gotLeft) {
+            _uiState.value = _uiState.value.copy(
+                alpha = bandPowers[1]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat())
+        } else {
+            _uiState.value = _uiState.value.copy(
+                alpha = bandPowers[2]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat())
+        }
         for (channelBandPowers in bandPowers.entries) {
             val channel = if (channelBandPowers.key == 1) "Left" else "Right"
 
@@ -149,30 +200,52 @@ class BrainEqualizerViewModel @Inject constructor(
         if (alphaBetaRatio == null) {
             return
         }
-        _bassEqLevel = if (alphaBetaRatio >= alphaBetaRatioMidPoint) {
-            (((alphaBetaRatio - alphaBetaRatioMidPoint) * 2).coerceAtMost(1.0) *
-                    AirohaDeviceManager.MAX_EQUALIZER_SETTING).toFloat()
-        } else {
-            0F
-        }
-        _trebleEqLevel = if (alphaBetaRatio < alphaBetaRatioMidPoint) {
-            ((alphaBetaRatioMidPoint - alphaBetaRatio).coerceAtMost(1.0) *
-                    AirohaDeviceManager.MAX_EQUALIZER_SETTING).toFloat()
-        } else {
-            0F
-        }
-        Log.d(tag, "Bass: $_bassEqLevel Treble: $_trebleEqLevel")
 
-        if (!_modulatedVolume && _bassEqLevel > 0F) {
-            modulateVolume()
-        }
+        if (uiState.value.modulatingStarted) {
+            if (uiState.value.alphaModulationDemoMode) {
+                if (uiState.value.alpha == null || uiState.value.alphaSnapshot == null) {
+                    return
+                }
+                val amplitudeChangeTarget = uiState.value.alphaAmplitudeTarget * alphaStepSize
+                var amplitudeChange = 0F
+                if (uiState.value.alphaDirection == AlphaDirection.UP) {
+                    amplitudeChange = (uiState.value.alpha!! - (uiState.value.alphaSnapshot!! +
+                            amplitudeChangeTarget)).coerceAtLeast(0F)
+                } else if (uiState.value.alphaDirection == AlphaDirection.DOWN) {
+                    amplitudeChange = ((uiState.value.alphaSnapshot!! - amplitudeChangeTarget) -
+                            uiState.value.alpha!!).coerceAtLeast(0F)
+                }
+                _bassEqLevel = (amplitudeChange * AirohaDeviceManager.MAX_EQUALIZER_SETTING * 6).
+                    coerceAtMost(AirohaDeviceManager.MAX_EQUALIZER_SETTING.toFloat())
+                _trebleEqLevel = 0F
+            } else {
+                _bassEqLevel = if (alphaBetaRatio >= alphaBetaRatioMidPoint) {
+                    (((alphaBetaRatio - alphaBetaRatioMidPoint) * 2).coerceAtMost(1.0) *
+                            AirohaDeviceManager.MAX_EQUALIZER_SETTING).toFloat()
+                } else {
+                    0F
+                }
+                _trebleEqLevel = if (alphaBetaRatio < alphaBetaRatioMidPoint) {
+                    ((alphaBetaRatioMidPoint - alphaBetaRatio).coerceAtMost(1.0) *
+                            AirohaDeviceManager.MAX_EQUALIZER_SETTING).toFloat()
+                } else {
+                    0F
+                }
+            }
+            Log.d(tag, "Bass: $_bassEqLevel Treble: $_trebleEqLevel")
 
-        val newEqualizerLevels = floatArrayOf(
-            _bassEqLevel, _bassEqLevel,  // Bass is 300 hertz and lower.
-            0f, 0f, 0f, 0f, 0f,  // Mid is 300 hertz to 4 khz
-            _trebleEqLevel, _trebleEqLevel, _trebleEqLevel)  // Treble is 4 khz and higher.
-        fftAudioProcessor.setEqualizerValues(newEqualizerLevels)
-        airohaDeviceManager.changeEqualizer(newEqualizerLevels)
+            if (!_modulatedVolume && _bassEqLevel > 0F) {
+                modulateVolume()
+            }
+
+            val newEqualizerLevels = floatArrayOf(
+                _bassEqLevel, _bassEqLevel,  // Bass is 300 hertz and lower.
+                0f, 0f, 0f, 0f, 0f,  // Mid is 300 hertz to 4 khz
+                _trebleEqLevel, _trebleEqLevel, _trebleEqLevel
+            )  // Treble is 4 khz and higher.
+            fftAudioProcessor.setEqualizerValues(newEqualizerLevels)
+            airohaDeviceManager.changeEqualizer(newEqualizerLevels)
+        }
     }
 
     private fun initPlayer() {
