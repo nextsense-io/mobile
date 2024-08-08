@@ -200,6 +200,13 @@ fun BrainEqualizerScreen(
                             onClick = {
                                 brainEqualizerViewModel.startStopModulating()
                             })
+                        Spacer(modifier = Modifier.width(20.dp))
+                        if (uiState.alphaSnapshot != null)
+                            Text(
+                                text = "%.3f".format(uiState.alphaSnapshot),
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                        )
                     }
                 }
             }
