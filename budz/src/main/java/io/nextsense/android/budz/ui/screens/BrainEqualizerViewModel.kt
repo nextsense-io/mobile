@@ -216,16 +216,7 @@ class BrainEqualizerViewModel @Inject constructor(
         }
         _player = ExoPlayer.Builder(context, renderersFactory).build()
         _player.repeatMode = ExoPlayer.REPEAT_MODE_ALL
-
-        // Online radio:
-        // val uri = Uri.parse("https://listen.livestreamingservice.com/181-xsoundtrax_128k.mp3")
-        val uri = RawResourceDataSource.buildRawResourceUri(R.raw.fan_sound)
-        // 1 kHz test sound:
-        // val uri = Uri.parse("https://www.mediacollege.com/audio/tone/files/1kHz_44100Hz_16bit_05sec.mp3")
-        // 10 kHz test sound:
-        // val uri = Uri.parse("https://www.mediacollege.com/audio/tone/files/10kHz_44100Hz_16bit_05sec.mp3")
-        // Sweep from 20 to 20 kHz
-        // val uri = Uri.parse("https://www.churchsoundcheck.com/CSC_sweep_20-20k.wav")
+        val uri = RawResourceDataSource.buildRawResourceUri(R.raw.skyline_loop)
         val mediaSource = ProgressiveMediaSource.Factory(
             DefaultDataSourceFactory(context, "ExoVisualizer")
         ).createMediaSource(MediaItem.Builder().setUri(uri).build())
