@@ -200,8 +200,10 @@ fun GetYouConnectedPage() {
 
 @Composable
 fun IntroPagerItem(page: Int) {
-    Surface(modifier = Modifier.fillMaxWidth().fillMaxHeight(0.85f)
-            .background(MaterialTheme.colorScheme.background)) {
+    Surface(modifier = Modifier
+        .fillMaxWidth()
+        .fillMaxHeight(0.80f)
+        .background(MaterialTheme.colorScheme.background)) {
         when (page) {
             0 -> HowToFallAsleepPage()
             1 -> HowToStayAsleepPage()
@@ -238,7 +240,9 @@ fun IntroScreen(
         }
     }
 
-    Box(modifier  = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    Box(modifier  = Modifier
+        .fillMaxSize()
+        .background(MaterialTheme.colorScheme.background)) {
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start
@@ -252,12 +256,17 @@ fun IntroScreen(
             ) { pageNumber ->
                 IntroPagerItem(page = pageNumber)
             }
-            Row(Modifier.height(50.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            Row(
+                Modifier
+                    .height(50.dp)
+                    .fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 repeat(pageCount) { iteration ->
                     val color = if (pagerState.currentPage == iteration) Color.White else
                         Color.White.copy(alpha = 0.5f)
                     val modifier = if (pagerState.currentPage == iteration) {
-                        Modifier.width(40.dp).height(20.dp)
+                        Modifier
+                            .width(40.dp)
+                            .height(20.dp)
                     } else {
                         Modifier.size(20.dp)
                     }
@@ -287,6 +296,17 @@ fun IntroScreen(
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(pagerState.currentPage + 1)
                             }
+                        })
+                }
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+            if (pagerState.currentPage == pageCount - 1) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    SimpleButton(name = "Continue without connecting",
+                        bigFont = true,
+                        enabled = !introUiState.connecting,
+                        onClick = {
+                            introViewModel.skipToHome(onGoToHome)
                         })
                 }
             }
