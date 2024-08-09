@@ -40,13 +40,14 @@ open class SignalVisualizationViewModel @Inject constructor(
     // You want at least 17 seconds at 1000 hertz with artifact rejection enabled so it cuts at
     // 16384 samples.
     private val _totalDataDuration = _shownDuration + _filterCropDuration
-    private val _refreshInterval = 100.milliseconds
     private val _chartSamplingRate = 100F
     private val _uiState = MutableStateFlow(SignalVisualizationState())
     private var _dataRefreshJob: Job? = null
     private var _stopping = false
     private var _eegSamplingRate = 0F
     private var _dataToChartSamplingRateRatio = 1F
+
+    protected val refreshInterval = 100.milliseconds
 
     val leftEarChartModelProducer = CartesianChartModelProducer()
     val rightEarChartModelProducer = CartesianChartModelProducer()
@@ -88,9 +89,10 @@ open class SignalVisualizationViewModel @Inject constructor(
                                 val startTime = System.currentTimeMillis()
                                 updateSignalCharts()
                                 val runtimeMs = System.currentTimeMillis() - startTime
-                                Log.d(tag, "Update time: " +
-                                        "${System.currentTimeMillis() - startTime}")
-                                delay(Math.max(_refreshInterval.inWholeMilliseconds - runtimeMs, 0))
+                                if (runtimeMs > refreshInterval.inWholeMilliseconds) {
+                                    Log.d(tag, "Slow update time: $runtimeMs")
+                                }
+                                delay(Math.max(refreshInterval.inWholeMilliseconds - runtimeMs, 0))
                             }
                         }
                     }
@@ -119,9 +121,10 @@ open class SignalVisualizationViewModel @Inject constructor(
                         val startTime = System.currentTimeMillis()
                         updateSignalCharts()
                         val runtimeMs = System.currentTimeMillis() - startTime
-                        Log.d(tag, "Update time: " +
-                                "${System.currentTimeMillis() - startTime}")
-                        delay(Math.max(_refreshInterval.inWholeMilliseconds - runtimeMs, 0))
+                        if (runtimeMs > refreshInterval.inWholeMilliseconds) {
+                            Log.d(tag, "Slow update time: $runtimeMs")
+                        }
+                        delay(Math.max(refreshInterval.inWholeMilliseconds - runtimeMs, 0))
                     }
                 }
             }
