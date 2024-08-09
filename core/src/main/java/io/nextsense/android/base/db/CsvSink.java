@@ -30,7 +30,7 @@ import io.objectbox.reactive.DataSubscription;
 public class CsvSink {
 
   private static final String TAG = CsvSink.class.getSimpleName();
-  private static final Duration RSSI_CHECK_INTERVAL = Duration.ofSeconds(1);
+  private static final Duration RSSI_CHECK_INTERVAL = Duration.ofSeconds(5);
 
   private final ObjectBoxDatabase objectBoxDatabase;
   private final BleCentralManagerProxy bleCentralManagerProxy;

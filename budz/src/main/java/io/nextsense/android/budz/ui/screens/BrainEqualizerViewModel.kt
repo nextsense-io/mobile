@@ -128,8 +128,9 @@ class BrainEqualizerViewModel @Inject constructor(
                     val startTime = System.currentTimeMillis()
                     updateSoundModulation()
                     val runtimeMs = System.currentTimeMillis() - startTime
-                    Log.d(tag, "Update time: " +
-                            "${System.currentTimeMillis() - startTime}")
+                    if (runtimeMs > refreshInterval.inWholeMilliseconds) {
+                        Log.d(tag, "Slow update time: $runtimeMs")
+                    }
                     delay(Math.max(_soundModulationInterval.inWholeMilliseconds - runtimeMs, 0))
                 }
             }
