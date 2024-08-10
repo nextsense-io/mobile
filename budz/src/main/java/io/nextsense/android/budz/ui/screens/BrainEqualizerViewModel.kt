@@ -97,6 +97,12 @@ class BrainEqualizerViewModel @Inject constructor(
     fun startStopModulating() {
         if (_uiState.value.modulatingStarted) {
             _uiState.value = _uiState.value.copy(modulatingStarted = false, alphaSnapshot = null)
+            _modulatedVolume = false
+            _bassEqLevel = 0f
+            _trebleEqLevel = 0f
+            modulateVolume(increase = false)
+            applySoundModulation(_bassEqLevel, _trebleEqLevel)
+
         } else {
             _uiState.value = _uiState.value.copy(modulatingStarted = true,
                 alphaSnapshot = _uiState.value.alpha)
@@ -143,10 +149,23 @@ class BrainEqualizerViewModel @Inject constructor(
         }
     }
 
-    private fun modulateVolume() {
-        _modulatedVolume = true
+    private fun applySoundModulation(bassLevel: Float, trebleLevel: Float) {
+        val eqArray = floatArrayOf(
+            bassLevel, bassLevel,  // Bass is 300 hertz and lower.
+            0f, 0f, 0f, 0f, 0f,  // Mid is 300 hertz to 4 khz
+            _trebleEqLevel, _trebleEqLevel, _trebleEqLevel  // Treble is 4 khz and higher.
+        )
+        fftAudioProcessor.setEqualizerValues(eqArray)
+        airohaDeviceManager.changeEqualizer(eqArray)
+    }
+
+    private fun modulateVolume(increase: Boolean = true) {
         val currentVolume = _audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-        val targetVolume = currentVolume + _maxMusicVolume / 5
+        val targetVolume = if (increase) {
+            currentVolume + _maxMusicVolume / 4
+        } else {
+            currentVolume - _maxMusicVolume / 4
+        }
         _audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, targetVolume, 0)
     }
 
@@ -241,15 +260,10 @@ class BrainEqualizerViewModel @Inject constructor(
 
             if (!_modulatedVolume && _bassEqLevel > 0F) {
                 modulateVolume()
+                _modulatedVolume = true
             }
 
-            val newEqualizerLevels = floatArrayOf(
-                _bassEqLevel, _bassEqLevel,  // Bass is 300 hertz and lower.
-                0f, 0f, 0f, 0f, 0f,  // Mid is 300 hertz to 4 khz
-                _trebleEqLevel, _trebleEqLevel, _trebleEqLevel
-            )  // Treble is 4 khz and higher.
-            fftAudioProcessor.setEqualizerValues(newEqualizerLevels)
-            airohaDeviceManager.changeEqualizer(newEqualizerLevels)
+            applySoundModulation(_bassEqLevel, _trebleEqLevel)
         }
     }
 
