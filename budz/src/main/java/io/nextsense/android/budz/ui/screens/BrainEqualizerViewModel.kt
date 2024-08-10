@@ -61,7 +61,7 @@ data class BrainEqualizerState(
 )
 
 private const val alphaBetaRatioMidPoint = 1F
-private const val alphaStepSize = 0.1F
+private const val alphaStepSize = 0.02F
 
 @UnstableApi
 @HiltViewModel
@@ -154,11 +154,11 @@ class BrainEqualizerViewModel @Inject constructor(
         if (airohaDeviceManager.streamingState.value != StreamingState.STARTED) {
             return
         }
-//        val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.DELTA,
-//            BandPowerAnalysis.Band.THETA, BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA,
-//            BandPowerAnalysis.Band.GAMMA))
-        val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.ALPHA,
-            BandPowerAnalysis.Band.BETA))
+        val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.DELTA,
+            BandPowerAnalysis.Band.THETA, BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA,
+            BandPowerAnalysis.Band.GAMMA))
+//        val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.ALPHA,
+//            BandPowerAnalysis.Band.BETA))
         if (bandPowers.isEmpty()) {
             return
         }
@@ -169,27 +169,31 @@ class BrainEqualizerViewModel @Inject constructor(
         if (!gotLeft && !gotRight) {
             return
         }
-        if (gotLeft) {
+        if (gotRight) {
             _uiState.value = _uiState.value.copy(
-                alpha = bandPowers[1]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat())
+                alpha = bandPowers[2]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let { it?.times(
+                    100
+                ) ?: 0F })
         } else {
             _uiState.value = _uiState.value.copy(
-                alpha = bandPowers[2]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat())
+                alpha = bandPowers[1]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let { it?.times(
+                    100
+                ) ?: 0F })
         }
         for (channelBandPowers in bandPowers.entries) {
             val channel = if (channelBandPowers.key == 1) "Left" else "Right"
 
             Log.d(tag,
-//                "$channel Delta: ${"%.3f".format(channelBandPowers.value[
-//                BandPowerAnalysis.Band.DELTA])}" +
-//                " $channel Theta: ${"%.3f".format(channelBandPowers.value[
-//                    BandPowerAnalysis.Band.THETA])}" +
+                "$channel Delta: ${"%.3f".format(channelBandPowers.value[
+                BandPowerAnalysis.Band.DELTA])}" +
+                " $channel Theta: ${"%.3f".format(channelBandPowers.value[
+                    BandPowerAnalysis.Band.THETA])}" +
                 " $channel Alpha: ${"%.3f".format(channelBandPowers.value[
                     BandPowerAnalysis.Band.ALPHA])}" +
                 " $channel Beta: ${"%.3f".format(channelBandPowers.value[
-                    BandPowerAnalysis.Band.BETA])}"  // +
-//                " $channel Gamma: ${"%.3f".format(channelBandPowers.value[
-//                    BandPowerAnalysis.Band.GAMMA])}"
+                    BandPowerAnalysis.Band.BETA])}" +
+                " $channel Gamma: ${"%.3f".format(channelBandPowers.value[
+                    BandPowerAnalysis.Band.GAMMA])}"
             )
 
             if (alphaBetaRatio == null) {
