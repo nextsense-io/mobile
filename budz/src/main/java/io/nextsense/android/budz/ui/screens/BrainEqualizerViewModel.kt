@@ -63,7 +63,7 @@ data class BrainEqualizerState(
 )
 
 private const val alphaBetaRatioMidPoint = 1F
-private const val alphaStepSize = 0.02F
+private const val alphaStepSize = 2F
 
 @UnstableApi
 @HiltViewModel
