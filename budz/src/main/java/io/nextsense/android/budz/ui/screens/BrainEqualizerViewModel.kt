@@ -53,7 +53,7 @@ enum class AlphaDirection(val direction: String) {
 data class BrainEqualizerState(
     val connected: Boolean = false,
     val alphaModulationDemoMode: Boolean = true,
-    val alphaAmplitudeTarget: Int = 1,
+    val alphaAmplitudeTarget: Int = 2,
     val alphaDirection: AlphaDirection = AlphaDirection.UP,
     val alpha: Float? = null,
     val alphaSnapshot: Float? = null,
@@ -100,11 +100,13 @@ class BrainEqualizerViewModel @Inject constructor(
         if (_uiState.value.modulatingStarted) {
             _uiState.value = _uiState.value.copy(modulatingStarted = false, alphaSnapshot = null,
                 alphaModulationSuccess = false, alphaModulationDifference = null)
-            _modulatedVolume = false
             _bassEqLevel = 0f
             _trebleEqLevel = 0f
-            modulateVolume(increase = false)
-            applySoundModulation(_bassEqLevel, _trebleEqLevel)
+            if (_modulatedVolume) {
+                modulateVolume(increase = false)
+                applySoundModulation(_bassEqLevel, _trebleEqLevel)
+                _modulatedVolume = false
+            }
 
         } else {
             _uiState.value = _uiState.value.copy(modulatingStarted = true,
@@ -234,7 +236,7 @@ class BrainEqualizerViewModel @Inject constructor(
                 if (uiState.value.alpha == null || uiState.value.alphaSnapshot == null) {
                     return
                 }
-                val amplitudeChangeTarget = uiState.value.alphaAmplitudeTarget * alphaStepSize
+                val amplitudeChangeTarget = uiState.value.alphaAmplitudeTarget
                 if (uiState.value.alphaDirection == AlphaDirection.UP) {
                     amplitudeChange = (uiState.value.alpha!! - (uiState.value.alphaSnapshot!! +
                             amplitudeChangeTarget)).coerceAtLeast(0F)
@@ -265,7 +267,8 @@ class BrainEqualizerViewModel @Inject constructor(
                 modulateVolume()
                 _modulatedVolume = true
                 _uiState.value = _uiState.value.copy(alphaModulationSuccess = true,
-                    alphaModulationDifference = amplitudeChange)
+                    alphaModulationDifference =
+                    _uiState.value.alpha!! - _uiState.value.alphaSnapshot!!)
             }
 
             applySoundModulation(_bassEqLevel, _trebleEqLevel)
