@@ -190,7 +190,7 @@ fun BrainEqualizerScreen(
                     Spacer(modifier = Modifier.height(20.dp))
                     Row {
                         Text(
-                            text = "Alpha: ${"%.3f".format(uiState.alpha ?: 0.0)}",
+                            text = "Alpha: ${"%.1f".format(uiState.alpha ?: 0.0)}",
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
@@ -203,7 +203,7 @@ fun BrainEqualizerScreen(
                         Spacer(modifier = Modifier.width(20.dp))
                         if (uiState.alphaSnapshot != null)
                             Text(
-                                text = "%.3f".format(uiState.alphaSnapshot),
+                                text = "%.1".format(uiState.alphaSnapshot),
                                 style = MaterialTheme.typography.labelLarge,
                                 modifier = Modifier.align(Alignment.CenterVertically)
                         )
