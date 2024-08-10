@@ -40,6 +40,7 @@ import io.nextsense.android.budz.ui.components.SimpleButton
 import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 import io.nextsense.android.budz.ui.components.WideButton
+import io.nextsense.android.budz.ui.theme.BudzColor
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -162,12 +163,20 @@ fun BrainEqualizerScreen(
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Spacer(modifier = Modifier.width(20.dp))
-                        AmplitudeDropDown(options = arrayListOf(1, 2, 3),
+                        AmplitudeDropDown(options = arrayListOf(2, 4, 6),
                             currentSelection = uiState.alphaAmplitudeTarget,
                             enabled = !uiState.modulatingStarted,
                             onChange = {amplitude ->
                                 brainEqualizerViewModel.changeAmplitudeTarget(amplitude)
                             })
+                        Spacer(modifier = Modifier.width(20.dp))
+                        if (uiState.alphaModulationSuccess)
+                            Text(
+                                text = "SUCCESS",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    color = BudzColor.green),
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     Row {
@@ -186,6 +195,14 @@ fun BrainEqualizerScreen(
                                 brainEqualizerViewModel.changeAlphaDirection(
                                     AlphaDirection.fromString(direction))
                             })
+                        Spacer(modifier = Modifier.width(20.dp))
+                        if (uiState.alphaModulationDifference != null)
+                            Text(
+                                text = "Diff: ${"%.1f".format(uiState.alphaModulationDifference)}",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    color = BudzColor.green),
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     Row {
