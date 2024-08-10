@@ -57,7 +57,9 @@ data class BrainEqualizerState(
     val alphaDirection: AlphaDirection = AlphaDirection.UP,
     val alpha: Float? = null,
     val alphaSnapshot: Float? = null,
-    val modulatingStarted: Boolean = false
+    val modulatingStarted: Boolean = false,
+    val alphaModulationSuccess: Boolean = false,
+    val alphaModulationDifference: Float? = null
 )
 
 private const val alphaBetaRatioMidPoint = 1F
@@ -96,7 +98,8 @@ class BrainEqualizerViewModel @Inject constructor(
 
     fun startStopModulating() {
         if (_uiState.value.modulatingStarted) {
-            _uiState.value = _uiState.value.copy(modulatingStarted = false, alphaSnapshot = null)
+            _uiState.value = _uiState.value.copy(modulatingStarted = false, alphaSnapshot = null,
+                alphaModulationSuccess = false, alphaModulationDifference = null)
             _modulatedVolume = false
             _bassEqLevel = 0f
             _trebleEqLevel = 0f
@@ -226,12 +229,12 @@ class BrainEqualizerViewModel @Inject constructor(
         }
 
         if (uiState.value.modulatingStarted) {
+            var amplitudeChange = 0F
             if (uiState.value.alphaModulationDemoMode) {
                 if (uiState.value.alpha == null || uiState.value.alphaSnapshot == null) {
                     return
                 }
                 val amplitudeChangeTarget = uiState.value.alphaAmplitudeTarget * alphaStepSize
-                var amplitudeChange = 0F
                 if (uiState.value.alphaDirection == AlphaDirection.UP) {
                     amplitudeChange = (uiState.value.alpha!! - (uiState.value.alphaSnapshot!! +
                             amplitudeChangeTarget)).coerceAtLeast(0F)
@@ -261,6 +264,8 @@ class BrainEqualizerViewModel @Inject constructor(
             if (!_modulatedVolume && _bassEqLevel > 0F) {
                 modulateVolume()
                 _modulatedVolume = true
+                _uiState.value = _uiState.value.copy(alphaModulationSuccess = true,
+                    alphaModulationDifference = amplitudeChange)
             }
 
             applySoundModulation(_bassEqLevel, _trebleEqLevel)
