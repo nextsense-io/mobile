@@ -452,6 +452,13 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         return false
     }
 
+    fun runSleepWakeInference(data: List<Float>) {
+        if (!_budzServiceBound || _budzService == null) {
+            return
+        }
+        _budzService?.sleepWakeModel?.doInference(data, getEegSamplingRate())
+    }
+
     private fun startRaceBleStreamingFlow() = callbackFlow<AirohaStatusCode> {
         val airohaDeviceListener = object : AirohaDeviceListener {
             override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
