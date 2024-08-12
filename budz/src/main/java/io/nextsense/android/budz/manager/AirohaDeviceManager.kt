@@ -264,11 +264,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         AirohaSDK.getInst().airohaDeviceConnector.unregisterConnectionListener(
             _airohaConnectionListener)
         disconnectDevice()
-        if (_budzServiceBound && _budzServiceConnection != null) {
-            context.unbindService(_budzServiceConnection!!)
-            _budzServiceBound = false
-            _budzServiceConnection = null
-        }
+        stopService()
     }
 
     fun setForceStream(force: Boolean) {
