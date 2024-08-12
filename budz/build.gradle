@@ -113,7 +113,7 @@ dependencies {
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
     implementation "com.patrykandpatrick.vico:compose:2.0.0-alpha.24"
     implementation 'com.github.paramsen:noise:2.0.0'
-    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
+    implementation "com.github.PhilJay:MPAndroidChart:v3.1.0"
     implementation "com.github.stevdza-san:OneTapCompose:1.0.12"
     implementation "com.google.accompanist:accompanist-permissions:0.34.0"
     implementation "com.google.android.gms:play-services-auth:21.1.1"

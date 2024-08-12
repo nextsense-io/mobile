@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.algo.tflite.SleepWakeModel
 import io.nextsense.android.base.devices.maui.MauiDataParser
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AirohaDeviceState
@@ -46,6 +47,7 @@ open class SignalVisualizationViewModel @Inject constructor(
     private var _stopping = false
     private var _eegSamplingRate = 0F
     private var _dataToChartSamplingRateRatio = 1F
+    private var _lastSleepWakeInference = 0L
 
     protected val refreshInterval = 100.milliseconds
 
@@ -169,11 +171,18 @@ open class SignalVisualizationViewModel @Inject constructor(
         }
 
         // TODO(eric): move somewhere else
-//        if (gotLeftEarData) {
-//            airohaDeviceManager.runSleepWakeInference(leftEarData!!)
-//        } else {
-//            airohaDeviceManager.runSleepWakeInference(rightEarData!!)
-//        }
+        if (System.currentTimeMillis() - _lastSleepWakeInference >
+                SleepWakeModel.INPUT_LENGTH.toMillis()) {
+            _lastSleepWakeInference = System.currentTimeMillis()
+            if (gotLeftEarData) {
+                val sleeping = airohaDeviceManager.runSleepWakeInference(leftEarData!!)
+                Log.i(tag, "Left Ear Sleeping: $sleeping")
+            }
+            if (gotRightEarData) {
+                val sleeping = airohaDeviceManager.runSleepWakeInference(rightEarData!!)
+                Log.i(tag, "Right Ear Sleeping: $sleeping")
+            }
+        }
 
         // Update the power line frequency.
         if (_uiState.value.powerLineFrequency == null &&

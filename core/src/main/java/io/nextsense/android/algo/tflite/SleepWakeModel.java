@@ -10,9 +10,7 @@ import com.google.common.primitives.Doubles;
 import org.apache.commons.math3.complex.Complex;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import brainflow.WindowOperations;
 import io.nextsense.android.algo.signal.Sampling;
@@ -28,22 +26,56 @@ public class SleepWakeModel extends BaseModel {
   private static final String TAG = SleepWakeModel.class.getSimpleName();
   private static final String MODEL_NAME = "sleep_wake.tflite";
   private static final int NUM_SLEEP_STAGING_CATEGORIES = 2;
+  private static final int FFT_LENGTH = 1024;
+  private static final int NOISE_FLOOR_DB = -90;
 
   public SleepWakeModel(Context context) {
     super(context, MODEL_NAME);
   }
 
+  static void normalizeSpectrogram(float[] features, int noiseFloorDb, boolean clipAtOne) {
+    final float noise = -1.0f * noiseFloorDb;
+    final float noiseScale = 1.0f / (noise + 12.0f);
+
+    for (int ix = 0; ix < features.length; ix++) {
+      float f = features[ix];
+      if (f < 1e-30f) {
+        f = 1e-30f;
+      }
+      f = (float) Math.log10(f);
+      f *= 10.0f; // scale by 10
+      f += noise;
+      f *= noiseScale;
+      // clip again
+      if (f < 0.0f) {
+        f = 0.0f;
+      } else if (f > 1.0f && clipAtOne) {
+        f = 1.0f;
+      }
+      features[ix] = f;
+    }
+  }
+
   private static double[] calculatePsd(double[] data) {
     try {
-      int fftLength = DataFilter.get_nearest_power_of_two(data.length);
+      int fftLength = FFT_LENGTH;
+      if (fftLength > data.length) {
+        double[] paddedData = new double[fftLength];
+        System.arraycopy(data, 0, paddedData, 0, data.length);
+        data = paddedData;
+      }
 
       // Perform FFT
       Complex[] fftResult = DataFilter.perform_fft(data, 0, fftLength, WindowOperations.NO_WINDOW);
 
       // Calculate the power spectrum
-      double[] powerSpectrum = new double[fftLength / 2];
-      for (int i = 0; i < fftLength / 2; i++) {
-        powerSpectrum[i] = Math.pow(fftResult[2 * i].abs(), 2);
+      double[] powerSpectrum = new double[(fftLength / 2) + 1];
+      double meanRatio = 1.0 / fftLength;
+      for (int i = 0; i < fftResult.length; i++) {
+        powerSpectrum[i] = meanRatio * Math.pow(fftResult[i].abs(), 2);
+        if (powerSpectrum[i] < 1e-10) {
+          powerSpectrum[i] = 1e-10;
+        }
       }
       return powerSpectrum;
     } catch (BrainFlowError error) {
@@ -52,15 +84,23 @@ public class SleepWakeModel extends BaseModel {
     }
   }
 
-  public Map<Integer, Object> doInference(List<Float> data, float samplingRate) throws
+  public synchronized Boolean doInference(List<Float> data, float samplingRate) throws
       IllegalArgumentException {
-    int numEpochs = (int)Math.round(Math.floor(
-        (data.size() / samplingRate) / FRAME_STRIDE.getSeconds() / 2) - 1);
-    if (numEpochs < 1) {
+    float frameStrideSeconds = FRAME_STRIDE.toMillis() / 1000f;
+    float frameLengthSeconds = FRAME_LENGTH.toMillis() / 1000f;
+    int numEpochs = (int) Math.floor(
+        ((data.size() / samplingRate) / frameStrideSeconds) - 1);
+    if (numEpochs < 7) {
       RotatingFileLogger.get().logw(TAG,
           "Input data is too small. Minimum input length is " + INPUT_LENGTH.getSeconds() +
               " seconds.");
-      return new HashMap<>();
+      return null;
+    }
+
+    // Use last 400 samples if more were sent.
+    if (numEpochs > 7) {
+      data = data.subList(data.size() - (int)(INPUT_LENGTH.toSeconds() * samplingRate),
+          data.size());
     }
 
     double[] downsampledData = Sampling.downsampleBF(Doubles.toArray(data), samplingRate,
@@ -70,9 +110,12 @@ public class SleepWakeModel extends BaseModel {
     // FRAME_STRIDE.
     double[] powerSpectrum = new double[0];
     for (int i = 0; i < numEpochs; i++) {
-      int startIdx = (int) (i * FRAME_STRIDE.getSeconds() * MODEL_INPUT_FREQUENCY);
-      int endIdx = (int) ((i * FRAME_STRIDE.getSeconds() + FRAME_LENGTH.getSeconds()) *
+      int startIdx = (int) (i * frameStrideSeconds * MODEL_INPUT_FREQUENCY);
+      int endIdx = (int) ((i * frameStrideSeconds + frameLengthSeconds) *
           MODEL_INPUT_FREQUENCY);
+      if (endIdx > downsampledData.length) {
+        break;
+      }
       double[] frameData = new double[endIdx - startIdx];
       System.arraycopy(downsampledData, startIdx, frameData, 0, frameData.length);
       double[] framePowerSpectrum = calculatePsd(frameData);
@@ -85,13 +128,11 @@ public class SleepWakeModel extends BaseModel {
       powerSpectrumFloat[i] = (float) (powerSpectrum[i]);
     }
 
-    // Run the inference.
-    float[][] inferenceOutput = new float[numEpochs][NUM_SLEEP_STAGING_CATEGORIES];
-    // Map<Integer, Object> inferenceOutputs = new HashMap<>();
-    getTflite().run(powerSpectrumFloat, inferenceOutput);
+    normalizeSpectrogram(powerSpectrumFloat, NOISE_FLOOR_DB, false);
 
-    // Put the backing array in the result that is returned instead of the buffer.
-    // mapOfIndicesToOutputs.put(POSTPROCESSING_CONFIDENCES_INDEX, confidencesOutput.array());
-    return new HashMap<>();
+    // Run the inference.
+    float[][] inferenceOutput = new float[1][NUM_SLEEP_STAGING_CATEGORIES];
+    getTflite().run(powerSpectrumFloat, inferenceOutput);
+    return inferenceOutput[0][0] > inferenceOutput[0][1];
   }
 }
