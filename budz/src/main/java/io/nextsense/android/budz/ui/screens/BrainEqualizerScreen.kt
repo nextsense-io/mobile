@@ -34,6 +34,7 @@ import io.nextsense.android.budz.ui.components.AmplitudeDirectionDropDown
 import io.nextsense.android.budz.ui.components.AmplitudeDropDown
 import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.ExoVisualizer
+import io.nextsense.android.budz.ui.components.HorizontalBandPowerBarChart
 import io.nextsense.android.budz.ui.components.KeepScreenOn
 import io.nextsense.android.budz.ui.components.SignalLineChart
 import io.nextsense.android.budz.ui.components.SimpleButton
@@ -73,6 +74,29 @@ fun BrainSignal(viewModel: BrainEqualizerViewModel) {
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 SignalLineChart(viewModel.rightEarChartModelProducer, viewModel.dataPointsSize)
+            }
+        }
+    }
+}
+
+@Composable
+@OptIn(UnstableApi::class)
+fun AlphaCharts(uiState: BrainEqualizerState) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = "Alpha Brain Power",
+            style = MaterialTheme.typography.labelLarge,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        BudzCard {
+            Row {
+                HorizontalBandPowerBarChart(
+                    xData = listOf(0F, 1F),
+                    yData = listOf(uiState.leftAlpha ?: 0F, uiState.rightAlpha ?: 0F),
+                    dataLabels = listOf("Left", "Right"),
+                    modifier = Modifier.height(120.dp)
+                )
             }
         }
     }
@@ -149,7 +173,7 @@ fun BrainEqualizerScreen(
                         onClick = { onGoToFitGuide() })
                     Spacer(modifier = Modifier.height(20.dp))
                 }
-                BrainSignal(brainEqualizerViewModel)
+                AlphaCharts(uiState)
                 Spacer(modifier = Modifier.height(20.dp))
                 if (!uiState.alphaModulationDemoMode) {
                     WideButton(

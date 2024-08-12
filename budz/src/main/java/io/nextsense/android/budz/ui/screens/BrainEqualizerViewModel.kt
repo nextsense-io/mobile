@@ -55,6 +55,8 @@ data class BrainEqualizerState(
     val alphaModulationDemoMode: Boolean = true,
     val alphaAmplitudeTarget: Int = 2,
     val alphaDirection: AlphaDirection = AlphaDirection.UP,
+    val leftAlpha: Float? = null,
+    val rightAlpha: Float? = null,
     val alpha: Float? = null,
     val alphaSnapshot: Float? = null,
     val modulatingStarted: Boolean = false,
@@ -193,17 +195,24 @@ class BrainEqualizerViewModel @Inject constructor(
         if (!gotLeft && !gotRight) {
             return
         }
+        var leftAlpha: Float? = null
+        var rightAlpha: Float? = null
+        var alphaValue: Float? = null
         if (gotRight) {
-            _uiState.value = _uiState.value.copy(
-                alpha = bandPowers[2]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let { it?.times(
-                    100
-                ) ?: 0F })
-        } else {
-            _uiState.value = _uiState.value.copy(
-                alpha = bandPowers[1]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let { it?.times(
-                    100
-                ) ?: 0F })
+            rightAlpha = bandPowers[2]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let {
+                it?.times(100) ?: 0F }
+            alphaValue = rightAlpha
         }
+        if (gotLeft) {
+            leftAlpha = bandPowers[1]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let {
+                it?.times(100) ?: 0F }
+            if (alphaValue == null) {
+                alphaValue = leftAlpha
+            }
+        }
+       _uiState.value = _uiState.value.copy(alpha = alphaValue, leftAlpha = leftAlpha,
+           rightAlpha = rightAlpha)
+
         for (channelBandPowers in bandPowers.entries) {
             val channel = if (channelBandPowers.key == 1) "Left" else "Right"
 
