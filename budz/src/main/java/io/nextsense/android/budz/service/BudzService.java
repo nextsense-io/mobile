@@ -25,6 +25,7 @@ import java.io.IOException;
 import io.nextsense.android.Config;
 import io.nextsense.android.airoha.device.AirohaBleManager;
 import io.nextsense.android.algo.tflite.SleepTransformerModel;
+import io.nextsense.android.algo.tflite.SleepWakeModel;
 import io.nextsense.android.base.DeviceManager;
 import io.nextsense.android.base.DeviceScanner;
 import io.nextsense.android.base.SampleRateCalculator;
@@ -86,6 +87,7 @@ public class BudzService extends Service {
   private Uploader uploader;
   private SampleRateCalculator sampleRateCalculator;
   private SleepTransformerModel sleepTransformerModel;
+  private SleepWakeModel sleepWakeModel;
   private AirohaBleManager airohaBleManager;
   private boolean initialized = false;
 
@@ -162,6 +164,9 @@ public class BudzService extends Service {
   public SleepTransformerModel getSleepTransformerModel() {
     return sleepTransformerModel;
   }
+  public SleepWakeModel getSleepWakeModel() {
+    return sleepWakeModel;
+  }
   public AirohaBleManager getAirohaBleManager() {
     return airohaBleManager;
   }
@@ -224,18 +229,25 @@ public class BudzService extends Service {
             );
       }
     });
-    // Not used at this time.
-    // initializeAlgorithms();
+    initializeAlgorithms();
     initialized = true;
   }
 
   private void initializeAlgorithms() {
-    sleepTransformerModel = new SleepTransformerModel(getApplicationContext());
+//    sleepTransformerModel = new SleepTransformerModel(getApplicationContext());
+//    try {
+//      sleepTransformerModel.loadModel();
+//      RotatingFileLogger.get().logi(TAG, "Initialized sleep transformer model.");
+//    } catch (IOException e) {
+//      RotatingFileLogger.get().loge(TAG, "Failed to load sleep transformer model: " +
+//          e.getMessage());
+//    }
+    sleepWakeModel = new SleepWakeModel(getApplicationContext());
     try {
-      sleepTransformerModel.loadModel();
-      RotatingFileLogger.get().logi(TAG, "Initialized sleep transformer model.");
+      sleepWakeModel.loadModel();
+      RotatingFileLogger.get().logi(TAG, "Initialized sleep wake model.");
     } catch (IOException e) {
-      RotatingFileLogger.get().loge(TAG, "Failed to load sleep transformer model: " +
+      RotatingFileLogger.get().loge(TAG, "Failed to load sleep wake model: " +
           e.getMessage());
     }
   }
@@ -245,6 +257,9 @@ public class BudzService extends Service {
     // sampleRateCalculator.stopListening();
     if (sleepTransformerModel != null) {
       sleepTransformerModel.closeModel();
+    }
+    if (sleepWakeModel != null) {
+      sleepWakeModel.closeModel();
     }
     if (deviceScanner != null) {
       deviceScanner.stopFinding();

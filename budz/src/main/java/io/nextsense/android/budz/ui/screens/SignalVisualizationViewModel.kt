@@ -168,6 +168,13 @@ open class SignalVisualizationViewModel @Inject constructor(
             return
         }
 
+        // TODO(eric): move somewhere else
+//        if (gotLeftEarData) {
+//            airohaDeviceManager.runSleepWakeInference(leftEarData!!)
+//        } else {
+//            airohaDeviceManager.runSleepWakeInference(rightEarData!!)
+//        }
+
         // Update the power line frequency.
         if (_uiState.value.powerLineFrequency == null &&
             signalStateManager.powerLineFrequency != null) {
