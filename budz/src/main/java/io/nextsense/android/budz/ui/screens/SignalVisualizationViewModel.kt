@@ -1,13 +1,18 @@
 package io.nextsense.android.budz.ui.screens
 
+import android.content.Context
 import android.util.Log
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.algo.tflite.SleepWakeModel
 import io.nextsense.android.base.devices.maui.MauiDataParser
+import io.nextsense.android.base.utils.SleepWakeCsvWriter
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AirohaDeviceState
 import io.nextsense.android.budz.manager.SignalStateManager
@@ -19,9 +24,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+
 
 data class SignalVisualizationState(
     val connected: Boolean = false,
@@ -32,6 +43,7 @@ data class SignalVisualizationState(
 
 @HiltViewModel
 open class SignalVisualizationViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val airohaDeviceManager: AirohaDeviceManager,
     private val signalStateManager: SignalStateManager
 ): ViewModel() {
@@ -43,11 +55,15 @@ open class SignalVisualizationViewModel @Inject constructor(
     private val _totalDataDuration = _shownDuration + _filterCropDuration
     private val _chartSamplingRate = 100F
     private val _uiState = MutableStateFlow(SignalVisualizationState())
+    private val csvFileNameFormatter: DateTimeFormatter = DateTimeFormatter
+        .ofPattern("yyyy-MM-dd_hh-mm-ss")
+        .withZone(ZoneId.systemDefault())
     private var _dataRefreshJob: Job? = null
     private var _stopping = false
     private var _eegSamplingRate = 0F
     private var _dataToChartSamplingRateRatio = 1F
     private var _lastSleepWakeInference = 0L
+    private var csvWriter: SleepWakeCsvWriter? = null
 
     protected val refreshInterval = 100.milliseconds
 
@@ -57,6 +73,10 @@ open class SignalVisualizationViewModel @Inject constructor(
     val signalUiState: StateFlow<SignalVisualizationState> = _uiState.asStateFlow()
 
     init {
+        csvWriter = SleepWakeCsvWriter(context)
+        val formattedDateTime =
+            LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).format(csvFileNameFormatter)
+        csvWriter?.initCsvFile("sleep-wake-$formattedDateTime")
         viewModelScope.launch {
             airohaDeviceManager.airohaDeviceState.collect { deviceState ->
                 _uiState.value =
@@ -108,6 +128,10 @@ open class SignalVisualizationViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun closeCsvFile() {
+        csvWriter?.closeCsvFile()
     }
 
     fun startStreaming() {
@@ -174,14 +198,19 @@ open class SignalVisualizationViewModel @Inject constructor(
         if (System.currentTimeMillis() - _lastSleepWakeInference >
                 SleepWakeModel.INPUT_LENGTH.toMillis()) {
             _lastSleepWakeInference = System.currentTimeMillis()
-            if (gotLeftEarData) {
-                val sleeping = airohaDeviceManager.runSleepWakeInference(leftEarData!!)
-                Log.i(tag, "Left Ear Sleeping: $sleeping")
+            val leftEarSleeping = if (gotLeftEarData) {
+                airohaDeviceManager.runSleepWakeInference(leftEarData!!)
+            } else {
+                null
             }
-            if (gotRightEarData) {
-                val sleeping = airohaDeviceManager.runSleepWakeInference(rightEarData!!)
-                Log.i(tag, "Right Ear Sleeping: $sleeping")
+            Log.i(tag, "Left Ear Sleeping: $leftEarSleeping")
+            val rightEarSleeping = if (gotRightEarData) {
+                airohaDeviceManager.runSleepWakeInference(rightEarData!!)
+            } else {
+                null
             }
+            Log.i(tag, "Right Ear Sleeping: $rightEarSleeping")
+            csvWriter?.appendData(leftEarSleeping, rightEarSleeping)
         }
 
         // Update the power line frequency.

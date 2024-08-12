@@ -73,7 +73,7 @@ class BrainEqualizerViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     val airohaDeviceManager: AirohaDeviceManager,
     val signalStateManager: SignalStateManager,
-): SignalVisualizationViewModel(airohaDeviceManager, signalStateManager) {
+): SignalVisualizationViewModel(context, airohaDeviceManager, signalStateManager) {
 
     private val tag = BrainEqualizerViewModel::class.simpleName
     private val _audioManager: AudioManager =
