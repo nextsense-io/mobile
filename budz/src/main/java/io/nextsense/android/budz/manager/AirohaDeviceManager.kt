@@ -452,11 +452,11 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         return false
     }
 
-    fun runSleepWakeInference(data: List<Float>) {
+    fun runSleepWakeInference(data: List<Float>) : Boolean? {
         if (!_budzServiceBound || _budzService == null) {
-            return
+            return null
         }
-        _budzService?.sleepWakeModel?.doInference(data, getEegSamplingRate())
+        return _budzService?.sleepWakeModel?.doInference(data, getEegSamplingRate())
     }
 
     private fun startRaceBleStreamingFlow() = callbackFlow<AirohaStatusCode> {
