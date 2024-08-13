@@ -265,6 +265,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         LocalBroadcastManager.getInstance(context).unregisterReceiver(broadCastReceiver)
         AirohaSDK.getInst().airohaDeviceConnector.unregisterConnectionListener(
             _airohaConnectionListener)
+        _startStreamingJob?.cancel()
         disconnectDevice()
         stopService()
     }
