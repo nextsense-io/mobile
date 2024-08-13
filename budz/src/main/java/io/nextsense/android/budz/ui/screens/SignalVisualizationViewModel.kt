@@ -137,21 +137,19 @@ open class SignalVisualizationViewModel @Inject constructor(
     fun startStreaming() {
         _stopping = false
         viewModelScope.launch {
-            val started = airohaDeviceManager.startBleStreaming()
-            if (started) {
-                _dataToChartSamplingRateRatio = airohaDeviceManager.getEegSamplingRate() /
-                        _chartSamplingRate
-                _dataRefreshJob?.cancel()
-                _dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
-                    while (true) {
-                        val startTime = System.currentTimeMillis()
-                        updateSignalCharts()
-                        val runtimeMs = System.currentTimeMillis() - startTime
-                        if (runtimeMs > refreshInterval.inWholeMilliseconds) {
-                            Log.d(tag, "Slow update time: $runtimeMs")
-                        }
-                        delay(Math.max(refreshInterval.inWholeMilliseconds - runtimeMs, 0))
+        airohaDeviceManager.startBleStreaming()
+            _dataToChartSamplingRateRatio = airohaDeviceManager.getEegSamplingRate() /
+                    _chartSamplingRate
+            _dataRefreshJob?.cancel()
+            _dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
+                while (true) {
+                    val startTime = System.currentTimeMillis()
+                    updateSignalCharts()
+                    val runtimeMs = System.currentTimeMillis() - startTime
+                    if (runtimeMs > refreshInterval.inWholeMilliseconds) {
+                        Log.d(tag, "Slow update time: $runtimeMs")
                     }
+                    delay(Math.max(refreshInterval.inWholeMilliseconds - runtimeMs, 0))
                 }
             }
         }
