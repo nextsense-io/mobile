@@ -3,8 +3,6 @@ package io.nextsense.android.budz.manager
 import io.nextsense.android.algo.signal.BandPowerAnalysis
 import kotlin.math.abs
 
-
-
 enum class Gem(val label: String, val description: String,val delta: Int, val theta: Int,
                val alpha: Int, val beta: Int, val gamma: Int) {
     DIAMOND("Diamond","Ultimate balance, coherence, and focused state", 0, 15, 30, 30, 0),
@@ -48,13 +46,3 @@ object AchievementManager {
         return closestGem ?: Gem.DIAMOND
     }
 }
-fun getClosestAndNextGems(bandPowers: Map<BandPowerAnalysis.Band, Float>): List<Gem> {
-    val ratios = bandPowers.map { it.value }
-    val sortedGems = Gem.values().sortedBy { gem ->
-        val gemRatios = gem.getRatios()
-        abs(ratios[0] - gemRatios[0]) + abs(ratios[1] - gemRatios[1]) + abs(ratios[2] - gemRatios[2])
-    }
-    return if (sortedGems.size > 1) sortedGems.take(2) else listOf(sortedGems.first(), sortedGems.first()) // Ensures at least two are returned
-}
-
-// Usage
