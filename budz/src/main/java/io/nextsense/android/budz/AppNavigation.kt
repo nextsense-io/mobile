@@ -45,4 +45,7 @@ sealed class Routes{
 
     @Serializable
     data object SignalVisualization : Routes()
+
+    @Serializable
+    data object Gems : Routes()
 }
