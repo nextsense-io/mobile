@@ -71,10 +71,13 @@ class GemsViewModel @Inject constructor(
     fun stopCheckingBandPowers() {
         _bandPowersCheckDurationJob?.cancel()
         _bandPowersCheckJob?.cancel()
-        val closestGem = AchievementManager.getClosestGem(
-            _uiState.value.bandPowersList.last()
-        )
-        Log.d(tag, "closestGem: ${closestGem.label}")
+        var closestGem: Gem? = null
+        if (_uiState.value.bandPowersList.isNotEmpty()) {
+            closestGem = AchievementManager.getClosestGem(
+                _uiState.value.bandPowersList.last()
+            )
+            Log.d(tag, "closestGem: ${closestGem.label}")
+        }
         _uiState.value = _uiState.value.copy(testStarted = false, closestGem = closestGem)
     }
 
