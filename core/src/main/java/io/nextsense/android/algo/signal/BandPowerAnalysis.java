@@ -91,7 +91,8 @@ public class BandPowerAnalysis {
       List<Float> data, int samplingRate, double bandStart, double bandEnd,
       Double powerLineFrequency) {
     if (data == null || data.isEmpty()) {
-      throw new IllegalArgumentException("Data list cannot be null or empty.");
+      Log.w(TAG, "Data list cannot be null or empty.");
+      return 0;
     }
     if (data.size() < MIN_SAMPLES_NUMBER) {
       Log.w(TAG, "Data list must contain at least " + MIN_SAMPLES_NUMBER + " samples.");
