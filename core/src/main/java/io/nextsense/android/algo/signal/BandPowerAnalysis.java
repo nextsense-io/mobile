@@ -31,6 +31,9 @@ public class BandPowerAnalysis {
     private final double start;
     private final double end;
 
+
+// Now closestGem and nextClosestGem can be used to update the UI or further logic
+
     Band(double start, double end) {
       this.start = start;
       this.end = end;
