@@ -1,11 +1,14 @@
 package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.algo.signal.BandPowerAnalysis
+import io.nextsense.android.budz.manager.AchievementManager
 import io.nextsense.android.budz.manager.AirohaDeviceManager
+import io.nextsense.android.budz.manager.Gem
 import io.nextsense.android.budz.manager.SignalStateManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -19,7 +22,7 @@ import kotlin.time.Duration.Companion.seconds
 data class GemsState(
     val connected: Boolean = false,
     val testStarted: Boolean = false,
-    val closestGem: String? = null,
+    val closestGem: Gem? = null,
     val bandPowersList: List<Map<BandPowerAnalysis.Band, Float>> = emptyList()
 )
 
@@ -51,7 +54,8 @@ class GemsViewModel @Inject constructor(
     }
 
     private fun startCheckingBandPowers() {
-        _uiState.value = _uiState.value.copy(testStarted = true, bandPowersList = emptyList())
+        _uiState.value = _uiState.value.copy(testStarted = true, bandPowersList = emptyList(),
+            closestGem = null)
         _bandPowersCheckJob = viewModelScope.launch {
             while (true) {
                 updateBandPowers()
@@ -67,7 +71,11 @@ class GemsViewModel @Inject constructor(
     fun stopCheckingBandPowers() {
         _bandPowersCheckDurationJob?.cancel()
         _bandPowersCheckJob?.cancel()
-        _uiState.value = _uiState.value.copy(testStarted = false)
+        val closestGem = AchievementManager.getClosestGem(
+            _uiState.value.bandPowersList.last()
+        )
+        Log.d(tag, "closestGem: ${closestGem.label}")
+        _uiState.value = _uiState.value.copy(testStarted = false, closestGem = closestGem)
     }
 
     private fun updateBandPowers() {

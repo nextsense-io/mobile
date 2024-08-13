@@ -85,6 +85,19 @@ fun GemsScreen(
                     name = if (uiState.testStarted) "Stop Test" else "Start Test",
                     onClick = { viewModel.startStopTest() }
                 )
+                Spacer(modifier = Modifier.height(20.dp))
+                val closestGemLabel = uiState.closestGem ?: ""
+                Text(
+                    text = "Closest Gem: $closestGemLabel",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(16.dp)
+                )
+                if (uiState.closestGem != null)
+                    Text(
+                        text = uiState.closestGem!!.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(16.dp)
+                    )
             }
         }
     }
