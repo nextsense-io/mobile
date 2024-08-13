@@ -127,6 +127,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private var _connectionTimeoutTimer: Timer? = null
     private var _forceStreaming = false
     private var _startStreamingJob: Job? = null
+    private var _stopStreamingJob: Job? = null
 
     val airohaDeviceState: StateFlow<AirohaDeviceState> = _airohaDeviceState.asStateFlow()
     val streamingState: StateFlow<StreamingState> = _streamingState.asStateFlow()
@@ -266,6 +267,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         AirohaSDK.getInst().airohaDeviceConnector.unregisterConnectionListener(
             _airohaConnectionListener)
         _startStreamingJob?.cancel()
+        _stopStreamingJob?.cancel()
         disconnectDevice()
         stopService()
     }
@@ -399,9 +401,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         _startStreamingJob?.join()
     }
 
-    suspend fun stopBleStreaming(overrideForceStreaming: Boolean = false) : Boolean {
+    suspend fun stopBleStreaming(overrideForceStreaming: Boolean = false) {
         if (_forceStreaming && !overrideForceStreaming) {
-            return false
+            return
         }
         if (overrideForceStreaming) {
             setForceStream(false)
@@ -414,17 +416,17 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                 // Already stopped.
                 _airohaDeviceState.value = AirohaDeviceState.READY
             }
-            return true
+            return
         }
 
         if (streamingState.value == StreamingState.STOPPED) {
-            return true
+            return
         }
 
         if (streamingState.value == StreamingState.STOPPING) {
             // Wait until it finished stopping
             val result = streamingState.take(1).last()
-            return result == StreamingState.STOPPED
+            return
         }
 
         if (streamingState.value == StreamingState.STARTING) {
@@ -441,18 +443,20 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             delay(500L)
         }
 
-        _streamingState.value = StreamingState.STOPPING
-        val airohaStatusCode = stopRaceBleStreamingFlow().take(1).last()
-        if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
-            _airohaBleManager?.stopStreaming()
-            _airohaBleManager?.disconnect()
-            _airohaDeviceState.value = AirohaDeviceState.READY
-            _streamingState.value = StreamingState.STOPPED
-            stopService()
-            return true
+        _stopStreamingJob = scope.launch {
+            _streamingState.value = StreamingState.STOPPING
+            val airohaStatusCode = stopRaceBleStreamingFlow().take(1).last()
+            if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
+                _airohaBleManager?.stopStreaming()
+                _airohaBleManager?.disconnect()
+                _airohaDeviceState.value = AirohaDeviceState.READY
+                _streamingState.value = StreamingState.STOPPED
+                stopService()
+                return@launch
+            }
+            _streamingState.value = StreamingState.ERROR
         }
-        _streamingState.value = StreamingState.ERROR
-        return false
+        _stopStreamingJob?.join()
     }
 
     fun runSleepWakeInference(data: List<Float>) : Boolean? {
