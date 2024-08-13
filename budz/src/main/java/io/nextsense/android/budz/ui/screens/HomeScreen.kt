@@ -230,10 +230,10 @@ fun HomeScreen(
                         onClick = { onGoToDeviceSettings() })
                     ActionButton(name = stringResource(R.string.label_button_focus),
                         icon= R.drawable.ic_focus, onClick = { onGoToFocus() })
-                    ActionButton(name = "Sign out", icon= R.drawable.ic_focus, onClick = {
-                            homeViewModel.signOut()
-                            onSignOut()
-                        })
+//                    ActionButton(name = "Sign out", icon= R.drawable.ic_focus, onClick = {
+//                            homeViewModel.signOut()
+//                            onSignOut()
+//                        })
                 }
             }
         }
