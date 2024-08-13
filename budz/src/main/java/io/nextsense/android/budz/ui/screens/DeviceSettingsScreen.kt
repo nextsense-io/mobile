@@ -23,7 +23,8 @@ import io.nextsense.android.budz.ui.components.SimpleButton
 @Composable
 fun DeviceSettingsScreen(
     deviceSettingsViewModel: DeviceSettingsViewModel = hiltViewModel(),
-    onGoToSignalVisualization: () -> Unit
+    onGoToSignalVisualization: () -> Unit,
+    onGoToGems: () -> Unit
 ) {
     val deviceSettingsUiState by deviceSettingsViewModel.uiState.collectAsState()
 
@@ -97,6 +98,9 @@ fun DeviceSettingsScreen(
         })
         SimpleButton(name = "Go to Signal Visualization", onClick = {
             onGoToSignalVisualization()
+        })
+        SimpleButton(name = "Go to Gems", onClick = {
+            onGoToGems()
         })
         Spacer(modifier = Modifier.height(20.dp))
         Text("Current gains: ${deviceSettingsUiState.gains.joinToString(", ")}")

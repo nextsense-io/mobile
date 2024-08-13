@@ -2,8 +2,6 @@ package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -66,6 +64,7 @@ open class SignalVisualizationViewModel @Inject constructor(
     private var csvWriter: SleepWakeCsvWriter? = null
 
     protected val refreshInterval = 100.milliseconds
+    protected var _updateSignalGraph = true
 
     val leftEarChartModelProducer = CartesianChartModelProducer()
     val rightEarChartModelProducer = CartesianChartModelProducer()
@@ -130,6 +129,10 @@ open class SignalVisualizationViewModel @Inject constructor(
         }
     }
 
+    fun setUpdateSignalGraph(updateSignalGraph: Boolean) {
+        _updateSignalGraph = updateSignalGraph
+    }
+
     fun closeCsvFile() {
         csvWriter?.closeCsvFile()
     }
@@ -144,7 +147,9 @@ open class SignalVisualizationViewModel @Inject constructor(
             _dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
                 while (true) {
                     val startTime = System.currentTimeMillis()
-                    updateSignalCharts()
+                    if (_updateSignalGraph) {
+                        updateSignalCharts()
+                    }
                     val runtimeMs = System.currentTimeMillis() - startTime
                     if (runtimeMs > refreshInterval.inWholeMilliseconds) {
                         Log.d(tag, "Slow update time: $runtimeMs")

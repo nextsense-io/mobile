@@ -17,6 +17,7 @@ import io.nextsense.android.budz.ui.screens.CheckConnectionScreen
 import io.nextsense.android.budz.ui.screens.ConnnectedScreen
 import io.nextsense.android.budz.ui.screens.DeviceSettingsScreen
 import io.nextsense.android.budz.ui.screens.FocusScreen
+import io.nextsense.android.budz.ui.screens.GemsScreen
 import io.nextsense.android.budz.ui.screens.HomeScreen
 import io.nextsense.android.budz.ui.screens.IntroScreen
 import io.nextsense.android.budz.ui.screens.LoginScreen
@@ -193,6 +194,9 @@ class MainActivity : ComponentActivity() {
                         DeviceSettingsScreen(
                             onGoToSignalVisualization = {
                                 navController.navigate(Routes.SignalVisualization)
+                            },
+                            onGoToGems = {
+                                navController.navigate(Routes.Gems)
                             }
                         )
                     }
@@ -228,6 +232,9 @@ class MainActivity : ComponentActivity() {
                                 navController.popBackStack()
                             },
                         )
+                    }
+                    composable<Routes.Gems> {
+                        GemsScreen()
                     }
                 }
             }
