@@ -21,8 +21,12 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.algo.signal.BandPowerAnalysis
+import io.nextsense.android.base.devices.maui.MauiDevice
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.manager.AirohaDeviceManager
+import io.nextsense.android.budz.manager.EarEegChannel
+import io.nextsense.android.budz.manager.EarbudsConfigNames
+import io.nextsense.android.budz.manager.EarbudsConfigs
 import io.nextsense.android.budz.manager.FFTAudioProcessor
 import io.nextsense.android.budz.manager.SignalStateManager
 import io.nextsense.android.budz.manager.StreamingState
@@ -55,6 +59,8 @@ data class BrainEqualizerState(
     val alphaModulationDemoMode: Boolean = true,
     val alphaAmplitudeTarget: Int = 2,
     val alphaDirection: AlphaDirection = AlphaDirection.UP,
+    val activeChannel: EarEegChannel = EarbudsConfigs.getEarbudsConfig(
+        EarbudsConfigNames.MAUI_CONFIG.name).channelsConfig[1]!!,
     val leftAlpha: Float? = null,
     val rightAlpha: Float? = null,
     val alpha: Float? = null,
@@ -96,6 +102,20 @@ class BrainEqualizerViewModel @Inject constructor(
 
     fun changeAlphaDirection(direction: AlphaDirection) {
         _uiState.value = _uiState.value.copy(alphaDirection = direction)
+    }
+
+    fun changeActiveChannel(activeChannel: EarEegChannel) {
+        _uiState.value = _uiState.value.copy(activeChannel = activeChannel, alpha =
+        if (activeChannel == EarEegChannel.ELW_ELC) {
+            _uiState.value.leftAlpha
+        } else {
+            _uiState.value.rightAlpha
+        })
+    }
+
+    fun getChannels(): List<String> {
+        return EarbudsConfigs.getEarbudsConfig(MauiDevice.EARBUD_CONFIG).channelsConfig.values
+            .map { it.alias }
     }
 
     fun startStopModulating() {
@@ -198,18 +218,21 @@ class BrainEqualizerViewModel @Inject constructor(
         var leftAlpha: Float? = null
         var rightAlpha: Float? = null
         var alphaValue: Float? = null
-        if (gotRight) {
-            rightAlpha = bandPowers[2]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let {
-                it?.times(100) ?: 0F }
-            alphaValue = rightAlpha
-        }
         if (gotLeft) {
             leftAlpha = bandPowers[1]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let {
                 it?.times(100) ?: 0F }
-            if (alphaValue == null) {
+            if (uiState.value.activeChannel == EarEegChannel.ELW_ELC) {
                 alphaValue = leftAlpha
             }
         }
+        if (gotRight) {
+            rightAlpha = bandPowers[2]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let {
+                it?.times(100) ?: 0F }
+            if (uiState.value.activeChannel == EarEegChannel.ERW_ERC) {
+                alphaValue = rightAlpha
+            }
+        }
+
        _uiState.value = _uiState.value.copy(alpha = alphaValue, leftAlpha = leftAlpha,
            rightAlpha = rightAlpha)
 
