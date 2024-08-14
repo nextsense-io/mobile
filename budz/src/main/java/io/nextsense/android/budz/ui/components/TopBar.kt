@@ -1,6 +1,7 @@
 package io.nextsense.android.budz.ui.components
 
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -37,13 +38,19 @@ fun TopBar(title: String, isAppTitle: Boolean = false,
             titleContentColor = MaterialTheme.colorScheme.tertiary,
         ),
         title = {
-            Text(
-                title,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = if (isAppTitle) MaterialTheme.typography.titleMedium else
-                    MaterialTheme.typography.titleSmall,
-            )
+            if (isAppTitle)
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_tone_title),
+                    contentDescription = null,
+                    modifier = Modifier.width(80.dp),
+                    tint = BudzColor.yellow)
+            else
+                Text(
+                    title,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleSmall,
+                )
         },
         navigationIcon = {
             IconButton(onClick = { onNavigationClick() }) {
