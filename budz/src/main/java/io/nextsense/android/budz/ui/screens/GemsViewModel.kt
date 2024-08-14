@@ -6,8 +6,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.algo.signal.BandPowerAnalysis
+import io.nextsense.android.base.devices.maui.MauiDevice
 import io.nextsense.android.budz.manager.AchievementManager
 import io.nextsense.android.budz.manager.AirohaDeviceManager
+import io.nextsense.android.budz.manager.EarEegChannel
+import io.nextsense.android.budz.manager.EarbudsConfigNames
+import io.nextsense.android.budz.manager.EarbudsConfigs
 import io.nextsense.android.budz.manager.Gem
 import io.nextsense.android.budz.manager.SignalStateManager
 import kotlinx.coroutines.Job
@@ -23,7 +27,9 @@ data class GemsState(
     val connected: Boolean = false,
     val testStarted: Boolean = false,
     val closestGem: Gem? = null,
-    val bandPowersList: List<Map<BandPowerAnalysis.Band, Float>> = emptyList()
+    val bandPowersList: List<Map<BandPowerAnalysis.Band, Float>> = emptyList(),
+    val activeChannel: EarEegChannel = EarbudsConfigs.getEarbudsConfig(
+        EarbudsConfigNames.MAUI_CONFIG.name).channelsConfig[1]!!,
 )
 
 @HiltViewModel
@@ -51,6 +57,15 @@ class GemsViewModel @Inject constructor(
         } else {
             startCheckingBandPowers()
         }
+    }
+
+    fun changeActiveChannel(activeChannel: EarEegChannel) {
+        _uiState.value = _uiState.value.copy(activeChannel = activeChannel)
+    }
+
+    fun getChannels(): List<String> {
+        return EarbudsConfigs.getEarbudsConfig(MauiDevice.EARBUD_CONFIG).channelsConfig.values
+            .map { it.alias }
     }
 
     private fun startCheckingBandPowers() {
@@ -85,18 +100,24 @@ class GemsViewModel @Inject constructor(
         val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.DELTA,
             BandPowerAnalysis.Band.THETA, BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA,
             BandPowerAnalysis.Band.GAMMA))
-        val rightBandPowers = bandPowers[1] ?: return
-        val multiplyFactor = (1 / (rightBandPowers[BandPowerAnalysis.Band.ALPHA]!! +
-                rightBandPowers[BandPowerAnalysis.Band.THETA]!! +
-                rightBandPowers[BandPowerAnalysis.Band.BETA]!!)) * 100
+        val channel = if (uiState.value.activeChannel == EarEegChannel.ELW_ELC) {
+            1
+        } else {
+            2
+        }
+        val channelBandPowers = bandPowers[channel] ?: return
+        Log.d(tag, "${uiState.value.activeChannel.alias} band powers: $channelBandPowers")
+        val multiplyFactor = (1 / (channelBandPowers[BandPowerAnalysis.Band.ALPHA]!! +
+                channelBandPowers[BandPowerAnalysis.Band.THETA]!! +
+                channelBandPowers[BandPowerAnalysis.Band.BETA]!!)) * 100
         _uiState.value = _uiState.value.copy(
             bandPowersList = _uiState.value.bandPowersList.plus(
                 mapOf(
-                    BandPowerAnalysis.Band.THETA to (rightBandPowers[BandPowerAnalysis.Band.THETA]!!
+                    BandPowerAnalysis.Band.THETA to (channelBandPowers[BandPowerAnalysis.Band.THETA]!!
                             * multiplyFactor).toFloat(),
-                    BandPowerAnalysis.Band.ALPHA to (rightBandPowers[BandPowerAnalysis.Band.ALPHA]!!
+                    BandPowerAnalysis.Band.ALPHA to (channelBandPowers[BandPowerAnalysis.Band.ALPHA]!!
                             * multiplyFactor).toFloat(),
-                    BandPowerAnalysis.Band.BETA to (rightBandPowers[BandPowerAnalysis.Band.BETA]!!
+                    BandPowerAnalysis.Band.BETA to (channelBandPowers[BandPowerAnalysis.Band.BETA]!!
                             * multiplyFactor).toFloat(),
                 )
             )
