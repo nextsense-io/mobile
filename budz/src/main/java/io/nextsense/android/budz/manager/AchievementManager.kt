@@ -28,9 +28,10 @@ enum class Gem(val label: String, val description: String,val delta: Int, val th
     }
 
     fun getRatios() : List<Float> {
-        val total = theta + alpha + beta
+        val total = theta + alpha + beta + gamma
         val multiplyRatio = 100F / total
-        return listOf(theta * multiplyRatio, alpha * multiplyRatio, beta * multiplyRatio)
+        return listOf(theta * multiplyRatio, alpha * multiplyRatio, beta * multiplyRatio,
+            gamma * multiplyRatio)
     }
 }
 
@@ -41,7 +42,7 @@ object AchievementManager {
         val closestGem = Gem.values().minByOrNull {
             val gemRatios = it.getRatios()
             abs(ratios[0] - gemRatios[0]) + abs(ratios[1] - gemRatios[1]) +
-                    abs(ratios[2] - gemRatios[2])
+                    abs(ratios[2] - gemRatios[2]) + abs(ratios[3] - gemRatios[3])
         }
         return closestGem ?: Gem.DIAMOND
     }
