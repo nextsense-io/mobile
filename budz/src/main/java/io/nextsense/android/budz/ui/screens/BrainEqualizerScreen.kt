@@ -30,6 +30,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.util.UnstableApi
 import io.nextsense.android.budz.R
+import io.nextsense.android.budz.manager.EarEegChannel
 import io.nextsense.android.budz.ui.components.AmplitudeDirectionDropDown
 import io.nextsense.android.budz.ui.components.AmplitudeDropDown
 import io.nextsense.android.budz.ui.components.BudzCard
@@ -105,30 +106,30 @@ fun AlphaCharts(uiState: BrainEqualizerState) {
 @OptIn(UnstableApi::class)
 @Composable
 fun BrainEqualizerScreen(
-    brainEqualizerViewModel: BrainEqualizerViewModel = hiltViewModel(),
+    viewModel: BrainEqualizerViewModel = hiltViewModel(),
     onGoToCheckConnection: () -> Unit,
     onGoToConnectionGuide: () -> Unit,
     onGoToFitGuide: () -> Unit,
 ) {
     KeepScreenOn()
-    val signalUiState by brainEqualizerViewModel.signalUiState.collectAsState()
-    val uiState by brainEqualizerViewModel.uiState.collectAsState()
+    val signalUiState by viewModel.signalUiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     LifecycleResumeEffect(true) {
-        brainEqualizerViewModel.resumePlayer()
+        viewModel.resumePlayer()
         onPauseOrDispose {
-            brainEqualizerViewModel.pausePlayer()
+            viewModel.pausePlayer()
         }
     }
 
     LifecycleStartEffect(true) {
-        brainEqualizerViewModel.startPlayer()
-        brainEqualizerViewModel.startStreaming()
-        brainEqualizerViewModel.startModulatingSound()
+        viewModel.startPlayer()
+        viewModel.startStreaming()
+        viewModel.startModulatingSound()
         onStopOrDispose {
-            brainEqualizerViewModel.stopModulatingSound()
-            brainEqualizerViewModel.stopStreaming()
-            brainEqualizerViewModel.stopPlayer()
+            viewModel.stopModulatingSound()
+            viewModel.stopStreaming()
+            viewModel.stopPlayer()
         }
     }
 
@@ -165,7 +166,7 @@ fun BrainEqualizerScreen(
                 Text(text = stringResource(R.string.text_tune_your_music_content),
                     style = MaterialTheme.typography.displaySmall)
                 Spacer(modifier = Modifier.height(20.dp))
-                ExoVisualizer(brainEqualizerViewModel.fftAudioProcessor)
+                ExoVisualizer(viewModel.fftAudioProcessor)
                 Spacer(modifier = Modifier.height(20.dp))
                 if (!uiState.alphaModulationDemoMode) {
                     WideButton(
@@ -191,7 +192,7 @@ fun BrainEqualizerScreen(
                             currentSelection = uiState.alphaAmplitudeTarget,
                             enabled = !uiState.modulatingStarted,
                             onChange = {amplitude ->
-                                brainEqualizerViewModel.changeAmplitudeTarget(amplitude)
+                                viewModel.changeAmplitudeTarget(amplitude)
                             })
                         Spacer(modifier = Modifier.width(20.dp))
                         if (uiState.alphaModulationSuccess)
@@ -205,19 +206,17 @@ fun BrainEqualizerScreen(
                     Spacer(modifier = Modifier.height(20.dp))
                     Row {
                         Text(
-                            text = "Direction",
+                            text = "Side",
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Spacer(modifier = Modifier.width(20.dp))
-                        AmplitudeDirectionDropDown(options =
-                            arrayListOf(AlphaDirection.UP.toString(),
-                                AlphaDirection.DOWN.toString()),
-                            currentSelection = uiState.alphaDirection.toString(),
+                        AmplitudeDirectionDropDown(options = viewModel.getChannels(),
+                            currentSelection = uiState.activeChannel.alias,
                             enabled = !uiState.modulatingStarted,
-                            onChange = {direction ->
-                                brainEqualizerViewModel.changeAlphaDirection(
-                                    AlphaDirection.fromString(direction))
+                            onChange = {alias ->
+                                viewModel.changeActiveChannel(
+                                    EarEegChannel.getChannelByAlias(alias))
                             })
                         Spacer(modifier = Modifier.width(20.dp))
                         if (uiState.alphaModulationDifference != null)
@@ -239,7 +238,7 @@ fun BrainEqualizerScreen(
                         SimpleButton(name = if (uiState.modulatingStarted) "Stop" else "Start",
                             enabled = uiState.alpha != null,
                             onClick = {
-                                brainEqualizerViewModel.startStopModulating()
+                                viewModel.startStopModulating()
                             })
                         Spacer(modifier = Modifier.width(20.dp))
                         if (uiState.alphaSnapshot != null)

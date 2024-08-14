@@ -43,6 +43,7 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
   public static final String BLUETOOTH_PREFIX_LEFT = "AH203_L";
   public static final String BLUETOOTH_PREFIX_RIGHT = "AH203_R";
   public static final ByteOrder BYTE_ORDER = ByteOrder.LITTLE_ENDIAN;
+  public static final String EARBUD_CONFIG = "maui_config";
   private static final String TAG = MauiDevice.class.getSimpleName();
   private static final int TARGET_MTU = 512;
   private static final int CHANNELS_NUMBER = 2;
