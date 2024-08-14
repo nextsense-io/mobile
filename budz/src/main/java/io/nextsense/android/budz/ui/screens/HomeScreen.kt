@@ -50,8 +50,17 @@ import io.nextsense.android.budz.ui.theme.BudzColor
 
 @Composable
 fun BatteryLevel(percent: Int?) {
+    val iconId = when {
+        percent == null -> R.drawable.ic_battery_unavailable
+        percent > 90 -> R.drawable.ic_battery_100
+        percent > 70 -> R.drawable.ic_battery_80
+        percent > 50 -> R.drawable.ic_battery_60
+        percent > 30 -> R.drawable.ic_battery_40
+        percent > 10 -> R.drawable.ic_battery_20
+        else -> R.drawable.ic_battery_alert
+    }
     Row {
-        Icon(painter = painterResource(id = R.drawable.ic_battery_40), contentDescription = null)
+        Icon(painter = painterResource(id = iconId), contentDescription = null)
         Spacer(modifier = Modifier.width(4.dp))
         Text(text = percent?.let { "$it%" } ?: "--%",
             style = MaterialTheme.typography.labelMedium)
