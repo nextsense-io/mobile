@@ -128,7 +128,7 @@ dependencies {
     implementation "androidx.compose.ui:ui"
     implementation "androidx.core:core-ktx:1.13.1"
     implementation 'androidx.test:core:1.5.0'
-    implementation 'com.github.weliem:blessed-android:2.4.2'
+    implementation 'com.github.weliem:blessed-android:2.5.0'
     // implementation 'com.github.nextsense-io:blessed-android:2.0.11-nextsense'
     implementation platform('com.google.firebase:firebase-bom:31.1.1')
     implementation 'com.google.firebase:firebase-appcheck-playintegrity'
