@@ -50,6 +50,7 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeState> = _uiState.asStateFlow()
 
     fun startMonitoring() {
+        airohaDeviceManager.initialize()
         _monitoringJob = viewModelScope.launch {
             airohaDeviceManager.airohaDeviceState.collect { deviceState ->
                 Log.d("HomeViewModel", "deviceState: $deviceState")
@@ -81,6 +82,13 @@ class HomeViewModel @Inject constructor(
     fun stopConnection() {
         Log.i("HomeViewModel", "stopConnection")
         airohaDeviceManager.stopConnectingDevice()
+    }
+
+    fun exitApp() {
+        Log.i("HomeViewModel", "exitApp")
+        viewModelScope.launch {
+            airohaDeviceManager.destroy()
+        }
     }
 
     fun connectDeviceIfNeeded() {
@@ -119,9 +127,9 @@ class HomeViewModel @Inject constructor(
 
     fun signOut() {
         viewModelScope.launch {
-            airohaDeviceManager.destroy()
             authRepository.signOut()
         }
+        exitApp()
     }
 
     fun loadUserSounds() {
