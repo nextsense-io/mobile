@@ -26,6 +26,7 @@ import io.nextsense.android.budz.ui.screens.SelectSoundScreen
 import io.nextsense.android.budz.ui.screens.SignalVisualizationScreen
 import io.nextsense.android.budz.ui.screens.TimedSleepScreen
 import io.nextsense.android.budz.ui.theme.BudzTheme
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import kotlin.system.exitProcess
 
@@ -242,8 +243,11 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        airohaDeviceManager.destroy()
+        runBlocking {
+            airohaDeviceManager.destroy()
+        }
         super.onDestroy()
-        exitProcess(0);
+        // TODO(eric): Temporary fix until all lifecycle issues are fixed.
+        // exitProcess(0);
     }
 }

@@ -93,12 +93,17 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         stopConnectingBoundDevice();
     }
 
-    public final void connectBoundDevice() {
+    /**
+     * Connect to the bound device.
+     *
+     * @return true if already connected. Otherwise, return false.
+     */
+    public final boolean connectBoundDevice() {
         gLogger.d(TAG, "connectBoundDevice()");
 
         if (_isConnected) {
             gLogger.d(TAG, "already_connected");
-            return;
+            return true;
         }
 
         try {
@@ -115,6 +120,7 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         _isChecking = true;
         _thread = new Thread(this::checkBondDevice);
         _thread.start();
+        return false;
     }
 
     public void stopConnectingBoundDevice() {

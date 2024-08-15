@@ -79,10 +79,7 @@ open class SignalVisualizationViewModel @Inject constructor(
         viewModelScope.launch {
             airohaDeviceManager.airohaDeviceState.collect { deviceState ->
                 _uiState.value =
-                    SignalVisualizationState(connected = deviceState == AirohaDeviceState.READY ||
-                            deviceState == AirohaDeviceState.CONNECTING_BLE ||
-                            deviceState == AirohaDeviceState.CONNECTED_BLE
-                    )
+                    SignalVisualizationState(connected = deviceState == AirohaDeviceState.READY)
                 when (deviceState) {
                     AirohaDeviceState.READY -> {
                         if (!_stopping) {
