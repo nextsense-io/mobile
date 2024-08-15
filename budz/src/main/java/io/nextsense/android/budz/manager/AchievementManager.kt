@@ -11,13 +11,13 @@ enum class Gem(val label: String, val description: String,val delta: Int, val th
     OPAL("Opal","Energetic and enthusiastic, boosts vitality", 0, 25, 15, 20, 0),
     SAPPHIRE("Sapphire","Calm and serene, ideal for meditation", 0, 20, 25, 20, 0),
     EMERALD("Emerald","Creative and open-minded state", 0, 22, 18, 25, 0),
-    AMETHYST("Amethyst", "Introspective and insightful, good for deep thinking", 0, 35, 10, 15, 0),
+    AMETHYST("Amethyst", "Introspective and detached, insight meditation", 0, 35, 10, 15, 0),
     TOPAZ("Topaz", "Clarity and decision-making, great for problem solving", 0, 8, 12, 35, 0),
     JADE("Jade","Peaceful and harmonious, for stress relief", 0, 14, 14, 35, 0),
     TURQUOISE("Turquoise", "Healing and recuperative, for recovery phases", 0, 14, 14, 38, 0),
     GARNET("Garnet", "Revitalizing and restoring, boosts motivation",0, 10, 12, 40, 0),
     PEARL("Pearl","Pure and clear-minded, aids in emotional balance", 0, 12, 14, 38, 0),
-    ONYX("Onyx", "Strength and resilience, for overcoming challenge",0, 30, 20, 30, 0),
+    ONYX("Onyx", "Strength and resilience, for overcoming challenge",0, 10, 20, 30, 0),
     CITRINE("Citrine", "Joyful and uplifting, enhances positivity", 0, 20, 15, 25, 0),
     AQUAMARINE("Aquamarine", "Soothing and calming, great for anxiety reduction",0, 10, 20, 30, 0);
 
