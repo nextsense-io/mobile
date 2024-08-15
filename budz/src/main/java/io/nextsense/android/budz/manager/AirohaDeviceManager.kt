@@ -9,7 +9,6 @@ import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.os.IBinder
 import android.util.Log
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.airoha.libbase.RaceCommand.constant.RaceType
 import com.airoha.libutils.Converter
 import com.airoha.sdk.AirohaConnector
@@ -81,9 +80,8 @@ enum class BleDeviceState {
     ERROR,  // Error when trying to connect to the device.
     DISCONNECTED,  // Device is not currently connected.
     CONNECTING,  // Device is currently connecting.
-    CONNECTED,  // Device is currently connected.
+    CONNECTED,  // Device is currently connected and ready.
     DISCONNECTING,  // Device is currently disconnecting.
-    READY  // Device is ready to use (BLE connected, settings applied).
 }
 
 enum class StreamingState {
@@ -460,6 +458,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
                 _airohaBleManager?.stopStreaming()
                 _streamingState.value = StreamingState.STOPPED
+                _bleDeviceState.value = BleDeviceState.DISCONNECTING
                 _airohaBleManager?.disconnect()
                 _bleDeviceState.value = BleDeviceState.DISCONNECTED
                 stopService()
