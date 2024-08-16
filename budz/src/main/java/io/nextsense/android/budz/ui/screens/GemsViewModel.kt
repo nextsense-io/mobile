@@ -1,12 +1,12 @@
 package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.algo.signal.BandPowerAnalysis
 import io.nextsense.android.base.devices.maui.MauiDevice
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.manager.AchievementManager
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.EarEegChannel
@@ -91,7 +91,7 @@ class GemsViewModel @Inject constructor(
             closestGem = AchievementManager.getClosestGem(
                 _uiState.value.bandPowersList.last()
             )
-            Log.d(tag, "closestGem: ${closestGem.label}")
+            RotatingFileLogger.get().logd(tag, "closestGem: ${closestGem.label}")
         }
         _uiState.value = _uiState.value.copy(testStarted = false, closestGem = closestGem)
     }
@@ -106,7 +106,8 @@ class GemsViewModel @Inject constructor(
             2
         }
         val channelBandPowers = bandPowers[channel] ?: return
-        Log.d(tag, "${uiState.value.activeChannel.alias} band powers: $channelBandPowers")
+        RotatingFileLogger.get().logd(tag, "${uiState.value.activeChannel.alias} band powers: " +
+                "$channelBandPowers")
         val multiplyFactor = (1 / (channelBandPowers[BandPowerAnalysis.Band.ALPHA]!! +
                 channelBandPowers[BandPowerAnalysis.Band.THETA]!! +
                 channelBandPowers[BandPowerAnalysis.Band.BETA]!!)) * 100

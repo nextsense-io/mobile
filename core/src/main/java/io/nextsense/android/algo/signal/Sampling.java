@@ -1,7 +1,5 @@
 package io.nextsense.android.algo.signal;
 
-import android.util.Log;
-
 import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
 import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
 
@@ -10,6 +8,7 @@ import java.util.Arrays;
 import brainflow.AggOperations;
 import brainflow.BrainFlowError;
 import brainflow.DataFilter;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 
 public class Sampling {
@@ -24,7 +23,8 @@ public class Sampling {
       int period = (int) (rawFs / newFs);
       return DataFilter.perform_downsampling(signal, period, AggOperations.MEAN);
     } catch (BrainFlowError error) {
-      Log.e("Sampling", "Error in resampling signal: " + error.getMessage());
+      RotatingFileLogger.get().loge("Sampling", "Error in resampling signal: " +
+          error.getMessage());
       return signal;
     }
   }

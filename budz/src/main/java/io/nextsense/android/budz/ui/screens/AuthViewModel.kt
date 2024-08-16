@@ -1,11 +1,11 @@
 package io.nextsense.android.budz.ui.screens
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.auth.api.identity.SignInCredential
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.AuthRepository
 import io.nextsense.android.budz.model.AuthDataProvider
@@ -53,7 +53,8 @@ class AuthViewModel @Inject constructor(
             if (signedInDb is State.Success) {
                 AuthDataProvider.googleSignInResponse = response
             } else {
-                AuthDataProvider.googleSignInResponse = AuthResponse.Failure(Exception("Failed to sign in with database"))
+                AuthDataProvider.googleSignInResponse = AuthResponse.Failure(Exception(
+                    "Failed to sign in with database"))
             }
             return@launch
         }
@@ -81,7 +82,7 @@ class AuthViewModel @Inject constructor(
                 // If failed initiate oneTap sign in flow
                 // deleteAccount(googleIdToken:) will be called from oneTap result callback
                 oneTapSignIn()
-                Log.i("AuthViewModel:deleteAccount","OneTapSignIn")
+                RotatingFileLogger.get().logi("AuthViewModel:deleteAccount","OneTapSignIn")
             }
         } else {
             deleteAccount(null)
@@ -89,7 +90,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun deleteAccount(googleIdToken: String?) = CoroutineScope(Dispatchers.IO).launch {
-        Log.i("AuthViewModel:deleteAccount","Deleting Account...")
+        RotatingFileLogger.get().logi("AuthViewModel:deleteAccount","Deleting Account...")
         AuthDataProvider.deleteAccountResponse = AuthResponse.Loading
         AuthDataProvider.deleteAccountResponse = authRepository.deleteUserAccount(googleIdToken)
     }

@@ -15,7 +15,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -28,6 +27,7 @@ import io.nextsense.android.base.data.LocalSessionManager;
 import io.nextsense.android.base.data.Samples;
 import io.nextsense.android.base.data.SleepStageRecord;
 import io.nextsense.android.base.devices.FirmwareMessageParsingException;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.base.utils.Util;
 import io.nextsense.android.budz.BudzDataPacketProto;
 
@@ -133,8 +133,8 @@ public class MauiDataParser {
     int protoLength = deviceLocation == DeviceLocation.LEFT_EARBUD ? leftProtoLength :
         rightProtoLength;
     if (VERBOSE_LOGGING) {
-      Log.d(TAG, "Proto length: " + leftProtoLength + ", values length: " + values.length +
-          ", device name: " + deviceName);
+      Log.v(TAG, "Proto length: " + leftProtoLength + ", values length: " +
+          values.length + ", device name: " + deviceName);
     }
     // TODO(eric): Re-enable this check when the length is fixed by AUT.
     // if (protoLength > values.length - PROTO_SIZE_BYTES) {
@@ -152,8 +152,8 @@ public class MauiDataParser {
 
       long packageNum = Integer.toUnsignedLong(budzDataPacket.getPackageNum());
       if (SEMI_VERBOSE_LOGGING && packageNum % 100 == 0) {
-        Log.d(TAG, "Proto length: " + leftProtoLength + ", values length: " + values.length +
-            ", device name: " + deviceName);
+        RotatingFileLogger.get().logv(TAG, "Proto length: " + leftProtoLength +
+            ", values length: " + values.length + ", device name: " + deviceName);
       }
       long skipped = getSkippedPackets(packageNum);
       if (skipped != 0) {
@@ -165,15 +165,15 @@ public class MauiDataParser {
 //        } else {
 //          rightSamplesSinceKeyTimestamp += skipped * eegSamplesPerPacket;
 //        }
-        Log.w(TAG, "Package number is not sequential. Last: " + lastPackageNum + ", current: " +
-            packageNum + ", skipped: " + skipped);
+        RotatingFileLogger.get().logw(TAG, "Package number is not sequential. Last: " +
+            lastPackageNum + ", current: " + packageNum + ", skipped: " + skipped);
       }
       lastPackageNum = packageNum;
 
       long acquisitionTimestamp;
       if (budzDataPacket.getBtClockNclk() != 0) {
-        Log.w(TAG, "btClockNclk: " + Integer.toUnsignedLong(budzDataPacket.getBtClockNclk()) +
-            ", btClockNclIntra: " +
+        RotatingFileLogger.get().logv(TAG, "btClockNclk: " +
+            Integer.toUnsignedLong(budzDataPacket.getBtClockNclk()) + ", btClockNclIntra: " +
             (Integer.toUnsignedLong(budzDataPacket.getBtClockNclkIntra())) + ", flags: " +
             budzDataPacket.getFlags());
         if (deviceLocation == DeviceLocation.RIGHT_EARBUD) {
@@ -191,11 +191,11 @@ public class MauiDataParser {
         if (!useSequenceNumberAsRelativeTimestamp) {
           if (Duration.between(firstReceptionTimestamp, receptionTimestamp).compareTo(
               FIRST_KEY_TIMESTAMP_TIMEOUT) > 0) {
-            Log.w(TAG, "First key timestamp not received after " + FIRST_KEY_TIMESTAMP_TIMEOUT +
-                ". Start accepting data.");
+            RotatingFileLogger.get().logi(TAG, "First key timestamp not received after " +
+                FIRST_KEY_TIMESTAMP_TIMEOUT + ". Start accepting data.");
             useSequenceNumberAsRelativeTimestamp = true;
           } else {
-            Log.d(TAG, "Data packet before first key timestamp, ignoring.");
+            RotatingFileLogger.get().logd(TAG, "Data packet before first key timestamp, ignoring.");
             return;
           }
         }
@@ -372,7 +372,7 @@ public class MauiDataParser {
 //    }
 
     if (VERBOSE_LOGGING) {
-      Log.d(TAG, "Parsed " + samples.getEegSamples().size() + " EEG samples, " +
+      Log.v(TAG, "Parsed " + samples.getEegSamples().size() + " EEG samples, " +
           samples.getAccelerations().size() + " accelerations and " +
           samples.getAngularSpeeds().size() + " angular speeds.");
     }

@@ -1,7 +1,5 @@
 package io.nextsense.android.algo.signal;
 
-import android.util.Log;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.transform.DftNormalization;
@@ -18,6 +16,7 @@ import brainflow.BrainFlowError;
 import brainflow.DataFilter;
 import brainflow.DetrendOperations;
 import brainflow.WindowOperations;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 public class BandPowerAnalysis {
 
@@ -80,7 +79,7 @@ public class BandPowerAnalysis {
         bandpowersMap.put(bands.get(i), bandPowers.getLeft()[i]);
       }
     } catch (BrainFlowError error) {
-      Log.e(TAG, error.getMessage());
+      RotatingFileLogger.get().loge(TAG, error.getMessage());
     }
     return bandpowersMap;
   }
@@ -94,11 +93,12 @@ public class BandPowerAnalysis {
       List<Float> data, int samplingRate, double bandStart, double bandEnd,
       Double powerLineFrequency) {
     if (data == null || data.isEmpty()) {
-      Log.w(TAG, "Data list cannot be null or empty.");
+      RotatingFileLogger.get().logw(TAG, "Data list cannot be null or empty.");
       return 0;
     }
     if (data.size() < MIN_SAMPLES_NUMBER) {
-      Log.w(TAG, "Data list must contain at least " + MIN_SAMPLES_NUMBER + " samples.");
+      RotatingFileLogger.get().logw(TAG, "Data list must contain at least " + MIN_SAMPLES_NUMBER +
+          " samples.");
       return 0;
     }
     if (samplingRate <= 0) {
@@ -125,8 +125,8 @@ public class BandPowerAnalysis {
     double originalSNR = calculateSNR(originalPower, originalPower - processedPower); // Example computation
     double processedSNR = calculateSNR(processedPower, originalPower - processedPower); // Example computation
 
-    Log.d(TAG, "Original SNR: " + originalSNR + " dB");
-    Log.d(TAG, "Processed SNR: " + processedSNR + " dB");
+    RotatingFileLogger.get().logd(TAG, "Original SNR: " + originalSNR + " dB");
+    RotatingFileLogger.get().logd(TAG, "Processed SNR: " + processedSNR + " dB");
 
     if (powerLineFrequency != null) {
       dataArray = Filters.applyBandStop(

@@ -45,7 +45,6 @@ import android.content.Context;
 import android.os.ParcelUuid;
 import android.util.Log;
 
-import com.airoha.liblogger.AirohaLogger;
 import com.airoha.libutils.Converter;
 import com.airoha.sdk.AirohaConnector;
 import com.airoha.sdk.AirohaSDK;
@@ -57,12 +56,13 @@ import com.airoha.sdk.api.utils.ConnectionUUID;
 import java.util.Set;
 import java.util.UUID;
 
+import io.nextsense.android.base.utils.RotatingFileLogger;
+
 @SuppressLint("MissingPermission")
 public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionListener {
 
     private static final String TAG = "DeviceSearchPresenter";
     public static final String KEY_BDADDRESS = "KEY_BDADDRESS";
-    private static final AirohaLogger gLogger = AirohaLogger.getInstance();
     private final Context act;
 
     private static final String SPP_UUID = "00000000-0000-0000-0099-AABBCCDDEEFF";
@@ -84,7 +84,7 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         mBluetoothAdapter = bluetoothManager.getAdapter();
         mA2dpProfileServiceListener = new A2DPProfileServiceListener();
         mBluetoothAdapter.getProfileProxy(act, mA2dpProfileServiceListener, BluetoothProfile.A2DP);
-        Log.i(TAG, "initialized");
+        RotatingFileLogger.get().logi(TAG, "initialized");
     }
 
     public final void destroy() {
@@ -99,22 +99,22 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
      * @return true if already connected. Otherwise, return false.
      */
     public final boolean connectBoundDevice() {
-        gLogger.d(TAG, "connectBoundDevice()");
+        RotatingFileLogger.get().logd(TAG, "connectBoundDevice()");
 
         if (_isConnected) {
-            gLogger.d(TAG, "already_connected");
+            RotatingFileLogger.get().logd(TAG, "already_connected");
             return true;
         }
 
         try {
             _isChecking = false;
             if (_thread != null) {
-                gLogger.d(TAG, "connectBoundDevice().interrupt");
+                RotatingFileLogger.get().logd(TAG, "connectBoundDevice().interrupt");
                 _thread.interrupt();
                 _thread.join(1000);
             }
         } catch (Exception ex) {
-            gLogger.e(ex);
+            RotatingFileLogger.get().loge(TAG, ex.getMessage());
         }
 
         _isChecking = true;
@@ -140,13 +140,13 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
             int i = 0;
             while (_isChecking) {
                 i++;
-                gLogger.d(TAG, "checkBondDevice_seq=" + i);
+                RotatingFileLogger.get().logd(TAG, "checkBondDevice_seq=" + i);
                 findConnectedDevice();
                 Thread.sleep(500);
             }
         } catch (InterruptedException ignored) {
         } catch (Exception ex) {
-            gLogger.e(ex);
+            RotatingFileLogger.get().loge(TAG, ex.getMessage());
         }
     }
 
@@ -158,8 +158,8 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
 
         for (ParcelUuid pu : pus) {
             String reversed_uuid = Converter.byte2HerStrReverse(Converter.hexStrToBytes(pu.getUuid().toString().replace("-", ""))).replace(" ","");
-            gLogger.d(TAG, "variable = reversed_uuid: " + reversed_uuid);
-            gLogger.d(TAG, "variable = uuid: " + pu.getUuid().toString());
+            RotatingFileLogger.get().logd(TAG, "variable = reversed_uuid: " + reversed_uuid);
+            RotatingFileLogger.get().logd(TAG, "variable = uuid: " + pu.getUuid().toString());
             if (pu.getUuid().toString().equalsIgnoreCase(SPP_UUID) || reversed_uuid.equalsIgnoreCase(SPP_UUID.replace("-",""))) {
 
                 return true;
@@ -172,18 +172,18 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         try {
             if (!adapter.isEnabled()) {
-                Log.i(TAG, "adapter.isEnabled()=" + adapter.isEnabled());
+                RotatingFileLogger.get().logi(TAG, "adapter.isEnabled()=" + adapter.isEnabled());
                 return;
             }
 
             if (adapter.getState() != BluetoothAdapter.STATE_ON) {
-                Log.i(TAG, "adapter.getState()=" + adapter.getState());
+                RotatingFileLogger.get().logi(TAG, "adapter.getState()=" + adapter.getState());
                 return;
             }
 
             Set<BluetoothDevice> devices = adapter.getBondedDevices();
 
-            Log.i(TAG, "devices.size()=====================" + devices.size());
+            RotatingFileLogger.get().logv(TAG, "devices.size()=====================" + devices.size());
 
             for (BluetoothDevice device : devices) {
                 Log.i(TAG, "found_device==================" + device.getName() + "," + device.getAddress());
@@ -191,8 +191,8 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
 
             for (BluetoothDevice device : devices) {
                 if (isA2dpConnected(device.getAddress()) && isAirohaDevice(device)) {
-                    Log.i(TAG, "device_airoha==================" + device.getName() + "," + device.getAddress());
-                    Log.i(TAG, "device_A2DP_connected==================" + device.getName() + "," + device.getAddress());
+                    RotatingFileLogger.get().logi(TAG, "device_airoha==================" + device.getName() + "," + device.getAddress());
+                    RotatingFileLogger.get().logi(TAG, "device_A2DP_connected==================" + device.getName() + "," + device.getAddress());
                     connectClassicDevice(device);
 
                     synchronized (this) {
@@ -201,13 +201,13 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
                 }
 
                 if (_isConnected) {
-                    gLogger.d(TAG, "connected_and_stop_loop");
+                    RotatingFileLogger.get().logd(TAG, "connected_and_stop_loop");
                     _isChecking = false;
                     break;
                 }
             }
         } catch (Exception ex) {
-            gLogger.e(ex);
+            RotatingFileLogger.get().loge(TAG, ex.getMessage());
         }
     }
 
@@ -229,18 +229,21 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
             Log.i(TAG, "devices.size()=====================" + devices.size());
 
             for (BluetoothDevice device : devices) {
-                Log.i(TAG, "found_device==================" + device.getName() + "," + device.getAddress());
+                Log.i(TAG, "found_device==================" + device.getName() + "," +
+                    device.getAddress());
             }
 
             for (BluetoothDevice device : devices) {
                 if (isA2dpConnected(device.getAddress()) && isAirohaDevice(device)) {
-                    Log.i(TAG, "device_airoha==================" + device.getName() + "," + device.getAddress());
-                    Log.i(TAG, "device_A2DP_connected==================" + device.getName() + "," + device.getAddress());
+                    Log.i(TAG, "device_airoha==================" + device.getName() + "," +
+                        device.getAddress());
+                    Log.i(TAG, "device_A2DP_connected==================" + device.getName() +
+                        "," + device.getAddress());
                     return true;
                 }
             }
         } catch (Exception ex) {
-            gLogger.e(ex);
+            RotatingFileLogger.get().loge(TAG, ex.getMessage());
         }
         return false;
     }
@@ -261,7 +264,7 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
 
     @Override
     public final void onStatusChanged(int status) {
-        gLogger.d(TAG, "onStatusChanged=" + status);
+        RotatingFileLogger.get().logd(TAG, "onStatusChanged=" + status);
 
         String text = "";
         if (status == AirohaConnector.CONNECTION_STATUS_BASE) text = "CONNECTION_STATUS_BASE";
@@ -273,7 +276,7 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         else if (status == AirohaConnector.CONNECTION_ERROR) text = "CONNECTION_ERROR";
         else if (status == AirohaConnector.INITIALIZATION_FAILED) text = "INITIALIZATION_FAILED";
         else if (status == AirohaConnector.CONNECTED_WRONG_ROLE) text = "CONNECTED_WRONG_ROLE";
-        gLogger.d(TAG, "onStatusChanged=" + text);
+        RotatingFileLogger.get().logd(TAG, "onStatusChanged=" + text);
 
         if (status == AirohaConnector.CONNECTED) {
             _isConnected = true;
@@ -290,7 +293,7 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
             return;
         }
         synchronized (this) {
-            gLogger.d(TAG, "_isConnected=" + _isConnected);
+            RotatingFileLogger.get().logd(TAG, "_isConnected=" + _isConnected);
             notify();
         }
     }
@@ -298,16 +301,18 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
     @Override
     public final void onDataReceived(AirohaBaseMsg airohaBaseMsg) {
         if (airohaBaseMsg == null) {
-            gLogger.d(TAG, "onDataReceived");
+            RotatingFileLogger.get().logd(TAG, "onDataReceived");
             return;
         }
 
         if (airohaBaseMsg.getMsgID() != null) {
-            gLogger.d(TAG, "onDataReceived=" + airohaBaseMsg.getMsgID().getCmdName());
+            RotatingFileLogger.get().logd(TAG, "onDataReceived=" + airohaBaseMsg.getMsgID().getCmdName());
         }
 
         if (airohaBaseMsg.getMsgContent() != null) {
-            gLogger.d(TAG, "onDataReceived=" + "," + airohaBaseMsg.getMsgContent().getClass().getName() + "," + airohaBaseMsg.getMsgContent().toString());
+            RotatingFileLogger.get().logd(TAG, "onDataReceived=" + "," +
+                airohaBaseMsg.getMsgContent().getClass().getName() + "," +
+                airohaBaseMsg.getMsgContent().toString());
         }
     }
 
@@ -332,14 +337,14 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
     private boolean isA2dpConnected(String bdAddr) {
         if (mBluetoothProfileA2DP == null) {
             mBluetoothAdapter.getProfileProxy(act, mA2dpProfileServiceListener, BluetoothProfile.A2DP);
-            gLogger.d(TAG, "Error = mBluetoothProfileA2DP is null");
+            RotatingFileLogger.get().logw(TAG, "Error = mBluetoothProfileA2DP is null");
             return false;
         }
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(bdAddr);
         if (mBluetoothProfileA2DP.getConnectionState(device) == BluetoothProfile.STATE_CONNECTED) {
             return true;
         } else {
-            gLogger.d(TAG, "Error = A2DP is not Connected: " + bdAddr);
+            RotatingFileLogger.get().logw(TAG, "Error = A2DP is not Connected: " + bdAddr);
             return false;
         }
     }

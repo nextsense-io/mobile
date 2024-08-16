@@ -1,10 +1,9 @@
 package io.nextsense.android.algo.signal;
 
-import android.util.Log;
-
 import java.util.Arrays;
 
 import io.nextsense.android.algo.MathUtils;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import jwave.Transform;
 import jwave.transforms.FastWaveletTransform;
 import jwave.transforms.wavelets.daubechies.Daubechies4;
@@ -35,8 +34,8 @@ public class WaveletArtifactRejection {
   public static double[] getPowerOf2DataSize(double[] data) {
     // Ensure the data array is a power of 2.
     int effectiveSamplesNumber = MathUtils.biggestPowerOfTwoUnder(data.length);
-    Log.d(TAG, "Number of samples: " + data.length + ", Effective samples number: " +
-        effectiveSamplesNumber);
+    RotatingFileLogger.get().logd(TAG, "Number of samples: " + data.length +
+        ", Effective samples number: " + effectiveSamplesNumber);
     return Arrays.copyOfRange(data, data.length - effectiveSamplesNumber, data.length);
   }
 
@@ -48,7 +47,7 @@ public class WaveletArtifactRejection {
    */
   public static double[] applyWaveletArtifactRejection(double[] data) {
     if (data == null || data.length == 0) {
-      Log.w(TAG, "Data array cannot be null or empty.");
+      RotatingFileLogger.get().logw(TAG, "Data array cannot be null or empty.");
       return data;
     }
 

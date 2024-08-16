@@ -1,9 +1,9 @@
 package io.nextsense.android.budz.ui.screens
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AirohaDeviceState
@@ -44,7 +44,8 @@ class IntroViewModel @Inject constructor(
                                 if (updateState is State.Success) {
                                     return@launch
                                 } else {
-                                    Log.d(tag, "Failed to update user is onboarding completed")
+                                    RotatingFileLogger.get().logd(tag,
+                                        "Failed to update user is onboarding completed")
                                 }
                             }
                     }
@@ -62,7 +63,7 @@ class IntroViewModel @Inject constructor(
         }
         viewModelScope.launch {
             airohaDeviceManager.airohaDeviceState.collect { deviceState ->
-                Log.d("HomeViewModel", "deviceState: $deviceState")
+                RotatingFileLogger.get().logd("HomeViewModel", "deviceState: $deviceState")
                 when (deviceState) {
                     AirohaDeviceState.CONNECTING_CLASSIC -> {
                         _uiState.value = _uiState.value.copy(connecting = true)

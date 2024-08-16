@@ -1,10 +1,10 @@
 package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.AudioSample
 import io.nextsense.android.budz.manager.AudioSampleType
@@ -147,7 +147,8 @@ class SelectSoundViewModel @Inject constructor(
                                     )
                                 }
                             } else {
-                                Log.d(tag, "Failed to update user ${audioSampleType.name} sound")
+                                RotatingFileLogger.get().logd(tag, "Failed to update user " +
+                                        "${audioSampleType.name} sound")
                             }
                         }
                     }

@@ -1,7 +1,5 @@
 package io.nextsense.android.budz.manager
 
-import io.nextsense.android.budz.manager.EarbudsConfigs.earbudsConfigs
-
 enum class EarEegChannel(val alias: String) {
     ERW_ELC(""), // Ear Right Whole Canal - Ear Left Cymba
     ELW_ELC("Left"), // Ear Left Whole Canal - Ear Left Cymba
@@ -55,7 +53,8 @@ class ImpedanceConfig private constructor(
         ): ImpedanceConfig {
             if (channelOperator != null || secondChannel != null) {
                 if (channelOperator == null || secondChannel == null) {
-                    throw IllegalArgumentException("Both channelOperator and secondChannel need to be provided if one of them is provided.")
+                    throw IllegalArgumentException("Both channelOperator and secondChannel need " +
+                            "to be provided if one of them is provided.")
                 }
                 return ImpedanceConfig(firstChannel, channelOperator, secondChannel)
             }

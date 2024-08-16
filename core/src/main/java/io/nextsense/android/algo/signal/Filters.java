@@ -1,16 +1,17 @@
 package io.nextsense.android.algo.signal;
 
-import android.util.Log;
-
 import java.util.Objects;
 
 import brainflow.BrainFlowError;
 import brainflow.DataFilter;
 import brainflow.FilterTypes;
 import brainflow.NoiseTypes;
+import io.nextsense.android.base.utils.RotatingFileLogger;
 import uk.me.berndporr.iirj.Butterworth;
 
 public class Filters {
+
+  private static final String TAG = Filters.class.getSimpleName();
 
   private Filters() {}
 
@@ -71,7 +72,7 @@ public class Filters {
       DataFilter.perform_bandpass(signal, (int) samplingRate, lowCutoff, highCutoff, order,
           FilterTypes.BUTTERWORTH, /*ripple=*/0.0);
     } catch (BrainFlowError error) {
-      Log.e("Filters", Objects.requireNonNull(error.getMessage()));
+      RotatingFileLogger.get().loge(TAG, Objects.requireNonNull(error.getMessage()));
     }
   }
 
@@ -100,7 +101,7 @@ public class Filters {
     try {
       DataFilter.remove_environmental_noise(signal, (int) samplingRate, noiseType.get_code());
     } catch (BrainFlowError error) {
-      Log.e("Filters", Objects.requireNonNull(error.getMessage()));
+      RotatingFileLogger.get().loge(TAG, Objects.requireNonNull(error.getMessage()));
     }
   }
 }

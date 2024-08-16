@@ -1,6 +1,5 @@
 package io.nextsense.android.budz.manager
 
-import android.util.Log
 import com.google.android.gms.auth.api.identity.BeginSignInRequest
 import com.google.android.gms.auth.api.identity.SignInClient
 import com.google.android.gms.auth.api.identity.SignInCredential
@@ -12,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuth.AuthStateListener
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.GoogleAuthProvider
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.model.AuthDataProvider
 import io.nextsense.android.budz.model.AuthResponse
@@ -103,7 +103,8 @@ class AuthRepository @Inject constructor(
                 trySend(null)
                 channel.close()
             }
-            Log.i(TAG, "User: ${authState.currentUser?.uid ?: "Not authenticated"}")
+            RotatingFileLogger.get().logi(TAG, "User: ${authState.currentUser?.uid ?: 
+                "Not authenticated"}")
         }
 
         firebaseAuth.addAuthStateListener(authStateListener)
@@ -120,7 +121,7 @@ class AuthRepository @Inject constructor(
                     googleSignInClient.silentSignIn().await()
                     true
                 } catch (e: ApiException) {
-                    Log.e(TAG, "Error: ${e.message}")
+                    RotatingFileLogger.get().loge(TAG, "Error: ${e.message}")
                     signOut()
                     false
                 }
@@ -133,11 +134,13 @@ class AuthRepository @Inject constructor(
         return try {
             val authResult = firebaseAuth.signInAnonymously().await()
             authResult?.user?.let { user ->
-                Log.i(TAG, "FirebaseAuthSuccess: Anonymous UID: ${user.uid}")
+                RotatingFileLogger.get().logi(TAG, "FirebaseAuthSuccess: Anonymous UID: " +
+                        user.uid
+                )
             }
             AuthResponse.Success(authResult)
         } catch (error: Exception) {
-            Log.e(TAG, "FirebaseAuthError: Failed to Sign in anonymously")
+            RotatingFileLogger.get().loge(TAG, "FirebaseAuthError: Failed to Sign in anonymously")
             AuthResponse.Failure(error)
         }
     }
@@ -172,7 +175,7 @@ class AuthRepository @Inject constructor(
     suspend fun authSignIn(credential: AuthCredential): FirebaseSignInResponse {
         return try {
             val authResult = firebaseAuth.signInWithCredential(credential).await()
-            Log.i(TAG, "User: ${authResult?.user?.uid}")
+            RotatingFileLogger.get().logi(TAG, "User: ${authResult?.user?.uid}")
             AuthDataProvider.updateAuthState(authResult?.user)
             AuthResponse.Success(authResult)
         }
@@ -184,7 +187,7 @@ class AuthRepository @Inject constructor(
     suspend fun authLink(credential: AuthCredential): FirebaseSignInResponse {
         return try {
             val authResult = firebaseAuth.currentUser?.linkWithCredential(credential)?.await()
-            Log.i(TAG, "User: ${authResult?.user?.uid}")
+            RotatingFileLogger.get().logi(TAG, "User: ${authResult?.user?.uid}")
             AuthDataProvider.updateAuthState(authResult?.user)
             AuthResponse.Success(authResult)
         }
@@ -192,7 +195,8 @@ class AuthRepository @Inject constructor(
             when (error.errorCode) {
                 AuthErrors.CREDENTIAL_ALREADY_IN_USE,
                 AuthErrors.EMAIL_ALREADY_IN_USE -> {
-                    Log.e(TAG, "FirebaseAuthError: authLink(credential:) failed, ${error.message}")
+                    RotatingFileLogger.get().loge(TAG, "FirebaseAuthError: authLink(credential:)" +
+                            " failed, ${error.message}")
                     return authSignIn(credential)
                 }
             }
@@ -230,7 +234,7 @@ class AuthRepository @Inject constructor(
                     val account = googleSignInClient.silentSignIn().await()
                     return account.idToken
                 } catch (e: ApiException) {
-                    Log.e(TAG, "Error: ${e.message}")
+                    RotatingFileLogger.get().loge(TAG, "Error: ${e.message}")
                 }
             }
         }
@@ -259,11 +263,11 @@ class AuthRepository @Inject constructor(
                 firebaseAuth.currentUser?.delete()?.await()
                 AuthResponse.Success(true)
             }
-            Log.e(TAG, "FirebaseAuthError: Current user is not available")
+            RotatingFileLogger.get().loge(TAG, "FirebaseAuthError: Current user is not available")
             AuthResponse.Success(false)
         }
         catch (e: Exception) {
-            Log.e(TAG, "FirebaseAuthError: Failed to delete user")
+            RotatingFileLogger.get().loge(TAG, "FirebaseAuthError: Failed to delete user")
             AuthResponse.Failure(e)
         }
     }
@@ -273,7 +277,7 @@ class AuthRepository @Inject constructor(
             firebaseAuth.currentUser?.getIdToken(true)?.await()
             true
         } catch (e: Exception) {
-            Log.i(TAG, "Error retrieving id token result. $e")
+            RotatingFileLogger.get().logi(TAG, "Error retrieving id token result. $e")
             false
         }
     }

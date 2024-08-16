@@ -1,8 +1,8 @@
 package io.nextsense.android.budz.manager
 
-import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import io.nextsense.android.base.utils.RotatingFileLogger
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,6 +25,6 @@ class FirestoreClient @Inject constructor() {
     val usersRef = db.collection(rootRefPath + Table.USERS.tableName())
 
     init {
-        Log.d(tag, "FirestoreClient initialized.")
+        RotatingFileLogger.get().logd(tag, "FirestoreClient initialized.")
     }
 }

@@ -1,10 +1,10 @@
 package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.AirohaBatteryLevel
 import io.nextsense.android.budz.manager.AirohaDeviceManager
@@ -53,7 +53,7 @@ class HomeViewModel @Inject constructor(
         airohaDeviceManager.initialize()
         _monitoringJob = viewModelScope.launch {
             airohaDeviceManager.airohaDeviceState.collect { deviceState ->
-                Log.d("HomeViewModel", "deviceState: $deviceState")
+                RotatingFileLogger.get().logd("HomeViewModel", "deviceState: $deviceState")
                 when (deviceState) {
                     AirohaDeviceState.CONNECTING_CLASSIC -> {}
                     AirohaDeviceState.READY -> {
@@ -80,12 +80,12 @@ class HomeViewModel @Inject constructor(
     }
 
     fun stopConnection() {
-        Log.i("HomeViewModel", "stopConnection")
+        RotatingFileLogger.get().logi("HomeViewModel", "stopConnection")
         airohaDeviceManager.stopConnectingDevice()
     }
 
     fun exitApp() {
-        Log.i("HomeViewModel", "exitApp")
+        RotatingFileLogger.get().logi("HomeViewModel", "exitApp")
         viewModelScope.launch {
             airohaDeviceManager.destroy()
         }
