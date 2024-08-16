@@ -157,6 +157,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                     AirohaConnector.DISCONNECTED -> {
                         RotatingFileLogger.get().logd(tag, "Airoha disconnected.")
                         _airohaDeviceState.update { AirohaDeviceState.DISCONNECTED }
+                        _scope.launch {
+                            stopBleStreaming(overrideForceStreaming = true)
+                        }
                     }
                     AirohaConnector.CONNECTING -> {
                         _airohaDeviceState.update { AirohaDeviceState.CONNECTING_CLASSIC }
@@ -458,17 +461,21 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
         _stopStreamingJob = _scope.launch {
             _streamingState.value = StreamingState.STOPPING
-            val airohaStatusCode = stopRaceBleStreamingFlow().take(1).last()
-            if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
-                _airohaBleManager?.stopStreaming()
-                _streamingState.value = StreamingState.STOPPED
-                _bleDeviceState.value = BleDeviceState.DISCONNECTING
-                _airohaBleManager?.disconnect()
-                _bleDeviceState.value = BleDeviceState.DISCONNECTED
-                stopService()
-                return@launch
+            if (_airohaDeviceState.value == AirohaDeviceState.CONNECTED_AIROHA ||
+                _airohaDeviceState.value == AirohaDeviceState.READY) {
+                val airohaStatusCode = stopRaceBleStreamingFlow().take(1).last()
+                RotatingFileLogger.get().logd(tag, "stopRaceBleStreamingFlow airohaStatusCode=$airohaStatusCode")
+                if (airohaStatusCode != AirohaStatusCode.STATUS_SUCCESS) {
+                    _streamingState.value = StreamingState.ERROR
+                    return@launch
+                }
             }
-            _streamingState.value = StreamingState.ERROR
+            _airohaBleManager?.stopStreaming()
+            _streamingState.value = StreamingState.STOPPED
+            _bleDeviceState.value = BleDeviceState.DISCONNECTING
+            _airohaBleManager?.disconnect()
+            _bleDeviceState.value = BleDeviceState.DISCONNECTED
+            stopService()
         }
         _stopStreamingJob?.join()
     }
