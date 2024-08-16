@@ -225,7 +225,8 @@ public class BudzService extends Service {
             })
             .addOnFailureListener(e ->
               // Token refresh failed
-              RotatingFileLogger.get().logw(TAG, "Failed to refresh Firebase auth token: " + e.getMessage())
+              RotatingFileLogger.get().logw(TAG, "Failed to refresh Firebase auth token: " +
+                  e.getMessage())
             );
       }
     });

@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
 import android.os.IBinder
-import android.util.Log
 import com.airoha.libbase.RaceCommand.constant.RaceType
 import com.airoha.libutils.Converter
 import com.airoha.sdk.AirohaConnector
@@ -147,26 +146,27 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             override fun onStatusChanged(newStatus: Int) {
                 when (newStatus) {
                     AirohaConnector.CONNECTED -> {
-                        Log.d(tag, "Airoha connected.")
+                        RotatingFileLogger.get().logd(tag, "Airoha connected.")
                         _airohaDeviceState.update { AirohaDeviceState.CONNECTED_AIROHA }
                     }
                     AirohaConnector.CONNECTED_WRONG_ROLE -> {
-                        Log.w(tag, "Airoha connected with wrong role. Disconnecting.")
+                        RotatingFileLogger.get().logw(tag,
+                            "Airoha connected with wrong role. Disconnecting.")
                         disconnectDevice()
                     }
                     AirohaConnector.DISCONNECTED -> {
-                        Log.d(tag, "Airoha disconnected.")
+                        RotatingFileLogger.get().logd(tag, "Airoha disconnected.")
                         _airohaDeviceState.update { AirohaDeviceState.DISCONNECTED }
                     }
                     AirohaConnector.CONNECTING -> {
                         _airohaDeviceState.update { AirohaDeviceState.CONNECTING_CLASSIC }
                     }
                     AirohaConnector.CONNECTION_ERROR -> {
-                        Log.w(tag, "Airoha connection error.")
+                        RotatingFileLogger.get().logw(tag, "Airoha connection error.")
                         _airohaDeviceState.update { AirohaDeviceState.ERROR }
                     }
                     AirohaConnector.INITIALIZATION_FAILED -> {
-                        Log.w(tag, "Airoha initialization failed.")
+                        RotatingFileLogger.get().logw(tag, "Airoha initialization failed.")
                         _airohaDeviceState.update { AirohaDeviceState.ERROR }
                     }
                 }
@@ -180,27 +180,28 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private val airohaDeviceListener = object : AirohaDeviceListener {
 
         override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-            Log.d(tag, "Read response: ${msg.msgContent}")
+            RotatingFileLogger.get().logd(tag, "Read response: ${msg.msgContent}")
             if (code == AirohaStatusCode.STATUS_SUCCESS) {
                 val resp = msg.msgContent as ByteArray
-                Log.d(tag, "Read response: ${Converter.byte2HerStrReverse(resp)}")
+                RotatingFileLogger.get().logd(tag,
+                    "Read response: ${Converter.byte2HerStrReverse(resp)}")
             } else {
-                Log.w(tag, "Read error: $code.")
+                RotatingFileLogger.get().logw(tag, "Read error: $code.")
             }
         }
 
         override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-            Log.d(tag, "Changed response: ${msg.msgContent}")
+            RotatingFileLogger.get().logd(tag, "Changed response: ${msg.msgContent}")
             try {
                 if (code == AirohaStatusCode.STATUS_SUCCESS) {
                     _equalizerState.value = _targetGains
                 } else {
                     _targetGains = _equalizerState.value
-                    Log.w(tag, "Equalizer settings not changed: $code.")
+                    RotatingFileLogger.get().logw(tag, "Equalizer settings not changed: $code.")
                 }
             } catch (e: Exception) {
                 _targetGains = _equalizerState.value
-                Log.w(tag, "Equalizer settings error: ${e.message}.")
+                RotatingFileLogger.get().logw(tag, "Equalizer settings error: ${e.message}.")
             }
         }
     }
@@ -224,7 +225,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         override fun onReceive(context: Context, intent: Intent) = goAsync {
             when (intent.action) {
                 BluetoothDevice.ACTION_ACL_CONNECTED -> {
-                    Log.d(tag, "BluetoothDevice.ACTION_ACL_CONNECTED")
+                    RotatingFileLogger.get().logd(tag, "BluetoothDevice.ACTION_ACL_CONNECTED")
                     connectDevice(timeout = 30.seconds)
                 }
             }
@@ -234,7 +235,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     init {
         initialize()
         _devicePresenter = DeviceSearchPresenter(context)
-        Log.i(tag, "initialized")
+        RotatingFileLogger.get().logi(tag, "initialized")
     }
 
     fun initialize() {
@@ -255,10 +256,10 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                     // Also need a small delay between these commands or they often fail.
                     delay(200L)
                     _twsConnected.value = twsConnectStatusFlow().last() ?: false
-                    Log.d(tag, "twsConnected=$_twsConnected")
+                    RotatingFileLogger.get().logd(tag, "twsConnected=$_twsConnected")
                     delay(200L)
                     _deviceInfo = deviceInfoFlow().last()
-                    Log.d(tag, "deviceInfo=$_deviceInfo")
+                    RotatingFileLogger.get().logd(tag, "deviceInfo=$_deviceInfo")
                     if (_deviceInfo == null) {
                         disconnectDevice()
                         _airohaDeviceState.value = AirohaDeviceState.ERROR
@@ -288,10 +289,10 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     }
 
     fun connectDevice(timeout: Duration? = null) {
-        Log.i(tag, "connectDevice")
+        RotatingFileLogger.get().logi(tag, "connectDevice")
         if (_airohaDeviceState.value == AirohaDeviceState.READY ||
                 _airohaDeviceState.value == AirohaDeviceState.CONNECTED_AIROHA) {
-            Log.i(tag, "Device already connected.")
+            RotatingFileLogger.get().logi(tag, "Device already connected.")
             return
         }
         if (_airohaDeviceState.value != AirohaDeviceState.BONDED) {
@@ -303,7 +304,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             _connectionTimeoutTimer?.schedule(object : TimerTask() {
                 override fun run() {
                     if (_airohaDeviceState.value == AirohaDeviceState.CONNECTING_CLASSIC) {
-                        Log.i(tag, "Timed out waiting for Airoha connection, disconnecting.")
+                        RotatingFileLogger.get().logi(tag,
+                            "Timed out waiting for Airoha connection, disconnecting.")
                         disconnectDevice()
                         _airohaDeviceState.value = AirohaDeviceState.DISCONNECTED
                     }
@@ -338,7 +340,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                 }
                 delay(500L)
             } catch (timeout: TimeoutCancellationException) {
-                Log.i(tag, "Timeout waiting for streaming to stop, starting again.")
+                RotatingFileLogger.get().logi(tag,
+                    "Timeout waiting for streaming to stop, starting again.")
             }
         }
 
@@ -351,7 +354,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 //                }
 //                return result == StreamingState.STARTED
 //            } catch (timeout: TimeoutCancellationException) {
-//                Log.i(tag, "Timeout waiting for streaming to start, starting again.")
+//                RotatingFileLogger.get().logi(tag, "Timeout waiting for streaming to start, starting again.")
 //            }
         }
 
@@ -369,7 +372,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                 }
             } catch (timeout: TimeoutCancellationException) {
                 if (!_budzServiceBound) {
-                    Log.i(tag, "Timeout waiting for service to connect.")
+                    RotatingFileLogger.get().logi(tag, "Timeout waiting for service to connect.")
                     _bleDeviceState.value = BleDeviceState.DISCONNECTED
                     _streamingState.value = StreamingState.STOPPED
                     return@launch
@@ -378,7 +381,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             }
             if (serviceConnected) {
                 val deviceMac = (_deviceInfo?.deviceMAC ?: "").filter { it != ':' }
-                Log.d(tag, "Connecting to BLE devices with mac $deviceMac")
+                RotatingFileLogger.get().logd(tag, "Connecting to BLE devices with mac $deviceMac")
                 val deviceState = _airohaBleManager?.connect(deviceMac, _twsConnected.value)
                 if (deviceState == DeviceState.READY) {
                     _bleDeviceState.value = BleDeviceState.CONNECTED
@@ -447,7 +450,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                     }
                 }
             } catch (timeout: TimeoutCancellationException) {
-                Log.i(tag, "Timeout waiting for streaming to start, stopping anyway.")
+                RotatingFileLogger.get().logi(tag,
+                    "Timeout waiting for streaming to start, stopping anyway.")
             }
             delay(500L)
         }
@@ -523,8 +527,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     fun startSoundLoop() {
         if (!isReady) {
-            Log.w(tag, "Tried to start sound loop, but device is not available: " +
-                    "${_airohaDeviceState.value}")
+            RotatingFileLogger.get().logw(tag, "Tried to start sound loop, but device is not " +
+                    "available: ${_airohaDeviceState.value}")
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
@@ -533,8 +537,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     fun stopSoundLoop() {
         if (!isReady) {
-            Log.w(tag, "Tried to stop sound loop, but device is not available: " +
-                    "${_airohaDeviceState.value}")
+            RotatingFileLogger.get().logw(tag, "Tried to stop sound loop, but device is not " +
+                    "available: ${_airohaDeviceState.value}")
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
@@ -543,8 +547,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     fun reset() {
         if (!isReady) {
-            Log.w(tag, "Tried to reset device, but device is not available: " +
-                    "${_airohaDeviceState.value}")
+            RotatingFileLogger.get().logw(tag, "Tried to reset device, but device is not " +
+                    "available: ${_airohaDeviceState.value}")
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
@@ -553,8 +557,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     fun powerOff() {
         if (!isReady) {
-            Log.w(tag, "Tried to power off device, but device is not available: " +
-                    "${_airohaDeviceState.value}")
+            RotatingFileLogger.get().logw(tag, "Tried to power off device, but device is not " +
+                    "available: ${_airohaDeviceState.value}")
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
@@ -563,8 +567,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     suspend fun setAfeRegisterValue(register: String, value: String): AirohaStatusCode? {
         if (!isReady) {
-            Log.w(tag, "Tried to set AFE register, but device is not available: " +
-                    "${_airohaDeviceState.value}")
+            RotatingFileLogger.get().logw(tag, "Tried to set AFE register, but device is not" +
+                    " available: ${_airohaDeviceState.value}")
             return null
         }
 
@@ -573,8 +577,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     suspend fun getAfeRegisterValue(register: String): String? {
         if (!isReady) {
-            Log.w(tag, "Tried to get AFE register, but device is not available: " +
-                    "${_airohaDeviceState.value}")
+            RotatingFileLogger.get().logw(tag, "Tried to get AFE register, but device is not " +
+                    "available: ${_airohaDeviceState.value}")
             return null
         }
         return getAfeRegisterFlow(register).first()
@@ -582,8 +586,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     suspend fun setSoundLoopVolume(volume: Int): AirohaStatusCode? {
         if (!isReady) {
-            Log.w(tag, "Tried to set sound loop volume, but device is not available: " +
-                    "${_airohaDeviceState.value}")
+            RotatingFileLogger.get().logw(tag, "Tried to set sound loop volume, but device is " +
+                    "not available: ${_airohaDeviceState.value}")
             return null
         }
 
@@ -592,8 +596,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
 
     suspend fun getSoundLoopVolume(): Int? {
         if (!isReady) {
-            Log.w(tag, "Tried to get sound loop volume, but device is not available: " +
-                    "${_airohaDeviceState.value}")
+            RotatingFileLogger.get().logw(tag, "Tried to get sound loop volume, but device is " +
+                    "not available: ${_airohaDeviceState.value}")
             return null
         }
         return getSoundLoopVolumeFlow().first()?.toInt()
@@ -637,8 +641,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     fun batteryLevelsFlow() = callbackFlow<AirohaBatteryLevel> {
         val batteryInfoListener = object : AirohaDeviceListener {
             override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg?) {
-                Log.d(tag,"BatteryInfoListener.onRead=${code.description}," +
-                        " msg = ${msg?.msgID?.cmdName}")
+                RotatingFileLogger.get().logd(tag,"BatteryInfoListener.onRead=" +
+                        "${code.description}, msg = ${msg?.msgID?.cmdName}")
 
                 var leftBattery: Int? = null
                 var rightBattery: Int? = null
@@ -648,9 +652,12 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                     if (code == AirohaStatusCode.STATUS_SUCCESS && msg != null) {
                         val batteryInfo = msg.msgContent as AirohaBatteryInfo
 
-                        Log.d(tag,"batteryInfo master level ${batteryInfo.masterLevel}")
-                        Log.d(tag, "batteryInfo slave level ${batteryInfo.slaveLevel}")
-                        Log.d(tag,"AirohaSDK.getInst().isAgentRightSideDevice()=" +
+                        RotatingFileLogger.get().logd(tag,
+                            "batteryInfo master level ${batteryInfo.masterLevel}")
+                        RotatingFileLogger.get().logd(tag,
+                            "batteryInfo slave level ${batteryInfo.slaveLevel}")
+                        RotatingFileLogger.get().logd(tag,
+                            "AirohaSDK.getInst().isAgentRightSideDevice()=" +
                                 "${AirohaSDK.getInst().isAgentRightSideDevice}")
                         if (AirohaSDK.getInst().isAgentRightSideDevice) {
                             rightBattery = batteryInfo.masterLevel
@@ -663,7 +670,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                         }
                     }
                 } catch (e: java.lang.Exception) {
-                    Log.e(tag, e.message, e)
+                    RotatingFileLogger.get().loge(tag, e.message)
                 }
                 trySend(AirohaBatteryLevel(leftBattery, rightBattery, caseBattery))
                 channel.close()
@@ -705,8 +712,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private fun getAfeRegisterFlow(register: String) = callbackFlow<String?> {
         val airohaDeviceListener = object : AirohaDeviceListener {
             override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                Log.d(tag, "GetAfeRegisterListener.onRead=${code.description}," +
-                        " msg = ${msg.msgID.cmdName}")
+                RotatingFileLogger.get().logd(tag, "GetAfeRegisterListener.onRead=" +
+                        "${code.description}, msg = ${msg.msgID.cmdName}")
                 try {
                     if (code == AirohaStatusCode.STATUS_SUCCESS) {
                         val afeRegisterResponseBytes = msg.msgContent as ByteArray
@@ -715,16 +722,16 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                         // TODO(eric): Parse the full response.
                         val afeRegisterValue = Converter.byteArrayToHexString(
                             afeRegisterResponseBytes.copyOfRange(9, 12))
-                        Log.d(tag, "afe register response: $afeRegisterResponseValue, " +
-                                "value=$afeRegisterValue.")
+                        RotatingFileLogger.get().logd(tag, "afe register response: " +
+                                "$afeRegisterResponseValue, value=$afeRegisterValue.")
                         trySend(afeRegisterValue)
                     } else {
-                        Log.d(tag, "getAfeRegisterFlowStatus: ${code.description}," +
-                                " msg = ${msg.msgID.cmdName}")
+                        RotatingFileLogger.get().logd(tag, "getAfeRegisterFlowStatus: " +
+                                "${code.description}, msg = ${msg.msgID.cmdName}")
                         trySend(null)
                     }
                 } catch (e: java.lang.Exception) {
-                    Log.e(tag, e.message, e)
+                    RotatingFileLogger.get().loge(tag, e.message)
                     trySend(null)
                 }
                 channel.close()
@@ -768,8 +775,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private fun getSoundLoopVolumeFlow() = callbackFlow<String?> {
         val airohaDeviceListener = object : AirohaDeviceListener {
             override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                Log.d(tag, "GetSoundLoopVolumeListener.onRead=${code.description}," +
-                        " msg = ${msg.msgID.cmdName}")
+                RotatingFileLogger.get().logd(tag, "GetSoundLoopVolumeListener.onRead=" +
+                        "${code.description}, msg = ${msg.msgID.cmdName}")
                 try {
                     if (code == AirohaStatusCode.STATUS_SUCCESS) {
                         val afeRegisterResponseBytes = msg.msgContent as ByteArray
@@ -778,16 +785,16 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                         // TODO(eric): Parse the full response.
                         val afeRegisterValue = Converter.byteArrayToHexString(
                             afeRegisterResponseBytes.copyOfRange(8, 9))
-                        Log.d(tag, "sound loop volume response: $afeRegisterResponseValue, " +
-                                "value=$afeRegisterValue.")
+                        RotatingFileLogger.get().logd(tag, "sound loop volume response: " +
+                                "$afeRegisterResponseValue, value=$afeRegisterValue.")
                         trySend(afeRegisterValue)
                     } else {
-                        Log.d(tag, "getSoundLoopVolumeFlowStatus: ${code.description}," +
-                                " msg = ${msg.msgID.cmdName}")
+                        RotatingFileLogger.get().logd(tag, "getSoundLoopVolumeFlowStatus: " +
+                                "${code.description}, msg = ${msg.msgID.cmdName}")
                         trySend(null)
                     }
                 } catch (e: java.lang.Exception) {
-                    Log.e(tag, e.message, e)
+                    RotatingFileLogger.get().loge(tag, e.message)
                     trySend(null)
                 }
                 channel.close()
@@ -846,20 +853,20 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private fun twsConnectStatusFlow() = callbackFlow<Boolean?> {
         val twsConnectStatusListener = object : AirohaDeviceListener {
                 override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                    Log.d(tag, "TwsConnectStatusListener.onRead=${code.description}," +
-                            " msg = ${msg.msgID.cmdName}")
+                    RotatingFileLogger.get().logd(tag, "TwsConnectStatusListener.onRead=" +
+                            "${code.description}, msg = ${msg.msgID.cmdName}")
                     try {
                         if (code == AirohaStatusCode.STATUS_SUCCESS) {
                             val isTwsConnected = msg.msgContent as Boolean
-                            Log.d(tag, "isTwsConnected=$isTwsConnected")
+                            RotatingFileLogger.get().logd(tag, "isTwsConnected=$isTwsConnected")
                             trySend(isTwsConnected)
                         } else {
-                            Log.d(tag, "getTwsConnectStatus: ${code.description}," +
-                                    " msg = ${msg.msgID.cmdName}")
+                            RotatingFileLogger.get().logd(tag, "getTwsConnectStatus: " +
+                                    "${code.description}, msg = ${msg.msgID.cmdName}")
                             trySend(null)
                         }
                     } catch (e: java.lang.Exception) {
-                        Log.e(tag, e.message, e)
+                        RotatingFileLogger.get().loge(tag, e.message)
                         trySend(null)
                     }
                     channel.close()
@@ -880,11 +887,11 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private fun deviceInfoFlow() = callbackFlow<AirohaDevice?> {
         val deviceInfoListener = object : AirohaDeviceListener {
             override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                Log.d(tag, "DeviceInfoListener.onRead=${code.description}," +
-                        " msg = ${msg.msgID.cmdName}")
+                RotatingFileLogger.get().logd(tag, "DeviceInfoListener.onRead=" +
+                        "${code.description}, msg = ${msg.msgID.cmdName}")
                 try {
                     if (code == AirohaStatusCode.STATUS_SUCCESS) {
-                        Log.d(tag, "Parsing DeviceInfo")
+                        RotatingFileLogger.get().logd(tag, "Parsing DeviceInfo")
                         val deviceInfoMessage = msg as AirohaDeviceInfoMsg
                         val content = deviceInfoMessage.msgContent as LinkedList<AirohaDevice>
                         if (content.isEmpty()) {
@@ -906,7 +913,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                         trySend(null)
                     }
                 } catch (e: java.lang.Exception) {
-                    Log.e(tag, e.message, e)
+                    RotatingFileLogger.get().loge(tag, e.message)
                     trySend(null)
                 }
                 channel.close()
@@ -924,12 +931,14 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     }
 
     private fun logAirohaResponse(method: String, code: AirohaStatusCode, msg: AirohaBaseMsg) {
-        Log.d(tag, "$method: ${msg.msgContent}")
+        RotatingFileLogger.get().logd(tag, "$method: ${msg.msgContent}")
         if (code == AirohaStatusCode.STATUS_SUCCESS) {
             val resp = msg.msgContent as ByteArray
-            Log.d(tag, "Read response: ${Converter.byte2HerStrReverse(resp)}")
+            RotatingFileLogger.get().logd(tag, "Read response: " +
+                    Converter.byte2HerStrReverse(resp)
+            )
         } else {
-            Log.w(tag, "Read error: $code.")
+            RotatingFileLogger.get().logw(tag, "Read error: $code.")
         }
     }
 
@@ -958,7 +967,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         raceCommand.respType = RaceType.INDICATION
         raceCommand.command = StartStopSoundLoopRaceCommand(
             StartStopSoundLoopRaceCommand.SoundLoopType.START_LOOP).getBytes()
-        Log.d(tag, "getStartStopSoundLoopAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        RotatingFileLogger.get().logd(tag, "getStartStopSoundLoopAirohaCommand: " +
+                Converter.byte2HexStr(raceCommand.command)
+        )
         return raceCommand
     }
 
@@ -967,7 +978,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         raceCommand.respType = RaceType.INDICATION
         raceCommand.command = StartStopSoundLoopRaceCommand(
             StartStopSoundLoopRaceCommand.SoundLoopType.STOP_LOOP).getBytes()
-        Log.d(tag, "getStartStopSoundLoopAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        RotatingFileLogger.get().logd(tag, "getStartStopSoundLoopAirohaCommand: " +
+                Converter.byte2HexStr(raceCommand.command)
+        )
         return raceCommand
     }
 
@@ -976,7 +989,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         raceCommand.respType = RaceType.INDICATION
         raceCommand.command = PowerRaceCommand(
             PowerRaceCommand.PowerType.RESET).getBytes()
-        Log.d(tag, "getResetAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        RotatingFileLogger.get().logd(tag, "getResetAirohaCommand: " +
+                Converter.byte2HexStr(raceCommand.command)
+        )
         return raceCommand
     }
 
@@ -985,7 +1000,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         raceCommand.respType = RaceType.INDICATION
         raceCommand.command = PowerRaceCommand(
             PowerRaceCommand.PowerType.POWER_OFF).getBytes()
-        Log.d(tag, "getPowerOffAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        RotatingFileLogger.get().logd(tag, "getPowerOffAirohaCommand: " +
+                Converter.byte2HexStr(raceCommand.command)
+        )
         return raceCommand
     }
 
@@ -993,7 +1010,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         val raceCommand = AirohaCmdSettings()
         raceCommand.respType = RaceType.INDICATION
         raceCommand.command = SetAfeRegisterRaceCommand(register, value).getBytes()
-        Log.d(tag, "setAfeRegisterAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        RotatingFileLogger.get().logd(tag, "setAfeRegisterAirohaCommand: " +
+                Converter.byte2HexStr(raceCommand.command)
+        )
         return raceCommand
     }
 
@@ -1001,7 +1020,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         val raceCommand = AirohaCmdSettings()
         raceCommand.respType = RaceType.INDICATION
         raceCommand.command = GetAfeRegisterRaceCommand(register).getBytes()
-        Log.d(tag, "getAfeRegisterAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        RotatingFileLogger.get().logd(tag, "getAfeRegisterAirohaCommand: " +
+                Converter.byte2HexStr(raceCommand.command)
+        )
         return raceCommand
     }
 
@@ -1009,7 +1030,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         val raceCommand = AirohaCmdSettings()
         raceCommand.respType = RaceType.INDICATION
         raceCommand.command = SetSoundLoopVolumeRaceCommand(volume).getBytes()
-        Log.d(tag, "SetSoundLoopAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        RotatingFileLogger.get().logd(tag, "SetSoundLoopAirohaCommand: " +
+                Converter.byte2HexStr(raceCommand.command)
+        )
         return raceCommand
     }
 
@@ -1017,7 +1040,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         val raceCommand = AirohaCmdSettings()
         raceCommand.respType = RaceType.INDICATION
         raceCommand.command = GetSoundLoopVolumeRaceCommand().getBytes()
-        Log.d(tag, "GetSoundLoopAirohaCommand: ${Converter.byte2HexStr(raceCommand.command)}")
+        RotatingFileLogger.get().logd(tag, "GetSoundLoopAirohaCommand: " +
+                Converter.byte2HexStr(raceCommand.command)
+        )
         return raceCommand
     }
 
@@ -1067,7 +1092,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             try {
                 context.unbindService(_budzServiceConnection!!)
             } catch (e: IllegalArgumentException) {
-                Log.w(tag, e.message, e)
+                RotatingFileLogger.get().logw(tag, e.message)
             } finally {
                 _budzServiceBound = false
                 _budzServiceConnection = null
@@ -1081,7 +1106,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         val bonded: Boolean = _devicePresenter?.findAirohaDevice() ?: false
         _airohaDeviceState.value = if (bonded) AirohaDeviceState.BONDED else
             AirohaDeviceState.DISCONNECTED
-        Log.i(tag, "isAirohaDeviceBonded=$bonded")
+        RotatingFileLogger.get().logi(tag, "isAirohaDeviceBonded=$bonded")
         return bonded
     }
 

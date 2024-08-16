@@ -55,8 +55,8 @@ object SoundsManager {
         idToSample(AudioSamples.WHITE_NOISE.key())).sortedBy { it.index },
     )
 
-    private val _mechanicalNoiseSamples = AudioGroup(name = "Mechanical Noise", index = 1, samples = listOf(
-        idToSample(AudioSamples.FAN_SOUND.key())).sortedBy { it.index }
+    private val _mechanicalNoiseSamples = AudioGroup(name = "Mechanical Noise", index = 1,
+        samples = listOf(idToSample(AudioSamples.FAN_SOUND.key())).sortedBy { it.index }
     )
 
     private val _fallAsleepSamples = listOf(

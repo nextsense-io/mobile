@@ -2,10 +2,10 @@ package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
 import android.os.CountDownTimer
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.AudioSample
 import io.nextsense.android.budz.manager.AudioSampleType
@@ -101,7 +101,8 @@ class TimedSleepViewModel @Inject constructor(
                                         )
                                     }
                                 } else {
-                                    Log.d(tag, "Failed to update timed sleep duration")
+                                    RotatingFileLogger.get().logd(tag, "Failed to update timed " +
+                                            "sleep duration")
                                 }
                             }
                     }
@@ -111,7 +112,7 @@ class TimedSleepViewModel @Inject constructor(
     }
 
     fun loadUserData() {
-        Log.d(tag, "updating state")
+        RotatingFileLogger.get().logd(tag, "updating state")
         _uiState.update { currentState ->
             currentState.copy(
                 loading = true
@@ -125,10 +126,10 @@ class TimedSleepViewModel @Inject constructor(
             }
             return
         }
-        Log.d(tag, "loading user data")
+        RotatingFileLogger.get().logd(tag, "loading user data")
         viewModelScope.launch {
             usersRepository.getUser(authRepository.currentUserId!!).let { userState ->
-                Log.d(tag, "user data loaded")
+                RotatingFileLogger.get().logd(tag, "user data loaded")
                 if (userState is State.Success && userState.data != null) {
                     _uiState.update { currentState ->
                         val fallAsleepSampleName =
@@ -163,7 +164,7 @@ class TimedSleepViewModel @Inject constructor(
                                     AudioSampleType.STAY_ASLEEP_TIMED_SLEEP]!!)
                         )
                     }
-                    Log.d(tag, "state updated")
+                    RotatingFileLogger.get().logd(tag, "state updated")
                 }
                 _uiState.update { currentState ->
                     currentState.copy(

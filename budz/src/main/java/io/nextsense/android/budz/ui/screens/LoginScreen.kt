@@ -1,7 +1,6 @@
 package io.nextsense.android.budz.ui.screens
 
 import android.app.Activity
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.android.gms.auth.api.identity.BeginSignInResult
 import com.google.android.gms.common.api.ApiException
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.model.AuthDataProvider
 import io.nextsense.android.budz.model.AuthState
@@ -56,14 +56,14 @@ fun LoginScreen(
                 val credentials =
                     authViewModel.oneTapClient.getSignInCredentialFromIntent(result.data)
                 authViewModel.signInWithGoogle(credentials)
-                Log.i("LoginScreen:Launcher","Login-in with database")
+                RotatingFileLogger.get().logi("LoginScreen:Launcher","Login-in with database")
             }
             catch (e: ApiException) {
-                Log.e("LoginScreen:Launcher","Login One-tap $e")
+                RotatingFileLogger.get().loge("LoginScreen:Launcher","Login One-tap $e")
             }
         }
         else if (result.resultCode == Activity.RESULT_CANCELED){
-            Log.e("LoginScreen:Launcher","OneTapClient Canceled")
+            RotatingFileLogger.get().loge("LoginScreen:Launcher","OneTapClient Canceled")
         }
     }
 
@@ -76,9 +76,11 @@ fun LoginScreen(
 
     LaunchedEffect(currentUser) {
         AuthDataProvider.updateAuthState(currentUser)
-        Log.i("LoginScreen", "updating auth state: ${AuthDataProvider.authState}")
+        RotatingFileLogger.get().logi("LoginScreen", "updating auth state: " +
+                "${AuthDataProvider.authState}")
         if (AuthDataProvider.authState == AuthState.SignedIn) {
-            Log.i("LoginScreen", "Authenticated in launched effect: ${AuthDataProvider.isAuthenticated}")
+            RotatingFileLogger.get().logi("LoginScreen", "Authenticated in launched effect: " +
+                    "${AuthDataProvider.isAuthenticated}")
             loginViewModel.navigateToNext(
                 goToIntro = {
                     onGoToIntro()
@@ -136,7 +138,8 @@ fun LoginScreen(
         launch = {
             // Dismiss LoginScreen
             loginState.value = false
-            Log.i("LoginScreen", "Authenticated: ${AuthDataProvider.isAuthenticated}")
+            RotatingFileLogger.get().logi("LoginScreen", "Authenticated: " +
+                    "${AuthDataProvider.isAuthenticated}")
             if (!loginViewModel.uiState.value.loading) {
                 loginViewModel.navigateToNext(
                     goToIntro = {

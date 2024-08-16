@@ -1,12 +1,12 @@
 package io.nextsense.android.budz.manager
 
-import android.util.Log
 import io.nextsense.android.algo.signal.BandPowerAnalysis
 import io.nextsense.android.algo.signal.BandPowerAnalysis.Band
 import io.nextsense.android.algo.signal.Filters
 import io.nextsense.android.algo.signal.Sampling
 import io.nextsense.android.algo.signal.WaveletArtifactRejection
 import io.nextsense.android.base.devices.maui.MauiDataParser
+import io.nextsense.android.base.utils.RotatingFileLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -88,7 +88,7 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
             /*bandStart=*/49.0, /*bandEnd=*/51.0, /*powerLineFrequency=*/null)
         val sixtyHertzBandPower = BandPowerAnalysis.getBandPower(data, eegSamplingRate,
             /*bandStart=*/59.0, /*bandEnd=*/61.0, /*powerLineFrequency=*/null)
-        Log.i(tag, "50 hertz band power: $fiftyHertzBandPower\n" +
+        RotatingFileLogger.get().logi(tag, "50 hertz band power: $fiftyHertzBandPower\n" +
                 "60 hertz band power: $sixtyHertzBandPower")
         if (fiftyHertzBandPower == 0.0 && sixtyHertzBandPower == 0.0) {
             return null
@@ -102,7 +102,8 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
         }
         val threshold = 1.0
         for (i in data.indices step data.size / windows) {
-            if (isWindowFlat(data.subList(i, (i + data.size / windows).coerceAtMost(data.size)), threshold)) {
+            if (isWindowFlat(data.subList(i, (i + data.size / windows).coerceAtMost(data.size)),
+                    threshold)) {
                 return true
             }
         }

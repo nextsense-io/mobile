@@ -16,7 +16,6 @@ import brainflow.WindowOperations;
 import io.nextsense.android.algo.signal.Sampling;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
-
 public class SleepWakeModel extends BaseModel {
 
   public static final Duration FRAME_LENGTH = Duration.ofSeconds(1);

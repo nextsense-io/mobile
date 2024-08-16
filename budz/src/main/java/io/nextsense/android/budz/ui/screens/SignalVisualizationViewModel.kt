@@ -1,7 +1,6 @@
 package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
@@ -10,6 +9,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.algo.tflite.SleepWakeModel
 import io.nextsense.android.base.devices.maui.MauiDataParser
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.base.utils.SleepWakeCsvWriter
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AirohaDeviceState
@@ -108,18 +108,19 @@ open class SignalVisualizationViewModel @Inject constructor(
                                 updateSignalCharts()
                                 val runtimeMs = System.currentTimeMillis() - startTime
                                 if (runtimeMs > refreshInterval.inWholeMilliseconds) {
-                                    Log.d(tag, "Slow update time: $runtimeMs")
+                                    RotatingFileLogger.get().logv(tag, "Slow update time: " +
+                                            "$runtimeMs")
                                 }
                                 delay(Math.max(refreshInterval.inWholeMilliseconds - runtimeMs, 0))
                             }
                         }
                     }
                     StreamingState.STOPPED -> {
-                        Log.i(tag, "Streaming stopped")
+                        RotatingFileLogger.get().logi(tag, "Streaming stopped")
                         _dataRefreshJob?.cancel()
                     }
                     else -> {
-                        Log.i(tag, "Streaming $streamingState")
+                        RotatingFileLogger.get().logi(tag, "Streaming $streamingState")
                     }
                 }
             }
@@ -149,7 +150,7 @@ open class SignalVisualizationViewModel @Inject constructor(
                     }
                     val runtimeMs = System.currentTimeMillis() - startTime
                     if (runtimeMs > refreshInterval.inWholeMilliseconds) {
-                        Log.d(tag, "Slow update time: $runtimeMs")
+                        RotatingFileLogger.get().logv(tag, "Slow update time: $runtimeMs")
                     }
                     delay(Math.max(refreshInterval.inWholeMilliseconds - runtimeMs, 0))
                 }
@@ -203,13 +204,13 @@ open class SignalVisualizationViewModel @Inject constructor(
             } else {
                 null
             }
-            Log.i(tag, "Left Ear Sleeping: $leftEarSleeping")
+            RotatingFileLogger.get().logi(tag, "Left Ear Sleeping: $leftEarSleeping")
             val rightEarSleeping = if (gotRightEarData) {
                 airohaDeviceManager.runSleepWakeInference(rightEarData!!)
             } else {
                 null
             }
-            Log.i(tag, "Right Ear Sleeping: $rightEarSleeping")
+            RotatingFileLogger.get().logi(tag, "Right Ear Sleeping: $rightEarSleeping")
             csvWriter?.appendData(leftEarSleeping, rightEarSleeping)
         }
 

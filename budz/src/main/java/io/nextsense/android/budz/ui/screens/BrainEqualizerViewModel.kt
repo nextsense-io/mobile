@@ -3,7 +3,6 @@ package io.nextsense.android.budz.ui.screens
 import android.content.Context
 import android.media.AudioManager
 import android.os.Handler
-import android.util.Log
 import androidx.lifecycle.viewModelScope
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
@@ -22,6 +21,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.algo.signal.BandPowerAnalysis
 import io.nextsense.android.base.devices.maui.MauiDevice
+import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.EarEegChannel
@@ -162,7 +162,7 @@ class BrainEqualizerViewModel @Inject constructor(
                     updateSoundModulation()
                     val runtimeMs = System.currentTimeMillis() - startTime
                     if (runtimeMs > refreshInterval.inWholeMilliseconds) {
-                        Log.d(tag, "Slow update time: $runtimeMs")
+                        RotatingFileLogger.get().logv(tag, "Slow update time: $runtimeMs")
                     }
                     delay(Math.max(_soundModulationInterval.inWholeMilliseconds - runtimeMs, 0))
                 }
@@ -239,7 +239,7 @@ class BrainEqualizerViewModel @Inject constructor(
         for (channelBandPowers in bandPowers.entries) {
             val channel = if (channelBandPowers.key == 1) "Left" else "Right"
 
-            Log.d(tag,
+            RotatingFileLogger.get().logd(tag,
                 "$channel Delta: ${"%.3f".format(channelBandPowers.value[
                 BandPowerAnalysis.Band.DELTA])}" +
                 " $channel Theta: ${"%.3f".format(channelBandPowers.value[
@@ -293,7 +293,7 @@ class BrainEqualizerViewModel @Inject constructor(
                     0F
                 }
             }
-            Log.d(tag, "Bass: $_bassEqLevel Treble: $_trebleEqLevel")
+            RotatingFileLogger.get().logd(tag, "Bass: $_bassEqLevel Treble: $_trebleEqLevel")
 
             if (!_modulatedVolume && _bassEqLevel > 0F) {
                 modulateVolume()
