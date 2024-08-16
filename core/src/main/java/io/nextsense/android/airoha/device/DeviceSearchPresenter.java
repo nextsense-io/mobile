@@ -344,7 +344,6 @@ public class DeviceSearchPresenter implements AirohaConnector.AirohaConnectionLi
         if (mBluetoothProfileA2DP.getConnectionState(device) == BluetoothProfile.STATE_CONNECTED) {
             return true;
         } else {
-            RotatingFileLogger.get().logw(TAG, "Error = A2DP is not Connected: " + bdAddr);
             return false;
         }
     }
