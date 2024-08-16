@@ -91,8 +91,8 @@ fun HomeScreen(
     }
 
     LifecycleStartEffect(true) {
-        homeViewModel.connectDeviceIfNeeded()
         homeViewModel.startMonitoring()
+        homeViewModel.connectDeviceIfNeeded()
         onStopOrDispose {
             homeViewModel.stopMonitoring()
             homeViewModel.stopConnection()

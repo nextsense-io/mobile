@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 data class HomeState(
     val loading: Boolean = false,
@@ -110,7 +111,10 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             // Need a bit of delay after initializing the Airoha SDK before connecting.
             delay(1000L)
-            airohaDeviceManager.connectDevice()
+            // Try to connect when the app is opened in case it is already connected with the
+            // device. Timeout after 15 seconds, it will get picked up by the system broadcast when
+            // connected later on if not found.
+            airohaDeviceManager.connectDevice(timeout = 15.seconds)
         }
     }
 
