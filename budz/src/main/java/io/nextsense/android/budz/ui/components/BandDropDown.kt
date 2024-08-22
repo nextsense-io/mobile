@@ -16,12 +16,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.nextsense.android.algo.signal.BandPowerAnalysis
 import io.nextsense.android.budz.ui.theme.BudzColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AmplitudeDropDown(options: List<Int>, currentSelection: Int, enabled: Boolean,
-                  onChange: (amplitude: Int) -> Unit) {
+fun BandDropDown(options: List<BandPowerAnalysis.Band>, currentSelection: BandPowerAnalysis.Band,
+                 enabled: Boolean, onChange: (amplitude: BandPowerAnalysis.Band) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
@@ -31,10 +32,10 @@ fun AmplitudeDropDown(options: List<Int>, currentSelection: Int, enabled: Boolea
                 expanded = !expanded
             }
         },
-        modifier = Modifier.width(80.dp)
+        modifier = Modifier.width(120.dp)
     ) {
         TextField(
-            value = currentSelection.toString(),
+            value = currentSelection.getName(),
             onValueChange = {},
             readOnly = true,
             trailingIcon = {
@@ -54,7 +55,7 @@ fun AmplitudeDropDown(options: List<Int>, currentSelection: Int, enabled: Boolea
         ) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(text = option.toString(),
+                    text = { Text(text = option.name,
                         style = MaterialTheme.typography.displayMedium) },
                     onClick = {
                         onChange(option)

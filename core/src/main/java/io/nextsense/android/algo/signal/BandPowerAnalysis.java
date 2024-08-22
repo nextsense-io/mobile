@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import brainflow.BrainFlowError;
 import brainflow.DataFilter;
 import brainflow.DetrendOperations;
-import brainflow.WindowOperations;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
 public class BandPowerAnalysis {
@@ -30,9 +30,6 @@ public class BandPowerAnalysis {
     private final double start;
     private final double end;
 
-
-// Now closestGem and nextClosestGem can be used to update the UI or further logic
-
     Band(double start, double end) {
       this.start = start;
       this.end = end;
@@ -44,6 +41,11 @@ public class BandPowerAnalysis {
 
     public double getEnd() {
       return end;
+    }
+
+    public String getName() {
+      String lowerCaseName = this.name().toLowerCase(Locale.ROOT);
+      return lowerCaseName.substring(0, 1).toUpperCase(Locale.ROOT) + lowerCaseName.substring(1);
     }
   }
 

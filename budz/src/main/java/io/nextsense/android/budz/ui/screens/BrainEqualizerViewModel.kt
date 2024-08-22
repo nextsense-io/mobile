@@ -56,22 +56,20 @@ enum class AlphaDirection(val direction: String) {
 
 data class BrainEqualizerState(
     val connected: Boolean = false,
-    val alphaModulationDemoMode: Boolean = true,
-    val alphaAmplitudeTarget: Int = 2,
-    val alphaDirection: AlphaDirection = AlphaDirection.UP,
+    val modulationDemoMode: Boolean = true,
+    val amplitudeTarget: Int = 2,
+    val direction: AlphaDirection = AlphaDirection.UP,
     val activeChannel: EarEegChannel = EarbudsConfigs.getEarbudsConfig(
         EarbudsConfigNames.MAUI_CONFIG.name).channelsConfig[1]!!,
-    val leftAlpha: Float? = null,
-    val rightAlpha: Float? = null,
-    val alpha: Float? = null,
-    val alphaSnapshot: Float? = null,
+    val activeBand: BandPowerAnalysis.Band = BandPowerAnalysis.Band.ALPHA,
+    val leftBandPower: Float? = null,
+    val rightBandPower: Float? = null,
+    val bandPower: Float? = null,
+    val bandPowerSnapshot: Float? = null,
     val modulatingStarted: Boolean = false,
-    val alphaModulationSuccess: Boolean = false,
-    val alphaModulationDifference: Float? = null
+    val modulationSuccess: Boolean = false,
+    val modulationDifference: Float? = null
 )
-
-private const val alphaBetaRatioMidPoint = 1F
-private const val alphaStepSize = 2F
 
 @UnstableApi
 @HiltViewModel
@@ -96,20 +94,24 @@ class BrainEqualizerViewModel @Inject constructor(
     val uiState: StateFlow<BrainEqualizerState> = _uiState.asStateFlow()
     val fftAudioProcessor = FFTAudioProcessor()
 
-    fun changeAmplitudeTarget(amplitude: Int) {
-        _uiState.value = _uiState.value.copy(alphaAmplitudeTarget = amplitude)
+    fun changeActiveBand(band: BandPowerAnalysis.Band) {
+        _uiState.value = _uiState.value.copy(activeBand = band)
     }
 
-    fun changeAlphaDirection(direction: AlphaDirection) {
-        _uiState.value = _uiState.value.copy(alphaDirection = direction)
+    fun changeAmplitudeTarget(amplitude: Int) {
+        _uiState.value = _uiState.value.copy(amplitudeTarget = amplitude)
+    }
+
+    fun changeDirection(direction: AlphaDirection) {
+        _uiState.value = _uiState.value.copy(direction = direction)
     }
 
     fun changeActiveChannel(activeChannel: EarEegChannel) {
-        _uiState.value = _uiState.value.copy(activeChannel = activeChannel, alpha =
+        _uiState.value = _uiState.value.copy(activeChannel = activeChannel, bandPower =
         if (activeChannel == EarEegChannel.ELW_ELC) {
-            _uiState.value.leftAlpha
+            _uiState.value.leftBandPower
         } else {
-            _uiState.value.rightAlpha
+            _uiState.value.rightBandPower
         })
     }
 
@@ -120,8 +122,8 @@ class BrainEqualizerViewModel @Inject constructor(
 
     fun startStopModulating() {
         if (_uiState.value.modulatingStarted) {
-            _uiState.value = _uiState.value.copy(modulatingStarted = false, alphaSnapshot = null,
-                alphaModulationSuccess = false, alphaModulationDifference = null)
+            _uiState.value = _uiState.value.copy(modulatingStarted = false, bandPowerSnapshot = null,
+                modulationSuccess = false, modulationDifference = null)
             _bassEqLevel = 0f
             _trebleEqLevel = 0f
             if (_modulatedVolume) {
@@ -132,7 +134,7 @@ class BrainEqualizerViewModel @Inject constructor(
 
         } else {
             _uiState.value = _uiState.value.copy(modulatingStarted = true,
-                alphaSnapshot = _uiState.value.alpha)
+                bandPowerSnapshot = _uiState.value.bandPower)
         }
     }
 
@@ -203,38 +205,35 @@ class BrainEqualizerViewModel @Inject constructor(
         val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.DELTA,
             BandPowerAnalysis.Band.THETA, BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA,
             BandPowerAnalysis.Band.GAMMA))
-//        val bandPowers = signalStateManager.getBandPowers(listOf(BandPowerAnalysis.Band.ALPHA,
-//            BandPowerAnalysis.Band.BETA))
         if (bandPowers.isEmpty()) {
             return
         }
-        var alphaBetaRatio: Double? = null
 
         val gotLeft = bandPowers.containsKey(1)
         val gotRight = bandPowers.containsKey(2)
         if (!gotLeft && !gotRight) {
             return
         }
-        var leftAlpha: Float? = null
-        var rightAlpha: Float? = null
-        var alphaValue: Float? = null
+        var leftBandPower: Float? = null
+        var rightBandPower: Float? = null
+        var bandPowerValue: Float? = null
         if (gotLeft) {
-            leftAlpha = bandPowers[1]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let {
+            leftBandPower = bandPowers[1]?.get(_uiState.value.activeBand)?.toFloat().let {
                 it?.times(100) ?: 0F }
             if (uiState.value.activeChannel == EarEegChannel.ELW_ELC) {
-                alphaValue = leftAlpha
+                bandPowerValue = leftBandPower
             }
         }
         if (gotRight) {
-            rightAlpha = bandPowers[2]?.get(BandPowerAnalysis.Band.ALPHA)?.toFloat().let {
+            rightBandPower = bandPowers[2]?.get(_uiState.value.activeBand)?.toFloat().let {
                 it?.times(100) ?: 0F }
             if (uiState.value.activeChannel == EarEegChannel.ERW_ERC) {
-                alphaValue = rightAlpha
+                bandPowerValue = rightBandPower
             }
         }
 
-       _uiState.value = _uiState.value.copy(alpha = alphaValue, leftAlpha = leftAlpha,
-           rightAlpha = rightAlpha)
+       _uiState.value = _uiState.value.copy(bandPower = bandPowerValue, leftBandPower = leftBandPower,
+           rightBandPower = rightBandPower)
 
         for (channelBandPowers in bandPowers.entries) {
             val channel = if (channelBandPowers.key == 1) "Left" else "Right"
@@ -251,56 +250,34 @@ class BrainEqualizerViewModel @Inject constructor(
                 " $channel Gamma: ${"%.3f".format(channelBandPowers.value[
                     BandPowerAnalysis.Band.GAMMA])}"
             )
-
-            if (alphaBetaRatio == null) {
-                alphaBetaRatio = channelBandPowers.value[BandPowerAnalysis.Band.ALPHA]!! /
-                        channelBandPowers.value[BandPowerAnalysis.Band.BETA]!!
-            }
-        }
-
-        if (alphaBetaRatio == null) {
-            return
         }
 
         if (uiState.value.modulatingStarted) {
             var amplitudeChange = 0F
-            if (uiState.value.alphaModulationDemoMode) {
-                if (uiState.value.alpha == null || uiState.value.alphaSnapshot == null) {
+            if (uiState.value.modulationDemoMode) {
+                if (uiState.value.bandPower == null || uiState.value.bandPowerSnapshot == null) {
                     return
                 }
-                val amplitudeChangeTarget = uiState.value.alphaAmplitudeTarget
-                if (uiState.value.alphaDirection == AlphaDirection.UP) {
-                    amplitudeChange = (uiState.value.alpha!! - (uiState.value.alphaSnapshot!! +
+                val amplitudeChangeTarget = uiState.value.amplitudeTarget
+                if (uiState.value.direction == AlphaDirection.UP) {
+                    amplitudeChange = (uiState.value.bandPower!! - (uiState.value.bandPowerSnapshot!! +
                             amplitudeChangeTarget)).coerceAtLeast(0F)
-                } else if (uiState.value.alphaDirection == AlphaDirection.DOWN) {
-                    amplitudeChange = ((uiState.value.alphaSnapshot!! - amplitudeChangeTarget) -
-                            uiState.value.alpha!!).coerceAtLeast(0F)
+                } else if (uiState.value.direction == AlphaDirection.DOWN) {
+                    amplitudeChange = ((uiState.value.bandPowerSnapshot!! - amplitudeChangeTarget) -
+                            uiState.value.bandPower!!).coerceAtLeast(0F)
                 }
                 _bassEqLevel = (amplitudeChange * AirohaDeviceManager.MAX_EQUALIZER_SETTING * 6).
                     coerceAtMost(AirohaDeviceManager.MAX_EQUALIZER_SETTING.toFloat())
                 _trebleEqLevel = 0F
-            } else {
-                _bassEqLevel = if (alphaBetaRatio >= alphaBetaRatioMidPoint) {
-                    (((alphaBetaRatio - alphaBetaRatioMidPoint) * 2).coerceAtMost(1.0) *
-                            AirohaDeviceManager.MAX_EQUALIZER_SETTING).toFloat()
-                } else {
-                    0F
-                }
-                _trebleEqLevel = if (alphaBetaRatio < alphaBetaRatioMidPoint) {
-                    ((alphaBetaRatioMidPoint - alphaBetaRatio).coerceAtMost(1.0) *
-                            AirohaDeviceManager.MAX_EQUALIZER_SETTING).toFloat()
-                } else {
-                    0F
-                }
             }
             RotatingFileLogger.get().logd(tag, "Bass: $_bassEqLevel Treble: $_trebleEqLevel")
 
             if (!_modulatedVolume && _bassEqLevel > 0F) {
                 modulateVolume()
                 _modulatedVolume = true
-                _uiState.value = _uiState.value.copy(alphaModulationSuccess = true,
-                    alphaModulationDifference =
-                    _uiState.value.alpha!! - _uiState.value.alphaSnapshot!!)
+                _uiState.value = _uiState.value.copy(modulationSuccess = true,
+                    modulationDifference =
+                    _uiState.value.bandPower!! - _uiState.value.bandPowerSnapshot!!)
             }
 
             applySoundModulation(_bassEqLevel, _trebleEqLevel)

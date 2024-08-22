@@ -29,10 +29,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.util.UnstableApi
+import io.nextsense.android.algo.signal.BandPowerAnalysis
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.manager.EarEegChannel
 import io.nextsense.android.budz.ui.components.StringListDropDown
 import io.nextsense.android.budz.ui.components.AmplitudeDropDown
+import io.nextsense.android.budz.ui.components.BandDropDown
 import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.ExoVisualizer
 import io.nextsense.android.budz.ui.components.HorizontalBandPowerBarChart
@@ -43,6 +45,7 @@ import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 import io.nextsense.android.budz.ui.components.WideButton
 import io.nextsense.android.budz.ui.theme.BudzColor
+import java.util.Locale
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -85,7 +88,7 @@ fun BrainSignal(viewModel: BrainEqualizerViewModel) {
 fun AlphaCharts(uiState: BrainEqualizerState) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Alpha Brain Power",
+            text = "${uiState.activeBand.getName()} Brain Power",
             style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.align(Alignment.CenterHorizontally)
         )
@@ -94,7 +97,7 @@ fun AlphaCharts(uiState: BrainEqualizerState) {
             Row {
                 HorizontalBandPowerBarChart(
                     xData = listOf(0F, 1F),
-                    yData = listOf(uiState.leftAlpha ?: 0F, uiState.rightAlpha ?: 0F),
+                    yData = listOf(uiState.leftBandPower ?: 0F, uiState.rightBandPower ?: 0F),
                     dataLabels = listOf("Left", "Right"),
                     modifier = Modifier.height(120.dp)
                 )
@@ -168,7 +171,7 @@ fun BrainEqualizerScreen(
                 Spacer(modifier = Modifier.height(20.dp))
                 ExoVisualizer(viewModel.fftAudioProcessor)
                 Spacer(modifier = Modifier.height(20.dp))
-                if (!uiState.alphaModulationDemoMode) {
+                if (!uiState.modulationDemoMode) {
                     WideButton(
                         name = stringResource(R.string.label_instructions_and_tips),
                         onClick = { onGoToFitGuide() })
@@ -176,32 +179,33 @@ fun BrainEqualizerScreen(
                 }
                 AlphaCharts(uiState)
                 Spacer(modifier = Modifier.height(20.dp))
-                if (!uiState.alphaModulationDemoMode) {
+                if (!uiState.modulationDemoMode) {
                     WideButton(
                         name = stringResource(R.string.label_fit_guide),
                         onClick = { onGoToConnectionGuide() })
                 } else {
                     Row {
+                        BandDropDown(options = arrayListOf(BandPowerAnalysis.Band.THETA,
+                            BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA),
+                            currentSelection = uiState.activeBand,
+                            enabled = !uiState.modulatingStarted,
+                            onChange = {band ->
+                                viewModel.changeActiveBand(band)
+                            })
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Alpha Target",
+                            text = "Target",
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Spacer(modifier = Modifier.width(20.dp))
                         AmplitudeDropDown(options = arrayListOf(2, 4, 6),
-                            currentSelection = uiState.alphaAmplitudeTarget,
+                            currentSelection = uiState.amplitudeTarget,
                             enabled = !uiState.modulatingStarted,
                             onChange = {amplitude ->
                                 viewModel.changeAmplitudeTarget(amplitude)
                             })
                         Spacer(modifier = Modifier.width(20.dp))
-                        if (uiState.alphaModulationSuccess)
-                            Text(
-                                text = "SUCCESS",
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    color = BudzColor.green),
-                                modifier = Modifier.align(Alignment.CenterVertically)
-                            )
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     Row {
@@ -220,9 +224,9 @@ fun BrainEqualizerScreen(
                                     EarEegChannel.getChannelByAlias(alias))
                             })
                         Spacer(modifier = Modifier.width(20.dp))
-                        if (uiState.alphaModulationDifference != null)
+                        if (uiState.modulationDifference != null)
                             Text(
-                                text = "Diff: ${"%.1f".format(uiState.alphaModulationDifference)}",
+                                text = "Diff: ${"%.1f".format(uiState.modulationDifference)}",
                                 style = MaterialTheme.typography.labelLarge.copy(
                                     color = BudzColor.green),
                                 modifier = Modifier.align(Alignment.CenterVertically)
@@ -231,23 +235,35 @@ fun BrainEqualizerScreen(
                     Spacer(modifier = Modifier.height(20.dp))
                     Row {
                         Text(
-                            text = "Alpha: ${"%.1f".format(uiState.alpha ?: 0.0)}",
+                            text = "${uiState.activeBand.getName()}: ${"%.1f".format(
+                                uiState.bandPower ?: 0.0)}",
                             style = MaterialTheme.typography.labelLarge,
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Spacer(modifier = Modifier.width(60.dp))
                         SimpleButton(name = if (uiState.modulatingStarted) "Stop" else "Start",
-                            enabled = uiState.alpha != null,
+                            enabled = uiState.bandPower != null,
                             onClick = {
                                 viewModel.startStopModulating()
                             })
                         Spacer(modifier = Modifier.width(20.dp))
-                        if (uiState.alphaSnapshot != null)
+                        if (uiState.bandPowerSnapshot != null)
                             Text(
-                                text = "%.1f".format(uiState.alphaSnapshot),
+                                text = "%.1f".format(uiState.bandPowerSnapshot),
                                 style = MaterialTheme.typography.labelLarge,
                                 modifier = Modifier.align(Alignment.CenterVertically)
                         )
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row {
+                        if (uiState.modulationSuccess)
+                            Text(
+                                text = "SUCCESS",
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    color = BudzColor.green
+                                ),
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
                     }
                 }
             }
