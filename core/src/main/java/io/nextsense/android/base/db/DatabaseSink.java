@@ -66,7 +66,7 @@ public class DatabaseSink {
   public synchronized void onSamples(Samples samples) {
     localSessionManager.getActiveLocalSession().ifPresent(currentLocalSession -> {
       if (!currentLocalSession.isReceivedData()) {
-        localSessionManager.notifyFirstDataReceived();
+        localSessionManager.notifyFirstDataReceived(samples.getEegSamples().get(0));
       }
       if (currentLocalSession.isUploadNeeded()) {
         // Verify that the timestamps are moving forward in time.
@@ -82,7 +82,8 @@ public class DatabaseSink {
         }
         int packetIndex = 0;
         for (EegSample eegSample : samples.getEegSamples()) {
-          if (lastEegSample != null && eegSample.getAbsoluteSamplingTimestamp().isBefore(
+          if (lastEegSample != null && lastEegSample.getAbsoluteSamplingTimestamp() != null &&
+              eegSample.getAbsoluteSamplingTimestamp().isBefore(
                 lastEegSample.getAbsoluteSamplingTimestamp())) {
             RotatingFileLogger.get().logw(TAG,
                 "Received a sample that is before a previous sample, skipping packet. " +
@@ -91,15 +92,35 @@ public class DatabaseSink {
                     ", packet index: " + packetIndex);
             return;
           }
+//          if (lastEegSample != null && lastEegSample.getRelativeSamplingTimestamp() != null &&
+//              eegSample.getRelativeSamplingTimestamp() != null &&
+//              eegSample.getRelativeSamplingTimestamp() <=
+//                  lastEegSample.getRelativeSamplingTimestamp()) {
+//            RotatingFileLogger.get().logw(TAG,
+//                "Received a sample that is before a previous sample, skipping packet. " +
+//                    "Previous timestamp: " + lastEegSample.getRelativeSamplingTimestamp() +
+//                    ", new timestamp: " + eegSample.getRelativeSamplingTimestamp() +
+//                    ", packet index: " + packetIndex);
+//            return;
+//          }
           lastEegSample = eegSample;
           packetIndex++;
         }
 
         lastEegFrequency = (int)localSessionManager.getActiveLocalSession().get().getEegSampleRate();
         // Save the samples in the local database.
+        if (samples.getEegSamples().size() != 50 || samples.getAccelerations().size() != 5 ||
+            samples.getAngularSpeeds().size() != 5) {
+          RotatingFileLogger.get().logw(TAG,
+              "Received a packet with an unexpected number of samples: " +
+                  samples.getEegSamples().size() + " eeg samples, " +
+                  samples.getAccelerations().size() + " accelerations, " +
+                  samples.getAngularSpeeds().size() + " angular speeds.");
+        }
         boxDatabase.runInTx(() -> {
           boxDatabase.putEegSamples(samples.getEegSamples());
           boxDatabase.putAccelerations(samples.getAccelerations());
+          boxDatabase.putAngularSpeeds(samples.getAngularSpeeds());
         });
         eegRecordsCounter.getAndAdd(samples.getEegSamples().size());
         previousSamples = samples;

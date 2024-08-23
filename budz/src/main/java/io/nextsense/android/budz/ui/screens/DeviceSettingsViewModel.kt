@@ -44,16 +44,16 @@ class DeviceSettingsViewModel @Inject constructor(
     fun connectAndStartStreaming() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(message = "Starting streaming...")
-            val started = deviceManager.startBleStreaming()
-            _uiState.value = _uiState.value.copy(message = "Started streaming: $started")
+            deviceManager.startBleStreaming()
+            _uiState.value = _uiState.value.copy(message = "Started streaming")
         }
     }
 
     fun disconnectAndStopStreaming() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(message = "Stopping streaming...")
-            val stopped = deviceManager.stopBleStreaming(overrideForceStreaming = true)
-            _uiState.value = _uiState.value.copy(message = "Stopped streaming: $stopped")
+            deviceManager.stopBleStreaming(overrideForceStreaming = true)
+            _uiState.value = _uiState.value.copy(message = "Stopped streaming")
         }
     }
 

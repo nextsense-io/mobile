@@ -402,7 +402,7 @@ public class MauiDataParser {
 //    eegDataSynchronizer.addData(channelName, dataPointAcquisitionTimeStamp, receptionTimestamp,
 //        convertToMicroVolts(eegValue));
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
-        dataPointAcquisitionTimeStamp, /*samplingTimestamp=*/null, null);
+        dataPointAcquisitionTimeStamp, /*samplingTimestamp=*/null, /*flags=*/null);
     ++eegSamplesCount;
     if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
       ++leftEegSamplesSinceKeyTimestamp;
@@ -430,10 +430,10 @@ public class MauiDataParser {
         Math.round(1000 / localSession.getAccelerationSampleRate());
     samples.addAcceleration(Acceleration.create(localSession.id, /*x=*/imuData.get(0),
         /*y=*/imuData.get(1), /*z=*/imuData.get(2), deviceLocation,
-        /*samplingTimestamp=*/null, dataPointAcquisitionTimeStamp, receptionTimestamp));
+        receptionTimestamp, dataPointAcquisitionTimeStamp, /*samplingTimestamp=*/null));
     samples.addAngularSpeed(AngularSpeed.create(localSession.id, /*x=*/imuData.get(3),
         /*y=*/imuData.get(4), /*z=*/imuData.get(5), deviceLocation,
-        /*samplingTimestamp=*/null, dataPointAcquisitionTimeStamp, receptionTimestamp));
+        receptionTimestamp, dataPointAcquisitionTimeStamp, /*samplingTimestamp=*/null));
     if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
       ++leftImuSamplesSinceKeyTimestamp;
     } else {

@@ -25,7 +25,6 @@ class UsersRepository @Inject constructor() {
             cachedUser = user
             return State.success(userRef)
         } catch (exception: Exception) {
-            // If exception is thrown, emit failed state along with message.
             return State.failed(exception.message.toString())
         }
     }
@@ -41,7 +40,6 @@ class UsersRepository @Inject constructor() {
             cachedUser = user
             return State.success(userRef)
         } catch (exception: Exception) {
-            // If exception is thrown, emit failed state along with message.
             return State.failed(exception.message.toString())
         }
     }

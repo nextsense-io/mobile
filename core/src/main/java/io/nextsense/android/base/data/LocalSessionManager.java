@@ -170,8 +170,11 @@ public class LocalSessionManager {
     return Optional.ofNullable(activeLocalSession);
   }
 
-  public synchronized void notifyFirstDataReceived() {
+  public synchronized void notifyFirstDataReceived(EegSample eegSample) {
     if (activeLocalSession != null) {
+      if (eegSample.getRelativeSamplingTimestamp() != null) {
+        activeLocalSession.setFirstRelativeTimestamp(eegSample.getRelativeSamplingTimestamp());
+      }
       activeLocalSession.setReceivedData(true);
       objectBoxDatabase.putLocalSession(activeLocalSession);
       onFirstDataReceivedListeners.forEach(OnFirstDataReceivedListener::onFirstDataReceived);

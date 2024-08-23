@@ -48,10 +48,16 @@ public class ObjectBoxDatabase implements Database {
   private Query<LocalSession> sessionUploadedQuery;
   private Query<EegSample> eegSamplesQuery;
   private Query<EegSample> eegSamplesTimestampIsLesserQuery;
+  private Query<EegSample> eegSamplesRelativeTimestampIsLesserQuery;
+  private Query<EegSample> eegSamplesRelativeTimestampBetweenQuery;
   private Query<Acceleration> accelerationQuery;
   private Query<Acceleration> accelerationTimestampIsLesserQuery;
+  private Query<Acceleration> accelerationRelativeTimestampIsLesserQuery;
+  private Query<Acceleration> accelerationRelativeTimestampBetweenQuery;
   private Query<AngularSpeed> angularSpeedQuery;
   private Query<AngularSpeed> angularSpeedTimestampIsLesserQuery;
+  private Query<AngularSpeed> angularSpeedRelativeTimestampIsLesserQuery;
+  private Query<AngularSpeed> angularSpeedRelativeTimestampBetweenQuery;
   private Query<DeviceInternalState> sessionDeviceInternalStateQuery;
   private Query<DeviceInternalState> recentDeviceInternalStateQuery;
   private Query<DeviceInternalState> lastDeviceInternalStateQuery;
@@ -74,14 +80,28 @@ public class ObjectBoxDatabase implements Database {
     eegSamplesQuery = eegSampleBox.query().equal(EegSample_.localSessionId, 0).build();
     eegSamplesTimestampIsLesserQuery = eegSampleBox.query().equal(EegSample_.localSessionId, 0)
         .less(EegSample_.absoluteSamplingTimestamp, 0).build();
+    eegSamplesRelativeTimestampBetweenQuery = eegSampleBox.query().equal(EegSample_.localSessionId, 0)
+        .between(EegSample_.relativeSamplingTimestamp, 0, 0).build();
+    eegSamplesRelativeTimestampIsLesserQuery = eegSampleBox.query().equal(EegSample_.localSessionId, 0)
+        .less(EegSample_.relativeSamplingTimestamp, 0).build();
     accelerationBox = boxStore.boxFor(Acceleration.class);
     accelerationQuery = accelerationBox.query().equal(Acceleration_.localSessionId, 0).build();
     accelerationTimestampIsLesserQuery = accelerationBox.query().equal(
         Acceleration_.localSessionId, 0).less(Acceleration_.absoluteSamplingTimestamp, 0).build();
+    accelerationRelativeTimestampIsLesserQuery = accelerationBox.query().equal(
+        Acceleration_.localSessionId, 0).less(Acceleration_.relativeSamplingTimestamp, 0).build();
+    accelerationRelativeTimestampBetweenQuery = accelerationBox.query().equal(
+        Acceleration_.localSessionId, 0)
+        .between(Acceleration_.relativeSamplingTimestamp, 0, 0).build();
     angularSpeedBox = boxStore.boxFor(AngularSpeed.class);
     angularSpeedQuery = angularSpeedBox.query().equal(AngularSpeed_.localSessionId, 0).build();
     angularSpeedTimestampIsLesserQuery = angularSpeedBox.query().equal(
         AngularSpeed_.localSessionId, 0).less(AngularSpeed_.absoluteSamplingTimestamp, 0).build();
+    angularSpeedRelativeTimestampIsLesserQuery = angularSpeedBox.query().equal(
+        AngularSpeed_.localSessionId, 0).less(AngularSpeed_.relativeSamplingTimestamp, 0).build();
+    angularSpeedRelativeTimestampBetweenQuery = angularSpeedBox.query().equal(
+            AngularSpeed_.localSessionId, 0)
+        .between(AngularSpeed_.relativeSamplingTimestamp, 0, 0).build();
     deviceInternalStateBox = boxStore.boxFor(DeviceInternalState.class);
     sessionDeviceInternalStateQuery = deviceInternalStateBox.query().equal(
             DeviceInternalState_.localSessionId, 0).build();
@@ -162,16 +182,18 @@ public class ObjectBoxDatabase implements Database {
   public Optional<LocalSession> getActiveSession() {
     return runWithExceptionLog(() -> {
       List<LocalSession> activeSessions = activeSessionQuery.find();
+      if (activeSessions == null || activeSessions.isEmpty()) {
+        RotatingFileLogger.get().logw(TAG, "No active session");
+        return Optional.empty();
+      }
       if (activeSessions.size() > 1) {
         RotatingFileLogger.get().logw(TAG, "More than one active session");
         for (LocalSession session : activeSessions) {
-          RotatingFileLogger.get().logw(TAG, "Active session : " + session.getCloudDataSessionId());
+          RotatingFileLogger.get().logw(TAG, "Active session : " +
+              session.getCloudDataSessionId());
         }
       }
-      if (!activeSessions.isEmpty()) {
-        return Optional.of(activeSessions.get(activeSessions.size() - 1));
-      }
-      return Optional.empty();
+      return Optional.of(activeSessions.get(activeSessions.size() - 1));
     });
   }
 
@@ -184,9 +206,13 @@ public class ObjectBoxDatabase implements Database {
       eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).find());
   }
 
-  public List<Acceleration> getAccelerations(int localSessionId) {
+  public List<EegSample> getEegSamplesBetweenRelative(long localSessionId, long startTimestamp,
+                                                      long endTimestamp) {
     return runWithExceptionLog(() ->
-      accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).find());
+        eegSamplesRelativeTimestampBetweenQuery.setParameter(
+            EegSample_.localSessionId, localSessionId)
+            .setParameters(EegSample_.relativeSamplingTimestamp, startTimestamp, endTimestamp)
+            .find());
   }
 
   public List<EegSample> getLastEegSamples(long localSessionId, long count) {
@@ -247,12 +273,34 @@ public class ObjectBoxDatabase implements Database {
       eegSamplesQuery.setParameter(EegSample_.localSessionId, localSessionId).count());
   }
 
+  public List<Acceleration> getAccelerations(int localSessionId) {
+    return runWithExceptionLog(() ->
+        accelerationQuery.setParameter(Acceleration_.localSessionId, localSessionId).find());
+  }
+
   public List<Acceleration> getLastAccelerations(int localSessionId, long count) {
     return runWithExceptionLog(() -> {
       long sessionAccelerationCount = getAccelerationCount(localSessionId);
       long offset = count <= sessionAccelerationCount ? sessionAccelerationCount - count : 0;
       return getAccelerations(localSessionId, offset, count);
     });
+  }
+
+  public List<Acceleration> getAccelerationsBeforeRelative(long localSessionId, long timestamp) {
+    return runWithExceptionLog(() ->
+        accelerationRelativeTimestampIsLesserQuery.setParameter(
+            Acceleration_.localSessionId, localSessionId)
+            .setParameter(Acceleration_.relativeSamplingTimestamp, timestamp)
+            .find());
+  }
+
+  public List<Acceleration> getAccelerationsBetweenRelative(
+      long localSessionId, long startTimestamp, long endTimestamp) {
+    return runWithExceptionLog(() ->
+        accelerationRelativeTimestampBetweenQuery.setParameter(
+                Acceleration_.localSessionId, localSessionId)
+            .setParameters(Acceleration_.relativeSamplingTimestamp, startTimestamp, endTimestamp)
+            .find());
   }
 
   public List<EegSample> getEegSamples(long localSessionId, long offset, long count) {
@@ -278,6 +326,23 @@ public class ObjectBoxDatabase implements Database {
   public List<AngularSpeed> getAngularSpeeds(long localSessionId, long offset, long count) {
     return runWithExceptionLog(() -> angularSpeedQuery.setParameter(
         AngularSpeed_.localSessionId, localSessionId).find(offset, count));
+  }
+
+  public List<AngularSpeed> getAngularSpeedsBeforeRelative(long localSessionId, long timestamp) {
+    return runWithExceptionLog(() ->
+        angularSpeedRelativeTimestampIsLesserQuery.setParameter(
+            AngularSpeed_.localSessionId, localSessionId)
+            .setParameter(AngularSpeed_.relativeSamplingTimestamp, timestamp)
+            .find());
+  }
+
+  public List<AngularSpeed> getAngularSpeedsBetweenRelative(
+      long localSessionId, long startTimestamp, long endTimestamp) {
+    return runWithExceptionLog(() ->
+        angularSpeedRelativeTimestampBetweenQuery.setParameter(
+                AngularSpeed_.localSessionId, localSessionId)
+            .setParameters(AngularSpeed_.relativeSamplingTimestamp, startTimestamp, endTimestamp)
+            .find());
   }
 
   public long getAngularSpeedCount() {
@@ -327,11 +392,25 @@ public class ObjectBoxDatabase implements Database {
     );
   }
 
+  public long deleteFirstRelativeEegSamplesData(long localSessionId, long timestampCutoff) {
+    return runWithExceptionLog(() ->
+        eegSamplesRelativeTimestampIsLesserQuery.setParameter(EegSample_.localSessionId, localSessionId)
+            .setParameter(EegSample_.relativeSamplingTimestamp, timestampCutoff).remove()
+    );
+  }
+
   public long deleteFirstAccelerationsData(long localSessionId, long timestampCutoff) {
     return runWithExceptionLog(() ->
         accelerationTimestampIsLesserQuery
             .setParameter(Acceleration_.localSessionId, localSessionId)
             .setParameter(Acceleration_.absoluteSamplingTimestamp, timestampCutoff).remove());
+  }
+
+  public long deleteFirstRelativeAccelerationsData(long localSessionId, long timestampCutoff) {
+    return runWithExceptionLog(() ->
+        accelerationRelativeTimestampIsLesserQuery
+            .setParameter(Acceleration_.localSessionId, localSessionId)
+            .setParameter(Acceleration_.relativeSamplingTimestamp, timestampCutoff).remove());
   }
 
   public long deleteAccelerationData(long localSessionId) {
@@ -344,6 +423,13 @@ public class ObjectBoxDatabase implements Database {
         angularSpeedTimestampIsLesserQuery
             .setParameter(AngularSpeed_.localSessionId, localSessionId)
             .setParameter(AngularSpeed_.absoluteSamplingTimestamp, timestampCutoff).remove());
+  }
+
+  public long deleteFirstRelativeAngularSpeedData(long localSessionId, long timestampCutoff) {
+    return runWithExceptionLog(() ->
+        angularSpeedRelativeTimestampIsLesserQuery
+            .setParameter(AngularSpeed_.localSessionId, localSessionId)
+            .setParameter(AngularSpeed_.relativeSamplingTimestamp, timestampCutoff).remove());
   }
 
   public long deleteAngularSpeedData(long localSessionId) {

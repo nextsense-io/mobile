@@ -20,10 +20,10 @@ import io.objectbox.relation.ToOne;
  * Either the relative or absolute sampling timestamp need to be provided.
  */
 @Entity
-public class EegSample extends BaseRecord {
+public class EegSample extends BaseRecord implements TimestampedDataSample {
   public ToOne<LocalSession> localSession;
 
-  // Key is the channel number, value is the voltage im milliVolts.
+  // Key is the channel number, value is the voltage im microVolts.
   @Convert(converter = Converters.SerializableConverter.class, dbType = byte[].class)
   private HashMap<Integer, Float> eegSamples;
   // When the Android application received the packet from the device.
@@ -127,14 +127,17 @@ public class EegSample extends BaseRecord {
     return eegSamples;
   }
 
+  @Override
   public Instant getReceptionTimestamp() {
     return receptionTimestamp;
   }
 
+  @Override
   public @Nullable Integer getRelativeSamplingTimestamp() {
     return relativeSamplingTimestamp;
   }
 
+  @Override
   public @Nullable Instant getAbsoluteSamplingTimestamp() {
     return absoluteSamplingTimestamp;
   }

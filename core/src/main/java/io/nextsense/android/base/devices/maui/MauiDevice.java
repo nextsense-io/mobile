@@ -163,18 +163,6 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
       return Futures.immediateFailedFuture(
           new IllegalStateException("No characteristic to stream on."));
     }
-    boolean saveToCsv = false;
-    if (parameters != null && parameters.containsKey(LocalSessionManager.SAVE_TO_CSV_KEY)) {
-      saveToCsv = parameters.getBoolean(LocalSessionManager.SAVE_TO_CSV_KEY, false);
-    }
-    long localSessionId = localSessionManager.startLocalSession(userBigTableKey, dataSessionId,
-        earbudsConfig, uploadToCloud, deviceSettings.getEegStreamingRate(),
-        deviceSettings.getImuStreamingRate(), true);
-    if (localSessionId == -1) {
-      // Previous session not finished, cannot start streaming.
-      RotatingFileLogger.get().logw(TAG, "Previous session not finished, cannot start streaming.");
-      return Futures.immediateFuture(false);
-    }
     mauiDataParser.startNewSession();
     if (!peripheral.isNotifying(dataCharacteristic)) {
       changeStreamingStateFuture = SettableFuture.create();
@@ -189,7 +177,6 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
     if (this.deviceMode == DeviceMode.IDLE) {
       return Futures.immediateFuture(true);
     }
-    localSessionManager.stopActiveLocalSession();
     deviceMode = DeviceMode.IDLE;
     if (peripheral.isNotifying(dataCharacteristic)) {
       changeStreamingStateFuture = SettableFuture.create();

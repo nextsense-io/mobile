@@ -3,6 +3,8 @@ package io.nextsense.android.base.data;
 import androidx.annotation.Nullable;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 import io.nextsense.android.base.db.objectbox.Converters;
 import io.objectbox.annotation.Convert;
@@ -14,7 +16,7 @@ import io.objectbox.relation.ToOne;
  * Either the relative or absolute sampling timestamp need to be provided.
  */
 @Entity
-public class AngularSpeed extends BaseRecord {
+public class AngularSpeed extends BaseRecord implements TimestampedDataSample {
 
   public enum Channels {
     GYRO_X("gyro_x"),  // Angular speed X from a device with a single value, usually the box.
@@ -26,6 +28,15 @@ public class AngularSpeed extends BaseRecord {
     GYRO_L_X("gyro_l_x"),  // Angular speed X from the left earbud.
     GYRO_L_Y("gyro_l_y"),  // Angular speed Y from the left earbud.
     GYRO_L_Z("gyro_l_z");  // Angular speed Z from the left earbud.
+
+    public static List<Channels> getForDeviceLocation(DeviceLocation deviceLocation) {
+      return switch (deviceLocation) {
+        case BOX, CASE, UNKNOWN -> List.of(GYRO_X, GYRO_Y, GYRO_Z);
+        case RIGHT_EARBUD -> List.of(GYRO_R_X, GYRO_R_Y, GYRO_R_Z);
+        case LEFT_EARBUD -> List.of(GYRO_L_X, GYRO_L_Y, GYRO_L_Z);
+        case BOTH_EARBUDS -> List.of(GYRO_R_X, GYRO_R_Y, GYRO_R_Z, GYRO_L_X, GYRO_L_Y, GYRO_L_Z);
+      };
+    }
 
     private final String name;
 
@@ -193,14 +204,41 @@ public class AngularSpeed extends BaseRecord {
     }
   }
 
+  public Map<AngularSpeed.Channels, Integer> getChannels() {
+    return switch (getDeviceLocation()) {
+      case BOX, CASE, UNKNOWN -> Map.of(
+          Channels.GYRO_X, x,
+          Channels.GYRO_Y, y,
+          Channels.GYRO_Z, z);
+      case RIGHT_EARBUD -> Map.of(
+          Channels.GYRO_R_X, rightX,
+          Channels.GYRO_R_Y, rightY,
+          Channels.GYRO_R_Z, rightZ);
+      case LEFT_EARBUD -> Map.of(
+          Channels.GYRO_L_X, leftX,
+          Channels.GYRO_L_Y, leftY,
+          Channels.GYRO_L_Z, leftZ);
+      case BOTH_EARBUDS -> Map.of(
+          Channels.GYRO_R_X, rightX,
+          Channels.GYRO_R_Y, rightY,
+          Channels.GYRO_R_Z, rightZ,
+          Channels.GYRO_L_X, leftX,
+          Channels.GYRO_L_Y, leftY,
+          Channels.GYRO_L_Z, leftZ);
+    };
+  }
+
+  @Override
   public Instant getReceptionTimestamp() {
     return receptionTimestamp;
   }
 
+  @Override
   public @Nullable Integer getRelativeSamplingTimestamp() {
     return relativeSamplingTimestamp;
   }
 
+  @Override
   public @Nullable Instant getAbsoluteSamplingTimestamp() {
     return absoluteSamplingTimestamp;
   }

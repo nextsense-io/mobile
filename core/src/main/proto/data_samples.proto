@@ -13,24 +13,33 @@ message Channel {
   repeated float sample = 2;
 }
 
-message EegDataSamples {
+message ModalityDataSamples {
   enum Modality {
     EAR_EEG = 0;
     SCALP_EEG = 1;
     INTRA_CRANIAL_EEG = 2;
+    ACC = 3;
+    GYRO = 4;
+    INTERNAL_STATE = 5;
   }
   Modality modality = 3;
-  int32 frequency = 4;
+  int32 sampling_rate = 4;
+  // What the first timestamp should be for the first sample. If not, then there are missing
+  // samples before.
   google.protobuf.Timestamp expected_start_timestamp = 5;
+  // How many samples are expected to be in this message. If less, then it means samples were
+  // dropped or lost.
   int32 expected_samples_count = 6;
   repeated google.protobuf.Timestamp sampling_timestamp = 7;
   repeated Channel channel = 8;
+  // These fields are used only with Xenon.
   repeated bool sync = 9;
   repeated bool trig_out = 10;
   repeated bool trig_in = 11;
   repeated bool z_mod = 12;
   repeated bool marker = 13;
   repeated bool button = 14;
+  // Used only for EEG modality
   string earbuds_config = 15;
 }
 
@@ -56,6 +65,6 @@ message DeviceInternalState {
 message DataSamples {
   string data_session_id = 1;
   string user_id = 2;
-  EegDataSamples eeg_data_samples = 3;
+  repeated ModalityDataSamples modality_data_samples = 3;
   repeated DeviceInternalState device_internal_states = 4;
 }

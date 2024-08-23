@@ -1,5 +1,6 @@
 package io.nextsense.android.budz.ui.activities
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -11,6 +12,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import io.nextsense.android.budz.Routes
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AudioSampleType
+import io.nextsense.android.budz.service.BudzService
 import io.nextsense.android.budz.ui.screens.BrainEqualizerScreen
 import io.nextsense.android.budz.ui.screens.CheckBrainSignalIntroScreen
 import io.nextsense.android.budz.ui.screens.CheckConnectionScreen
@@ -36,6 +38,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        startService()
         setContent {
             BudzTheme {
                 val navController = rememberNavController()
@@ -246,7 +249,16 @@ class MainActivity : ComponentActivity() {
             airohaDeviceManager.destroy()
         }
         super.onDestroy()
-        // TODO(eric): Temporary fix until all lifecycle issues are fixed.
-        // exitProcess(0);
+    }
+
+    private fun startService() {
+        // Start the service
+        val foregroundServiceIntent = Intent(applicationContext, BudzService::class.java)
+        foregroundServiceIntent.putExtra(
+            BudzService.EXTRA_UI_CLASS,
+            MainActivity::class.java
+        )
+        // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
+        applicationContext.startService(foregroundServiceIntent)
     }
 }
