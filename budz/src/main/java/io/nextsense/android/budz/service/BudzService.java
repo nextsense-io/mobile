@@ -21,7 +21,12 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.io.IOException;
+import java.time.Duration;
 
+import javax.inject.Inject;
+
+import dagger.hilt.android.AndroidEntryPoint;
+import io.nextsense.android.ApplicationType;
 import io.nextsense.android.Config;
 import io.nextsense.android.airoha.device.AirohaBleManager;
 import io.nextsense.android.algo.tflite.SleepTransformerModel;
@@ -42,6 +47,10 @@ import io.nextsense.android.base.db.objectbox.ObjectBoxDatabase;
 import io.nextsense.android.base.devices.NextSenseDeviceManager;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 import io.nextsense.android.budz.R;
+import io.nextsense.android.budz.manager.AirohaDeviceManager;
+import io.nextsense.android.budz.manager.AuthRepository;
+import io.nextsense.android.budz.manager.SessionManager;
+import io.nextsense.android.budz.model.SessionsRepository;
 
 /**
  * Main Foreground service that will manage the Bluetooth connection to the NextSense device and the
@@ -55,6 +64,7 @@ import io.nextsense.android.budz.R;
  * This service could be extended later on with an AIDL file to let external applications connect
  * to our device if that is something we want to do.
  */
+@AndroidEntryPoint
 public class BudzService extends Service {
 
   public static final String EXTRA_UI_CLASS = "ui_class";
@@ -67,9 +77,12 @@ public class BudzService extends Service {
   private static final int UI_INTENT_REQUEST_CODE = 1;
   private static final int NOTIFICATION_ID = 1;
 
+  @Inject AirohaDeviceManager airohaDeviceManager;
+  @Inject AuthRepository authRepository;
+  @Inject SessionsRepository sessionsRepository;
+
   // Binder given to clients.
   private final IBinder binder = new LocalBinder();
-
   private NotificationManager notificationManager;
   private FirebaseAuth firebaseAuth;
   private NextSenseDeviceManager budzDeviceManager;
@@ -83,6 +96,7 @@ public class BudzService extends Service {
   private CacheSink cacheSink;
   private CsvSink csvSink;
   private LocalSessionManager localSessionManager;
+  private SessionManager sessionManager;
   private Connectivity connectivity;
   private Uploader uploader;
   private SampleRateCalculator sampleRateCalculator;
@@ -167,6 +181,9 @@ public class BudzService extends Service {
   public SleepWakeModel getSleepWakeModel() {
     return sleepWakeModel;
   }
+  public SessionManager getSessionManager() {
+    return sessionManager;
+  }
   public AirohaBleManager getAirohaBleManager() {
     return airohaBleManager;
   }
@@ -194,8 +211,8 @@ public class BudzService extends Service {
     deviceManager = DeviceManager.create(
         deviceScanner, localSessionManager, centralManagerProxy, bluetoothStateManager,
         budzDeviceManager, memoryCache, csvSink);
-    // databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
-    // databaseSink.startListening();
+     databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
+     databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);
     // sampleRateCalculator.startListening();
     cacheSink = CacheSink.create(memoryCache);
@@ -204,12 +221,14 @@ public class BudzService extends Service {
     connectivity = Connectivity.create(this);
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
     // minRecordsToKeep is set at 12 minutes as we need 10 minutes for sleep staging.
-//    uploader = Uploader.create(this, ApplicationType.CONSUMER, objectBoxDatabase, databaseSink,
-//        connectivity, /*uploadChunk=*/Duration.ofSeconds(5), /*minRecordsToKeep=*/250 * 60 * 12,
-//        /*minDurationToKeep=*/Duration.ofMinutes(12));
-//    uploader.setMinimumConnectivityState(allowDataViaCellular ?
-//        Connectivity.State.LIMITED_CONNECTION : Connectivity.State.FULL_CONNECTION);
-//    uploader.start();
+    uploader = Uploader.create(this, ApplicationType.CONSUMER, objectBoxDatabase, databaseSink,
+        connectivity, /*uploadChunk=*/Duration.ofSeconds(10),
+        /*minDurationToKeep=*/Duration.ofMinutes(1));
+    uploader.setMinimumConnectivityState(allowDataViaCellular ?
+        Connectivity.State.LIMITED_CONNECTION : Connectivity.State.FULL_CONNECTION);
+    uploader.start();
+    sessionManager = new SessionManager(airohaDeviceManager, authRepository, sessionsRepository,
+        localSessionManager);
 
     firebaseAuth = FirebaseAuth.getInstance();
     firebaseAuth.addAuthStateListener(firebaseAuth -> {

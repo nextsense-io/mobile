@@ -1,9 +1,9 @@
 package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.AirohaBatteryLevel
@@ -12,6 +12,7 @@ import io.nextsense.android.budz.manager.AirohaDeviceState
 import io.nextsense.android.budz.manager.AudioSample
 import io.nextsense.android.budz.manager.AudioSampleType
 import io.nextsense.android.budz.manager.AuthRepository
+import io.nextsense.android.budz.manager.Protocol
 import io.nextsense.android.budz.manager.SoundsManager
 import io.nextsense.android.budz.model.UsersRepository
 import kotlinx.coroutines.Job
@@ -39,18 +40,38 @@ data class HomeState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val usersRepository: UsersRepository,
     private val authRepository: AuthRepository,
     private val airohaDeviceManager: AirohaDeviceManager
-): ViewModel() {
+): BudzViewModel(context) {
 
+    private val tag = HomeViewModel::class.java.simpleName
     private val _uiState = MutableStateFlow(HomeState())
     private val _forceStreaming = true
     private var _monitoringJob: Job? = null
 
     val uiState: StateFlow<HomeState> = _uiState.asStateFlow()
 
+    init {
+       viewModelScope.launch {
+
+       }
+    }
+
     fun startMonitoring() {
+        viewModelScope.launch {
+            budzState.collect { budzState ->
+                if (budzState.budzServiceBound) {
+                    startMonitoringAirohaDevice()
+                } else {
+                    stopMonitoring()
+                }
+            }
+        }
+    }
+
+    private fun startMonitoringAirohaDevice() {
         airohaDeviceManager.initialize()
         _monitoringJob = viewModelScope.launch {
             airohaDeviceManager.airohaDeviceState.collect { deviceState ->
@@ -62,11 +83,13 @@ class HomeViewModel @Inject constructor(
                         getBatteryLevels()
                         if (_forceStreaming) {
                             airohaDeviceManager.setForceStream(true)
-                            airohaDeviceManager.startBleStreaming()
+                            sessionManager.startSession(
+                                protocol = Protocol.WAKE, uploadToCloud = true)
                         }
                     }
                     AirohaDeviceState.CONNECTED_AIROHA -> {}
                     AirohaDeviceState.DISCONNECTED -> {
+                        sessionManager.stopSession()
                         _uiState.value = _uiState.value.copy(connected = false,
                             batteryLevel = AirohaBatteryLevel(null, null, null))
                     }
@@ -85,7 +108,7 @@ class HomeViewModel @Inject constructor(
         airohaDeviceManager.stopConnectingDevice()
     }
 
-    fun exitApp() {
+    private fun exitApp() {
         RotatingFileLogger.get().logi("HomeViewModel", "exitApp")
         viewModelScope.launch {
             airohaDeviceManager.destroy()

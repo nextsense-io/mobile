@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:3658994930751552543",
-      "lastPropertyId": "8:4163970389268528287",
+      "lastPropertyId": "14:9073749853583641367",
       "name": "Acceleration",
       "properties": [
         {
@@ -30,27 +30,42 @@
           "type": 5
         },
         {
-          "id": "5:2260023409202753285",
-          "name": "receptionTimestamp",
-          "type": 6
-        },
-        {
-          "id": "6:2718408363096941834",
-          "name": "relativeSamplingTimestamp",
-          "type": 5
-        },
-        {
-          "id": "7:3599223326442562352",
-          "name": "absoluteSamplingTimestamp",
-          "type": 6
-        },
-        {
           "id": "8:4163970389268528287",
           "name": "localSessionId",
           "indexId": "1:8816028416433126273",
           "type": 11,
           "flags": 520,
           "relationTarget": "LocalSession"
+        },
+        {
+          "id": "9:1786492366173782021",
+          "name": "rightX",
+          "type": 5
+        },
+        {
+          "id": "10:9152130849575436052",
+          "name": "rightY",
+          "type": 5
+        },
+        {
+          "id": "11:2751740407322629322",
+          "name": "rightZ",
+          "type": 5
+        },
+        {
+          "id": "12:5756981352762286195",
+          "name": "leftX",
+          "type": 5
+        },
+        {
+          "id": "13:7754633682019888179",
+          "name": "leftY",
+          "type": 5
+        },
+        {
+          "id": "14:9073749853583641367",
+          "name": "leftZ",
+          "type": 5
         }
       ],
       "relations": []
@@ -84,25 +99,6 @@
           "id": "2:3023543844408358812",
           "name": "eegSamples",
           "type": 23
-        },
-        {
-          "id": "3:9217311519292577988",
-          "name": "receptionTimestamp",
-          "type": 6
-        },
-        {
-          "id": "4:3141188964553715676",
-          "name": "relativeSamplingTimestamp",
-          "indexId": "5:4976751085054561409",
-          "type": 5,
-          "flags": 8
-        },
-        {
-          "id": "5:2161923181385908254",
-          "name": "absoluteSamplingTimestamp",
-          "indexId": "6:8757822738783033429",
-          "type": 6,
-          "flags": 8
         },
         {
           "id": "6:3394089932842450801",
@@ -152,7 +148,7 @@
     },
     {
       "id": "4:7829109381478237227",
-      "lastPropertyId": "18:3755527821508309483",
+      "lastPropertyId": "30:8764685609041196148",
       "name": "LocalSession",
       "properties": [
         {
@@ -235,6 +231,56 @@
           "id": "18:3755527821508309483",
           "name": "receivedData",
           "type": 1
+        },
+        {
+          "id": "21:2029569188391414576",
+          "name": "accelerationsUploadedUntil",
+          "type": 6
+        },
+        {
+          "id": "22:2101324205982193287",
+          "name": "accelerationsDeletedUntil",
+          "type": 6
+        },
+        {
+          "id": "23:1552130092401408317",
+          "name": "deviceInternalStateUploadedUntil",
+          "type": 5
+        },
+        {
+          "id": "24:1914093190649678550",
+          "name": "uploadedUntilRelative",
+          "type": 6
+        },
+        {
+          "id": "25:9064084009492585577",
+          "name": "uploadedUntil",
+          "type": 6
+        },
+        {
+          "id": "26:2772990822324806906",
+          "name": "deletedUntilRelative",
+          "type": 6
+        },
+        {
+          "id": "27:8794602654084715014",
+          "name": "deletedUntil",
+          "type": 6
+        },
+        {
+          "id": "28:199703073055032962",
+          "name": "accelerationsUploadedUntilRelative",
+          "type": 5
+        },
+        {
+          "id": "29:1343040803326675173",
+          "name": "accelerationsDeletedUntilRelative",
+          "type": 6
+        },
+        {
+          "id": "30:8764685609041196148",
+          "name": "firstRelativeTimestamp",
+          "type": 6
         }
       ],
       "relations": []
@@ -343,7 +389,7 @@
     },
     {
       "id": "8:2305739789178864595",
-      "lastPropertyId": "8:894003901266616460",
+      "lastPropertyId": "14:8855641057293512176",
       "name": "AngularSpeed",
       "properties": [
         {
@@ -368,27 +414,42 @@
           "type": 5
         },
         {
-          "id": "5:6626874622764669998",
-          "name": "receptionTimestamp",
-          "type": 6
-        },
-        {
-          "id": "6:8613048978926625836",
-          "name": "relativeSamplingTimestamp",
-          "type": 5
-        },
-        {
-          "id": "7:8751504952291949080",
-          "name": "absoluteSamplingTimestamp",
-          "type": 6
-        },
-        {
           "id": "8:894003901266616460",
           "name": "localSessionId",
           "indexId": "7:7495440003052720935",
           "type": 11,
           "flags": 520,
           "relationTarget": "LocalSession"
+        },
+        {
+          "id": "9:7826067142913150697",
+          "name": "rightX",
+          "type": 5
+        },
+        {
+          "id": "10:3837616897804495366",
+          "name": "rightY",
+          "type": 5
+        },
+        {
+          "id": "11:6845232573343839674",
+          "name": "rightZ",
+          "type": 5
+        },
+        {
+          "id": "12:561960359202965629",
+          "name": "leftX",
+          "type": 5
+        },
+        {
+          "id": "13:8538441311878204569",
+          "name": "leftY",
+          "type": 5
+        },
+        {
+          "id": "14:8855641057293512176",
+          "name": "leftZ",
+          "type": 5
         }
       ],
       "relations": []
@@ -405,7 +466,9 @@
     8897068767595150511
   ],
   "retiredIndexUids": [
-    3338737088726377102
+    3338737088726377102,
+    4976751085054561409,
+    8757822738783033429
   ],
   "retiredPropertyUids": [
     6662824838682468754,
@@ -429,7 +492,18 @@
     5572777395575348568,
     5241366559788209373,
     2258544700067478525,
-    330530214154588309
+    330530214154588309,
+    5319669163784479325,
+    6254396848489119719,
+    9217311519292577988,
+    3141188964553715676,
+    2161923181385908254,
+    2260023409202753285,
+    2718408363096941834,
+    3599223326442562352,
+    6626874622764669998,
+    8613048978926625836,
+    8751504952291949080
   ],
   "retiredRelationUids": [],
   "version": 1

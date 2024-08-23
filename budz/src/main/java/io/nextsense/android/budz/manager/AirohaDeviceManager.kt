@@ -133,12 +133,14 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     private var _forceStreaming = false
     private var _startStreamingJob: Job? = null
     private var _stopStreamingJob: Job? = null
+    private var _serviceConnected: Boolean = false
 
     val airohaDeviceState: StateFlow<AirohaDeviceState> = _airohaDeviceState.asStateFlow()
     val bleDeviceState: StateFlow<BleDeviceState> = _bleDeviceState.asStateFlow()
     val streamingState: StateFlow<StreamingState> = _streamingState.asStateFlow()
     val equalizerState: StateFlow<FloatArray> = _equalizerState.asStateFlow()
     val twsConnected: StateFlow<Boolean?> = MutableStateFlow(null).asStateFlow()
+    val deviceInfo: AirohaDevice? get() = _deviceInfo
     val isReady: Boolean get() = _airohaDeviceState.value == AirohaDeviceState.READY
 
     private val _airohaConnectionListener: AirohaConnector.AirohaConnectionListener =
@@ -259,7 +261,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                     // Also need a small delay between these commands or they often fail.
                     delay(200L)
                     _twsConnected.value = twsConnectStatusFlow().last() ?: false
-                    RotatingFileLogger.get().logd(tag, "twsConnected=$_twsConnected")
+                    RotatingFileLogger.get().logd(tag, "twsConnected=${_twsConnected.value}")
                     delay(200L)
                     _deviceInfo = deviceInfoFlow().last()
                     RotatingFileLogger.get().logd(tag, "deviceInfo=$_deviceInfo")
@@ -285,6 +287,20 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         _stopStreamingJob?.cancel()
         stopBleStreaming(true)
         disconnectDevice()
+    }
+
+    private suspend fun bindService() {
+        try {
+            withTimeout(1000L) {
+                connectServiceFlow().flowOn(Dispatchers.IO).take(1).last()
+            }
+        } catch (timeout: TimeoutCancellationException) {
+            if (!_budzServiceBound) {
+                RotatingFileLogger.get().loge(tag, "Timeout waiting for service to connect.")
+                return
+            }
+            _serviceConnected = true
+        }
     }
 
     fun setForceStream(force: Boolean) {
@@ -1086,9 +1102,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             BudzService.EXTRA_UI_CLASS,
             MainActivity::class.java
         )
-        // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
-        context.startService(_budzServiceIntent)
-        context.bindService(_budzServiceIntent!!, serviceConnection, Context.BIND_AUTO_CREATE)
+        context.bindService(_budzServiceIntent!!, serviceConnection, Context.BIND_IMPORTANT)
     }
 
     private fun stopService() {

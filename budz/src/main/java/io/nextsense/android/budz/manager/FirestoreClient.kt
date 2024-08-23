@@ -23,8 +23,12 @@ class FirestoreClient @Inject constructor() {
     private val rootRefPath = "consumer/v2/"
 
     val usersRef = db.collection(rootRefPath + Table.USERS.tableName())
+    val sessionsRef = db.collection(rootRefPath + Table.SESSIONS.tableName())
 
     init {
         RotatingFileLogger.get().logd(tag, "FirestoreClient initialized.")
     }
+
+    fun dataSessionsRef(sessionId: String) = sessionsRef.document(sessionId).collection(
+        Table.DATA_SESSIONS.tableName())
 }

@@ -19,7 +19,7 @@ public class LocalSession extends BaseRecord {
     NOT_STARTED(0),  // Recording not started yet, getting ready.
     RECORDING(1),  // Currently recording samples from the device.
     FINISHED(2),  // Session is finished, new samples should not be acquired anymore, but some
-                  // might still be left on the device to stream.
+    // might still be left on the device to stream.
     ALL_DATA_RECEIVED(5),  // All data received from the device.
     UPLOADED(3),  // All samples were uploaded to the cloud.
     COMPLETED(4);  // Session marked as completed in the cloud after the upload is done.
@@ -46,13 +46,27 @@ public class LocalSession extends BaseRecord {
 
   // If some data was received from the device for this session.
   private boolean receivedData;
+  private long firstRelativeTimestamp;
   private int eegSamplesUploaded;
+  private long uploadedUntilRelative;
+  @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
+  private Instant uploadedUntil;
   private long eegSamplesDeleted;
+  private long deletedUntilRelative;
+  @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
+  private Instant deletedUntil;
   private float eegSampleRate;
   private int accelerationsUploaded;
+  private int accelerationsUploadedUntilRelative;
+  @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
+  private Instant accelerationsUploadedUntil;
   private long accelerationsDeleted;
+  private long accelerationsDeletedUntilRelative;
+  @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
+  private Instant accelerationsDeletedUntil;
   private float accelerationSampleRate;
   private int deviceInternalStateUploaded;
+  private int deviceInternalStateUploadedUntil;
   @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
   private Instant startTime;
   @Nullable
@@ -61,10 +75,13 @@ public class LocalSession extends BaseRecord {
 
   private LocalSession(@Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
                        @Nullable String earbudsConfig, Status status, boolean uploadNeeded,
-                       boolean receivedData, int eegSamplesUploaded, long eegSamplesDeleted,
-                       float eegSampleRate, int accelerationsUploaded, long accelerationsDeleted,
+                       boolean receivedData, long firstRelativeTimestamp, int eegSamplesUploaded, long uploadedUntilRelative,
+                       @Nullable Instant uploadedUntil, long eegSamplesDeleted, long deletedUntilRelative,
+                       @Nullable Instant deletedUntil, float eegSampleRate, int accelerationsUploaded,
+                       int accelerationsUploadedUntilRelative, @Nullable Instant accelerationsUploadedUntil, long accelerationsDeleted,
+                       long accelerationsDeletedUntilRelative, @Nullable Instant accelerationsDeletedUntil,
                        float accelerationSampleRate, int deviceInternalStateUploaded,
-                       Instant startTime) {
+                       int deviceInternalStateUploadedUntil, Instant startTime, @Nullable Instant endTime) {
     super();
     this.userBigTableKey = userBigTableKey;
     this.cloudDataSessionId = cloudDataSessionId;
@@ -72,33 +89,51 @@ public class LocalSession extends BaseRecord {
     this.status = status;
     this.uploadNeeded = uploadNeeded;
     this.receivedData = receivedData;
+    this.firstRelativeTimestamp = firstRelativeTimestamp;
     this.eegSamplesUploaded = eegSamplesUploaded;
+    this.uploadedUntilRelative = uploadedUntilRelative;
+    this.uploadedUntil = uploadedUntil;
     this.eegSamplesDeleted = eegSamplesDeleted;
+    this.deletedUntilRelative = deletedUntilRelative;
+    this.deletedUntil = deletedUntil;
     this.eegSampleRate = eegSampleRate;
     this.accelerationsUploaded = accelerationsUploaded;
+    this.accelerationsUploadedUntilRelative = accelerationsUploadedUntilRelative;
+    this.accelerationsUploadedUntil = accelerationsUploadedUntil;
     this.accelerationsDeleted = accelerationsDeleted;
+    this.accelerationsDeletedUntilRelative = accelerationsDeletedUntilRelative;
+    this.accelerationsDeletedUntil = accelerationsDeletedUntil;
     this.accelerationSampleRate = accelerationSampleRate;
     this.deviceInternalStateUploaded = deviceInternalStateUploaded;
+    this.deviceInternalStateUploadedUntil = deviceInternalStateUploadedUntil;
     this.startTime = startTime;
+    this.endTime = endTime;
   }
 
   public static LocalSession create(
       @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
       @Nullable String earbudsConfig, boolean uploadNeeded, boolean receivedData,
       float eegSampleRate, float accelerationSampleRate, Instant startTime) {
-    return new LocalSession(cloudDataSessionId, userBigTableKey, earbudsConfig, Status.RECORDING,
-        uploadNeeded, receivedData, /*recordsUploaded=*/0, /*eegSamplesDeleted=*/0, eegSampleRate,
-        /*accelerationsUploaded=*/0, /*accelerationSamplesDeleted=*/0, accelerationSampleRate,
-        /*deviceInternalStateUploaded=*/0, startTime);
+    return new LocalSession(userBigTableKey, cloudDataSessionId, earbudsConfig, Status.RECORDING,
+        uploadNeeded, receivedData, /*firstRelativeTimestamp=*/ 0L, /*recordsUploaded=*/0, /*eegSamplesUploadedUntilRelative=*/0L, startTime,
+        /*eegSamplesDeleted=*/0L, /*eegSamplesDeletedUntilRelative=*/0L, startTime, eegSampleRate,
+        /*accelerationsUploaded=*/0, /*accelerationsUploadedUntilRelative=*/0, startTime,
+        /*accelerationsDeleted=*/0L, /*accelerationsDeletedUntilRelative=*/0L, startTime, accelerationSampleRate,
+        /*deviceInternalStateUploaded=*/0, /*deviceInternalStateUploadedUntil=*/0, startTime, /*endTime=*/null);
   }
 
   // Need to be public for ObjectBox performance.
   public LocalSession(
       int id, @Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
       @Nullable String earbudsConfig, Status status, boolean uploadNeeded, boolean receivedData,
-      int eegSamplesUploaded, long eegSamplesDeleted, float eegSampleRate,
-      int accelerationsUploaded, long accelerationsDeleted, float accelerationSampleRate,
-      int deviceInternalStateUploaded, Instant startTime, @Nullable Instant endTime) {
+      long firstRelativeTimestamp,
+      int eegSamplesUploaded, long uploadedUntilRelative, @Nullable Instant uploadedUntil,
+      long eegSamplesDeleted, long deletedUntilRelative, @Nullable Instant deletedUntil,
+      float eegSampleRate, int accelerationsUploaded, int accelerationsUploadedUntilRelative,
+      @Nullable Instant accelerationsUploadedUntil, long accelerationsDeleted, long accelerationsDeletedUntilRelative,
+      @Nullable Instant accelerationsDeletedUntil, float accelerationSampleRate,
+      int deviceInternalStateUploaded, int deviceInternalStateUploadedUntil, Instant startTime,
+      @Nullable Instant endTime) {
     super(id);
     this.userBigTableKey = userBigTableKey;
     this.cloudDataSessionId = cloudDataSessionId;
@@ -106,23 +141,58 @@ public class LocalSession extends BaseRecord {
     this.status = status;
     this.uploadNeeded = uploadNeeded;
     this.receivedData = receivedData;
+    this.firstRelativeTimestamp = firstRelativeTimestamp;
     this.eegSamplesUploaded = eegSamplesUploaded;
+    this.uploadedUntilRelative = uploadedUntilRelative;
+    this.uploadedUntil = uploadedUntil;
     this.eegSamplesDeleted = eegSamplesDeleted;
+    this.deletedUntilRelative = deletedUntilRelative;
+    this.deletedUntil = deletedUntil;
     this.eegSampleRate = eegSampleRate;
     this.accelerationsUploaded = accelerationsUploaded;
+    this.accelerationsUploadedUntilRelative = accelerationsUploadedUntilRelative;
+    this.accelerationsUploadedUntil = accelerationsUploadedUntil;
     this.accelerationsDeleted = accelerationsDeleted;
+    this.accelerationsDeletedUntilRelative = accelerationsDeletedUntilRelative;
+    this.accelerationsDeletedUntil = accelerationsDeletedUntil;
     this.accelerationSampleRate = accelerationSampleRate;
     this.deviceInternalStateUploaded = deviceInternalStateUploaded;
+    this.deviceInternalStateUploadedUntil = deviceInternalStateUploadedUntil;
     this.startTime = startTime;
     this.endTime = endTime;
   }
 
   // Needed for ObjectBox performance.
-  public LocalSession() {}
+  public LocalSession() {
+  }
+
+  public boolean isUploadNeeded() {
+    return uploadNeeded;
+  }
+
+  public void setUploadNeeded(boolean uploadNeeded) {
+    this.uploadNeeded = uploadNeeded;
+  }
+
+  public boolean isReceivedData() {
+    return receivedData;
+  }
+
+  public void setReceivedData(boolean receivedData) {
+    this.receivedData = receivedData;
+  }
 
   @Nullable
   public String getUserBigTableKey() {
     return userBigTableKey;
+  }
+
+  public long getFirstRelativeTimestamp() {
+    return firstRelativeTimestamp;
+  }
+
+  public void setFirstRelativeTimestamp(long firstRelativeTimestamp) {
+    this.firstRelativeTimestamp = firstRelativeTimestamp;
   }
 
   public void setUserBigTableKey(@Nullable String userBigTableKey) {
@@ -158,6 +228,27 @@ public class LocalSession extends BaseRecord {
     return eegSamplesUploaded;
   }
 
+  public void setEegSamplesUploaded(int eegSamplesUploaded) {
+    this.eegSamplesUploaded = eegSamplesUploaded;
+  }
+
+  public long getUploadedUntilRelative() {
+    return uploadedUntilRelative;
+  }
+
+  public void setUploadedUntilRelative(long uploadedUntilRelative) {
+    this.uploadedUntilRelative = uploadedUntilRelative;
+  }
+
+  @Nullable
+  public Instant getUploadedUntil() {
+    return uploadedUntil;
+  }
+
+  public void setUploadedUntil(@Nullable Instant uploadedUntil) {
+    this.uploadedUntil = uploadedUntil;
+  }
+
   public long getEegSamplesDeleted() {
     return eegSamplesDeleted;
   }
@@ -166,36 +257,21 @@ public class LocalSession extends BaseRecord {
     this.eegSamplesDeleted = eegSamplesDeleted;
   }
 
-  public boolean isUploadNeeded() {
-    return uploadNeeded;
+  public long getDeletedUntilRelative() {
+    return deletedUntilRelative;
   }
 
-  public void setUploadNeeded(boolean uploadNeeded) {
-    this.uploadNeeded = uploadNeeded;
+  public void setDeletedUntilRelative(long deletedUntilRelative) {
+    this.deletedUntilRelative = deletedUntilRelative;
   }
 
-  public boolean isReceivedData() {
-    return receivedData;
+  @Nullable
+  public Instant getDeletedUntil() {
+    return deletedUntil;
   }
 
-  public void setReceivedData(boolean receivedData) {
-    this.receivedData = receivedData;
-  }
-
-  public int getAccelerationsUploaded() {
-    return accelerationsUploaded;
-  }
-
-  public long getAccelerationsDeleted() {
-    return accelerationsDeleted;
-  }
-
-  public void setAccelerationsDeleted(long accelerationsDeleted) {
-    this.accelerationsDeleted = accelerationsDeleted;
-  }
-
-  public void setEegSamplesUploaded(int eegSamplesUploaded) {
-    this.eegSamplesUploaded = eegSamplesUploaded;
+  public void setDeletedUntil(@Nullable Instant deletedUntil) {
+    this.deletedUntil = deletedUntil;
   }
 
   public float getEegSampleRate() {
@@ -206,8 +282,54 @@ public class LocalSession extends BaseRecord {
     this.eegSampleRate = eegSampleRate;
   }
 
+  public int getAccelerationsUploaded() {
+    return accelerationsUploaded;
+  }
+
   public void setAccelerationsUploaded(int accelerationsUploaded) {
     this.accelerationsUploaded = accelerationsUploaded;
+  }
+
+  public int getAccelerationsUploadedUntilRelative() {
+    return accelerationsUploadedUntilRelative;
+  }
+
+  public void setAccelerationsUploadedUntilRelative(int accelerationsUploadedUntilRelative) {
+    this.accelerationsUploadedUntilRelative = accelerationsUploadedUntilRelative;
+  }
+
+  @Nullable
+  public Instant getAccelerationsUploadedUntil() {
+    return accelerationsUploadedUntil;
+  }
+
+  public void setAccelerationsUploadedUntil(@Nullable Instant accelerationsUploadedUntil) {
+    this.accelerationsUploadedUntil = accelerationsUploadedUntil;
+  }
+
+  public long getAccelerationsDeleted() {
+    return accelerationsDeleted;
+  }
+
+  public void setAccelerationsDeleted(long accelerationsDeleted) {
+    this.accelerationsDeleted = accelerationsDeleted;
+  }
+
+  public long getAccelerationsDeletedUntilRelative() {
+    return accelerationsDeletedUntilRelative;
+  }
+
+  public void setAccelerationsDeletedUntilRelative(long accelerationsDeletedUntilRelative) {
+    this.accelerationsDeletedUntilRelative = accelerationsDeletedUntilRelative;
+  }
+
+  @Nullable
+  public Instant getAccelerationsDeletedUntil() {
+    return accelerationsDeletedUntil;
+  }
+
+  public void setAccelerationsDeletedUntil(@Nullable Instant accelerationsDeletedUntil) {
+    this.accelerationsDeletedUntil = accelerationsDeletedUntil;
   }
 
   public float getAccelerationSampleRate() {
@@ -224,6 +346,14 @@ public class LocalSession extends BaseRecord {
 
   public void setDeviceInternalStateUploaded(int deviceInternalStateUploaded) {
     this.deviceInternalStateUploaded = deviceInternalStateUploaded;
+  }
+
+  public int getDeviceInternalStateUploadedUntil() {
+    return deviceInternalStateUploadedUntil;
+  }
+
+  public void setDeviceInternalStateUploadedUntil(int deviceInternalStateUploadedUntil) {
+    this.deviceInternalStateUploadedUntil = deviceInternalStateUploadedUntil;
   }
 
   public Instant getStartTime() {

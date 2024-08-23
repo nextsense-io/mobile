@@ -37,7 +37,9 @@ enum class EarbudsConfigNames {
     XENON_P02_CONFIG,
     KAUAI_MEDICAL_CONFIG,
     NITRO_CONFIG,
-    MAUI_CONFIG
+    MAUI_CONFIG;
+
+    fun key() = name.lowercase()
 }
 
 class ImpedanceConfig private constructor(
@@ -89,7 +91,7 @@ class EarbudsConfig(
 
 object EarbudsConfigs {
     private val earbudsConfigs: Map<String, EarbudsConfig> = mapOf(
-        EarbudsConfigNames.XENON_B_CONFIG.name.lowercase() to EarbudsConfig(
+        EarbudsConfigNames.XENON_B_CONFIG.key() to EarbudsConfig(
             name = EarbudsConfigNames.XENON_B_CONFIG.name.lowercase(),
             channelsConfig = mapOf(
                 1 to EarEegChannel.ERW_ELC,
@@ -119,7 +121,7 @@ object EarbudsConfigs {
             ),
             bestSignalChannel = 6
         ),
-        EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.lowercase() to EarbudsConfig(
+        EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.key() to EarbudsConfig(
             name = EarbudsConfigNames.KAUAI_MEDICAL_CONFIG.name.lowercase(),
             channelsConfig = mapOf(
                 1 to EarEegChannel.ERW_ERC,
@@ -150,7 +152,7 @@ object EarbudsConfigs {
             ),
             bestSignalChannel = 4
         ),
-        EarbudsConfigNames.XENON_P02_CONFIG.name.lowercase() to EarbudsConfig(
+        EarbudsConfigNames.XENON_P02_CONFIG.key() to EarbudsConfig(
             name = EarbudsConfigNames.XENON_P02_CONFIG.name.lowercase(),
             channelsConfig = mapOf(
                 1 to EarEegChannel.ELC_ELW,
@@ -180,7 +182,7 @@ object EarbudsConfigs {
             ),
             bestSignalChannel = 6
         ),
-        EarbudsConfigNames.MAUI_CONFIG.name.lowercase() to EarbudsConfig(
+        EarbudsConfigNames.MAUI_CONFIG.key() to EarbudsConfig(
             name = EarbudsConfigNames.MAUI_CONFIG.name.lowercase(),
             channelsConfig = mapOf(
                 1 to EarEegChannel.ELW_ELC,

@@ -6,10 +6,12 @@ import com.google.common.collect.ImmutableList;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import io.nextsense.android.base.db.objectbox.Converters;
 import io.objectbox.annotation.Convert;
 import io.objectbox.annotation.Entity;
+import io.objectbox.annotation.Index;
 import io.objectbox.relation.ToOne;
 
 /**
@@ -17,7 +19,7 @@ import io.objectbox.relation.ToOne;
  * Either the relative or absolute sampling timestamp need to be provided.
  */
 @Entity
-public class Acceleration extends BaseRecord {
+public class Acceleration extends BaseRecord implements TimestampedDataSample {
 
   public enum Channels {
     ACC_X("acc_x"),  // Acceleration X from a device with a single value, usually the box.
@@ -39,6 +41,16 @@ public class Acceleration extends BaseRecord {
     public String getName() {
       return name;
     }
+
+    public static List<Channels> getForDeviceLocation(DeviceLocation location) {
+      return switch (location) {
+        case BOX, UNKNOWN -> ImmutableList.of(ACC_X, ACC_Y, ACC_Z);
+        case RIGHT_EARBUD -> ImmutableList.of(ACC_R_X, ACC_R_Y, ACC_R_Z);
+        case LEFT_EARBUD -> ImmutableList.of(ACC_L_X, ACC_L_Y, ACC_L_Z);
+        case BOTH_EARBUDS -> ImmutableList.of(ACC_R_X, ACC_R_Y, ACC_R_Z, ACC_L_X, ACC_L_Y, ACC_L_Z);
+        default -> throw new IllegalArgumentException("Unknown location: " + location);
+      };
+    }
   }
   public static final List<String> CHANNELS = ImmutableList.of("acc_x", "acc_y", "acc_z", "acc_r_x",
       "acc_r_y", "acc_r_z", "acc_l_x", "acc_l_y", "acc_l_z");
@@ -54,11 +66,15 @@ public class Acceleration extends BaseRecord {
   @Nullable private Integer leftX;
   @Nullable private Integer leftY;
   @Nullable private Integer leftZ;
+  // When the Android application received the packet from the device.
   @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
   private Instant receptionTimestamp;
   @Nullable
+  @Index
   private Integer relativeSamplingTimestamp;
+  // When the sample was collected on the device.
   @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
+  @Index
   @Nullable
   private Instant absoluteSamplingTimestamp;
 
@@ -197,14 +213,43 @@ public class Acceleration extends BaseRecord {
     }
   }
 
+  public Map<Channels, Integer> getChannels() {
+    Map<Channels, Integer> channels = Map.of();
+    switch (getDeviceLocation()) {
+      case BOX, UNKNOWN -> channels = Map.of(
+          Channels.ACC_X, x,
+          Channels.ACC_Y, y,
+          Channels.ACC_Z, z);
+      case RIGHT_EARBUD -> channels = Map.of(
+          Channels.ACC_R_X, rightX,
+          Channels.ACC_R_Y, rightY,
+          Channels.ACC_R_Z, rightZ);
+      case LEFT_EARBUD -> channels = Map.of(
+          Channels.ACC_L_X, leftX,
+          Channels.ACC_L_Y, leftY,
+          Channels.ACC_L_Z, leftZ);
+      case BOTH_EARBUDS -> channels = Map.of(
+          Channels.ACC_R_X, rightX,
+          Channels.ACC_R_Y, rightY,
+          Channels.ACC_R_Z, rightZ,
+          Channels.ACC_L_X, leftX,
+          Channels.ACC_L_Y, leftY,
+          Channels.ACC_L_Z, leftZ);
+    }
+    return channels;
+  }
+
+  @Override
   public Instant getReceptionTimestamp() {
     return receptionTimestamp;
   }
 
+  @Override
   public @Nullable Integer getRelativeSamplingTimestamp() {
     return relativeSamplingTimestamp;
   }
 
+  @Override
   public @Nullable Instant getAbsoluteSamplingTimestamp() {
     return absoluteSamplingTimestamp;
   }
