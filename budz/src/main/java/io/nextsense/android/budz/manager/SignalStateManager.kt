@@ -66,7 +66,7 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
                     doubleData, airohaDeviceManager.getEegSamplingRate(), powerLineFrequency)
             }
             Filters.applyBandPassBF(doubleData, airohaDeviceManager.getEegSamplingRate(),
-                /*order=*/4, /*lowCutoff=*/0.5F, /*highCutoff=*/40F)
+                /*order=*/4, /*lowCutoff=*/0.3F, /*highCutoff=*/90F)
         }
         // Resample the data to the chart sampling rate for performance.
         return Sampling.downsampleBF(doubleData, airohaDeviceManager.getEegSamplingRate(),
@@ -93,7 +93,7 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
         if (fiftyHertzBandPower == 0.0 && sixtyHertzBandPower == 0.0) {
             return null
         }
-        return if (fiftyHertzBandPower > sixtyHertzBandPower) 50 else 60
+        return if (fiftyHertzBandPower > sixtyHertzBandPower) 60 else 60
     }
 
     private fun isSignalFlat(data: List<Float>?, windows: Int = 1): Boolean {
