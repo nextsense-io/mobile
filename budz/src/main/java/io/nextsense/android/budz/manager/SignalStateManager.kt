@@ -84,16 +84,18 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
     }
 
     private fun findPowerLineFrequency(data: List<Float>?, eegSamplingRate: Int): Int? {
-        val fiftyHertzBandPower = BandPowerAnalysis.getBandPower(data, eegSamplingRate,
-            /*bandStart=*/49.0, /*bandEnd=*/51.0, /*powerLineFrequency=*/null)
-        val sixtyHertzBandPower = BandPowerAnalysis.getBandPower(data, eegSamplingRate,
-            /*bandStart=*/59.0, /*bandEnd=*/61.0, /*powerLineFrequency=*/null)
-        RotatingFileLogger.get().logi(tag, "50 hertz band power: $fiftyHertzBandPower\n" +
-                "60 hertz band power: $sixtyHertzBandPower")
-        if (fiftyHertzBandPower == 0.0 && sixtyHertzBandPower == 0.0) {
-            return null
-        }
-        return if (fiftyHertzBandPower > sixtyHertzBandPower) 60 else 60
+        return 60;
+        // TODO(eric): Not working, always return 50 hertz.
+//        val fiftyHertzBandPower = BandPowerAnalysis.getBandPower(data, eegSamplingRate,
+//            /*bandStart=*/49.0, /*bandEnd=*/51.0, /*powerLineFrequency=*/null)
+//        val sixtyHertzBandPower = BandPowerAnalysis.getBandPower(data, eegSamplingRate,
+//            /*bandStart=*/59.0, /*bandEnd=*/61.0, /*powerLineFrequency=*/null)
+//        RotatingFileLogger.get().logi(tag, "50 hertz band power: $fiftyHertzBandPower\n" +
+//                "60 hertz band power: $sixtyHertzBandPower")
+//        if (fiftyHertzBandPower == 0.0 && sixtyHertzBandPower == 0.0) {
+//            return null
+//        }
+//        return if (fiftyHertzBandPower > sixtyHertzBandPower) 60 else 60
     }
 
     private fun isSignalFlat(data: List<Float>?, windows: Int = 1): Boolean {
