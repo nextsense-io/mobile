@@ -31,7 +31,7 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.util.UnstableApi
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.manager.EarEegChannel
-import io.nextsense.android.budz.ui.components.AmplitudeDirectionDropDown
+import io.nextsense.android.budz.ui.components.StringListDropDown
 import io.nextsense.android.budz.ui.components.AmplitudeDropDown
 import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.ExoVisualizer
@@ -211,9 +211,10 @@ fun BrainEqualizerScreen(
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                         Spacer(modifier = Modifier.width(20.dp))
-                        AmplitudeDirectionDropDown(options = viewModel.getChannels(),
+                        StringListDropDown(options = viewModel.getChannels(),
                             currentSelection = uiState.activeChannel.alias,
                             enabled = !uiState.modulatingStarted,
+                            modifier = Modifier.width(140.dp),
                             onChange = {alias ->
                                 viewModel.changeActiveChannel(
                                     EarEegChannel.getChannelByAlias(alias))

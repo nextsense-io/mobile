@@ -439,9 +439,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         if (overrideForceStreaming) {
             setForceStream(false)
         }
-        if (!_budzServiceBound || _budzService == null ||
-            (_streamingState.value != StreamingState.STARTED &&
-                    _streamingState.value != StreamingState.STARTING)) {
+        if (_streamingState.value != StreamingState.STARTED &&
+            _streamingState.value != StreamingState.STARTING) {
             if (_bleDeviceState.value == BleDeviceState.CONNECTING ||
                     _bleDeviceState.value == BleDeviceState.CONNECTED) {
                 // Already stopped.
@@ -491,7 +490,6 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             _bleDeviceState.value = BleDeviceState.DISCONNECTING
             _airohaBleManager?.disconnect()
             _bleDeviceState.value = BleDeviceState.DISCONNECTED
-            stopService()
         }
         _stopStreamingJob?.join()
     }

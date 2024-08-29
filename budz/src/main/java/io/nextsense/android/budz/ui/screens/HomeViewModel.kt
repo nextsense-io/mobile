@@ -53,12 +53,6 @@ class HomeViewModel @Inject constructor(
 
     val uiState: StateFlow<HomeState> = _uiState.asStateFlow()
 
-    init {
-       viewModelScope.launch {
-
-       }
-    }
-
     fun startMonitoring() {
         viewModelScope.launch {
             budzState.collect { budzState ->
@@ -84,7 +78,7 @@ class HomeViewModel @Inject constructor(
                         if (_forceStreaming) {
                             airohaDeviceManager.setForceStream(true)
                             sessionManager.startSession(
-                                protocol = Protocol.WAKE, uploadToCloud = true)
+                                protocol = Protocol.WAKE, uploadToCloud = false)
                         }
                     }
                     AirohaDeviceState.CONNECTED_AIROHA -> {}

@@ -48,4 +48,7 @@ sealed class Routes{
 
     @Serializable
     data object Gems : Routes()
+
+    @Serializable
+    data object DataCollection : Routes()
 }

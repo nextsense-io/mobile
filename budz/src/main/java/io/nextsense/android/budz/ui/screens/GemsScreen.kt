@@ -28,7 +28,7 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.manager.EarEegChannel
-import io.nextsense.android.budz.ui.components.AmplitudeDirectionDropDown
+import io.nextsense.android.budz.ui.components.StringListDropDown
 import io.nextsense.android.budz.ui.components.KeepScreenOn
 import io.nextsense.android.budz.ui.components.SimpleButton
 import io.nextsense.android.budz.ui.components.TopBar
@@ -93,9 +93,10 @@ fun GemsScreen(
                         modifier = Modifier.align(Alignment.CenterVertically)
                     )
                     Spacer(modifier = Modifier.width(20.dp))
-                    AmplitudeDirectionDropDown(options = viewModel.getChannels(),
+                    StringListDropDown(options = viewModel.getChannels(),
                         currentSelection = uiState.activeChannel.alias,
                         enabled = !uiState.testStarted,
+                        modifier = Modifier.width(140.dp),
                         onChange = {alias ->
                             viewModel.changeActiveChannel(
                                 EarEegChannel.getChannelByAlias(alias))

@@ -24,20 +24,14 @@ import io.nextsense.android.budz.ui.components.SimpleButton
 fun DeviceSettingsScreen(
     deviceSettingsViewModel: DeviceSettingsViewModel = hiltViewModel(),
     onGoToSignalVisualization: () -> Unit,
-    onGoToGems: () -> Unit
+    onGoToGems: () -> Unit,
+    onGoToDataCollection: () -> Unit
 ) {
     val deviceSettingsUiState by deviceSettingsViewModel.uiState.collectAsState()
 
     Column(verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 30.dp).verticalScroll(rememberScrollState())) {
-        SimpleButton(name = "Connect and Start Streaming", onClick = {
-            deviceSettingsViewModel.connectAndStartStreaming()
-        })
-        SimpleButton(name = "Disconnect and Stop Streaming", onClick = {
-            deviceSettingsViewModel.disconnectAndStopStreaming()
-        })
-        Spacer(modifier = Modifier.height(20.dp))
         TextField(
             value = deviceSettingsUiState.soundLoopVolume?.toString() ?: "",
             onValueChange = { deviceSettingsViewModel.setSoundLoopVolumeField(it) },
@@ -101,6 +95,9 @@ fun DeviceSettingsScreen(
         })
         SimpleButton(name = "Go to Gems", onClick = {
             onGoToGems()
+        })
+        SimpleButton(name = "Go to Data Collection", onClick = {
+            onGoToDataCollection()
         })
         Spacer(modifier = Modifier.height(20.dp))
         Text("Current gains: ${deviceSettingsUiState.gains.joinToString(", ")}")

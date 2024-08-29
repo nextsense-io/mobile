@@ -17,6 +17,7 @@ import io.nextsense.android.budz.ui.screens.BrainEqualizerScreen
 import io.nextsense.android.budz.ui.screens.CheckBrainSignalIntroScreen
 import io.nextsense.android.budz.ui.screens.CheckConnectionScreen
 import io.nextsense.android.budz.ui.screens.ConnnectedScreen
+import io.nextsense.android.budz.ui.screens.DataCollectionScreen
 import io.nextsense.android.budz.ui.screens.DeviceSettingsScreen
 import io.nextsense.android.budz.ui.screens.FocusScreen
 import io.nextsense.android.budz.ui.screens.GemsScreen
@@ -200,6 +201,9 @@ class MainActivity : ComponentActivity() {
                             },
                             onGoToGems = {
                                 navController.navigate(Routes.Gems)
+                            },
+                            onGoToDataCollection = {
+                                navController.navigate(Routes.DataCollection)
                             }
                         )
                     }
@@ -238,6 +242,13 @@ class MainActivity : ComponentActivity() {
                     }
                     composable<Routes.Gems> {
                         GemsScreen()
+                    }
+                    composable<Routes.DataCollection> {
+                        DataCollectionScreen(
+                            onGoBack = {
+                                navController.popBackStack()
+                            }
+                        )
                     }
                 }
             }
