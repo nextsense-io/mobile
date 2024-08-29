@@ -12,7 +12,7 @@ enum class Modality {
 }
 
 enum class DataSessionKeys {
-    NAME, START_DATETIME, END_DATETIME, SAMPLING_RATE, HAVE_RAW_DATA;
+    NAME, START_DATETIME, END_DATETIME, SAMPLING_RATE, STREAMING_RATE, HAVE_RAW_DATA;
 
     fun key() = name.lowercase()
 }
@@ -30,22 +30,31 @@ data class DataSession(
     @get:PropertyName("sampling_rate")
     @set:PropertyName("sampling_rate")
     var samplingRate: Float? = null,
+    @get:PropertyName("streaming_rate")
+    @set:PropertyName("streaming_rate")
+    var streamingRate: Float? = null,
+    @get:PropertyName("channel_definitions")
+    @set:PropertyName("channel_definitions")
+    var channelDefinitions: List<ChannelDefinition>? = null,
     @get:PropertyName("have_raw_data")
     @set:PropertyName("have_raw_data")
-    var haveRawData: Boolean = false,
+    var haveRawData: Boolean? = false,
     @ServerTimestamp
     @get:PropertyName("created_at")
     @set:PropertyName("created_at")
     var createdAt: Timestamp? = null
 ) {
-    // Needed for Firestore.
-    constructor() : this(null, null, null, null)
+    @SuppressWarnings("unused")  // Needed for Firestore.
+    constructor() : this(null, null, null, null, null, null, false, null)
     constructor(
         name: String,
         startDatetime: Timestamp,
         samplingRate: Float,
+        streamingRate: Float,
+        channelDefinitions: List<ChannelDefinition>,
         haveRawData: Boolean
-    ) : this(name, startDatetime, null, samplingRate, haveRawData)
+    ) : this(name, startDatetime, null, samplingRate, streamingRate, channelDefinitions,
+        haveRawData)
 
     // Optional methods for convenience
     @Exclude

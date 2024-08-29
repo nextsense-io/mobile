@@ -15,12 +15,13 @@ message Channel {
 
 message ModalityDataSamples {
   enum Modality {
-    EAR_EEG = 0;
-    SCALP_EEG = 1;
-    INTRA_CRANIAL_EEG = 2;
-    ACC = 3;
-    GYRO = 4;
-    INTERNAL_STATE = 5;
+    UNKNOWN = 0;
+    EAR_EEG = 1;
+    SCALP_EEG = 2;
+    INTRA_CRANIAL_EEG = 3;
+    ACC = 4;
+    GYRO = 5;
+    INTERNAL_STATE = 6;
   }
   Modality modality = 3;
   int32 sampling_rate = 4;

@@ -50,7 +50,7 @@ data class Session(
     @set:PropertyName("created_at")
     var createdAt: Timestamp? = null
 ) {
-    // Needed for Firestore.
+    @SuppressWarnings("unused")  // Needed for Firestore.
     constructor() : this(null, null, null, null, null, null, null, null, null, null, null)
     constructor(
         startDatetime: Timestamp, deviceId: String, deviceFirmwareVersion: String,

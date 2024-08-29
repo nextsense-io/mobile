@@ -2,10 +2,15 @@ package io.nextsense.android.budz.manager
 
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
+import io.nextsense.android.base.data.Acceleration
+import io.nextsense.android.base.data.AngularSpeed
+import io.nextsense.android.base.data.DeviceLocation
 import io.nextsense.android.base.data.LocalSessionManager
 import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.BuildConfig
 import io.nextsense.android.budz.State
+import io.nextsense.android.budz.model.ChannelDefinition
+import io.nextsense.android.budz.model.ChannelType
 import io.nextsense.android.budz.model.DataSession
 import io.nextsense.android.budz.model.Modality
 import io.nextsense.android.budz.model.Session
@@ -46,6 +51,7 @@ class SessionManager(
             return false
         }
         val startTime = Timestamp.now()
+        val earbudsConfig = EarbudsConfigs.getEarbudsConfig(EarbudsConfigNames.MAUI_CONFIG.name)
 
         // Create the session in Firestore.
         val session = Session(
@@ -54,7 +60,7 @@ class SessionManager(
             deviceMacAddress = deviceInfo.deviceMAC,
             deviceFirmwareVersion = deviceInfo.firmwareVer,
             deviceVersion = deviceInfo.devicePid,
-            earbudsConfig = EarbudsConfigNames.MAUI_CONFIG.key(),
+            earbudsConfig = earbudsConfig.name,
             mobileAppVersion = appVersion,
             protocolName = protocol.key(),
             timezone = TimeZone.getDefault().id,
@@ -76,7 +82,9 @@ class SessionManager(
             name = Modality.EEEG.key(),
             startDatetime = startTime,
             samplingRate = airohaDeviceManager.getEegSamplingRate(),
+            streamingRate = airohaDeviceManager.getEegSamplingRate(),
             haveRawData = false,
+            channelDefinitions = getChannelDefinitions(earbudsConfig),
             createdAt = Timestamp.now()
         )
         val dataSessionState = sessionsRepository.addDataSession(
@@ -93,8 +101,7 @@ class SessionManager(
 
         val localSessionId: Long = localSessionManager.startLocalSession(
             /*cloudDataSessionId=*/_currentSessionRef!!.id,
-            /*userBigTableKey=*/_currentSessionRef!!.id,
-            EarbudsConfigNames.MAUI_CONFIG.key(), uploadToCloud,
+            /*userBigTableKey=*/userId, earbudsConfig.name, uploadToCloud,
             airohaDeviceManager.getEegSamplingRate(), /*accelerationSampleRate=*/100F,
             /*saveToCsv=*/true)
         if (localSessionId == -1L) {
@@ -146,5 +153,54 @@ class SessionManager(
         _currentSession = null
         _currentDataSessionRef = null
         _currentDataSession = null
+    }
+
+    private fun getChannelDefinitions(earbudsConfig: EarbudsConfig): List<ChannelDefinition> {
+        val channelDefinitions = mutableListOf<ChannelDefinition>()
+        for (channel: EarEegChannel in earbudsConfig.channelsConfig.values) {
+            channelDefinitions.add(
+                ChannelDefinition(
+                    name = channel.channelName(),
+                    samplingRate = airohaDeviceManager.getEegSamplingRate(),
+                    streamingRate = airohaDeviceManager.getEegSamplingRate(),
+                    channelType = ChannelType.EEEG.name
+                )
+            )
+        }
+        for (channel in Acceleration.Channels.getForDeviceLocation(DeviceLocation.BOTH_EARBUDS)) {
+            channelDefinitions.add(
+                ChannelDefinition(
+                    name = channel.name,
+                    samplingRate = 100F,
+                    streamingRate = 100F,
+                    channelType = ChannelType.IMU.name
+                )
+            )
+        }
+        for (channel in AngularSpeed.Channels.getForDeviceLocation(DeviceLocation.BOTH_EARBUDS)) {
+            channelDefinitions.add(
+                ChannelDefinition(
+                    name = channel.name,
+                    samplingRate = 100F,
+                    streamingRate = 100F,
+                    channelType = ChannelType.IMU.name
+                )
+            )
+        }
+        channelDefinitions.add(
+            ChannelDefinition(
+                name = "TS",
+                samplingRate = airohaDeviceManager.getEegSamplingRate(),
+                streamingRate = airohaDeviceManager.getEegSamplingRate(),
+                channelType = ChannelType.TIME.name
+            ))
+        channelDefinitions.add(
+            ChannelDefinition(
+                name = "MS",
+                samplingRate = airohaDeviceManager.getEegSamplingRate(),
+                streamingRate = airohaDeviceManager.getEegSamplingRate(),
+                channelType = ChannelType.TIME.name
+            ))
+        return channelDefinitions
     }
 }

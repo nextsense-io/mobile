@@ -48,13 +48,19 @@ class UsersRepository @Inject constructor() {
      * Fetches user from the cloud firestore collection.
      * @return The [State] which will store state of current action.
      */
+    // TODO(eric): Remove this function and use Firebase method directly once transition is over.
     suspend fun getUser(id: String): State<User?> {
         if (cachedUser != null) {
             return State.success(cachedUser)
         }
         val userSnapshot = firestoreClient.usersRef.document(id).get().await()
         if (userSnapshot.exists()) {
-            val user = userSnapshot.toObject(User::class.java)
+            val user: User?
+            try {
+                user = User.toObject(userSnapshot)
+            } catch (exception: Exception) {
+                return State.failed(exception.message.toString())
+            }
             cachedUser = user
             return State.success(user)
         }

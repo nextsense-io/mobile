@@ -18,6 +18,10 @@ enum class EarEegChannel(val alias: String) {
             return values().first { it.alias == alias }
         }
     }
+
+    fun channelName(): String {
+        return name.replace('_', '-')
+    }
 }
 
 enum class ChannelOperator {

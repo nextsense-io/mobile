@@ -67,7 +67,7 @@ class AuthRepository @Inject constructor(
         val userGetState = usersRepository.getUser(firebaseAuth.currentUser!!.uid)
         if (userGetState is State.Success) {
             if (userGetState.data == null) {
-                val newUser = User(email = email!!, name = name, type = UserType.CONSUMER,
+                val newUser = User(email = email!!, name = name, type = UserType.consumer,
                     createdAt = Timestamp.now())
                 val userAddState = usersRepository.addUser(newUser, firebaseAuth.currentUser!!.uid)
                 if (userAddState is State.Success) {

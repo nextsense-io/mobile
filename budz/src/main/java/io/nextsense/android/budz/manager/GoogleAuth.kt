@@ -46,7 +46,7 @@ class GoogleAuth @Inject constructor() {
             val userGetState = usersRepository.getUser(currentUserId).let { userGetState ->
                 if (userGetState is State.Success) {
                     if (userGetState.data == null) {
-                        val newUser = User(email = email!!, name = name, type = UserType.CONSUMER,
+                        val newUser = User(email = email!!, name = name, type = UserType.consumer,
                             createdAt = Timestamp.now())
                         usersRepository.addUser(newUser, currentUserId).let {userAddState ->
                             if (userAddState is State.Success) {

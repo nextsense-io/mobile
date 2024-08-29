@@ -8,7 +8,7 @@ public class Config {
     public static final boolean USE_EMULATED_BLE = false;
 
     // Name of the https time series upload function in Firebase.
-    public static final String UPLOAD_FUNCTION_NAME = "enqueue_upload_data_samples";
+    public static final String UPLOAD_FUNCTION_NAME = "enqueue_upload_data_samples_test";
 
     // Name of the https session complete function in Firebase.
     public static final String COMPLETE_SESSION_FUNCTION_NAME = "enqueue_complete_session_v2";
