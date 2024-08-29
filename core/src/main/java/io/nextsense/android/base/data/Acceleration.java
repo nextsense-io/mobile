@@ -22,9 +22,9 @@ import io.objectbox.relation.ToOne;
 public class Acceleration extends BaseRecord implements TimestampedDataSample {
 
   public enum Channels {
-    ACC_X("acc_x"),  // Acceleration X from a device with a single value, usually the box.
-    ACC_Y("acc_y"),  // Acceleration Y from a device with a single value, usually the box.
-    ACC_Z("acc_z"),  // Acceleration Z from a device with a single value, usually the box.
+    ACC_X("x"),  // Acceleration X from a device with a single value, usually the box.
+    ACC_Y("y"),  // Acceleration Y from a device with a single value, usually the box.
+    ACC_Z("z"),  // Acceleration Z from a device with a single value, usually the box.
     ACC_R_X("acc_r_x"),  // Acceleration X from the right earbud.
     ACC_R_Y("acc_r_y"),  // Acceleration Y from the right earbud.
     ACC_R_Z("acc_r_z"),  // Acceleration Z from the right earbud.
@@ -52,8 +52,6 @@ public class Acceleration extends BaseRecord implements TimestampedDataSample {
       };
     }
   }
-  public static final List<String> CHANNELS = ImmutableList.of("acc_x", "acc_y", "acc_z", "acc_r_x",
-      "acc_r_y", "acc_r_z", "acc_l_x", "acc_l_y", "acc_l_z");
 
   public ToOne<LocalSession> localSession;
 

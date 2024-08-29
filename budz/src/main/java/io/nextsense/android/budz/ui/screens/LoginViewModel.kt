@@ -44,7 +44,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             usersRepository.getUser(authRepository.currentUserId!!).let { userState ->
                 if (userState is State.Success && userState.data != null) {
-                    if (userState.data.isOnboardingCompleted) {
+                    if (userState.data.isOnboardingCompleted == true) {
                         goToHome()
                     } else {
                         goToIntro()

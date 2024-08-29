@@ -10,7 +10,6 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.gson.Gson;
@@ -93,8 +92,9 @@ public class MainActivity extends AppCompatActivity {
     editor.apply();
 
     applicationType = ((NextSenseApplication) getApplication()).getApplicationType();
-    if (applicationType == ApplicationType.CONSUMER || applicationType == ApplicationType.MEDICAL
-        || applicationType == ApplicationType.RESEARCH) {
+    if (applicationType == ApplicationType.CONSUMER_MED_DEVICE ||
+        applicationType == ApplicationType.MEDICAL ||
+        applicationType == ApplicationType.RESEARCH) {
       foregroundServiceIntent = new Intent(getApplicationContext(), ForegroundService.class);
       foregroundServiceIntent.putExtra(ForegroundService.EXTRA_APPLICATION_TYPE,
           applicationType.name());
@@ -129,8 +129,9 @@ public class MainActivity extends AppCompatActivity {
   protected void onStart() {
     RotatingFileLogger.get().logi(TAG, "Starting activity.");
     super.onStart();
-    if (applicationType == ApplicationType.CONSUMER || applicationType == ApplicationType.MEDICAL
-        || applicationType == ApplicationType.RESEARCH) {
+    if (applicationType == ApplicationType.CONSUMER_MED_DEVICE ||
+        applicationType == ApplicationType.MEDICAL ||
+        applicationType == ApplicationType.RESEARCH) {
       if (!nextSenseServiceBound) {
         bindService(foregroundServiceIntent, nextSenseConnection, Context.BIND_IMPORTANT);
       } else {

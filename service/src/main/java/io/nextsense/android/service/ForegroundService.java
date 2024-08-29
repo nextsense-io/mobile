@@ -47,12 +47,10 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
 /**
  * Main Foreground service that will manage the Bluetooth connection to the NextSense device and the
  * Cloud data sync.
- *
  * It is necessary to have a foreground service so that the data streaming from the device does not
  * get interrupted in long sessions (more than an hour) when the NextSense app is not in the
  * foreground or the phone goes in sleep mode when not in use for a long period if time, like at
  * night.
- *
  * This service could be extended later on with an AIDL file to let external applications connect
  * to our device if that is something we want to do.
  */
@@ -245,7 +243,7 @@ public class ForegroundService extends Service {
   }
 
   private void initializeAlgorithms() {
-    if (applicationType == ApplicationType.CONSUMER) {
+    if (applicationType == ApplicationType.CONSUMER_MED_DEVICE) {
       sleepTransformerModel = new SleepTransformerModel(getApplicationContext());
       try {
         sleepTransformerModel.loadModel();

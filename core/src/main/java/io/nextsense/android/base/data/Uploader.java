@@ -300,8 +300,9 @@ public class Uploader {
       // Move the start offset to the next sample.
       relativeStartOffset += (long) (1000f / localSession.getEegSampleRate());
     }
-    // Add the upload chunk size in milliseconds to the start offset to get the end time.
-    long relativeEndOffset = relativeStartOffset + uploadChunkSize.toMillis();
+    // Add the upload chunk size in milliseconds to the start offset to get the end time. End time
+    // is inclusive, so need to remove 1 millisecond to get the correct end time.
+    long relativeEndOffset = relativeStartOffset + uploadChunkSize.toMillis() - 1;
 
     // Check the absolute time to know if anything needs to be uploaded even if timestamps from the
     // device are relative.
@@ -334,6 +335,10 @@ public class Uploader {
           previous = acceleration;
         }
         accelerationsToUpload.addAll(accelerations);
+      } else {
+        if (eegSamples != null && !eegSamples.isEmpty()) {
+          RotatingFileLogger.get().logd(TAG, "EEG but not accelerations to upload.");
+        }
       }
       List<AngularSpeed> angSpeeds = objectBoxDatabase.getAngularSpeedsBetweenRelative(
           localSession.id, relativeStartOffset, relativeEndOffset);
@@ -391,15 +396,22 @@ public class Uploader {
     TimestampedDataSample lastUploadedSample = null;
     if (firstSampleToUpload instanceof EegSample) {
       if (localSession.getEegSamplesUploaded() > 0) {
-        lastUploadedSample = objectBoxDatabase.getEegSamples(
+        List<EegSample> lastUploadedSampleList = objectBoxDatabase.getEegSamples(
                 localSession.id, localSession.getEegSamplesUploaded() -
-                    localSession.getEegSamplesDeleted() - 1L, /*count=*/1).get(0);
+                    localSession.getEegSamplesDeleted() - 1L, /*count=*/1);
+        if (lastUploadedSampleList != null && !lastUploadedSampleList.isEmpty()) {
+          lastUploadedSample = lastUploadedSampleList.get(0);
+        }
       }
-    } else if (firstSampleToUpload instanceof Acceleration || firstSampleToUpload instanceof AngularSpeed) {
+    } else if (firstSampleToUpload instanceof Acceleration ||
+        firstSampleToUpload instanceof AngularSpeed) {
       if (localSession.getAccelerationsUploaded() > 0) {
-        lastUploadedSample = objectBoxDatabase.getAccelerations(
+        List<Acceleration> lastUploadedSampleList = objectBoxDatabase.getAccelerations(
                 localSession.id, localSession.getAccelerationsUploaded() -
-                    localSession.getAccelerationsDeleted() - 1L, /*count=*/1).get(0);
+                    localSession.getAccelerationsDeleted() - 1L, /*count=*/1);
+        if (lastUploadedSampleList != null && !lastUploadedSampleList.isEmpty()) {
+          lastUploadedSample = lastUploadedSampleList.get(0);
+        }
       }
     }
 
@@ -410,7 +422,7 @@ public class Uploader {
       if (lastUploadedSample.getAbsoluteSamplingTimestamp() != null) {
         return lastUploadedSample.getAbsoluteSamplingTimestamp().plusMillis(oneSampleDurationMs);
       }
-      return lastUploadedSample.getReceptionTimestamp().plusMillis(oneSampleDurationMs);
+      return getSamplingTimestamp(lastUploadedSample, localSession);
     } else if (firstSampleToUpload.getAbsoluteSamplingTimestamp() != null) {
       return firstSampleToUpload.getAbsoluteSamplingTimestamp();
     }
@@ -453,8 +465,13 @@ public class Uploader {
           }
           RotatingFileLogger.get().logd(TAG, "Session " + localSession.id +
               " uploaded eeg samples until " + localSession.getUploadedUntil() + ".");
-          // Map<String, List<BaseRecord>> samplesToUpload = getSamplesToUpload(localSession);
-          Map<Modality, List<BaseRecord>> samplesToUpload = getSamplesToUploadRelative(localSession);
+          Map<Modality, List<BaseRecord>> samplesToUpload;
+          // TODO(eric): Implement xenon config support with absolute timestamps.
+          if (Objects.equals(localSession.getEarbudsConfig(), "maui_config")) {
+            samplesToUpload = getSamplesToUploadRelative(localSession);
+          } else {
+            samplesToUpload = getSamplesToUpload(localSession);
+          }
 
           while (dataToUpload(samplesToUpload) && running.get()) {
             final int eegSamplesToUploadSize = samplesToUpload.get(Modality.EAR_EEG).size();
@@ -469,8 +486,13 @@ public class Uploader {
                 " imu records to upload.");
 
             // Serialize and upload the data.
+            boolean isLastPacket = samplesToUpload.get(Modality.EAR_EEG).size() !=
+                uploadChunkSize.getSeconds() * localSession.getEegSampleRate();
             DataSamplesProto.DataSamples dataSamplesProto = serializeToProto(samplesToUpload,
-                localSession, /*isLastPacket=*/false);
+                localSession, isLastPacket);
+            if (dataSamplesProto.getModalityDataSamplesCount() == 1) {
+              Log.d(TAG, "No data to upload, skipping.");
+            }
             if (saveTestProtoData) {
               saveData(dataSamplesProto);
             }
@@ -504,35 +526,34 @@ public class Uploader {
                     localSession.id);
 
                 objectBoxDatabase.putLocalSession(localSession);
-              });
 
-              // Need to check the status from the DB as it could get updated to finished in
-              // another thread.
-              LocalSession refreshedLocalSession =
-                  objectBoxDatabase.getLocalSession(localSession.id);
-              if (refreshedLocalSession != null) {
-                localSession.setStatus(refreshedLocalSession.getStatus());
-              }
-              if ((localSession.getStatus() == LocalSession.Status.FINISHED ||
-                  localSession.getStatus() == LocalSession.Status.ALL_DATA_RECEIVED) &&
-                  localSession.getEegSamplesUploaded() ==
-                      objectBoxDatabase.getEegSamplesCount(localSession.id) +
-                          localSession.getEegSamplesDeleted()) {
-                // TODO(eric): Seems to have an issue where acceleration could be missing sometimes,
-                //             should not block completion.
-                // localSession.getAccelerationsUploaded() ==
-                //         objectBoxDatabase.getAccelerationCount(localSession.id) +
-                //                 localSession.getAccelerationsDeleted()
-                RotatingFileLogger.get().logd(TAG, "Session " + localSession.id +
-                    " data all received and upload is completed.");
-                localSession.setStatus(LocalSession.Status.UPLOADED);
-                completeSession(localSession);
-              }
-              objectBoxDatabase.putLocalSession(localSession);
+                // Need to check the status from the DB as it could get updated to finished in
+                // another thread.
+                LocalSession refreshedLocalSession =
+                    objectBoxDatabase.getLocalSession(localSession.id);
+                if (refreshedLocalSession != null) {
+                  localSession.setStatus(refreshedLocalSession.getStatus());
+                }
+                if ((localSession.getStatus() == LocalSession.Status.FINISHED ||
+                    localSession.getStatus() == LocalSession.Status.ALL_DATA_RECEIVED) &&
+                    localSession.getEegSamplesUploaded() ==
+                        objectBoxDatabase.getEegSamplesCount(localSession.id) +
+                            localSession.getEegSamplesDeleted()) {
+                  // TODO(eric): Seems to have an issue where acceleration could be missing sometimes,
+                  //             should not block completion.
+                  // localSession.getAccelerationsUploaded() ==
+                  //         objectBoxDatabase.getAccelerationCount(localSession.id) +
+                  //                 localSession.getAccelerationsDeleted()
+                  RotatingFileLogger.get().logd(TAG, "Session " + localSession.id +
+                      " data all received and upload is completed.");
+                  localSession.setStatus(LocalSession.Status.UPLOADED);
+                  completeSession(localSession);
+                }
+                objectBoxDatabase.putLocalSession(localSession);
+              });
 
               // Check if need to delete older records to keep the database size in check.
               if (localSession.getStatus() != LocalSession.Status.UPLOADED) {
-                objectBoxDatabase.runInTx(() -> {
                   LocalSession deletingLocalSession = objectBoxDatabase.getLocalSession(
                       localSession.id);
                   localSession.setStatus(deletingLocalSession.getStatus());
@@ -547,7 +568,6 @@ public class Uploader {
                         localSession.getAccelerationsDeleted() + accelerationRecordsDeleted);
                     objectBoxDatabase.putLocalSession(localSession);
                   }
-                });
               }
             }
             // TODO(eric): Implement more error mitigation strategies:
@@ -665,19 +685,22 @@ public class Uploader {
           objectBoxDatabase.getEegSamplesCount(localSession.id) +
           " eeg records in db, need to delete " +
           (objectBoxDatabase.getEegSamplesCount(localSession.id) - recordsToKeep));
-      EegSample lastEegSample = objectBoxDatabase.getEegSamples(
+      List<EegSample> lastEegSampleList = objectBoxDatabase.getEegSamples(
               localSession.id, localSession.getEegSamplesUploaded() -
-                  localSession.getEegSamplesDeleted() - 1L, /*count=*/1).get(0);
-      if (lastEegSample.getAbsoluteSamplingTimestamp() != null) {
-        Instant cutOffTimestamp = lastEegSample.getAbsoluteSamplingTimestamp().minus(
+                  localSession.getEegSamplesDeleted() - 1L, /*count=*/1);
+      if (lastEegSampleList == null && lastEegSampleList.isEmpty()) {
+        return 0;
+      }
+      if (lastEegSampleList.get(0).getAbsoluteSamplingTimestamp() != null) {
+        Instant cutOffTimestamp = lastEegSampleList.get(0).getAbsoluteSamplingTimestamp().minus(
             minDurationToKeep);
         RotatingFileLogger.get().logd(TAG, "EEG Cutoff time: " +
             formatter.format(cutOffTimestamp));
         return objectBoxDatabase.deleteFirstEegSamplesData(localSession.id,
             cutOffTimestamp.toEpochMilli());
       }
-      long cutOffRelativeTimestamp = lastEegSample.getRelativeSamplingTimestamp() -
-          minDurationToKeep.toMillis();;
+      long cutOffRelativeTimestamp = lastEegSampleList.get(0).getRelativeSamplingTimestamp() -
+          minDurationToKeep.toMillis();
       return objectBoxDatabase.deleteFirstRelativeEegSamplesData(localSession.id,
           cutOffRelativeTimestamp);
     }
@@ -768,31 +791,14 @@ public class Uploader {
     }
 
     dataSamplesProtoBuilder.setModality(modality);
-    int samplingRate = 0;
     if (modality == Modality.EAR_EEG) {
       if (localSession.getEarbudsConfig() != null) {
         dataSamplesProtoBuilder.setEarbudsConfig(localSession.getEarbudsConfig());
       }
     }
-    Instant expectedStartInstant = getExpectedFirstTimestamp(
-        localSession, (TimestampedDataSample) samples.get(0), samplingRate);
-    Timestamp expectedStartTimestamp = Timestamp.newBuilder()
-        .setSeconds(expectedStartInstant.getEpochSecond())
-        .setNanos(expectedStartInstant.getNano()).build();
-    dataSamplesProtoBuilder.setExpectedStartTimestamp(expectedStartTimestamp);
-    if (!isLastPacket) {
-      dataSamplesProtoBuilder.setExpectedSamplesCount(
-          (int) (samplingRate * uploadChunkSize.getSeconds()));
-    } else {
-      // If it is the last packet, calculate the expected samples count based on the last sample and
-      // the expected first sample.
-      long expectedSamplesCount = (((EegSample) samples.get(samples.size() - 1))
-          .getAbsoluteSamplingTimestamp().toEpochMilli() -
-          expectedStartInstant.toEpochMilli()) / (1000 / samplingRate);
-      dataSamplesProtoBuilder.setExpectedSamplesCount((int) expectedSamplesCount);
-    }
 
     // Add samples to the proto.
+    int samplingRate = 0;
     Map<String, DataSamplesProto.Channel.Builder> channelBuilders = new HashMap<>();
     List<Timestamp> modalitySamplingTimestamps = new ArrayList<>();
     if (modality == Modality.EAR_EEG) {
@@ -863,9 +869,9 @@ public class Uploader {
             Objects.requireNonNull(channelBuilders.get(channel.getName())).addSample(value)
         );
       }
-      channelBuilders.forEach((channel, channelBuilder) ->
-          dataSamplesProtoBuilder.addChannel(channelBuilder.build()));
     }
+    channelBuilders.forEach((channel, channelBuilder) ->
+        dataSamplesProtoBuilder.addChannel(channelBuilder.build()));
 
     dataSamplesProtoBuilder.setSamplingRate(samplingRate);
 
@@ -885,7 +891,11 @@ public class Uploader {
     int minTimeDifference = 1000 / samplingRate;
     boolean skippedLast = false;
     List<Timestamp> modalitySamplingTimestampsDedup = new ArrayList<>();
-    for (int i = 1; i < modalitySamplingTimestamps.size(); ++i) {
+    for (int i = 0; i < modalitySamplingTimestamps.size(); ++i) {
+      if (i == 0) {
+        modalitySamplingTimestampsDedup.add(modalitySamplingTimestamps.get(i));
+        continue;
+      }
       long diff = (Math.abs(modalitySamplingTimestamps.get(i).getSeconds() -
           modalitySamplingTimestamps.get(i - 1).getSeconds()) * 1000) +
           Math.abs(modalitySamplingTimestamps.get(i).getNanos() -
@@ -896,99 +906,37 @@ public class Uploader {
         skippedLast = true;
         continue;
       }
-      modalitySamplingTimestampsDedup.add(modalitySamplingTimestamps.get(i - 1));
+      modalitySamplingTimestampsDedup.add(modalitySamplingTimestamps.get(i));
     }
     dataSamplesProtoBuilder.addAllSamplingTimestamp(modalitySamplingTimestampsDedup);
 
+    // Set the expected start timestamp and the expected samples count.
+    Instant expectedStartInstant = getExpectedFirstTimestamp(
+        localSession, (TimestampedDataSample) samples.get(0), samplingRate);
+    Timestamp expectedStartTimestamp = Timestamp.newBuilder()
+        .setSeconds(expectedStartInstant.getEpochSecond())
+        .setNanos(expectedStartInstant.getNano()).build();
+    dataSamplesProtoBuilder.setExpectedStartTimestamp(expectedStartTimestamp);
+    if (!isLastPacket) {
+      dataSamplesProtoBuilder.setExpectedSamplesCount(
+          (int) (samplingRate * uploadChunkSize.getSeconds()));
+    } else {
+      // If it is the last packet, calculate the expected samples count based on the last sample and
+      // the expected first sample.
+      long expectedSamplesCount;
+      TimestampedDataSample lastSample = (TimestampedDataSample) samples.get(samples.size() - 1);
+      if (lastSample.getAbsoluteSamplingTimestamp() != null) {
+        expectedSamplesCount = (lastSample.getAbsoluteSamplingTimestamp().toEpochMilli() -
+            expectedStartInstant.toEpochMilli()) / (1000 / samplingRate);
+      } else {
+        expectedSamplesCount = (getSamplingTimestamp(lastSample, localSession).toEpochMilli()
+            - expectedStartInstant.toEpochMilli()) / (1000 / samplingRate);
+      }
+      dataSamplesProtoBuilder.setExpectedSamplesCount((int) expectedSamplesCount);
+    }
+
     return dataSamplesProtoBuilder.build();
   }
-
-//  private DataSamplesProto.ModalityDataSamples serializeEegToProto(
-//          Map<String, List<BaseRecord>> samples, LocalSession localSession) {
-//    // TODO(eric): If acceleration is not on the same frequency as eeg, should send it in a separate
-//    //             proto?
-//    List<BaseRecord> eegSamplesToUpload = samples.get(Modality.EAR_EEG);
-//    List<BaseRecord> accelerationsToUpload = samples.get(Modality.ACC);
-//    if (accelerationsToUpload == null) {
-//      accelerationsToUpload = new ArrayList<>();
-//    }
-//    List<BaseRecord> gyroSamplesToUpload = samples.get(GYRO_SAMPLES);
-//    if (gyroSamplesToUpload == null) {
-//      gyroSamplesToUpload = new ArrayList<>();
-//    }
-//    RotatingFileLogger.get().logv(TAG, "Uploading " + eegSamplesToUpload.size() + " eeg samples.");
-//    RotatingFileLogger.get().logv(TAG, "Uploading " + accelerationsToUpload.size() +
-//        " acc samples and " + gyroSamplesToUpload.size() + " gyro samples.");
-//    DataSamplesProto.ModalityDataSamples.Builder dataSamplesProtoBuilder =
-//        DataSamplesProto.ModalityDataSamples.newBuilder();
-//    dataSamplesProtoBuilder.setModality(Modality.EAR_EEG);
-//    if (localSession.getEarbudsConfig() != null) {
-//      dataSamplesProtoBuilder.setEarbudsConfig(localSession.getEarbudsConfig());
-//    }
-//    dataSamplesProtoBuilder.setSamplingRate((int)localSession.getEegSampleRate());
-//    dataSamplesProtoBuilder.setExpectedSamplesCount(eegSamplesToUpload.size());
-//    Instant expectedStartInstant = getExpectedFirstEegTimestamp(
-//        localSession, (EegSample) eegSamplesToUpload.get(0), (int)localSession.getEegSampleRate());
-//    Timestamp expectedStartTimestamp = Timestamp.newBuilder()
-//        .setSeconds(expectedStartInstant.getEpochSecond())
-//        .setNanos(expectedStartInstant.getNano()).build();
-//    dataSamplesProtoBuilder.setExpectedStartTimestamp(expectedStartTimestamp);
-//    Map<String, DataSamplesProto.Channel.Builder> channelBuilders = new HashMap<>();
-//
-//    // Add EEG samples to the proto.
-//    for (int i = 0; i < eegSamplesToUpload.size(); ++i) {
-//      EegSample eegSample = (EegSample) eegSamplesToUpload.get(i);
-//      Timestamp samplingTimestamp = Timestamp.newBuilder()
-//          .setSeconds(eegSample.getAbsoluteSamplingTimestamp().getEpochSecond())
-//          .setNanos(eegSample.getAbsoluteSamplingTimestamp().getNano()).build();
-//      dataSamplesProtoBuilder.addSamplingTimestamp(samplingTimestamp);
-//      for (Integer channel : eegSample.getEegSamples().keySet()) {
-//        DataSamplesProto.Channel.Builder channelBuilder = channelBuilders.computeIfAbsent(
-//            String.valueOf(channel), channelValue ->
-//                DataSamplesProto.Channel.newBuilder().setName(String.valueOf(channel)));
-//        channelBuilder.addSample(eegSample.getEegSamples().get(channel));
-//      }
-//      if (eegSample.getSync() != null) {
-//        dataSamplesProtoBuilder.addSync(eegSample.getSync());
-//      }
-//      if (eegSample.getTrigIn() != null) {
-//        dataSamplesProtoBuilder.addTrigIn(eegSample.getTrigIn());
-//      }
-//      if (eegSample.getTrigOut() != null) {
-//        dataSamplesProtoBuilder.addTrigOut(eegSample.getTrigOut());
-//      }
-//      if (eegSample.getZMod() != null) {
-//        dataSamplesProtoBuilder.addZMod(eegSample.getZMod());
-//      }
-//      if (eegSample.getMarker() != null) {
-//        dataSamplesProtoBuilder.addMarker(eegSample.getMarker());
-//      }
-//      if (eegSample.getButton() != null) {
-//        dataSamplesProtoBuilder.addButton(eegSample.getButton());
-//      }
-//    }
-//    for (DataSamplesProto.Channel.Builder channelBuilder : channelBuilders.values()) {
-//      dataSamplesProtoBuilder.addChannel(channelBuilder.build());
-//    }
-//
-//    // Add IMU samples to the proto.
-//    for (int i = 0; i < accelerationsToUpload.size(); ++i) {
-//      Acceleration acceleration = (Acceleration) accelerationsToUpload.get(i);
-//      Timestamp samplingTimestamp = Timestamp.newBuilder()
-//          .setSeconds(acceleration.getAbsoluteSamplingTimestamp().getEpochSecond())
-//          .setNanos(acceleration.getAbsoluteSamplingTimestamp().getNano()).build();
-//      dataSamplesProtoBuilder.addAccSamplingTimestamp(samplingTimestamp);
-//      DataSamplesProto.Acceleration.Builder accelerationBuilder =
-//          DataSamplesProto.Acceleration.newBuilder();
-//      accelerationBuilder.setX(acceleration.getX());
-//      accelerationBuilder.setY(acceleration.getY());
-//      accelerationBuilder.setZ(acceleration.getZ());
-//      dataSamplesProtoBuilder.addAcceleration(accelerationBuilder.build());
-//    }
-//
-//
-//    return dataSamplesProtoBuilder.build();
-//  }
 
   private DataSamplesProto.DataSamples serializeToProto(
           Map<Modality, List<BaseRecord>> samples, LocalSession localSession,
@@ -1030,9 +978,7 @@ public class Uploader {
       RotatingFileLogger.get().loge(TAG, "Error serializing proto: " + e.getMessage());
       return false;
     }
-    return true;
-    // TODO (eric): Re-activate.
-    // return firebaseFunctions.uploadDataSamples(byteArrayOutputStream);
+    return firebaseFunctions.uploadDataSamples(byteArrayOutputStream);
   }
 
   private SessionProto.Session serializeSessionToProto(LocalSession localSession) {
@@ -1048,6 +994,8 @@ public class Uploader {
     }
     switch (applicationType) {
       case CONSUMER -> builder.setUserType(SessionProto.UserType.USER_TYPE_CONSUMER);
+      case CONSUMER_MED_DEVICE -> builder.setUserType(
+          SessionProto.UserType.USER_TYPE_CONSUMER_MED_DEVICE);
       case RESEARCH -> builder.setUserType(SessionProto.UserType.USER_TYPE_RESEARCHER);
       case MEDICAL -> builder.setUserType(SessionProto.UserType.USER_TYPE_SUBJECT);
     }

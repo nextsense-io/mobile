@@ -64,8 +64,6 @@ public class MauiDataParser {
   private int leftImuSamplesSinceKeyTimestamp = 0;
   private Long lastPackageNum = null;
   private Instant firstReceptionTimestamp = null;
-  private boolean useSequenceNumberAsRelativeTimestamp = false;
-  private int eegSamplesCount = 0;
 
   private MauiDataParser(LocalSessionManager localSessionManager) {
     this.localSessionManager = localSessionManager;
@@ -151,27 +149,30 @@ public class MauiDataParser {
           DeviceLocation.RIGHT_EARBUD;
 
       long packageNum = Integer.toUnsignedLong(budzDataPacket.getPackageNum());
-      if (SEMI_VERBOSE_LOGGING && packageNum % 100 == 0) {
+      if (SEMI_VERBOSE_LOGGING && packageNum % 5000 == 0 && packageNum != 0) {
         RotatingFileLogger.get().logv(TAG, "Proto length: " + leftProtoLength +
             ", values length: " + values.length + ", device name: " + deviceName);
       }
-      long skipped = getSkippedPackets(packageNum);
+      int packetEegSamplesCount =
+          budzDataPacket.getEeeg().toByteArray().length / EEG_SAMPLE_SIZE_BYTES;
+      long skipped = getSkippedPackets(packageNum, packetEegSamplesCount);
       if (skipped != 0) {
-        // TODO(eric): Replace the content of the field with number of eeg packets sent instead of
-        //  number of packets to be able to increment the time correctly for skipped eeg samples.
-//        int eegSamplesPerPacket = Math.round(1000 / localSession.getEegSampleRate()) / 20;
-//        if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
-//          leftSamplesSinceKeyTimestamp += skipped * eegSamplesPerPacket;
-//        } else {
-//          rightSamplesSinceKeyTimestamp += skipped * eegSamplesPerPacket;
-//        }
+        if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
+          leftEegSamplesSinceKeyTimestamp += (int) skipped;
+        } else {
+          rightEegSamplesSinceKeyTimestamp += (int) skipped;
+        }
         RotatingFileLogger.get().logw(TAG, "Package number is not sequential. Last: " +
             lastPackageNum + ", current: " + packageNum + ", skipped: " + skipped);
       }
       lastPackageNum = packageNum;
+      leftEegSamplesSinceKeyTimestamp = 0;
+      rightEegSamplesSinceKeyTimestamp = 0;
+      leftImuSamplesSinceKeyTimestamp = 0;
+      rightImuSamplesSinceKeyTimestamp = 0;
 
-      long acquisitionTimestamp;
-      if (budzDataPacket.getBtClockNclk() != 0) {
+      if (lastKeyTimestampRight == 0 && lastKeyTimestampLeft == 0 &&
+          budzDataPacket.getBtClockNclk() != 0) {
         RotatingFileLogger.get().logv(TAG, "btClockNclk: " +
             Integer.toUnsignedLong(budzDataPacket.getBtClockNclk()) + ", btClockNclIntra: " +
             (Integer.toUnsignedLong(budzDataPacket.getBtClockNclkIntra())) + ", flags: " +
@@ -179,55 +180,70 @@ public class MauiDataParser {
         if (deviceLocation == DeviceLocation.RIGHT_EARBUD) {
           lastKeyTimestampRight = getTimestamp(budzDataPacket, localSession.getEegSampleRate());
           rightEegSamplesSinceKeyTimestamp = 0;
+          rightImuSamplesSinceKeyTimestamp = 0;
         } else {
           lastKeyTimestampLeft = getTimestamp(budzDataPacket, localSession.getEegSampleRate());
           leftEegSamplesSinceKeyTimestamp = 0;
+          leftImuSamplesSinceKeyTimestamp = 0;
         }
-      } else if (deviceLocation == DeviceLocation.LEFT_EARBUD && lastKeyTimestampLeft == 0 ||
-          deviceLocation == DeviceLocation.RIGHT_EARBUD && lastKeyTimestampRight == 0) {
-        if (firstReceptionTimestamp == null) {
-          firstReceptionTimestamp = receptionTimestamp;
-        }
-        if (!useSequenceNumberAsRelativeTimestamp) {
-          if (Duration.between(firstReceptionTimestamp, receptionTimestamp).compareTo(
-              FIRST_KEY_TIMESTAMP_TIMEOUT) > 0) {
-            RotatingFileLogger.get().logi(TAG, "First key timestamp not received after " +
-                FIRST_KEY_TIMESTAMP_TIMEOUT + ". Start accepting data.");
-            useSequenceNumberAsRelativeTimestamp = true;
-          } else {
-            RotatingFileLogger.get().logd(TAG, "Data packet before first key timestamp, ignoring.");
-            return;
-          }
-        }
-      }
-      if (!useSequenceNumberAsRelativeTimestamp) {
-        acquisitionTimestamp = deviceLocation == DeviceLocation.LEFT_EARBUD ? lastKeyTimestampLeft :
-            lastKeyTimestampRight;
-      } else {
-        // TODO(eric): Replace this counter with the package number when it is fixed by AUT.
-        acquisitionTimestamp =
-            (long) eegSamplesCount * Math.round(1000 / localSession.getEegSampleRate());
       }
 
+      if (lastKeyTimestampRight == 0 && lastKeyTimestampLeft == 0) {
+        RotatingFileLogger.get().logd(TAG, "Data packet before first key timestamp, ignoring.");
+        return;
+      }
+
+      long acquisitionTimestamp =
+            packageNum * Math.round(1000 / localSession.getEegSampleRate());
+
+//      else if (deviceLocation == DeviceLocation.LEFT_EARBUD && lastKeyTimestampLeft == 0 ||
+//          deviceLocation == DeviceLocation.RIGHT_EARBUD && lastKeyTimestampRight == 0) {
+//        if (firstReceptionTimestamp == null) {
+//          firstReceptionTimestamp = receptionTimestamp;
+//        }
+//        if (!useSequenceNumberAsRelativeTimestamp) {
+//          if (Duration.between(firstReceptionTimestamp, receptionTimestamp).compareTo(
+//              FIRST_KEY_TIMESTAMP_TIMEOUT) > 0) {
+//            RotatingFileLogger.get().logi(TAG, "First key timestamp not received after " +
+//                FIRST_KEY_TIMESTAMP_TIMEOUT + ". Start accepting data.");
+//            useSequenceNumberAsRelativeTimestamp = true;
+//          } else {
+//            RotatingFileLogger.get().logd(TAG, "Data packet before first key timestamp, ignoring.");
+//            return;
+//          }
+//        }
+//      }
+//      if (!useSequenceNumberAsRelativeTimestamp) {
+//        acquisitionTimestamp = deviceLocation == DeviceLocation.LEFT_EARBUD ? lastKeyTimestampLeft :
+//            lastKeyTimestampRight;
+//      } else {
+//        // TODO(eric): Replace this counter with the package number when it is fixed by AUT.
+//        acquisitionTimestamp =
+//            (long) eegSamplesCount * Math.round(1000 / localSession.getEegSampleRate());
+//      }
+
       if (!budzDataPacket.getEeeg().isEmpty()) {
-        parseSampleData(budzDataPacket, deviceLocation, receptionTimestamp,
-            acquisitionTimestamp);
+        parseSampleData(budzDataPacket, deviceLocation, receptionTimestamp, acquisitionTimestamp);
       }
     } catch (InvalidProtocolBufferException e) {
       throw new FirmwareMessageParsingException("Error parsing proto data: " + e.getMessage());
     }
   }
 
-  private long getSkippedPackets(Long packageNum) {
+  private long getSkippedPackets(Long packageNum, int eegSamplesCount) {
     long skipped = 0;
+    if (lastPackageNum != null && packageNum - lastPackageNum != eegSamplesCount) {
+      Log.w(TAG, "Package number increase not equal to eeg samples: " +
+          (packageNum - lastPackageNum));
+    }
     if (lastPackageNum != null) {
       // Check for rollover after integer limit.
       if (lastPackageNum > packageNum) {
         if (!lastPackageNum.equals(UNSIGNED_INT_MAX_VALUE) || packageNum != 0) {
           skipped = UNSIGNED_INT_MAX_VALUE - lastPackageNum + packageNum;
         }
-      } else if (lastPackageNum + 1 != packageNum) {
-        skipped = packageNum - lastPackageNum - 1;
+      } else if (lastPackageNum + eegSamplesCount != packageNum) {
+        skipped = packageNum - lastPackageNum - eegSamplesCount;
       }
     }
     return skipped;

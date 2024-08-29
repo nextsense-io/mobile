@@ -64,7 +64,7 @@ public class NextSenseApplication extends Application {
 
     // Initial route which determines which Flutter module will be used.
     String route = ROUTE_TRIAL_UI;
-    if (applicationType == ApplicationType.CONSUMER) {
+    if (applicationType == ApplicationType.CONSUMER_MED_DEVICE) {
       route = ROUTE_CONSUMER_UI;
     } else if (applicationType == ApplicationType.LUCID_REALITY) {
       route = LUCID_UI;

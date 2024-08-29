@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
     ext.kotlin_version = '1.9.10'
-    ext.objectboxVersion = '3.5.0'
+    ext.objectboxVersion = '4.0.2'
     ext.nav_version = "2.7.7"
     repositories {
         google()
