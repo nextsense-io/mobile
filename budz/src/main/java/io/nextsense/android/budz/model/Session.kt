@@ -11,6 +11,71 @@ enum class SessionKeys {
     fun key() = name.lowercase()
 }
 
+enum class ActivityType(val label: String) {
+    UNKNOWN("Unknown"),
+    EOEC("EOEC"),
+    NAP("Nap"),
+    SLEEP("Sleep"),
+    TV("TV"),
+    READING("Reading"),
+    MEDITATION("Meditation"),
+    THINKING("Thinking"),
+    VIDEO_GAME("Video Game"),
+    MUSIC("Listening to music"),
+    BREATHING("Breathing exercises"),
+    WORK_STUDY("Focused Work/Study"),
+    NON_SLEEP_DEEP_REST("Non-sleep deep rest"),
+    PUZZLE_SOLVING("Puzzle solving"),
+    FUTURE_PLANNING("Future thinking / planning"),
+    RELAXING("Relaxing");
+
+    companion object {
+        fun fromString(value: String): ActivityType {
+            return entries.firstOrNull { it.name == value } ?: UNKNOWN
+        }
+
+        fun fromLabel(value: String): ActivityType {
+            return entries.firstOrNull { it.label == value } ?: UNKNOWN
+        }
+    }
+}
+
+enum class DataQuality(val label: String) {
+    UNKNOWN("Unknown"),
+    GREAT("Great, Use the data"),
+    GOOD("Good, Use the data"),
+    FAIR("Maybe, some data issues"),
+    POOR("Probably not, data compromised");
+
+    companion object {
+        fun fromString(value: String): DataQuality? {
+            return entries.firstOrNull { it.name == value }
+        }
+
+        fun fromLabel(value: String): DataQuality {
+            return entries.firstOrNull { it.label == value } ?: UNKNOWN
+        }
+    }
+}
+
+enum class ToneBud(val label: String) {
+    UNKNOWN("Unknown"),
+    FIN_PRO("Tone Pro with a fin"),
+    FIN_BALANCE("Tone Balance with a fin"),
+    FIN_COMFORT("Tone Comfort with a fin"),
+    HOOK("Tone with a hook");
+
+    companion object {
+        fun fromString(value: String): ToneBud {
+            return entries.firstOrNull { it.name == value } ?: UNKNOWN
+        }
+
+        fun fromLabel(value: String): ToneBud {
+            return entries.firstOrNull { it.label == value } ?: UNKNOWN
+        }
+    }
+}
+
 data class Session(
     @get:PropertyName("start_datetime")
     @set:PropertyName("start_datetime")
@@ -45,6 +110,15 @@ data class Session(
     @get:PropertyName("user_id")
     @set:PropertyName("user_id")
     var userId: String? = null,
+    @get:PropertyName("activity_type")
+    @set:PropertyName("activity_type")
+    var activityType: ActivityType? = null,
+    @get:PropertyName("tone_bud")
+    @set:PropertyName("tone_bud")
+    var toneBud: ToneBud? = null,
+    @get:PropertyName("data_quality")
+    @set:PropertyName("data_quality")
+    var dataQuality: DataQuality? = null,
     @ServerTimestamp
     @get:PropertyName("created_at")
     @set:PropertyName("created_at")

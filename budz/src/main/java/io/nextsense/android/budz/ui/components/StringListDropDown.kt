@@ -20,9 +20,9 @@ import io.nextsense.android.budz.ui.theme.BudzColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AmplitudeDirectionDropDown(
+fun StringListDropDown(
     options: List<String>, currentSelection: String, enabled: Boolean,
-    onChange: (direction: String) -> Unit
+    modifier: Modifier = Modifier, onChange: (direction: String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -33,7 +33,7 @@ fun AmplitudeDirectionDropDown(
                 expanded = !expanded
             }
         },
-        modifier = Modifier.width(120.dp)
+        modifier = modifier
     ) {
         TextField(
             value = currentSelection,

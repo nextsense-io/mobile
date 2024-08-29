@@ -9,12 +9,15 @@ import io.nextsense.android.base.data.LocalSessionManager
 import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.BuildConfig
 import io.nextsense.android.budz.State
+import io.nextsense.android.budz.model.ActivityType
 import io.nextsense.android.budz.model.ChannelDefinition
 import io.nextsense.android.budz.model.ChannelType
+import io.nextsense.android.budz.model.DataQuality
 import io.nextsense.android.budz.model.DataSession
 import io.nextsense.android.budz.model.Modality
 import io.nextsense.android.budz.model.Session
 import io.nextsense.android.budz.model.SessionsRepository
+import io.nextsense.android.budz.model.ToneBud
 import java.util.TimeZone
 
 enum class Protocol {
@@ -39,7 +42,14 @@ class SessionManager(
     private var _currentDataSession: DataSession? = null
     val currentDataSession: DataSession? get() = _currentDataSession
 
-    suspend fun startSession(protocol: Protocol, uploadToCloud: Boolean = false) : Boolean {
+    fun isSessionRunning(): Boolean {
+        return currentSession != null
+    }
+
+    suspend fun startSession(
+            protocol: Protocol, uploadToCloud: Boolean = false,
+            activityType: ActivityType = ActivityType.UNKNOWN, toneBud: ToneBud = ToneBud.UNKNOWN) :
+            Boolean {
         val userId = authRepository.currentUserId
         if (userId == null) {
             RotatingFileLogger.get().logw(tag, "User id is null, cannot start a session.")
@@ -65,6 +75,8 @@ class SessionManager(
             protocolName = protocol.key(),
             timezone = TimeZone.getDefault().id,
             userId = userId,
+            activityType = activityType,
+            toneBud = toneBud,
             createdAt = Timestamp.now()
         )
         val sessionState = sessionsRepository.addSession(session)
@@ -119,7 +131,7 @@ class SessionManager(
         return true
     }
 
-    suspend fun stopSession() {
+    suspend fun stopSession(dataQuality: DataQuality = DataQuality.UNKNOWN) {
         if (_currentSessionRef == null || _currentDataSessionRef == null ||
             _currentSession == null || _currentDataSession == null) {
             RotatingFileLogger.get().logw(tag, "Tried to stop a session while none was running.")
@@ -127,13 +139,15 @@ class SessionManager(
         }
 
         // TODO(eric): Check result.
-        airohaDeviceManager.stopBleStreaming()
+        airohaDeviceManager.stopBleStreaming(overrideForceStreaming = true)
 
         val stopTime = Timestamp.now()
         localSessionManager.stopActiveLocalSession()
 
         _currentSession!!.endDatetime = stopTime
-        val sessionState = sessionsRepository.updateSession(_currentSession!!, _currentSessionRef!!.id)
+        _currentSession!!.dataQuality = dataQuality
+        val sessionState = sessionsRepository.updateSession(_currentSession!!,
+            _currentSessionRef!!.id)
         if (sessionState is State.Success) {
             RotatingFileLogger.get().logi(tag, "Session updated successfully.")
         } else {

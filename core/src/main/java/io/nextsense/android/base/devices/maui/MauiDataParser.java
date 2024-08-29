@@ -100,8 +100,6 @@ public class MauiDataParser {
     leftImuSamplesSinceKeyTimestamp = 0;
     lastPackageNum = null;
     firstReceptionTimestamp = null;
-    useSequenceNumberAsRelativeTimestamp = false;
-    eegSamplesCount = 0;
     eegDataSynchronizer.clear();
     imuDataSynchronizer.clear();
   }
@@ -419,7 +417,6 @@ public class MauiDataParser {
 //        convertToMicroVolts(eegValue));
     EegSample eegSample = EegSample.create(localSession.id, eegData, receptionTimestamp,
         dataPointAcquisitionTimeStamp, /*samplingTimestamp=*/null, /*flags=*/null);
-    ++eegSamplesCount;
     if (deviceLocation == DeviceLocation.LEFT_EARBUD) {
       ++leftEegSamplesSinceKeyTimestamp;
     } else {
