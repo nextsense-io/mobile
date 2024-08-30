@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.nextsense.android.airoha.device.DisableVoicePromptRaceCommand
 import io.nextsense.android.budz.manager.AirohaDeviceManager
+import io.nextsense.android.budz.manager.PreferenceKeys
+import io.nextsense.android.budz.manager.PreferencesManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,12 +18,14 @@ data class DeviceSettingsState(
     val register: String,
     val registerValue: String,
     val soundLoopVolume: Int? = null,
+    val sleepMode: Boolean = false,
     val gains: FloatArray = floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f)
 )
 
 @HiltViewModel
 class DeviceSettingsViewModel @Inject constructor(
-        private val deviceManager: AirohaDeviceManager
+        private val deviceManager: AirohaDeviceManager,
+        private val preferencesManager: PreferencesManager
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -33,10 +37,22 @@ class DeviceSettingsViewModel @Inject constructor(
     val uiState: StateFlow<DeviceSettingsState> = _uiState.asStateFlow()
 
     init {
+        _uiState.value = _uiState.value.copy(sleepMode = preferencesManager.prefs.getBoolean(
+            PreferenceKeys.SLEEP_MODE.name, false))
         viewModelScope.launch {
             deviceManager.equalizerState.collect { gains ->
                 _uiState.value = _uiState.value.copy(gains = gains)
             }
+        }
+    }
+
+    fun setSleepMode(sleepMode: Boolean) {
+        _uiState.value = _uiState.value.copy(sleepMode = sleepMode)
+        preferencesManager.prefs.edit().putBoolean(PreferenceKeys.SLEEP_MODE.name, sleepMode).apply()
+        viewModelScope.launch {
+            // TODO(eric): Enable when available in firmware.
+            deviceManager.setVoicePromptsEnabled(!sleepMode)
+            //deviceManager.setTouchControlsEnabled(!sleepMode)
         }
     }
 

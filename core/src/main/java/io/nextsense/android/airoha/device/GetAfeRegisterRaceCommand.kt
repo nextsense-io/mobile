@@ -10,6 +10,10 @@ class GetAfeRegisterRaceCommand(register: String) : NextSenseRaceCommand(
 ) {
     private val _register: String = register
 
+    override fun getName(): String {
+        return GetAfeRegisterRaceCommand::class.java.simpleName
+    }
+
     override fun getBytes(): ByteArray {
         return super.getBytes(payload = Converter.hexStringToByteArray(_register))
     }

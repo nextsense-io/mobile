@@ -45,5 +45,9 @@ abstract class RaceCommand(raceCommandType: RaceCommandType, raceId: RaceId) {
             _raceId.getHexValue() + payload
     }
 
+    open fun getName(): String {
+        return this.javaClass.simpleName
+    }
+
     abstract fun getBytes(): ByteArray
 }

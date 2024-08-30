@@ -29,8 +29,11 @@ import io.nextsense.android.airoha.device.DeviceSearchPresenter
 import io.nextsense.android.airoha.device.GetAfeRegisterRaceCommand
 import io.nextsense.android.airoha.device.GetSoundLoopVolumeRaceCommand
 import io.nextsense.android.airoha.device.PowerRaceCommand
+import io.nextsense.android.airoha.device.RaceCommand
 import io.nextsense.android.airoha.device.SetAfeRegisterRaceCommand
 import io.nextsense.android.airoha.device.SetSoundLoopVolumeRaceCommand
+import io.nextsense.android.airoha.device.SetTouchControlsRaceCommand
+import io.nextsense.android.airoha.device.SetVoicePromptsControlsRaceCommand
 import io.nextsense.android.airoha.device.StartStopSoundLoopRaceCommand
 import io.nextsense.android.base.DeviceState
 import io.nextsense.android.base.utils.RotatingFileLogger
@@ -102,7 +105,9 @@ data class AirohaBatteryLevel(
 )
 
 @Singleton
-class AirohaDeviceManager @Inject constructor(@ApplicationContext private val context: Context) {
+class AirohaDeviceManager @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val preferencesManager: PreferencesManager) {
 
     companion object {
         // Maximum value that can be set in the equalizer, either positive or negative.
@@ -144,6 +149,8 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     val equalizerState: StateFlow<FloatArray> = _equalizerState.asStateFlow()
     val twsConnected: StateFlow<Boolean?> = MutableStateFlow(null).asStateFlow()
     val deviceInfo: AirohaDevice? get() = _deviceInfo
+    val isConnected: Boolean get() = _airohaDeviceState.value == AirohaDeviceState.CONNECTED_AIROHA ||
+            isReady
     val isReady: Boolean get() = _airohaDeviceState.value == AirohaDeviceState.READY
 
     private val _airohaConnectionListener: AirohaConnector.AirohaConnectionListener =
@@ -273,6 +280,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                         _airohaDeviceState.value = AirohaDeviceState.ERROR
                         return@collect
                     }
+                    val sleepMode = preferencesManager.prefs.getBoolean(
+                            PreferenceKeys.SLEEP_MODE.name, false)
+                    setVoicePromptsEnabled(!sleepMode)
                     _airohaDeviceState.value = AirohaDeviceState.READY
                 }
             }
@@ -436,7 +446,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
                     if (readyForStreaming) {
                         // Clear the memory cache from the previous recording data, if any.
                         _budzService?.memoryCache?.clear()
-                        val airohaStatusCode = startRaceBleStreamingFlow().last()
+                        val airohaStatusCode = runSetRaceCommandFlow(getRaceCommand(
+                            DataStreamRaceCommand(
+                                DataStreamRaceCommand.DataStreamType.START_STREAM))).last()
                         if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
                             _streamingState.value = StreamingState.STARTED
                             return@launch
@@ -505,7 +517,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             _streamingState.value = StreamingState.STOPPING
             if (_airohaDeviceState.value == AirohaDeviceState.CONNECTED_AIROHA ||
                 _airohaDeviceState.value == AirohaDeviceState.READY) {
-                val airohaStatusCode = stopRaceBleStreamingFlow().take(1).last()
+                val airohaStatusCode = runSetRaceCommandFlow(getRaceCommand(
+                    DataStreamRaceCommand(DataStreamRaceCommand.DataStreamType.STOP_STREAM)))
+                    .take(1).last()
                 RotatingFileLogger.get().logd(tag, "stopRaceBleStreamingFlow airohaStatusCode=$airohaStatusCode")
                 if (airohaStatusCode != AirohaStatusCode.STATUS_SUCCESS) {
                     _streamingState.value = StreamingState.ERROR
@@ -528,103 +542,69 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         return _budzService?.sleepWakeModel?.doInference(data, getEegSamplingRate())
     }
 
-    private fun startRaceBleStreamingFlow() = callbackFlow<AirohaStatusCode> {
-        val airohaDeviceListener = object : AirohaDeviceListener {
-            override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                logAirohaResponse("onRead", code, msg)
-                trySend(code)
-                channel.close()
-            }
-
-            override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                logAirohaResponse("onChanged", code, msg)
-                trySend(code)
-                channel.close()
-            }
-        }
-
-        getAirohaDeviceControl().sendCustomCommand(
-            getStartBleStreamingAirohaCommand(), airohaDeviceListener)
-
-        awaitClose {
-        }
-    }
-
-    private fun stopRaceBleStreamingFlow() = callbackFlow<AirohaStatusCode> {
-            val airohaDeviceListener = object : AirohaDeviceListener {
-                override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                    logAirohaResponse("onRead", code, msg)
-                    trySend(code)
-                    channel.close()
-                }
-
-                override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                    logAirohaResponse("onChanged", code, msg)
-                    trySend(code)
-                    channel.close()
-                }
-            }
-
-            getAirohaDeviceControl().sendCustomCommand(
-                getStopBleStreamingAirohaCommand(), airohaDeviceListener)
-
-            awaitClose {
-                // Nothing to do.
-            }
-        }
-
     fun startSoundLoop() {
-        if (!isReady) {
+        if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to start sound loop, but device is not " +
                     "available: ${_airohaDeviceState.value}")
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
-            getStartSoundLoopAirohaCommand(), airohaDeviceListener)
+            getRaceCommand(StartStopSoundLoopRaceCommand(
+                StartStopSoundLoopRaceCommand.SoundLoopType.START_LOOP)),
+            airohaDeviceListener
+        )
     }
 
     fun stopSoundLoop() {
-        if (!isReady) {
+        if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to stop sound loop, but device is not " +
                     "available: ${_airohaDeviceState.value}")
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
-            getStopSoundLoopAirohaCommand(), airohaDeviceListener)
+            getRaceCommand(StartStopSoundLoopRaceCommand(
+                StartStopSoundLoopRaceCommand.SoundLoopType.STOP_LOOP)),
+            airohaDeviceListener
+        )
     }
 
     fun reset() {
-        if (!isReady) {
+        if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to reset device, but device is not " +
                     "available: ${_airohaDeviceState.value}")
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
-            getResetAirohaCommand(), airohaDeviceListener)
+            getRaceCommand(PowerRaceCommand(PowerRaceCommand.PowerType.RESET)),
+            airohaDeviceListener
+        )
     }
 
     fun powerOff() {
-        if (!isReady) {
+        if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to power off device, but device is not " +
                     "available: ${_airohaDeviceState.value}")
             return
         }
         getAirohaDeviceControl().sendCustomCommand(
-            getPowerOffAirohaCommand(), airohaDeviceListener)
+            getRaceCommand(PowerRaceCommand(PowerRaceCommand.PowerType.POWER_OFF)),
+            airohaDeviceListener
+        )
     }
 
     suspend fun setAfeRegisterValue(register: String, value: String): AirohaStatusCode? {
-        if (!isReady) {
+        if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to set AFE register, but device is not" +
                     " available: ${_airohaDeviceState.value}")
             return null
         }
 
-        return setAfeRegisterFlow(register, value).first()
+        return runSetRaceCommandFlow(getRaceCommand(SetAfeRegisterRaceCommand(register, value)))
+            .first()
     }
 
     suspend fun getAfeRegisterValue(register: String): String? {
-        if (!isReady) {
+        if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to get AFE register, but device is not " +
                     "available: ${_airohaDeviceState.value}")
             return null
@@ -633,22 +613,44 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
     }
 
     suspend fun setSoundLoopVolume(volume: Int): AirohaStatusCode? {
-        if (!isReady) {
+        if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to set sound loop volume, but device is " +
                     "not available: ${_airohaDeviceState.value}")
             return null
         }
 
-        return setSoundLoopVolumeFlow(volume).first()
+        return runSetRaceCommandFlow(getRaceCommand(SetSoundLoopVolumeRaceCommand(volume))).first()
     }
 
     suspend fun getSoundLoopVolume(): Int? {
-        if (!isReady) {
+        if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to get sound loop volume, but device is " +
                     "not available: ${_airohaDeviceState.value}")
             return null
         }
         return getSoundLoopVolumeFlow().first()?.toInt()
+    }
+
+    suspend fun setTouchControlsEnabled(enabled: Boolean): AirohaStatusCode? {
+        if (!isConnected) {
+            RotatingFileLogger.get().logw(tag, "Tried to set touch controls, but device is " +
+                    "not available: ${_airohaDeviceState.value}")
+            return null
+        }
+
+        return runSetRaceCommandFlow(getRaceCommand(
+            SetTouchControlsRaceCommand(disable=!enabled))).first()
+    }
+
+    suspend fun setVoicePromptsEnabled(enabled: Boolean): AirohaStatusCode? {
+        if (!isConnected) {
+            RotatingFileLogger.get().logw(tag, "Tried to set voice prompts, but device is " +
+                    "not available: ${_airohaDeviceState.value}")
+            return null
+        }
+
+        return runSetRaceCommandFlow(getRaceCommand(
+            SetVoicePromptsControlsRaceCommand(disable=!enabled))).first()
     }
 
     fun changeEqualizer(gains: FloatArray) : Boolean {
@@ -735,27 +737,27 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
     }
 
-    private fun setAfeRegisterFlow(register: String, value: String) = callbackFlow<AirohaStatusCode> {
-        val airohaDeviceListener = object : AirohaDeviceListener {
-            override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                logAirohaResponse("onRead", code, msg)
-                trySend(code)
-                channel.close()
+    private fun runSetRaceCommandFlow(raceCommand: AirohaCmdSettings) =
+        callbackFlow<AirohaStatusCode> {
+            val airohaDeviceListener = object : AirohaDeviceListener {
+                override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                    logAirohaResponse("onRead", code, msg)
+                    trySend(code)
+                    channel.close()
+                }
+
+                override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
+                    logAirohaResponse("onChanged", code, msg)
+                    trySend(code)
+                    channel.close()
+                }
             }
 
-            override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                logAirohaResponse("onChanged", code, msg)
-                trySend(code)
-                channel.close()
+            getAirohaDeviceControl().sendCustomCommand(raceCommand, airohaDeviceListener)
+
+            awaitClose {
             }
         }
-
-        getAirohaDeviceControl().sendCustomCommand(
-            getSetAfeRegisterAirohaCommand(register, value), airohaDeviceListener)
-
-        awaitClose {
-        }
-    }
 
     private fun getAfeRegisterFlow(register: String) = callbackFlow<String?> {
         val airohaDeviceListener = object : AirohaDeviceListener {
@@ -792,29 +794,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
 
         getAirohaDeviceControl().sendCustomCommand(
-            getGetAfeRegisterAirohaCommand(register), airohaDeviceListener)
-
-        awaitClose {
-        }
-    }
-
-    private fun setSoundLoopVolumeFlow(volume: Int) = callbackFlow<AirohaStatusCode> {
-        val airohaDeviceListener = object : AirohaDeviceListener {
-            override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                logAirohaResponse("onRead", code, msg)
-                trySend(code)
-                channel.close()
-            }
-
-            override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                logAirohaResponse("onChanged", code, msg)
-                trySend(code)
-                channel.close()
-            }
-        }
-
-        getAirohaDeviceControl().sendCustomCommand(
-            getSetSoundLoopVolumeAirohaCommand(volume), airohaDeviceListener)
+            getRaceCommand(GetAfeRegisterRaceCommand(register)),
+            airohaDeviceListener
+        )
 
         awaitClose {
         }
@@ -855,7 +837,9 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         }
 
         getAirohaDeviceControl().sendCustomCommand(
-            getGetSoundLoopVolumeAirohaCommand(), airohaDeviceListener)
+            getRaceCommand(GetSoundLoopVolumeRaceCommand()),
+            airohaDeviceListener
+        )
 
         awaitClose {
         }
@@ -994,103 +978,13 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
         return AirohaSDK.getInst().airohaDeviceControl
     }
 
-    private fun getStartBleStreamingAirohaCommand(): AirohaCmdSettings {
+    private fun getRaceCommand(command: RaceCommand, raceType: Byte = RaceType.INDICATION):
+            AirohaCmdSettings {
         val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = DataStreamRaceCommand(
-            DataStreamRaceCommand.DataStreamType.START_STREAM).getBytes()
-        return raceCommand
-    }
-
-    private fun getStopBleStreamingAirohaCommand(): AirohaCmdSettings {
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = DataStreamRaceCommand(
-            DataStreamRaceCommand.DataStreamType.STOP_STREAM).getBytes()
-        return raceCommand
-    }
-
-    private fun getStartSoundLoopAirohaCommand(): AirohaCmdSettings {
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = StartStopSoundLoopRaceCommand(
-            StartStopSoundLoopRaceCommand.SoundLoopType.START_LOOP).getBytes()
-        RotatingFileLogger.get().logd(tag, "getStartStopSoundLoopAirohaCommand: " +
-                Converter.byte2HexStr(raceCommand.command)
-        )
-        return raceCommand
-    }
-
-    private fun getStopSoundLoopAirohaCommand(): AirohaCmdSettings {
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = StartStopSoundLoopRaceCommand(
-            StartStopSoundLoopRaceCommand.SoundLoopType.STOP_LOOP).getBytes()
-        RotatingFileLogger.get().logd(tag, "getStartStopSoundLoopAirohaCommand: " +
-                Converter.byte2HexStr(raceCommand.command)
-        )
-        return raceCommand
-    }
-
-    private fun getResetAirohaCommand(): AirohaCmdSettings {
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = PowerRaceCommand(
-            PowerRaceCommand.PowerType.RESET).getBytes()
-        RotatingFileLogger.get().logd(tag, "getResetAirohaCommand: " +
-                Converter.byte2HexStr(raceCommand.command)
-        )
-        return raceCommand
-    }
-
-    private fun getPowerOffAirohaCommand() : AirohaCmdSettings {
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = PowerRaceCommand(
-            PowerRaceCommand.PowerType.POWER_OFF).getBytes()
-        RotatingFileLogger.get().logd(tag, "getPowerOffAirohaCommand: " +
-                Converter.byte2HexStr(raceCommand.command)
-        )
-        return raceCommand
-    }
-
-    private fun getSetAfeRegisterAirohaCommand(register: String, value: String): AirohaCmdSettings {
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = SetAfeRegisterRaceCommand(register, value).getBytes()
-        RotatingFileLogger.get().logd(tag, "setAfeRegisterAirohaCommand: " +
-                Converter.byte2HexStr(raceCommand.command)
-        )
-        return raceCommand
-    }
-
-    private fun getGetAfeRegisterAirohaCommand(register: String): AirohaCmdSettings {
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = GetAfeRegisterRaceCommand(register).getBytes()
-        RotatingFileLogger.get().logd(tag, "getAfeRegisterAirohaCommand: " +
-                Converter.byte2HexStr(raceCommand.command)
-        )
-        return raceCommand
-    }
-
-    private fun getSetSoundLoopVolumeAirohaCommand(volume: Int): AirohaCmdSettings {
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = SetSoundLoopVolumeRaceCommand(volume).getBytes()
-        RotatingFileLogger.get().logd(tag, "SetSoundLoopAirohaCommand: " +
-                Converter.byte2HexStr(raceCommand.command)
-        )
-        return raceCommand
-    }
-
-    private fun getGetSoundLoopVolumeAirohaCommand(): AirohaCmdSettings {
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = GetSoundLoopVolumeRaceCommand().getBytes()
-        RotatingFileLogger.get().logd(tag, "GetSoundLoopAirohaCommand: " +
-                Converter.byte2HexStr(raceCommand.command)
-        )
+        raceCommand.respType = raceType
+        raceCommand.command = command.getBytes()
+        RotatingFileLogger.get().logd(
+            tag, "${command.getName()}: ${Converter.byte2HexStr(raceCommand.command)}")
         return raceCommand
     }
 

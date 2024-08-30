@@ -15,6 +15,10 @@ class SetSoundLoopVolumeRaceCommand(volume: Int) : NextSenseRaceCommand(
 
     private val _volume: Int = volume
 
+    override fun getName(): String {
+        return SetSoundLoopVolumeRaceCommand::class.java.simpleName
+    }
+
     override fun getBytes(): ByteArray {
         val effectiveVolume = if (_volume < MIN_VOLUME) MIN_VOLUME else
             if (_volume > MAX_VOLUME) MAX_VOLUME else _volume

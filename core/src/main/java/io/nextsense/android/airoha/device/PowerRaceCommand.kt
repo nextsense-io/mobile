@@ -6,7 +6,6 @@ class PowerRaceCommand(powerType: PowerType) : RaceCommand(
     raceCommandType = RaceCommandType.NEEDS_RESPONSE,
     raceId = RaceId.MCU
 ) {
-
     enum class PowerType(private val value: String) {
         POWER_OFF("18"),
         RESET("19");
@@ -17,6 +16,10 @@ class PowerRaceCommand(powerType: PowerType) : RaceCommand(
     }
 
     private val _powerType: PowerType = powerType
+
+    override fun getName(): String {
+        return PowerRaceCommand::class.java.simpleName
+    }
 
     override fun getBytes(): ByteArray {
         return super.getBytes(payload = _powerType.getHexValue() + byteArrayOf(0x00))
