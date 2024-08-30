@@ -17,6 +17,10 @@ class StartStopSoundLoopRaceCommand(soundLoopType: SoundLoopType) : NextSenseRac
         }
     }
 
+    override fun getName(): String {
+        return StartStopSoundLoopRaceCommand::class.java.simpleName
+    }
+
     private val _soundLoopType: SoundLoopType = soundLoopType
 
     override fun getBytes(): ByteArray {

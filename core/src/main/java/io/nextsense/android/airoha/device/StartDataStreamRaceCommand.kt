@@ -18,6 +18,10 @@ class DataStreamRaceCommand(dataStreamType: DataStreamType) : NextSenseRaceComma
         }
     }
 
+    override fun getName(): String {
+        return DataStreamRaceCommand::class.java.simpleName
+    }
+
     private val _dataStreamType: DataStreamType = dataStreamType
 
     override fun getBytes(): ByteArray {
