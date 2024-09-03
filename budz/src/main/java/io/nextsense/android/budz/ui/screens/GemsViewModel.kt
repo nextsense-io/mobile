@@ -110,7 +110,8 @@ class GemsViewModel @Inject constructor(
                 "$channelBandPowers")
         val multiplyFactor = (1 / (channelBandPowers[BandPowerAnalysis.Band.ALPHA]!! +
                 channelBandPowers[BandPowerAnalysis.Band.THETA]!! +
-                channelBandPowers[BandPowerAnalysis.Band.BETA]!!)) * 100
+                channelBandPowers[BandPowerAnalysis.Band.BETA]!! +
+                channelBandPowers[BandPowerAnalysis.Band.GAMMA]!!)) * 100
         _uiState.value = _uiState.value.copy(
             bandPowersList = _uiState.value.bandPowersList.plus(
                 mapOf(
@@ -119,6 +120,8 @@ class GemsViewModel @Inject constructor(
                     BandPowerAnalysis.Band.ALPHA to (channelBandPowers[BandPowerAnalysis.Band.ALPHA]!!
                             * multiplyFactor).toFloat(),
                     BandPowerAnalysis.Band.BETA to (channelBandPowers[BandPowerAnalysis.Band.BETA]!!
+                            * multiplyFactor).toFloat(),
+                    BandPowerAnalysis.Band.GAMMA to (channelBandPowers[BandPowerAnalysis.Band.GAMMA]!!
                             * multiplyFactor).toFloat(),
                 )
             )
