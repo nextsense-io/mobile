@@ -28,8 +28,6 @@ android {
         targetSdk 34
         versionCode 28
         versionName "0.3.3"
-        versionCode 26
-        versionName "0.3.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
