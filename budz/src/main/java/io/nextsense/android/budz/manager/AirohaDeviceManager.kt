@@ -286,6 +286,7 @@ class AirohaDeviceManager @Inject constructor(
                     val sleepMode = preferencesManager.prefs.getBoolean(
                             PreferenceKeys.SLEEP_MODE.name, false)
                     setVoicePromptsEnabled(!sleepMode)
+                    setTouchControlsEnabled(!sleepMode)
                     _airohaDeviceState.value = AirohaDeviceState.READY
                 }
             }
