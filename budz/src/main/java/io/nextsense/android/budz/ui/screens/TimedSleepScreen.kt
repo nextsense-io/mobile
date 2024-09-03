@@ -118,25 +118,25 @@ fun TimedSleepScreen(timedSleepViewModel: TimedSleepViewModel = hiltViewModel(),
                             })
                     }
                 }
-                Spacer(modifier = Modifier.height(15.dp))
-                BudzCard {
-                    Text(
-                        stringResource(R.string.label_stay_asleep),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    HorizontalDivider(color = BudzColor.lightPurple)
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("${timedSleepUiState.stayAsleepSample?.name}",
-                            style = MaterialTheme.typography.displayMedium)
-                        Spacer(modifier = Modifier.weight(1f))
-                        SimpleButton(name = stringResource(R.string.label_change),
-                            enabled = !timedSleepUiState.loading, onClick = {
-                                onGoToStayAsleep()
-                            })
-                    }
-                }
+//                Spacer(modifier = Modifier.height(15.dp))
+//                BudzCard {
+//                    Text(
+//                        stringResource(R.string.label_stay_asleep),
+//                        style = MaterialTheme.typography.labelMedium
+//                    )
+//                    HorizontalDivider(color = BudzColor.lightPurple)
+//                    Row(verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.SpaceBetween
+//                    ) {
+//                        Text("${timedSleepUiState.stayAsleepSample?.name}",
+//                            style = MaterialTheme.typography.displayMedium)
+//                        Spacer(modifier = Modifier.weight(1f))
+//                        SimpleButton(name = stringResource(R.string.label_change),
+//                            enabled = !timedSleepUiState.loading, onClick = {
+//                                onGoToStayAsleep()
+//                            })
+//                    }
+//                }
                 if (timedSleepUiState.fallingAsleep) {
                     Spacer(modifier = Modifier.weight(1f))
                     WideButton(name = stringResource(R.string.label_end_timed_sleep), onClick = {
