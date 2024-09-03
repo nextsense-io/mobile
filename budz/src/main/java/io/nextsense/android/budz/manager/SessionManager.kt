@@ -41,9 +41,12 @@ class SessionManager(
     private var _currentDataSessionRef: DocumentReference? = null
     private var _currentDataSession: DataSession? = null
     val currentDataSession: DataSession? get() = _currentDataSession
+    private var _sessionRunning = false
+    val sessionRunning: Boolean get() = _sessionRunning
 
     fun isSessionRunning(): Boolean {
-        return currentSession != null
+        return airohaDeviceManager.streamingState.value == StreamingState.STARTING ||
+                airohaDeviceManager.streamingState.value == StreamingState.STARTED
     }
 
     suspend fun startSession(
@@ -63,56 +66,65 @@ class SessionManager(
         val startTime = Timestamp.now()
         val earbudsConfig = EarbudsConfigs.getEarbudsConfig(EarbudsConfigNames.MAUI_CONFIG.name)
 
-        // Create the session in Firestore.
-        val session = Session(
-            startDatetime = startTime,
-            deviceId = deviceInfo.deviceMAC,
-            deviceMacAddress = deviceInfo.deviceMAC,
-            deviceFirmwareVersion = deviceInfo.firmwareVer,
-            deviceVersion = deviceInfo.devicePid,
-            earbudsConfig = earbudsConfig.name,
-            mobileAppVersion = appVersion,
-            protocolName = protocol.key(),
-            timezone = TimeZone.getDefault().id,
-            userId = userId,
-            activityType = activityType,
-            toneBud = toneBud,
-            createdAt = Timestamp.now()
-        )
-        val sessionState = sessionsRepository.addSession(session)
-        if (sessionState is State.Success) {
-            RotatingFileLogger.get().logi(tag, "Session created in Firestore successfully." +
-                    " id=${sessionState.data.id}")
-        } else {
-            RotatingFileLogger.get().logw(tag, "Failed to create Firestore session.")
-            return false
-        }
-        _currentSessionRef = sessionState.data
+        if (uploadToCloud) {
+            // Create the session in Firestore.
+            val session = Session(
+                startDatetime = startTime,
+                deviceId = deviceInfo.deviceMAC,
+                deviceMacAddress = deviceInfo.deviceMAC,
+                deviceFirmwareVersion = deviceInfo.firmwareVer,
+                deviceVersion = deviceInfo.devicePid,
+                earbudsConfig = earbudsConfig.name,
+                mobileAppVersion = appVersion,
+                protocolName = protocol.key(),
+                timezone = TimeZone.getDefault().id,
+                userId = userId,
+                activityType = activityType,
+                toneBud = toneBud,
+                createdAt = Timestamp.now()
+            )
+            val sessionState = sessionsRepository.addSession(session)
+            if (sessionState is State.Success) {
+                RotatingFileLogger.get().logi(
+                    tag, "Session created in Firestore successfully." +
+                            " id=${sessionState.data.id}"
+                )
+            } else {
+                RotatingFileLogger.get().logw(tag, "Failed to create Firestore session.")
+                return false
+            }
+            _currentSessionRef = sessionState.data
 
-        // Create the data session in Firestore.
-        val dataSession = DataSession(
-            name = Modality.EEEG.key(),
-            startDatetime = startTime,
-            samplingRate = airohaDeviceManager.getEegSamplingRate(),
-            streamingRate = airohaDeviceManager.getEegSamplingRate(),
-            haveRawData = false,
-            channelDefinitions = getChannelDefinitions(earbudsConfig),
-            createdAt = Timestamp.now()
-        )
-        val dataSessionState = sessionsRepository.addDataSession(
-            dataSession, _currentSessionRef!!.id)
-        if (dataSessionState is State.Success) {
+            // Create the data session in Firestore.
+            val dataSession = DataSession(
+                name = Modality.EEEG.key(),
+                startDatetime = startTime,
+                samplingRate = airohaDeviceManager.getEegSamplingRate(),
+                streamingRate = airohaDeviceManager.getEegSamplingRate(),
+                haveRawData = false,
+                channelDefinitions = getChannelDefinitions(earbudsConfig),
+                createdAt = Timestamp.now()
+            )
+            val dataSessionState = sessionsRepository.addDataSession(
+                dataSession, _currentSessionRef!!.id
+            )
+            if (dataSessionState is State.Success) {
+                _currentDataSession = dataSession
+                RotatingFileLogger.get().logi(
+                    tag, "Data session created in Firestore successfully." +
+                            " id=${dataSessionState.data.id}"
+                )
+            } else {
+                RotatingFileLogger.get().logw(tag, "Failed to create Firestore data session.")
+                return false
+            }
+            _currentDataSessionRef = dataSessionState.data
+            _currentSession = session
             _currentDataSession = dataSession
-            RotatingFileLogger.get().logi(tag, "Data session created in Firestore successfully." +
-                    " id=${dataSessionState.data.id}")
-        } else {
-            RotatingFileLogger.get().logw(tag, "Failed to create Firestore data session.")
-            return false
         }
-        _currentDataSessionRef = dataSessionState.data
 
         val localSessionId: Long = localSessionManager.startLocalSession(
-            /*cloudDataSessionId=*/_currentSessionRef!!.id,
+            /*cloudDataSessionId=*/_currentSessionRef?.id,
             /*userBigTableKey=*/userId, earbudsConfig.name, uploadToCloud,
             airohaDeviceManager.getEegSamplingRate(), /*accelerationSampleRate=*/100F,
             /*saveToCsv=*/true)
@@ -123,8 +135,6 @@ class SessionManager(
                 .logw(tag, "Previous session not finished, cannot start streaming.")
             return false
         }
-        _currentSession = session
-        _currentDataSession = dataSession
 
         // TODO(eric): Check result.
         airohaDeviceManager.startBleStreaming()
@@ -132,41 +142,40 @@ class SessionManager(
     }
 
     suspend fun stopSession(dataQuality: DataQuality = DataQuality.UNKNOWN) {
-        if (_currentSessionRef == null || _currentDataSessionRef == null ||
-            _currentSession == null || _currentDataSession == null) {
-            RotatingFileLogger.get().logw(tag, "Tried to stop a session while none was running.")
-            return
-        }
-
         // TODO(eric): Check result.
         airohaDeviceManager.stopBleStreaming(overrideForceStreaming = true)
 
         val stopTime = Timestamp.now()
         localSessionManager.stopActiveLocalSession()
 
-        _currentSession!!.endDatetime = stopTime
-        _currentSession!!.dataQuality = dataQuality
-        val sessionState = sessionsRepository.updateSession(_currentSession!!,
-            _currentSessionRef!!.id)
-        if (sessionState is State.Success) {
-            RotatingFileLogger.get().logi(tag, "Session updated successfully.")
-        } else {
-            RotatingFileLogger.get().logw(tag, "Failed to update session.")
-        }
+        if (_currentSession != null) {
+            _currentSession!!.endDatetime = stopTime
+            _currentSession!!.dataQuality = dataQuality
+            val sessionState = sessionsRepository.updateSession(
+                _currentSession!!,
+                _currentSessionRef!!.id
+            )
+            if (sessionState is State.Success) {
+                RotatingFileLogger.get().logi(tag, "Session updated successfully.")
+            } else {
+                RotatingFileLogger.get().logw(tag, "Failed to update session.")
+            }
 
-        _currentDataSession!!.endDatetime = stopTime
-        val dataSessionState = sessionsRepository.updateDataSession(
-            _currentDataSession!!, _currentSessionRef!!.id, _currentDataSessionRef!!.id)
-        if (dataSessionState is State.Success) {
-            RotatingFileLogger.get().logi(tag, "Data session updated successfully.")
-        } else {
-            RotatingFileLogger.get().logw(tag, "Failed to update data session.")
-        }
+            _currentDataSession!!.endDatetime = stopTime
+            val dataSessionState = sessionsRepository.updateDataSession(
+                _currentDataSession!!, _currentSessionRef!!.id, _currentDataSessionRef!!.id
+            )
+            if (dataSessionState is State.Success) {
+                RotatingFileLogger.get().logi(tag, "Data session updated successfully.")
+            } else {
+                RotatingFileLogger.get().logw(tag, "Failed to update data session.")
+            }
 
-        _currentSessionRef = null
-        _currentSession = null
-        _currentDataSessionRef = null
-        _currentDataSession = null
+            _currentSessionRef = null
+            _currentSession = null
+            _currentDataSessionRef = null
+            _currentDataSession = null
+        }
     }
 
     private fun getChannelDefinitions(earbudsConfig: EarbudsConfig): List<ChannelDefinition> {

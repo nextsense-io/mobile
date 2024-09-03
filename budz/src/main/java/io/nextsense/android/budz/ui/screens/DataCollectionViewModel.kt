@@ -71,14 +71,14 @@ class DataCollectionViewModel @Inject constructor(
             sessionManager.stopSession()
         }
         deviceManager.setForceStream(true)
-        sessionManager.startSession(
-            protocol = Protocol.WAKE, uploadToCloud = true)
+        sessionManager.startSession(protocol = Protocol.WAKE, uploadToCloud = true,
+            activityType = _uiState.value.activityType, toneBud = _uiState.value.toneBud)
         _uiState.value = _uiState.value.copy(recordingState = RecordingState.STARTED)
     }
 
     private suspend fun stopSession() {
         _uiState.value = _uiState.value.copy(recordingState = RecordingState.STOPPING)
-        sessionManager.stopSession()
+        sessionManager.stopSession(dataQuality = _uiState.value.dataQuality)
         _uiState.value = _uiState.value.copy(recordingState = RecordingState.STOPPED,
             activityType = ActivityType.UNKNOWN, dataQuality = DataQuality.UNKNOWN,
             toneBud = ToneBud.UNKNOWN)
