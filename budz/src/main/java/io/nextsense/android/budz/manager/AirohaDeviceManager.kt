@@ -67,6 +67,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.math.ceil
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import io.nextsense.android.airoha.device.DisableVoicePromptRaceCommand
 import io.nextsense.android.airoha.device.DisableTouchRaceCommand
@@ -121,6 +122,7 @@ class AirohaDeviceManager @Inject constructor(
     private val _airohaDeviceConnector = AirohaSDK.getInst().airohaDeviceConnector
     // Equalizer gains that are currently being set. _equalizerState is the current state, and will
     // get updated if these are set successfully.
+    private val _airohaCommandInterval = 200.milliseconds
     private val _airohaDeviceState = MutableStateFlow(AirohaDeviceState.DISCONNECTED)
     private val _bleDeviceState = MutableStateFlow(BleDeviceState.DISCONNECTED)
     private val _streamingState = MutableStateFlow(StreamingState.UNKNOWN)
@@ -269,10 +271,10 @@ class AirohaDeviceManager @Inject constructor(
                     // Need to call these 2 APIs to correctly initialize the connection. If not,
                     // things like getting the battery levels do not work correctly.
                     // Also need a small delay between these commands or they often fail.
-                    delay(200L)
+                    delay(_airohaCommandInterval)
                     _twsConnected.value = twsConnectStatusFlow().last() ?: false
                     RotatingFileLogger.get().logd(tag, "twsConnected=${_twsConnected.value}")
-                    delay(200L)
+                    delay(_airohaCommandInterval)
                     _deviceInfo = deviceInfoFlow().last()
                     RotatingFileLogger.get().logd(tag, "deviceInfo=$_deviceInfo")
                     if (_deviceInfo == null) {
@@ -280,6 +282,7 @@ class AirohaDeviceManager @Inject constructor(
                         _airohaDeviceState.value = AirohaDeviceState.ERROR
                         return@collect
                     }
+                    delay(_airohaCommandInterval)
                     val sleepMode = preferencesManager.prefs.getBoolean(
                             PreferenceKeys.SLEEP_MODE.name, false)
                     setVoicePromptsEnabled(!sleepMode)

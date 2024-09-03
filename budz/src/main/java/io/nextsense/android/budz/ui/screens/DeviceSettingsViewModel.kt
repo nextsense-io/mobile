@@ -50,9 +50,8 @@ class DeviceSettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(sleepMode = sleepMode)
         preferencesManager.prefs.edit().putBoolean(PreferenceKeys.SLEEP_MODE.name, sleepMode).apply()
         viewModelScope.launch {
-            // TODO(eric): Enable when available in firmware.
             deviceManager.setVoicePromptsEnabled(!sleepMode)
-            //deviceManager.setTouchControlsEnabled(!sleepMode)
+            deviceManager.setTouchControlsEnabled(!sleepMode)
         }
     }
 
