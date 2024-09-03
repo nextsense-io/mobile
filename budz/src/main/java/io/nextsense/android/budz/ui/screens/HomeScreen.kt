@@ -75,7 +75,8 @@ fun HomeScreen(
     onGoToFallAsleep: () -> Unit,
     onGoToStayAsleep: () -> Unit,
     onGoToTimedSleep: () -> Unit,
-    onGoToFocus: () -> Unit,
+    onGoToSignalVisualization: () -> Unit,
+    onGoToBrainEq: () -> Unit,
     onGoToDeviceConnection: () -> Unit,
     onGoToDeviceSettings: () -> Unit,
     onSignOut: () -> Unit
@@ -157,40 +158,40 @@ fun HomeScreen(
                         })
                     }
                 }
-                Spacer(modifier = Modifier.height(15.dp))
-                BudzCard {
-                    Text(stringResource(R.string.label_stay_asleep),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                    HorizontalDivider(color = BudzColor.lightPurple)
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text("${homeUiState.stayAsleepSample?.name}",
-                            style = MaterialTheme.typography.displayMedium)
-                        Spacer(modifier = Modifier.weight(1f))
-                        SimpleButton(name = stringResource(R.string.label_change),
-                            enabled = !homeUiState.loading, onClick = {
-                            onGoToStayAsleep()
-                        })
-                    }
-                }
-                Spacer(modifier = Modifier.height(15.dp))
-                BudzCard {
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(stringResource(R.string.label_restoration_boost),
-                            style = MaterialTheme.typography.labelMedium)
-                        Spacer(modifier = Modifier.weight(1f))
-                        Switch(checked = homeUiState.restorationBoost, colors =
-                            SwitchDefaults.colors(
-                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
-                            ),
-                            onCheckedChange = {checked ->
-                                homeViewModel.setRestorationBoost(checked)
-                            })
-                    }
-                }
+//                Spacer(modifier = Modifier.height(15.dp))
+//                BudzCard {
+//                    Text(stringResource(R.string.label_stay_asleep),
+//                        style = MaterialTheme.typography.labelMedium
+//                    )
+//                    HorizontalDivider(color = BudzColor.lightPurple)
+//                    Row(verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.SpaceBetween
+//                    ) {
+//                        Text("${homeUiState.stayAsleepSample?.name}",
+//                            style = MaterialTheme.typography.displayMedium)
+//                        Spacer(modifier = Modifier.weight(1f))
+//                        SimpleButton(name = stringResource(R.string.label_change),
+//                            enabled = !homeUiState.loading, onClick = {
+//                            onGoToStayAsleep()
+//                        })
+//                    }
+//                }
+//                Spacer(modifier = Modifier.height(15.dp))
+//                BudzCard {
+//                    Row(verticalAlignment = Alignment.CenterVertically,
+//                            horizontalArrangement = Arrangement.SpaceBetween) {
+//                        Text(stringResource(R.string.label_restoration_boost),
+//                            style = MaterialTheme.typography.labelMedium)
+//                        Spacer(modifier = Modifier.weight(1f))
+//                        Switch(checked = homeUiState.restorationBoost, colors =
+//                            SwitchDefaults.colors(
+//                                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+//                            ),
+//                            onCheckedChange = {checked ->
+//                                homeViewModel.setRestorationBoost(checked)
+//                            })
+//                    }
+//                }
                 Spacer(modifier = Modifier.height(15.dp))
                 BudzCard {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -228,16 +229,16 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    ActionButton(name = stringResource(R.string.label_check_connection),
+                    ActionButton(name = "Brain\nstates",
                         icon = R.drawable.ic_connection,
-                        onClick = { onGoToDeviceConnection() })
+                        onClick = { onGoToBrainEq() })
                     ActionButton(name = stringResource(R.string.label_timed_sleep),
                         icon = R.drawable.ic_clock,
                         onClick = { onGoToTimedSleep() })
-                    ActionButton(name = "Device\nsettings", icon = R.drawable.ic_settings,
-                        onClick = { onGoToDeviceSettings() })
-                    ActionButton(name = stringResource(R.string.label_button_focus),
-                        icon= R.drawable.ic_focus, onClick = { onGoToFocus() })
+//                    ActionButton(name = "Device\nsettings", icon = R.drawable.ic_settings,
+//                        onClick = { onGoToDeviceSettings() })
+                    ActionButton(name = "Signal\nvisualization",
+                        icon= R.drawable.ic_focus, onClick = { onGoToSignalVisualization() })
 //                    ActionButton(name = "Sign out", icon= R.drawable.ic_focus, onClick = {
 //                            homeViewModel.signOut()
 //                            onSignOut()

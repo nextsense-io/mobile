@@ -6,7 +6,6 @@ import io.nextsense.android.algo.signal.Filters
 import io.nextsense.android.algo.signal.Sampling
 import io.nextsense.android.algo.signal.WaveletArtifactRejection
 import io.nextsense.android.base.devices.maui.MauiDataParser
-import io.nextsense.android.base.utils.RotatingFileLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -19,7 +18,7 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
     private val defaultCalculationEpoch = 17.seconds
     private val _bandPowers: MutableMap<Int, MutableMap<Band, Double>> = mutableMapOf()
     private val _calculationEpoch = defaultCalculationEpoch
-    private var _powerLineFrequency: Int? = null
+    private var _powerLineFrequency: Int? = 60
 
     val bandPowersState = MutableStateFlow(_bandPowers)
 

@@ -125,8 +125,11 @@ class MainActivity : ComponentActivity() {
                             onGoToTimedSleep = {
                                 navController.navigate(Routes.TimedSleep)
                             },
-                            onGoToFocus = {
-                                navController.navigate(Routes.Focus)
+                            onGoToSignalVisualization = {
+                                navController.navigate(Routes.SignalVisualization)
+                            },
+                            onGoToBrainEq = {
+                                navController.navigate(Routes.BrainEqualizer)
                             },
                             onGoToDeviceSettings = {
                                 navController.navigate(Routes.DeviceSettings)

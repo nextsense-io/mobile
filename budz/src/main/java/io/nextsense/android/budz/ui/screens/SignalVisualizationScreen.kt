@@ -86,15 +86,18 @@ fun SignalVisualization(signalVisualizationViewModel: SignalVisualizationViewMod
 fun CardConnected(signalVisualizationViewModel: SignalVisualizationViewModel,
                   signalVisualizationState: SignalVisualizationState) {
     BudzCard(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.label_bluetooth_status),
-            style = MaterialTheme.typography.displayMedium
-        )
-        Text(
-            text = stringResource(R.string.label_connected),
-            style = MaterialTheme.typography.titleSmall.copy(color = BudzColor.green),
-            modifier = Modifier.padding(bottom = 20.dp)
-        )
+        Row {
+            Text(
+                text = stringResource(R.string.label_bluetooth_status),
+                style = MaterialTheme.typography.displayMedium
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = stringResource(R.string.label_connected),
+                style = MaterialTheme.typography.titleSmall.copy(color = BudzColor.green),
+                modifier = Modifier.padding(bottom = 20.dp)
+            )
+        }
         HorizontalDivider(color = BudzColor.lightPurple)
     }
     Column {
@@ -113,20 +116,20 @@ fun CardConnected(signalVisualizationViewModel: SignalVisualizationViewModel,
                 onCheckedChange = {checked ->
                     signalVisualizationViewModel.setFiltered(checked)
                 })
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = "Artifacts Removal",
-                style = MaterialTheme.typography.labelMedium,
-                modifier = Modifier.align(Alignment.CenterVertically)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Switch(checked = signalVisualizationState.artifactsRemoval, colors =
-            SwitchDefaults.colors(
-                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
-            ),
-                onCheckedChange = {checked ->
-                    signalVisualizationViewModel.setArtifactsRemoval(checked)
-                })
+//            Spacer(modifier = Modifier.width(10.dp))
+//            Text(
+//                text = "Artifacts Removal",
+//                style = MaterialTheme.typography.labelMedium,
+//                modifier = Modifier.align(Alignment.CenterVertically)
+//            )
+//            Spacer(modifier = Modifier.width(10.dp))
+//            Switch(checked = signalVisualizationState.artifactsRemoval, colors =
+//            SwitchDefaults.colors(
+//                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+//            ),
+//                onCheckedChange = {checked ->
+//                    signalVisualizationViewModel.setArtifactsRemoval(checked)
+//                })
         }
         Spacer(modifier = Modifier.height(10.dp))
         Text(
