@@ -2,6 +2,9 @@ package io.nextsense.android.base.utils;
 
 import android.content.Context;
 import android.content.ContextWrapper;
+
+import com.airoha.sdk.BuildConfig;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,7 +31,8 @@ public class CsvWriter {
     appDirectory = contextWrapper.getDir(context.getFilesDir().getName(), Context.MODE_PRIVATE);
   }
 
-  public synchronized void initCsvFile(String fileName, String earbudsConfig, boolean haveRssi) {
+  public synchronized void initCsvFile(String fileName, String earbudsConfig, boolean haveRssi,
+                                       String macAddress) {
     try {
       if (writer != null) {
         RotatingFileLogger.get().logw(TAG, "csv file already initialized");
@@ -48,12 +52,12 @@ public class CsvWriter {
     String effectiveEarbudsConfig = earbudsConfig == null || earbudsConfig.isEmpty() ?
         "maui_config" : earbudsConfig;
     appendHeaderLine("Header version 1.0");
-    appendHeaderLine("Version", "0.7.0");
+    appendHeaderLine("Version", BuildConfig.VERSION_NAME);
     appendHeaderLine("Protocol version", "1");
     appendHeaderLine("Device", "Maui");
-    appendHeaderLine("MAC address", "unknown");
+    appendHeaderLine("MAC address", macAddress == null ? "Unknown" : macAddress);
     appendHeaderLine("eegStreamingRate", "1000");
-    appendHeaderLine("accelerationStreamingRate", "250");
+    appendHeaderLine("accelerationStreamingRate", "100");
     appendHeaderLine("channelConfig", effectiveEarbudsConfig);
     appendHeaderLine("========== Start Data ==========");
     String headerLine = "SAMPLE_NUMBER,CH-1,CH-2,CH-3,CH-4,CH-5,CH-6,CH-7,CH-8,ACC_L_X,ACC_L_Y," +

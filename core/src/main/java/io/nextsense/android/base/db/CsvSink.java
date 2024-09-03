@@ -81,8 +81,12 @@ public class CsvSink {
   }
 
   public void openCsv(String filename, String earbudsConfig, long localSessionId) {
-    leftCsvWriter.initCsvFile(filename + "_left", earbudsConfig, /*haveRssi=*/true);
-    rightCsvWriter.initCsvFile(filename + "_right", earbudsConfig, /*haveRssi=*/true);
+    openCsv(filename, earbudsConfig, localSessionId, null);
+  }
+
+  public void openCsv(String filename, String earbudsConfig, long localSessionId, String macAddress) {
+    leftCsvWriter.initCsvFile(filename + "_left", earbudsConfig, /*haveRssi=*/true, macAddress);
+    rightCsvWriter.initCsvFile(filename + "_right", earbudsConfig, /*haveRssi=*/true, macAddress);
     currentSessionId = localSessionId;
     LocalSession localSession = objectBoxDatabase.getLocalSession(localSessionId);
     eegSamplingRate = localSession.getEegSampleRate();

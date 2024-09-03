@@ -127,7 +127,7 @@ class SessionManager(
             /*cloudDataSessionId=*/_currentSessionRef?.id,
             /*userBigTableKey=*/userId, earbudsConfig.name, uploadToCloud,
             airohaDeviceManager.getEegSamplingRate(), /*accelerationSampleRate=*/100F,
-            /*saveToCsv=*/true)
+            /*saveToCsv=*/true, deviceInfo.deviceMAC)
         if (localSessionId == -1L) {
             // TODO(eric): delete cloud session on error.
             // Previous session not finished, cannot start streaming.

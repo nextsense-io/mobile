@@ -91,6 +91,14 @@ public class LocalSessionManager {
       @Nullable String cloudDataSessionId, @Nullable String userBigTableKey,
       @Nullable String earbudsConfig, boolean uploadNeeded, float eegSampleRate,
       float accelerationSampleRate, boolean saveToCsv) {
+    return startLocalSession(cloudDataSessionId, userBigTableKey, earbudsConfig, uploadNeeded,
+        eegSampleRate, accelerationSampleRate, saveToCsv, /*macAddress=*/null);
+  }
+
+  public synchronized long startLocalSession(
+      @Nullable String cloudDataSessionId, @Nullable String userBigTableKey,
+      @Nullable String earbudsConfig, boolean uploadNeeded, float eegSampleRate,
+      float accelerationSampleRate, boolean saveToCsv, String macAddress) {
     if (!canStartNewSession()) {
       RotatingFileLogger.get().logw(TAG, "Trying to start a session, but one is already active.");
       return -1;
@@ -102,7 +110,8 @@ public class LocalSessionManager {
       csvSink.startListening();
       String formattedDateTime =
           LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).format(csvFileNameFormatter);
-      csvSink.openCsv(/*fileName=*/"data_recording_" + formattedDateTime, earbudsConfig, sessionId);
+      csvSink.openCsv(/*fileName=*/"data_recording_" + formattedDateTime, earbudsConfig, sessionId,
+          macAddress);
     }
     return sessionId;
   }
