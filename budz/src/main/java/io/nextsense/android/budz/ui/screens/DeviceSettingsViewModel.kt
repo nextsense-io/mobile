@@ -3,6 +3,7 @@ package io.nextsense.android.budz.ui.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.nextsense.android.airoha.device.DisableVoicePromptRaceCommand
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,9 +24,11 @@ class DeviceSettingsViewModel @Inject constructor(
         private val deviceManager: AirohaDeviceManager
 ): ViewModel() {
 
-    private val _uiState = MutableStateFlow(DeviceSettingsState(
-        message = "", register = "", registerValue = ""
-    ))
+    private val _uiState = MutableStateFlow(
+        DeviceSettingsState(
+            message = "", register = "", registerValue = ""
+        )
+    )
 
     val uiState: StateFlow<DeviceSettingsState> = _uiState.asStateFlow()
 
@@ -75,7 +78,7 @@ class DeviceSettingsViewModel @Inject constructor(
         }
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(message = "Setting sound loop volume...")
-            val set =deviceManager.setSoundLoopVolume(volume)
+            val set = deviceManager.setSoundLoopVolume(volume)
             _uiState.value = _uiState.value.copy(message = "Sound loop volume set: $set")
         }
     }
@@ -85,11 +88,15 @@ class DeviceSettingsViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(message = "Getting sound loop volume...")
             val volume = deviceManager.getSoundLoopVolume()
             if (volume != null) {
-                _uiState.value = _uiState.value.copy(message = "Got sound loop volume",
-                    soundLoopVolume = volume)
+                _uiState.value = _uiState.value.copy(
+                    message = "Got sound loop volume",
+                    soundLoopVolume = volume
+                )
             } else {
-                _uiState.value = _uiState.value.copy(message = "Failed to get register",
-                    soundLoopVolume = null)
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to get register",
+                    soundLoopVolume = null
+                )
             }
         }
     }
@@ -132,12 +139,27 @@ class DeviceSettingsViewModel @Inject constructor(
             _uiState.value = _uiState.value.copy(message = "Getting register...")
             val registerValue = deviceManager.getAfeRegisterValue(register)
             if (registerValue != null) {
-                _uiState.value = _uiState.value.copy(message = "Got register",
-                    registerValue = registerValue)
+                _uiState.value = _uiState.value.copy(
+                    message = "Got register",
+                    registerValue = registerValue
+                )
             } else {
-                _uiState.value = _uiState.value.copy(message = "Failed to get register",
-                    registerValue = "")
+                _uiState.value = _uiState.value.copy(
+                    message = "Failed to get register",
+                    registerValue = ""
+                )
             }
         }
     }
+
+    fun disableVoicePrompt(disable: Boolean) {
+        viewModelScope.launch {
+            deviceManager.disableVoicePrompt(disable)
+            _uiState.value =
+                _uiState.value.copy(message = "Voice prompt ${if (disable) "disabled" else "enabled"}")
+        }
+    }
 }
+
+
+

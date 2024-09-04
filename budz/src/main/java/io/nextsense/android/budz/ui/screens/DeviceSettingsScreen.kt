@@ -84,9 +84,16 @@ fun DeviceSettingsScreen(
         SimpleButton(name = "Increase bass gain", onClick = {
             deviceSettingsViewModel.changeEqualizer(floatArrayOf(8f,8f,8f,8f,0f,0f,0f,0f,0f,0f))
         })
-        SimpleButton(name = "Normal bass gain", onClick = {
-            deviceSettingsViewModel.changeEqualizer(floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f))
+        SimpleButton(name = "Disable Voice Prompt", onClick = {
+            deviceSettingsViewModel.run { disableVoicePrompt(disable = true) }
         })
+
+        SimpleButton(name = "Enable Voice Prompt", onClick = {
+            deviceSettingsViewModel.disableVoicePrompt(disable = false)
+        })
+        //SimpleButton(name = "Normal bass gain", onClick = {
+          //  deviceSettingsViewModel.changeEqualizer(floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f))
+        //})
         SimpleButton(name = "Lower bass gain", onClick = {
             deviceSettingsViewModel.changeEqualizer(floatArrayOf(-8f,-8f,-8f,-8f,0f,0f,0f,0f,0f,0f))
         })
