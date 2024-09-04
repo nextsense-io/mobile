@@ -65,18 +65,6 @@ fun DeviceSettingsScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 Spacer(modifier = Modifier.height(20.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Sleep Mode")
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Switch(checked = deviceSettingsUiState.sleepMode, colors =
-                    SwitchDefaults.colors(
-                        checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
-                    ),
-                        onCheckedChange = { checked ->
-                            deviceSettingsViewModel.setSleepMode(checked)
-                        })
-                }
-                Spacer(modifier = Modifier.height(20.dp))
                 BudzCard {
                     TextField(
                         value = deviceSettingsUiState.soundLoopVolume?.toString() ?: "",

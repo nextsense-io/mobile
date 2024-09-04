@@ -12,6 +12,8 @@ import io.nextsense.android.budz.manager.AirohaDeviceState
 import io.nextsense.android.budz.manager.AudioSample
 import io.nextsense.android.budz.manager.AudioSampleType
 import io.nextsense.android.budz.manager.AuthRepository
+import io.nextsense.android.budz.manager.PreferenceKeys
+import io.nextsense.android.budz.manager.PreferencesManager
 import io.nextsense.android.budz.manager.Protocol
 import io.nextsense.android.budz.manager.SoundsManager
 import io.nextsense.android.budz.model.UsersRepository
@@ -35,7 +37,9 @@ data class HomeState(
     val batteryLevel: AirohaBatteryLevel =
         AirohaBatteryLevel(right = null, left = null, case = null),
     val connected: Boolean = false,
-    val restorationBoost: Boolean = true
+    val restorationBoost: Boolean = true,
+    val touchControlsDisabled: Boolean = true,
+    val voicePromptsDisabled: Boolean = true
 )
 
 @HiltViewModel
@@ -43,7 +47,8 @@ class HomeViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val usersRepository: UsersRepository,
     private val authRepository: AuthRepository,
-    private val airohaDeviceManager: AirohaDeviceManager
+    private val airohaDeviceManager: AirohaDeviceManager,
+    private val preferencesManager: PreferencesManager,
 ): BudzViewModel(context) {
 
     private val tag = HomeViewModel::class.java.simpleName
@@ -52,6 +57,17 @@ class HomeViewModel @Inject constructor(
     private var _monitoringJob: Job? = null
 
     val uiState: StateFlow<HomeState> = _uiState.asStateFlow()
+
+    init {
+        _uiState.update { currentState ->
+            currentState.copy(
+                touchControlsDisabled = preferencesManager.prefs.getBoolean(
+                    PreferenceKeys.TOUCH_CONTROLS_DISABLED.name, true),
+                voicePromptsDisabled = preferencesManager.prefs.getBoolean(
+                    PreferenceKeys.VOICE_PROMPTS_DISABLED.name, true)
+            )
+        }
+    }
 
     fun startMonitoring() {
         viewModelScope.launch {
@@ -90,6 +106,28 @@ class HomeViewModel @Inject constructor(
                     else -> {}
                 }
             }
+        }
+    }
+
+    fun setTouchControlsDisabled(value: Boolean) {
+        viewModelScope.launch {
+            airohaDeviceManager.setTouchControlsEnabled(!value)
+        }
+        _uiState.update { currentState ->
+            currentState.copy(
+                touchControlsDisabled = value,
+            )
+        }
+    }
+
+    fun setVoicePromptsDisabled(value: Boolean) {
+        viewModelScope.launch {
+            airohaDeviceManager.setVoicePromptsEnabled(!value)
+        }
+        _uiState.update { currentState ->
+            currentState.copy(
+                voicePromptsDisabled = value,
+            )
         }
     }
 

@@ -283,10 +283,17 @@ class AirohaDeviceManager @Inject constructor(
                         return@collect
                     }
                     delay(_airohaCommandInterval)
+                    // TODO(eric): Probably use this setting later for real users.
                     val sleepMode = preferencesManager.prefs.getBoolean(
                             PreferenceKeys.SLEEP_MODE.name, false)
-                    setVoicePromptsEnabled(!sleepMode)
-                    setTouchControlsEnabled(!sleepMode)
+                    val voicePromptsDisabled = preferencesManager.prefs.getBoolean(
+                            PreferenceKeys.VOICE_PROMPTS_DISABLED.name,
+                        PreferenceKeys.VOICE_PROMPTS_DISABLED.getDefaultValue())
+                    val touchControlsDisabled = preferencesManager.prefs.getBoolean(
+                            PreferenceKeys.TOUCH_CONTROLS_DISABLED.name,
+                        PreferenceKeys.TOUCH_CONTROLS_DISABLED.getDefaultValue())
+                    setVoicePromptsEnabled(voicePromptsDisabled)
+                    setTouchControlsEnabled(touchControlsDisabled)
                     _airohaDeviceState.value = AirohaDeviceState.READY
                 }
             }
