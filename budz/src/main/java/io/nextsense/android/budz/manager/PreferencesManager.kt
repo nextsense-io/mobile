@@ -6,8 +6,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
-enum class PreferenceKeys {
-    SLEEP_MODE
+enum class PreferenceKeys(private val defaultValue: Any) {
+    SLEEP_MODE(false),
+    TOUCH_CONTROLS_DISABLED(true),
+    VOICE_PROMPTS_DISABLED(true);
+
+    fun <T> getDefaultValue(): T {
+        return defaultValue as T
+    }
 }
 
 @Singleton

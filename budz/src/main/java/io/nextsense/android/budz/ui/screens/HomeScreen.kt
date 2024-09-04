@@ -158,6 +158,36 @@ fun HomeScreen(
                         })
                     }
                 }
+                Spacer(modifier = Modifier.height(20.dp))
+                BudzCard {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Disable Touch Controls")
+                        Spacer(modifier = Modifier.weight(1f))
+                        Switch(checked = homeUiState.touchControlsDisabled, colors =
+                        SwitchDefaults.colors(
+                            checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                        ),
+                            onCheckedChange = { checked ->
+                                homeViewModel.setTouchControlsDisabled(checked)
+                            })
+                    }
+                }
+                Spacer(modifier = Modifier.height(20.dp))
+                BudzCard {
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("Disable Voice Prompts")
+                        Spacer(modifier = Modifier.weight(1f))
+                        Switch(checked = homeUiState.voicePromptsDisabled, colors =
+                        SwitchDefaults.colors(
+                            checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                        ),
+                            onCheckedChange = { checked ->
+                                homeViewModel.setVoicePromptsDisabled(checked)
+                            })
+                    }
+                }
 //                Spacer(modifier = Modifier.height(15.dp))
 //                BudzCard {
 //                    Text(stringResource(R.string.label_stay_asleep),
@@ -229,15 +259,15 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    ActionButton(name = "Brain\nstates",
+                    ActionButton(name = "Brain\nEqualizer",
                         icon = R.drawable.ic_connection,
                         onClick = { onGoToBrainEq() })
                     ActionButton(name = stringResource(R.string.label_timed_sleep),
                         icon = R.drawable.ic_clock,
                         onClick = { onGoToTimedSleep() })
-                    ActionButton(name = "Device\nsettings", icon = R.drawable.ic_settings,
+                    ActionButton(name = "Device\nSettings", icon = R.drawable.ic_settings,
                         onClick = { onGoToDeviceSettings() })
-                    ActionButton(name = "Signal\nvisualization",
+                    ActionButton(name = "Signal\nVisualization",
                         icon= R.drawable.ic_focus, onClick = { onGoToSignalVisualization() })
 //                    ActionButton(name = "Sign out", icon= R.drawable.ic_focus, onClick = {
 //                            homeViewModel.signOut()
