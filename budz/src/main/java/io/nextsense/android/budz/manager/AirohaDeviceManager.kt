@@ -292,8 +292,8 @@ class AirohaDeviceManager @Inject constructor(
                     val touchControlsDisabled = preferencesManager.prefs.getBoolean(
                             PreferenceKeys.TOUCH_CONTROLS_DISABLED.name,
                         PreferenceKeys.TOUCH_CONTROLS_DISABLED.getDefaultValue())
-                    setVoicePromptsEnabled(voicePromptsDisabled)
-                    setTouchControlsEnabled(touchControlsDisabled)
+                    setVoicePromptsEnabled(!voicePromptsDisabled)
+                    setTouchControlsEnabled(!touchControlsDisabled)
                     _airohaDeviceState.value = AirohaDeviceState.READY
                 }
             }
