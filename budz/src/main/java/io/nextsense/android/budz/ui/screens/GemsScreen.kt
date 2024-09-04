@@ -37,6 +37,7 @@ import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 @Composable
 fun GemsScreen(
     viewModel: GemsViewModel = hiltViewModel(),
+    onGoBack: () -> Unit,
 ) {
     LifecycleStartEffect(true) {
         viewModel.startStreaming()
@@ -56,7 +57,8 @@ fun GemsScreen(
     Scaffold(
         topBar = {
             TopBar(title = stringResource(R.string.app_title), isAppTitle = true,
-                leftIconContent = TopBarLeftIconContent.BACK, showPrivacy = false)
+                leftIconContent = TopBarLeftIconContent.BACK, showPrivacy = false,
+                onNavigationClick = { onGoBack() })
         },
         modifier = Modifier
             .fillMaxSize()

@@ -235,8 +235,8 @@ fun HomeScreen(
                     ActionButton(name = stringResource(R.string.label_timed_sleep),
                         icon = R.drawable.ic_clock,
                         onClick = { onGoToTimedSleep() })
-//                    ActionButton(name = "Device\nsettings", icon = R.drawable.ic_settings,
-//                        onClick = { onGoToDeviceSettings() })
+                    ActionButton(name = "Device\nsettings", icon = R.drawable.ic_settings,
+                        onClick = { onGoToDeviceSettings() })
                     ActionButton(name = "Signal\nvisualization",
                         icon= R.drawable.ic_focus, onClick = { onGoToSignalVisualization() })
 //                    ActionButton(name = "Sign out", icon= R.drawable.ic_focus, onClick = {
