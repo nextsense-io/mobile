@@ -207,6 +207,9 @@ class MainActivity : ComponentActivity() {
                             },
                             onGoToDataCollection = {
                                 navController.navigate(Routes.DataCollection)
+                            },
+                            onGoToHome = {
+                                navController.popBackStack()
                             }
                         )
                     }
@@ -244,7 +247,11 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable<Routes.Gems> {
-                        GemsScreen()
+                        GemsScreen(
+                            onGoBack = {
+                                navController.popBackStack()
+                            }
+                        )
                     }
                     composable<Routes.DataCollection> {
                         DataCollectionScreen(
