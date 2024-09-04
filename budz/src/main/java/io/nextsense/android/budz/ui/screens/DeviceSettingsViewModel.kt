@@ -151,6 +151,14 @@ class DeviceSettingsViewModel @Inject constructor(
             }
         }
     }
+    fun setTouchCapability(disable: Boolean) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(message = "Setting touch capability...")
+            deviceManager.setTouchCapability(disable)
+            _uiState.value = _uiState.value.copy(message = "Touch capability ${if (disable) "disabled" else "enabled"}")
+        }
+    }
+
 
     fun disableVoicePrompt(disable: Boolean) {
         viewModelScope.launch {

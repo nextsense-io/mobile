@@ -91,11 +91,11 @@ fun DeviceSettingsScreen(
         SimpleButton(name = "Enable Voice Prompt", onClick = {
             deviceSettingsViewModel.disableVoicePrompt(disable = false)
         })
-        //SimpleButton(name = "Normal bass gain", onClick = {
-          //  deviceSettingsViewModel.changeEqualizer(floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f))
-        //})
-        SimpleButton(name = "Lower bass gain", onClick = {
-            deviceSettingsViewModel.changeEqualizer(floatArrayOf(-8f,-8f,-8f,-8f,0f,0f,0f,0f,0f,0f))
+        SimpleButton(name = "Disable Touch", onClick = {
+            deviceSettingsViewModel.setTouchCapability(disable = true)
+        })
+        SimpleButton(name = "Enable Touch", onClick = {
+            deviceSettingsViewModel.setTouchCapability(disable = false)
         })
         SimpleButton(name = "Go to Signal Visualization", onClick = {
             onGoToSignalVisualization()
