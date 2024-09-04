@@ -33,23 +33,27 @@ object SoundsManager {
         BROWN_NOISE,
         PINK_NOISE,
         WHITE_NOISE,
-        FAN_SOUND;
+        FAN_SOUND,
+        DEEP_SLEEP;
 
         fun key() = name.lowercase()
     }
 
     private val _idToSampleMap = mapOf(
         AudioSamples.BROWN_NOISE.key() to
-                AudioSample(AudioSamples.BROWN_NOISE.key(),0, "Brown Noise", R.raw.brown_noise),
+                AudioSample(AudioSamples.BROWN_NOISE.key(),1, "Brown Noise", R.raw.brown_noise),
         AudioSamples.PINK_NOISE.key() to
-                AudioSample(AudioSamples.PINK_NOISE.key(), 2, "Pink Noise", R.raw.pink_noise),
+                AudioSample(AudioSamples.PINK_NOISE.key(), 3, "Pink Noise", R.raw.pink_noise),
         AudioSamples.WHITE_NOISE.key() to
-                AudioSample(AudioSamples.WHITE_NOISE.key(), 1, "White Noise", R.raw.white_noise),
+                AudioSample(AudioSamples.WHITE_NOISE.key(), 2, "White Noise", R.raw.white_noise),
         AudioSamples.FAN_SOUND.key() to
-                AudioSample(AudioSamples.FAN_SOUND.key(), 3, "Fan Sound", R.raw.fan_sound)
+                AudioSample(AudioSamples.FAN_SOUND.key(), 4, "Fan Sound", R.raw.fan_sound),
+        AudioSamples.DEEP_SLEEP.key() to
+                AudioSample(AudioSamples.DEEP_SLEEP.key(), 0, "Deep Sleep", R.raw.deep_sleep)
     )
 
     private val _steadyNoiseSamples = AudioGroup(name = "Steady Noise", index = 0, samples = listOf(
+        idToSample(AudioSamples.DEEP_SLEEP.key()),
         idToSample(AudioSamples.BROWN_NOISE.key()),
         idToSample(AudioSamples.PINK_NOISE.key()),
         idToSample(AudioSamples.WHITE_NOISE.key())).sortedBy { it.index },
@@ -83,10 +87,10 @@ object SoundsManager {
     )
 
     val defaultAudioSamples: Map<AudioSampleType, AudioSamples> = mapOf(
-        AudioSampleType.FALL_ASLEEP to AudioSamples.FAN_SOUND,
-        AudioSampleType.FALL_ASLEEP_TIMED_SLEEP to AudioSamples.FAN_SOUND,
-        AudioSampleType.STAY_ASLEEP to AudioSamples.BROWN_NOISE,
-        AudioSampleType.STAY_ASLEEP_TIMED_SLEEP to AudioSamples.BROWN_NOISE,
+        AudioSampleType.FALL_ASLEEP to AudioSamples.DEEP_SLEEP,
+        AudioSampleType.FALL_ASLEEP_TIMED_SLEEP to AudioSamples.DEEP_SLEEP,
+        AudioSampleType.STAY_ASLEEP to AudioSamples.DEEP_SLEEP,
+        AudioSampleType.STAY_ASLEEP_TIMED_SLEEP to AudioSamples.DEEP_SLEEP,
         AudioSampleType.FOCUS to AudioSamples.WHITE_NOISE
     )
 
