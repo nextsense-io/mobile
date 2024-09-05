@@ -13,10 +13,12 @@ import io.nextsense.android.budz.manager.AirohaDeviceState
 import io.nextsense.android.budz.manager.AudioSample
 import io.nextsense.android.budz.manager.AudioSampleType
 import io.nextsense.android.budz.manager.AuthRepository
+import io.nextsense.android.budz.manager.BleDeviceState
 import io.nextsense.android.budz.manager.PreferenceKeys
 import io.nextsense.android.budz.manager.PreferencesManager
 import io.nextsense.android.budz.manager.Protocol
 import io.nextsense.android.budz.manager.SoundsManager
+import io.nextsense.android.budz.model.DataQuality
 import io.nextsense.android.budz.model.UsersRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -113,9 +115,17 @@ class HomeViewModel @Inject constructor(
                             }
                         }
                         if (_forceStreaming) {
-                            airohaDeviceManager.setForceStream(true)
-                            sessionManager.startSession(
-                                protocol = Protocol.WAKE, uploadToCloud = false)
+                            viewModelScope.launch {
+                                airohaDeviceManager.bleDeviceState.collect { bleState ->
+                                    if (bleState == BleDeviceState.CONNECTED) {
+                                        airohaDeviceManager.setForceStream(true)
+                                        viewModelScope.launch {
+                                            sessionManager.startSession(
+                                                protocol = Protocol.WAKE, uploadToCloud = false)
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     AirohaDeviceState.CONNECTED_AIROHA -> {}
@@ -164,6 +174,9 @@ class HomeViewModel @Inject constructor(
     private fun exitApp() {
         RotatingFileLogger.get().logi("HomeViewModel", "exitApp")
         viewModelScope.launch {
+            if (sessionManager.isSessionRunning()) {
+                sessionManager.stopSession(dataQuality = DataQuality.UNKNOWN)
+            }
             airohaDeviceManager.destroy()
         }
     }
@@ -171,10 +184,12 @@ class HomeViewModel @Inject constructor(
     fun connectDeviceIfNeeded() {
         if (uiState.value.connected) {
             getBatteryLevels()
-            if (_forceStreaming) {
+            if (_forceStreaming &&
+                    airohaDeviceManager.bleDeviceState.value == BleDeviceState.CONNECTED) {
                 airohaDeviceManager.setForceStream(true)
                 viewModelScope.launch {
-                    airohaDeviceManager.startBleStreaming()
+                    sessionManager.startSession(
+                        protocol = Protocol.WAKE, uploadToCloud = false)
                 }
             }
             return
