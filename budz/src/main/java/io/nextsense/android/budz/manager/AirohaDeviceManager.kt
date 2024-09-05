@@ -259,6 +259,9 @@ class AirohaDeviceManager @Inject constructor(
         if (_airohaDeviceStateJob != null) {
             return
         }
+        _scope.launch {
+            connectServiceFlow().flowOn(Dispatchers.IO).first()
+        }
         _airohaDeviceConnector.registerConnectionListener(_airohaConnectionListener)
         context.registerReceiver(broadCastReceiver,
             IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED))
@@ -311,20 +314,7 @@ class AirohaDeviceManager @Inject constructor(
         _stopStreamingJob?.cancel()
         stopBleStreaming(true)
         disconnectDevice()
-    }
-
-    private suspend fun bindService() {
-        try {
-            withTimeout(1000L) {
-                connectServiceFlow().flowOn(Dispatchers.IO).take(1).last()
-            }
-        } catch (timeout: TimeoutCancellationException) {
-            if (!_budzServiceBound) {
-                RotatingFileLogger.get().loge(tag, "Timeout waiting for service to connect.")
-                return
-            }
-            _serviceConnected = true
-        }
+        unbindService()
     }
 
     fun setForceStream(force: Boolean) {
@@ -429,55 +419,42 @@ class AirohaDeviceManager @Inject constructor(
             return
         }
 
+        if (!_budzServiceBound || _budzService == null) {
+            RotatingFileLogger.get().logw(tag, "Tried to start streaming, but service is not " +
+                    "available: $_budzServiceBound")
+            return
+        }
+
         _startStreamingJob = _scope.launch {
             _streamingState.value = StreamingState.STARTING
             _bleDeviceState.value = BleDeviceState.CONNECTING
-            var serviceConnected: Boolean
-            try {
-                serviceConnected = withTimeout(1000L) {
-                    connectServiceFlow().flowOn(Dispatchers.IO).take(1).last()
-                }
-            } catch (timeout: TimeoutCancellationException) {
-                if (!_budzServiceBound) {
-                    RotatingFileLogger.get().logi(tag, "Timeout waiting for service to connect.")
-                    _bleDeviceState.value = BleDeviceState.DISCONNECTED
-                    _streamingState.value = StreamingState.STOPPED
-                    return@launch
-                }
-                serviceConnected = true
-            }
-            if (serviceConnected) {
-                val deviceMac = (_deviceInfo?.deviceMAC ?: "").filter { it != ':' }
-                RotatingFileLogger.get().logd(tag, "Connecting to BLE devices with mac $deviceMac")
-                val deviceState = _airohaBleManager?.connect(deviceMac, _twsConnected.value)
-                if (deviceState == DeviceState.READY) {
-                    _bleDeviceState.value = BleDeviceState.CONNECTED
-                    val readyForStreaming =
-                        _airohaBleManager!!.startStreaming(twsConnected.value ?: false)
-                    if (readyForStreaming) {
-                        // Clear the memory cache from the previous recording data, if any.
-                        _budzService?.memoryCache?.clear()
-                        val airohaStatusCode = runSetRaceCommandFlow(getRaceCommand(
-                            DataStreamRaceCommand(
-                                DataStreamRaceCommand.DataStreamType.START_STREAM))).last()
-                        if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
-                            _streamingState.value = StreamingState.STARTED
-                            return@launch
-                        }
-                        _streamingState.value = StreamingState.ERROR
+            val deviceMac = (_deviceInfo?.deviceMAC ?: "").filter { it != ':' }
+            RotatingFileLogger.get().logd(tag, "Connecting to BLE devices with mac $deviceMac")
+            val deviceState = _airohaBleManager?.connect(deviceMac, _twsConnected.value)
+            if (deviceState == DeviceState.READY) {
+                _bleDeviceState.value = BleDeviceState.CONNECTED
+                val readyForStreaming =
+                    _airohaBleManager!!.startStreaming(twsConnected.value ?: false)
+                if (readyForStreaming) {
+                    // Clear the memory cache from the previous recording data, if any.
+                    _budzService?.memoryCache?.clear()
+                    val airohaStatusCode = runSetRaceCommandFlow(getRaceCommand(
+                        DataStreamRaceCommand(
+                            DataStreamRaceCommand.DataStreamType.START_STREAM))).last()
+                    if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
+                        _streamingState.value = StreamingState.STARTED
                         return@launch
                     }
                     _streamingState.value = StreamingState.ERROR
                     return@launch
-                } else if (deviceState == DeviceState.DISCONNECTED) {
-                    _bleDeviceState.value = BleDeviceState.DISCONNECTED
-                    _streamingState.value = StreamingState.STOPPED
-                    return@launch
                 }
+                _streamingState.value = StreamingState.ERROR
+                return@launch
+            } else if (deviceState == DeviceState.DISCONNECTED) {
+                _bleDeviceState.value = BleDeviceState.DISCONNECTED
+                _streamingState.value = StreamingState.STOPPED
+                return@launch
             }
-            _bleDeviceState.value = BleDeviceState.DISCONNECTED
-            _streamingState.value = StreamingState.STOPPED
-            return@launch
         }
         _startStreamingJob?.join()
     }
@@ -1035,7 +1012,7 @@ class AirohaDeviceManager @Inject constructor(
         context.bindService(_budzServiceIntent!!, serviceConnection, Context.BIND_IMPORTANT)
     }
 
-    private fun stopService() {
+    private fun unbindService() {
         if (_budzServiceIntent == null) {
             return
         }
@@ -1049,7 +1026,6 @@ class AirohaDeviceManager @Inject constructor(
                 _budzServiceConnection = null
             }
        }
-        context.stopService(_budzServiceIntent)
         _budzService = null
     }
 
