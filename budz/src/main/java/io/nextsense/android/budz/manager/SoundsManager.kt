@@ -31,51 +31,73 @@ object SoundsManager {
 
     enum class AudioSamples {
         BROWN_NOISE,
+        GREEN_NOISE,
         PINK_NOISE,
         WHITE_NOISE,
-        FAN_SOUND,
-        DEEP_SLEEP;
+        RAIN,
+        WAVES,
+        WIND,
+        DEEP_SLEEP,
+        FAN_SOUND;
 
         fun key() = name.lowercase()
     }
 
     private val _idToSampleMap = mapOf(
         AudioSamples.BROWN_NOISE.key() to
-                AudioSample(AudioSamples.BROWN_NOISE.key(),1, "Brown Noise", R.raw.brown_noise),
+                AudioSample(AudioSamples.BROWN_NOISE.key(),5, "Brown Noise", R.raw.brown_noise_medium),
+        AudioSamples.GREEN_NOISE.key() to
+                AudioSample(AudioSamples.GREEN_NOISE.key(), 4, "Green Noise", R.raw.green_noise_medium),
         AudioSamples.PINK_NOISE.key() to
-                AudioSample(AudioSamples.PINK_NOISE.key(), 3, "Pink Noise", R.raw.pink_noise),
+                AudioSample(AudioSamples.PINK_NOISE.key(), 2, "Pink Noise", R.raw.pink_noise_medium),
         AudioSamples.WHITE_NOISE.key() to
-                AudioSample(AudioSamples.WHITE_NOISE.key(), 2, "White Noise", R.raw.white_noise),
+                AudioSample(AudioSamples.WHITE_NOISE.key(), 3, "White Noise", R.raw.white_noise_medium),
+        AudioSamples.RAIN.key() to
+                AudioSample(AudioSamples.RAIN.key(), 6, "Rain", R.raw.natural_rain_medium),
+        AudioSamples.WAVES.key() to
+                AudioSample(AudioSamples.WAVES.key(), 8, "Waves", R.raw.natural_waves_medium),
+        AudioSamples.WIND.key() to
+                AudioSample(AudioSamples.WIND.key(), 7, "Wind", R.raw.natural_wind_medium),
         AudioSamples.FAN_SOUND.key() to
-                AudioSample(AudioSamples.FAN_SOUND.key(), 4, "Fan Sound", R.raw.fan_sound),
+                AudioSample(AudioSamples.FAN_SOUND.key(), 1, "Fan Sound", R.raw.fan_sound),
         AudioSamples.DEEP_SLEEP.key() to
                 AudioSample(AudioSamples.DEEP_SLEEP.key(), 0, "Deep Sleep", R.raw.deep_sleep)
     )
 
-    private val _steadyNoiseSamples = AudioGroup(name = "Steady Noise", index = 0, samples = listOf(
-        idToSample(AudioSamples.DEEP_SLEEP.key()),
+    private val _colorSamples = AudioGroup(name = "Colors", index = 0, samples = listOf(
+        idToSample(AudioSamples.GREEN_NOISE.key()),
         idToSample(AudioSamples.BROWN_NOISE.key()),
         idToSample(AudioSamples.PINK_NOISE.key()),
         idToSample(AudioSamples.WHITE_NOISE.key())).sortedBy { it.index },
     )
 
-    private val _mechanicalNoiseSamples = AudioGroup(name = "Mechanical Noise", index = 1,
-        samples = listOf(idToSample(AudioSamples.FAN_SOUND.key())).sortedBy { it.index }
+    private val _natureSamples = AudioGroup(name = "Nature", index = 1,
+        samples = listOf(idToSample(AudioSamples.RAIN.key()),
+            idToSample(AudioSamples.WAVES.key()),
+            idToSample(AudioSamples.WIND.key())).sortedBy { it.index }
+    )
+
+    private val _otherSamples = AudioGroup(name = "Other", index = 1,
+        samples = listOf(idToSample(AudioSamples.FAN_SOUND.key()),
+            idToSample(AudioSamples.DEEP_SLEEP.key())).sortedBy { it.index }
     )
 
     private val _fallAsleepSamples = listOf(
-        _steadyNoiseSamples,
-        _mechanicalNoiseSamples,
+        _colorSamples,
+        _natureSamples,
+        _otherSamples,
     ).sortedBy { it.index }
 
     private val _stayAsleepSamples = listOf(
-        _steadyNoiseSamples,
-        _mechanicalNoiseSamples,
+        _colorSamples,
+        _natureSamples,
+        _otherSamples,
     ).sortedBy { it.index }
 
     private val _focusSamples = listOf(
-        _steadyNoiseSamples,
-        _mechanicalNoiseSamples,
+        _colorSamples,
+        _natureSamples,
+        _otherSamples,
     ).sortedBy { it.index }
 
     val audioSamples: Map<AudioSampleType, List<AudioGroup>> = mapOf(
