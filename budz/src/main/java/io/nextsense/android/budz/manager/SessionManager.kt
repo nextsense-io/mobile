@@ -63,6 +63,11 @@ class SessionManager(
             RotatingFileLogger.get().logw(tag, "Device info is null, cannot start a session.")
             return false
         }
+        if (airohaDeviceManager.bleDeviceState.value != BleDeviceState.CONNECTED) {
+            RotatingFileLogger.get().logw(tag, "Device is not connected, cannot start a session.")
+            return false
+        }
+
         val startTime = Timestamp.now()
         val earbudsConfig = EarbudsConfigs.getEarbudsConfig(EarbudsConfigNames.MAUI_CONFIG.name)
 

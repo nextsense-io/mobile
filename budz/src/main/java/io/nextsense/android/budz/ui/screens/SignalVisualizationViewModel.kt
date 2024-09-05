@@ -1,7 +1,6 @@
 package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
@@ -12,9 +11,11 @@ import io.nextsense.android.base.devices.maui.MauiDataParser
 import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.base.utils.SleepWakeCsvWriter
 import io.nextsense.android.budz.manager.AirohaDeviceManager
-import io.nextsense.android.budz.manager.AirohaDeviceState
+import io.nextsense.android.budz.manager.BleDeviceState
+import io.nextsense.android.budz.manager.Protocol
 import io.nextsense.android.budz.manager.SignalStateManager
 import io.nextsense.android.budz.manager.StreamingState
+import io.nextsense.android.budz.model.DataQuality
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -44,7 +45,7 @@ open class SignalVisualizationViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val airohaDeviceManager: AirohaDeviceManager,
     private val signalStateManager: SignalStateManager
-): ViewModel() {
+): BudzViewModel(context) {
     private val tag = CheckConnectionViewModel::class.simpleName
     //private val _shownDuration = 10.seconds
     private val _shownDuration = 30.seconds
@@ -79,17 +80,22 @@ open class SignalVisualizationViewModel @Inject constructor(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).format(csvFileNameFormatter)
         csvWriter?.initCsvFile("sleep-wake-$formattedDateTime")
         viewModelScope.launch {
-            airohaDeviceManager.airohaDeviceState.collect { deviceState ->
-                _uiState.value =
-                    SignalVisualizationState(connected = deviceState == AirohaDeviceState.READY)
-                when (deviceState) {
-                    AirohaDeviceState.READY -> {
-                        if (!_stopping) {
-                            airohaDeviceManager.startBleStreaming()
+            budzState.collect { budzState ->
+                if (budzState.budzServiceBound) {
+                    airohaDeviceManager.bleDeviceState.collect { deviceState ->
+                        _uiState.value =
+                            SignalVisualizationState(connected = deviceState == BleDeviceState.CONNECTED)
+                        when (deviceState) {
+                            BleDeviceState.CONNECTED -> {
+                                if (!_stopping) {
+                                    sessionManager.startSession(
+                                        protocol = Protocol.WAKE, uploadToCloud = false)
+                                }
+                            }
+                            else -> {
+                                // Nothing to do
+                            }
                         }
-                    }
-                    else -> {
-                        // Nothing to do
                     }
                 }
             }
@@ -140,21 +146,27 @@ open class SignalVisualizationViewModel @Inject constructor(
     fun startStreaming() {
         _stopping = false
         viewModelScope.launch {
-        airohaDeviceManager.startBleStreaming()
-            _dataToChartSamplingRateRatio = airohaDeviceManager.getEegSamplingRate() /
-                    _chartSamplingRate
-            _dataRefreshJob?.cancel()
-            _dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
-                while (true) {
-                    val startTime = System.currentTimeMillis()
-                    if (_updateSignalGraph) {
-                        updateSignalCharts()
+            budzState.collect { budzState ->
+                if (budzState.budzServiceBound) {
+                    sessionManager.startSession(
+                        protocol = Protocol.WAKE, uploadToCloud = false
+                    )
+                    _dataToChartSamplingRateRatio = airohaDeviceManager.getEegSamplingRate() /
+                            _chartSamplingRate
+                    _dataRefreshJob?.cancel()
+                    _dataRefreshJob = viewModelScope.launch(Dispatchers.IO) {
+                        while (true) {
+                            val startTime = System.currentTimeMillis()
+                            if (_updateSignalGraph) {
+                                updateSignalCharts()
+                            }
+                            val runtimeMs = System.currentTimeMillis() - startTime
+                            if (runtimeMs > refreshInterval.inWholeMilliseconds) {
+                                RotatingFileLogger.get().logv(tag, "Slow update time: $runtimeMs")
+                            }
+                            delay(Math.max(refreshInterval.inWholeMilliseconds - runtimeMs, 0))
+                        }
                     }
-                    val runtimeMs = System.currentTimeMillis() - startTime
-                    if (runtimeMs > refreshInterval.inWholeMilliseconds) {
-                        RotatingFileLogger.get().logv(tag, "Slow update time: $runtimeMs")
-                    }
-                    delay(Math.max(refreshInterval.inWholeMilliseconds - runtimeMs, 0))
                 }
             }
         }
@@ -164,7 +176,7 @@ open class SignalVisualizationViewModel @Inject constructor(
         _stopping = true
         viewModelScope.launch {
             _dataRefreshJob?.cancel()
-            airohaDeviceManager.stopBleStreaming()
+            sessionManager.stopSession(dataQuality = DataQuality.UNKNOWN)
             delay(500L)
         }
     }
