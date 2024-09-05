@@ -378,6 +378,7 @@ class AirohaDeviceManager @Inject constructor(
     }
 
     fun stopConnectingDevice() {
+        RotatingFileLogger.get().logi(tag, "Stop trying to connect with Bluetooth classic.")
         _devicePresenter?.stopConnectingBoundDevice()
     }
 

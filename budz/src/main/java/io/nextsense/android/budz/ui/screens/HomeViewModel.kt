@@ -167,7 +167,6 @@ class HomeViewModel @Inject constructor(
     }
 
     fun stopConnection() {
-        RotatingFileLogger.get().logi("HomeViewModel", "stopConnection")
         airohaDeviceManager.stopConnectingDevice()
     }
 

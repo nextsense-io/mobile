@@ -176,7 +176,8 @@ open class SignalVisualizationViewModel @Inject constructor(
         _stopping = true
         viewModelScope.launch {
             _dataRefreshJob?.cancel()
-            sessionManager.stopSession(dataQuality = DataQuality.UNKNOWN)
+            // TODO(eric): Re-enable when not streaming all the time.
+            // sessionManager.stopSession(dataQuality = DataQuality.UNKNOWN)
             delay(500L)
         }
     }

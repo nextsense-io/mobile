@@ -114,7 +114,7 @@ fun HomeScreen(
         homeViewModel.connectDeviceIfNeeded()
         onStopOrDispose {
             homeViewModel.stopMonitoring()
-            homeViewModel.stopConnection()
+            // homeViewModel.stopConnection()
         }
     }
 
