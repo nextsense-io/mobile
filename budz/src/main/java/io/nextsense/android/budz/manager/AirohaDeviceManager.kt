@@ -143,7 +143,8 @@ class AirohaDeviceManager @Inject constructor(
     private var _forceStreaming = false
     private var _startStreamingJob: Job? = null
     private var _stopStreamingJob: Job? = null
-    private var _serviceConnected: Boolean = false
+    private var _connectBleJob: Job? = null
+    private var _disconnectBleJob: Job? = null
 
     val airohaDeviceState: StateFlow<AirohaDeviceState> = _airohaDeviceState.asStateFlow()
     val bleDeviceState: StateFlow<BleDeviceState> = _bleDeviceState.asStateFlow()
@@ -298,6 +299,9 @@ class AirohaDeviceManager @Inject constructor(
                     setVoicePromptsEnabled(!voicePromptsDisabled)
                     setTouchControlsEnabled(!touchControlsDisabled)
                     _airohaDeviceState.value = AirohaDeviceState.READY
+                    _scope.launch {
+                        connectBle()
+                    }
                 }
             }
         }
@@ -311,8 +315,9 @@ class AirohaDeviceManager @Inject constructor(
         AirohaSDK.getInst().airohaDeviceConnector.unregisterConnectionListener(
             _airohaConnectionListener)
         _startStreamingJob?.cancel()
-        _stopStreamingJob?.cancel()
+        _connectBleJob?.cancel()
         stopBleStreaming(true)
+        disconnectBle()
         disconnectDevice()
         unbindService()
     }
@@ -381,6 +386,41 @@ class AirohaDeviceManager @Inject constructor(
         _airohaDeviceState.value = AirohaDeviceState.DISCONNECTED
     }
 
+    suspend fun connectBle() {
+        if (_airohaDeviceState.value != AirohaDeviceState.READY) {
+            return
+        }
+
+        if (!_budzServiceBound || _budzService == null) {
+            RotatingFileLogger.get().logw(tag, "Tried to start streaming, but service is not " +
+                    "available: $_budzServiceBound")
+            return
+        }
+
+        _connectBleJob = _scope.launch {
+            _bleDeviceState.value = BleDeviceState.CONNECTING
+            val deviceMac = (_deviceInfo?.deviceMAC ?: "").filter { it != ':' }
+            RotatingFileLogger.get().logd(tag, "Connecting to BLE devices with mac $deviceMac")
+            val deviceState = _airohaBleManager?.connect(deviceMac, _twsConnected.value)
+            if (deviceState == DeviceState.READY) {
+                _bleDeviceState.value = BleDeviceState.CONNECTED
+            } else if (deviceState == DeviceState.DISCONNECTED) {
+                _bleDeviceState.value = BleDeviceState.DISCONNECTED
+                return@launch
+            }
+        }
+        _startStreamingJob?.join()
+    }
+
+    suspend fun disconnectBle() {
+        _disconnectBleJob = _scope.launch {
+            _bleDeviceState.value = BleDeviceState.DISCONNECTING
+            _airohaBleManager?.disconnect()
+            _bleDeviceState.value = BleDeviceState.DISCONNECTED
+        }
+        _disconnectBleJob?.join()
+    }
+
     suspend fun startBleStreaming() {
         if (streamingState.value == StreamingState.STARTED) {
             return
@@ -427,34 +467,22 @@ class AirohaDeviceManager @Inject constructor(
 
         _startStreamingJob = _scope.launch {
             _streamingState.value = StreamingState.STARTING
-            _bleDeviceState.value = BleDeviceState.CONNECTING
-            val deviceMac = (_deviceInfo?.deviceMAC ?: "").filter { it != ':' }
-            RotatingFileLogger.get().logd(tag, "Connecting to BLE devices with mac $deviceMac")
-            val deviceState = _airohaBleManager?.connect(deviceMac, _twsConnected.value)
-            if (deviceState == DeviceState.READY) {
-                _bleDeviceState.value = BleDeviceState.CONNECTED
-                val readyForStreaming =
-                    _airohaBleManager!!.startStreaming(twsConnected.value ?: false)
-                if (readyForStreaming) {
-                    // Clear the memory cache from the previous recording data, if any.
-                    _budzService?.memoryCache?.clear()
-                    val airohaStatusCode = runSetRaceCommandFlow(getRaceCommand(
-                        DataStreamRaceCommand(
-                            DataStreamRaceCommand.DataStreamType.START_STREAM))).last()
-                    if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
-                        _streamingState.value = StreamingState.STARTED
-                        return@launch
-                    }
-                    _streamingState.value = StreamingState.ERROR
+            val readyForStreaming =
+                _airohaBleManager!!.startStreaming(twsConnected.value ?: false)
+            if (readyForStreaming) {
+                // Clear the memory cache from the previous recording data, if any.
+                _budzService?.memoryCache?.clear()
+                val airohaStatusCode = runSetRaceCommandFlow(getRaceCommand(
+                    DataStreamRaceCommand(
+                        DataStreamRaceCommand.DataStreamType.START_STREAM))).last()
+                if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
+                    _streamingState.value = StreamingState.STARTED
                     return@launch
                 }
                 _streamingState.value = StreamingState.ERROR
                 return@launch
-            } else if (deviceState == DeviceState.DISCONNECTED) {
-                _bleDeviceState.value = BleDeviceState.DISCONNECTED
-                _streamingState.value = StreamingState.STOPPED
-                return@launch
             }
+            _streamingState.value = StreamingState.ERROR
         }
         _startStreamingJob?.join()
     }
@@ -516,9 +544,6 @@ class AirohaDeviceManager @Inject constructor(
             }
             _airohaBleManager?.stopStreaming()
             _streamingState.value = StreamingState.STOPPED
-            _bleDeviceState.value = BleDeviceState.DISCONNECTING
-            _airohaBleManager?.disconnect()
-            _bleDeviceState.value = BleDeviceState.DISCONNECTED
         }
         _stopStreamingJob?.join()
     }
