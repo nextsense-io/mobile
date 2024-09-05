@@ -1,10 +1,13 @@
 package io.nextsense.android.budz.ui.screens
 
-import androidx.lifecycle.ViewModel
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.nextsense.android.airoha.device.DisableVoicePromptRaceCommand
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.budz.manager.AirohaDeviceManager
+import io.nextsense.android.budz.manager.Protocol
+import io.nextsense.android.budz.manager.StreamingState
+import io.nextsense.android.budz.model.DataQuality
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,13 +19,16 @@ data class DeviceSettingsState(
     val register: String,
     val registerValue: String,
     val soundLoopVolume: Int? = null,
-    val sleepMode: Boolean = false
+    val sleepMode: Boolean = false,
+    val serviceBound: Boolean = false,
+    val streaming: StreamingState = StreamingState.UNKNOWN
 )
 
 @HiltViewModel
 class DeviceSettingsViewModel @Inject constructor(
-        private val deviceManager: AirohaDeviceManager
-): ViewModel() {
+    @ApplicationContext context: Context,
+    private val deviceManager: AirohaDeviceManager
+): BudzViewModel(context) {
 
     private val _uiState = MutableStateFlow(
         DeviceSettingsState(
@@ -31,6 +37,33 @@ class DeviceSettingsViewModel @Inject constructor(
     )
 
     val uiState: StateFlow<DeviceSettingsState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            budzState.collect { budzState ->
+                if (budzState.budzServiceBound) {
+                    _uiState.value = _uiState.value.copy(serviceBound = true)
+                    deviceManager.streamingState.collect { streamingState ->
+                        _uiState.value = _uiState.value.copy(streaming = streamingState)
+                    }
+                } else {
+                    _uiState.value = _uiState.value.copy(serviceBound = false)
+                }
+            }
+        }
+    }
+
+    fun startStreaming() {
+        viewModelScope.launch {
+            sessionManager.startSession(Protocol.WAKE, uploadToCloud = false)
+        }
+    }
+
+    fun stopStreaming() {
+        viewModelScope.launch {
+            sessionManager.stopSession(dataQuality = DataQuality.UNKNOWN)
+        }
+    }
 
     fun startSoundLoop() {
         viewModelScope.launch {
@@ -121,22 +154,6 @@ class DeviceSettingsViewModel @Inject constructor(
                     registerValue = ""
                 )
             }
-        }
-    }
-    fun setTouchCapability(disable: Boolean) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(message = "Setting touch capability...")
-            deviceManager.setTouchCapability(disable)
-            _uiState.value = _uiState.value.copy(message = "Touch capability ${if (disable) "disabled" else "enabled"}")
-        }
-    }
-
-
-    fun disableVoicePrompt(disable: Boolean) {
-        viewModelScope.launch {
-            deviceManager.disableVoicePrompt(disable)
-            _uiState.value =
-                _uiState.value.copy(message = "Voice prompt ${if (disable) "disabled" else "enabled"}")
         }
     }
 }
