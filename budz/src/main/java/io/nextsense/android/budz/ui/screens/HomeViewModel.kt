@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.nextsense.android.base.DeviceState
 import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.State
 import io.nextsense.android.budz.manager.AirohaBatteryLevel
@@ -39,7 +40,9 @@ data class HomeState(
     val connected: Boolean = false,
     val restorationBoost: Boolean = true,
     val touchControlsDisabled: Boolean = true,
-    val voicePromptsDisabled: Boolean = true
+    val voicePromptsDisabled: Boolean = true,
+    val leftBleDeviceState: DeviceState = DeviceState.DISCONNECTED,
+    val rightBleDeviceState: DeviceState = DeviceState.DISCONNECTED,
 )
 
 @HiltViewModel
@@ -91,6 +94,24 @@ class HomeViewModel @Inject constructor(
                     AirohaDeviceState.READY -> {
                         _uiState.value = _uiState.value.copy(connected = true)
                         getBatteryLevels()
+                        viewModelScope.launch {
+                            airohaBleManager.leftDeviceState.collect {
+                                _uiState.update { currentState ->
+                                    currentState.copy(
+                                        leftBleDeviceState = it
+                                    )
+                                }
+                            }
+                        }
+                        viewModelScope.launch {
+                            airohaBleManager.rightDeviceState.collect {
+                                _uiState.update { currentState ->
+                                    currentState.copy(
+                                        rightBleDeviceState = it
+                                    )
+                                }
+                            }
+                        }
                         if (_forceStreaming) {
                             airohaDeviceManager.setForceStream(true)
                             sessionManager.startSession(

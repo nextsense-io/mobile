@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -39,6 +40,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import io.nextsense.android.base.DeviceState
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.ActionButton
 import io.nextsense.android.budz.ui.components.BudzCard
@@ -64,6 +66,22 @@ fun BatteryLevel(percent: Int?) {
         Spacer(modifier = Modifier.width(4.dp))
         Text(text = percent?.let { "$it%" } ?: "--%",
             style = MaterialTheme.typography.labelMedium)
+    }
+}
+
+@Composable
+fun BleConnectionStatus(deviceState: DeviceState) {
+    when (deviceState) {
+        DeviceState.CONNECTED, DeviceState.READY -> Icon(
+            painter = painterResource(id = R.drawable.ic_connected),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = Color.Green)
+        else -> Icon(
+            painter = painterResource(id = R.drawable.ic_disconnected),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp),
+            tint = BudzColor.red)
     }
 }
 
@@ -225,6 +243,8 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(15.dp))
                 BudzCard {
                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        BleConnectionStatus(homeUiState.leftBleDeviceState)
+                        Spacer(modifier = Modifier.width(5.dp))
                         Text(stringResource(R.string.label_left),
                             style = MaterialTheme.typography.displayMedium)
                         Spacer(modifier = Modifier.width(5.dp))
@@ -237,6 +257,8 @@ fun HomeScreen(
                                 .width(1.dp).height(20.dp)
                         )
                         Spacer(modifier = Modifier.weight(1f))
+                        BleConnectionStatus(homeUiState.rightBleDeviceState)
+                        Spacer(modifier = Modifier.width(5.dp))
                         Text(stringResource(R.string.label_right),
                             style = MaterialTheme.typography.displayMedium)
                         Spacer(modifier = Modifier.width(5.dp))

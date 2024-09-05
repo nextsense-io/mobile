@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.nextsense.android.airoha.device.AirohaBleManager
 import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.manager.SessionManager
 import io.nextsense.android.budz.service.BudzService
@@ -17,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 
 data class BudzState(
@@ -29,12 +29,15 @@ abstract class BudzViewModel(
 ) : ViewModel() {
     private val tag = BudzViewModel::class.java.simpleName
     private var _sessionManager: SessionManager? = null
+    private var _airohaBleManager: AirohaBleManager? = null
     private val _budzState = MutableStateFlow(BudzState())
 
     val budzState: StateFlow<BudzState> = _budzState.asStateFlow()
 
     val sessionManager: SessionManager
         get() = _sessionManager ?: throw IllegalStateException("SessionManager is not initialized.")
+    val airohaBleManager: AirohaBleManager
+        get() = _airohaBleManager ?: throw IllegalStateException("AirohaBleManager is not initialized.")
 
     init {
         connectServiceFlow()
@@ -52,6 +55,7 @@ abstract class BudzViewModel(
             override fun onServiceConnected(className: ComponentName, service: IBinder) {
                 val binder: BudzService.LocalBinder = service as BudzService.LocalBinder
                 _sessionManager = binder.service.sessionManager
+                _airohaBleManager = binder.service.airohaBleManager
                _budzState.value = BudzState(budzServiceBound = true)
                 RotatingFileLogger.get().logi(tag, "service bound.")
                 trySend(true)
