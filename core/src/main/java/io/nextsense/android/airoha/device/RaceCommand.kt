@@ -18,6 +18,15 @@ abstract class RaceCommand(raceCommandType: RaceCommandType, raceId: RaceId) {
             return Converter.hexStringToByteArray(value)
         }
 
+        companion object {
+            private fun fromValue(value: String): RaceCommandType {
+                return values().first { it.value == value }
+            }
+
+            fun fromValue(value: Byte): RaceCommandType {
+                return fromValue(value.toString(16).uppercase())
+            }
+        }
     }
 
     enum class RaceId(private val value: String) {
@@ -30,6 +39,12 @@ abstract class RaceCommand(raceCommandType: RaceCommandType, raceId: RaceId) {
 
         fun getHexValue(): ByteArray {
             return Converter.hexStringToByteArray(value)
+        }
+
+        companion object {
+            fun fromValue(value: String): RaceId {
+                return RaceId.values().first { it.value == value }
+            }
         }
     }
 
