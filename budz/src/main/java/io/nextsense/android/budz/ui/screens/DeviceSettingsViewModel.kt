@@ -2,6 +2,7 @@ package io.nextsense.android.budz.ui.screens
 
 import android.content.Context
 import androidx.lifecycle.viewModelScope
+import com.airoha.libutils.Converter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.nextsense.android.budz.manager.AirohaDeviceManager
@@ -142,7 +143,8 @@ class DeviceSettingsViewModel @Inject constructor(
     fun getRegister(register: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(message = "Getting register...")
-            val registerValue = deviceManager.getAfeRegisterValue(register)
+            val registerValue = Converter.byteArrayToHexString(
+                deviceManager.getAfeRegisterValue(register))
             if (registerValue != null) {
                 _uiState.value = _uiState.value.copy(
                     message = "Got register",

@@ -1,10 +1,10 @@
 package io.nextsense.android.airoha.device
 
-class GetSoundLoopVolumeRaceCommand : NextSenseRaceCommand(
+class GetSoundLoopIdRaceCommand : NextSenseRaceCommand(
     raceCommandType = RaceCommandType.NEEDS_RESPONSE,
     raceId = RaceId.AFE,
     nextSenseCommandType = NextSenseCommandType.SEND,
-    nextSenseId = "04"
+    nextSenseId = "08"
 ) {
     override fun getName(): String {
         return GetSoundLoopVolumeRaceCommand::class.java.simpleName
