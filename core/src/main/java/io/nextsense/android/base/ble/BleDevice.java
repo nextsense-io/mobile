@@ -63,7 +63,7 @@ public class BleDevice extends Device {
       MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
 
   private DeviceState deviceState = DeviceState.DISCONNECTED;
-  private boolean autoReconnect = true;
+  private boolean autoReconnect = false;
   private DisconnectionStatus disconnectionStatus = DisconnectionStatus.NOT_DISCONNECTING;
   private DeviceSettings deviceSettings;
   private DeviceSettings savedDeviceSettings;

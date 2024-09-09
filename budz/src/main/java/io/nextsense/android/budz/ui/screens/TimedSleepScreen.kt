@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.CircleButton
@@ -52,6 +54,11 @@ fun TimedSleepScreen(timedSleepViewModel: TimedSleepViewModel = hiltViewModel(),
     LifecycleResumeEffect(true) {
         timedSleepViewModel.loadUserData()
         onPauseOrDispose {
+        }
+    }
+
+    DisposableEffect(LocalLifecycleOwner.current.lifecycle) {
+        onDispose {
             timedSleepViewModel.stopSleeping()
         }
     }

@@ -25,6 +25,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import io.nextsense.android.base.DeviceState
@@ -105,7 +107,6 @@ fun HomeScreen(
     LifecycleResumeEffect(true) {
         homeViewModel.loadUserSounds()
         onPauseOrDispose {
-            homeViewModel.stopSleeping()
         }
     }
 
@@ -115,6 +116,12 @@ fun HomeScreen(
         onStopOrDispose {
             homeViewModel.stopMonitoring()
             // homeViewModel.stopConnection()
+        }
+    }
+
+    DisposableEffect(LocalLifecycleOwner.current.lifecycle) {
+        onDispose {
+            homeViewModel.stopSleeping()
         }
     }
 
