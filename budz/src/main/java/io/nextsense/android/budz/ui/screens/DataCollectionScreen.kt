@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleStartEffect
 import io.nextsense.android.budz.R
+import io.nextsense.android.budz.manager.SessionState
 import io.nextsense.android.budz.model.ActivityType
 import io.nextsense.android.budz.model.DataQuality
 import io.nextsense.android.budz.model.ToneBud
@@ -49,9 +50,9 @@ fun DataCollectionScreen(
     }
 
     val startStopEnabled = uiState.connected &&
-            ((uiState.recordingState == RecordingState.STARTED &&
+            ((uiState.recordingState == SessionState.STARTED &&
                     uiState.dataQuality != DataQuality.UNKNOWN) ||
-                    (uiState.recordingState == RecordingState.STOPPED &&
+                    (uiState.recordingState == SessionState.STOPPED &&
                             uiState.activityType != ActivityType.UNKNOWN &&
                             uiState.toneBud != ToneBud.UNKNOWN))
 
@@ -89,7 +90,7 @@ fun DataCollectionScreen(
                     StringListDropDown(
                         options = ActivityType.entries.map {activityType -> activityType.label },
                         currentSelection = uiState.activityType.label,
-                        enabled = uiState.recordingState == RecordingState.STOPPED,
+                        enabled = uiState.recordingState == SessionState.STOPPED,
                         modifier = Modifier.width(400.dp),
                         onChange = { label ->
                             dataCollectionViewModel.setActivityType(ActivityType.fromLabel(label)) }
@@ -106,7 +107,7 @@ fun DataCollectionScreen(
                     StringListDropDown(
                         options = ToneBud.entries.map { toneBud -> toneBud.label },
                         currentSelection = uiState.toneBud.label,
-                        enabled = uiState.recordingState == RecordingState.STOPPED,
+                        enabled = uiState.recordingState == SessionState.STOPPED,
                         modifier = Modifier.width(400.dp),
                         onChange = { label ->
                             dataCollectionViewModel.setToneBud(ToneBud.fromLabel(label)) }
@@ -123,7 +124,7 @@ fun DataCollectionScreen(
                     StringListDropDown(
                         options = DataQuality.entries.map { dataQuality -> dataQuality.label },
                         currentSelection = uiState.dataQuality.label,
-                        enabled = uiState.recordingState == RecordingState.STARTED,
+                        enabled = uiState.recordingState == SessionState.STARTED,
                         modifier = Modifier.width(400.dp),
                         onChange = { label ->
                             dataCollectionViewModel.setDataQuality(DataQuality.fromLabel(label)) }
@@ -131,9 +132,9 @@ fun DataCollectionScreen(
                 }
                 Spacer(modifier = Modifier.height(40.dp))
                 val buttonLabel = when (uiState.recordingState) {
-                    RecordingState.STARTED -> "Stop Recording"
-                    RecordingState.STARTING -> "Starting..."
-                    RecordingState.STOPPING -> "Stopping..."
+                    SessionState.STARTED -> "Stop Recording"
+                    SessionState.STARTING -> "Starting..."
+                    SessionState.STOPPING -> "Stopping..."
                     else -> "Start Recording"
                 }
                 WideButton(name = buttonLabel, enabled = startStopEnabled, onClick = {

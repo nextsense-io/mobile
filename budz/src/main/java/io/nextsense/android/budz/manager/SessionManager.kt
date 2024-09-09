@@ -20,6 +20,10 @@ import io.nextsense.android.budz.model.SessionsRepository
 import io.nextsense.android.budz.model.ToneBud
 import java.util.TimeZone
 
+enum class SessionState {
+    STARTED, STARTING, STOPPING, STOPPED
+}
+
 enum class Protocol {
     SLEEP, TIMED_SLEEP, FOCUS, WAKE;
 
@@ -41,8 +45,8 @@ class SessionManager(
     private var _currentDataSessionRef: DocumentReference? = null
     private var _currentDataSession: DataSession? = null
     val currentDataSession: DataSession? get() = _currentDataSession
-    private var _sessionRunning = false
-    val sessionRunning: Boolean get() = _sessionRunning
+    private var _sessionState = SessionState.STOPPED
+    val sessionState: SessionState get() = _sessionState
 
     fun isSessionRunning(): Boolean {
         return airohaDeviceManager.streamingState.value == StreamingState.STARTING ||
@@ -53,6 +57,11 @@ class SessionManager(
             protocol: Protocol, uploadToCloud: Boolean = false,
             activityType: ActivityType = ActivityType.UNKNOWN, toneBud: ToneBud = ToneBud.UNKNOWN) :
             Boolean {
+        if (_sessionState != SessionState.STOPPED) {
+            RotatingFileLogger.get().logw(tag, "Session already running.")
+            return false
+        }
+        _sessionState = SessionState.STARTING
         val userId = authRepository.currentUserId
         if (userId == null) {
             RotatingFileLogger.get().logw(tag, "User id is null, cannot start a session.")
@@ -143,10 +152,19 @@ class SessionManager(
 
         // TODO(eric): Check result.
         airohaDeviceManager.startBleStreaming()
+        _sessionState = SessionState.STARTED
+        RotatingFileLogger.get().logi(tag,
+            "Session started successfully. Uploading to cloud: $uploadToCloud.")
         return true
     }
 
     suspend fun stopSession(dataQuality: DataQuality = DataQuality.UNKNOWN) {
+        if (_sessionState != SessionState.STARTED) {
+            RotatingFileLogger.get().logw(tag, "Session not running.")
+            return
+        }
+        _sessionState = SessionState.STOPPING
+
         // TODO(eric): Check result.
         airohaDeviceManager.stopBleStreaming(overrideForceStreaming = true)
 
@@ -181,6 +199,8 @@ class SessionManager(
             _currentDataSessionRef = null
             _currentDataSession = null
         }
+        _sessionState = SessionState.STOPPED
+        RotatingFileLogger.get().logi(tag, "Session stopped successfully.")
     }
 
     private fun getChannelDefinitions(earbudsConfig: EarbudsConfig): List<ChannelDefinition> {

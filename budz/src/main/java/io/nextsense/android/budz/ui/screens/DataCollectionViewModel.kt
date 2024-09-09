@@ -8,6 +8,7 @@ import io.nextsense.android.base.utils.RotatingFileLogger
 import io.nextsense.android.budz.manager.AirohaDeviceManager
 import io.nextsense.android.budz.manager.AirohaDeviceState
 import io.nextsense.android.budz.manager.Protocol
+import io.nextsense.android.budz.manager.SessionState
 import io.nextsense.android.budz.model.ActivityType
 import io.nextsense.android.budz.model.DataQuality
 import io.nextsense.android.budz.model.ToneBud
@@ -18,13 +19,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-enum class RecordingState {
-    STARTED, STARTING, STOPPING, STOPPED
-}
-
 data class DataCollectionState(
     val connected: Boolean = false,
-    val recordingState: RecordingState = RecordingState.STOPPED,
+    val recordingState: SessionState = SessionState.STOPPED,
     val activityType: ActivityType = ActivityType.UNKNOWN,
     val dataQuality: DataQuality = DataQuality.UNKNOWN,
     val toneBud: ToneBud = ToneBud.UNKNOWN,
@@ -38,7 +35,7 @@ class DataCollectionViewModel @Inject constructor(
 
     private var _monitoringJob: Job? = null
     private val _uiState = MutableStateFlow(DataCollectionState(
-        recordingState = RecordingState.STOPPED
+        recordingState = SessionState.STOPPED
     ))
 
     val uiState: StateFlow<DataCollectionState> = _uiState.asStateFlow()
@@ -57,7 +54,7 @@ class DataCollectionViewModel @Inject constructor(
 
     fun startStopRecording() {
         viewModelScope.launch {
-            if (_uiState.value.recordingState == RecordingState.STARTED) {
+            if (_uiState.value.recordingState == SessionState.STARTED) {
                 stopSession()
             } else {
                 startSession()
@@ -66,20 +63,20 @@ class DataCollectionViewModel @Inject constructor(
     }
 
     private suspend fun startSession() {
-        _uiState.value = _uiState.value.copy(recordingState = RecordingState.STARTING)
+        _uiState.value = _uiState.value.copy(recordingState = SessionState.STARTING)
         if (sessionManager.isSessionRunning()) {
             sessionManager.stopSession()
         }
         deviceManager.setForceStream(true)
         sessionManager.startSession(protocol = Protocol.WAKE, uploadToCloud = true,
             activityType = _uiState.value.activityType, toneBud = _uiState.value.toneBud)
-        _uiState.value = _uiState.value.copy(recordingState = RecordingState.STARTED)
+        _uiState.value = _uiState.value.copy(recordingState = SessionState.STARTED)
     }
 
     private suspend fun stopSession() {
-        _uiState.value = _uiState.value.copy(recordingState = RecordingState.STOPPING)
+        _uiState.value = _uiState.value.copy(recordingState = SessionState.STOPPING)
         sessionManager.stopSession(dataQuality = _uiState.value.dataQuality)
-        _uiState.value = _uiState.value.copy(recordingState = RecordingState.STOPPED,
+        _uiState.value = _uiState.value.copy(recordingState = SessionState.STOPPED,
             activityType = ActivityType.UNKNOWN, dataQuality = DataQuality.UNKNOWN,
             toneBud = ToneBud.UNKNOWN)
     }
@@ -90,6 +87,16 @@ class DataCollectionViewModel @Inject constructor(
                 deviceManager.airohaDeviceState.value == AirohaDeviceState.READY)
             budzState.collect { budzState ->
                 if (budzState.budzServiceBound) {
+                    if (sessionManager.currentSession != null) {
+                        _uiState.value = _uiState.value.copy(
+                            recordingState = sessionManager.sessionState,
+                            activityType = sessionManager.currentSession?.activityType
+                                ?: ActivityType.UNKNOWN,
+                            dataQuality = sessionManager.currentSession?.dataQuality
+                                ?: DataQuality.UNKNOWN,
+                            toneBud = sessionManager.currentSession?.toneBud ?: ToneBud.UNKNOWN
+                        )
+                    }
                     startMonitoringAirohaDevice()
                 } else {
                     stopMonitoring()

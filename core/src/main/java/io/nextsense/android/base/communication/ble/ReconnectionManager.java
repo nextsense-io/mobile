@@ -15,7 +15,6 @@ import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Manages the reconnection trigger and attempts.
- *
  * If the device is connected manually and this tries to connect again before it can be stopped,
  * it will be a no-op so it is not an issue.
  */
@@ -61,7 +60,7 @@ public class ReconnectionManager {
     this.callback = callback;
     reconnectionExecutor = Executors.newSingleThreadScheduledExecutor();
     reconnecting.set(true);
-    reconnectionsFuture = reconnectionExecutor.scheduleAtFixedRate(() -> {
+    reconnectionsFuture = reconnectionExecutor.scheduleWithFixedDelay(() -> {
       if (reconnecting.get()) {
         reconnect();
       }
