@@ -63,7 +63,8 @@ enum class ToneBud(val label: String) {
     FIN_PRO("Tone Pro with a fin"),
     FIN_BALANCE("Tone Balance with a fin"),
     FIN_COMFORT("Tone Comfort with a fin"),
-    HOOK("Tone with a hook");
+    HOOK("Tone with a hook"),
+    FIN_LESS("Tone without a fin");
 
     companion object {
         fun fromString(value: String): ToneBud {
