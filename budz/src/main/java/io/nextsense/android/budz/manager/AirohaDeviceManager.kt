@@ -72,9 +72,6 @@ import kotlin.math.ceil
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import io.nextsense.android.airoha.device.DisableVoicePromptRaceCommand
-import io.nextsense.android.airoha.device.DisableTouchRaceCommand
-
 
 enum class AirohaDeviceState {
     ERROR,  // Error when trying to connect to the device.
@@ -327,30 +324,6 @@ class AirohaDeviceManager @Inject constructor(
 
     fun setForceStream(force: Boolean) {
         _forceStreaming = force
-    }
-    fun disableVoicePrompt(disable: Boolean) {
-        if (!isReady) {
-            RotatingFileLogger.get().logw(tag, "Tried to disable voice prompt, but device is not available: ${_airohaDeviceState.value}")
-            return
-        }
-
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = DisableVoicePromptRaceCommand(disable).getBytes()
-
-        getAirohaDeviceControl().sendCustomCommand(raceCommand, airohaDeviceListener)
-    }
-    fun setTouchCapability(disable: Boolean) {
-        if (!isReady) {
-            RotatingFileLogger.get().logw(tag, "Tried to set touch capability, but device is not available: ${_airohaDeviceState.value}")
-            return
-        }
-
-        val raceCommand = AirohaCmdSettings()
-        raceCommand.respType = RaceType.INDICATION
-        raceCommand.command = DisableTouchRaceCommand(disable).getBytes()
-
-        getAirohaDeviceControl().sendCustomCommand(raceCommand, airohaDeviceListener)
     }
 
     fun connectDevice(timeout: Duration? = null) {
