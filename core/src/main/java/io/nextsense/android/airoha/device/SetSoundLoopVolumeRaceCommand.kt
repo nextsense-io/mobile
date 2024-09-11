@@ -10,7 +10,7 @@ class SetSoundLoopVolumeRaceCommand(volume: Int) : NextSenseRaceCommand(
 ) {
     companion object {
         const val MIN_VOLUME = 0
-        const val MAX_VOLUME = 4
+        const val MAX_VOLUME = 15
     }
 
     private val _volume: Int = volume
