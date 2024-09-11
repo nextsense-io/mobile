@@ -18,6 +18,9 @@ import io.nextsense.android.budz.model.Modality
 import io.nextsense.android.budz.model.Session
 import io.nextsense.android.budz.model.SessionsRepository
 import io.nextsense.android.budz.model.ToneBud
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.TimeZone
 
 enum class SessionState {
@@ -38,6 +41,7 @@ class SessionManager(
 ) {
     private val tag = SessionManager::class.java.simpleName
     private val appVersion = BuildConfig.VERSION_NAME
+    private val _scope = CoroutineScope(Dispatchers.Default)
 
     private var _currentSessionRef: DocumentReference? = null
     private var _currentSession: Session? = null
@@ -47,6 +51,20 @@ class SessionManager(
     val currentDataSession: DataSession? get() = _currentDataSession
     private var _sessionState = SessionState.STOPPED
     val sessionState: SessionState get() = _sessionState
+
+    init {
+        _scope.launch {
+            airohaDeviceManager.airohaDeviceState.collect { deviceState ->
+                if (deviceState == AirohaDeviceState.DISCONNECTED) {
+                    if (_sessionState == SessionState.STARTED ||
+                            _sessionState == SessionState.STARTING) {
+                        RotatingFileLogger.get().logw(tag, "Device disconnected. Stopping session.")
+                        stopSession(dataQuality = DataQuality.UNKNOWN, forceStop = true)
+                    }
+                }
+            }
+        }
+    }
 
     fun isSessionRunning(): Boolean {
         return airohaDeviceManager.streamingState.value == StreamingState.STARTING ||
@@ -143,29 +161,55 @@ class SessionManager(
             airohaDeviceManager.getEegSamplingRate(), /*accelerationSampleRate=*/100F,
             /*saveToCsv=*/true)
         if (localSessionId == -1L) {
-            // TODO(eric): delete cloud session on error.
-            // Previous session not finished, cannot start streaming.
-            RotatingFileLogger.get()
-                .logw(tag, "Previous session not finished, cannot start streaming.")
+            RotatingFileLogger.get().logw(tag, "Failed to create a local session. Usually because" +
+                    " the previous session did not finish running yet.")
+            if (uploadToCloud) {
+                deleteSession(_currentSessionRef!!.id)
+            }
+            clearCurrentSession()
             return false
         }
 
-        // TODO(eric): Check result.
         airohaDeviceManager.startBleStreaming()
+        if (airohaDeviceManager.streamingState.value != StreamingState.STARTED) {
+            RotatingFileLogger.get().logw(tag, "Failed to start streaming.")
+            localSessionManager.stopActiveLocalSession()
+            if (uploadToCloud) {
+                deleteSession(_currentSessionRef!!.id)
+            }
+            clearCurrentSession()
+            return false
+        }
         _sessionState = SessionState.STARTED
         RotatingFileLogger.get().logi(tag,
             "Session started successfully. Uploading to cloud: $uploadToCloud.")
         return true
     }
 
-    suspend fun stopSession(dataQuality: DataQuality = DataQuality.UNKNOWN) {
-        if (_sessionState != SessionState.STARTED) {
+    private suspend fun deleteSession(sessionId: String) {
+        val sessionState = sessionsRepository.deleteSession(sessionId)
+        if (sessionState is State.Success) {
+            RotatingFileLogger.get().logi(tag, "Session deleted successfully.")
+        } else {
+            RotatingFileLogger.get().logw(tag, "Failed to delete session.")
+        }
+    }
+
+    private fun clearCurrentSession() {
+        _currentSessionRef = null
+        _currentSession = null
+        _currentDataSessionRef = null
+        _currentDataSession = null
+    }
+
+    suspend fun stopSession(dataQuality: DataQuality = DataQuality.UNKNOWN,
+                            forceStop: Boolean = false) {
+        if (_sessionState != SessionState.STARTED && !forceStop) {
             RotatingFileLogger.get().logw(tag, "Session not running.")
             return
         }
         _sessionState = SessionState.STOPPING
 
-        // TODO(eric): Check result.
         airohaDeviceManager.stopBleStreaming(overrideForceStreaming = true)
 
         val stopTime = Timestamp.now()
@@ -194,10 +238,7 @@ class SessionManager(
                 RotatingFileLogger.get().logw(tag, "Failed to update data session.")
             }
 
-            _currentSessionRef = null
-            _currentSession = null
-            _currentDataSessionRef = null
-            _currentDataSession = null
+            clearCurrentSession()
         }
         _sessionState = SessionState.STOPPED
         RotatingFileLogger.get().logi(tag, "Session stopped successfully.")
