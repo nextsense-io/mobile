@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import io.nextsense.android.airoha.device.SetSoundLoopVolumeRaceCommand
 import io.nextsense.android.budz.BuildConfig
 import io.nextsense.android.budz.R
 import io.nextsense.android.budz.manager.StreamingState
@@ -71,7 +72,9 @@ fun DeviceSettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     Row {
-                        SimpleButton(name = "Set Volume (0-4)", onClick = {
+                        SimpleButton(name = "Set Volume (" +
+                                "${SetSoundLoopVolumeRaceCommand.MIN_VOLUME}-" +
+                                "${SetSoundLoopVolumeRaceCommand.MAX_VOLUME})", onClick = {
                             deviceSettingsViewModel.setSoundLoopVolume(
                                 uiState.soundLoopVolume
                             )
