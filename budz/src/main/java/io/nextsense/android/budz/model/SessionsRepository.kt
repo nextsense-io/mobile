@@ -96,4 +96,13 @@ class SessionsRepository @Inject constructor() {
             return State.failed(exception.message.toString())
         }
     }
+
+    suspend fun deleteSession(sessionId: String): State<Unit> {
+        try {
+            firestoreClient.sessionsRef.document(sessionId).delete().await()
+            return State.success(Unit)
+        } catch (exception: Exception) {
+            return State.failed(exception.message.toString())
+        }
+    }
 }
