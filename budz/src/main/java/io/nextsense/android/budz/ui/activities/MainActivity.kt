@@ -1,6 +1,7 @@
 package io.nextsense.android.budz.ui.activities
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,6 +32,7 @@ import io.nextsense.android.budz.ui.screens.TimedSleepScreen
 import io.nextsense.android.budz.ui.theme.BudzTheme
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -280,6 +282,6 @@ class MainActivity : ComponentActivity() {
             MainActivity::class.java
         )
         // Need to start the service explicitly so that 'onStartCommand' gets called in the service.
-        applicationContext.startService(foregroundServiceIntent)
+        applicationContext.startForegroundService(foregroundServiceIntent)
     }
 }
