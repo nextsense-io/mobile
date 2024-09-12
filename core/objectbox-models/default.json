@@ -186,7 +186,7 @@
     },
     {
       "id": "4:7829109381478237227",
-      "lastPropertyId": "30:8764685609041196148",
+      "lastPropertyId": "31:1418796158854506088",
       "name": "LocalSession",
       "properties": [
         {
@@ -318,6 +318,11 @@
         {
           "id": "30:8764685609041196148",
           "name": "firstRelativeTimestamp",
+          "type": 6
+        },
+        {
+          "id": "31:1418796158854506088",
+          "name": "firstDataTime",
           "type": 6
         }
       ],

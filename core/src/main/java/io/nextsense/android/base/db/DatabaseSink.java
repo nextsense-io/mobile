@@ -64,6 +64,10 @@ public class DatabaseSink {
 
   @Subscribe(threadMode = ThreadMode.BACKGROUND)
   public synchronized void onSamples(Samples samples) {
+    if (localSessionManager.getActiveLocalSession().isEmpty()) {
+      RotatingFileLogger.get().logw(TAG, "Received samples but no active session.");
+      return;
+    }
     localSessionManager.getActiveLocalSession().ifPresent(currentLocalSession -> {
       if (!currentLocalSession.isReceivedData()) {
         localSessionManager.notifyFirstDataReceived(samples.getEegSamples().get(0));

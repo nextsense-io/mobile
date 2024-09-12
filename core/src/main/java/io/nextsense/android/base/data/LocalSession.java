@@ -71,6 +71,9 @@ public class LocalSession extends BaseRecord {
   private Instant startTime;
   @Nullable
   @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
+  private Instant firstDataTime;
+  @Nullable
+  @Convert(converter = Converters.InstantConverter.class, dbType = Long.class)
   private Instant endTime;
 
   private LocalSession(@Nullable String userBigTableKey, @Nullable String cloudDataSessionId,
@@ -354,6 +357,14 @@ public class LocalSession extends BaseRecord {
 
   public void setDeviceInternalStateUploadedUntil(int deviceInternalStateUploadedUntil) {
     this.deviceInternalStateUploadedUntil = deviceInternalStateUploadedUntil;
+  }
+
+  public Instant getFirstDataTime() {
+    return firstDataTime;
+  }
+
+  public void setFirstDataTime(Instant firstDataTime) {
+    this.firstDataTime = firstDataTime;
   }
 
   public Instant getStartTime() {

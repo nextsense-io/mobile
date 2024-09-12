@@ -5,7 +5,7 @@
   "entities": [
     {
       "id": "1:3658994930751552543",
-      "lastPropertyId": "14:9073749853583641367",
+      "lastPropertyId": "17:4671323139063424380",
       "name": "Acceleration",
       "properties": [
         {
@@ -66,6 +66,25 @@
           "id": "14:9073749853583641367",
           "name": "leftZ",
           "type": 5
+        },
+        {
+          "id": "15:798201686084754816",
+          "name": "receptionTimestamp",
+          "type": 6
+        },
+        {
+          "id": "16:1737830058736183467",
+          "name": "relativeSamplingTimestamp",
+          "indexId": "8:529463692344259930",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "17:4671323139063424380",
+          "name": "absoluteSamplingTimestamp",
+          "indexId": "9:5664139229516820345",
+          "type": 6,
+          "flags": 8
         }
       ],
       "relations": []
@@ -86,7 +105,7 @@
     },
     {
       "id": "3:7033608295971815213",
-      "lastPropertyId": "15:5199851023059001981",
+      "lastPropertyId": "18:2754851991606830521",
       "name": "EegSample",
       "properties": [
         {
@@ -142,6 +161,25 @@
           "id": "15:5199851023059001981",
           "name": "hdmiPresent",
           "type": 1
+        },
+        {
+          "id": "16:338353244515079997",
+          "name": "receptionTimestamp",
+          "type": 6
+        },
+        {
+          "id": "17:2137765127661079574",
+          "name": "relativeSamplingTimestamp",
+          "indexId": "10:784703886289693398",
+          "type": 5,
+          "flags": 8
+        },
+        {
+          "id": "18:2754851991606830521",
+          "name": "absoluteSamplingTimestamp",
+          "indexId": "11:6526135583726343715",
+          "type": 6,
+          "flags": 8
         }
       ],
       "relations": []
@@ -389,7 +427,7 @@
     },
     {
       "id": "8:2305739789178864595",
-      "lastPropertyId": "14:8855641057293512176",
+      "lastPropertyId": "17:4956345211553012263",
       "name": "AngularSpeed",
       "properties": [
         {
@@ -450,13 +488,28 @@
           "id": "14:8855641057293512176",
           "name": "leftZ",
           "type": 5
+        },
+        {
+          "id": "15:3518967787657178203",
+          "name": "receptionTimestamp",
+          "type": 6
+        },
+        {
+          "id": "16:7532234570141098669",
+          "name": "relativeSamplingTimestamp",
+          "type": 5
+        },
+        {
+          "id": "17:4956345211553012263",
+          "name": "absoluteSamplingTimestamp",
+          "type": 6
         }
       ],
       "relations": []
     }
   ],
   "lastEntityId": "8:2305739789178864595",
-  "lastIndexId": "7:7495440003052720935",
+  "lastIndexId": "11:6526135583726343715",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,

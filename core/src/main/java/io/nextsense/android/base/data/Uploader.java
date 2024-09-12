@@ -775,7 +775,7 @@ public class Uploader {
       // Subtract the first relative timestamp received in the session from the current relative
       // timestamp to get the time elapsed since the session started. Add this to the session start
       // time to get the approximate absolute timestamp.
-      return localSession.getStartTime().plus(
+      return localSession.getFirstDataTime().plus(
           Duration.ofMillis(dataSample.getRelativeSamplingTimestamp() -
               localSession.getFirstRelativeTimestamp()));
     }

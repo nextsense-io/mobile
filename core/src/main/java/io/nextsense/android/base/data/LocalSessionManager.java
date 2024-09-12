@@ -174,6 +174,9 @@ public class LocalSessionManager {
     if (activeLocalSession != null) {
       if (eegSample.getRelativeSamplingTimestamp() != null) {
         activeLocalSession.setFirstRelativeTimestamp(eegSample.getRelativeSamplingTimestamp());
+        activeLocalSession.setFirstDataTime(eegSample.getReceptionTimestamp());
+      } else {
+        activeLocalSession.setFirstDataTime(eegSample.getAbsoluteSamplingTimestamp());
       }
       activeLocalSession.setReceivedData(true);
       objectBoxDatabase.putLocalSession(activeLocalSession);
