@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -26,21 +27,23 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import io.nextsense.android.airoha.device.SetSoundLoopVolumeRaceCommand
 import io.nextsense.android.budz.BuildConfig
 import io.nextsense.android.budz.R
+import io.nextsense.android.budz.manager.EarEegChannel
 import io.nextsense.android.budz.manager.StreamingState
 import io.nextsense.android.budz.ui.components.BudzCard
 import io.nextsense.android.budz.ui.components.SimpleButton
+import io.nextsense.android.budz.ui.components.StringListDropDown
 import io.nextsense.android.budz.ui.components.TopBar
 import io.nextsense.android.budz.ui.components.TopBarLeftIconContent
 
 @Composable
 fun DeviceSettingsScreen(
-    deviceSettingsViewModel: DeviceSettingsViewModel = hiltViewModel(),
+    viewModel: DeviceSettingsViewModel = hiltViewModel(),
     onGoToSignalVisualization: () -> Unit,
     onGoToGems: () -> Unit,
     onGoToDataCollection: () -> Unit,
     onGoToHome: () -> Unit
 ) {
-    val uiState by deviceSettingsViewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -67,7 +70,7 @@ fun DeviceSettingsScreen(
                 BudzCard {
                     TextField(
                         value = uiState.soundLoopVolume?.toString() ?: "",
-                        onValueChange = { deviceSettingsViewModel.setSoundLoopVolumeField(it) },
+                        onValueChange = { viewModel.setSoundLoopVolumeField(it) },
                         label = { Text("Sound Loop Volume:") }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
@@ -75,59 +78,77 @@ fun DeviceSettingsScreen(
                         SimpleButton(name = "Set Volume (" +
                                 "${SetSoundLoopVolumeRaceCommand.MIN_VOLUME}-" +
                                 "${SetSoundLoopVolumeRaceCommand.MAX_VOLUME})", onClick = {
-                            deviceSettingsViewModel.setSoundLoopVolume(
+                            viewModel.setSoundLoopVolume(
                                 uiState.soundLoopVolume
                             )
                         })
                         Spacer(modifier = Modifier.weight(1f))
                         SimpleButton(name = "Get Volume", onClick = {
-                            deviceSettingsViewModel.getSoundLoopVolume()
+                            viewModel.getSoundLoopVolume()
                         })
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     Row {
                         SimpleButton(name = "Start Sound Loop", onClick = {
-                            deviceSettingsViewModel.startSoundLoop()
+                            viewModel.startSoundLoop()
                         })
                         Spacer(modifier = Modifier.weight(1f))
                         SimpleButton(name = "Stop Sound Loop", onClick = {
-                            deviceSettingsViewModel.stopSoundLoop()
+                            viewModel.stopSoundLoop()
                         })
                     }
                 }
                 Spacer(modifier = Modifier.height(20.dp))
                 BudzCard {
-                    TextField(
-                        value = uiState.register,
-                        onValueChange = { deviceSettingsViewModel.setRegisterField(it) },
-                        label = { Text("Register:") }
-                    )
+                    Row {
+                        TextField(
+                            value = uiState.register,
+                            onValueChange = { viewModel.setRegisterField(it) },
+                            label = { Text("Register:") },
+                            modifier = Modifier.width(100.dp)
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Text(
+                            text = "Side",
+                            style = MaterialTheme.typography.labelLarge,
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        StringListDropDown(options = viewModel.getChannels(),
+                            currentSelection = uiState.activeChannel.alias,
+                            enabled = true,
+                            modifier = Modifier.width(140.dp),
+                            onChange = {alias ->
+                                viewModel.changeActiveChannel(
+                                    EarEegChannel.getChannelByAlias(alias))
+                            })
+                    }
                     TextField(
                         value = uiState.registerValue,
-                        onValueChange = { deviceSettingsViewModel.setRegisterValueField(it) },
+                        onValueChange = { viewModel.setRegisterValueField(it) },
                         label = { Text("Value:") }
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     Row {
                         SimpleButton(name = "Set Register", onClick = {
-                            deviceSettingsViewModel.setRegister(
+                            viewModel.setRegister(
                                 uiState.register,
                                 uiState.registerValue
                             )
                         })
                         Spacer(modifier = Modifier.weight(1f))
                         SimpleButton(name = "Get Register", onClick = {
-                            deviceSettingsViewModel.getRegister(uiState.register)
+                            viewModel.getRegister(uiState.register)
                         })
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                     Row {
                         SimpleButton(name = "Reset Buds", onClick = {
-                            deviceSettingsViewModel.resetBuds()
+                            viewModel.resetBuds()
                         })
                         Spacer(modifier = Modifier.weight(1f))
                         SimpleButton(name = "Power Off Buds", onClick = {
-                            deviceSettingsViewModel.powerOffBuds()
+                            viewModel.powerOffBuds()
                         })
                     }
                     Spacer(modifier = Modifier.height(20.dp))
@@ -143,27 +164,15 @@ fun DeviceSettingsScreen(
                     SimpleButton(name = streamingButtonName,
                         enabled = streamingButtonEnabled, onClick = {
                         if (uiState.streaming == StreamingState.STARTED) {
-                            deviceSettingsViewModel.stopStreaming()
+                            viewModel.stopStreaming()
                         } else {
-                            deviceSettingsViewModel.startStreaming()
+                            viewModel.startStreaming()
                         }
                     })
                 }
                 Spacer(modifier = Modifier.height(20.dp))
                 Text("Last result: ${uiState.message}")
                 Spacer(modifier = Modifier.height(20.dp))
-//        SimpleButton(name = "Increase bass gain", onClick = {
-//            deviceSettingsViewModel.changeEqualizer(floatArrayOf(8f,8f,8f,8f,0f,0f,0f,0f,0f,0f))
-//        })
-//        SimpleButton(name = "Normal bass gain", onClick = {
-//            deviceSettingsViewModel.changeEqualizer(floatArrayOf(0f,0f,0f,0f,0f,0f,0f,0f,0f,0f))
-//        })
-//        SimpleButton(name = "Lower bass gain", onClick = {
-//            deviceSettingsViewModel.changeEqualizer(floatArrayOf(-8f,-8f,-8f,-8f,0f,0f,0f,0f,0f,0f))
-//        })
-//        SimpleButton(name = "Go to Signal Visualization", onClick = {
-//            onGoToSignalVisualization()
-//        })
                 SimpleButton(name = "Go to Gems", onClick = {
                     onGoToGems()
                 })
@@ -171,8 +180,6 @@ fun DeviceSettingsScreen(
                 SimpleButton(name = "Go to Data Collection", onClick = {
                     onGoToDataCollection()
                 })
-//        Spacer(modifier = Modifier.height(20.dp))
-//        Text("Current gains: ${deviceSettingsUiState.gains.joinToString(", ")}")
                 Spacer(modifier = Modifier.weight(1f))
                 Text("Version: ${BuildConfig.VERSION_NAME}")
             }

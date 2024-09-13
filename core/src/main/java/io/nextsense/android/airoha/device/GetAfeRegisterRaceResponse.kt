@@ -7,11 +7,15 @@ class GetAfeRegisterRaceResponse(nextSensePayload: ByteArray) : NextSenseRaceRes
     nextSenseId = NextSenseRaceCommand.NextSenseId.READ_AFE_REG,
     data = nextSensePayload
 ) {
+    fun getEarbudSide(): SetAfeRegisterRaceCommand.EarbudSide {
+        return SetAfeRegisterRaceCommand.EarbudSide.valueOf(getPayload()[0])
+    }
+
     fun getRegister(): Byte {
-        return getPayload()[0]
+        return getPayload()[1]
     }
 
     fun getValue(): ByteArray {
-        return getPayload().copyOfRange(1, getPayload().size)
+        return getPayload().copyOfRange(2, getPayload().size)
     }
 }

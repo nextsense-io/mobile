@@ -14,12 +14,21 @@ open class NextSenseRaceResponse(
     private val _data: ByteArray = data
 
     override fun getPayload(): ByteArray {
+        // Last byte contains the Airoha status code.
         return _data.copyOfRange(0, _data.size - 1)
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
+    private fun getAirohaStatusCode(value: Int): AirohaStatusCode {
+        for (airohaStatusCode in AirohaStatusCode.entries) {
+            if (value == airohaStatusCode.value) {
+                return airohaStatusCode
+            }
+        }
+        return AirohaStatusCode.STATUS_UNKNOWN
+    }
+
     override fun getStatusCode(): AirohaStatusCode {
         // Last byte contains the Airoha status code.
-        return AirohaStatusCode.valueOf(_data[_data.size - 1].toHexString())
+        return getAirohaStatusCode(_data[_data.size - 1].toInt())
     }
 }
