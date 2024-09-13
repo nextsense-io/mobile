@@ -5,7 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.airoha.libutils.Converter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import io.nextsense.android.base.devices.maui.MauiDevice
 import io.nextsense.android.budz.manager.AirohaDeviceManager
+import io.nextsense.android.budz.manager.EarEegChannel
+import io.nextsense.android.budz.manager.EarbudsConfigNames
+import io.nextsense.android.budz.manager.EarbudsConfigs
 import io.nextsense.android.budz.manager.Protocol
 import io.nextsense.android.budz.manager.StreamingState
 import io.nextsense.android.budz.model.DataQuality
@@ -22,7 +26,9 @@ data class DeviceSettingsState(
     val soundLoopVolume: Int? = null,
     val sleepMode: Boolean = false,
     val serviceBound: Boolean = false,
-    val streaming: StreamingState = StreamingState.UNKNOWN
+    val streaming: StreamingState = StreamingState.UNKNOWN,
+    val activeChannel: EarEegChannel = EarbudsConfigs.getEarbudsConfig(
+        EarbudsConfigNames.MAUI_CONFIG.name).channelsConfig[1]!!,
 )
 
 @HiltViewModel
@@ -124,6 +130,15 @@ class DeviceSettingsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(soundLoopVolume = volumeInt)
     }
 
+    fun changeActiveChannel(activeChannel: EarEegChannel) {
+        _uiState.value = _uiState.value.copy(activeChannel = activeChannel)
+    }
+
+    fun getChannels(): List<String> {
+        return EarbudsConfigs.getEarbudsConfig(MauiDevice.EARBUD_CONFIG).channelsConfig.values
+            .map { it.alias }
+    }
+
     fun setRegisterField(register: String) {
         _uiState.value = _uiState.value.copy(register = register)
     }
@@ -135,7 +150,8 @@ class DeviceSettingsViewModel @Inject constructor(
     fun setRegister(register: String, value: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(message = "Setting register...")
-            val registerSet = deviceManager.setAfeRegisterValue(register, value)
+            val registerSet = deviceManager.setAfeRegisterValue(
+                _uiState.value.activeChannel, register, value)
             _uiState.value = _uiState.value.copy(message = "Register set: $registerSet")
         }
     }
@@ -143,8 +159,9 @@ class DeviceSettingsViewModel @Inject constructor(
     fun getRegister(register: String) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(message = "Getting register...")
-            val registerValue = Converter.byteArrayToHexString(
-                deviceManager.getAfeRegisterValue(register))
+            val registerBytes = deviceManager.getAfeRegisterValue(
+                _uiState.value.activeChannel, register)
+            val registerValue = Converter.byteArrayToHexString(registerBytes ?: byteArrayOf())
             if (registerValue != null) {
                 _uiState.value = _uiState.value.copy(
                     message = "Got register",

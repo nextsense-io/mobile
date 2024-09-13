@@ -116,6 +116,10 @@ class AirohaDeviceManager @Inject constructor(
         // Frequencies that can be set in the equalizer.
         val EQ_FREQUENCIES =
             floatArrayOf(200f, 280f, 400f, 550f, 770f, 1000f, 2000f, 4000f, 8000f, 16000f)
+        // Registers to set to put the device in DC impedance mode.
+        val NO_IMPEDANCE_REGISTERS = mapOf(("BB" to "00003E"), ("D6" to "5900CD"))
+        val DC_IMPEDANCE_REGISTERS = mapOf(("BB" to "00003F"), ("D6" to "5900CF"))
+        const val DC_VALUE_REGISTER = "BC"
     }
 
     private val tag = AirohaDeviceManager::class.java.simpleName
@@ -202,7 +206,7 @@ class AirohaDeviceManager @Inject constructor(
             if (code == AirohaStatusCode.STATUS_SUCCESS) {
                 val resp = msg.msgContent as ByteArray
                 RotatingFileLogger.get().logd(tag,
-                    "Read response: ${Converter.byte2HerStrReverse(resp)}")
+                    "Read response: ${Converter.byteArrayToHexString(resp)}")
             } else {
                 RotatingFileLogger.get().logw(tag, "Read error: $code.")
             }
@@ -586,26 +590,47 @@ class AirohaDeviceManager @Inject constructor(
         )
     }
 
-    suspend fun setAfeRegisterValue(register: String, value: String): AirohaStatusCode? {
+    suspend fun setAfeRegisterValue(channel: EarEegChannel, register: String, value: String):
+            AirohaStatusCode? {
         if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to set AFE register, but device is not" +
                     " available: ${_airohaDeviceState.value}")
             return null
         }
+        if (register.length != 2 || value.length != 6) {
+            RotatingFileLogger.get().logw(tag, "Invalid register or value: $register, $value")
+            return null
+        }
 
-        return runSetRaceCommandFlow(getRaceCommand(SetAfeRegisterRaceCommand(register, value)))
-            .first()
+        val earBudSide = when (channel) {
+            EarEegChannel.ELW_ELC -> SetAfeRegisterRaceCommand.EarbudSide.LEFT
+            EarEegChannel.ERW_ERC -> SetAfeRegisterRaceCommand.EarbudSide.RIGHT
+            else -> SetAfeRegisterRaceCommand.EarbudSide.LEFT
+        }
+        return runSetRaceCommandFlow(getRaceCommand(SetAfeRegisterRaceCommand(
+            earBudSide, register, value))).first()
     }
 
-    suspend fun getAfeRegisterValue(register: String): ByteArray? {
+    suspend fun getAfeRegisterValue(channel: EarEegChannel, register: String): ByteArray? {
         if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to get AFE register, but device is not " +
                     "available: ${_airohaDeviceState.value}")
             return null
         }
+        val earBudSide = when (channel) {
+            EarEegChannel.ELW_ELC -> SetAfeRegisterRaceCommand.EarbudSide.LEFT
+            EarEegChannel.ERW_ERC -> SetAfeRegisterRaceCommand.EarbudSide.RIGHT
+            else -> SetAfeRegisterRaceCommand.EarbudSide.LEFT
+        }
         val afeRaceResponse = getRaceCommandResponseFlow(getRaceCommand(
-            GetAfeRegisterRaceCommand(register))).first() as GetAfeRegisterRaceResponse?
-        return afeRaceResponse?.getValue()
+            GetAfeRegisterRaceCommand(earBudSide, register))).first() as GetAfeRegisterRaceResponse?
+        if (afeRaceResponse == null ||
+            afeRaceResponse.getStatusCode() != AirohaStatusCode.STATUS_SUCCESS) {
+            RotatingFileLogger.get().logw(tag, "Failed to get AFE register. Reason: " +
+                    "${afeRaceResponse?.getStatusCode()}")
+            return null
+        }
+        return afeRaceResponse.getValue()
     }
 
     suspend fun setSoundLoopVolume(volume: Int): AirohaStatusCode? {
@@ -626,7 +651,13 @@ class AirohaDeviceManager @Inject constructor(
         }
         val soundLoopVolumeResponse = getRaceCommandResponseFlow(getRaceCommand(
             GetSoundLoopVolumeRaceCommand())).first() as SoundLoopVolumeRaceResponse?
-        return soundLoopVolumeResponse?.getVolume()
+        if (soundLoopVolumeResponse == null ||
+            soundLoopVolumeResponse.getStatusCode() != AirohaStatusCode.STATUS_SUCCESS) {
+            RotatingFileLogger.get().logw(tag, "Failed to get sound loop volume. Reason: " +
+                    "${soundLoopVolumeResponse?.getStatusCode()}")
+            return null
+        }
+        return soundLoopVolumeResponse.getVolume()
     }
 
     suspend fun setTouchControlsEnabled(enabled: Boolean): AirohaStatusCode? {
@@ -649,6 +680,50 @@ class AirohaDeviceManager @Inject constructor(
 
         return runSetRaceCommandFlow(getRaceCommand(
             SetVoicePromptsControlsRaceCommand(disable=!enabled))).first()
+    }
+
+    suspend fun setRegisters(registers: Map<String, String>): AirohaStatusCode? {
+        if (!isConnected) {
+            RotatingFileLogger.get().logw(
+                tag, "Tried to set registers, but device is " +
+                        "not available: ${_airohaDeviceState.value}"
+            )
+            return null
+        }
+
+        var statusCode: AirohaStatusCode? = null
+        for ((register, value) in registers) {
+            for (earbudChannel in EarbudsConfigs.getEarbudsConfig(
+                    EarbudsConfigNames.MAUI_CONFIG.name).channelsConfig.values) {
+                statusCode = setAfeRegisterValue(earbudChannel, register, value)
+                if (statusCode != AirohaStatusCode.STATUS_SUCCESS) {
+                    break
+                }
+            }
+        }
+        return statusCode
+    }
+
+    suspend fun switchDCImpedanceMode(enabled: Boolean) : AirohaStatusCode? {
+        if (!isConnected) {
+            RotatingFileLogger.get().logw(tag, "Tried to switch DC impedance mode, but device is " +
+                    "not available: ${_airohaDeviceState.value}")
+            return null
+        }
+
+        if (enabled) {
+            return setRegisters(DC_IMPEDANCE_REGISTERS)
+        }
+        return setRegisters(NO_IMPEDANCE_REGISTERS)
+    }
+
+    suspend fun getDCValue(earEegChannel: EarEegChannel) : ByteArray? {
+        if (!isConnected) {
+            RotatingFileLogger.get().logw(tag, "Tried to get DC value, but device is " +
+                    "not available: ${_airohaDeviceState.value}")
+            return null
+        }
+        return getAfeRegisterValue(earEegChannel, DC_VALUE_REGISTER)
     }
 
     fun changeEqualizer(gains: FloatArray) : Boolean {
@@ -903,7 +978,7 @@ class AirohaDeviceManager @Inject constructor(
         if (code == AirohaStatusCode.STATUS_SUCCESS) {
             val resp = msg.msgContent as ByteArray
             RotatingFileLogger.get().logd(tag, "Read response: " +
-                    Converter.byte2HerStrReverse(resp)
+                    Converter.byteArrayToHexString(resp)
             )
         } else {
             RotatingFileLogger.get().logw(tag, "Read error: $code.")
@@ -920,7 +995,7 @@ class AirohaDeviceManager @Inject constructor(
         raceCommand.respType = raceType
         raceCommand.command = command.getBytes()
         RotatingFileLogger.get().logd(
-            tag, "${command.getName()}: ${Converter.byte2HexStr(raceCommand.command)}")
+            tag, "${command.getName()}: ${Converter.byteArrayToHexString(raceCommand.command)}")
         return raceCommand
     }
 
