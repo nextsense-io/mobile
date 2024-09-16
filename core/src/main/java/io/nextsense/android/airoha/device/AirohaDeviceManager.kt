@@ -78,7 +78,7 @@ class AirohaDeviceManager @Inject constructor(@ApplicationContext private val co
             Log.d(tag, "Read response: ${msg.msgContent}")
             if (code == AirohaStatusCode.STATUS_SUCCESS) {
                 val resp = msg.msgContent as ByteArray
-                Log.d(tag, "Read response: ${Converter.byte2HerStrReverse(resp)}")
+                Log.d(tag, "Read response: ${Converter.byteArrayToHexString(resp)}")
             } else {
                 Log.w(tag, "Read error: $code.")
             }
