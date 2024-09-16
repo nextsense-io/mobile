@@ -18,7 +18,7 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
     private val defaultCalculationEpoch = 17.seconds
     private val _bandPowers: MutableMap<Int, MutableMap<Band, Double>> = mutableMapOf()
     private val _calculationEpoch = defaultCalculationEpoch
-    private var _powerLineFrequency: Int? = 60
+    private var _powerLineFrequency: Int? = 50
 
     val bandPowersState = MutableStateFlow(_bandPowers)
 

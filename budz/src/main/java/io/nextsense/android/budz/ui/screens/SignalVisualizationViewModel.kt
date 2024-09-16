@@ -48,7 +48,7 @@ open class SignalVisualizationViewModel @Inject constructor(
 ): BudzViewModel(context) {
     private val tag = CheckConnectionViewModel::class.simpleName
     //private val _shownDuration = 10.seconds
-    private val _shownDuration = 17.seconds
+    private val _shownDuration = 22.seconds
     private val _filterCropDuration = 9.seconds
     //private val _filterCropDuration = 7.seconds
     // You want at least 17 seconds at 1000 hertz with artifact rejection enabled so it cuts at

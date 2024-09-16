@@ -25,7 +25,7 @@ public class BandPowerAnalysis {
     THETA(4.0, 8.0),
     ALPHA(8.0, 12.0),
     BETA(12.0, 30.0),
-    GAMMA(30.0, 49.0);
+    GAMMA(30.0, 99.0);
 
     private final double start;
     private final double end;
