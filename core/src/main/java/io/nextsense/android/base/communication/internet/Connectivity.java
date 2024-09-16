@@ -7,8 +7,14 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
 import androidx.annotation.NonNull;
 import com.google.common.collect.Sets;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+
+import io.nextsense.android.base.utils.RotatingFileLogger;
 
 /**
  * Monitors the Internet connectivity and notify callers if it changes.
@@ -24,6 +30,8 @@ public class Connectivity {
   public interface StateListener {
     void onStateChange(State newState);
   }
+
+  private static final String TAG = Connectivity.class.getSimpleName();
 
   private final Set<StateListener> stateListeners = Sets.newConcurrentHashSet();
 
@@ -62,7 +70,9 @@ public class Connectivity {
 
   private void updateConnectionState() {
     if (hasConnection) {
-      if (hasWifi) {
+      if (!checkFirebaseAvailable()) {
+        state.set(State.NO_CONNECTION);
+      } else if (hasWifi) {
         state.set(State.FULL_CONNECTION);
       } else if (isMetered) {
         state.set(State.LIMITED_CONNECTION);
@@ -75,6 +85,31 @@ public class Connectivity {
     for (StateListener stateListener : stateListeners) {
       stateListener.onStateChange(state.get());
     }
+  }
+
+  private boolean checkFirebaseAvailable() {
+    // Check if the phone can reach firebase servers. Might not be able if behind a firewall.
+    boolean reachable = false;
+    try {
+      URL url = new URL("https://firebase.googlesdfsdf.com");
+      HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+      urlConnection.setRequestMethod("GET");
+      urlConnection.setConnectTimeout(5000); // 5 seconds timeout
+      urlConnection.setReadTimeout(5000); // 5 seconds timeout
+
+      int responseCode = urlConnection.getResponseCode();
+      if (responseCode == 200) {
+        reachable = true;
+        RotatingFileLogger.get().logd(TAG, "Firebase is reachable via HTTP");
+      } else {
+        RotatingFileLogger.get().logd(TAG, "Failed to connect to Firebase. Response code: " +
+            responseCode);
+      }
+      urlConnection.disconnect();
+    } catch (IOException e) {
+      RotatingFileLogger.get().logw(TAG, "Error checking Firebase connectivity: " + e.getMessage());
+    }
+    return reachable;
   }
 
   private final ConnectivityManager.NetworkCallback networkCallback =

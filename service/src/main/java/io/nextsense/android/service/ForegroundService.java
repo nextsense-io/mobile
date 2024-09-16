@@ -203,13 +203,13 @@ public class ForegroundService extends Service {
     deviceManager = DeviceManager.create(
         deviceScanner, localSessionManager, centralManagerProxy, bluetoothStateManager,
         nextSenseDeviceManager, memoryCache, csvSink);
-    databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
+    connectivity = Connectivity.create(this);
+    databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager, connectivity);
     databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);
     // sampleRateCalculator.startListening();
     cacheSink = CacheSink.create(memoryCache);
     cacheSink.startListening();
-    connectivity = Connectivity.create(this);
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
     // minRecordsToKeep is set at 12 minutes as we need 1 0minutes for sleep staging.
     uploader = Uploader.create(this, applicationType, objectBoxDatabase, databaseSink, connectivity,

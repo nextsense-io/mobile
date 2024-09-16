@@ -211,14 +211,14 @@ public class BudzService extends Service {
     deviceManager = DeviceManager.create(
         deviceScanner, localSessionManager, centralManagerProxy, bluetoothStateManager,
         budzDeviceManager, memoryCache, csvSink);
-     databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager);
-     databaseSink.startListening();
+    connectivity = Connectivity.create(this);
+    databaseSink = DatabaseSink.create(objectBoxDatabase, localSessionManager, connectivity);
+    databaseSink.startListening();
     // sampleRateCalculator = SampleRateCalculator.create(250);
     // sampleRateCalculator.startListening();
     cacheSink = CacheSink.create(memoryCache);
     cacheSink.startListening();
     airohaBleManager = new AirohaBleManager(deviceManager);
-    connectivity = Connectivity.create(this);
     // uploadChunkSize should be by chunks of 1 second of data to match BigTable transaction size.
     // minRecordsToKeep is set at 12 minutes as we need 10 minutes for sleep staging.
     uploader = Uploader.create(this, ApplicationType.CONSUMER, objectBoxDatabase, databaseSink,

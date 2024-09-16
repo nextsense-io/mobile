@@ -6,6 +6,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.nextsense.android.base.communication.internet.Connectivity;
 import io.nextsense.android.base.data.DeviceInternalState;
 import io.nextsense.android.base.data.EegSample;
 import io.nextsense.android.base.data.LocalSessionManager;
@@ -22,18 +23,22 @@ public class DatabaseSink {
 
   private final ObjectBoxDatabase boxDatabase;
   private final LocalSessionManager localSessionManager;
+  private final Connectivity connectivity;
   private final AtomicInteger eegRecordsCounter = new AtomicInteger(0);
   private Samples previousSamples = null;
   private int lastEegFrequency = 0;
 
-  private DatabaseSink(ObjectBoxDatabase boxDatabase, LocalSessionManager localSessionManager) {
+  private DatabaseSink(ObjectBoxDatabase boxDatabase, LocalSessionManager localSessionManager,
+                       Connectivity connectivity) {
     this.boxDatabase = boxDatabase;
     this.localSessionManager = localSessionManager;
+    this.connectivity = connectivity;
   }
 
   public static DatabaseSink create(
-      ObjectBoxDatabase objectBoxDatabase, LocalSessionManager localSessionManager) {
-    return new DatabaseSink(objectBoxDatabase, localSessionManager);
+      ObjectBoxDatabase objectBoxDatabase, LocalSessionManager localSessionManager,
+      Connectivity connectivity) {
+    return new DatabaseSink(objectBoxDatabase, localSessionManager, connectivity);
   }
 
   public void startListening() {
@@ -72,7 +77,8 @@ public class DatabaseSink {
       if (!currentLocalSession.isReceivedData()) {
         localSessionManager.notifyFirstDataReceived(samples.getEegSamples().get(0));
       }
-      if (currentLocalSession.isUploadNeeded()) {
+      if (currentLocalSession.isUploadNeeded() &&
+          connectivity.getState() == Connectivity.State.FULL_CONNECTION) {
         // Verify that the timestamps are moving forward in time.
         EegSample lastEegSample = null;
         if (previousSamples != null && !previousSamples.getEegSamples().isEmpty() &&
@@ -113,8 +119,9 @@ public class DatabaseSink {
 
         lastEegFrequency = (int)localSessionManager.getActiveLocalSession().get().getEegSampleRate();
         // Save the samples in the local database.
-        if (samples.getEegSamples().size() != 50 || samples.getAccelerations().size() != 5 ||
-            samples.getAngularSpeeds().size() != 5) {
+        if ((!samples.getEegSamples().isEmpty() && samples.getEegSamples().size() != 50) ||
+            (!samples.getAccelerations().isEmpty() && samples.getAccelerations().size() != 5) ||
+            (!samples.getAngularSpeeds().isEmpty() && samples.getAngularSpeeds().size() != 5)) {
           RotatingFileLogger.get().logw(TAG,
               "Received a packet with an unexpected number of samples: " +
                   samples.getEegSamples().size() + " eeg samples, " +
