@@ -91,7 +91,7 @@ public class Connectivity {
     // Check if the phone can reach firebase servers. Might not be able if behind a firewall.
     boolean reachable = false;
     try {
-      URL url = new URL("https://firebase.googlesdfsdf.com");
+      URL url = new URL("https://firebase.google.com");
       HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
       urlConnection.setRequestMethod("GET");
       urlConnection.setConnectTimeout(5000); // 5 seconds timeout
