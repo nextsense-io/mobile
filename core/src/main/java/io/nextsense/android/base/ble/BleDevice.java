@@ -22,6 +22,7 @@ import com.welie.blessed.PhyType;
 
 import java.time.Duration;
 import java.util.Objects;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
@@ -123,6 +124,24 @@ public class BleDevice extends Device {
   public void removeOnDeviceInternalStateChangeListener(
       NextSenseDevice.DeviceInternalStateChangeListener listener) {
     nextSenseDevice.removeOnDeviceInternalStateChangeListener(listener);
+  }
+
+  @Override
+  public void writeControlCharacteristic(byte[] bytes) throws
+      ExecutionException, InterruptedException, CancellationException {
+    nextSenseDevice.writeControlCharacteristic(bytes);
+  }
+
+  @Override
+  public void addControlCharacteristicListener(
+      NextSenseDevice.ControlCharacteristicListener listener) {
+    nextSenseDevice.addControlCharacteristicListener(listener);
+  }
+
+  @Override
+  public void removeControlCharacteristicListener(
+      NextSenseDevice.ControlCharacteristicListener listener) {
+    nextSenseDevice.removeControlCharacteristicListener(listener);
   }
 
   @Override

@@ -633,6 +633,30 @@ class AirohaDeviceManager @Inject constructor(
         return afeRaceResponse.getValue()
     }
 
+    suspend fun getAfeRegisterValueBle(register: String): ByteArray? {
+        if (!isConnected) {
+            RotatingFileLogger.get().logw(tag, "Tried to get AFE register, but device is not " +
+                    "available: ${_airohaDeviceState.value}")
+            return null
+        }
+        _airohaBleManager?.writeLeftBudControlCharacteristic(
+            getRaceCommand(GetAfeRegisterRaceCommand(SetAfeRegisterRaceCommand.EarbudSide.LEFT,
+                register)).command)
+        val responseBytes = _airohaBleManager?.leftBudControlCharacteristicListenerFlow()?.first()
+        if (responseBytes == null) {
+            RotatingFileLogger.get().logw(tag, "Failed to get AFE register.")
+            return null
+        }
+        val afeRaceResponse = RaceResponseFactory.create(responseBytes) as GetAfeRegisterRaceResponse?
+        if (afeRaceResponse == null ||
+            afeRaceResponse.getStatusCode() != AirohaStatusCode.STATUS_SUCCESS) {
+            RotatingFileLogger.get().logw(tag, "Failed to get AFE register. Reason: " +
+                    "${afeRaceResponse?.getStatusCode()}")
+            return null
+        }
+        return afeRaceResponse.getValue()
+    }
+
     suspend fun setSoundLoopVolume(volume: Int): AirohaStatusCode? {
         if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to set sound loop volume, but device is " +

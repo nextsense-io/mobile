@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
 import io.nextsense.android.base.Device;
@@ -182,6 +184,18 @@ public class EmulatedDevice extends Device {
   @Override
   public void removeOnDeviceInternalStateChangeListener(
       NextSenseDevice.DeviceInternalStateChangeListener listener) {}
+
+  @Override
+  public void writeControlCharacteristic(byte[] bytes) throws
+      ExecutionException, InterruptedException, CancellationException {}
+
+  @Override
+  public void addControlCharacteristicListener(
+      NextSenseDevice.ControlCharacteristicListener listener) {}
+
+  @Override
+  public void removeControlCharacteristicListener(
+      NextSenseDevice.ControlCharacteristicListener listener) {}
 
   @Override
   public ListenableFuture<DeviceState> connect(boolean autoReconnect) {

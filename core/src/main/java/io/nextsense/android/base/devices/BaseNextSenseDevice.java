@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 
 import io.nextsense.android.base.DeviceMode;
 import io.nextsense.android.base.DeviceSettings;
@@ -26,6 +28,8 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
   protected DeviceMode deviceMode = DeviceMode.IDLE;
   protected BluetoothPeripheral peripheral;
   protected final Set<DeviceInternalStateChangeListener> deviceInternalStateChangeListeners =
+      new HashSet<>();
+  protected final Set<ControlCharacteristicListener> controlCharacteristicListeners =
       new HashSet<>();
 
   public LocalSessionManager getLocalSessionManager() {
@@ -110,5 +114,22 @@ public abstract class BaseNextSenseDevice implements NextSenseDevice {
     for (DeviceInternalStateChangeListener listener : deviceInternalStateChangeListeners) {
       listener.onDeviceInternalStateChange(deviceInternalState);
     }
+  }
+
+  @Override
+  public void writeControlCharacteristic(byte[] bytes) throws
+      ExecutionException, InterruptedException, CancellationException {
+    throw new UnsupportedOperationException("This device does not support writing to the control " +
+        "characteristic.");
+  }
+
+  @Override
+  public void addControlCharacteristicListener(ControlCharacteristicListener listener) {
+    controlCharacteristicListeners.add(listener);
+  }
+
+  @Override
+  public void removeControlCharacteristicListener(ControlCharacteristicListener listener) {
+    controlCharacteristicListeners.remove(listener);
   }
 }

@@ -50,8 +50,6 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
   private static final UUID SERVICE_UUID = UUID.fromString("7319494d-2dab-0341-6972-6f6861424c45");
   private static final UUID DATA_UUID = UUID.fromString("73194152-2dab-3141-6972-6f6861424c45");
   private static final UUID CONTROL_UUID = UUID.fromString("73194152-2dab-3241-6972-6f6861424c45");
-  private static final byte[] COMMAND_START_STREAMING = new byte[] {0x01, 0x00, 0x01, 0x01};
-  private static final byte[] COMMAND_STOP_STREAMING = new byte[] {0x01, 0x00, 0x01, 0x00};
   private static final DeviceInfo DEVICE_INFO = new DeviceInfo(
       DeviceType.MAUI,
       DeviceInfo.UNKNOWN,
@@ -105,6 +103,10 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
     return dataCharacteristic != null && characteristic.getUuid() == dataCharacteristic.getUuid();
   }
 
+  private boolean isControlCharacteristic(BluetoothGattCharacteristic characteristic) {
+    return controlCharacteristic != null && characteristic.getUuid() == controlCharacteristic.getUuid();
+  }
+
   @Override
   public int getTargetMTU() {
     return TARGET_MTU;
@@ -136,6 +138,12 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
     this.peripheral = peripheral;
     mauiDataParser.setDeviceName(peripheral.getName());
     initializeCharacteristics();
+    // TODO: Implement once firmware supports.
+//    if (!peripheral.isNotifying(controlCharacteristic)) {
+//      changeStreamingStateFuture = SettableFuture.create();
+//      peripheral.setNotify(controlCharacteristic, /*enable=*/true);
+//      return changeStreamingStateFuture;
+//    }
     return Futures.immediateFuture(true);
   }
 
@@ -212,6 +220,19 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
     return Futures.immediateFuture(true);
   }
 
+  public byte[] writeWithResponse(byte[] data) throws
+      ExecutionException, InterruptedException, CancellationException {
+    if (peripheral == null || controlCharacteristic == null) {
+      RotatingFileLogger.get().logw(TAG, "No peripheral to write with response.");
+      return new byte[0];
+    }
+    RotatingFileLogger.get().logi(TAG, "Writing with response: " + Arrays.toString(data) + " on " +
+        peripheral.getName());
+    blePeripheralCallbackProxy.writeCharacteristic(
+        peripheral, controlCharacteristic, data, WriteType.WITH_RESPONSE).get();
+    return blePeripheralCallbackProxy.readCharacteristic(peripheral, controlCharacteristic).get();
+  }
+
   private void initializeCharacteristics() {
     dataCharacteristic = peripheral.getCharacteristic(SERVICE_UUID, DATA_UUID);
     checkCharacteristic(dataCharacteristic, SERVICE_UUID, DATA_UUID);
@@ -236,35 +257,35 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
         peripheral, controlCharacteristic, bytes, WriteType.WITHOUT_RESPONSE).get();
   }
 
+  @Override
+  public void writeControlCharacteristic(byte[] bytes) throws
+      ExecutionException, InterruptedException, CancellationException {
+    if (peripheral == null || controlCharacteristic == null) {
+      RotatingFileLogger.get().logw(TAG, "No peripheral to write control characteristic.");
+      return;
+    }
+    RotatingFileLogger.get().logi(TAG, "Writing control characteristic: " + Arrays.toString(bytes) +
+        " on " + peripheral.getName());
+    blePeripheralCallbackProxy.writeCharacteristic(
+        peripheral, controlCharacteristic, bytes, WriteType.WITH_RESPONSE).get();
+  }
+
   private final BluetoothPeripheralCallback bluetoothPeripheralCallback =
       new BluetoothPeripheralCallback() {
         @Override
         public void onNotificationStateUpdate(
             @NonNull BluetoothPeripheral peripheral,
             @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-          if (changeStreamingStateFuture != null && !changeStreamingStateFuture.isDone() &&
-              isDataCharacteristic(characteristic)) {
+          if (changeStreamingStateFuture != null && !changeStreamingStateFuture.isDone()) {
             if (status == GattStatus.SUCCESS) {
               RotatingFileLogger.get().logd(TAG, "Notification updated with success to " +
                   peripheral.isNotifying(characteristic));
-              if (peripheral.isNotifying(characteristic)) {
-                // TODO(eric): Should use a RACE command when possible instead of writing to each
-                //             BLE connection.
-//                try {
-//                  executeCommandNoResponse(COMMAND_START_STREAMING);
-//                } catch (ExecutionException | InterruptedException | CancellationException e) {
-//                  changeStreamingStateFuture.setException(e);
-//                }
-                deviceMode = DeviceMode.STREAMING;
-              } else {
-                // TODO(eric): Should use a RACE command when possible instead of writing to each
-                //             BLE connection.
-//                try {
-//                  executeCommandNoResponse(COMMAND_STOP_STREAMING);
-//                } catch (ExecutionException | InterruptedException | CancellationException e) {
-//                  changeStreamingStateFuture.setException(e);
-//                }
-                deviceMode = DeviceMode.IDLE;
+              if (isDataCharacteristic(characteristic)) {
+                if (peripheral.isNotifying(characteristic)) {
+                  deviceMode = DeviceMode.STREAMING;
+                } else {
+                  deviceMode = DeviceMode.IDLE;
+                }
               }
               changeStreamingStateFuture.set(true);
             } else {
@@ -278,10 +299,18 @@ public class MauiDevice extends BaseNextSenseDevice implements NextSenseDevice {
         public void onCharacteristicUpdate(
             @NonNull BluetoothPeripheral peripheral, @NonNull byte[] value,
             @NonNull BluetoothGattCharacteristic characteristic, @NonNull GattStatus status) {
-          try {
-            mauiDataParser.parseDataBytes(value);
-          } catch (FirmwareMessageParsingException e) {
-            RotatingFileLogger.get().loge(TAG, "Failed to parse data bytes: " + e.getMessage());
+          if (isDataCharacteristic(characteristic)) {
+            try {
+              mauiDataParser.parseDataBytes(value);
+            } catch (FirmwareMessageParsingException e) {
+              RotatingFileLogger.get().loge(TAG, "Failed to parse data bytes: " + e.getMessage());
+            }
+          } else if (isControlCharacteristic(characteristic)) {
+            RotatingFileLogger.get().logd(TAG, "Control characteristic update: " +
+                Arrays.toString(value));
+            for (ControlCharacteristicListener listener : controlCharacteristicListeners) {
+              listener.onControlCharacteristicUpdate(value);
+            }
           }
         }
       };

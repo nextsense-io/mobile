@@ -5,6 +5,7 @@ import io.nextsense.android.base.Device.DeviceStateChangeListener
 import io.nextsense.android.base.DeviceManager
 import io.nextsense.android.base.DeviceScanner.ScanError
 import io.nextsense.android.base.DeviceState
+import io.nextsense.android.base.devices.NextSenseDevice
 import io.nextsense.android.base.devices.maui.MauiDevice
 import io.nextsense.android.base.utils.RotatingFileLogger
 import kotlinx.coroutines.CancellationException
@@ -185,6 +186,38 @@ class AirohaBleManager(
 
         awaitClose {
             deviceManager.stopFindingDevices(deviceScanListener)
+            channel.close()
+        }
+    }.flowOn(Dispatchers.IO)
+
+    public fun writeLeftBudControlCharacteristic(value: ByteArray) {
+        _leftEarDevice?.writeControlCharacteristic(value)
+    }
+
+    public fun writeRightBudControlCharacteristic(value: ByteArray) {
+        _rightEarDevice?.writeControlCharacteristic(value)
+    }
+
+    public fun leftBudControlCharacteristicListenerFlow() = callbackFlow<ByteArray> {
+        val characteristicListener =
+            NextSenseDevice.ControlCharacteristicListener { value -> trySend(value) }
+
+        _leftEarDevice?.addControlCharacteristicListener(characteristicListener)
+
+        awaitClose {
+            _leftEarDevice?.removeControlCharacteristicListener(characteristicListener)
+            channel.close()
+        }
+    }.flowOn(Dispatchers.IO)
+
+    public fun rightBudControlCharacteristicListenerFlow() = callbackFlow<ByteArray> {
+        val characteristicListener =
+            NextSenseDevice.ControlCharacteristicListener { value -> trySend(value) }
+
+        _rightEarDevice?.addControlCharacteristicListener(characteristicListener)
+
+        awaitClose {
+            _rightEarDevice?.removeControlCharacteristicListener(characteristicListener)
             channel.close()
         }
     }.flowOn(Dispatchers.IO)

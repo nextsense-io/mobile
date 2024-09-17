@@ -19,6 +19,8 @@ import io.nextsense.android.base.emulated.EmulatedDevice;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Main device interface that is shared for any device. Device specific functions are encapsulated
@@ -101,6 +103,15 @@ public abstract class Device {
 
   public abstract void removeOnDeviceInternalStateChangeListener(
       NextSenseDevice.DeviceInternalStateChangeListener listener);
+
+  public abstract void writeControlCharacteristic(byte[] bytes) throws
+      ExecutionException, InterruptedException, CancellationException;
+
+  public abstract void addControlCharacteristicListener(
+      NextSenseDevice.ControlCharacteristicListener listener);
+
+  public abstract void removeControlCharacteristicListener(
+      NextSenseDevice.ControlCharacteristicListener listener);
 
   /**
    * Tries to connect the device.

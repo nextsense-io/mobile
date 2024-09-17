@@ -9,6 +9,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.welie.blessed.BluetoothPeripheral;
 
 import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 
 import io.nextsense.android.base.DeviceInfo;
 import io.nextsense.android.base.DeviceMode;
@@ -25,6 +27,10 @@ public interface NextSenseDevice {
     // The internal state is different depending on which device. For Kauai it is a protobuf that
     // needs to be decoded for example.
     void onDeviceInternalStateChange(byte[] deviceInternalState);
+  }
+
+  interface ControlCharacteristicListener {
+    void onControlCharacteristicUpdate(byte[] value);
   }
 
   String START_MODE_UPLOAD_TO_CLOUD_PARAM = "start.mode.upload.to.cloud.param";
@@ -106,4 +112,26 @@ public interface NextSenseDevice {
    * @return DeviceInfo
    */
   DeviceInfo getDeviceInfo();
+
+  /**
+   * Writes a byte array to the control characteristic.
+   * @param bytes byte array to write
+   * @throws ExecutionException if the write fails
+   * @throws InterruptedException if the write is interrupted
+   * @throws CancellationException if the write is cancelled
+   */
+  void writeControlCharacteristic(byte[] bytes) throws
+      ExecutionException, InterruptedException, CancellationException;
+
+  /**
+   * Adds a listener for control characteristic updates.
+   * @param listener ControlCharacteristicListener that will receive updates.
+   */
+  void addControlCharacteristicListener(ControlCharacteristicListener listener);
+
+  /**
+   * Removes a listener for control characteristic updates.
+   * @param listener ControlCharacteristicListener that will no longer receive updates.
+   */
+  void removeControlCharacteristicListener(ControlCharacteristicListener listener);
 }
