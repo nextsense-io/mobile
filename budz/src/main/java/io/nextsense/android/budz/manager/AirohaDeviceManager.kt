@@ -453,10 +453,11 @@ class AirohaDeviceManager @Inject constructor(
             if (readyForStreaming) {
                 // Clear the memory cache from the previous recording data, if any.
                 _budzService?.memoryCache?.clear()
-                val airohaStatusCode = runSetRaceCommandFlow(getRaceCommand(
+                val raceResponse = runSetRaceCommandFlow(getRaceCommand(
                     DataStreamRaceCommand(
                         DataStreamRaceCommand.DataStreamType.START_STREAM))).last()
-                if (airohaStatusCode == AirohaStatusCode.STATUS_SUCCESS) {
+                if (raceResponse != null && raceResponse.getStatusCode() ==
+                        AirohaStatusCode.STATUS_SUCCESS) {
                     _streamingState.value = StreamingState.STARTED
                     return@launch
                 }
@@ -514,11 +515,11 @@ class AirohaDeviceManager @Inject constructor(
             _streamingState.value = StreamingState.STOPPING
             if (_airohaDeviceState.value == AirohaDeviceState.CONNECTED_AIROHA ||
                 _airohaDeviceState.value == AirohaDeviceState.READY) {
-                val airohaStatusCode = runSetRaceCommandFlow(getRaceCommand(
+                val raceResponse = runSetRaceCommandFlow(getRaceCommand(
                     DataStreamRaceCommand(DataStreamRaceCommand.DataStreamType.STOP_STREAM)))
                     .take(1).last()
-                RotatingFileLogger.get().logd(tag, "stopRaceBleStreamingFlow airohaStatusCode=$airohaStatusCode")
-                if (airohaStatusCode != AirohaStatusCode.STATUS_SUCCESS) {
+                if (raceResponse != null && raceResponse.getStatusCode() ==
+                        AirohaStatusCode.STATUS_SUCCESS) {
                     _streamingState.value = StreamingState.ERROR
                     return@launch
                 }
@@ -607,8 +608,9 @@ class AirohaDeviceManager @Inject constructor(
             EarEegChannel.ERW_ERC -> SetAfeRegisterRaceCommand.EarbudSide.RIGHT
             else -> SetAfeRegisterRaceCommand.EarbudSide.LEFT
         }
-        return runSetRaceCommandFlow(getRaceCommand(SetAfeRegisterRaceCommand(
+        val raceResponse = runSetRaceCommandFlow(getRaceCommand(SetAfeRegisterRaceCommand(
             earBudSide, register, value))).first()
+        return raceResponse?.getStatusCode()
     }
 
     suspend fun getAfeRegisterValue(channel: EarEegChannel, register: String): ByteArray? {
@@ -640,7 +642,9 @@ class AirohaDeviceManager @Inject constructor(
             return null
         }
 
-        return runSetRaceCommandFlow(getRaceCommand(SetSoundLoopVolumeRaceCommand(volume))).first()
+        val raceResponse = runSetRaceCommandFlow(
+            getRaceCommand(SetSoundLoopVolumeRaceCommand(volume))).first()
+        return raceResponse?.getStatusCode()
     }
 
     suspend fun getSoundLoopVolume(): Int? {
@@ -667,8 +671,9 @@ class AirohaDeviceManager @Inject constructor(
             return null
         }
 
-        return runSetRaceCommandFlow(getRaceCommand(
+        val raceResponse = runSetRaceCommandFlow(getRaceCommand(
             SetTouchControlsRaceCommand(disable=!enabled))).first()
+        return raceResponse?.getStatusCode()
     }
 
     suspend fun setVoicePromptsEnabled(enabled: Boolean): AirohaStatusCode? {
@@ -678,8 +683,9 @@ class AirohaDeviceManager @Inject constructor(
             return null
         }
 
-        return runSetRaceCommandFlow(getRaceCommand(
+        val raceResponse = runSetRaceCommandFlow(getRaceCommand(
             SetVoicePromptsControlsRaceCommand(disable=!enabled))).first()
+        return raceResponse?.getStatusCode()
     }
 
     suspend fun setRegisters(registers: Map<String, String>): AirohaStatusCode? {
@@ -811,17 +817,19 @@ class AirohaDeviceManager @Inject constructor(
     }
 
     private fun runSetRaceCommandFlow(raceCommand: AirohaCmdSettings) =
-        callbackFlow<AirohaStatusCode> {
+        callbackFlow {
             val airohaDeviceListener = object : AirohaDeviceListener {
                 override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg) {
                     logAirohaResponse("onRead", code, msg)
-                    trySend(code)
+                    val raceResponse = RaceResponseFactory.create(msg.msgContent as ByteArray)
+                    trySend(raceResponse)
                     channel.close()
                 }
 
                 override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
                     logAirohaResponse("onChanged", code, msg)
-                    trySend(code)
+                    val raceResponse = RaceResponseFactory.create(msg.msgContent as ByteArray)
+                    trySend(raceResponse)
                     channel.close()
                 }
             }
