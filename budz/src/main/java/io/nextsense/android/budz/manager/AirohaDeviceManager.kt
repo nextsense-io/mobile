@@ -315,7 +315,12 @@ class AirohaDeviceManager @Inject constructor(
         setForceStream(false)
         _airohaDeviceStateJob?.cancel()
         _airohaDeviceStateJob = null
-        context.unregisterReceiver(broadCastReceiver)
+        try {
+            context.unregisterReceiver(broadCastReceiver)
+        } catch (e: Exception) {
+            RotatingFileLogger.get().logw(tag,
+                "Failed to unregister Bluetooth broadcast receiver: ${e.message}")
+        }
         AirohaSDK.getInst().airohaDeviceConnector.unregisterConnectionListener(
             _airohaConnectionListener)
         _startStreamingJob?.cancel()
