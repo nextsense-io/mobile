@@ -81,7 +81,7 @@ class SignalStateManager @Inject constructor(val airohaDeviceManager: AirohaDevi
     }
 
     private fun findPowerLineFrequency(data: List<Float>?, eegSamplingRate: Int): Int? {
-        return 60;
+        return 50
         // TODO(eric): Not working, always return 50 hertz.
 //        val fiftyHertzBandPower = BandPowerAnalysis.getBandPower(data, eegSamplingRate,
 //            /*bandStart=*/49.0, /*bandEnd=*/51.0, /*powerLineFrequency=*/null)
