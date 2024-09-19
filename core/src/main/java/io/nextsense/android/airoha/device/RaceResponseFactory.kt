@@ -66,9 +66,7 @@ class RaceResponseFactory {
                         NextSenseRaceCommand.NextSenseId.SOUND_LOOP_VOLUME ->
                             return SoundLoopVolumeRaceResponse(nextSensePayload = payload)
                         NextSenseRaceCommand.NextSenseId.BATTERY_LEVEL -> {
-                            // TODO(eric): Implement battery level response.
-                            RotatingFileLogger.get().logd(TAG, "Battery level: ${payload[0]}")
-                            return null
+                            return GetBatteryRaceResponse(nextSensePayload = payload)
                         }
                         NextSenseRaceCommand.NextSenseId.DISABLE_VOICE_PROMPTS ->
                             return VoicePromptsControlsRaceResponse(nextSensePayload = payload)
