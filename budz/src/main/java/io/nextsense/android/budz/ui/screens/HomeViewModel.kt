@@ -210,7 +210,7 @@ class HomeViewModel @Inject constructor(
 
     private fun getBatteryLevels() {
         viewModelScope.launch {
-            val batteryLevel = airohaDeviceManager.batteryLevelsFlow().take(1).last()
+            val batteryLevel = airohaDeviceManager.getBatteryLevels()
             _uiState.update { currentState ->
                 currentState.copy(
                     batteryLevel = batteryLevel

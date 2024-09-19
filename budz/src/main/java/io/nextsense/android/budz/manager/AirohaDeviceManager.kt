@@ -28,6 +28,8 @@ import io.nextsense.android.airoha.device.DataStreamRaceCommand
 import io.nextsense.android.airoha.device.DeviceSearchPresenter
 import io.nextsense.android.airoha.device.GetAfeRegisterRaceCommand
 import io.nextsense.android.airoha.device.GetAfeRegisterRaceResponse
+import io.nextsense.android.airoha.device.GetBatteryRaceCommand
+import io.nextsense.android.airoha.device.GetBatteryRaceResponse
 import io.nextsense.android.airoha.device.GetSoundLoopVolumeRaceCommand
 import io.nextsense.android.airoha.device.PowerRaceCommand
 import io.nextsense.android.airoha.device.RaceCommand
@@ -669,6 +671,27 @@ class AirohaDeviceManager @Inject constructor(
         return soundLoopVolumeResponse.getVolume()
     }
 
+    suspend fun getBatteryLevels(): AirohaBatteryLevel {
+        if (!isConnected) {
+            RotatingFileLogger.get().logw(tag, "Tried to get battery levels, but device is " +
+                    "not available: ${_airohaDeviceState.value}")
+            return AirohaBatteryLevel(left=null, right=null, case=null)
+        }
+        val batteryResponse = getRaceCommandResponseFlow(getRaceCommand(GetBatteryRaceCommand()))
+            .first() as GetBatteryRaceResponse?
+        if (batteryResponse == null ||
+            batteryResponse.getStatusCode() != AirohaStatusCode.STATUS_SUCCESS) {
+            RotatingFileLogger.get().logw(tag, "Failed to get battery levels. Reason: " +
+                    "${batteryResponse?.getStatusCode()}")
+            return AirohaBatteryLevel(left=null, right=null, case=null)
+        }
+        return AirohaBatteryLevel(
+            left = batteryResponse.getLeftEarPercent(),
+            right = batteryResponse.getRightEarPercent(),
+            case = batteryResponse.getCasePercent()
+        )
+    }
+
     suspend fun setTouchControlsEnabled(enabled: Boolean): AirohaStatusCode? {
         if (!isConnected) {
             RotatingFileLogger.get().logw(tag, "Tried to set touch controls, but device is " +
@@ -770,55 +793,6 @@ class AirohaDeviceManager @Inject constructor(
             airohaDeviceListener
         )
         return true
-    }
-
-    fun batteryLevelsFlow() = callbackFlow<AirohaBatteryLevel> {
-        val batteryInfoListener = object : AirohaDeviceListener {
-            override fun onRead(code: AirohaStatusCode, msg: AirohaBaseMsg?) {
-                RotatingFileLogger.get().logd(tag,"BatteryInfoListener.onRead=" +
-                        "${code.description}, msg = ${msg?.msgID?.cmdName}")
-
-                var leftBattery: Int? = null
-                var rightBattery: Int? = null
-                var caseBattery: Int? = null
-
-                try {
-                    if (code == AirohaStatusCode.STATUS_SUCCESS && msg != null) {
-                        val batteryInfo = msg.msgContent as AirohaBatteryInfo
-
-                        RotatingFileLogger.get().logd(tag,
-                            "batteryInfo master level ${batteryInfo.masterLevel}")
-                        RotatingFileLogger.get().logd(tag,
-                            "batteryInfo slave level ${batteryInfo.slaveLevel}")
-                        RotatingFileLogger.get().logd(tag,
-                            "AirohaSDK.getInst().isAgentRightSideDevice()=" +
-                                "${AirohaSDK.getInst().isAgentRightSideDevice}")
-                        if (AirohaSDK.getInst().isAgentRightSideDevice) {
-                            rightBattery = batteryInfo.masterLevel
-                            leftBattery = batteryInfo.slaveLevel
-                            caseBattery = batteryInfo.boxLevel
-                        } else {
-                            leftBattery = batteryInfo.masterLevel
-                            rightBattery = batteryInfo.slaveLevel
-                            caseBattery = batteryInfo.boxLevel
-                        }
-                    }
-                } catch (e: java.lang.Exception) {
-                    RotatingFileLogger.get().loge(tag, e.message)
-                }
-                trySend(AirohaBatteryLevel(leftBattery, rightBattery, caseBattery))
-                channel.close()
-            }
-
-            override fun onChanged(code: AirohaStatusCode, msg: AirohaBaseMsg) {
-                // Nothing to do.
-            }
-        }
-
-        AirohaSDK.getInst().airohaDeviceControl.getBatteryInfo(batteryInfoListener)
-
-        awaitClose {
-        }
     }
 
     private fun runSetRaceCommandFlow(raceCommand: AirohaCmdSettings) =
