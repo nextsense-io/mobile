@@ -32,7 +32,7 @@ fun BandDropDown(options: List<BandPowerAnalysis.Band>, currentSelection: BandPo
                 expanded = !expanded
             }
         },
-        modifier = Modifier.width(120.dp)
+        modifier = Modifier.width(130.dp)
     ) {
         TextField(
             value = currentSelection.getName(),

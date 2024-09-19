@@ -186,7 +186,8 @@ fun BrainEqualizerScreen(
                 } else {
                     Row {
                         BandDropDown(options = arrayListOf(BandPowerAnalysis.Band.THETA,
-                            BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA, BandPowerAnalysis.Band.GAMMA),
+                            BandPowerAnalysis.Band.ALPHA, BandPowerAnalysis.Band.BETA,
+                            BandPowerAnalysis.Band.GAMMA),
                             currentSelection = uiState.activeBand,
                             enabled = !uiState.modulatingStarted,
                             onChange = {band ->
