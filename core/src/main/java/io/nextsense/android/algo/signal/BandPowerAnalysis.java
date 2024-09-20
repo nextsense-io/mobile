@@ -16,6 +16,8 @@ import java.util.Map;
 import brainflow.BrainFlowError;
 import brainflow.DataFilter;
 import brainflow.DetrendOperations;
+import brainflow.FilterTypes;
+import brainflow.NoiseTypes;
 import io.nextsense.android.base.utils.RotatingFileLogger;
 
 public class BandPowerAnalysis {
@@ -25,7 +27,7 @@ public class BandPowerAnalysis {
     THETA(4.0, 8.0),
     ALPHA(8.0, 12.0),
     BETA(12.0, 30.0),
-    GAMMA(30.0, 49.0);
+    GAMMA(30.0, 99.0);
 
     private final double start;
     private final double end;
@@ -63,20 +65,24 @@ public class BandPowerAnalysis {
     try {
       // Optional: Detrend before calculating band powers.
       DataFilter.detrend(dataArray, DetrendOperations.LINEAR);
+      DataFilter.detrend(dataArray, DetrendOperations.CONSTANT);
+      if (powerLineFrequency == null || powerLineFrequency == 50) {
+        DataFilter.remove_environmental_noise(dataArray, samplingRate, NoiseTypes.FIFTY);
+      } else {
+        DataFilter.remove_environmental_noise(dataArray, samplingRate, NoiseTypes.SIXTY);
+      }
+      DataFilter.perform_bandpass(dataArray, samplingRate, /*start_freq=*/1.0, /*stop_freq=*/99.0,
+          /*order=*/4, FilterTypes.BUTTERWORTH, /*ripple=*/0.0);
       // apply_filters does:
       // 1. Detrend the data with a CONSTANT fit.
       // 2. Bandstop 48-52 and 58-62 Hz to remove power line noise.
       // 3. Bandpass 2-40 Hz to keep only the useful frequencies.
-//      Pair<double[], double[]> bandPowers = DataFilter.get_custom_band_powers(
-//          new double[][] {dataArray}, bandPairs, /*channels=*/new int[] {0}, samplingRate,
+      Pair<double[], double[]> bandPowers = DataFilter.get_custom_band_powers(
+          new double[][] {dataArray}, bandPairs, /*channels=*/new int[] {0}, samplingRate,
+          /*apply_filters=*/false);
+//      Pair<double[], double[]> bandPowers = DataFilter.get_avg_band_powers(
+//          new double[][] {dataArray}, /*channels=*/new int[] {0}, samplingRate,
 //          /*apply_filters=*/true);
-//      for (int i = 0; i < bands.size(); i++) {
-//        bandpowersMap.put(bands.get(i), bandPowers.getLeft()[i]);
-//      }
-
-      Pair<double[], double[]> bandPowers = DataFilter.get_avg_band_powers(
-          new double[][] {dataArray}, /*channels=*/new int[] {0}, samplingRate,
-          /*apply_filters=*/true);
       for (int i = 0; i < bands.size(); i++) {
         bandpowersMap.put(bands.get(i), bandPowers.getLeft()[i]);
       }
